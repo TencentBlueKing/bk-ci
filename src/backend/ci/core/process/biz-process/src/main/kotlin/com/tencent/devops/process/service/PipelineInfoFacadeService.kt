@@ -496,7 +496,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         yml: String,
         branchName: String,
-        defaultBranch: Boolean
+        isDefaultBranch: Boolean
     ): DeployPipelineResult {
 
         val newModel = try {
@@ -508,7 +508,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 data = TransferBody(oldYaml = yml)
             )
             if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$defaultBranch|yml=\n$yml")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
@@ -516,7 +516,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             result.modelAndSetting!!
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
@@ -527,13 +527,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = newModel.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
-            versionStatus = if (defaultBranch) {
+            versionStatus = if (isDefaultBranch) {
                 VersionStatus.RELEASED
             } else {
                 VersionStatus.BRANCH
             }
         )
-        if (!defaultBranch) {
+        if (!isDefaultBranch) {
             pipelineBranchVersionService.saveBranchVersion(
                 userId = userId,
                 projectId = projectId,
@@ -551,7 +551,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineId: String,
         yml: String,
         branchName: String,
-        defaultBranch: Boolean
+        isDefaultBranch: Boolean
     ): DeployPipelineResult {
         val newModel = try {
             val result = transferService.transfer(
@@ -562,7 +562,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 data = TransferBody(oldYaml = yml)
             )
             if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$defaultBranch|yml=\n$yml")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
@@ -570,7 +570,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             result.modelAndSetting!!
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
@@ -582,13 +582,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = newModel.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
-            versionStatus = if (defaultBranch) {
+            versionStatus = if (isDefaultBranch) {
                 VersionStatus.RELEASED
             } else {
                 VersionStatus.BRANCH
             }
         )
-        if (!defaultBranch) {
+        if (!isDefaultBranch) {
             pipelineBranchVersionService.saveBranchVersion(
                 userId = userId,
                 projectId = projectId,
