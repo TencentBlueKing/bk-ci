@@ -16,8 +16,8 @@ data class ScriptExecuteInfoReq(
     @ApiModelProperty(value = "脚本类型", notes = "1(shell脚本)、2(bat脚本)、3(perl脚本)、4(python脚本)、5(powershell脚本)",
                       required = true)
     val scriptType: Int,
-    @ApiModelProperty(value = "环境集合", required = true)
-    val envsetInfo: EnvsetInfo,
+    @ApiModelProperty(value = "目标服务器", required = true)
+    val targetEnv: EnvsetInfo,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
     val userAccount: String
 )
