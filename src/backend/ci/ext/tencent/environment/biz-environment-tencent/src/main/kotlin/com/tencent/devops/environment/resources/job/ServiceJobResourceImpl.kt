@@ -27,24 +27,15 @@
 
 package com.tencent.devops.environment.resources.job
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
-import com.tencent.devops.environment.api.old.OldServiceNodeResource
-import com.tencent.devops.environment.pojo.NodeBaseInfo
-import com.tencent.devops.environment.pojo.NodeWithPermission
-import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.ScriptExecuteInfo
+import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
-import com.tencent.devops.environment.service.EnvService
-import com.tencent.devops.environment.service.NodeService
-import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceJobResourceImpl : ServiceJobResource {
-    override fun executeScripts(userId: String, projectId: String, scriptExecuteInfo: List<ScriptExecuteInfo>): Result<List<ScriptExecuteResult>> {
+    override fun executeScripts(userId: String, projectId: String, scriptExecuteInfo: ScriptExecuteInfoReq): Result<ScriptExecuteResult> {
         TODO("Not yet implemented")
     }
 }

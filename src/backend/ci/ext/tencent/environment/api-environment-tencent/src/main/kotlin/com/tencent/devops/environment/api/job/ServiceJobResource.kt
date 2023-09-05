@@ -30,7 +30,7 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.job.ScriptExecuteInfo
+import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -43,14 +43,14 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_NODE"], description = "服务-JOB")
+@Api(tags = ["SERVICE_JOB"], description = "服务-JOB")
 @Path("/service/job")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceJobResource {
     @ApiOperation("脚本执行的Job接口")
     @POST
-    @Path("/{projectId}/script_execute_job_server")
+    @Path("/{projectId}/script_execute")
     fun executeScripts(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -59,6 +59,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
-        scriptExecuteInfo: List<ScriptExecuteInfo>
-    ): Result<List<ScriptExecuteResult>>
+        scriptExecuteInfo: ScriptExecuteInfoReq
+    ): Result<ScriptExecuteResult>
 }
