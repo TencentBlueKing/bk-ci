@@ -1,4 +1,4 @@
-﻿package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel

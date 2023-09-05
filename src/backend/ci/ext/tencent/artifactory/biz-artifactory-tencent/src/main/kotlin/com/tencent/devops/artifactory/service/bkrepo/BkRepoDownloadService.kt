@@ -156,7 +156,7 @@ open class BkRepoDownloadService @Autowired constructor(
         )
         val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url)
 
-        //获取IPA属性
+        // 获取IPA属性
         val fileProperties = bkRepoClient.listMetadata(
             creatorId,
             projectId,

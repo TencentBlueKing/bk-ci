@@ -534,7 +534,6 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
-
     private fun onlinePublicExperience(
         projectId: String,
         size: Long,

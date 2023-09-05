@@ -1,7 +1,6 @@
-﻿package com.tencent.devops.experience.job
+package com.tencent.devops.experience.job
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 class ExperienceApkDefenderJob @Autowired constructor(
