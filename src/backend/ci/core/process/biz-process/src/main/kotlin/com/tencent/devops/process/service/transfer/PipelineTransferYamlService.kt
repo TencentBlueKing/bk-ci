@@ -138,7 +138,7 @@ class PipelineTransferYamlService @Autowired constructor(
                 }
             }
         } catch (t: Throwable) {
-            logger.warn("PAC|TRANSFER|transferAction")
+            logger.warn("PAC|TRANSFER|transferAction", t)
         } finally {
             watcher.stop()
         }
