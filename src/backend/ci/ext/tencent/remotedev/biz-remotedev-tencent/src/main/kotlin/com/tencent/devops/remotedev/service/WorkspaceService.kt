@@ -797,7 +797,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun deleteSharedWorkspace(id: Long): Boolean {
-        val info = workspaceDao.fetchSharedWorkspaceById(
+        val info = workspaceSharedDao.fetchSharedWorkspaceById(
             id = id,
             dslContext = dslContext
         )
@@ -819,7 +819,7 @@ class WorkspaceService @Autowired constructor(
         sharedUser: String
     ): Boolean {
         logger.info("deleteSharedWorkspace|workspaceName|$workspaceName|sharedUser|$sharedUser")
-        workspaceDao.fetchSharedWorkspaceByUser(
+        workspaceSharedDao.fetchSharedWorkspaceByUser(
             dslContext = dslContext,
             workspaceName = workspaceName,
             sharedUser = sharedUser

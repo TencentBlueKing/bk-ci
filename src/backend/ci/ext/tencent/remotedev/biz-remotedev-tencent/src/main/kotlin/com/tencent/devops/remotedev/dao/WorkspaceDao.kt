@@ -35,7 +35,6 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -44,6 +43,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -51,12 +52,10 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record2
+import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import org.jooq.RecordMapper
 
 @Repository
 class WorkspaceDao {
@@ -419,7 +418,11 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectDistinct(PROJECT_ID).from(this)
                 .where(PROJECT_ID.ne(""))
-                .let { i -> if (mountType != null) { i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
+                .let { i ->
+                    if (mountType != null) {
+                        i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+                    } else i
+                }
                 .fetch()
         }
     }
@@ -460,45 +463,6 @@ class WorkspaceDao {
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .fetch()
-    }
-
-    fun fetchSharedWorkspaceById(
-        id: Long,
-        dslContext: DSLContext
-    ): TWorkspaceSharedRecord? {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this)
-                .where(ID.eq(id))
-                .limit(1)
-                .fetchAny()
-        }
-    }
-    fun fetchSharedWorkspaceByUser(
-        dslContext: DSLContext,
-        workspaceName: String,
-        sharedUser: String
-    ): TWorkspaceSharedRecord? {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this)
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .and(SHARED_USER.eq(sharedUser))
-                .fetchAny()
-        }
-    }
-
-    fun deleteSharedWorkspace(
-        dslContext: DSLContext,
-        workspaceName: String,
-        shareUser: String
-    ): Int {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.delete(this)
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .and(SHARED_USER.eq(shareUser))
-                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
-                .limit(1)
-                .execute()
-        }
     }
 
     private fun mixCondition(
