@@ -47,14 +47,12 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     val client: Client
 ) : PermissionProjectService {
 
-    override fun getProjectUsers(
-        projectCode: String,
-        group: String?
-    ): List<String> {
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
+
         return authProjectApi.getProjectUsers(
             serviceCode = authServiceCode,
             projectCode = projectCode,
-            group = group?.let { BkAuthGroup.get(it) }
+            group = group
         )
     }
 
@@ -128,7 +126,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
             projectName = projectInfo.projectName,
             creator = projectInfo.creator!!,
             owners = getProjectUsers(
-                projectCode, BkAuthGroup.MANAGER.value
+                projectCode, BkAuthGroup.MANAGER
             ),
             members = getProjectUsers(projectCode, null)
         )

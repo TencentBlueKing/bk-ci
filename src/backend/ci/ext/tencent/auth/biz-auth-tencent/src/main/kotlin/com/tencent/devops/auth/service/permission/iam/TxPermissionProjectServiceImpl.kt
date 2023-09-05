@@ -40,6 +40,7 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -72,11 +73,8 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String, String>()
 
-    override fun getUserByExt(
-        group: String,
-        projectCode: String
-    ): List<String> {
-        val groupInfo = groupService.getGroupByCode(projectCode, group) ?: return emptyList()
+    override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
+        val groupInfo = groupService.getGroupByCode(projectCode, group.value) ?: return emptyList()
         val extProjectId = getExtProjectId(projectCode)
         val groupMemberInfos = permissionRoleMemberService.getRoleMember(
             projectId = extProjectId,
