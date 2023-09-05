@@ -104,7 +104,7 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.maxProjectCount:#{5}}")
     private val migrationMaxProjectCount: Int = DEFAULT_MIGRATION_MAX_PROJECT_COUNT
 
-    @Value("\${sharding.migration.processDbMicroServices:}")
+    @Value("\${sharding.migration.processDbMicroServices:#{\"process,engine,misc,lambda\"}}")
     private val migrationProcessDbMicroServices = "process,engine,misc,lambda"
 
     @PostConstruct
@@ -139,8 +139,6 @@ class ProcessDataMigrateService @Autowired constructor(
         }
         // 锁定项目,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
-        // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
-        confirmAllServiceCacheIsUpdated(projectId)
         // 为项目分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
         // 把同时迁移的项目数量存入redis中
@@ -270,6 +268,8 @@ class ProcessDataMigrateService @Autowired constructor(
                             shardingRoutingRule = historyShardingRoutingRule
                         )
                     }
+                    // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
+                    confirmAllServiceCacheIsUpdated(projectId)
                 } catch (ignored: Throwable) {
                     logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
                 }

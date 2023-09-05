@@ -99,7 +99,7 @@ class ShardingRoutingRuleManageService @Autowired constructor(
         val finishServiceIps = redisOperation.getSetMembers(key)?.toMutableSet()
         // 移除redis中当前微服务的历史IP列表
         serviceIps?.let { finishServiceIps?.removeAll(serviceIps) }
-        finishServiceIps?.let {
+        if (!finishServiceIps.isNullOrEmpty()) {
             redisOperation.sremove(key, *finishServiceIps.toTypedArray())
         }
         // 将缓存操作完成的IP写入redis
