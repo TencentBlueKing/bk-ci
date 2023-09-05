@@ -48,7 +48,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
 
     override fun getProjectUsers(
         projectCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String> {
         val allGroupAndUser = getProjectGroupAndUserList(projectCode = projectCode)
         return if (group == null) {
@@ -222,7 +222,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         return iamProjectId.toInt()
     }
 
-    abstract fun getUserByExt(group: String, projectCode: String): List<String>
+    abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)

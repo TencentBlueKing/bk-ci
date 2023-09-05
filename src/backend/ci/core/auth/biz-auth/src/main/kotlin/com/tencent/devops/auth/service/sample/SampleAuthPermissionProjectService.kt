@@ -8,7 +8,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 class SampleAuthPermissionProjectService : PermissionProjectService {
     override fun getProjectUsers(
         projectCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String> {
         return emptyList()
     }

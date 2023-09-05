@@ -49,7 +49,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectUsers(
                 projectCode = projectCode,
-                group = group?.value
+                group = group
             )
         )
     }
