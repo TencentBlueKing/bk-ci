@@ -189,10 +189,16 @@ class ItsmService @Autowired constructor(
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
         val scheme = HashMap<String, ItsmScheme>()
         scheme["content_table"] = itsmScheme
-        return ItsmContentDTO.builder().formData(emptyList()).schemes(scheme).build()
+        val itsmValue = ItsmValue.builder()
+            .scheme("content_table")
+            .lable(
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
+            )
+            .build()
+        return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
     }
 
-    fun buildGroupApplyItsmValue(formData: ApplyJoinGroupFormDataInfo): ItsmValue {
+    fun buildGroupApplyItsmValue(formData: ApplyJoinGroupFormDataInfo): Map<String, ItsmStyle> {
         val value = HashMap<String, ItsmStyle>()
         value["projectName"] = ItsmStyle.builder().value(formData.projectName).build()
         value["resourceTypeName"] = ItsmStyle.builder().value(formData.resourceTypeName).build()
@@ -200,11 +206,7 @@ class ItsmService @Autowired constructor(
             .value(formData.resourceRedirectUri).build()
         value["groupName"] = ItsmStyle.builder().label(formData.groupName)
             .value(formData.groupPermissionDetailRedirectUri).build()
-        value["validityPeriod"] = ItsmStyle.builder().value(formData.validityPeriod).build()
-        return ItsmValue.builder()
-            .scheme("content_table")
-            .value(listOf(value))
-            .build()
+        return value
     }
 
     companion object {
