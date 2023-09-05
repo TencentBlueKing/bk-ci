@@ -30,6 +30,8 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
+import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import io.swagger.annotations.Api
@@ -61,4 +63,18 @@ interface ServiceJobResource {
         @ApiParam(value = "执行脚本的信息", required = true)
         scriptExecuteInfo: ScriptExecuteInfoReq
     ): Result<ScriptExecuteResult>
+
+    @ApiOperation("文件分发的Job接口")
+    @POST
+    @Path("/{projectId}/file_distribute")
+    fun distributeFile(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "文件分发的信息", required = true)
+        fileDistributeInfo: FileDistributeInfoReq
+    ): Result<FileDistributeResult>
 }

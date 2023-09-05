@@ -30,12 +30,18 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
+import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 
 @RestResource
 class ServiceJobResourceImpl : ServiceJobResource {
     override fun executeScripts(userId: String, projectId: String, scriptExecuteInfo: ScriptExecuteInfoReq): Result<ScriptExecuteResult> {
+        TODO("Not yet implemented")
+    }
+
+    override fun distributeFile(userId: String, projectId: String, fileDistributeInfo: FileDistributeInfoReq): Result<FileDistributeResult> {
         TODO("Not yet implemented")
     }
 }
