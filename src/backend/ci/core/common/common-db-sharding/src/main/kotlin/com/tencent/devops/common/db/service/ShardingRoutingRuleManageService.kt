@@ -53,6 +53,7 @@ class ShardingRoutingRuleManageService @Autowired constructor(
      * @param actionType 操作类型
      * @return 布尔值
      */
+    @Suppress("SpreadOperator")
     fun handleShardingRoutingRuleLocalCache(
         routingName: String,
         routingRule: String? = null,
@@ -90,9 +91,18 @@ class ShardingRoutingRuleManageService @Autowired constructor(
 
             else -> {}
         }
-        // 将缓存操作完成的IP写入redis
         val serviceName = BkServiceUtil.findServiceName()
         val key = BkServiceUtil.getServiceRoutingRuleActionFinishKey(serviceName, routingName, actionType)
+        // 获取当前微服务的IP列表
+        val serviceHostKey = BkServiceUtil.getServiceHostKey(serviceName)
+        val serviceIps = redisOperation.getSetMembers(serviceHostKey)
+        val finishServiceIps = redisOperation.getSetMembers(key)?.toMutableSet()
+        // 移除redis中当前微服务的历史IP列表
+        serviceIps?.let { finishServiceIps?.removeAll(serviceIps) }
+        finishServiceIps?.let {
+            redisOperation.sremove(key, *finishServiceIps.toTypedArray())
+        }
+        // 将缓存操作完成的IP写入redis
         redisOperation.sadd(key, ip)
         return true
     }
