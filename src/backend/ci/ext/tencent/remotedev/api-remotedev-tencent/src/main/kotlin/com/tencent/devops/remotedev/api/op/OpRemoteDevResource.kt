@@ -355,6 +355,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "machineType", required = false)
         @QueryParam("machineType")
         machineType: String?,
+        @ApiParam(value = "ip", required = false)
+        @QueryParam("ip")
+        ip: String?,
         @ApiParam(value = "status", required = false)
         @QueryParam("status")
         status: Int?,
