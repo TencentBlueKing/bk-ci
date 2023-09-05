@@ -1,0 +1,29 @@
+package com.tencent.devops.environment.pojo.job
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("作业实例基本信息")
+data class JobInstanceInfo(
+    @ApiModelProperty(value = "作业实例名称", required = true)
+    val name: String,
+    @ApiModelProperty(
+        value = "作业状态码", notes = "1.未执行; 2.正在执行; 3.执行成功; 4.执行失败; 5.跳过; 6.忽略错误; " +
+        "7.等待用户; 8.手动结束; 9.状态异常; 10.步骤强制终止中; 11.步骤强制终止成功", required = true
+    )
+    val status: Int,
+    @ApiModelProperty(value = "作业创建时间", notes = "Unix时间戳，单位毫秒", required = true)
+    val creatTime: Long,
+    @ApiModelProperty(value = "开始执行时间", notes = "Unix时间戳，单位毫秒", required = true)
+    val startTime: Long,
+    @ApiModelProperty(value = "执行结束时间", notes = "Unix时间戳，单位毫秒", required = true)
+    val endTime: Long,
+    @ApiModelProperty(value = "总耗时", notes = "单位毫秒", required = true)
+    val totalTime: Int,
+    @ApiModelProperty(value = "资源范围类型", notes = "可选值: biz - 业务，biz_set - 业务集", required = true)
+    val scopeType: String,
+    @ApiModelProperty(value = "资源范围ID", notes = "与上面scopeType对应, 表示业务ID或者业务集ID", required = true)
+    val scopeId: String,
+    @ApiModelProperty(value = "作业实例ID", required = true)
+    val jobInstanceId: Long
+)

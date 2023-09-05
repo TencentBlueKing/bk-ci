@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.QueryStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 
@@ -42,6 +43,10 @@ class ServiceJobResourceImpl : ServiceJobResource {
     }
 
     override fun distributeFile(userId: String, projectId: String, fileDistributeInfo: FileDistributeInfoReq): Result<FileDistributeResult> {
+        TODO("Not yet implemented")
+    }
+
+    override fun queryStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryStatusResult> {
         TODO("Not yet implemented")
     }
 }

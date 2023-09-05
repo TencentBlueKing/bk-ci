@@ -32,12 +32,14 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.QueryStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -77,4 +79,18 @@ interface ServiceJobResource {
         @ApiParam(value = "文件分发的信息", required = true)
         fileDistributeInfo: FileDistributeInfoReq
     ): Result<FileDistributeResult>
+
+    @ApiOperation("查询任务状态的Job接口")
+    @GET
+    @Path("/{projectId}/query_status")
+    fun queryStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "作业实例ID", required = true)
+        jobInstanceId: Long
+    ): Result<QueryStatusResult>
 }
