@@ -411,7 +411,7 @@
                         ...output,
                         ...res,
                         artifactoryTypeTxt: repoTypeMap[output.artifactoryType] ?? '--',
-                        size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
+                        size: output.folder ? convertFileSize(this.getFolderSize(output), 'B') : res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
                         icon: !output.folder ? extForFile(res.name) : 'folder',
@@ -428,6 +428,10 @@
                         }
                     ])
                 }
+            },
+            getFolderSize (payload) {
+                if (!payload.folder) return '0'
+                return this.getValuesByKey(payload.properties, 'size')
             },
             getInclude (payload) {
                 if (!payload.folder) return '--'
