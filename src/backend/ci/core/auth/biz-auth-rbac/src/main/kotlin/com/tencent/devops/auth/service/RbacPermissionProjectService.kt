@@ -73,7 +73,7 @@ class RbacPermissionProjectService(
 
     override fun getProjectUsers(
         projectCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String> {
         return resourceGroupMemberService.getResourceGroupMembers(
             projectCode = projectCode,

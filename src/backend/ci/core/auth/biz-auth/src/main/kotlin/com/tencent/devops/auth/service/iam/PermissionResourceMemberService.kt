@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
 interface PermissionResourceMemberService {
@@ -7,7 +8,7 @@ interface PermissionResourceMemberService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String>
 
     fun getResourceGroupAndMembers(

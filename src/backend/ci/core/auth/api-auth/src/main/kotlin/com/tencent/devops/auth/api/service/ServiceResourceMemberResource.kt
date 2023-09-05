@@ -2,8 +2,8 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.auth.api.pojo.BkAuthResourceGroup
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -39,7 +39,7 @@ interface ServiceResourceMemberResource {
         resourceCode: String,
         @QueryParam("group")
         @ApiParam("资源用户组类型", required = false)
-        group: BkAuthResourceGroup? = null
+        group: BkAuthGroup? = null
     ): Result<List<String>>
 
     @GET

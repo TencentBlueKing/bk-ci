@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
 class SamplePermissionResourceMemberService : PermissionResourceMemberService {
@@ -8,7 +9,7 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String> {
         return emptyList()
     }

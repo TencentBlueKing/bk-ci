@@ -24,12 +24,12 @@ class RbacPermissionResourceMemberService constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        group: String?
+        group: BkAuthGroup?
     ): List<String> {
         logger.info("[RBAC-IAM] get resource group members:$projectCode|$resourceType|$resourceCode|$group")
         return when (group) {
             // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员
-            BkAuthGroup.CIADMIN.value, BkAuthGroup.CI_MANAGER.value -> emptyList()
+            BkAuthGroup.CIADMIN, BkAuthGroup.CI_MANAGER -> emptyList()
             // 获取特定资源下全部成员
             null -> {
                 getResourceGroupAndMembers(
@@ -45,7 +45,7 @@ class RbacPermissionResourceMemberService constructor(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    groupCode = group
+                    groupCode = group.value
                 ) ?: return emptyList()
                 val groupInfo = getResourceGroupAndMembers(
                     projectCode = projectCode,
