@@ -518,15 +518,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (ignore is ErrorCodeException) throw ignore
             logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
             throw ErrorCodeException(
-                // TODO #8161 增加错误码配置
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
-        }
-        val versionStatus = if (defaultBranch) {
-            VersionStatus.RELEASED
-        } else {
-
-            VersionStatus.BRANCH
         }
         val result = createPipeline(
             userId = userId,
@@ -534,7 +527,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = newModel.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
-            versionStatus = versionStatus
+            versionStatus = if (defaultBranch) {
+                VersionStatus.RELEASED
+            } else {
+                VersionStatus.BRANCH
+            }
         )
         if (!defaultBranch) {
             pipelineBranchVersionService.saveBranchVersion(
@@ -556,13 +553,51 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         defaultBranch: Boolean
     ): DeployPipelineResult {
-        // TODO 待补充
-        return DeployPipelineResult(
-            pipelineId = "p-001",
-            pipelineName = "yml-001-pipeline",
-            version = 1,
-            versionName = "1.0"
+        val newModel = try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$defaultBranch|yml=\n$yml")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            result.modelAndSetting!!
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
+        val result = editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = newModel.model,
+            channelCode = ChannelCode.BS,
+            yaml = yml,
+            versionStatus = if (defaultBranch) {
+                VersionStatus.RELEASED
+            } else {
+                VersionStatus.BRANCH
+            }
         )
+        if (!defaultBranch) {
+            pipelineBranchVersionService.saveBranchVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = result.pipelineId,
+                branchName = branchName,
+                version = result.version
+            )
+        }
+        return result
     }
 
     /**
