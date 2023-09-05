@@ -13,6 +13,6 @@ data class FileDistributeInfoReq(
     val targetEnv: EnvsetInfo,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
     val userAccount: String,
-    @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。", required = false)
+    @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。")
     private val distributeTimeout: Long = 7200
 )
