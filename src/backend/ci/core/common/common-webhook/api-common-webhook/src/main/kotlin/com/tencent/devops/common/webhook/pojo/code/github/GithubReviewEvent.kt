@@ -144,7 +144,7 @@ data class GithubReview(
     override val updatedAt: String?, // 2022-06-21T08:45:41Z
     val user: GithubUser,
     @ApiModelProperty("评审内容")
-    val body: String,
+    val body: String?,
     @JsonProperty("commit_id")
     val commitId: String,
     @ApiModelProperty("提交时间")
