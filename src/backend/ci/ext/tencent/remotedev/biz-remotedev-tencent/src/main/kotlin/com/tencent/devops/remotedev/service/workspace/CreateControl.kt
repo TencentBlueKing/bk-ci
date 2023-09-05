@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -61,7 +62,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -90,9 +90,9 @@ class CreateControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val bkTicketServie: BkTicketService,
     private val whiteListService: WhiteListService,
@@ -252,26 +252,24 @@ class CreateControl @Autowired constructor(
             )
         if (event.status) {
             val pathWithNamespace = kotlin.runCatching {
-                GitUtils.getDomainAndRepoName(ws.url).second
+                GitUtils.getDomainAndRepoName(ws.repositoryUrl!!).second
             }.getOrNull()
             val opActions = kotlin.runCatching {
                 arrayOf(
                     WorkspaceAction.CREATE to getOpHistoryCreate(
-                        WorkspaceSystemType.valueOf(ws.systemType),
+                        ws.workspaceSystemType,
                         pathWithNamespace ?: "",
                         ws.branch ?: ""
                     ),
                     WorkspaceAction.START to workspaceCommon.getOpHistory(OpHistoryCopyWriting.FIRST_START)
                 )
             }.getOrElse { emptyArray() }
-            val ownerType = WorkspaceOwnerType.valueOf(ws.ownerType)
-            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = systemType.afterCreateStatus(ownerType),
+                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
                     hostName = event.environmentHost
                 )
                 remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
@@ -294,21 +292,25 @@ class CreateControl @Autowired constructor(
 
             workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
 
-            if (systemType.needHeartbeat()) {
+            if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
             }
 
-            if (systemType.needUpdateBkTicket()) {
+            if (ws.workspaceSystemType.needUpdateBkTicket()) {
                 kotlin.runCatching {
                     bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
                 }
             }
 
-            if (systemType.needSafeInitialization()) {
+            if (ws.workspaceSystemType.needSafeInitialization()) {
                 deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
 
-            if (!systemType.afterCreateNeedWs(ownerType)) {
+            if (ws.workspaceSystemType.checkWindows()) {
+                workspaceWindowsDao.updateWindowsResourceId(dslContext, event.workspaceName, event.resourceId)
+            }
+
+            if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return
             }
@@ -329,9 +331,9 @@ class CreateControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = event.status,
             action = WorkspaceAction.START,
-            systemType = WorkspaceSystemType.valueOf(ws.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType),
-            ownerType = WorkspaceOwnerType.valueOf(ws.ownerType)
+            systemType = ws.workspaceSystemType,
+            workspaceMountType = ws.workspaceMountType,
+            ownerType = ws.ownerType
         )
     }
 
@@ -411,7 +413,7 @@ class CreateControl @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -495,7 +497,7 @@ class CreateControl @Autowired constructor(
         }
 
         windowsGpuCheck(workspaceCreate, userId)
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
