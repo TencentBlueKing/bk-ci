@@ -533,7 +533,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = newModel.model,
             channelCode = ChannelCode.BS,
-            yaml = newYaml,
+            yaml = yml,
             versionStatus = versionStatus
         )
         if (!defaultBranch) {
