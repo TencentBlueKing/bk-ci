@@ -36,10 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class StreamPermissionProjectServiceImpl @Autowired constructor(
     private val streamPermissionService: StreamPermissionServiceImpl
 ) : PermissionProjectService {
-    override fun getProjectUsers(
-        projectCode: String,
-        group: BkAuthGroup?
-    ): List<String> {
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }
