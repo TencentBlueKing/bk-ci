@@ -37,7 +37,7 @@ class BkPermissionProjectService @Autowired constructor(
     groupService = groupService,
     iamCacheService = iamCacheService
 ) {
-    override fun getUserByExt(group: String, projectCode: String): List<String> {
+    override fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String> {
         return emptyList()
     }
 
