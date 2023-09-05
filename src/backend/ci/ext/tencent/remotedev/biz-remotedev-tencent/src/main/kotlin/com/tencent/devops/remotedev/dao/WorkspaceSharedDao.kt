@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import org.jooq.DSLContext
@@ -139,6 +140,30 @@ class WorkspaceSharedDao {
             return dslContext.select(WORKSPACE_NAME, ASSIGN_TYPE).from(this).where(SHARED_USER.eq(userId))
                 .and(WORKSPACE_NAME.`in`(workspaceNames)).fetch()
                 .associateBy({ it.value1() }, { WorkspaceShared.AssignType.valueOf(it.value2()) })
+        }
+    }
+
+    fun fetchSharedWorkspaceById(
+        id: Long,
+        dslContext: DSLContext
+    ): TWorkspaceSharedRecord? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .limit(1)
+                .fetchAny()
+        }
+    }
+    fun fetchSharedWorkspaceByUser(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUser: String
+    ): TWorkspaceSharedRecord? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(sharedUser))
+                .fetchAny()
         }
     }
 
