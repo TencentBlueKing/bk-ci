@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.image.constants
+package com.tencent.devops.misc.pojo.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -45,16 +45,7 @@ package com.tencent.devops.image.constants
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object ImageMessageCode {
-    const val USER_NOT_UPLOAD_IMAGE_PERMISSION = "2107001" // 用户({0})没有上传镜像权限
-    const val IMAGE_FILE_VALID_IMAGE_COUNT_ZERO = "2107002" // 镜像文件有效镜像个数为零
-    const val IMAGE_COPYING_IN_PROGRESS = "2107003" // 镜像正在拷贝中
-    const val PULL_IMAGE_SUCCESS = "2107004" // 拉取镜像成功，镜像名称：
-    const val MIRROR_FILE_SAVE_FAILED = "2107005" // 镜像文件保存失败
-    const val PARSE_MIRROR_FILE_FAILED = "2107006" // 解析镜像文件失败
-    const val FILE_NOT_FOUND_CHECK_PATH = "2107007" // 未找到 {0} 文件，请检查路径是否正确:
-    const val BK_SOURCE_IMAGE = "bkSourceImage" // 源镜像：{0}
-    const val BK_TARGET_IMAGE = "bkTargetImage" // 目标镜像：{0}:{1}
-    const val BK_SUCCESSFUL_REGISTRATION_IMAGE = "bkSuccessfulRegistrationImage" // 注册镜像成功
-    const val BK_FAILED_REGISTER_IMAGE = "bkFailedRegisterImage" // 注册镜像失败，错误信息：
+object MiscMessageCode {
+    const val ERROR_MIGRATING_PROJECT_NUM_TOO_MANY = "2133001" // 同时迁移的项目数量已超过{0}个，请稍后再试
+    const val ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL = "2133002" // 更新微服务[{0}]服务器分片规则本地缓存失败
 }

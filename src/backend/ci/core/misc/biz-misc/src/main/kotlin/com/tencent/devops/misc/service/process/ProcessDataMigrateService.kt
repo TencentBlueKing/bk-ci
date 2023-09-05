@@ -27,7 +27,7 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -47,6 +47,7 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
+import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.service.project.DataSourceService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
@@ -63,6 +64,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
 import javax.annotation.Resource
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList")
@@ -102,6 +104,16 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.maxProjectCount:#{5}}")
     private val migrationMaxProjectCount: Int = DEFAULT_MIGRATION_MAX_PROJECT_COUNT
 
+    @Value("\${sharding.migration.processDbMicroServices:}")
+    private val migrationProcessDbMicroServices = "process,engine,misc,lambda"
+
+    @PostConstruct
+    fun init() {
+        // 启动的时候重置redis中存储的同时迁移的项目数量，防止因为服务异常停了造成程序执行出错
+        redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "0", expired = false)
+    }
+
+
     fun migrateProjectData(
         userId: String,
         projectId: String,
@@ -112,8 +124,8 @@ class ProcessDataMigrateService @Autowired constructor(
         val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
         if (migrationProjectCount >= migrationMaxProjectCount) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
-                params = arrayOf(RETRY_NUM.toString())
+                errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
+                params = arrayOf(migrationMaxProjectCount.toString())
             )
         }
         // 判断项目是否超过规定的重试次数
@@ -131,9 +143,15 @@ class ProcessDataMigrateService @Autowired constructor(
         confirmAllServiceCacheIsUpdated(projectId)
         // 为项目分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
+        // 把同时迁移的项目数量存入redis中
+        if (migrationProjectCount < 1) {
+            redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "1", expired = false)
+        } else {
+            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, 1)
+        }
         // 把项目数据迁移次数存入redis中
-        if (projectExecuteCount == 0) {
-            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1")
+        if (projectExecuteCount < 1) {
+            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1", TimeUnit.HOURS.toSeconds(migrationTimeout))
         } else {
             redisOperation.increment(migrateProjectExecuteCountKey, 1)
         }
@@ -264,6 +282,9 @@ class ProcessDataMigrateService @Autowired constructor(
                             " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
                     )
                 }
+            } finally {
+                // 更新同时迁移的项目数量
+                redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, -1)
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
@@ -415,7 +436,7 @@ class ProcessDataMigrateService @Autowired constructor(
     }
 
     private fun confirmAllServiceCacheIsUpdated(projectId: String) {
-        val serviceNames = listOf("process", "engine", "misc", "lambda")
+        val serviceNames = migrationProcessDbMicroServices.split(",")
         serviceNames.forEach { serviceName ->
             logger.info("service[$serviceName] confirmCacheIsUpdated start")
             val cacheKey = ShardingUtil.getShardingRoutingRuleKey(
@@ -429,8 +450,8 @@ class ProcessDataMigrateService @Autowired constructor(
             if (!cacheUpdateFinishFlag) {
                 // 服务器缓存更新失败，抛出错误提示
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.SYSTEM_ERROR,
-                    defaultMessage = "update service($serviceName) rule cache fail"
+                    errorCode = MiscMessageCode.ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL,
+                    params = arrayOf(serviceName)
                 )
             }
         }
