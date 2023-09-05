@@ -13,10 +13,9 @@ data class StepIpResult(
     )
     val status: Int,
     @ApiModelProperty(
-        value = "用户通过job_success/job_fail函数模板自定义输出的结果", notes = "仅脚本任务存在该参数",
-        allowEmptyValue = true, required = false
+        value = "用户通过job_success/job_fail函数模板自定义输出的结果", notes = "仅脚本任务存在该参数", allowEmptyValue = true
     )
-    val tag: String = "",
+    val tag: String? = null,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
     val exitCode: Int,
     @ApiModelProperty(
