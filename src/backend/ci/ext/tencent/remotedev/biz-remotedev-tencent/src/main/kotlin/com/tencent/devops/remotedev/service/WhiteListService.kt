@@ -37,6 +37,24 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun checkInWhiteList(user: String): Boolean {
+        return cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) ?: false
+    }
+
+    fun removeWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to remove whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        if (whiteListUser.isEmpty()) return false
+        val whiteListUserArray = whiteListUser.split(";")
+        for (user in whiteListUserArray) {
+            if (cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) == true) {
+                logger.info("whiteListUser($user) in the whiteList")
+                redisOperation.removeSetMember(RedisKeys.REDIS_WHITE_LIST_KEY, user, false)
+            }
+        }
+        return true
+    }
+
     fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
         logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
@@ -51,6 +69,26 @@ class WhiteListService @Autowired constructor(
         }
 
         return true
+    }
+
+    fun removeGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to remove GPU whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        whiteListUser.apply {
+            val whiteListUserArray = this.split(";")
+            for (user in whiteListUserArray) {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user).run {
+                    logger.info("whiteListUser($user) in the GPU whiteList")
+                    redisOperation.hdelete(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, isDistinguishCluster = false)
+                }
+            }
+        }
+
+        return true
+    }
+
+    fun checkInGPUWhiteList(user: String): Boolean {
+        return cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?.isNotEmpty() ?: false
     }
 
     /* 有关数量的限制:

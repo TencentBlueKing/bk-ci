@@ -75,10 +75,10 @@ class PermissionService @Autowired constructor(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL.name) {
-                        return listOf(ws.creator)
+                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                        return listOf(ws.createUserId)
                     } else {
-                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.name)
+                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
                             .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
                     }
                 }
