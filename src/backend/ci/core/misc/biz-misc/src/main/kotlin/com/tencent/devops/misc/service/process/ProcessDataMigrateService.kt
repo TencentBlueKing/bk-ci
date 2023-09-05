@@ -27,7 +27,7 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.bkrepo.common.api.message.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
