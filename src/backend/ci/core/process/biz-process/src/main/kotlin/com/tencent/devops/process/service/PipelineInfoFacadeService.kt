@@ -499,7 +499,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         defaultBranch: Boolean
     ): DeployPipelineResult {
 
-        val (newModel, newYaml) = try {
+        val newModel = try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -507,16 +507,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 actionType = TransferActionType.FULL_YAML2MODEL,
                 data = TransferBody(oldYaml = yml)
             )
-            if (result.newYaml == null || result.modelAndSetting == null) {
-                logger.warn(
-                    "TRANSFER_YAML|$projectId|$userId|$defaultBranch|newYaml=\n${result.newYaml}\n" +
-                        "modelAndSetting=${result.modelAndSetting}"
-                )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$defaultBranch|yml=\n$yml")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
             }
-            Pair(result.modelAndSetting!!, result.newYaml!!)
+            result.modelAndSetting!!
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
             logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$defaultBranch|yml=\n$yml", ignore)
