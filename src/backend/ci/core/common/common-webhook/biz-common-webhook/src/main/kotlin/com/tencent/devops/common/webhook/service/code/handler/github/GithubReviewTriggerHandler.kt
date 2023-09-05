@@ -87,9 +87,9 @@ class GithubReviewTriggerHandler : CodeWebhookTriggerHandler<GithubReviewEvent> 
     }
 
     override fun preMatch(event: GithubReviewEvent): ScmWebhookMatcher.MatchResult {
-        // Review事件仅提交操作才触发，且仅提交Review评论不触发
+        // Review事件仅提交操作才触发，评审通过、拒绝、要求修改
         val result = event.action == "submitted" &&
-            GithubReviewState.valueOf(event.review.state) != GithubReviewState.COMMENTED
+            event.convertState().isNotBlank()
         return ScmWebhookMatcher.MatchResult(result)
     }
 
