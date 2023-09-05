@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.runner.BkServiceInstanceApplicationRunner
 import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -105,8 +106,14 @@ class WebAutoConfiguration {
     fun bkServiceInstanceApplicationRunner(
         compositeDiscoveryClient: CompositeDiscoveryClient,
         bkTag: BkTag,
-        redisOperation: RedisOperation
-    ) = BkServiceInstanceApplicationRunner(compositeDiscoveryClient, bkTag, redisOperation)
+        redisOperation: RedisOperation,
+        rabbitAdmin: RabbitAdmin
+    ) = BkServiceInstanceApplicationRunner(
+        compositeDiscoveryClient = compositeDiscoveryClient,
+        bkTag = bkTag,
+        redisOperation = redisOperation,
+        rabbitAdmin = rabbitAdmin
+    )
 
     @Bean
     @ConditionalOnProperty(

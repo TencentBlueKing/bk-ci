@@ -304,5 +304,4 @@ object MQ {
 
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
-    const val QUEUE_SHARDING_ROUTING_RULE_EVENT = "q.sharding.routing.rule.exchange.{0}_queue"
 }

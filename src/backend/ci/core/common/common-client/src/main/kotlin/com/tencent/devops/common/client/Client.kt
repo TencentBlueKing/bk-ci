@@ -189,7 +189,7 @@ class Client @Autowired constructor(
             .retryer(WithoutRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = BkServiceUtil.findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -225,7 +225,7 @@ class Client @Autowired constructor(
      */
     fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
             .client(feignClient)
@@ -240,7 +240,7 @@ class Client @Autowired constructor(
     // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScm(clz: KClass<T>): T {
         // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
-        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        val serviceName = BkServiceUtil.findServiceName(clz = clz).removeSuffix(serviceSuffix ?: "")
         // 获取为feign定义的拦截器
         val requestInterceptor = SpringContextUtil.getBeansWithClass(RequestInterceptor::class.java)
         return Feign.builder()
@@ -273,7 +273,7 @@ class Client @Autowired constructor(
             .retryer(HttpGetRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    serviceName = BkServiceUtil.findServiceName(clz),
+                    serviceName = BkServiceUtil.findServiceName(clz = clz),
                     type = clz.java,
                     compositeDiscoveryClient = compositeDiscoveryClient!!,
                     bkTag = bkTag
@@ -283,7 +283,7 @@ class Client @Autowired constructor(
 
     fun getServiceUrl(clz: KClass<*>): String {
         return MicroServiceTarget(
-            serviceName = BkServiceUtil.findServiceName(clz),
+            serviceName = BkServiceUtil.findServiceName(clz = clz),
             type = clz.java,
             compositeDiscoveryClient = compositeDiscoveryClient!!,
             bkTag = bkTag
