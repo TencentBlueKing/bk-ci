@@ -30,16 +30,12 @@ package com.tencent.devops.common.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.constant.CommonMessageCode.SERVICE_COULD_NOT_BE_ANALYZED
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.BkServiceUtil
-import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Contract
 import feign.Feign
@@ -55,7 +51,6 @@ import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -66,7 +61,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.context.annotation.DependsOn
-import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
 import kotlin.reflect.KClass
 
@@ -95,8 +89,6 @@ class Client @Autowired constructor(
 
     private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
         .maximumSize(CACHE_SIZE).build { key -> getImpl(key) }
-
-    private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
     private val trustAllCerts: Array<TrustManager> = arrayOf(object : X509TrustManager {
         @Throws(CertificateException::class)
@@ -143,9 +135,6 @@ class Client @Autowired constructor(
     private val springContract = SpringContract()
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
-
-    @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
-    private val assemblyServiceName: String? = null
 
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null

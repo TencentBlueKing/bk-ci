@@ -113,7 +113,6 @@ class ProcessDataMigrateService @Autowired constructor(
         redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "0", expired = false)
     }
 
-
     fun migrateProjectData(
         userId: String,
         projectId: String,
@@ -527,7 +526,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
-            if(auditResourceRecords.isNotEmpty()) {
+            if (auditResourceRecords.isNotEmpty()) {
                 processDataMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
             }
             offset += LONG_PAGE_SIZE
@@ -543,7 +542,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
-            if(pipelineGroupRecords.isNotEmpty()) {
+            if (pipelineGroupRecords.isNotEmpty()) {
                 processDataMigrateDao.migratePipelineGroupData(migratingShardingDslContext, pipelineGroupRecords)
             }
             offset += LONG_PAGE_SIZE
@@ -555,7 +554,7 @@ class ProcessDataMigrateService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId
         )
-        if(jobMutexGroupRecords.isNotEmpty()) {
+        if (jobMutexGroupRecords.isNotEmpty()) {
             processDataMigrateDao.migratePipelineJobMutexGroupData(migratingShardingDslContext, jobMutexGroupRecords)
         }
     }

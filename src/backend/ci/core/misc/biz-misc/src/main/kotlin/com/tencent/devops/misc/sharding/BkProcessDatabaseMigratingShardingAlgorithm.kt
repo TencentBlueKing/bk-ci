@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.db.pojo.DEFAULT_MIGRATING_DATA_SOURCE_NAME
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue

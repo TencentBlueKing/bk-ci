@@ -410,7 +410,7 @@ class MigratePipelineDataTask constructor(
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
-            if(pipelineFavorRecords.isNotEmpty()) {
+            if (pipelineFavorRecords.isNotEmpty()) {
                 processDataMigrateDao.migratePipelineFavorData(migratingShardingDslContext, pipelineFavorRecords)
             }
             offset += LONG_PAGE_SIZE
