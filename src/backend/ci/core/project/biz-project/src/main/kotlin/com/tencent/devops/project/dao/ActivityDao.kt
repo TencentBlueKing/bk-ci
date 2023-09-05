@@ -81,6 +81,7 @@ class ActivityDao {
         with(TActivity.T_ACTIVITY) {
             return dslContext.selectFrom(this)
                 .where(TYPE.eq(type.name))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }

@@ -984,14 +984,6 @@ class PipelineRuntimeService @Autowired constructor(
                 containerBuildRecords = containerBuildRecords,
                 taskBuildRecords = taskBuildRecords
             )
-            context.watcher.start("updateQueueCount")
-            // 排队计数+1
-            pipelineBuildSummaryDao.updateQueueCount(
-                dslContext = transactionContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                queueIncrement = 1
-            )
             context.watcher.stop()
         }
 
@@ -1275,6 +1267,13 @@ class PipelineRuntimeService @Autowired constructor(
         ?.contains(userId) == true
 
     private fun StartBuildContext.sendBuildStartEvent() {
+        // #8275 在发送运行或排队的开始事件时，进行排队计数+1
+        pipelineBuildSummaryDao.updateQueueCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            queueIncrement = 1
+        )
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "startBuild",
