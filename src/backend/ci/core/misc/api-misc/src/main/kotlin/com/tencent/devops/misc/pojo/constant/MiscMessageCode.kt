@@ -37,7 +37,7 @@ package com.tencent.devops.misc.pojo.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev 33：misc-杂项）
+ *    32: remotedev 35：misc-杂项）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -46,6 +46,6 @@ package com.tencent.devops.misc.pojo.constant
  *
  */
 object MiscMessageCode {
-    const val ERROR_MIGRATING_PROJECT_NUM_TOO_MANY = "2133001" // 同时迁移的项目数量已超过{0}个，请稍后再试
-    const val ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL = "2133002" // 更新微服务[{0}]服务器分片规则本地缓存失败
+    const val ERROR_MIGRATING_PROJECT_NUM_TOO_MANY = "2135001" // 同时迁移的项目数量已超过{0}个，请稍后再试
+    const val ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL = "2135002" // 更新微服务[{0}]服务器分片规则本地缓存失败
 }
