@@ -199,6 +199,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         zoneId: String?,
         machineType: String?,
+        ip: String?,
         status: Int?,
         page: Int?,
         pageSize: Int?
@@ -209,6 +210,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                     (machineType.isNullOrEmpty() || it.machineType == machineType) &&
+                (ip.isNullOrEmpty() || it.cgsIp == ip) &&
                     (status == null || it.status == status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
