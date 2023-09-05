@@ -106,13 +106,13 @@ data class GithubPullRequest(
     @JsonProperty("locked")
     val locked: Boolean, // false
     @JsonProperty("maintainer_can_modify")
-    val maintainerCanModify: Boolean, // false
+    val maintainerCanModify: Boolean? = false, // false
     @JsonProperty("merge_commit_sha")
     val mergeCommitSha: String?, // null
     @JsonProperty("mergeable")
     val mergeable: String?, // null
     @JsonProperty("mergeable_state")
-    val mergeableState: String, // unknown
+    val mergeableState: String?, // unknown
     @JsonProperty("merged")
     val merged: Boolean, // false
     @JsonProperty("merged_at")
