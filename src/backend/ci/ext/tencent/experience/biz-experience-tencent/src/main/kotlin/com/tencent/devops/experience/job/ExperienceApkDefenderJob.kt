@@ -39,8 +39,12 @@ class ExperienceApkDefenderJob @Autowired constructor(
                         redisOperation.sremove(apkDefendersKey, t)
                     }
                 }
-                if (redisOperation.hasKey(apkDefendersKey)) {
-                    logger.info("some tasks are running , experienceId: $experienceId")
+                if (redisOperation.getExpire(apkDefendersKey) in 0..100) {
+                    val expireTasks = redisOperation.getSetMembers(apkDefendersKey) ?: emptySet()
+                    logger.warn("tasks run for too long , they should be shut down. e: $e , tasks: $expireTasks")
+                    redisOperation.delete(apkDefendersKey)
+                } else if (redisOperation.hasKey(apkDefendersKey)) {
+                    logger.info("some tasks are running, check it next turn , experienceId: $experienceId")
                     redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, e)
                 } else {
                     logger.info("all tasks have done , experienceId: $experienceId")
