@@ -67,7 +67,7 @@ interface UserPipelineTriggerEventResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("代码库类型,为空则返回所有事件类型", required = true)
+        @QueryParam("代码库类型,为空则返回所有事件类型")
         scmType: ScmType?
     ): Result<List<IdValue>>
 
