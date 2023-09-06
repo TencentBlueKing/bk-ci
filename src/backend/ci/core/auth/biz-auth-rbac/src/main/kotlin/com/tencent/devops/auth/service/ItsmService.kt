@@ -204,6 +204,7 @@ class ItsmService @Autowired constructor(
             .value(formData.resourceRedirectUri).build()
         value["groupName"] = ItsmStyle.builder().label(formData.groupName)
             .value(formData.groupPermissionDetailRedirectUri).build()
+        value["validityPeriod"] = ItsmStyle.builder().value(formData.validityPeriod).build()
         return value
     }
 
