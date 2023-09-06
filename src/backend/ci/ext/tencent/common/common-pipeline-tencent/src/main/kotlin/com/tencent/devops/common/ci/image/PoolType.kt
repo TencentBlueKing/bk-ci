@@ -44,9 +44,9 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.yaml.v2.models.job.Container2
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.process.yaml.v2.models.job.RunsOn
+import com.tencent.devops.process.yaml.v3.models.job.Container2
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

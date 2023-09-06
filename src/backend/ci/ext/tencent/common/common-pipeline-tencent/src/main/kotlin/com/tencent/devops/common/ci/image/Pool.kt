@@ -30,7 +30,7 @@ package com.tencent.devops.common.ci.image
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.process.yaml.v2.models.image.PoolImage
+import com.tencent.devops.process.yaml.v3.models.image.PoolImage
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

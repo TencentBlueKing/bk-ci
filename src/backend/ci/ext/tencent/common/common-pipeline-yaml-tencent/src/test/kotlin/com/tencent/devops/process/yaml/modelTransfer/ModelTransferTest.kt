@@ -48,11 +48,11 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
-import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
-import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
+import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -74,17 +74,37 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     private val client: Client = mockk()
     private val creator: TransferCreator = TransferCreatorImpl()
     private val transferCache: TransferCacheService = mockk()
-    private val triggerTransfer: TriggerTransfer = TriggerTransfer(client, creator, transferCache)
-    private val dispatchTransfer: DispatchTransfer = TXDispatchTransfer(client, objectMapper, creator, transferCache)
+    private val triggerTransfer: TriggerTransfer = TriggerTransfer(
+        client = client, creator = creator, transferCache = transferCache
+    )
+    private val dispatchTransfer: DispatchTransfer = TXDispatchTransfer(
+        client = client, objectMapper = objectMapper, inner = creator, transferCache = transferCache
+    )
     private val modelContainer: ContainerTransfer = ContainerTransfer(
-        client, objectMapper, transferCache, dispatchTransfer
+        client = client,
+        objectMapper = objectMapper,
+        transferCache = transferCache,
+        dispatchTransfer = dispatchTransfer
     )
+    private val variableTransfer: VariableTransfer = VariableTransfer()
 
-    private val elementTransfer: ElementTransfer = ElementTransfer(client, creator, transferCache, triggerTransfer)
-    private val stageTransfer: StageTransfer = StageTransfer(
-        client, objectMapper, modelContainer, elementTransfer
+    private val elementTransfer: ElementTransfer = ElementTransfer(
+        client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer
     )
-    private val modelTransfer: ModelTransfer = ModelTransfer(client, stageTransfer, elementTransfer, transferCache)
+    private val stageTransfer: StageTransfer = StageTransfer(
+        client = client,
+        objectMapper = objectMapper,
+        containerTransfer = modelContainer,
+        elementTransfer = elementTransfer,
+        variableTransfer = variableTransfer
+    )
+    private val modelTransfer: ModelTransfer = ModelTransfer(
+        client = client,
+        modelStage = stageTransfer,
+        elementTransfer = elementTransfer,
+        variableTransfer = variableTransfer,
+        transferCache = transferCache
+    )
     private val pipelineInfo = PipelineInfo(
         projectId = "",
         pipelineId = "",
@@ -120,16 +140,24 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             listOf(
                 BkAuthGroupAndUserList(
-                    displayName = "管理员", roleId = 1, roleName = "manager", userIdList = emptyList(), type = ""
+                    displayName = "管理员",
+                    roleId = 1,
+                    roleName = "manager",
+                    userIdList = emptyList(),
+                    type = ""
                 ),
                 BkAuthGroupAndUserList(
-                    displayName = "开发人员", roleId = 2, roleName = "developer", userIdList = emptyList(), type = ""
+                    displayName = "开发人员",
+                    roleId = 2,
+                    roleName = "developer",
+                    userIdList = emptyList(),
+                    type = ""
                 )
             )
         )
 
         every {
-            transferCache.getPipelineLabel(any())
+            transferCache.getPipelineLabel(any(), any())
         }.returns(
             listOf(
                 PipelineGroup(
@@ -178,6 +206,12 @@ internal class ModelTransferTest : BkCiAbstractTest() {
                 gitProjectId = 0
             )
         )
+
+        every {
+            transferCache.getPipelineRemoteToken(any(), any(), any())
+        }.returns(
+            "PipelineRemoteToken"
+        )
         ReflectionTestUtils.setField(creator, "marketRunTaskData", true)
         ReflectionTestUtils.setField(creator, "runPlugInAtomCodeData", "run")
         ReflectionTestUtils.setField(creator, "runPlugInVersionData", "1.*")
@@ -199,7 +233,10 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         watcher.start("step_1|FULL_MODEL2YAML V3 start")
         val yml = modelTransfer.model2yaml(
             ModelTransferInput(
-                modelAndSetting.model, modelAndSetting.setting, YamlVersion.Version.V3_0
+                "test",
+                modelAndSetting.model,
+                modelAndSetting.setting,
+                YamlVersion.Version.V3_0
             )
         )
         val newYaml = TransferMapper.toYaml(yml)
@@ -207,7 +244,10 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         watcher.start("step_2|FULL_MODEL2YAML V2 start")
         val ymlV2 = modelTransfer.model2yaml(
             ModelTransferInput(
-                modelAndSetting.model, modelAndSetting.setting, YamlVersion.Version.V2_0
+                "test",
+                modelAndSetting.model,
+                modelAndSetting.setting,
+                YamlVersion.Version.V2_0
             )
         )
         val newYamlV2 = TransferMapper.toYaml(ymlV2)
@@ -247,13 +287,16 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }
         watcher.start("yaml2Model")
         val input = YamlTransferInput(
-            "testUser", "testProject", pipelineInfo, pYml
+            "testUser",
+            "testProject",
+            pipelineInfo,
+            pYml
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
         watcher.start("last")
         val newModel = JsonUtil.toJson(PipelineModelAndSetting(model, setting))
-        Assertions.assertEquals(newModel, modelFile)
+        Assertions.assertEquals(newModel, JsonUtil.toJson(JsonUtil.to(modelFile)))
         watcher.stop()
         println(watcher.toString())
     }
@@ -271,12 +314,15 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }
         watcher.start("yaml2Model")
         val input = YamlTransferInput(
-            "a", "a", pipelineInfo, pYml
+            "a",
+            "a",
+            pipelineInfo,
+            pYml
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
         watcher.start("model2yaml")
-        val ymls = modelTransfer.model2yaml(ModelTransferInput(model, setting, YamlVersion.Version.V2_0))
+        val ymls = modelTransfer.model2yaml(ModelTransferInput("test", model, setting, YamlVersion.Version.V2_0))
         watcher.start("step_2|mergeYaml")
         val newYaml = TransferMapper.toYaml(ymls)
         watcher.stop()
@@ -309,12 +355,15 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }
         watcher.start("yaml2Model")
         val input = YamlTransferInput(
-            "a", "a", pipelineInfo, pYml
+            "a",
+            "a",
+            pipelineInfo,
+            pYml
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
         watcher.start("model2yaml")
-        val ymls = modelTransfer.model2yaml(ModelTransferInput(model, setting, YamlVersion.Version.V3_0))
+        val ymls = modelTransfer.model2yaml(ModelTransferInput("test", model, setting, YamlVersion.Version.V3_0))
         watcher.start("step_2|mergeYaml")
         val newYaml = TransferMapper.toYaml(ymls)
         watcher.stop()
@@ -330,6 +379,6 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     private fun testReadResourceFile(resourceName: String): String {
         val inputStream = javaClass.classLoader.getResourceAsStream(resourceName) ?: return ""
         val reader = BufferedReader(InputStreamReader(inputStream))
-        return reader.readText()
+        return reader.readText().replace("\r\n", "\n")
     }
 }

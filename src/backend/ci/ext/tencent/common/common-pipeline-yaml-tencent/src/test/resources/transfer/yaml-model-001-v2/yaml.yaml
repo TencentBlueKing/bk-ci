@@ -25,24 +25,64 @@ variables:
     value: value
   文本框:
     value: 文本框
+    props:
+      type: vuex-textarea
   布尔值:
     value: "true"
+    props:
+      type: boolean
   单选框:
     value: 1
+    props:
+      type: selector
+      options:
+        - id: 1
+          label: 1
+        - id: 2
+          label: 2
+        - id: 3
+          label: 3
   复选框:
     value: "1,2"
+    props:
+      type: checkbox
+      options:
+        - id: 1
+          label: 1
+        - id: 2
+          label: 2
+        - id: 3
+          label: 3
   代码库:
     value: lockiechen/obb-demo
+    props:
+      type: code_lib
+      scmType: git
   git分支或tag:
     value: ""
+    props:
+      type: git_ref
+      repoHashId: jRME
   构建资源:
     value: ""
+    props:
+      type: container_type
+      containerType:
+        buildType: DOCKER
+        os: LINUX
   版本仓库过滤器:
     value: ""
+    props:
+      type: artifactory
+      glob: '*'
   子流水线:
     value: test123
+    props:
+      type: sub_pipeline
   文件:
     value: ""
+    props:
+      type: custom_file
 stages:
 - name: win
   label:

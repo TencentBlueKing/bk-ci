@@ -16,33 +16,82 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   schedules:
-    enable: false
-    cron: 0 0 0 ? * 3
+    cron: "0 0 1 ? * 3,4,5"
   manual: enabled
-  remote: disabled
+  remote: enabled
 variables:
   字符串:
     value: value
+    props:
+      type: vuex-input
+      description: 描述描述描述描述描述
   文本框:
     value: 文本框
+    props:
+      type: vuex-textarea
+      description: 描述描述描述描述描述
   布尔值:
     value: "true"
+    props:
+      type: boolean
   单选框:
     value: 1
+    props:
+      type: selector
+      options:
+      - id: 1
+        label: 1
+      - id: 2
+        label: 2
+      - id: 3
+        label: 3
+      description: 描述描述描述描述
   复选框:
     value: "1,2"
+    props:
+      type: checkbox
+      options:
+      - id: 1
+        label: 1
+      - id: 2
+        label: 2
+      - id: 3
+        label: 3
   代码库:
     value: lockiechen/obb-demo
+    props:
+      type: code_lib
+      scmType: git
   git分支或tag:
     value: ""
+    props:
+      type: git_ref
+      repoHashId: jRME
   构建资源:
-    value: ""
+    value: tlinux2.2
+    props:
+      type: container_type
+      description: 描述描述描述描述描述
+      containerType:
+        buildType: DOCKER
+        os: LINUX
   版本仓库过滤器:
     value: ""
+    props:
+      type: artifactory
+      description: 666
+      glob: '*'
+      properties:
+        key1asd: asdasd
+        key2: qwe
   子流水线:
     value: test123
+    props:
+      type: sub_pipeline
   文件:
-    value: ""
+    value: 123
+    props:
+      type: custom_file
 stages:
 - name: win
   label:
@@ -244,10 +293,10 @@ finally:
         image: tlinux3_ci:2.*
         imageType: BKSTORE
     steps:
-    - checkout: https://git.code.oa.com/XXX/XXX.git
+    - checkout: self
       name: Checkout
       with:
-        repositoryType: ID
+        repositoryType: URL
         repositoryHashId: 6DOdE
         repositoryName: ""
         repositoryUrl: ""
@@ -307,7 +356,7 @@ finally:
         goPath: ""
         bkcheckDebug: false
         bkcheckCustomMacros: []
-        bk_atom_del_hook_url: ""
+        bk_atom_del_hook_url: http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D
         bk_atom_del_hook_url_method: DELETE
         scriptType: SHELL
         script: |-
