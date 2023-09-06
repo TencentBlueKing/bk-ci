@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
 import com.tencent.devops.common.db.pojo.MIGRATING_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -202,54 +203,17 @@ class ProcessDataMigrateService @Autowired constructor(
                 // 执行迁移完成后的逻辑
                 doAfterMigrationBus(userId, projectId, routingRuleMap)
             } catch (ignored: Throwable) {
-                logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=${ignored.message}", ignored)
-                // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
-                val projectCurrentExecuteCount = projectExecuteCount + 1
-                val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
-                if (projectCurrentExecuteCount != projectLatestExecuteCount) {
-                    logger.warn(
-                        "migrateProjectData project:[$projectId] executeCount validate fail|" +
-                            "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
-                            "projectLatestExecuteCount:$projectLatestExecuteCount"
-                    )
-                    return@submit
-                }
-                val titleParams = mapOf(KEY_PROJECT_ID to projectId)
-                val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (ignored.message ?: ""))
-                val request = SendNotifyMessageTemplateRequest(
-                    templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
-                    receivers = mutableSetOf(userId),
-                    titleParams = titleParams,
-                    bodyParams = bodyParams,
-                    notifyType = mutableSetOf(NotifyType.WEWORK.name)
+                val errorMsg = ignored.message
+                logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=$errorMsg", ignored)
+                // 执行迁移出错的逻辑
+                doMigrationErrorBus(
+                    projectExecuteCount = projectExecuteCount,
+                    migrateProjectExecuteCountKey = migrateProjectExecuteCountKey,
+                    projectId = projectId,
+                    userId = userId,
+                    historyShardingRoutingRule = historyShardingRoutingRule,
+                    errorMsg = errorMsg
                 )
-                try {
-                    // 删除迁移库的数据
-                    migratingShardingDslContext.transaction { t ->
-                        val context = DSL.using(t)
-                        deleteAllProjectData(context, projectId)
-                    }
-                    // 把项目路由规则还原
-                    historyShardingRoutingRule?.let {
-                        client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
-                            userId = userId,
-                            shardingRoutingRule = historyShardingRoutingRule
-                        )
-                    }
-                    // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
-                    confirmAllServiceCacheIsUpdated(projectId)
-                } catch (ignored: Throwable) {
-                    logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
-                }
-                try {
-                    // 发送迁移失败消息
-                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-                } catch (ignored: Throwable) {
-                    logger.warn(
-                        "migrateProjectData project:[$projectId] send msg" +
-                            " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
-                    )
-                }
             } finally {
                 // 更新同时迁移的项目数量
                 redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, -1)
@@ -257,6 +221,73 @@ class ProcessDataMigrateService @Autowired constructor(
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
+    }
+
+    private fun doMigrationErrorBus(
+        projectExecuteCount: Int,
+        migrateProjectExecuteCountKey: String,
+        projectId: String,
+        userId: String,
+        historyShardingRoutingRule: ShardingRoutingRule?,
+        errorMsg: String? = null,
+    ): Boolean {
+        // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
+        val projectCurrentExecuteCount = projectExecuteCount + 1
+        val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
+        if (projectCurrentExecuteCount != projectLatestExecuteCount) {
+            logger.warn(
+                "migrateProjectData project:[$projectId] executeCount validate fail|" +
+                    "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
+                    "projectLatestExecuteCount:$projectLatestExecuteCount"
+            )
+            return true
+        }
+        val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (errorMsg ?: ""))
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
+            receivers = mutableSetOf(userId),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.WEWORK.name)
+        )
+        try {
+            // 删除迁移库的数据
+            migratingShardingDslContext.transaction { t ->
+                val context = DSL.using(t)
+                deleteAllProjectData(context, projectId)
+            }
+            // 把项目路由规则还原
+            val updateShardingRoutingRule = historyShardingRoutingRule
+                ?: ShardingRoutingRule(
+                    clusterName = CommonUtils.getDbClusterName(),
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    dataSourceName = DEFAULT_DATA_SOURCE_NAME,
+                    type = ShardingRuleTypeEnum.DB,
+                    routingName = projectId,
+                    routingRule = DEFAULT_DATA_SOURCE_NAME
+                )
+            historyShardingRoutingRule?.let {
+                client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
+                    userId = userId,
+                    shardingRoutingRule = updateShardingRoutingRule
+                )
+            }
+            // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
+            confirmAllServiceCacheIsUpdated(projectId)
+        } catch (ignored: Throwable) {
+            logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
+        }
+        try {
+            // 发送迁移失败消息
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "migrateProjectData project:[$projectId] send msg" +
+                    " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
+            )
+        }
+        return false
     }
 
     private fun doPreMigrationBus(
