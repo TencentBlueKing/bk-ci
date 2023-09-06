@@ -53,7 +53,6 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
-import com.tencent.devops.model.process.tables.TPipelineTransferHistory
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
@@ -67,7 +66,6 @@ import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
-import com.tencent.devops.model.process.tables.TTemplateTransferHistory
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -235,14 +233,6 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineTransferHistory(dslContext: DSLContext, projectId: String) {
-        with(TPipelineTransferHistory.T_PIPELINE_TRANSFER_HISTORY) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
     fun deletePipelineView(dslContext: DSLContext, projectId: String) {
         with(TPipelineView.T_PIPELINE_VIEW) {
             dslContext.deleteFrom(this)
@@ -317,14 +307,6 @@ class ProcessDataDeleteDao {
 
     fun deleteTemplatePipeline(dslContext: DSLContext, projectId: String) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun deleteTemplateTransferHistory(dslContext: DSLContext, projectId: String) {
-        with(TTemplateTransferHistory.T_TEMPLATE_TRANSFER_HISTORY) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .execute()

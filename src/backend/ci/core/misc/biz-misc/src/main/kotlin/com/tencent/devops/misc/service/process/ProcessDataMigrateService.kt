@@ -328,7 +328,6 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteDao.deletePipelineGroup(context, projectId)
         processDataDeleteDao.deletePipelineJobMutexGroup(context, projectId)
         processDataDeleteDao.deletePipelineLabel(context, projectId)
-        processDataDeleteDao.deletePipelineTransferHistory(context, projectId)
         processDataDeleteDao.deletePipelineView(context, projectId)
         processDataDeleteDao.deletePipelineViewUserLastView(context, projectId)
         processDataDeleteDao.deletePipelineViewUserSettings(context, projectId)
@@ -336,7 +335,6 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteDao.deleteProjectPipelineCallbackHistory(context, projectId)
         processDataDeleteDao.deleteTemplate(context, projectId)
         processDataDeleteDao.deleteTemplatePipeline(context, projectId)
-        processDataDeleteDao.deleteTemplateTransferHistory(context, projectId)
         processDataDeleteDao.deletePipelineViewGroup(context, projectId)
         processDataDeleteDao.deletePipelineViewTop(context, projectId)
         processDataDeleteDao.deletePipelineRecentUse(context, projectId)
@@ -347,7 +345,6 @@ class ProcessDataMigrateService @Autowired constructor(
         migratePipelineGroupData(projectId)
         migratePipelineJobMutexGroupData(projectId)
         migratePipelineLabelData(projectId)
-        migratePipelineTransferHistoryData(projectId)
         migratePipelineViewData(projectId)
         migratePipelineViewUserLastViewData(projectId)
         migratePipelineViewUserSettingsData(projectId)
@@ -355,7 +352,6 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateProjectPipelineCallbackHistoryData(projectId)
         migrateTemplateData(projectId)
         migrateTemplatePipelineData(projectId)
-        migrateTemplateTransferHistoryData(projectId)
         migratePipelineViewGroupData(projectId)
         migratePipelineViewTopData(projectId)
         migratePipelineRecentUseData(projectId)
@@ -575,25 +571,6 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineLabelRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineTransferHistoryData(projectId: String) {
-        var offset = 0
-        do {
-            val pipelineTransferHistoryRecords = processDataMigrateDao.getPipelineTransferHistoryRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                limit = LONG_PAGE_SIZE,
-                offset = offset
-            )
-            if (pipelineTransferHistoryRecords.isNotEmpty()) {
-                processDataMigrateDao.migratePipelineTransferHistoryData(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    pipelineTransferHistoryRecords = pipelineTransferHistoryRecords
-                )
-            }
-            offset += LONG_PAGE_SIZE
-        } while (pipelineTransferHistoryRecords.size == LONG_PAGE_SIZE)
-    }
-
     private fun migratePipelineViewData(projectId: String) {
         var offset = 0
         do {
@@ -725,25 +702,6 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += SHORT_PAGE_SIZE
         } while (templatePipelineRecords.size == SHORT_PAGE_SIZE)
-    }
-
-    private fun migrateTemplateTransferHistoryData(projectId: String) {
-        var offset = 0
-        do {
-            val templateTransferHistoryRecords = processDataMigrateDao.getTemplateTransferHistoryRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                limit = LONG_PAGE_SIZE,
-                offset = offset
-            )
-            if (templateTransferHistoryRecords.isNotEmpty()) {
-                processDataMigrateDao.migrateTemplateTransferHistoryData(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    templateTransferHistoryRecords = templateTransferHistoryRecords
-                )
-            }
-            offset += LONG_PAGE_SIZE
-        } while (templateTransferHistoryRecords.size == LONG_PAGE_SIZE)
     }
 
     private fun migratePipelineViewGroupData(projectId: String) {
