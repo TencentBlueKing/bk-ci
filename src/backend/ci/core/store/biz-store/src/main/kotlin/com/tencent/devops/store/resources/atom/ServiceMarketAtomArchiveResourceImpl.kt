@@ -92,8 +92,9 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
+        projectCode: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean> {
-        return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, atomPkgInfoUpdateRequest)
+        return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, projectCode, atomPkgInfoUpdateRequest)
     }
 }

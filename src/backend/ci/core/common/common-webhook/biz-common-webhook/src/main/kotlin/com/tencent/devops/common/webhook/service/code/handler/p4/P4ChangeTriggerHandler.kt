@@ -77,7 +77,7 @@ class P4ChangeTriggerHandler(
             CodeEventType.valueOf(event.eventType)
     }
 
-    override fun getMessage(event: P4ChangeEvent) = ""
+    override fun getMessage(event: P4ChangeEvent) = event.description
 
     override fun getWebhookFilters(
         event: P4ChangeEvent,
