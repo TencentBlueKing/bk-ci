@@ -52,19 +52,7 @@ object BkServiceUtil {
             serviceName
         } else if (clz != null) {
             interfaces.getOrPut(clz) {
-                val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
-                if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
-                    serviceInterface.value
-                } else {
-                    val packageName = clz.qualifiedName.toString()
-                    val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
-                    val matches = regex.find(packageName)
-                        ?: throw ErrorCodeException(
-                            errorCode = CommonMessageCode.SERVICE_COULD_NOT_BE_ANALYZED,
-                            params = arrayOf(packageName)
-                        )
-                    matches.groupValues[1]
-                }
+                parseServiceNameFromClz(clz)
             }
         } else {
             var applicationName = environment.getProperty("spring.application.name")
@@ -77,6 +65,22 @@ object BkServiceUtil {
             tmpServiceName
         } else {
             "$tmpServiceName$serviceSuffix"
+        }
+    }
+
+    private fun parseServiceNameFromClz(clz: KClass<*>): String {
+        val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
+        return if (serviceInterface != null && serviceInterface.value.isNotBlank()) {
+            serviceInterface.value
+        } else {
+            val packageName = clz.qualifiedName.toString()
+            val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
+            val matches = regex.find(packageName)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.SERVICE_COULD_NOT_BE_ANALYZED,
+                    params = arrayOf(packageName)
+                )
+            matches.groupValues[1]
         }
     }
 

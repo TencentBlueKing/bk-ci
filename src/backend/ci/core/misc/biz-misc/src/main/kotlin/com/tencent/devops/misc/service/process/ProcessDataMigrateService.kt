@@ -119,39 +119,8 @@ class ProcessDataMigrateService @Autowired constructor(
         cancelFlag: Boolean = false,
         dataTag: String
     ): Boolean {
-        // 判断同时迁移的项目数量是否超过限制
-        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
-        if (migrationProjectCount >= migrationMaxProjectCount) {
-            throw ErrorCodeException(
-                errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
-                params = arrayOf(migrationMaxProjectCount.toString())
-            )
-        }
-        // 判断项目是否超过规定的重试次数
-        val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
-        val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
-        if (projectExecuteCount >= RETRY_NUM) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
-                params = arrayOf(RETRY_NUM.toString())
-            )
-        }
-        // 锁定项目,不允许用户发起新构建等操作
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
-        // 为项目分配路由规则
-        val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
-        // 把同时迁移的项目数量存入redis中
-        if (migrationProjectCount < 1) {
-            redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "1", expired = false)
-        } else {
-            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, 1)
-        }
-        // 把项目数据迁移次数存入redis中
-        if (projectExecuteCount < 1) {
-            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1", TimeUnit.HOURS.toSeconds(migrationTimeout))
-        } else {
-            redisOperation.increment(migrateProjectExecuteCountKey, 1)
-        }
+        // 执行迁移前的逻辑
+        val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(projectId, dataTag)
         // 开启异步任务迁移项目的数据
         Executors.newFixedThreadPool(1).submit {
             logger.info("migrateProjectData begin,params:[$userId|$projectId]")
@@ -288,6 +257,46 @@ class ProcessDataMigrateService @Autowired constructor(
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
+    }
+
+    private fun doPreMigrationBus(
+        projectId: String,
+        dataTag: String
+    ): Triple<String, Int, Map<String, String>> {
+        // 判断同时迁移的项目数量是否超过限制
+        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
+        if (migrationProjectCount >= migrationMaxProjectCount) {
+            throw ErrorCodeException(
+                errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
+                params = arrayOf(migrationMaxProjectCount.toString())
+            )
+        }
+        // 判断项目是否超过规定的重试次数
+        val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
+        val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
+        if (projectExecuteCount >= RETRY_NUM) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
+                params = arrayOf(RETRY_NUM.toString())
+            )
+        }
+        // 锁定项目,不允许用户发起新构建等操作
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        // 为项目分配路由规则
+        val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
+        // 把同时迁移的项目数量存入redis中
+        if (migrationProjectCount < 1) {
+            redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "1", expired = false)
+        } else {
+            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, 1)
+        }
+        // 把项目数据迁移次数存入redis中
+        if (projectExecuteCount < 1) {
+            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1", TimeUnit.HOURS.toSeconds(migrationTimeout))
+        } else {
+            redisOperation.increment(migrateProjectExecuteCountKey, 1)
+        }
+        return Triple(migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap)
     }
 
     fun getMigrateProjectExecuteCountKey(projectId: String): String {

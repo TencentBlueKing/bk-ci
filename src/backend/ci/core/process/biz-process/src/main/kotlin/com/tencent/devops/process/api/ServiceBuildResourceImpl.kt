@@ -217,7 +217,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        terminateFlag: Boolean?
     ): Result<Boolean> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -230,7 +231,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            terminateFlag = terminateFlag
         )
         return Result(true)
     }

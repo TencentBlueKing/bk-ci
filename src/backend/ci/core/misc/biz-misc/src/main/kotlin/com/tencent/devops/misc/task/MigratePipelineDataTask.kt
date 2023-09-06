@@ -13,7 +13,7 @@ import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-@Suppress("TooManyFunctions", "LongMethod", "LargeClass")
+@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod")
 class MigratePipelineDataTask constructor(
     private val migratePipelineDataParam: MigratePipelineDataParam
 ) : Runnable {
@@ -25,7 +25,7 @@ class MigratePipelineDataTask constructor(
         private const val MEDIUM_PAGE_SIZE = 100
         private const val LONG_PAGE_SIZE = 1000
         private const val RETRY_NUM = 3
-        private const val DEFAULT_THREAD_SLEEP_TINE = 25000L
+        private const val DEFAULT_THREAD_SLEEP_TINE = 5000L
     }
         override fun run() {
             val semaphore = migratePipelineDataParam.semaphore
@@ -43,6 +43,7 @@ class MigratePipelineDataTask constructor(
                 if (cancelFlag) {
                     // 2、取消未结束的构建
                     handleUnFinishPipelines(RETRY_NUM)
+                    Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
                 }
                 // 3、开始迁移流水线的数据
                 // 3.1、迁移T_PIPELINE_BUILD_CONTAINER表数据
@@ -725,24 +726,14 @@ class MigratePipelineDataTask constructor(
                     val buildId = historyInfoRecord[tPipelineBuildHistory.BUILD_ID]
                     val channel = historyInfoRecord[tPipelineBuildHistory.CHANNEL]
                     val startUser = historyInfoRecord[tPipelineBuildHistory.START_USER]
-                    val client = SpringContextUtil.getBean(Client::class.java)
-                    try {
-                        val shutdownResult = client.get(ServiceBuildResource::class).manualShutdown(
-                            userId = startUser,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            channelCode = ChannelCode.getChannel(channel) ?: ChannelCode.BS
-                        )
-                        if (shutdownResult.isNotOk()) {
-                            logger.warn("project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail")
-                            retryFlag = true
-                        }
-                    } catch (ignored: Throwable) {
-                        logger.warn(
-                            "project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail",
-                            ignored
-                        )
+                    val successFlag = cancelBuild(
+                        startUser = startUser,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        channel = channel
+                    )
+                    if (!successFlag) {
                         retryFlag = true
                     }
                 }
@@ -756,4 +747,37 @@ class MigratePipelineDataTask constructor(
                 }
             }
         }
+
+    private fun cancelBuild(
+        startUser: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channel: String
+    ): Boolean {
+        var successFlag = true
+        val client = SpringContextUtil.getBean(Client::class.java)
+        try {
+            // 强制取消流水线构建
+            val shutdownResult = client.get(ServiceBuildResource::class).manualShutdown(
+                userId = startUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = ChannelCode.getChannel(channel) ?: ChannelCode.BS,
+                terminateFlag = true
+            )
+            if (shutdownResult.isNotOk()) {
+                logger.warn("project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail")
+                successFlag = false
+            }
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "project[$projectId]-pipelineId[$pipelineId]-buildId[$buildId] cancel fail",
+                ignored
+            )
+            successFlag = false
+        }
+        return successFlag
     }
+}
