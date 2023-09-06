@@ -47,5 +47,5 @@ object Versions {
     const val Okhttp = "4.9.0"
     const val jgit = "5.13.1.202206130422-r"
     const val iam = "1.0.30-SNAPSHOT"
-    const val audit = "1.0.5"
+    const val audit = "1.0.6"
 }
