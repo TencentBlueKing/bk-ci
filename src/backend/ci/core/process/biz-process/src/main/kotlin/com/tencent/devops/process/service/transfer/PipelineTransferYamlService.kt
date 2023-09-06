@@ -82,7 +82,7 @@ class PipelineTransferYamlService @Autowired constructor(
     fun transfer(
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineId: String?,
         actionType: TransferActionType,
         data: TransferBody
     ): TransferResponse {
@@ -94,8 +94,8 @@ class PipelineTransferYamlService @Autowired constructor(
                     val yml = modelTransfer.model2yaml(
                         ModelTransferInput(
                             userId,
-                            data.modelAndSetting.model,
-                            data.modelAndSetting.setting,
+                            data.modelAndSetting!!.model,
+                            data.modelAndSetting!!.setting,
                             YamlVersion.Version.V3_0
                         )
                     )
@@ -108,7 +108,9 @@ class PipelineTransferYamlService @Autowired constructor(
 
                 TransferActionType.FULL_YAML2MODEL -> {
                     watcher.start("step_1|FULL_YAML2MODEL start")
-                    val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                    val pipelineInfo = pipelineId?.let {
+                        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                    }
                     val pYml = TransferMapper.getObjectMapper()
                         .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
                     watcher.start("step_2|parse template")
@@ -138,7 +140,7 @@ class PipelineTransferYamlService @Autowired constructor(
                 }
             }
         } catch (t: Throwable) {
-            logger.warn("PAC|TRANSFER|transferAction")
+            logger.warn("PAC|TRANSFER|transferAction", t)
         } finally {
             watcher.stop()
         }

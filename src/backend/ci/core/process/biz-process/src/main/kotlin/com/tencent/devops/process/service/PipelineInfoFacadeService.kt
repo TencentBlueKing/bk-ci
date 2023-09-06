@@ -76,8 +76,11 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.transfer.TransferActionType
+import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -111,6 +114,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val transferService: PipelineTransferYamlService,
+    private val pipelineBranchVersionService: PipelineBranchVersionService,
     private val redisOperation: RedisOperation,
     private val pipelineRecentUseService: PipelineRecentUseService
 ) {
@@ -241,7 +246,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
-    // TODO #8161 旧接口传参改造
     fun createPipeline(
         userId: String,
         projectId: String,
@@ -254,7 +258,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
         fixTemplateVersion: Long? = null,
-        saveDraft: Boolean? = false,
+        versionStatus: VersionStatus? = VersionStatus.COMMITTING,
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false
@@ -487,6 +491,115 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    fun createYamlPipeline(
+        userId: String,
+        projectId: String,
+        yml: String,
+        branchName: String,
+        isDefaultBranch: Boolean
+    ): DeployPipelineResult {
+
+        val newModel = try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            result.modelAndSetting!!
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
+        val result = createPipeline(
+            userId = userId,
+            projectId = projectId,
+            model = newModel.model,
+            channelCode = ChannelCode.BS,
+            yaml = yml,
+            versionStatus = if (isDefaultBranch) {
+                VersionStatus.RELEASED
+            } else {
+                VersionStatus.BRANCH
+            }
+        )
+        if (!isDefaultBranch) {
+            pipelineBranchVersionService.saveBranchVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = result.pipelineId,
+                branchName = branchName,
+                version = result.version
+            )
+        }
+        return result
+    }
+
+    fun updateYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yml: String,
+        branchName: String,
+        isDefaultBranch: Boolean
+    ): DeployPipelineResult {
+        val newModel = try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            result.modelAndSetting!!
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
+        val result = editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = newModel.model,
+            channelCode = ChannelCode.BS,
+            yaml = yml,
+            versionStatus = if (isDefaultBranch) {
+                VersionStatus.RELEASED
+            } else {
+                VersionStatus.BRANCH
+            }
+        )
+        if (!isDefaultBranch) {
+            pipelineBranchVersionService.saveBranchVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = result.pipelineId,
+                branchName = branchName,
+                version = result.version
+            )
+        }
+        return result
+    }
+
     /**
      * 还原已经删除的流水线
      */
@@ -668,7 +781,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    // TODO #8161 旧接口传参改造
     fun editPipeline(
         userId: String,
         projectId: String,

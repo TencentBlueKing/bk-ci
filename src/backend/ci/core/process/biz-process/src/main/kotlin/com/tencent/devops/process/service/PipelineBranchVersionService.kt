@@ -25,16 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.process.dao.PipelineBranchVersionDao
+import com.tencent.devops.process.pojo.setting.PipelineBranchVersion
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ApiModel("构建模型-ID")
-data class TransferBody(
-    @ApiModelProperty("modelAndSetting")
-    val modelAndSetting: PipelineModelAndSetting? = null,
-    @ApiModelProperty("当前yaml内容")
-    val oldYaml: String = ""
-)
+@Service
+class PipelineBranchVersionService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineBranchVersionDao: PipelineBranchVersionDao
+) {
+
+    fun saveBranchVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        version: Int
+    ): Int {
+        return pipelineBranchVersionDao.saveBranchRefer(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branchName,
+            version = version
+        )
+    }
+
+    fun getPipelineSettingVersion(
+        projectId: String,
+        pipelineId: String
+    ): List<PipelineBranchVersion> {
+        return pipelineBranchVersionDao.getBranchVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+}
