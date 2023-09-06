@@ -17,3 +17,4 @@ build.yml
 .codecc
 *.log.gz
 i18n/
+core/mutijar/boot-mutijar/src/main/resources/application-*.yml
