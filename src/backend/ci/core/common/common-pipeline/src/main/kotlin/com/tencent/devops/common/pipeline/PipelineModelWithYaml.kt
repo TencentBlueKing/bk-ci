@@ -39,6 +39,8 @@ data class PipelineModelWithYaml(
     val modelAndSetting: PipelineModelAndSetting,
     @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?,
+    @ApiModelProperty("是否处在可以调试状态", required = false)
+    val canDebug: Boolean?,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String?
 )

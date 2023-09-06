@@ -587,7 +587,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     TimerTriggerElement(
                         newExpression = timer.cron?.let { listOf(it) },
                         advanceExpression = timer.advanceCron,
-                        noScm = timer.always != true,
+                        noScm = timer.always != true
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
