@@ -58,15 +58,15 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.RunAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v2.models.IfType
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.on.EnableType
-import com.tencent.devops.process.yaml.v2.models.on.ManualRule
-import com.tencent.devops.process.yaml.v2.models.on.SchedulesRule
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v2.models.step.PreStep
-import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.IfType
 import com.tencent.devops.process.yaml.v3.models.TriggerType
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.on.EnableType
+import com.tencent.devops.process.yaml.v3.models.on.ManualRule
+import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
+import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -86,12 +86,13 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun yaml2Triggers(yamlInput: YamlTransferInput, elements: MutableList<Element>) {
         yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
             when (it.first) {
-                TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(it.second, elements)
+                TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
                 TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
                 TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
                 TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
                 TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
                 TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
+                TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
             }
         }
     }
@@ -182,7 +183,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!gitlabElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_P4 })
+            res.putAll(gitTrigger.associateBy { ScmType.CODE_GITLAB })
         }
         return res
     }
@@ -208,7 +209,35 @@ class ElementTransfer @Autowired(required = false) constructor(
         agentSelector: String?
     ): Element {
         val timeout = setupTimeout(step)
+        var customVariables: List<NameAndValue>? = null
+        val runCondition = when {
+            step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
+            IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
+                RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+
+            IfType.ALWAYS.name == (step.ifFiled) ->
+                RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+
+            IfType.FAILURE.name == (step.ifFiled) ->
+                RunCondition.PRE_TASK_FAILED_ONLY
+
+            else -> {
+                ModelCommon.revertCustomVariableMatch(step.ifFiled)?.let {
+                    customVariables = it
+                    RunCondition.CUSTOM_VARIABLE_MATCH
+                } ?: ModelCommon.revertCustomVariableNotMatch(step.ifFiled)?.let {
+                    customVariables = it
+                    RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                } ?: RunCondition.CUSTOM_CONDITION_MATCH
+            }
+        }
+        val customCondition = if (step.ifFiled.isNullOrBlank()) {
+            step.ifFiled
+        } else {
+            ModelCreateUtil.removeIfBrackets(step.ifFiled)
+        }
         val additionalOptions = ElementAdditionalOptions(
+            enable = step.enable ?: true,
             continueWhenFailed = step.continueOnError ?: VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED,
             timeout = timeout.toLong(),
             timeoutVar = timeout.toString(),
@@ -216,40 +245,27 @@ class ElementTransfer @Autowired(required = false) constructor(
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             enableCustomEnv = step.env != null,
             customEnv = getElementEnv(step.env),
-            runCondition = when {
-                step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
-                    RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-
-                IfType.ALWAYS.name == (step.ifFiled) ->
-                    RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-
-                IfType.FAILURE.name == (step.ifFiled) ->
-                    RunCondition.PRE_TASK_FAILED_ONLY
-
-                else -> RunCondition.CUSTOM_CONDITION_MATCH
-            },
-            customCondition = if (step.ifFiled.isNullOrBlank()) {
-                step.ifFiled
-            } else {
-                ModelCreateUtil.removeIfBrackets(step.ifFiled)
-            },
-            manualRetry = false
+            runCondition = runCondition,
+            customCondition = if (customVariables == null) customCondition else null,
+            customVariables = customVariables,
+            manualRetry = step.manualRetry ?: false
         )
 
         // bash
         val element: Element = when {
             step.run != null -> {
-                makeRunElement(step, agentSelector, additionalOptions)
+                makeRunElement(step, agentSelector)
             }
 
             step.checkout != null -> {
-                creator.transferCheckoutElement(step, additionalOptions)
+                creator.transferCheckoutElement(step)
             }
 
             else -> {
-                creator.transferMarketBuildAtomElement(step, additionalOptions)
+                creator.transferMarketBuildAtomElement(step)
             }
+        }.apply {
+            this.additionalOptions = additionalOptions
         }
         return element
     }
@@ -258,13 +274,13 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     private fun makeRunElement(
         step: Step,
-        agentSelector: String?,
-        additionalOptions: ElementAdditionalOptions
+        agentSelector: String?
     ): Element {
         val type = step.runAdditionalOptions?.get(RunAtomParam::shell.name)
             ?: when (agentSelector) {
                 "windows" ->
                     RunAtomParam.ShellType.CMD.shellName
+
                 null -> null
                 else -> RunAtomParam.ShellType.BASH.shellName
             }
@@ -275,9 +291,9 @@ class ElementTransfer @Autowired(required = false) constructor(
                 stepId = step.id,
                 scriptType = BuildScriptType.SHELL,
                 script = step.run ?: "",
-                continueNoneZero = false,
-                additionalOptions = additionalOptions
+                continueNoneZero = false
             )
+
             RunAtomParam.ShellType.CMD.shellName -> WindowsScriptElement(
                 id = step.taskId,
                 name = step.name ?: "run",
@@ -285,6 +301,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 scriptType = BuildScriptType.BAT,
                 script = step.run ?: ""
             )
+
             else -> {
                 val data = mutableMapOf<String, Any>()
                 data["input"] = mapOf(
@@ -297,8 +314,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     stepId = step.id,
                     atomCode = creator.runPlugInAtomCode ?: throw ModelCreateException("runPlugInAtomCode must exist"),
                     version = creator.runPlugInVersion ?: throw ModelCreateException("runPlugInVersion must exist"),
-                    data = data,
-                    additionalOptions = additionalOptions
+                    data = data
                 )
             }
         }
@@ -320,15 +336,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun element2YamlStep(element: Element, projectId: String): PreStep? {
-        val retryTimes = if (element.additionalOptions?.retryWhenFailed == true) {
-            element.additionalOptions?.retryCount
-        } else null
-        val timeoutMinutes = element.additionalOptions?.timeout?.toInt()
-            .nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)
-        val continueOnError = element.additionalOptions?.continueWhenFailed
-            .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED)
         val uses = "${element.getAtomCode()}@${element.version}"
-        val env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }?.ifEmpty { null }
         return when {
             element is LinuxScriptElement -> {
                 PreStep(
@@ -338,15 +346,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                     ifFiled = parseStepIfFiled(element),
                     uses = null,
                     with = null,
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
                     run = element.script,
-                    checkout = null,
                     shell = RunAtomParam.ShellType.BASH.shellName
                 )
             }
+
             element is WindowsScriptElement -> {
                 PreStep(
                     name = element.name,
@@ -355,15 +359,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                     ifFiled = parseStepIfFiled(element),
                     uses = null,
                     with = null,
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
                     run = element.script,
-                    checkout = null,
                     shell = RunAtomParam.ShellType.CMD.shellName
                 )
             }
+
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 val repositoryType = input[CheckoutAtomParam::repositoryType.name].toString().ifBlank { null }?.let {
@@ -376,12 +376,15 @@ class ElementTransfer @Autowired(required = false) constructor(
                     repositoryType == CheckoutAtomParam.CheckoutRepositoryType.ID && repositoryHashId != null -> {
                         transferCache.getGitRepository(projectId, RepositoryType.ID, repositoryHashId)?.url
                     }
+
                     repositoryType == CheckoutAtomParam.CheckoutRepositoryType.NAME && repositoryName != null -> {
                         transferCache.getGitRepository(projectId, RepositoryType.NAME, repositoryName)?.url
                     }
+
                     repositoryType == CheckoutAtomParam.CheckoutRepositoryType.URL && repositoryUrl != null -> {
                         repositoryUrl
                     }
+
                     else -> null
                 } ?: "self"
                 // todo 等待checkout插件新增self参数
@@ -392,15 +395,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                     ifFiled = parseStepIfFiled(element),
                     uses = null,
                     with = simplifyParams(uses, input).ifEmpty { null },
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
-                    run = null,
-                    checkout = checkout,
-                    shell = null
+                    checkout = checkout
                 )
             }
+
             element.getAtomCode() == "run" && element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 PreStep(
@@ -415,15 +413,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                             it.key == RunAtomParam::shell.name || it.key == RunAtomParam::script.name
                         }
                     ).ifEmpty { null },
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
                     run = input[RunAtomParam::script.name]?.toString(),
-                    checkout = null,
                     shell = input[RunAtomParam::shell.name]?.toString()
                 )
             }
+
             element is MarketBuildLessAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 PreStep(
@@ -432,16 +426,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = parseStepIfFiled(element),
                     uses = uses,
-                    with = simplifyParams(uses, input).ifEmpty { null },
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
-                    run = null,
-                    checkout = null,
-                    shell = null
+                    with = simplifyParams(uses, input).ifEmpty { null }
                 )
             }
+
             element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 PreStep(
@@ -450,17 +438,23 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = parseStepIfFiled(element),
                     uses = uses,
-                    with = simplifyParams(uses, input).ifEmpty { null },
-                    timeoutMinutes = timeoutMinutes,
-                    continueOnError = continueOnError,
-                    retryTimes = retryTimes,
-                    env = env,
-                    run = null,
-                    checkout = null,
-                    shell = null
+                    with = simplifyParams(uses, input).ifEmpty { null }
                 )
             }
+
             else -> null
+        }?.apply {
+            this.enable = element.isElementEnable().nullIfDefault(true)
+            this.timeoutMinutes = element.additionalOptions?.timeout?.toInt()
+                .nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)
+            this.continueOnError = element.additionalOptions?.continueWhenFailed
+                .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED)
+            this.retryTimes = if (element.additionalOptions?.retryWhenFailed == true) {
+                element.additionalOptions?.retryCount
+            } else null
+            this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
+            this.env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }
+                ?.ifEmpty { null }
         }
     }
 
@@ -472,15 +466,20 @@ class ElementTransfer @Autowired(required = false) constructor(
             RunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
                 step.additionalOptions?.customVariables
             )
+
             RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
                 step.additionalOptions?.customVariables
             )
+
             RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
                 IfType.ALWAYS_UNLESS_CANCELLED.name
+
             RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
                 IfType.ALWAYS.name
+
             RunCondition.PRE_TASK_FAILED_ONLY ->
                 IfType.FAILURE.name
+
             else -> null
         }
     }
@@ -512,6 +511,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
         val nameAndValueList = mutableListOf<NameAndValue>()
         env.forEach {
+            // todo 001
             nameAndValueList.add(
                 NameAndValue(
                     key = it.key,

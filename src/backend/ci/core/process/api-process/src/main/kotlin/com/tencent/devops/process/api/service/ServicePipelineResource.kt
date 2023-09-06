@@ -37,17 +37,11 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.Permission
-import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineCopy
-import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.PipelineIdAndName
-import com.tencent.devops.process.pojo.PipelineIdInfo
-import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.*
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -115,10 +109,7 @@ interface ServicePipelineResource {
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
         @DefaultValue("true")
-        updateLastModifyUser: Boolean? = true,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -177,10 +168,7 @@ interface ServicePipelineResource {
         modelAndSetting: PipelineModelAndSetting,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        saveDraft: Boolean? = false
+        channelCode: ChannelCode
     ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
@@ -589,4 +577,19 @@ interface ServicePipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Pipeline>>
+    
+    @ApiOperation("生成远程执行token")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/remote_token")
+    fun generateRemoteToken(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineRemoteToken>
 }

@@ -86,6 +86,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
+@Suppress("LongParameterList")
 class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
@@ -234,8 +235,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        pipeline: Model,
-        saveDraft: Boolean?
+        pipeline: Model
     ): Result<Boolean> {
         checkParam(userId, projectId)
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -265,8 +265,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        modelAndSetting: PipelineModelAndSetting,
-        saveDraft: Boolean?
+        modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)
         modelAndSetting.setting.checkParam()
@@ -280,7 +279,6 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            versionStatus = VersionStatus.RELEASED,
             channelCode = ChannelCode.BS
         )
         auditService.createAudit(

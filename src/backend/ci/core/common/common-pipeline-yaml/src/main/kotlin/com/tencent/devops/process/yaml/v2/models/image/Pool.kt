@@ -30,34 +30,23 @@ package com.tencent.devops.process.yaml.v2.models.image
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Pool(
-    val container: String? = null,
-    val credentialId: String? = null,
-    val third: Boolean? = null,
+    val container: String?,
+    val credential: Credential?,
+    val third: Boolean?,
     val performanceConfigId: String? = "0",
     val env: Map<String, String>? = mapOf(),
     val type: PoolType? = null,
     val agentName: String? = null,
     val agentId: String? = null,
     val envName: String? = null,
-    val envProjectId: String? = null,
     val envId: String? = null,
     val os: VMBaseOS? = null,
     val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD,
-    val dockerInfo: ThirdPartyAgentDockerInfo? = null,
-    val image: PoolImage? = null
-)
-
-data class PoolImage(
-    val imageCode: String,
-    val imageVersion: String,
-    val imageType: ImageType? = ImageType.THIRD
+    val buildType: BuildType? = BuildType.DEVCLOUD
 )
 
 enum class BuildType {

@@ -29,8 +29,6 @@ package com.tencent.devops.process.yaml.v2.models.on
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -38,12 +36,7 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SchedulesRule(
-    val enable: Boolean? = true,
-    val cron: String? = null,
-
-    @ApiModelProperty(name = "advance-cron")
-    @JsonProperty("advance-cron")
-    val advanceCron: List<String>? = null,
+    val cron: String,
 
     val branches: List<String>? = null,
 

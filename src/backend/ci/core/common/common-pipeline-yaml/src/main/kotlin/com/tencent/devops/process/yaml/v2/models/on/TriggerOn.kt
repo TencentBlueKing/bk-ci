@@ -30,11 +30,7 @@ package com.tencent.devops.process.yaml.v2.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MANUAL_RULE
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import io.swagger.annotations.ApiModelProperty
 
 /**
@@ -43,101 +39,35 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TriggerOn(
-    var push: PushRule? = null,
-    var tag: TagRule? = null,
-    var mr: MrRule? = null,
-    var schedules: List<SchedulesRule>? = null,
-    var delete: DeleteRule? = null,
-    var issue: IssueRule? = null,
-    var review: ReviewRule? = null,
-    var note: NoteRule? = null,
+    val push: PushRule?,
+    val tag: TagRule?,
+    val mr: MrRule?,
+    val schedules: SchedulesRule? = null,
+    val delete: DeleteRule? = null,
+    val issue: IssueRule? = null,
+    val review: ReviewRule? = null,
+    val note: NoteRule? = null,
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
-    var manual: ManualRule? = null,
-    var remote: String? = null,
-    val openapi: String? = null,
-    var repoName: String? = null,
-    var triggerName: String? = null,
-    @JsonProperty("repoId")
-    @ApiModelProperty(name = "repoId")
-    var repoHashId: String? = null,
-    var credentials: String? = null
-) {
-    fun toPre(version: YamlVersion.Version) = when (version) {
-        YamlVersion.Version.V2_0 -> toPreV2()
-        YamlVersion.Version.V3_0 -> toPreV3()
-    }
-
-    private fun toPreV2() = PreTriggerOn(
-        push = push,
-        tag = tag,
-        mr = mr,
-        schedules = schedules?.firstOrNull(),
-        delete = delete,
-        issue = issue,
-        review = review,
-        note = note,
-        // todo
-        repoHook = null,
-        manual = manual?.let { EnableType.TRUE.value } ?: EnableType.FALSE.value,
-        openapi = openapi,
-        remote = remote
-    )
-
-    private fun toPreV3() = PreTriggerOnV3(
-        repoName = repoName,
-        repoHashId = repoHashId,
-        type = null,
-        credentials = credentials,
-        push = push,
-        tag = tag,
-        mr = mr,
-        schedules = if (schedules?.size == 1) schedules!!.first() else schedules,
-        delete = delete,
-        issue = issue,
-        review = review,
-        note = note,
-        // todo
-        repoHook = null,
-        manual = (manual ?: EnableType.FALSE.value).nullIfDefault(DEFAULT_MANUAL_RULE),
-        openapi = openapi,
-        remote = remote
-    )
-}
-
-interface IPreTriggerOn : YamlVersion {
-    val push: Any?
-    val tag: Any?
-    val mr: Any?
-    val schedules: Any?
-    val delete: DeleteRule?
-    val issue: IssueRule?
-    val review: ReviewRule?
-    val note: NoteRule?
-    val repoHook: List<Any>?
-    val manual: Any?
-    val openapi: String?
-    val remote: String?
-}
+    val manual: String? = null,
+    val openapi: String? = null
+)
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTriggerOn(
-    override val push: Any?,
-    override val tag: Any?,
-    override val mr: Any?,
-    override val schedules: Any?,
-    override val delete: DeleteRule?,
-    override val issue: IssueRule? = null,
-    override val review: ReviewRule? = null,
-    override val note: NoteRule? = null,
+    val push: Any?,
+    val tag: Any?,
+    val mr: Any?,
+    val schedules: SchedulesRule?,
+    val delete: DeleteRule?,
+    val issue: IssueRule? = null,
+    val review: ReviewRule? = null,
+    val note: NoteRule? = null,
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
-    override val repoHook: List<Any>? = null,
-    override val manual: Any? = null,
-    override val openapi: String? = null,
-    override val remote: String? = null
-) : IPreTriggerOn {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
-}
+    val repoHook: List<Any>? = null,
+    val manual: String? = null,
+    val openapi: String? = null
+)

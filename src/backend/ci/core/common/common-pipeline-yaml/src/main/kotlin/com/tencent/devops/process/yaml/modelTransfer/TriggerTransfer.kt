@@ -32,31 +32,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerData
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerInput
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerData
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.*
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
-import com.tencent.devops.process.yaml.v2.models.on.EnableType
-import com.tencent.devops.process.yaml.v2.models.on.IssueRule
-import com.tencent.devops.process.yaml.v2.models.on.MrRule
-import com.tencent.devops.process.yaml.v2.models.on.NoteRule
-import com.tencent.devops.process.yaml.v2.models.on.PushRule
-import com.tencent.devops.process.yaml.v2.models.on.ReviewRule
-import com.tencent.devops.process.yaml.v2.models.on.TagRule
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.v3.models.on.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -203,6 +186,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repoHashId = name,
                             repoName = transferCache.getGitRepository(projectId, RepositoryType.ID, name)?.aliasName
                         )
+
                         git.repositoryName -> TriggerOn(repoName = name)
                         else -> TriggerOn()
                     }
@@ -220,6 +204,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         // todo action
                         action = null
                     )
+
                     CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
                         enable = git.enable.nullIfDefault(true),
                         tags = git.tagName?.disjoin(),
@@ -228,6 +213,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         users = git.includeUsers,
                         usersIgnore = git.excludeUsers
                     )
+
                     CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
                         enable = git.enable.nullIfDefault(true),
                         targetBranches = git.branchName?.disjoin(),
@@ -245,15 +231,18 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         // todo action
                         action = null
                     )
+
                     CodeEventType.REVIEW -> nowExist.review = ReviewRule(
                         enable = git.enable.nullIfDefault(true),
                         states = git.includeCrState,
                         types = git.includeCrTypes
                     )
+
                     CodeEventType.ISSUES -> nowExist.issue = IssueRule(
                         enable = git.enable.nullIfDefault(true),
                         action = git.includeIssueAction
                     )
+
                     CodeEventType.NOTE -> nowExist.note = NoteRule(
                         enable = git.enable.nullIfDefault(true),
                         types = git.includeNoteTypes?.map {
@@ -265,6 +254,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             }
                         }
                     )
+
                     CodeEventType.POST_COMMIT -> nowExist.push = PushRule(
                         enable = git.enable.nullIfDefault(true),
                         branches = null,
@@ -274,6 +264,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         usersIgnore = git.excludeUsers,
                         pathFilterType = git.pathFilterType?.name
                     )
+
                     CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
                         enable = git.enable.nullIfDefault(true),
                         branches = null,
@@ -573,13 +564,13 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             repositoryName = triggerOn.repoName
                         )
                     )
-                ).checkTriggerElementEnable(push.enable)
+                ).checkTriggerElementEnable(push.enable).apply { version = "2.*" }
             )
         }
     }
 
     @Suppress("ComplexMethod")
-    fun yaml2TriggerBase(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+    fun yaml2TriggerBase(yamlInput: YamlTransferInput, triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
         triggerOn.manual?.let { manual ->
             elementQueue.add(
                 ManualTriggerElement(
@@ -589,24 +580,93 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 )
             )
         }
-        triggerOn.remote?.let { remote ->
-            elementQueue.add(
-                RemoteTriggerElement(
-                    // todo,
-                ).checkTriggerElementEnable(remote == EnableType.TRUE.value)
-            )
-        }
 
         triggerOn.schedules?.let { remote ->
             remote.forEach { timer ->
                 elementQueue.add(
                     TimerTriggerElement(
-                        newExpression = timer.cron?.disjoin(),
+                        newExpression = timer.cron?.let { listOf(it) },
                         advanceExpression = timer.advanceCron,
                         noScm = timer.always != true
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
+        }
+
+        triggerOn.remote?.let { remote ->
+            elementQueue.add(
+                RemoteTriggerElement(
+                    remoteToken = yamlInput.pipelineInfo?.pipelineId?.let {
+                        transferCache.getPipelineRemoteToken(
+                            userId = yamlInput.userId,
+                            projectId = yamlInput.projectCode,
+                            pipelineId = it
+                        )
+                    } ?: ""
+                ).checkTriggerElementEnable(remote == EnableType.TRUE.value)
+            )
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    fun yaml2TriggerGitlab(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        triggerOn.push?.let { push ->
+            elementQueue.add(
+                CodeGitlabWebHookTriggerElement(
+                    branchName = push.branches.nonEmptyOrNull()?.join(),
+                    excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
+                    includePaths = push.paths.nonEmptyOrNull()?.join(),
+                    excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = push.users,
+                    excludeUsers = push.usersIgnore,
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    eventType = CodeEventType.PUSH,
+                    // todo action
+                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
+                        RepositoryType.NAME else RepositoryType.ID,
+                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryName = triggerOn.repoName
+                ).checkTriggerElementEnable(push.enable)
+            )
+        }
+
+        triggerOn.tag?.let { tag ->
+            elementQueue.add(
+                CodeGitlabWebHookTriggerElement(
+                    tagName = tag.tags.nonEmptyOrNull()?.join(),
+                    excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = tag.users,
+                    excludeUsers = tag.usersIgnore,
+                    eventType = CodeEventType.TAG_PUSH,
+                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
+                        RepositoryType.NAME else RepositoryType.ID,
+                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryName = triggerOn.repoName
+                ).checkTriggerElementEnable(tag.enable)
+            )
+        }
+
+        triggerOn.mr?.let { mr ->
+            elementQueue.add(
+                CodeGitlabWebHookTriggerElement(
+                    branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+                    excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+                    includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+                    excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+                    includePaths = mr.paths.nonEmptyOrNull()?.join(),
+                    excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = mr.users,
+                    excludeUsers = mr.usersIgnore,
+                    block = mr.block,
+                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    // todo action
+                    eventType = CodeEventType.MERGE_REQUEST,
+                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
+                        RepositoryType.NAME else RepositoryType.ID,
+                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryName = triggerOn.repoName
+                ).checkTriggerElementEnable(mr.enable)
+            )
         }
     }
 

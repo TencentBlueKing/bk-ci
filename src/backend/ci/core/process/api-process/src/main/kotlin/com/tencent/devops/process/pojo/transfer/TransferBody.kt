@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("构建模型-ID")
 data class TransferBody(
     @ApiModelProperty("modelAndSetting")
-    val modelAndSetting: PipelineModelAndSetting,
+    val modelAndSetting: PipelineModelAndSetting? = null,
     @ApiModelProperty("当前yaml内容")
     val oldYaml: String = ""
 )

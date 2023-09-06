@@ -37,7 +37,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("Git事件触发", description = CodeGitWebHookTriggerElement.classType)
 data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
-    override val name: String = "Git变更触发",
+    override val name: String = "Git事件触发",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)

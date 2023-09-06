@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.v2.parsers.template
 
-import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Repositories
@@ -44,10 +43,10 @@ object TemplateYamlUtil {
 
     // 检查是否具有重复的ID，job，variable中使用
     fun checkDuplicateKey(
-        filePath: TemplatePath,
+        filePath: String,
         keys: Set<String>,
         newKeys: Set<String>,
-        toPath: TemplatePath? = null
+        toPath: String? = null
     ): Boolean {
         val interSet = newKeys intersect keys
         return if (interSet.isEmpty() || (interSet.size == 1 && interSet.last() == Constants.TEMPLATE_KEY)) {
@@ -56,7 +55,7 @@ object TemplateYamlUtil {
             if (toPath == null) {
                 throw error(
                     Constants.TEMPLATE_ROOT_ID_DUPLICATE.format(
-                        filePath.toString(),
+                        filePath,
                         interSet.filter { it != Constants.TEMPLATE_KEY }
                     )
                 )
@@ -64,8 +63,8 @@ object TemplateYamlUtil {
                 throw error(
                     Constants.TEMPLATE_ID_DUPLICATE.format(
                         interSet.filter { it != Constants.TEMPLATE_KEY },
-                        filePath.toString(),
-                        toPath.toString()
+                        filePath,
+                        toPath
                     )
                 )
             }
@@ -74,7 +73,7 @@ object TemplateYamlUtil {
 
     // 校验当前模板的远程库信息，每个文件只可以使用当前文件下引用的远程库
     fun <T> checkAndGetRepo(
-        fromPath: TemplatePath,
+        fromPath: String,
         repoName: String,
         templateType: TemplateType,
         templateLib: TemplateLibrary<T>,
@@ -112,8 +111,8 @@ object TemplateYamlUtil {
      */
     @Deprecated("旧版本，只是为了兼容，非必要不要使用")
     fun parseTemplateParametersOld(
-        fromPath: TemplatePath,
-        path: TemplatePath,
+        fromPath: String,
+        path: String,
         template: String,
         templateParameters: MutableList<Parameters>?,
         parameters: Map<String, Any?>?
@@ -128,8 +127,8 @@ object TemplateYamlUtil {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
                             throw error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
-                                    fromPath.toString(),
-                                    path.toString(),
+                                    fromPath,
+                                    path,
                                     valueName,
                                     newValue.toString(),
                                     param.values.joinToString(",")

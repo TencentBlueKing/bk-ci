@@ -27,19 +27,20 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -50,21 +51,15 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.Permission
-import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineCopy
-import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.PipelineIdAndName
-import com.tencent.devops.process.pojo.PipelineIdInfo
-import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.*
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -77,7 +72,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService
 ) : ServicePipelineResource {
 
     override fun status(
@@ -126,8 +122,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         pipeline: Model,
         channelCode: ChannelCode,
-        updateLastModifyUser: Boolean?,
-        saveDraft: Boolean?
+        updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         val deployPipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -218,8 +213,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         modelAndSetting: PipelineModelAndSetting,
-        channelCode: ChannelCode,
-        saveDraft: Boolean?
+        channelCode: ChannelCode
     ): Result<DeployPipelineResult> {
         modelAndSetting.setting.checkParam()
         val buildNumRule = modelAndSetting.setting.buildNumRule
@@ -232,7 +226,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = modelAndSetting.model,
             setting = modelAndSetting.setting,
-            versionStatus = VersionStatus.RELEASED,
             channelCode = ChannelCode.BS
         )
 
@@ -588,6 +581,38 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 pageSize = pageSize ?: -1,
                 count = result.count,
                 records = result.records
+            )
+        )
+    }
+    
+    override fun generateRemoteToken(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<PipelineRemoteToken> {
+        checkParam(userId, projectId)
+        val language = I18nUtil.getLanguage(userId)
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EDIT.getI18n(language),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineRemoteAuthService.generateAuth(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                userId = userId
             )
         )
     }

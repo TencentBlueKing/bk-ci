@@ -32,8 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-class NoteRule(
-    val enable: Boolean? = true,
-    val types: List<String>? = null,
+class NoteRule {
+    val types: List<String>? = null
     val comment: List<String>? = null
-)
+}
