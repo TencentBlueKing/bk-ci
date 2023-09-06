@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
@@ -58,10 +59,12 @@ class RequestProjectPermissionFilter : ContainerRequestFilter {
     override fun filter(requestContext: ContainerRequestContext) {
         // 判断项目的api权限校验开关是否打开，如果是get请求或者是build接口无需做权限校验（未结束的构建需要调build接口才能完成）
         val url = requestContext.uriInfo.requestUri.path
-        logger.info("url[$url],channel[${I18nUtil.getRequestChannel()}]")
-        if (!apiProjectPermissionSwitch || requestContext.method.uppercase() == HttpMethod.GET ||
-            I18nUtil.getRequestChannel() == RequestChannelTypeEnum.BUILD.name
-        ) {
+        val channel = I18nUtil.getRequestChannel()
+        val permissionFlag = requestContext.getHeaderString(API_PERMISSION)?.toBoolean() ?: false
+        logger.info("url[$url],channel[$channel],permissionFlag[$permissionFlag]")
+        val checkFlag = permissionFlag || requestContext.method.uppercase() == HttpMethod.GET ||
+            channel == RequestChannelTypeEnum.BUILD.name
+        if (!apiProjectPermissionSwitch || checkFlag) {
             return
         }
         val uriInfo = requestContext.uriInfo

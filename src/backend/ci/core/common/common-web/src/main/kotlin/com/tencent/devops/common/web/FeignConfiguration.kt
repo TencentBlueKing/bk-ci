@@ -32,12 +32,14 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.BkApiUtil
 import feign.RequestInterceptor
 import feign.Target.HardCodedTarget
 import org.slf4j.LoggerFactory
@@ -90,6 +92,12 @@ class FeignConfiguration @Autowired constructor(
             val devopsToken = EnvironmentUtil.gatewayDevopsToken()
             if (devopsToken != null) {
                 requestTemplate.header("X-DEVOPS-TOKEN", devopsToken)
+            }
+
+            // 设置接口访问权限标识
+            val permissionFlag = BkApiUtil.getPermissionFlag()
+            if (permissionFlag != null) {
+                requestTemplate.header(API_PERMISSION, permissionFlag.toString())
             }
 
             val attributes =
