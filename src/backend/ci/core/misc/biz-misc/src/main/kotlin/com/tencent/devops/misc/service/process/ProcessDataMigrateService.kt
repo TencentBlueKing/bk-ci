@@ -96,7 +96,7 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val FAIL_MSG = "failMsg"
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
-        private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET"
+        private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
     }
 
     @Value("\${sharding.migration.timeout:#{2}}")
@@ -111,7 +111,7 @@ class ProcessDataMigrateService @Autowired constructor(
     @PostConstruct
     fun init() {
         // 启动的时候重置redis中存储的同时迁移的项目数量，防止因为服务异常停了造成程序执行出错
-        redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "0", expired = false)
+        redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, value = "0", expired = false)
     }
 
     fun migrateProjectData(
@@ -216,7 +216,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 )
             } finally {
                 // 更新同时迁移的项目数量
-                redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, -1)
+                redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
@@ -295,7 +295,7 @@ class ProcessDataMigrateService @Autowired constructor(
         dataTag: String
     ): Triple<String, Int, Map<String, String>> {
         // 判断同时迁移的项目数量是否超过限制
-        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
+        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY)?.toInt() ?: 0
         if (migrationProjectCount >= migrationMaxProjectCount) {
             throw ErrorCodeException(
                 errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
@@ -317,9 +317,13 @@ class ProcessDataMigrateService @Autowired constructor(
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
         // 把同时迁移的项目数量存入redis中
         if (migrationProjectCount < 1) {
-            redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "1", expired = false)
+            redisOperation.setIfAbsent(
+                key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY,
+                value = "1",
+                expired = false
+            )
         } else {
-            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, 1)
+            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, 1)
         }
         // 把项目数据迁移次数存入redis中
         if (projectExecuteCount < 1) {
