@@ -35,13 +35,4 @@ enum class StageLabel(
     APPROVE("Approve", "5168be68b9764edb91aa5b866e51a1a8"),
     DEPLOY("Deploy", "53b4d3f38e3e425cb1aaa97aa1b37857"),
     TEST("Test", "d0a06f6986fa4670af65ccad7bb49d3a");
-
-    companion object {
-        fun parseById(id: String): StageLabel {
-            values().forEach {
-                if (it.id == id) return it
-            }
-            return BUILD
-        }
-    }
 }

@@ -271,19 +271,18 @@ class StreamYamlBuild @Autowired constructor(
         val pipeline = action.data.context.pipeline!!
         // 如果是定时触发需要注册事件
         if (triggerResult.timeTrigger) {
-            val schedules = yaml.triggerOn?.schedules?.firstOrNull()
             streamTimerService.saveTimer(
                 StreamTimer(
                     projectId = action.getProjectCode(),
                     pipelineId = pipeline.pipelineId,
                     userId = action.data.getUserId(),
-                    crontabExpressions = listOf(schedules?.cron.toString()),
+                    crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     // 未填写则在每次触发拉默认分支
-                    branchs = schedules?.branches?.ifEmpty {
+                    branchs = yaml.triggerOn?.schedules?.branches?.ifEmpty {
                         listOf(action.data.context.defaultBranch!!)
                     } ?: listOf(action.data.context.defaultBranch!!),
-                    always = schedules?.always ?: false,
+                    always = yaml.triggerOn?.schedules?.always ?: false,
                     channelCode = channelCode,
                     eventId = action.data.context.requestEventId!!,
                     originYaml = action.data.context.originYaml!!

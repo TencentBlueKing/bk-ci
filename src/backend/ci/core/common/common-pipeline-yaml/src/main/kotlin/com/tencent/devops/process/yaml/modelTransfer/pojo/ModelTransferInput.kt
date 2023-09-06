@@ -6,6 +6,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 
 data class ModelTransferInput(
+    val userId: String,
     var model: Model,
     val setting: PipelineSetting,
     val version: YamlVersion.Version,

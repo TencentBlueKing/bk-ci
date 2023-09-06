@@ -38,7 +38,6 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TagRule(
-    val enable: Boolean? = true,
     val tags: List<String>? = null,
 
     @ApiModelProperty(name = "tags-ignore")

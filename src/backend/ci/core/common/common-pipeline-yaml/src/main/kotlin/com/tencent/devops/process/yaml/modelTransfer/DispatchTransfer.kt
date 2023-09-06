@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -45,14 +46,14 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
-import com.tencent.devops.process.yaml.v2.models.image.Pool
-import com.tencent.devops.process.yaml.v2.models.image.PoolImage
-import com.tencent.devops.process.yaml.v2.models.image.PoolType
-import com.tencent.devops.process.yaml.v2.models.job.Container3
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnPoolType
-import com.tencent.devops.process.yaml.v2.models.job.RunsOn
+import com.tencent.devops.process.yaml.v3.models.image.Pool
+import com.tencent.devops.process.yaml.v3.models.image.PoolImage
+import com.tencent.devops.process.yaml.v3.models.image.PoolType
+import com.tencent.devops.process.yaml.v3.models.job.Container3
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
+import com.tencent.devops.process.yaml.v3.models.job.RunsOn
+import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -118,7 +119,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
             container = null,
             agentSelector = null
         )
-        if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+        if (dispatchType is ThirdPartyAgentEnvDispatchType || dispatchType is ThirdPartyAgentIDDispatchType) {
             runsOn.agentSelector = when (job.baseOS) {
                 VMBaseOS.WINDOWS -> listOf("windows")
                 VMBaseOS.LINUX -> listOf("linux")

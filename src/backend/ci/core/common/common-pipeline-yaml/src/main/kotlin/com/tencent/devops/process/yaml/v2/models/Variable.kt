@@ -31,37 +31,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 
-// @JsonDeserialize(using = IVariableDeserializer::class)
-interface IVariable
-//
-// class IVariableDeserializer : StdDeserializer<IVariable>(IVariable::class.java) {
-//    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): IVariable {
-//        val node: JsonNode = p.codec.readTree(p)
-//        return when (node) {
-//            is ObjectNode -> Variable(
-//                value = node.get(Variable::value.name)?.asText(),
-//                readonly = node.get(Variable::readonly.name)?.asBoolean(),
-//                allowModifyAtStartup = node.get(Variable::allowModifyAtStartup.name)?.asBoolean(),
-//                props = JsonUtil.toOrNull(
-//                    node.get(Variable::props.name)?.toString(), object : TypeReference<VariableProps>() {}),
-//            )
-//            is ArrayNode -> TemplateVariable(JsonUtil.to(node.toString(), object : TypeReference<List<Extends>>() {}))
-//            is TextNode -> ShortVariable(node.toString())
-//            else -> throw Exception("")
-//        }
-//    }
-// }
-//
-// class IVariableSerializer : StdSerializer<IVariable>(IVariable::class.java) {
-//    override fun serialize(value: IVariable, gen: JsonGenerator, provider: SerializerProvider) {
-//        when (value) {
-//            is ShortVariable -> gen.writeString(value.value)
-//            is Variable -> gen.writeObject(value.toMap())
-//            is TemplateVariable -> gen.writeObject(value.toList())
-//        }
-//    }
-// }
-
 /**
  * Variable model
  * @param allowModifyAtStartup 手动触发/openapi触发时生效
@@ -73,14 +42,8 @@ data class Variable(
     val readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = false,
-    @JsonProperty("value-not-empty")
-    val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
-) : IVariable
-
-data class ShortVariable(val value: String) : IVariable
-
-data class TemplateVariable(private val list: List<Extends>) : List<Extends> by list, IVariable
+)
 
 /**
  * Variable 属性变量

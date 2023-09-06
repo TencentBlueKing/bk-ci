@@ -38,19 +38,11 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefau
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.Concurrency
-import com.tencent.devops.process.yaml.v2.models.GitNotices
-import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.IfType
-import com.tencent.devops.process.yaml.v2.models.Notices
-import com.tencent.devops.process.yaml.v2.models.PacNotices
-import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
-import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.tencent.devops.process.yaml.v2.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.*
+import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,7 +51,8 @@ import org.springframework.stereotype.Component
 class ModelTransfer @Autowired constructor(
     val client: Client,
     val modelStage: StageTransfer,
-    val modelElement: ElementTransfer,
+    val elementTransfer: ElementTransfer,
+    val variableTransfer: VariableTransfer,
     val transferCache: TransferCacheService
 ) {
 
@@ -68,7 +61,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     fun yaml2Labels(yamlInput: YamlTransferInput): List<String> {
-        return preparePipelineLabels(yamlInput.projectCode, yamlInput.yaml)
+        return preparePipelineLabels(yamlInput.userId, yamlInput.projectCode, yamlInput.yaml)
     }
 
     fun yaml2Setting(yamlInput: YamlTransferInput): PipelineSetting {
@@ -130,7 +123,6 @@ class ModelTransfer @Autowired constructor(
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         var stageIndex = 1
-        // todo 需要trigger on
         stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex++))
 
         // 其他的stage
@@ -173,9 +165,9 @@ class ModelTransfer @Autowired constructor(
             val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId)
             stages.add(ymlStage)
         }
-        val label = prepareYamlLabels(modelInput.setting).ifEmpty { null }
+        val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
         val triggerOn = makeTriggerOn(modelInput)
-        val variables = makeVariableFromModel(modelInput.model)
+        val variables = variableTransfer.makeVariableFromModel(modelInput.model)
         val lastStage = modelInput.model.stages.last()
         val finally = if (lastStage.finally)
             modelStage.model2YamlStage(lastStage, modelInput.setting.projectId).jobs else null
@@ -195,6 +187,7 @@ class ModelTransfer @Autowired constructor(
                 finally = finally,
                 concurrency = concurrency
             )
+
             YamlVersion.Version.V3_0 -> PreTemplateScriptBuildYamlV3(
                 version = "v3.0",
                 name = modelInput.model.name,
@@ -228,13 +221,13 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices> {
         val res = mutableListOf<PacNotices>()
-        setting.successSubscriptionList?.forEach {
+        setting.successSubscriptionList?.plus(setting.successSubscription)?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.SUCCESS.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }
-        setting.failSubscriptionList?.forEach {
+        setting.failSubscriptionList?.plus(setting.failSubscription)?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.FAILURE.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
@@ -259,8 +252,8 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeTriggerOn(modelInput: ModelTransferInput): List<IPreTriggerOn> {
         val triggers = (modelInput.model.stages[0].containers[0] as TriggerContainer).elements
-        val baseTrigger = modelElement.baseTriggers2yaml(triggers)?.toPre(modelInput.version)
-        val scmTrigger = modelElement.scmTriggers2Yaml(triggers, modelInput.setting.projectId)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers)?.toPre(modelInput.version)
+        val scmTrigger = elementTransfer.scmTriggers2Yaml(triggers, modelInput.setting.projectId)
         when (modelInput.version) {
             YamlVersion.Version.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
@@ -281,6 +274,7 @@ class ModelTransfer @Autowired constructor(
                 // 不带触发器
                 return emptyList()
             }
+
             YamlVersion.Version.V3_0 -> {
                 val trigger = mutableListOf<IPreTriggerOn>()
                 val triggerV3 = scmTrigger.map { on ->
@@ -311,33 +305,16 @@ class ModelTransfer @Autowired constructor(
         }
     }
 
-    private fun makeVariableFromModel(model: Model): Map<String, Variable>? {
-        val result = mutableMapOf<String, Variable>()
-        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
-            // todo 启动参数需要更详细的解析
-            result[it.id] = Variable(
-                it.defaultValue.toString(),
-                readonly = it.readOnly.nullIfDefault(false),
-                allowModifyAtStartup = it.required.nullIfDefault(true),
-                valueNotEmpty = it.valueNotEmpty.nullIfDefault(false)
-            )
-        }
-        return if (result.isEmpty()) {
-            null
-        } else {
-            result
-        }
-    }
-
     @Suppress("NestedBlockDepth")
     private fun preparePipelineLabels(
+        userId: String,
         projectCode: String,
         yaml: IPreTemplateScriptBuildYaml
     ): List<String> {
         val ymlLabel = yaml.label ?: return emptyList()
         val labels = mutableListOf<String>()
 
-        transferCache.getPipelineLabel(projectCode)?.forEach { group ->
+        transferCache.getPipelineLabel(userId, projectCode)?.forEach { group ->
             group.labels.forEach {
                 if (ymlLabel.contains(it.name)) labels.add(it.id)
             }
@@ -346,11 +323,12 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun prepareYamlLabels(
+        userId: String,
         pipelineSetting: PipelineSetting
     ): List<String> {
         val labels = mutableListOf<String>()
 
-        transferCache.getPipelineLabel(pipelineSetting.projectId)?.forEach { group ->
+        transferCache.getPipelineLabel(userId, pipelineSetting.projectId)?.forEach { group ->
             group.labels.forEach {
                 if (pipelineSetting.labels.contains(it.id)) labels.add(it.name)
             }

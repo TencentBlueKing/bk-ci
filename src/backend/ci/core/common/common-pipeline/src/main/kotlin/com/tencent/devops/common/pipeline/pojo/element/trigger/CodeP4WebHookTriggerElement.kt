@@ -36,7 +36,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("p4事件触发", description = CodeP4WebHookTriggerElement.classType)
 data class CodeP4WebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
-    override val name: String = "TGit变更触发",
+    override val name: String = "P4事件触发",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)

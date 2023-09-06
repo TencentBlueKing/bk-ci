@@ -38,11 +38,6 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
-    val enable: Boolean? = true,
-    @ApiModelProperty(name = "source-branches")
-    @JsonProperty("source-branches")
-    val sourceBranches: List<String>? = null,
-
     @ApiModelProperty(name = "source-branches-ignore")
     @JsonProperty("source-branches-ignore")
     val sourceBranchesIgnore: List<String>? = null,
@@ -50,10 +45,6 @@ data class MrRule(
     @ApiModelProperty(name = "target-branches")
     @JsonProperty("target-branches")
     val targetBranches: List<String>? = null,
-
-    @ApiModelProperty(name = "target-branches-ignore")
-    @JsonProperty("target-branches-ignore")
-    val targetBranchesIgnore: List<String>? = null,
 
     val paths: List<String>? = null,
 
@@ -67,15 +58,5 @@ data class MrRule(
 
     @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-
-    val block: Boolean? = null,
-
-    val webhookQueue: Boolean? = null,
-
-    val enableCheck: Boolean? = null,
-
-    @ApiModelProperty(name = "path-filter-type")
-    @JsonProperty("path-filter-type")
-    val pathFilterType: String? = null
+    val usersIgnore: List<String>? = null
 )

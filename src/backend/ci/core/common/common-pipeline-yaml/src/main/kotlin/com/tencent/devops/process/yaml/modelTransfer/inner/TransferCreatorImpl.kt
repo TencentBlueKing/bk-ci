@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
@@ -69,8 +69,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
         get() = defaultImageData
 
     override fun transferCheckoutElement(
-        step: Step,
-        additionalOptions: ElementAdditionalOptions
+        step: Step
     ): MarketBuildAtomElement {
         // checkout插件装配
         val inputMap = mutableMapOf<String, Any?>()
@@ -107,14 +106,12 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             stepId = step.id,
             atomCode = "checkout",
             version = "1.*",
-            data = data,
-            additionalOptions = additionalOptions
+            data = data
         )
     }
 
     override fun transferMarketBuildAtomElement(
-        step: Step,
-        additionalOptions: ElementAdditionalOptions
+        step: Step
     ): MarketBuildAtomElement {
         val data = mutableMapOf<String, Any>()
         data["input"] = step.with ?: Any()
@@ -124,8 +121,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             stepId = step.id,
             atomCode = step.uses!!.split('@')[0],
             version = step.uses!!.split('@')[1],
-            data = data,
-            additionalOptions = additionalOptions
+            data = data
         )
     }
 }

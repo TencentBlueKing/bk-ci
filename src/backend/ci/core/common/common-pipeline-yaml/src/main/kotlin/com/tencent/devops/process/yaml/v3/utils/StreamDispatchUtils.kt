@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.utils
+package com.tencent.devops.process.yaml.v3.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.constant.CommonMessageCode.BUILD_RESOURCE_NOT_EXIST
@@ -44,10 +44,10 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfo
-import com.tencent.devops.process.yaml.v2.models.job.Container
-import com.tencent.devops.process.yaml.v2.models.job.Container2
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.Container
+import com.tencent.devops.process.yaml.v3.models.job.Container2
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential

@@ -17,7 +17,7 @@ import com.github.difflib.patch.DeltaType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.process.pojo.transfer.TransferMark
-import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory

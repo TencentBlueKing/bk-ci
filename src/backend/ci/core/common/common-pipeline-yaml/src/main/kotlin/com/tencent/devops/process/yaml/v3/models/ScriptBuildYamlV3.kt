@@ -30,14 +30,14 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.Concurrency
-import com.tencent.devops.process.yaml.v2.models.Extends
-import com.tencent.devops.process.yaml.v2.models.GitNotices
-import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v2.models.stage.Stage
+import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.Extends
+import com.tencent.devops.process.yaml.v3.models.GitNotices
+import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.stage.Stage
 
 /**
  * model
