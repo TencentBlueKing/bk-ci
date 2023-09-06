@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
@@ -401,10 +402,14 @@ class PipelineTriggerEventService @Autowired constructor(
             listOf()
         } else {
             reasonDetailList!!.map {
-                JsonUtil.to(
-                    json = it,
+                val reasonDetail = JsonUtil.to(it, PipelineTriggerReasonDetail::class.java)
+                // 国际化触发失败原因
+                val i18nReason = JsonUtil.to(
+                    json = reasonDetail.reasonMsg,
                     typeReference = object : TypeReference<I18Variable>() {}
                 ).getCodeLanMessage(language)
+                // 详情格式： |{{触发器名称}}|{{国际化后的触发失败原因}}
+                "|${reasonDetail.elementName}|${i18nReason}"
             }
         }
     } catch (ignored: Exception) {

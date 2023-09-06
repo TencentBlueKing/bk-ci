@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
@@ -294,7 +295,14 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 )
                 if (!matchResult.reason.isNullOrBlank()) {
                     builder.eventSource(eventSource = repo.repoHashId!!)
-                        .reasonDetail("|${element.name}|${matchResult.reason}")
+                        .reasonDetail(JsonUtil.toJson(
+                            PipelineTriggerReasonDetail(
+                                elementId = element.id,
+                                elementName = element.name,
+                                elementAtomCode = element.getAtomCode(),
+                                reasonMsg = matchResult.reason!!
+                            )
+                        ))
                 }
             }
         }
