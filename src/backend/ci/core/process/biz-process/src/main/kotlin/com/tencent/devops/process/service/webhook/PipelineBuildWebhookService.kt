@@ -294,7 +294,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 )
                 if (!matchResult.reason.isNullOrBlank()) {
                     builder.eventSource(eventSource = repo.repoHashId!!)
-                        .reasonDetail("${matchResult.reason}")
+                        .reasonDetail("|${element.name}|${matchResult.reason}")
                 }
             }
         }
