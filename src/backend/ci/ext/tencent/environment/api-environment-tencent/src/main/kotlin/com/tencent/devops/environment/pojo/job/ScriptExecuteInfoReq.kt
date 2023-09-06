@@ -5,10 +5,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("执行脚本的信息")
 data class ScriptExecuteInfoReq(
-    @ApiModelProperty(value = "脚本内容", required = true)
+    @ApiModelProperty(value = "脚本内容Base64", required = true)
     val scriptContent: String,
     @ApiModelProperty(value = "脚本执行超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400")
-    private val scriptTimeout: Long = 7200,
+    val timeout: Long = 7200,
     @ApiModelProperty(value = "脚本执行参数", required = true)
     val scriptParam: String,
     @ApiModelProperty(value = "是否执行敏感参数", notes = "0：不是（默认），1：是")
@@ -19,7 +19,7 @@ data class ScriptExecuteInfoReq(
     )
     val scriptType: Int,
     @ApiModelProperty(value = "目标服务器", required = true)
-    val targetEnv: EnvsetInfo,
+    val targetEnv: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
-    val userAccount: String
+    val account: String
 )

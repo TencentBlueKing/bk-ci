@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
-import com.tencent.devops.environment.pojo.job.QueryLogsReq
-import com.tencent.devops.environment.pojo.job.QueryLogsResult
-import com.tencent.devops.environment.pojo.job.QueryStatusResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import io.swagger.annotations.Api
@@ -47,6 +47,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_JOB"], description = "服务-JOB")
@@ -57,7 +58,7 @@ interface ServiceJobResource {
     @ApiOperation("脚本执行的Job接口")
     @POST
     @Path("/{projectId}/script_execute")
-    fun executeScripts(
+    fun executeScript(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -84,7 +85,7 @@ interface ServiceJobResource {
 
     @ApiOperation("查询任务状态的Job接口")
     @GET
-    @Path("/{projectId}/query_status")
+    @Path("/{projectId}/query_job_instance_status")
     fun queryStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -93,12 +94,13 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "作业实例ID", required = true)
+        @QueryParam("jobInstanceId")
         jobInstanceId: Long
-    ): Result<QueryStatusResult>
+    ): Result<QueryJobInstanceStatusResult>
 
     @ApiOperation("批量查询日志的Job接口")
     @POST
-    @Path("/{projectId}/query_logs")
+    @Path("/{projectId}/query_job_instance_logs")
     fun queryLogs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -107,6 +109,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
-        queryLogsReq: QueryLogsReq
-    ): Result<QueryLogsResult>
+        queryLogsReq: QueryJobInstanceLogsReq
+    ): Result<QueryJobInstanceLogsResult>
 }

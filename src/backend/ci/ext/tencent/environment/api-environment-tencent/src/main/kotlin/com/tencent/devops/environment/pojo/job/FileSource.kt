@@ -8,7 +8,7 @@ data class FileSource(
     @ApiModelProperty(value = "文件集合", required = true)
     val fileList: List<String>,
     @ApiModelProperty(value = "源文件服务器", required = true)
-    val fileEnv: EnvsetInfo,
+    val fileEnv: ExecuteTarget,
     @ApiModelProperty(value = "文件源账号", required = true)
-    val fileAccount: String
+    val account: String
 )

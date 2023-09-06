@@ -8,11 +8,11 @@ data class FileDistributeInfoReq(
     @ApiModelProperty(value = "源文件列表", required = true)
     val fileSourceList: List<FileSource>,
     @ApiModelProperty(value = "文件传输目标路径", required = true)
-    private val fileTargetPath: String,
+    val fileTargetPath: String,
     @ApiModelProperty(value = "目标服务器", required = true)
-    val targetEnv: EnvsetInfo,
+    val targetEnv: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
-    val userAccount: String,
+    val account: String,
     @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。")
-    private val distributeTimeout: Long = 7200
+    val timeout: Long = 7200
 )

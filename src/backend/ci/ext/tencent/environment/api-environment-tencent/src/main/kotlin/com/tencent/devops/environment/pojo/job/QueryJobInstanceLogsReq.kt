@@ -4,11 +4,13 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("批量查询日志的请求信息")
-data class QueryLogsReq(
+data class QueryJobInstanceLogsReq(
     @ApiModelProperty(value = "作业实例ID", required = true)
     val jobInstanceId: Long,
     @ApiModelProperty(value = "步骤实例ID", required = true)
-    private val stepInstanceId: Long,
-    @ApiModelProperty(value = "源/目标主机IP列表", required = true)
-    val ipList: List<IPInfo>
+    val stepInstanceId: Long,
+    @ApiModelProperty(value = "源/目标主机IP列表")
+    val ipList: List<HostInfo>?,
+    @ApiModelProperty(value = "主机ID列表")
+    val hostIdList: List<HostInfo>?
 )

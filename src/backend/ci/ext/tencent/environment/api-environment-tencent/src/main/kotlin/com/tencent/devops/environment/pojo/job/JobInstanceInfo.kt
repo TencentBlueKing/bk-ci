@@ -20,10 +20,6 @@ data class JobInstanceInfo(
     val endTime: Long,
     @ApiModelProperty(value = "总耗时", notes = "单位毫秒", required = true)
     val totalTime: Int,
-    @ApiModelProperty(value = "资源范围类型", notes = "可选值: biz - 业务，biz_set - 业务集", required = true)
-    val scopeType: String,
-    @ApiModelProperty(value = "资源范围ID", notes = "与上面scopeType对应, 表示业务ID或者业务集ID", required = true)
-    val scopeId: String,
     @ApiModelProperty(value = "作业实例ID", required = true)
     val jobInstanceId: Long
 )

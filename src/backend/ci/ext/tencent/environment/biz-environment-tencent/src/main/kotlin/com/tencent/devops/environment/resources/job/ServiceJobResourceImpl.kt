@@ -32,9 +32,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
-import com.tencent.devops.environment.pojo.job.QueryLogsReq
-import com.tencent.devops.environment.pojo.job.QueryLogsResult
-import com.tencent.devops.environment.pojo.job.QueryStatusResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 
@@ -48,11 +48,11 @@ class ServiceJobResourceImpl : ServiceJobResource {
         TODO("Not yet implemented")
     }
 
-    override fun queryStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryStatusResult> {
+    override fun queryStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryJobInstanceStatusResult> {
         TODO("Not yet implemented")
     }
 
-    override fun queryLogs(userId: String, projectId: String, queryLogsReq: QueryLogsReq): Result<QueryLogsResult> {
+    override fun queryLogs(userId: String, projectId: String, queryLogsReq: QueryJobInstanceLogsReq): Result<QueryJobInstanceLogsResult> {
         TODO("Not yet implemented")
     }
 }
