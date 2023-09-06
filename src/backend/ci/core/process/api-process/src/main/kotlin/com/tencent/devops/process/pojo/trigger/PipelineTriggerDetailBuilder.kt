@@ -96,7 +96,12 @@ class PipelineTriggerDetailBuilder {
             buildId = buildId,
             buildNum = buildNum,
             reason = reason,
-            reasonDetailList = reasonDetailList
+            reasonDetailList = if (status == PipelineTriggerStatus.SUCCEED.name) {
+                // 当流水线存在多个触发器关联同一代码库，其中有一个触发器触发成功，则不保存其他触发器触发失败信息
+                listOf()
+            } else {
+                reasonDetailList
+            }
         )
     }
 }
