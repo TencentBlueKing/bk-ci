@@ -79,7 +79,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
-    private val dispatchService1: DispatchService1
+    private val dispatchAgentService: DispatchAgentService
 ) : Dispatcher {
     override fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
@@ -251,7 +251,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 val message = if (dockerInfo == null) {
                     null
                 } else {
-                    dispatchService1.setRedisAuth(event)
+                    dispatchAgentService.setRedisAuth(event)
                 }
 
                 // #5806 入库失败就不再写Redis

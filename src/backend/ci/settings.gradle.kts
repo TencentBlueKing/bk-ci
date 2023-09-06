@@ -270,7 +270,3 @@ include(":core:metrics:model-metrics")
 
 include("core:mutijar")
 include("core:mutijar:boot-mutijar")
-include("core:mutijar:boot-mutijar")
-findProject(":core:mutijar:boot-mutijar")?.name = "boot-mutijar"
-include("core:mutijar:boot-mutijar")
-findProject(":core:mutijar:boot-mutijar")?.name = "boot-mutijar"

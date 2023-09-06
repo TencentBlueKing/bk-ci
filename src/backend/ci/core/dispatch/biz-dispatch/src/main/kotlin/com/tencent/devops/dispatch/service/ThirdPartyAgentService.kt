@@ -49,7 +49,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService1
+import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchAgentService
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
@@ -75,7 +75,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val dispatchService1: DispatchService1
+    private val dispatchAgentService: DispatchAgentService
 ) {
 
     fun queueBuild(
@@ -367,7 +367,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(it, success)
                 if (it.dockerInfo != null) {
                     // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                    dispatchService1.shutdown(event)
+                    dispatchAgentService.shutdown(event)
                 }
             }
         } else {
@@ -375,7 +375,7 @@ class ThirdPartyAgentService @Autowired constructor(
             finishBuild(record, success)
             if (record.dockerInfo != null) {
                 // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                dispatchService1.shutdown(event)
+                dispatchAgentService.shutdown(event)
             }
         }
     }

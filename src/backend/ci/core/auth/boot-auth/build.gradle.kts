@@ -30,7 +30,3 @@ dependencies {
     api(project(":core:auth:biz-auth-blueking"))
     api(project(":core:auth:biz-auth-rbac"))
 }
-tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
-    //classpath = files("${project.rootDir}\\release\\boot-finalModule.jar")
-    println("greysonfang-test classpath = ${classpath.asPath}")
-}
