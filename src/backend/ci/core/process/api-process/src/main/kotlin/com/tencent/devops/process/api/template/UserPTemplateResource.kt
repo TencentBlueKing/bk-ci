@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -295,4 +296,22 @@ interface UserPTemplateResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    // PAC新增
+    @ApiOperation("获取列表流水线预览")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/preview")
+    fun previewTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @QueryParam("needSetting")
+        needSetting: Boolean?
+    ): Result<TemplatePreviewDetail>
 }
