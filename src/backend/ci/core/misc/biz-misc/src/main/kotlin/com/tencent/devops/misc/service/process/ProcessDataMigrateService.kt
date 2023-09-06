@@ -229,7 +229,7 @@ class ProcessDataMigrateService @Autowired constructor(
         projectId: String,
         userId: String,
         historyShardingRoutingRule: ShardingRoutingRule?,
-        errorMsg: String? = null,
+        errorMsg: String? = null
     ): Boolean {
         // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
         val projectCurrentExecuteCount = projectExecuteCount + 1
