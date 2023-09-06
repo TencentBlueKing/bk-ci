@@ -150,6 +150,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     private fun send(weworkMessage: WeweokRobotBaseMessage): Optional<Throwable> {
+        if (weworkMessage.chatid.isNullOrBlank() || weworkMessage.chatid == "null") {
+            logger.warn("failed to send wework robot message,chatid can't be empty")
+            return Optional.empty()
+        }
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         return OkhttpUtils.doPost(url, requestBody).use {
