@@ -31,7 +31,6 @@ import com.tencent.devops.common.db.listener.BkShardingRoutingRuleListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.service.utils.BkServiceUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -48,7 +47,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import java.text.MessageFormat
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)

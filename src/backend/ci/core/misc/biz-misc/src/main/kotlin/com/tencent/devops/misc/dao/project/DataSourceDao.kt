@@ -28,15 +28,12 @@
 package com.tencent.devops.misc.dao.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
 import com.tencent.devops.model.project.tables.records.TDataSourceRecord
-import com.tencent.devops.project.pojo.DataSource
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class DataSourceDao {

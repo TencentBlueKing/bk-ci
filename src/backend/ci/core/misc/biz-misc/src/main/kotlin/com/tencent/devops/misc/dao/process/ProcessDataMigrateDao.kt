@@ -53,7 +53,6 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
-import com.tencent.devops.model.process.tables.TPipelineTransferHistory
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
@@ -67,7 +66,6 @@ import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
-import com.tencent.devops.model.process.tables.TTemplateTransferHistory
 import com.tencent.devops.model.process.tables.records.TAuditResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
@@ -94,7 +92,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
-import com.tencent.devops.model.process.tables.records.TPipelineTransferHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewTopRecord
@@ -108,7 +105,6 @@ import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackR
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
-import com.tencent.devops.model.process.tables.records.TTemplateTransferHistoryRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -585,30 +581,6 @@ class ProcessDataMigrateDao {
         }
     }
 
-    fun getPipelineTransferHistoryRecords(
-        dslContext: DSLContext,
-        projectId: String,
-        limit: Int,
-        offset: Int
-    ): List<TPipelineTransferHistoryRecord> {
-        with(TPipelineTransferHistory.T_PIPELINE_TRANSFER_HISTORY) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .orderBy(PIPELINE_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineTransferHistoryRecord::class.java)
-        }
-    }
-
-    fun migratePipelineTransferHistoryData(
-        migratingShardingDslContext: DSLContext,
-        pipelineTransferHistoryRecords: List<TPipelineTransferHistoryRecord>
-    ) {
-        with(TPipelineTransferHistory.T_PIPELINE_TRANSFER_HISTORY) {
-            val insertRecords = pipelineTransferHistoryRecords.map { migratingShardingDslContext.newRecord(this, it) }
-            migratingShardingDslContext.batchInsert(insertRecords).execute()
-        }
-    }
-
     fun getPipelineViewRecords(
         dslContext: DSLContext,
         projectId: String,
@@ -848,30 +820,6 @@ class ProcessDataMigrateDao {
     ) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val insertRecords = templatePipelineRecords.map { migratingShardingDslContext.newRecord(this, it) }
-            migratingShardingDslContext.batchInsert(insertRecords).execute()
-        }
-    }
-
-    fun getTemplateTransferHistoryRecords(
-        dslContext: DSLContext,
-        projectId: String,
-        limit: Int,
-        offset: Int
-    ): List<TTemplateTransferHistoryRecord> {
-        with(TTemplateTransferHistory.T_TEMPLATE_TRANSFER_HISTORY) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .orderBy(TEMPLATE_ID.asc())
-                .limit(limit).offset(offset).fetchInto(TTemplateTransferHistoryRecord::class.java)
-        }
-    }
-
-    fun migrateTemplateTransferHistoryData(
-        migratingShardingDslContext: DSLContext,
-        templateTransferHistoryRecords: List<TTemplateTransferHistoryRecord>
-    ) {
-        with(TTemplateTransferHistory.T_TEMPLATE_TRANSFER_HISTORY) {
-            val insertRecords = templateTransferHistoryRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }

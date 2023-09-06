@@ -51,14 +51,14 @@ class ShardingRoutingRuleDispatcher @Autowired constructor(
             try {
                 send(event)
             } catch (ignored: Exception) {
-                if (ignored.cause is ChannelContinuationTimeoutException) {
-                    logger.warn("[SHARDING_MQ_SERVER]Fail to dispatch the event($event)", ignored)
-                    val cause = ignored.cause as ChannelContinuationTimeoutException
-                    if (cause.method is AMQImpl.Channel.Open) {
-                        send(event)
-                    }
-                } else {
+                if (ignored.cause !is ChannelContinuationTimeoutException) {
                     logger.error("[SHARDING_MQ_SERVER]Fail to dispatch the event($event)", ignored)
+                    return
+                }
+                logger.warn("[SHARDING_MQ_SERVER]Fail to dispatch the event($event)", ignored)
+                val cause = ignored.cause as ChannelContinuationTimeoutException
+                if (cause.method is AMQImpl.Channel.Open) {
+                    send(event)
                 }
             }
         }

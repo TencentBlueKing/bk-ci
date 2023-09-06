@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
 import com.tencent.devops.common.db.pojo.MIGRATING_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -67,7 +68,7 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 import javax.annotation.Resource
 
-@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList")
+@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service
 class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -95,7 +96,7 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val FAIL_MSG = "failMsg"
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
-        private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET"
+        private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
     }
 
     @Value("\${sharding.migration.timeout:#{2}}")
@@ -104,15 +105,14 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.maxProjectCount:#{5}}")
     private val migrationMaxProjectCount: Int = DEFAULT_MIGRATION_MAX_PROJECT_COUNT
 
-    @Value("\${sharding.migration.processDbMicroServices:}")
+    @Value("\${sharding.migration.processDbMicroServices:#{\"process,engine,misc,lambda\"}}")
     private val migrationProcessDbMicroServices = "process,engine,misc,lambda"
 
     @PostConstruct
     fun init() {
         // 启动的时候重置redis中存储的同时迁移的项目数量，防止因为服务异常停了造成程序执行出错
-        redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "0", expired = false)
+        redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, value = "0", expired = false)
     }
-
 
     fun migrateProjectData(
         userId: String,
@@ -120,41 +120,8 @@ class ProcessDataMigrateService @Autowired constructor(
         cancelFlag: Boolean = false,
         dataTag: String
     ): Boolean {
-        // 判断同时迁移的项目数量是否超过限制
-        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY)?.toInt() ?: 0
-        if (migrationProjectCount >= migrationMaxProjectCount) {
-            throw ErrorCodeException(
-                errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
-                params = arrayOf(migrationMaxProjectCount.toString())
-            )
-        }
-        // 判断项目是否超过规定的重试次数
-        val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
-        val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
-        if (projectExecuteCount >= RETRY_NUM) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
-                params = arrayOf(RETRY_NUM.toString())
-            )
-        }
-        // 锁定项目,不允许用户发起新构建等操作
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
-        // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
-        confirmAllServiceCacheIsUpdated(projectId)
-        // 为项目分配路由规则
-        val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
-        // 把同时迁移的项目数量存入redis中
-        if (migrationProjectCount < 1) {
-            redisOperation.setIfAbsent(key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, value = "1", expired = false)
-        } else {
-            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, 1)
-        }
-        // 把项目数据迁移次数存入redis中
-        if (projectExecuteCount < 1) {
-            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1", TimeUnit.HOURS.toSeconds(migrationTimeout))
-        } else {
-            redisOperation.increment(migrateProjectExecuteCountKey, 1)
-        }
+        // 执行迁移前的逻辑
+        val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(projectId, dataTag)
         // 开启异步任务迁移项目的数据
         Executors.newFixedThreadPool(1).submit {
             logger.info("migrateProjectData begin,params:[$userId|$projectId]")
@@ -236,59 +203,135 @@ class ProcessDataMigrateService @Autowired constructor(
                 // 执行迁移完成后的逻辑
                 doAfterMigrationBus(userId, projectId, routingRuleMap)
             } catch (ignored: Throwable) {
-                logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=${ignored.message}", ignored)
-                // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
-                val projectCurrentExecuteCount = projectExecuteCount + 1
-                val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
-                if (projectCurrentExecuteCount != projectLatestExecuteCount) {
-                    logger.warn(
-                        "migrateProjectData project:[$projectId] executeCount validate fail|" +
-                            "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
-                            "projectLatestExecuteCount:$projectLatestExecuteCount"
-                    )
-                    return@submit
-                }
-                val titleParams = mapOf(KEY_PROJECT_ID to projectId)
-                val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (ignored.message ?: ""))
-                val request = SendNotifyMessageTemplateRequest(
-                    templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
-                    receivers = mutableSetOf(userId),
-                    titleParams = titleParams,
-                    bodyParams = bodyParams,
-                    notifyType = mutableSetOf(NotifyType.WEWORK.name)
+                val errorMsg = ignored.message
+                logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=$errorMsg", ignored)
+                // 执行迁移出错的逻辑
+                doMigrationErrorBus(
+                    projectExecuteCount = projectExecuteCount,
+                    migrateProjectExecuteCountKey = migrateProjectExecuteCountKey,
+                    projectId = projectId,
+                    userId = userId,
+                    historyShardingRoutingRule = historyShardingRoutingRule,
+                    errorMsg = errorMsg
                 )
-                try {
-                    // 删除迁移库的数据
-                    migratingShardingDslContext.transaction { t ->
-                        val context = DSL.using(t)
-                        deleteAllProjectData(context, projectId)
-                    }
-                    // 把项目路由规则还原
-                    historyShardingRoutingRule?.let {
-                        client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
-                            userId = userId,
-                            shardingRoutingRule = historyShardingRoutingRule
-                        )
-                    }
-                } catch (ignored: Throwable) {
-                    logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
-                }
-                try {
-                    // 发送迁移失败消息
-                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-                } catch (ignored: Throwable) {
-                    logger.warn(
-                        "migrateProjectData project:[$projectId] send msg" +
-                            " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
-                    )
-                }
             } finally {
                 // 更新同时迁移的项目数量
-                redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_SET_KEY, -1)
+                redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
             }
             logger.info("migrateProjectData end,params:[$userId|$projectId]")
         }
         return true
+    }
+
+    private fun doMigrationErrorBus(
+        projectExecuteCount: Int,
+        migrateProjectExecuteCountKey: String,
+        projectId: String,
+        userId: String,
+        historyShardingRoutingRule: ShardingRoutingRule?,
+        errorMsg: String? = null
+    ): Boolean {
+        // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
+        val projectCurrentExecuteCount = projectExecuteCount + 1
+        val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
+        if (projectCurrentExecuteCount != projectLatestExecuteCount) {
+            logger.warn(
+                "migrateProjectData project:[$projectId] executeCount validate fail|" +
+                    "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
+                    "projectLatestExecuteCount:$projectLatestExecuteCount"
+            )
+            return true
+        }
+        val titleParams = mapOf(KEY_PROJECT_ID to projectId)
+        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (errorMsg ?: ""))
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE,
+            receivers = mutableSetOf(userId),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.WEWORK.name)
+        )
+        try {
+            // 删除迁移库的数据
+            migratingShardingDslContext.transaction { t ->
+                val context = DSL.using(t)
+                deleteAllProjectData(context, projectId)
+            }
+            // 把项目路由规则还原
+            val updateShardingRoutingRule = historyShardingRoutingRule
+                ?: ShardingRoutingRule(
+                    clusterName = CommonUtils.getDbClusterName(),
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    dataSourceName = DEFAULT_DATA_SOURCE_NAME,
+                    type = ShardingRuleTypeEnum.DB,
+                    routingName = projectId,
+                    routingRule = DEFAULT_DATA_SOURCE_NAME
+                )
+            historyShardingRoutingRule?.let {
+                client.get(ServiceShardingRoutingRuleResource::class).updateShardingRoutingRule(
+                    userId = userId,
+                    shardingRoutingRule = updateShardingRoutingRule
+                )
+            }
+            // 判断微服务所有服务器的缓存是否已经全部更新成一致，不一致需要人工介入确认
+            confirmAllServiceCacheIsUpdated(projectId)
+        } catch (ignored: Throwable) {
+            logger.warn("migrateProjectData project:[$projectId] restore data fail!", ignored)
+        }
+        try {
+            // 发送迁移失败消息
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "migrateProjectData project:[$projectId] send msg" +
+                    " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
+            )
+        }
+        return false
+    }
+
+    private fun doPreMigrationBus(
+        projectId: String,
+        dataTag: String
+    ): Triple<String, Int, Map<String, String>> {
+        // 判断同时迁移的项目数量是否超过限制
+        val migrationProjectCount = redisOperation.get(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY)?.toInt() ?: 0
+        if (migrationProjectCount >= migrationMaxProjectCount) {
+            throw ErrorCodeException(
+                errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NUM_TOO_MANY,
+                params = arrayOf(migrationMaxProjectCount.toString())
+            )
+        }
+        // 判断项目是否超过规定的重试次数
+        val migrateProjectExecuteCountKey = getMigrateProjectExecuteCountKey(projectId)
+        val projectExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt() ?: 0
+        if (projectExecuteCount >= RETRY_NUM) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INTERFACE_RETRY_NUM_EXCEEDED,
+                params = arrayOf(RETRY_NUM.toString())
+            )
+        }
+        // 锁定项目,不允许用户发起新构建等操作
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        // 为项目分配路由规则
+        val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
+        // 把同时迁移的项目数量存入redis中
+        if (migrationProjectCount < 1) {
+            redisOperation.setIfAbsent(
+                key = MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY,
+                value = "1",
+                expired = false
+            )
+        } else {
+            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, 1)
+        }
+        // 把项目数据迁移次数存入redis中
+        if (projectExecuteCount < 1) {
+            redisOperation.setIfAbsent(migrateProjectExecuteCountKey, "1", TimeUnit.HOURS.toSeconds(migrationTimeout))
+        } else {
+            redisOperation.increment(migrateProjectExecuteCountKey, 1)
+        }
+        return Triple(migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap)
     }
 
     fun getMigrateProjectExecuteCountKey(projectId: String): String {
@@ -329,7 +372,6 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteDao.deletePipelineGroup(context, projectId)
         processDataDeleteDao.deletePipelineJobMutexGroup(context, projectId)
         processDataDeleteDao.deletePipelineLabel(context, projectId)
-        processDataDeleteDao.deletePipelineTransferHistory(context, projectId)
         processDataDeleteDao.deletePipelineView(context, projectId)
         processDataDeleteDao.deletePipelineViewUserLastView(context, projectId)
         processDataDeleteDao.deletePipelineViewUserSettings(context, projectId)
@@ -337,7 +379,6 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteDao.deleteProjectPipelineCallbackHistory(context, projectId)
         processDataDeleteDao.deleteTemplate(context, projectId)
         processDataDeleteDao.deleteTemplatePipeline(context, projectId)
-        processDataDeleteDao.deleteTemplateTransferHistory(context, projectId)
         processDataDeleteDao.deletePipelineViewGroup(context, projectId)
         processDataDeleteDao.deletePipelineViewTop(context, projectId)
         processDataDeleteDao.deletePipelineRecentUse(context, projectId)
@@ -348,7 +389,6 @@ class ProcessDataMigrateService @Autowired constructor(
         migratePipelineGroupData(projectId)
         migratePipelineJobMutexGroupData(projectId)
         migratePipelineLabelData(projectId)
-        migratePipelineTransferHistoryData(projectId)
         migratePipelineViewData(projectId)
         migratePipelineViewUserLastViewData(projectId)
         migratePipelineViewUserSettingsData(projectId)
@@ -356,7 +396,6 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateProjectPipelineCallbackHistoryData(projectId)
         migrateTemplateData(projectId)
         migrateTemplatePipelineData(projectId)
-        migrateTemplateTransferHistoryData(projectId)
         migratePipelineViewGroupData(projectId)
         migratePipelineViewTopData(projectId)
         migratePipelineRecentUseData(projectId)
@@ -527,7 +566,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
-            if(auditResourceRecords.isNotEmpty()) {
+            if (auditResourceRecords.isNotEmpty()) {
                 processDataMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
             }
             offset += LONG_PAGE_SIZE
@@ -543,7 +582,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 limit = LONG_PAGE_SIZE,
                 offset = offset
             )
-            if(pipelineGroupRecords.isNotEmpty()) {
+            if (pipelineGroupRecords.isNotEmpty()) {
                 processDataMigrateDao.migratePipelineGroupData(migratingShardingDslContext, pipelineGroupRecords)
             }
             offset += LONG_PAGE_SIZE
@@ -555,7 +594,7 @@ class ProcessDataMigrateService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId
         )
-        if(jobMutexGroupRecords.isNotEmpty()) {
+        if (jobMutexGroupRecords.isNotEmpty()) {
             processDataMigrateDao.migratePipelineJobMutexGroupData(migratingShardingDslContext, jobMutexGroupRecords)
         }
     }
@@ -574,25 +613,6 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += LONG_PAGE_SIZE
         } while (pipelineLabelRecords.size == LONG_PAGE_SIZE)
-    }
-
-    private fun migratePipelineTransferHistoryData(projectId: String) {
-        var offset = 0
-        do {
-            val pipelineTransferHistoryRecords = processDataMigrateDao.getPipelineTransferHistoryRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                limit = LONG_PAGE_SIZE,
-                offset = offset
-            )
-            if (pipelineTransferHistoryRecords.isNotEmpty()) {
-                processDataMigrateDao.migratePipelineTransferHistoryData(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    pipelineTransferHistoryRecords = pipelineTransferHistoryRecords
-                )
-            }
-            offset += LONG_PAGE_SIZE
-        } while (pipelineTransferHistoryRecords.size == LONG_PAGE_SIZE)
     }
 
     private fun migratePipelineViewData(projectId: String) {
@@ -726,25 +746,6 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += SHORT_PAGE_SIZE
         } while (templatePipelineRecords.size == SHORT_PAGE_SIZE)
-    }
-
-    private fun migrateTemplateTransferHistoryData(projectId: String) {
-        var offset = 0
-        do {
-            val templateTransferHistoryRecords = processDataMigrateDao.getTemplateTransferHistoryRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                limit = LONG_PAGE_SIZE,
-                offset = offset
-            )
-            if (templateTransferHistoryRecords.isNotEmpty()) {
-                processDataMigrateDao.migrateTemplateTransferHistoryData(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    templateTransferHistoryRecords = templateTransferHistoryRecords
-                )
-            }
-            offset += LONG_PAGE_SIZE
-        } while (templateTransferHistoryRecords.size == LONG_PAGE_SIZE)
     }
 
     private fun migratePipelineViewGroupData(projectId: String) {

@@ -62,7 +62,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.util.Properties
 import javax.sql.DataSource
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ComplexMethod")
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(DataSourceAutoConfiguration::class, JooqAutoConfiguration::class)

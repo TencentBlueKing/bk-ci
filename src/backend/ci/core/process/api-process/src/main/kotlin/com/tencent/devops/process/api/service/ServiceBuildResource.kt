@@ -272,7 +272,10 @@ interface ServiceBuildResource {
         buildId: String,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否强制终止", required = false)
+        @QueryParam("terminateFlag")
+        terminateFlag: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("系统异常导致停止流水线")
