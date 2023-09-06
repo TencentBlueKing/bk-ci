@@ -19,7 +19,7 @@ data class ScriptExecuteInfoReq(
     )
     val scriptType: Int,
     @ApiModelProperty(value = "目标服务器", required = true)
-    val targetEnv: ExecuteTarget,
+    val executeTarget: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
     val account: String
 )

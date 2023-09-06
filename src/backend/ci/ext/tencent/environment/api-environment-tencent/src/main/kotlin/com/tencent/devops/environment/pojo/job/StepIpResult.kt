@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("主机任务执行结果")
 data class StepIpResult(
     @ApiModelProperty(value = "IP信息", required = true)
-    val ipInfo: HostInfo,
+    val hostInfo: HostInfo,
     @ApiModelProperty(
         value = "作业执行状态", notes = "1.Agent异常; 5.等待执行; 7.正在执行; 9.执行成功; 11.执行失败; " +
         "12.任务下发失败; 403.任务强制终止成功; 404.任务强制终止失败", required = true

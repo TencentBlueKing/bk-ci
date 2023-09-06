@@ -86,7 +86,7 @@ interface ServiceJobResource {
     @ApiOperation("查询任务状态的Job接口")
     @GET
     @Path("/{projectId}/query_job_instance_status")
-    fun queryStatus(
+    fun queryJobInstanceStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -101,7 +101,7 @@ interface ServiceJobResource {
     @ApiOperation("批量查询日志的Job接口")
     @POST
     @Path("/{projectId}/query_job_instance_logs")
-    fun queryLogs(
+    fun queryJobInstanceLogs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

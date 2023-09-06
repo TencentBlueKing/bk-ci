@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("脚本执行任务日志")
 data class ScriptExcuteLog(
     @ApiModelProperty(value = "IP信息", required = true)
-    val iPInfo: HostInfo,
+    val hostInfo: HostInfo,
     @ApiModelProperty(value = "脚本执行日志内容", required = true)
     val logContent: String
 )

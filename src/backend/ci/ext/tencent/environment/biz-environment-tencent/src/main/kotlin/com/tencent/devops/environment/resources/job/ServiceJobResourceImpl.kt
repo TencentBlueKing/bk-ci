@@ -40,7 +40,7 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 
 @RestResource
 class ServiceJobResourceImpl : ServiceJobResource {
-    override fun executeScripts(userId: String, projectId: String, scriptExecuteInfo: ScriptExecuteInfoReq): Result<ScriptExecuteResult> {
+    override fun executeScript(userId: String, projectId: String, scriptExecuteInfo: ScriptExecuteInfoReq): Result<ScriptExecuteResult> {
         TODO("Not yet implemented")
     }
 
@@ -48,11 +48,11 @@ class ServiceJobResourceImpl : ServiceJobResource {
         TODO("Not yet implemented")
     }
 
-    override fun queryStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryJobInstanceStatusResult> {
+    override fun queryJobInstanceStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryJobInstanceStatusResult> {
         TODO("Not yet implemented")
     }
 
-    override fun queryLogs(userId: String, projectId: String, queryLogsReq: QueryJobInstanceLogsReq): Result<QueryJobInstanceLogsResult> {
+    override fun queryJobInstanceLogs(userId: String, projectId: String, queryLogsReq: QueryJobInstanceLogsReq): Result<QueryJobInstanceLogsResult> {
         TODO("Not yet implemented")
     }
 }

@@ -10,7 +10,7 @@ data class QueryJobInstanceLogsReq(
     @ApiModelProperty(value = "步骤实例ID", required = true)
     val stepInstanceId: Long,
     @ApiModelProperty(value = "源/目标主机IP列表")
-    val ipList: List<HostInfo>?,
+    val hostList: List<HostInfo>?,
     @ApiModelProperty(value = "主机ID列表")
-    val hostIdList: List<HostInfo>?
+    val hostIdList: List<Long>?
 )
