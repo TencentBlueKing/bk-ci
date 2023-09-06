@@ -39,7 +39,7 @@ tasks.register<BootRun>("multiBootRun") {
         systemProperty("file.encoding", "UTF-8")
         systemProperty("spring.cloud.consul.enabled", "false")
         systemProperty("spring.cloud.consul.discovery.enabled", "false")
-        systemProperty("server.port", "8080")
+        systemProperty("server.port", "8081")
         systemProperty("service.log.dir", joinPath(projectDir.absolutePath, "log"))
     }
     dependsOn("multiBootJar")
