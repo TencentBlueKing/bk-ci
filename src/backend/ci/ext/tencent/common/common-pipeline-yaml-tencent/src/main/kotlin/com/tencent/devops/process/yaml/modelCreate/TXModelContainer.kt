@@ -32,15 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
@@ -48,15 +41,8 @@ import com.tencent.devops.process.yaml.modelCreate.pojo.RdsDispatchInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
 import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.process.yaml.v2.models.job.PreJob
-import com.tencent.devops.process.yaml.v2.models.job.RunsOn
-import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
@@ -135,107 +121,5 @@ class TXModelContainer @Autowired(required = false) constructor(
         )
 
         containerList.add(vmContainer)
-    }
-
-    override fun addYamlVMBuildContainer(job: VMBuildContainer, steps: List<PreStep>?): PreJob {
-        return PreJob(
-            name = job.name,
-            runsOn = getRunsOn(job),
-            container = null,
-            services = null,
-            ifField = when (job.jobControlOption?.runCondition) {
-                JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
-                JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
-                    job.jobControlOption?.customVariables
-                )
-                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
-                    job.jobControlOption?.customVariables
-                )
-                else -> null
-            },
-            steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_TIME_OUT),
-            env = null,
-            continueOnError = job.jobControlOption?.continueWhenFailed
-                .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED),
-            strategy = if (job.matrixGroupFlag == true) {
-                getMatrixFromJob(job.matrixControlOption)
-            } else null,
-            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
-                job.jobControlOption?.dependOnId
-            } else null
-        )
-    }
-
-    override fun getRunsOn(
-        job: VMBuildContainer
-    ): RunsOn = when (val dispatchType = job.dispatchType) {
-        is ThirdPartyAgentEnvDispatchType -> {
-            RunsOn(
-                selfHosted = true,
-                poolName = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
-                ),
-                container = null,
-                agentSelector = listOf(job.baseOS.name.toLowerCase()),
-                needs = job.buildEnv
-            )
-        }
-        is DockerDispatchType -> {
-            val (containerImage, credentials) = getImageNameAndCredentials(
-                dispatchType
-            )
-            RunsOn(
-                selfHosted = null,
-                poolName = JobRunsOnType.DOCKER.type,
-                container = Container2(
-                    image = containerImage,
-                    credentials = credentials,
-                    options = null,
-                    imagePullPolicy = null
-                ),
-                agentSelector = null,
-                needs = job.buildEnv
-            )
-        }
-        is PublicDevCloudDispathcType -> {
-            val (containerImage, credentials) = getImageNameAndCredentials(
-                dispatchType
-            )
-            RunsOn(
-                selfHosted = null,
-                poolName = JobRunsOnType.DOCKER.type,
-                container = Container2(
-                    image = containerImage,
-                    credentials = credentials,
-                    options = null,
-                    imagePullPolicy = null
-                ),
-                agentSelector = null,
-                needs = job.buildEnv
-            )
-        }
-        is MacOSDispatchType -> {
-            RunsOn(
-                selfHosted = null,
-                poolName = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_BUILD_CLUSTERS_THROUGH
-                ) + I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOTE_DEFAULT_XCODE_VERSION
-                ),
-                container = null,
-                agentSelector = null
-            )
-        }
-        else -> {
-            RunsOn(
-                selfHosted = null,
-                poolName = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
-                ),
-                container = null,
-                agentSelector = null
-            )
-        }
     }
 }

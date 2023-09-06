@@ -39,11 +39,11 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
-import com.tencent.devops.process.yaml.v2.models.image.PoolImage
-import com.tencent.devops.process.yaml.v2.models.image.PoolType
-import com.tencent.devops.process.yaml.v2.models.job.Container
-import com.tencent.devops.process.yaml.v2.models.job.Container2
-import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.image.PoolImage
+import com.tencent.devops.process.yaml.v3.models.image.PoolType
+import com.tencent.devops.process.yaml.v3.models.job.Container
+import com.tencent.devops.process.yaml.v3.models.job.Container2
+import com.tencent.devops.process.yaml.v3.models.job.Job
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component

@@ -353,7 +353,7 @@
                 "name": "远程触发",
                 "id": "e-4c9966f789eb4a5cadcb10bf7095a98d",
                 "canElementSkip": false,
-                "remoteToken": "7896b3e29a844a85ba203d7b1e3675d7",
+                "remoteToken": "PipelineRemoteToken",
                 "executeCount": 1,
                 "version": "1.*",
                 "additionalOptions": {

@@ -2,11 +2,8 @@ version: v3.0
 name: all job
 on:
 - schedules:
-    enable: false
-    cron: 0 0 0 ? * 3
-  manual:
-    use-latest-parameters: true
-  remote: disabled
+    cron: "0 0 1 ? * 3,4,5"
+  remote: enabled
 - repoName: aliasName/xxx
   repoHashId: kjVY7
   type: git
@@ -45,7 +42,6 @@ on:
   repoHashId: Nz0Vj
   type: github
   push:
-    enable: false
     branches:
     - master
     branches-ignore:
@@ -54,8 +50,7 @@ on:
     - 排除以下人员：
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: aliasName/xxx
-  repoHashId: a1ED
+- repoName: 按代码库别名输入
   type: svn
   push:
     paths:
@@ -68,45 +63,98 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: aliasName/xxx
-  repoHashId: kA3B
+- repoName: 123
   type: p4
   push:
-    branches:
-    - master
-    branches-ignore:
-    - 排除以下目标分支：
     paths:
     - 监听以下路径：
     paths-ignore:
-    - mr
+    - 排除以下路径：
+  manual: disabled
+- repoName: aliasName/xxx
+  repoHashId: kA3B
+  type: gitlab
+  tag:
+    tags:
+    - 监听以下tag：
+    tags-ignore:
+    - 排除以下tag：
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: disabled
 variables:
   字符串:
     value: value
+    props:
+      type: vuex-input
+      description: 描述描述描述描述描述
   文本框:
     value: 文本框
+    props:
+      type: vuex-textarea
+      description: 描述描述描述描述描述
   布尔值:
     value: "true"
+    props:
+      type: boolean
   单选框:
     value: 1
+    props:
+      type: selector
+      options:
+      - id: 1
+        label: 1
+      - id: 2
+        label: 2
+      - id: 3
+        label: 3
+      description: 描述描述描述描述
   复选框:
     value: "1,2"
+    props:
+      type: checkbox
+      options:
+      - id: 1
+        label: 1
+      - id: 2
+        label: 2
+      - id: 3
+        label: 3
   代码库:
     value: lockiechen/obb-demo
+    props:
+      type: code_lib
+      scmType: git
   git分支或tag:
     value: ""
+    props:
+      type: git_ref
+      repoHashId: jRME
   构建资源:
-    value: ""
+    value: tlinux2.2
+    props:
+      type: container_type
+      description: 描述描述描述描述描述
+      containerType:
+        buildType: DOCKER
+        os: LINUX
   版本仓库过滤器:
     value: ""
+    props:
+      type: artifactory
+      description: 666
+      glob: '*'
+      properties:
+        key1asd: asdasd
+        key2: qwe
   子流水线:
     value: test123
+    props:
+      type: sub_pipeline
   文件:
-    value: ""
+    value: 123
+    props:
+      type: custom_file
 stages:
 - name: win
   label:
@@ -118,13 +166,20 @@ stages:
         self-hosted: true
         pool-name: ydpzneyp
         pool-type: AGENT_ID
+        agent-selector:
+        - windows
         workspace: 工作空间
       steps:
       - name: Batch Script
+        if: AAA == 'bbb'  && VVV == 'wwww'
+        timeout-minutes: 666
+        continue-on-error: true
+        retry-times: 4
         env:
           param1: ""
         run: echo 1
         shell: cmd
+        manual-retry: true
     job_nT0:
       name: Windows-私有构建机群
       runs-on:
@@ -135,7 +190,8 @@ stages:
         - windows
         workspace: 工作空间
       steps:
-      - name: Batch Script
+      - enable: false
+        name: Batch Script
         env:
           param1: ""
         run: echo 1
@@ -186,6 +242,8 @@ stages:
         self-hosted: true
         pool-name: zmoxbbqp
         pool-type: AGENT_ID
+        agent-selector:
+        - macos
         workspace: 工作空间
       steps:
       - name: Bash
@@ -234,6 +292,8 @@ stages:
         self-hosted: true
         pool-name: xpvwazlm
         pool-type: AGENT_ID
+        agent-selector:
+        - linux
         workspace: 工作空间
       steps:
       - name: Bash
@@ -308,10 +368,10 @@ finally:
         image: tlinux3_ci:2.*
         imageType: BKSTORE
     steps:
-    - checkout: https://git.code.oa.com/XXX/XXX.git
+    - checkout: self
       name: Checkout
       with:
-        repositoryType: ID
+        repositoryType: URL
         repositoryHashId: 6DOdE
         repositoryName: ""
         repositoryUrl: ""
@@ -354,6 +414,7 @@ finally:
         param1: ""
       run: echo 1
       shell: bash
+      manual-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
       with:
@@ -371,7 +432,7 @@ finally:
         goPath: ""
         bkcheckDebug: false
         bkcheckCustomMacros: []
-        bk_atom_del_hook_url: ""
+        bk_atom_del_hook_url: http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D
         bk_atom_del_hook_url_method: DELETE
         scriptType: SHELL
         script: |-
