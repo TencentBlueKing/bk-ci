@@ -7,11 +7,11 @@ import io.swagger.annotations.ApiModelProperty
 data class FileLog(
     @ApiModelProperty(value = "分发模式", notes = "0:上传, 1:下载", required = true)
     val mode: Int,
-    @ApiModelProperty(value = "文件源主机IP", required = true)
+    @ApiModelProperty(value = "文件源主机信息", required = true)
     val srcHost: HostInfo,
     @ApiModelProperty(value = "源文件路径", required = true)
     val srcPath: String,
-    @ApiModelProperty(value = "分发目标主机IP", notes = "mode == 1 时有值", required = true)
+    @ApiModelProperty(value = "分发目标主机信息", notes = "mode == 1 时有值", required = true)
     val destHost: HostInfo,
     @ApiModelProperty(value = "目标路径", notes = "mode == 1 时有值", required = true)
     val destPath: String,

@@ -9,7 +9,7 @@ data class FileDistributeInfoReq(
     val fileSourceList: List<FileSource>,
     @ApiModelProperty(value = "文件传输目标路径", required = true)
     val fileTargetPath: String,
-    @ApiModelProperty(value = "目标服务器", required = true)
+    @ApiModelProperty(value = "执行目标", required = true)
     val executeTarget: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
     val account: String,

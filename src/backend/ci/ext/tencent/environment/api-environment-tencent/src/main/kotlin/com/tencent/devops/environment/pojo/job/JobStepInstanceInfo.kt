@@ -27,5 +27,5 @@ data class JobStepInstanceInfo(
     @ApiModelProperty(value = "步骤重试次数", required = true)
     val stepRetries: Int,
     @ApiModelProperty(value = "每个主机的任务执行结果", required = true)
-    val stepIpResultList: List<StepIpResult>
+    val stepHostResultList: List<StepHostResult>
 )
