@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 import javax.annotation.Resource
 
-@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList")
+@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service
 class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
