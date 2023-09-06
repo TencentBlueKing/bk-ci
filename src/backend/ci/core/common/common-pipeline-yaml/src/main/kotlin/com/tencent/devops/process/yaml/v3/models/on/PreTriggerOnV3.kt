@@ -31,11 +31,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
-import com.tencent.devops.process.yaml.v2.models.on.IPreTriggerOn
-import com.tencent.devops.process.yaml.v2.models.on.IssueRule
-import com.tencent.devops.process.yaml.v2.models.on.NoteRule
-import com.tencent.devops.process.yaml.v2.models.on.ReviewRule
+import com.tencent.devops.process.yaml.v3.models.on.DeleteRule
+import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
+import com.tencent.devops.process.yaml.v3.models.on.IssueRule
+import com.tencent.devops.process.yaml.v3.models.on.NoteRule
+import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import io.swagger.annotations.ApiModelProperty
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

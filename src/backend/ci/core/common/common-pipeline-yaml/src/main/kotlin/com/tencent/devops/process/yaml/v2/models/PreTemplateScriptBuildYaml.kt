@@ -27,66 +27,9 @@
 
 package com.tencent.devops.process.yaml.v2.models
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v2.models.stage.Stage
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
-import com.tencent.devops.process.yaml.v3.models.TriggerType
-
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "version",
-    defaultImpl = PreTemplateScriptBuildYaml::class
-)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3::class, name = YamlVersion.Version.V3),
-    JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
-)
-interface IPreTemplateScriptBuildYaml : YamlVersion {
-    val version: String?
-    val name: String?
-    val label: List<String>?
-    val notices: List<Notices>?
-    val concurrency: Concurrency?
-
-    fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI)
-
-    fun formatVariables(): Map<String, Variable>
-
-    fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>>
-
-    fun formatStages(): List<Stage>
-
-    fun formatFinallyStage(): List<Job>
-
-    fun formatResources(): Resources?
-}
-
-/*
-* ITemplateFilter 为模板替换所需材料
-*/
-interface ITemplateFilter : YamlVersion {
-    val variables: Map<String, Any>?
-    val stages: List<Map<String, Any>>?
-    val jobs: Map<String, Any>?
-    val steps: List<Map<String, Any>>?
-    val extends: Extends?
-    val resources: Resources?
-    var finally: Map<String, Any>?
-
-    fun initPreScriptBuildYamlI(): PreScriptBuildYamlI
-}
 
 /**
  * model
@@ -96,67 +39,17 @@ interface ITemplateFilter : YamlVersion {
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTemplateScriptBuildYaml(
-    override val version: String?,
-    override val name: String?,
-    override val label: List<String>? = null,
-    @JsonProperty("on")
+    val version: String?,
+    val name: String?,
+    val label: List<String>? = null,
     val triggerOn: PreTriggerOn?,
-    override val variables: Map<String, Any>?,
-    override val stages: List<Map<String, Any>>?,
-    override val jobs: Map<String, Any>? = null,
-    override val steps: List<Map<String, Any>>? = null,
-    override val extends: Extends?,
-    override val resources: Resources?,
-    override var finally: Map<String, Any>?,
-    override val notices: List<GitNotices>?,
-    override val concurrency: Concurrency? = null
-) : IPreTemplateScriptBuildYaml, ITemplateFilter {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
-
-    override fun initPreScriptBuildYamlI(): PreScriptBuildYamlI {
-        return PreScriptBuildYaml(
-            version = version,
-            name = name,
-            label = label,
-            triggerOn = triggerOn,
-            resources = resources,
-            notices = notices,
-            concurrency = concurrency
-        )
-    }
-
-    @JsonIgnore
-    lateinit var preYaml: PreScriptBuildYaml
-
-    override fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI) {
-        preYaml = f(this) as PreScriptBuildYaml
-    }
-
-    override fun formatVariables(): Map<String, Variable> {
-        checkInitialized()
-        return preYaml.variables ?: emptyMap()
-    }
-
-    override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
-        return listOf(TriggerType.parse(default) to ScriptYmlUtils.formatTriggerOn(triggerOn))
-    }
-
-    override fun formatStages(): List<Stage> {
-        checkInitialized()
-        return ScriptYmlUtils.formatStage(preYaml)
-    }
-
-    override fun formatFinallyStage(): List<Job> {
-        checkInitialized()
-        return ScriptYmlUtils.preJobs2Jobs(preYaml.finally)
-    }
-
-    override fun formatResources(): Resources? {
-        checkInitialized()
-        return preYaml.resources
-    }
-
-    private fun checkInitialized() {
-        if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")
-    }
-}
+    val variables: Map<String, Any>?,
+    val stages: List<Map<String, Any>>?,
+    val jobs: Map<String, Any>? = null,
+    val steps: List<Map<String, Any>>? = null,
+    val extends: Extends?,
+    val resources: Resources?,
+    val notices: List<GitNotices>?,
+    var finally: Map<String, Any>?,
+    val concurrency: Concurrency? = null
+)

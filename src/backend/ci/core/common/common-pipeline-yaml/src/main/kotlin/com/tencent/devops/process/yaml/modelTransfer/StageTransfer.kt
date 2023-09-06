@@ -51,27 +51,24 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.process.yaml.v2.models.stage.PreStage
-import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
-import com.tencent.devops.process.yaml.v2.stageCheck.PreFlow
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageReviews
-import com.tencent.devops.process.yaml.v2.stageCheck.ReviewVariable
-import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
+import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
+import com.tencent.devops.process.yaml.v3.stageCheck.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
+import com.tencent.devops.process.yaml.v3.models.stage.Stage as StreamV2Stage
 
 @Component
 class StageTransfer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val modelContainer: ContainerTransfer,
-    val modelElement: ElementTransfer
+    val containerTransfer: ContainerTransfer,
+    val elementTransfer: ElementTransfer,
+    val variableTransfer: VariableTransfer
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StageTransfer::class.java)
@@ -81,7 +78,7 @@ class StageTransfer @Autowired(required = false) constructor(
     fun yaml2TriggerStage(yamlInput: YamlTransferInput, stageIndex: Int): Stage {
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
-        modelElement.yaml2Triggers(yamlInput, triggerElementList)
+        elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
 
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -91,7 +88,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = getBuildFormPropertyFromYmlVariable(yamlInput.yaml.formatVariables())
+            params = variableTransfer.makeVariableFromYaml(yamlInput.yaml.formatVariables())
         )
 
         val stageId = VMUtils.genStageId(stageIndex)
@@ -128,13 +125,13 @@ class StageTransfer @Autowired(required = false) constructor(
         val containerList = mutableListOf<Container>()
 
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = modelElement.yaml2Elements(
+            val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
             )
 
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                modelContainer.addNormalContainer(
+                containerTransfer.addNormalContainer(
                     job = job,
                     elementList = elementList,
                     containerList = containerList,
@@ -142,7 +139,7 @@ class StageTransfer @Autowired(required = false) constructor(
                     finalStage = finalStage
                 )
             } else {
-                modelContainer.addVmBuildContainer(
+                containerTransfer.addVmBuildContainer(
                     job = job,
                     elementList = elementList,
                     containerList = containerList,
@@ -191,11 +188,11 @@ class StageTransfer @Autowired(required = false) constructor(
     ): PreStage {
         val jobs = stage.containers.associate { job ->
 
-            val steps = modelElement.model2YamlSteps(job, projectId)
+            val steps = elementTransfer.model2YamlSteps(job, projectId)
 
             (job.jobId ?: "job_${job.id}") to when (job.getClassType()) {
-                NormalContainer.classType -> modelContainer.addYamlNormalContainer(job as NormalContainer, steps)
-                VMBuildContainer.classType -> modelContainer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
+                NormalContainer.classType -> containerTransfer.addYamlNormalContainer(job as NormalContainer, steps)
+                VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")
             }
         }
@@ -207,9 +204,11 @@ class StageTransfer @Autowired(required = false) constructor(
                 StageRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
                     stage.stageControlOption?.customVariables
                 )
+
                 StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
                     stage.stageControlOption?.customVariables
                 )
+
                 else -> null
             },
             fastKill = if (stage.fastKill == true) true else null,

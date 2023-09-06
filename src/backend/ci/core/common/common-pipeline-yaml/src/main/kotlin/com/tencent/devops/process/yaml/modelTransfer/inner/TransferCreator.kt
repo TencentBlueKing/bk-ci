@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.step.Step
 
 /**
  * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
@@ -54,15 +54,13 @@ interface TransferCreator {
      * @param additionalOptions 插件的控制参数
      */
     fun transferCheckoutElement(
-        step: Step,
-        additionalOptions: ElementAdditionalOptions
+        step: Step
     ): MarketBuildAtomElement
 
     /**
      * 构造编译类的插件
      */
     fun transferMarketBuildAtomElement(
-        step: Step,
-        additionalOptions: ElementAdditionalOptions
+        step: Step
     ): MarketBuildAtomElement
 }

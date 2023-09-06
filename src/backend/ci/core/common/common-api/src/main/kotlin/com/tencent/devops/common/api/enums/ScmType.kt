@@ -49,6 +49,7 @@ enum class ScmType(val alis: String) {
         }
 
         fun parse(alis: String?): ScmType? {
+            if (alis.isNullOrBlank()) return null
             values().forEach {
                 if (alis == it.alis) return it
             }

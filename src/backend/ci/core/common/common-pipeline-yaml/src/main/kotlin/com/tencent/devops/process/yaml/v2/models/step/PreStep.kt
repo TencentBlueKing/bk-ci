@@ -34,8 +34,6 @@ import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.process.yaml.v2.models.YamlMetaData
 import io.swagger.annotations.ApiModelProperty
 
-interface IPreStep
-
 /**
  * 为了方便产生中间变量的过度类和Step一模一样
  */
@@ -65,4 +63,4 @@ data class PreStep(
     val run: String?,
     val shell: String?,
     override val yamlMetaData: MetaData? = null
-) : YamlMetaData, IPreStep
+) : YamlMetaData

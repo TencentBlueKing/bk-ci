@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -52,7 +51,7 @@ class ManualPreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
+    override var triggerOn: PreTriggerOn?,
     var inputs: Map<String, String>?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
@@ -60,7 +59,7 @@ class ManualPreScriptBuildYaml(
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    var notices: List<GitNotices>?,
+    override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {
@@ -80,6 +79,4 @@ class ManualPreScriptBuildYaml(
         finally = pre.finally,
         concurrency = pre.concurrency
     )
-
-    override fun yamlVersion() = YamlVersion.Version.V2_0
 }

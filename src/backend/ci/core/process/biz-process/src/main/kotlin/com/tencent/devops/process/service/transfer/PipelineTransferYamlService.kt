@@ -47,12 +47,12 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.step.PreStep
-import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
-import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
-import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
+import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
+import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -104,6 +104,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     logger.info(watcher.toString())
                     return TransferResponse(newYaml = newYaml)
                 }
+
                 TransferActionType.FULL_YAML2MODEL -> {
                     watcher.start("step_1|FULL_YAML2MODEL start")
                     val pipelineInfo = pipelineId?.let {

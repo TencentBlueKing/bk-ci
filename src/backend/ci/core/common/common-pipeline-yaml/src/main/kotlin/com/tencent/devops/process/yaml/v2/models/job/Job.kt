@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.v2.models.job
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import io.swagger.annotations.ApiModelProperty
 
@@ -69,29 +68,18 @@ data class Job(
 
 data class Container(
     val image: String,
-    val imageType: String? = ImageType.THIRD.name,
-    val credentials: Credentials? = null,
-    val options: DockerOptions? = null,
+    val credentials: Credentials?,
+    val options: DockerOptions?,
     @JsonProperty("image-pull-policy")
-    val imagePullPolicy: String? = null
+    val imagePullPolicy: String?
 )
 
 data class Container2(
     val image: String,
-    val imageType: String? = ImageType.THIRD.name,
-    val credentials: String? = null,
-    val options: DockerOptions? = null,
+    val credentials: String?,
+    val options: DockerOptions?,
     @JsonProperty("image-pull-policy")
-    val imagePullPolicy: String? = null
-)
-
-data class Container3(
-    val image: String,
-    val imageType: String? = ImageType.THIRD.name,
-    val credentials: Any? = null,
-    val options: DockerOptions? = null,
-    @JsonProperty("image-pull-policy")
-    val imagePullPolicy: String? = null
+    val imagePullPolicy: String?
 )
 
 enum class ImagePullPolicyEnum(val type: String) {
@@ -131,18 +119,16 @@ data class RunsOn(
     @ApiModelProperty(name = "pool-name")
     @JsonProperty("pool-name")
     var poolName: String = JobRunsOnType.DOCKER.type,
-    @JsonProperty("pool-type")
-    val poolType: String? = JobRunsOnPoolType.ENV_NAME.name,
     val container: Any? = null,
     @ApiModelProperty(name = "agent-selector")
     @JsonProperty("agent-selector")
-    var agentSelector: List<String>? = null,
+    val agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
     @ApiModelProperty(name = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
-    var queueTimeoutMinutes: Int? = null,
-    var needs: Map<String, String>? = null
+    val queueTimeoutMinutes: Int? = null,
+    val needs: Map<String, String>? = null
 )
 
 enum class JobRunsOnType(val type: String) {
@@ -153,19 +139,10 @@ enum class JobRunsOnType(val type: String) {
     LOCAL("local")
 }
 
-enum class JobRunsOnPoolType {
-    ENV_NAME,
-    ENV_ID,
-    AGENT_ID,
-    AGENT_NAME
-}
-
 data class Mutex(
     val label: String,
     @JsonProperty("queue-length")
     val queueLength: Int? = 0,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = 10,
-    @JsonProperty("queue-enable")
-    val queueEnable: Boolean? = false
+    val timeoutMinutes: Int? = 10
 )
