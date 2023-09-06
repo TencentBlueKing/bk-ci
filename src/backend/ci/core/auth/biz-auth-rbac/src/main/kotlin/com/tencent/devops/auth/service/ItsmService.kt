@@ -191,9 +191,7 @@ class ItsmService @Autowired constructor(
         scheme["content_table"] = itsmScheme
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
-            .lable(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
-            )
+            .value(emptyList())
             .build()
         return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
     }
