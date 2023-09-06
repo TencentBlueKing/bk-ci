@@ -29,8 +29,6 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
@@ -40,16 +38,18 @@ import com.tencent.devops.process.yaml.v2.models.step.PreStep
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
  * 注：PreScriptBuildYaml 新增的字段需要在这里新增
  */
-interface PreScriptBuildYamlI : YamlVersion {
+interface PreScriptBuildYamlI {
     var version: String?
     var name: String?
     var label: List<String>?
+    var triggerOn: PreTriggerOn?
     var variables: Map<String, Variable>?
     var stages: List<PreStage>?
     var jobs: Map<String, PreJob>?
     var steps: List<PreStep>?
     var extends: Extends?
     var resources: Resources?
+    var notices: List<GitNotices>?
     var finally: Map<String, PreJob>?
     val concurrency: Concurrency?
 }
@@ -65,17 +65,14 @@ data class PreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
-    @JsonProperty("on")
-    var triggerOn: PreTriggerOn?,
+    override var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
     override var jobs: Map<String, PreJob>? = null,
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
-    var notices: List<GitNotices>?,
+    override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
-) : PreScriptBuildYamlI {
-    override fun yamlVersion() = YamlVersion.Version.V2_0
-}
+) : PreScriptBuildYamlI

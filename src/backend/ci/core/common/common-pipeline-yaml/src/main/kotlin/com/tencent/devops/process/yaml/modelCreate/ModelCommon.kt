@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory
 object ModelCommon {
 
     private val logger = LoggerFactory.getLogger(ModelCommon::class.java)
+    val regexMatch = Regex("""(.*)\s*==\s*'(.*)'""")
+    val regexNotMatch = Regex("""(.*)\s*!=\s*'(.*)'""")
 
     fun getBranchName(ref: String): String {
         return when {
@@ -108,11 +110,40 @@ object ModelCommon {
         else ifString
     }
 
+    fun revertCustomVariableMatch(input: String): List<NameAndValue>? {
+        if (input.indexOf("&&") == -1) return null
+        val res = mutableListOf<NameAndValue>()
+        kotlin.runCatching {
+            input.split("&&").forEach {
+                regexMatch.matchEntire(it.trim())?.run {
+                    val (key, value) = this.destructured
+                    res.add(NameAndValue(key, value))
+                }
+            }
+        }.onFailure { return null }
+        return res
+    }
+
     fun customVariableMatchNotRun(input: List<NameAndValue>?): String? {
         val ifString = input?.joinToString(separator = " || ") {
             "${it.key} != '${it.value}' "
         }
         return if (input?.isEmpty() == true) null
         else ifString
+    }
+
+
+    fun revertCustomVariableNotMatch(input: String): List<NameAndValue>? {
+        if (input.indexOf("||") == -1) return null
+        val res = mutableListOf<NameAndValue>()
+        kotlin.runCatching {
+            input.split("||").forEach {
+                regexNotMatch.matchEntire(it.trim())?.run {
+                    val (key, value) = this.destructured
+                    res.add(NameAndValue(key, value))
+                }
+            }
+        }.onFailure { return null }
+        return res
     }
 }

@@ -25,28 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.on
+package com.tencent.devops.process.yaml.v3.models
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ManualRule(
-    @ApiModelProperty("手动触发执行时可跳过插件 ", name = "can-element-skip", required = false)
-    @JsonProperty("can-element-skip")
-    var canElementSkip: Boolean? = true,
-    @ApiModelProperty("手动触发执行时使用最近一次构建参数值 ", name = "use-latest-parameters", required = false)
-    @JsonProperty("use-latest-parameters")
-    var useLatestParameters: Boolean? = false
-) {
-    override fun equals(other: Any?): Boolean {
-        if (other is ManualRule) {
-            return (other.canElementSkip == canElementSkip || other.canElementSkip == null) &&
-                (other.useLatestParameters == useLatestParameters || other.useLatestParameters == null)
-        }
-        return super.equals(other)
-    }
+/**
+ * 当前Yaml对象的元数据，用来添加一些额外的信息字段
+ * 仅内部逻辑使用，不对外
+ */
+interface YamlMetaData {
+    val yamlMetaData: MetaData?
 }
+
+data class MetaData(
+    var templateInfo: TemplateInfo?
+)
+
+/**
+ * 当前Yaml对象是否来自模板引用
+ */
+data class TemplateInfo(
+    // 是否为远程模板
+    val remote: Boolean,
+    val remoteTemplateProjectId: String? = null
+)
+
+const val YAME_META_DATA_JSON_FILTER = "yamlMetaData"

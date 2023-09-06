@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.yaml.v2.parsers.template.models
 
-import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 
 class TemplateDeepTreeNode(
-    val path: TemplatePath,
+    val path: String,
     val parent: TemplateDeepTreeNode?,
     val children: MutableList<TemplateDeepTreeNode>
 ) {
@@ -46,7 +45,7 @@ class TemplateDeepTreeNode(
             "[%s]The template nesting depth exceeds the threshold [$MAX_TEMPLATE_DEEP}]"
     }
 
-    fun add(nodePath: TemplatePath): TemplateDeepTreeNode {
+    fun add(nodePath: String): TemplateDeepTreeNode {
         val node = TemplateDeepTreeNode(
             path = nodePath,
             parent = this,

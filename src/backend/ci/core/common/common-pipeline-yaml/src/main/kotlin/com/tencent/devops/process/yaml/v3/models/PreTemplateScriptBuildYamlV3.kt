@@ -35,19 +35,19 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v2.models.Concurrency
-import com.tencent.devops.process.yaml.v2.models.Extends
-import com.tencent.devops.process.yaml.v2.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.models.ITemplateFilter
-import com.tencent.devops.process.yaml.v2.models.PacNotices
-import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
-import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.Variable
-import com.tencent.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v2.models.stage.Stage
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.Extends
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
+import com.tencent.devops.process.yaml.v3.models.PacNotices
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
+import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.models.YamlTransferData
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.stage.Stage
+import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

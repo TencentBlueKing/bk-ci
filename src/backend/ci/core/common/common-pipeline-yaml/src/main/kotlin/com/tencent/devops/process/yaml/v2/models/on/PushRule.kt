@@ -38,8 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PushRule(
-    val enable: Boolean? = true,
-    val branches: List<String>? = listOf("*"),
+    val branches: List<String> = listOf("*"),
 
     @ApiModelProperty(name = "branches-ignore")
     @JsonProperty("branches-ignore")
@@ -57,9 +56,5 @@ data class PushRule(
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    val action: List<String>? = null,
-
-    @ApiModelProperty(name = "path-filter-type")
-    @JsonProperty("path-filter-type")
-    val pathFilterType: String? = null
+    val action: List<String>? = null
 )

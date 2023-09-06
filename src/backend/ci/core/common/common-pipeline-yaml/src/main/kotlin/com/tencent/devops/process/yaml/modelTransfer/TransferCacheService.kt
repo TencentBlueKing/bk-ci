@@ -2,13 +2,13 @@ package com.tencent.devops.process.yaml.modelTransfer
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -26,7 +26,6 @@ class TransferCacheService @Autowired constructor(
     private val client: Client,
     private val tokenService: ClientTokenService
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(TransferCacheService::class.java)
     }
@@ -41,7 +40,6 @@ class TransferCacheService @Autowired constructor(
                     .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data
             }.onFailure { logger.warn("get $key default value error.") }.getOrNull() ?: emptyMap()
         }
-
     private val storeImageInfoCache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.DAYS)
@@ -55,7 +53,6 @@ class TransferCacheService @Autowired constructor(
                     ).data
             }.onFailure { logger.warn("get $key ImageInfoByCodeAndVersion value error.") }.getOrNull()
         }
-
     private val projectGroupAndUsersCache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -68,18 +65,17 @@ class TransferCacheService @Autowired constructor(
                     ).data
             }.onFailure { logger.warn("get $key ProjectGroupAndUserList error.") }.getOrNull()
         }
-
     private val pipelineLabel = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, List<PipelineGroup>?> { projectId ->
+        .build<String, List<PipelineGroup>?> { key ->
             kotlin.runCatching {
+                val (userId, projectId) = key.split("@@")
                 client.get(ServicePipelineGroupResource::class)
-                    .getGroups(AUTH_HEADER_USER_ID_DEFAULT_VALUE, projectId)
+                    .getGroups(userId, projectId)
                     .data
-            }.onFailure { logger.warn("get $projectId default value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key pipeline label value error.") }.getOrNull()
         }
-
     private val gitRepository = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -95,7 +91,18 @@ class TransferCacheService @Autowired constructor(
                 client.get(ServiceRepositoryResource::class)
                     .get(projectId, config.getURLEncodeRepositoryId(), config.repositoryType)
                     .data
-            }.onFailure { logger.warn("get $key value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key git repository error.") }.getOrNull()
+        }
+    private val pipelineRemoteToken = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, String?> { key ->
+            kotlin.runCatching {
+                val (userId, projectId, pipelineId) = key.split("@@")
+                client.get(ServicePipelineResource::class)
+                    .generateRemoteToken(userId, projectId, pipelineId)
+                    .data?.token
+            }.onFailure { logger.warn("get $key remote token value error.") }.getOrNull()
         }
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
@@ -105,8 +112,11 @@ class TransferCacheService @Autowired constructor(
 
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 
-    fun getPipelineLabel(projectId: String) = pipelineLabel.get(projectId)
+    fun getPipelineLabel(userId: String, projectId: String) = pipelineLabel.get("$userId@@$projectId")
 
     fun getGitRepository(projectId: String, repositoryType: RepositoryType, value: String) =
         gitRepository.get("$projectId@@${repositoryType.name}@@$value")
+
+    fun getPipelineRemoteToken(userId: String, projectId: String, pipelineId: String) =
+        pipelineRemoteToken.get("$userId@@$projectId@@$pipelineId")
 }

@@ -45,21 +45,20 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_TIME_OUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_ENABLE
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_LENGTH
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v2.models.IfType
-import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.process.yaml.v2.models.job.Mutex
-import com.tencent.devops.process.yaml.v2.models.job.PreJob
-import com.tencent.devops.process.yaml.v2.models.job.RunsOn
-import com.tencent.devops.process.yaml.v2.models.job.Strategy
-import com.tencent.devops.process.yaml.v2.models.step.PreStep
+import com.tencent.devops.process.yaml.v3.models.IfType
+import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.Mutex
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.RunsOn
+import com.tencent.devops.process.yaml.v3.models.job.Strategy
+import com.tencent.devops.process.yaml.v3.models.step.PreStep
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -149,13 +148,15 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
                     job.jobControlOption?.customVariables
                 )
+
                 JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
                     job.jobControlOption?.customVariables
                 )
+
                 else -> null
             },
             steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_TIME_OUT),
+            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_MAX_RUNNING_MINUTES),
             env = null,
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
@@ -183,13 +184,15 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
                     job.jobControlOption?.customVariables
                 )
+
                 JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
                     job.jobControlOption?.customVariables
                 )
+
                 else -> null
             },
             steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_TIME_OUT),
+            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_MAX_RUNNING_MINUTES),
             env = null,
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
@@ -288,7 +291,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         }
     }
 
-    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: DEFAULT_JOB_TIME_OUT)
+    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: DEFAULT_JOB_MAX_RUNNING_MINUTES)
 
     private fun getMutexModel(resource: Mutex?): MutexGroup? {
         if (resource == null) {
