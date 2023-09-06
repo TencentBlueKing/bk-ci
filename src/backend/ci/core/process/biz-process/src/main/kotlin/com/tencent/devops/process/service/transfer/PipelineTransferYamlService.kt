@@ -93,6 +93,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     watcher.start("step_1|FULL_MODEL2YAML start")
                     val yml = modelTransfer.model2yaml(
                         ModelTransferInput(
+                            userId,
                             data.modelAndSetting!!.model,
                             data.modelAndSetting!!.setting,
                             YamlVersion.Version.V3_0
