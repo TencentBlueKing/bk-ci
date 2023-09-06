@@ -408,8 +408,8 @@ class PipelineTriggerEventService @Autowired constructor(
                     json = reasonDetail.reasonMsg,
                     typeReference = object : TypeReference<I18Variable>() {}
                 ).getCodeLanMessage(language)
-                // 详情格式： |{{触发器名称}}|{{国际化后的触发失败原因}}
-                "|${reasonDetail.elementName}|${i18nReason}"
+                // 详情格式： {{触发器名称}}|{{国际化后的触发失败原因}}
+                "${reasonDetail.elementName} | $i18nReason"
             }
         }
     } catch (ignored: Exception) {
