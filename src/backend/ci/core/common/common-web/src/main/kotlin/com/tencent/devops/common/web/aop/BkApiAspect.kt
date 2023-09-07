@@ -61,7 +61,7 @@ class BkApiAspect {
         // 参数key
         val parameterNames = (jp.signature as MethodSignature).parameterNames
         types?.forEach { type ->
-            BkApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
+            BkApiHandleFactory.createBuildApiHandleService(type)?.handleBuildApiService(
                 parameterNames,
                 parameterValue
             )

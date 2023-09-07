@@ -4,6 +4,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -701,52 +702,53 @@ class MigratePipelineDataTask constructor(
     }
 
     private fun handleUnFinishPipelines(retryNum: Int) {
-            // 查看项目下是否还有未结束的构建
-            val unFinishStatusList = listOf(
-                BuildStatus.QUEUE,
-                BuildStatus.QUEUE_CACHE,
-                BuildStatus.RUNNING
+        if (retryNum < 1) {
+            return
+        }
+        // 查看项目下是否还有未结束的构建
+        val unFinishStatusList = listOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.RUNNING
+        )
+        val projectId = migratePipelineDataParam.projectId
+        val pipelineId = migratePipelineDataParam.pipelineId
+        var offset = 0
+        var retryFlag = false
+        do {
+            // 查询未结束的构建记录
+            val historyInfoRecords = migratePipelineDataParam.processDao.getHistoryInfoList(
+                dslContext = migratePipelineDataParam.dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                offset = offset,
+                limit = DEFAULT_PAGE_SIZE,
+                statusList = unFinishStatusList
             )
-            val projectId = migratePipelineDataParam.projectId
-            val pipelineId = migratePipelineDataParam.pipelineId
-            var offset = 0
-            var retryFlag = false
-            do {
-                // 查询未结束的构建记录
-                val historyInfoRecords = migratePipelineDataParam.processDao.getHistoryInfoList(
-                    dslContext = migratePipelineDataParam.dslContext,
+            val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+            historyInfoRecords?.forEach { historyInfoRecord ->
+                val buildId = historyInfoRecord[tPipelineBuildHistory.BUILD_ID]
+                val channel = historyInfoRecord[tPipelineBuildHistory.CHANNEL]
+                val startUser = historyInfoRecord[tPipelineBuildHistory.START_USER]
+                val successFlag = cancelBuild(
+                    startUser = startUser,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    offset = offset,
-                    limit = DEFAULT_PAGE_SIZE,
-                    statusList = unFinishStatusList
+                    buildId = buildId,
+                    channel = channel
                 )
-                val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-                historyInfoRecords?.forEach { historyInfoRecord ->
-                    val buildId = historyInfoRecord[tPipelineBuildHistory.BUILD_ID]
-                    val channel = historyInfoRecord[tPipelineBuildHistory.CHANNEL]
-                    val startUser = historyInfoRecord[tPipelineBuildHistory.START_USER]
-                    val successFlag = cancelBuild(
-                        startUser = startUser,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        channel = channel
-                    )
-                    if (!successFlag) {
-                        retryFlag = true
-                    }
-                }
-                offset += DEFAULT_PAGE_SIZE
-            } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
-            if (retryFlag) {
-                if (retryNum > 0) {
-                    Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
-                    // 重试取消动作
-                    handleUnFinishPipelines(retryNum - 1)
+                if (!successFlag) {
+                    retryFlag = true
                 }
             }
+            offset += DEFAULT_PAGE_SIZE
+        } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
+        if (retryFlag) {
+            Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
+            // 重试取消动作
+            handleUnFinishPipelines(retryNum - 1)
         }
+    }
 
     private fun cancelBuild(
         startUser: String,
@@ -758,6 +760,8 @@ class MigratePipelineDataTask constructor(
         var successFlag = true
         val client = SpringContextUtil.getBean(Client::class.java)
         try {
+            // 设置该次取消service接口为放行状态
+            BkApiUtil.setPermissionFlag(true)
             // 强制取消流水线构建
             val shutdownResult = client.get(ServiceBuildResource::class).manualShutdown(
                 userId = startUser,

@@ -24,11 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.resources
 
-package com.tencent.devops.common.web.constant
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OPProjectManageResource
+import com.tencent.devops.project.service.DataSourceService
+import com.tencent.devops.project.service.ProjectManageService
+import org.springframework.beans.factory.annotation.Autowired
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    API_NO_AUTH_CHECK // 接口免权限校验
+@RestResource
+class OPProjectManageResourceImpl @Autowired constructor(
+    private val projectManageService: ProjectManageService
+) : OPProjectManageResource {
+    override fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(projectManageService.lockProjectPipelineBuildPermission(userId, projectId))
+    }
+
+    override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(projectManageService.unlockProjectPipelineBuildPermission(userId, projectId))
+    }
 }

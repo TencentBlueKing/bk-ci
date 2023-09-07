@@ -25,10 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.project.service
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    API_NO_AUTH_CHECK // 接口免权限校验
+interface ProjectManageService {
+
+    /**
+     * 锁定项目流水线构建权限
+     * @param userId 用户ID
+     * @param projectId 国际化语言信息
+     * @return 布尔值
+     */
+    fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean
+
+    /**
+     * 解锁项目流水线构建权限
+     * @param userId 用户ID
+     * @param projectId 国际化语言信息
+     * @return 布尔值
+     */
+    fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean
 }

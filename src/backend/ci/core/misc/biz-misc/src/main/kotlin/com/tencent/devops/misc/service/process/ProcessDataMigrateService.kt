@@ -230,7 +230,7 @@ class ProcessDataMigrateService @Autowired constructor(
         userId: String,
         historyShardingRoutingRule: ShardingRoutingRule?,
         errorMsg: String? = null
-    ): Boolean {
+    ) {
         // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
         val projectCurrentExecuteCount = projectExecuteCount + 1
         val projectLatestExecuteCount = redisOperation.get(migrateProjectExecuteCountKey)?.toInt()
@@ -240,7 +240,7 @@ class ProcessDataMigrateService @Autowired constructor(
                     "projectCurrentExecuteCount:$projectCurrentExecuteCount|" +
                     "projectLatestExecuteCount:$projectLatestExecuteCount"
             )
-            return true
+            return
         }
         val titleParams = mapOf(KEY_PROJECT_ID to projectId)
         val bodyParams = mapOf(KEY_PROJECT_ID to projectId, FAIL_MSG to (errorMsg ?: ""))
@@ -287,7 +287,6 @@ class ProcessDataMigrateService @Autowired constructor(
                     " template(MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE) fail!"
             )
         }
-        return false
     }
 
     private fun doPreMigrationBus(
