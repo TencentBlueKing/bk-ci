@@ -198,11 +198,12 @@
         }
 
         get serviceCount (): number {
-            return this.services.reduce((sum, service) => {
+            const count = this.services.reduce((sum, service) => {
                 sum += service.children.length
-                // 我的项目服务不展示，所以减去1
-                return sum - 1
+                return sum
             }, 0)
+            // 我的项目服务不展示，所以减去1
+            return count - 1
         }
 
         updateShowAllService (show: boolean): void {
