@@ -36,7 +36,7 @@ interface ApigwJobResourceV4 {
     @ApiOperation("脚本执行的Job接口", tags = ["v4_app_job_script_execute"])
     @POST
     @Path("/{projectId}/script_execute")
-    fun triggerStartup(
+    fun executeScript(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,

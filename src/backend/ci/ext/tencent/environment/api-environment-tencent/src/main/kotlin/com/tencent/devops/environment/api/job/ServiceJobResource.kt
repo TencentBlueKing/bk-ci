@@ -66,7 +66,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
-        @QueryParam("scriptExecuteInfo")
         scriptExecuteInfo: ScriptExecuteInfoReq
     ): Result<ScriptExecuteResult>
 
@@ -81,7 +80,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "文件分发的信息", required = true)
-        @QueryParam("fileDistributeInfo")
         fileDistributeInfo: FileDistributeInfoReq
     ): Result<FileDistributeResult>
 
@@ -111,7 +109,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
-        @QueryParam("queryLogsReq")
         queryLogsReq: QueryJobInstanceLogsReq
     ): Result<QueryJobInstanceLogsResult>
 }
