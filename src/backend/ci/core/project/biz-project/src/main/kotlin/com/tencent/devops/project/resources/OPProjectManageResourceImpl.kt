@@ -29,7 +29,6 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectManageResource
-import com.tencent.devops.project.service.DataSourceService
 import com.tencent.devops.project.service.ProjectManageService
 import org.springframework.beans.factory.annotation.Autowired
 
