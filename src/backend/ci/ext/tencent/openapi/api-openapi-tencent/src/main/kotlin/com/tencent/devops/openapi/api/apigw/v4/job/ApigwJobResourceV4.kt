@@ -13,7 +13,7 @@ import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
-import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,9 +50,8 @@ interface ApigwJobResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
-        @QueryParam("scriptExecuteInfo")
         scriptExecuteInfo: ScriptExecuteInfoReq
-    ): Result<TriggerBuildResult>
+    ): Result<ScriptExecuteResult>
 
     @ApiOperation("文件分发的Job接口", tags = ["v4_app_job_file_distribute"])
     @POST
@@ -71,7 +70,6 @@ interface ApigwJobResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "文件分发的信息", required = true)
-        @QueryParam("fileDistributeInfo")
         fileDistributeInfo: FileDistributeInfoReq
     ): Result<FileDistributeResult>
 
@@ -113,7 +111,6 @@ interface ApigwJobResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
-        @QueryParam("queryLogsReq")
         queryLogsReq: QueryJobInstanceLogsReq
     ): Result<QueryJobInstanceLogsResult>
 }
