@@ -105,7 +105,8 @@ class CodeP4RepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeP4Dao.edit(
                 dslContext = transactionContext,

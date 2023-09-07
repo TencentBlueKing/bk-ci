@@ -30,6 +30,7 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -38,6 +39,8 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -46,6 +49,7 @@ import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.CommitService
+import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +59,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val commitService: CommitService,
-    private val repositoryPermissionService: RepositoryPermissionService
+    private val repositoryPermissionService: RepositoryPermissionService,
+    private val repoPipelineService: RepoPipelineService
 ) : UserRepositoryResource {
 
     companion object {
@@ -289,6 +294,53 @@ class UserRepositoryResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid repositoryHashId")
         }
         repositoryService.userUnLock(userId, projectId, repositoryHashId)
+        return Result(true)
+    }
+
+    override fun listRepoPipelineRef(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageSize
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repoPipelineService.listPipelineRef(
+                projectId = projectId,
+                repositoryHashId = repositoryHashId,
+                limit = limit.limit,
+                offset = limit.offset
+            )
+        )
+    }
+
+    override fun rename(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        repoRename: RepoRename
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (repositoryHashId.isBlank()) {
+            throw ParamBlankException("Invalid repositoryHashId")
+        }
+        if (repoRename.name.isBlank()){
+            throw ParamBlankException("Invalid repoName")
+        }
+        repositoryService.rename(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            repoRename = repoRename
+        )
         return Result(true)
     }
 }

@@ -23,42 +23,48 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfoWithPermission(
-    @ApiModelProperty("仓库哈希ID", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("最后更新用户", required = false)
-    val updatedUser: String?,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("创建人", required = true)
-    val createUser: String,
-    @ApiModelProperty("能否被编辑", required = true)
-    val canEdit: Boolean,
-    @ApiModelProperty("能否被删除", required = true)
-    val canDelete: Boolean,
-    @ApiModelProperty("能否被使用", required = true)
-    val canUse: Boolean? = null,
-    @ApiModelProperty("认证类型", required = false)
-    val authType: String = "",
-    @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
-    val svnType: String? = null,
-    @ApiModelProperty("授权身份", required = true)
-    val authIdentity: String? = null
-)
+@Api(tags = ["OP_PIPELINE_REPOSITORY_REF"], description = "OP-流水线依赖代码库")
+@Path("/op/pipeline/repoRef")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineRepoRefResource {
+
+    @ApiOperation("更新代码库流水线引用信息")
+    @POST
+    @Path("/update")
+    fun updateRepoPipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新所有代码库流水线引用信息")
+    @POST
+    @Path("/updateAll")
+    fun updateAllRepoPipelineRef(): Result<Boolean>
+}

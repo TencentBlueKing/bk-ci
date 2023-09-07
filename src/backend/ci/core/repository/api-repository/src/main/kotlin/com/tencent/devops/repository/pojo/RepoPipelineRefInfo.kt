@@ -23,42 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.enums.RepositoryConfig
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfoWithPermission(
-    @ApiModelProperty("仓库哈希ID", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("最后更新用户", required = false)
-    val updatedUser: String?,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("创建人", required = true)
-    val createUser: String,
-    @ApiModelProperty("能否被编辑", required = true)
-    val canEdit: Boolean,
-    @ApiModelProperty("能否被删除", required = true)
-    val canDelete: Boolean,
-    @ApiModelProperty("能否被使用", required = true)
-    val canUse: Boolean? = null,
-    @ApiModelProperty("认证类型", required = false)
-    val authType: String = "",
-    @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
-    val svnType: String? = null,
-    @ApiModelProperty("授权身份", required = true)
-    val authIdentity: String? = null
+@ApiModel("流水线引用代码库")
+data class RepoPipelineRefInfo(
+    val projectId: String,
+    @ApiParam("流水线ID")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("代码库配置")
+    val repositoryConfig: RepositoryConfig,
+    @ApiModelProperty("插件ID")
+    val taskId: String,
+    @ApiModelProperty("插件名")
+    val taskName: String,
+    @ApiModelProperty("插件参数")
+    val taskParams: MutableMap<String, Any>,
+    @ApiModelProperty("插件code")
+    val atomCode: String,
+    @ApiModelProperty("插件版本")
+    val atomVersion: String? = null,
+    @ApiModelProperty("插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
+    val atomCategory: String
 )
