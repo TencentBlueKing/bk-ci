@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.bk.audit.config.AuditAutoConfiguration\
+com.tencent.devops.common.audit.BkAuditRequestProvider
