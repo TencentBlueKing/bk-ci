@@ -589,10 +589,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         managePermission = projectsWithManagePermission?.contains(it.englishName),
                         showUserManageIcon = isShowUserManageIcon(it.routerTag)
                     )
-                    if (isReturnProject(
-                            userId = userId,
-                            enableRemoteDev = projectVo.properties?.remotedev
-                        )) {
+                    if (isReturnProject(enableRemoteDev = projectVo.properties?.remotedev)) {
                         projectsResp.add(projectVo)
                     }
                 }
@@ -1191,7 +1188,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun buildRouterTag(routerTag: String?): String?
 
-    abstract fun isReturnProject(userId: String, enableRemoteDev: Boolean?): Boolean
+    abstract fun isReturnProject(enableRemoteDev: Boolean?): Boolean
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

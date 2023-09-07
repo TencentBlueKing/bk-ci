@@ -194,7 +194,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun buildRouterTag(routerTag: String?): String? = null
 
-    override fun isReturnProject(userId: String, enableRemoteDev: Boolean?): Boolean = true
+    override fun isReturnProject(enableRemoteDev: Boolean?): Boolean = true
 
     override fun updateProjectRouterTag(englishName: String) = Unit
 
