@@ -293,16 +293,17 @@ class RbacPermissionApplyService @Autowired constructor(
                     errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
                     defaultMessage = "group($it) not exist"
                 )
+                val relatedResourceType = resourceGroupInfo.resourceType
                 itsmService.buildGroupApplyItsmValue(
                     ApplyJoinGroupFormDataInfo(
                         projectName = projectInfo.projectName,
                         resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceGroupInfo.resourceType).name,
-                        resourceName = resourceGroupInfo.resourceName,
+                        resourceName = if (relatedResourceType == AuthResourceType.PROJECT.value) "--" else resourceGroupInfo.resourceName,
                         groupName = resourceGroupInfo.groupName,
                         validityPeriod = generateValidityPeriod(applyJoinGroupInfo.expiredAt.toLong()),
                         resourceRedirectUri = generateResourceRedirectUri(
                             projectCode = resourceGroupInfo.projectCode,
-                            resourceType = resourceGroupInfo.resourceType,
+                            resourceType = relatedResourceType,
                             resourceCode = resourceGroupInfo.resourceCode
                         ),
                         groupPermissionDetailRedirectUri = String.format(groupPermissionDetailRedirectUri, it)
