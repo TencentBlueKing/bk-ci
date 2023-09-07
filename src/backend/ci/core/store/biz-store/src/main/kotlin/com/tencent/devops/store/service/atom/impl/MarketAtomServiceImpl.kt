@@ -613,7 +613,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     atomId = it[tAtom.ID] as String,
                     name = it[tAtom.NAME] as String,
                     atomCode = atomCode,
-                    language = I18nUtil.getCodeLanMessage(it[tAtomEnvInfo.LANGUAGE]),
+                    language = it[tAtomEnvInfo.LANGUAGE]?.let { I18nUtil.getCodeLanMessage(it) },
                     category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
                     logoUrl = it[tAtom.LOGO_URL],
                     version = it[tAtom.VERSION] as String,
