@@ -154,37 +154,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
     }
 
-    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
-        return Result(
-            workspaceService.shareWorkspace(
-                workspaceShared.operator,
-                workspaceShared.workspaceName,
-                workspaceShared.sharedUser,
-                needPermission = false
-            )
-        )
-    }
-
-    override fun shareWorkspace4OP(
-        userId: String,
-        shareWorkspace: ShareWorkspace
-    ): Result<Boolean> {
-        return Result(
-            workspaceService.shareWorkspace4OP(
-                userId = userId,
-                shareWorkspace = shareWorkspace
-            )
-        )
-    }
-
-    override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
-        return Result(workspaceService.getShareWorkspace(workspaceName))
-    }
-
-    override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
-        return Result(workspaceService.deleteSharedWorkspace(id))
-    }
-
     override fun getProjectWorkspaceList(
         userId: String,
         projectId: String?,
@@ -234,15 +203,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
-    }
-
-    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
-        // 先获取工作空间信息
-        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
-            ?: return Result(false)
-
-        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
-        return Result(true)
     }
 
     override fun windowsWorkspaceDaoInit(userId: String): Result<Boolean> {
