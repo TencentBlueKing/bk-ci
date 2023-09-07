@@ -501,6 +501,5 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
-        private const val devxUserSign = "@tai"
     }
 }
