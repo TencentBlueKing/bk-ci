@@ -51,6 +51,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -110,6 +111,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
+    private val profile: Profile,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService
@@ -393,6 +395,10 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun isReturnProject(enableRemoteDev: Boolean?): Boolean {
+        return !profile.isDevx() || enableRemoteDev == true
+    }
+
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
             bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
@@ -495,5 +501,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+        private const val devxUserSign = "@tai"
     }
 }

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
@@ -54,7 +55,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-@Suppress("UNUSED", "LongParameterList", "LongMethod")
+@Suppress("UNUSED", "LongParameterList", "LongMethod", "ExplicitItLambdaParameter")
 @Service
 class UserProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -64,7 +65,8 @@ class UserProjectServiceImpl @Autowired constructor(
     gray: Gray,
     redisOperation: RedisOperation,
     private val tofService: TOFService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val profile: Profile
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
     @Value("\${project.container.url:#{null}}")
@@ -84,8 +86,11 @@ class UserProjectServiceImpl @Autowired constructor(
             val serviceListVO = ArrayList<ServiceListVO>()
 
             val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext)
-
-            val serviceList = serviceDao.getServiceList(dslContext)
+            val serviceList = serviceDao.getServiceList(
+                dslContext = dslContext,
+                // 根据集群类型，来获取对应的服务列表
+                clusterType = if (profile.isDevx()) devxClusterType else ""
+            )
             val groupService = serviceList.groupBy { it.serviceTypeId }
 
             val favorServices = favoriteDao.list(dslContext, userId).map {
@@ -105,8 +110,8 @@ class UserProjectServiceImpl @Autowired constructor(
                     .ifBlank { serviceType.title }
                 val services = ArrayList<ServiceVO>()
 
-                val s = groupService[typeId]
-                s?.forEach { it ->
+                val serviceListByTypeId = groupService[typeId]
+                serviceListByTypeId?.forEach { it ->
                     val favor = favorServices.contains(it.id)
                     val (newWindow, newWindowUrl) = getNewWindow(
                         tServiceRecord = it,
@@ -151,16 +156,16 @@ class UserProjectServiceImpl @Autowired constructor(
                         )
                     )
                 }
-
-                serviceListVO.add(
-                    ServiceListVO(
-                        title = typeName,
-                        weigHt = serviceType.weight ?: 0,
-                        children = services.sortedByDescending { it.weigHt }
+                if (serviceListByTypeId != null) {
+                    serviceListVO.add(
+                        ServiceListVO(
+                            title = typeName,
+                            weigHt = serviceType.weight ?: 0,
+                            children = services.sortedByDescending { it.weigHt }
+                        )
                     )
-                )
+                }
             }
-
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
@@ -182,7 +187,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     messageCode = BK_CONTAINER_SERVICE,
                     language = I18nUtil.getLanguage(userId)
                 )
-        ) &&
+            ) &&
             tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
             request != null &&
             bkToken != null &&
@@ -242,6 +247,7 @@ class UserProjectServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserProjectServiceImpl::class.java)
         private val MAP = mapOf("http://" to "https://", ".oa.com" to ".woa.com")
         private val regex = Regex("((http[s]?://)([-a-z0-9A-Z]+\\.)+([w]?oa\\.com)).*")
+        private const val devxClusterType = "devx"
     }
 
     private fun getReplaceMapByRequest(): Map<String, String> {
