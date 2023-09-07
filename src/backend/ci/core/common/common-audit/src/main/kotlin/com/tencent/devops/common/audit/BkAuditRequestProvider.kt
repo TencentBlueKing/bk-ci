@@ -67,10 +67,14 @@ class BkAuditRequestProvider : AuditRequestProvider {
         return httpServletRequest.getHeader(HEADER_BK_APP_CODE)
     }
 
-    override fun getClientIp(): String {
+    override fun getClientIp(): String? {
         val request = getHttpServletRequest()
-        val xff: String = request.getHeader("X-Forwarded-For")
-        return if (xff.contains(",")) xff.split(",".toRegex()).toTypedArray()[0] else xff
+        val xff = request.getHeader("X-Forwarded-For")
+        return if (xff == null) {
+            request.remoteAddr
+        } else {
+            if (xff.contains(",")) xff.split(",".toRegex()).toTypedArray()[0] else xff
+        }
     }
 
     override fun getUserAgent(): String? {
