@@ -26,21 +26,18 @@
                     v-model="newRepoInfo.authType"
                 >
                     <bk-radio
-                        v-if="isOAUTH"
                         class="mr20"
                         value="OAUTH"
                     >
                         OAUTH
                     </bk-radio>
                     <bk-radio
-                        v-else-if="isSSH"
                         class="mr20"
                         value="SSH"
                     >
                         SSH
                     </bk-radio>
                     <bk-radio
-                        v-else
                         value="HTTP"
                     >
                         {{ $t('codelib.用户名密码+个人token') }}

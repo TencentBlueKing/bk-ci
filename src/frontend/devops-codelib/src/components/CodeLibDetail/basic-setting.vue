@@ -41,7 +41,7 @@
                         {{ curRepo.authType }}@
                     </span>
                     <a
-                        v-if="!['OAUTH'].includes(repoInfo.authType)"
+                        v-if="!['OAUTH'].includes(curRepo.authType)"
                         :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
                         target="_blank"
                     >
@@ -318,7 +318,6 @@
                 return this.$route.query.id
             },
             repositoryType () {
-                console.log(this.curRepo, 'this.curRepo')
                 return this.curRepo.type
             },
             hasPower () {

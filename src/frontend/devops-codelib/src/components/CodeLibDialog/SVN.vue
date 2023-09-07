@@ -22,7 +22,7 @@
                 <bk-radio
                     value="http"
                 >
-                    HTTP/HTTPS
+                    {{ $t('codelib.用户名密码+个人token') }}
                 </bk-radio>
             </bk-radio-group>
         </bk-form-item>

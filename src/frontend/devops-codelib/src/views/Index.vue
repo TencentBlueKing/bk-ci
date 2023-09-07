@@ -323,6 +323,7 @@
             },
 
             handleUpdateRepo (id) {
+                this.startPage = 1
                 this.curRepoId = id
             },
 

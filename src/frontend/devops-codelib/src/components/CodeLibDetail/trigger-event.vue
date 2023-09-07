@@ -276,14 +276,14 @@
                     this.eventList.forEach(item => {
                         const eventDate = new Date(item.eventTime)
                         const year = eventDate.getFullYear()
-                        const month = eventDate.getMonth()
+                        const month = eventDate.getMonth() + 1
                         const day = eventDate.getDate()
                         const dateKey = `${year}-${month}-${day}`
 
                         if (!this.timelineMap[dateKey]) {
                             this.timelineMap[dateKey] = []
                         }
-
+                        
                         this.timelineMap[dateKey].push(item)
                     })
 

@@ -65,11 +65,12 @@
                         :name="codelibIconMap[props.row.type]"
                         size="16"
                     />
-                    <a
+                    {{ props.row.url }}
+                    <!-- <a
                         @click="handleToCodelib(props.row.url)"
                     >
                         {{ props.row.url }}
-                    </a>
+                    </a> -->
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -306,6 +307,11 @@
             defaultPagesize (val) {
                 const limitList = new Set([10, 20, 50, 100, val])
                 this.pagination.limitList = [...limitList].sort((a, b) => a - b)
+            },
+            'pipelinesDialogPayload.isShow' (val) {
+                if (!val) {
+                    this.pipelinesList = []
+                }
             }
         },
 
@@ -385,9 +391,9 @@
                 this.$emit('update:isListFlod', true)
             },
 
-            handleToCodelib (url) {
-                window.open(url, '__blank')
-            },
+            // handleToCodelib (url) {
+            //     window.open(url, '__blank')
+            // },
 
             handleRowSelect (row) {
                 this.$emit('update:curRepo', row)

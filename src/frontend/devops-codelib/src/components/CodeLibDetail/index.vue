@@ -12,14 +12,14 @@
                 <span @click="handleEditName">
                     <Icon
                         name="edit-line"
-                        size="14"
+                        size="16"
                         class="edit-icon"
                     />
                 </span>
                 <span @click="handleDeleteCodeLib">
                     <Icon
                         name="delete"
-                        size="12"
+                        size="14"
                         class="delete-icon"
                     />
                 </span>
