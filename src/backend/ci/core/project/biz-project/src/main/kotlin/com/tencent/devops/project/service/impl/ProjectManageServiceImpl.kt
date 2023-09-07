@@ -25,10 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.project.service.impl
 
-enum class BkApiHandleType {
-    BUILD_API_AUTH_CHECK, // build接口权限校验
-    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
-    API_NO_AUTH_CHECK // 接口免权限校验
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.project.service.ProjectManageService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectManageServiceImpl @Autowired constructor(
+    private val redisOperation: RedisOperation
+) : ProjectManageService {
+    override fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        return true
+    }
+
+    override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        return true
+    }
 }

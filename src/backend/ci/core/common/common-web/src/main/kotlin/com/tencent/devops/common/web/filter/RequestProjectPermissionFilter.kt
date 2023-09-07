@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.filter
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -36,6 +37,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
@@ -43,6 +46,8 @@ import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.HttpMethod
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
+import javax.ws.rs.container.ResourceInfo
+import javax.ws.rs.core.Context
 import javax.ws.rs.ext.Provider
 
 @Provider
@@ -56,30 +61,47 @@ class RequestProjectPermissionFilter : ContainerRequestFilter {
     @Value("\${api.project.permission.switch:false}")
     private val apiProjectPermissionSwitch: Boolean = false
 
+    @Value("\${api.project.permission.checkMicroServices:#{\"process\"}}")
+    private val checkMicroServices = "process"
+
+    @Context
+    private var resourceInfo: ResourceInfo? = null
+
     override fun filter(requestContext: ContainerRequestContext) {
+        val serviceName = requestContext.headers.getFirst(AUTH_HEADER_DEVOPS_SERVICE_NAME)
+        val serviceCheckFlag = checkMicroServices.split(",").contains(serviceName)
+        if (resourceInfo == null || !serviceCheckFlag) {
+            return
+        }
+        // 判断接口是否标注了免权限校验的注解
+        val method = resourceInfo!!.resourceMethod
+        val bkApiHandleType = method.getAnnotation(BkApiPermission::class.java)?.types?.toList()
+        val noAuthCheckFlag = bkApiHandleType?.contains(BkApiHandleType.API_NO_AUTH_CHECK) ?: false
         // 判断项目的api权限校验开关是否打开，如果是get请求或者是build接口无需做权限校验（未结束的构建需要调build接口才能完成）
         val url = requestContext.uriInfo.requestUri.path
         val channel = I18nUtil.getRequestChannel()
+        // 获取该次接口是否要权限标识
         val permissionFlag = requestContext.getHeaderString(API_PERMISSION)?.toBoolean() ?: false
-        logger.info("url[$url],channel[$channel],permissionFlag[$permissionFlag]")
-        val checkFlag = permissionFlag || requestContext.method.uppercase() == HttpMethod.GET ||
+        logger.info("url[$url],noAuthCheckFlag[$noAuthCheckFlag],channel[$channel],permissionFlag[$permissionFlag]")
+        val noCheckFlag = noAuthCheckFlag || permissionFlag || requestContext.method.uppercase() == HttpMethod.GET ||
             channel == RequestChannelTypeEnum.BUILD.name
-        if (!apiProjectPermissionSwitch || checkFlag) {
+        if (!apiProjectPermissionSwitch || noCheckFlag) {
             return
         }
         val uriInfo = requestContext.uriInfo
         val projectId =
             (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters.getFirst(KEY_PROJECT_ID)
-            ?: uriInfo.queryParameters.getFirst(KEY_PROJECT_ID))?.toString() ?: return
-        val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        // 判断项目是否在限制接口访问的列表中
-        if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
-            val path = uriInfo.requestUri.path
-            logger.info("Project[$projectId] does not have access permission for interface[$path]")
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
-                params = arrayOf(projectId, path)
-            )
+            ?: uriInfo.queryParameters.getFirst(KEY_PROJECT_ID))?.toString()
+        if (!projectId.isNullOrBlank()) {
+            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+            // 判断项目是否在限制接口访问的列表中
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
+                logger.info("Project[$projectId] does not have access permission for interface[$url]")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
+                    params = arrayOf(projectId, url)
+                )
+            }
         }
     }
 }

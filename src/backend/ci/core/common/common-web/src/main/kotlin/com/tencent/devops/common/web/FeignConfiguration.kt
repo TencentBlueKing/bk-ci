@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.BkApiUtil
 import feign.RequestInterceptor
+import feign.RequestTemplate
 import feign.Target.HardCodedTarget
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -100,6 +101,9 @@ class FeignConfiguration @Autowired constructor(
                 requestTemplate.header(API_PERMISSION, permissionFlag.toString())
             }
 
+            // 设置服务名称
+            setServiceName(requestTemplate)
+
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -124,25 +128,6 @@ class FeignConfiguration @Autowired constructor(
             if (!requestChannel.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_CHANNEL, requestChannel)
             }
-            // 设置服务名称
-            val serviceName = when (val target = requestTemplate.feignTarget()) {
-                is MicroServiceTarget -> {
-                    target.name()
-                }
-
-                is HardCodedTarget -> {
-                    val nameRegex = Regex("/([a-z]+)/api")
-                    val nameMatchResult = nameRegex.find(target.name())
-                    nameMatchResult?.groupValues?.get(1) ?: target.name()
-                }
-
-                else -> {
-                    target.name()
-                }
-            }
-            if (!serviceName.isNullOrBlank()) {
-                requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
-            }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()
@@ -151,6 +136,27 @@ class FeignConfiguration @Autowired constructor(
                 }
                 requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
             }
+        }
+    }
+
+    private fun setServiceName(requestTemplate: RequestTemplate) {
+        val serviceName = when (val target = requestTemplate.feignTarget()) {
+            is MicroServiceTarget -> {
+                target.name()
+            }
+
+            is HardCodedTarget -> {
+                val nameRegex = Regex("/([a-z]+)/api")
+                val nameMatchResult = nameRegex.find(target.name())
+                nameMatchResult?.groupValues?.get(1) ?: target.name()
+            }
+
+            else -> {
+                target.name()
+            }
+        }
+        if (!serviceName.isNullOrBlank()) {
+            requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
         }
     }
 }

@@ -39,7 +39,7 @@ object BkApiHandleFactory {
 
     fun createBuildApiHandleService(
         type: BkApiHandleType
-    ): BkApiHandleService {
+    ): BkApiHandleService? {
         var bkApiHandleService = bkApiHandleMap[type.name]
         when (type) {
             BkApiHandleType.BUILD_API_AUTH_CHECK -> {
@@ -48,12 +48,15 @@ object BkApiHandleFactory {
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }
+
             BkApiHandleType.PROJECT_API_ACCESS_LIMIT -> {
                 if (bkApiHandleService == null) {
                     bkApiHandleService = BkApiHandleProjectAccessServiceImpl()
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }
+
+            else -> {}
         }
         return bkApiHandleService
     }
