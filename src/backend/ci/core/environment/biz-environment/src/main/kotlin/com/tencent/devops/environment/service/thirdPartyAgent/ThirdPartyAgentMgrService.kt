@@ -136,7 +136,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
         val id = HashUtil.decodeIdToLong(agentHashId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id, projectId = projectId) ?: return null
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id) ?: return null
 
         return getThirdPartyAgentDetail(agentRecord, userId, true)
     }

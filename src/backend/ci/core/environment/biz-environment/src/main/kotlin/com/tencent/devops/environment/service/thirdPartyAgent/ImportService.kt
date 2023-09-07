@@ -140,7 +140,7 @@ class ImportService @Autowired constructor(
     }
 
     private fun import(id: Long, projectId: String, agentId: String, userId: String) {
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
             ?: throw NotFoundException("The agent($agentId) is not exist")
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
