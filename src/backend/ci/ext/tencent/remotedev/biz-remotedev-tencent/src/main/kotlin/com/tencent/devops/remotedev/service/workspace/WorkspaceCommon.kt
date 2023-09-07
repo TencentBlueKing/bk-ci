@@ -355,10 +355,11 @@ class WorkspaceCommon @Autowired constructor(
 
     fun checkWorkspaceAvailability(
         userId: String,
-        type: WorkspaceMountType
+        type: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType
     ) {
-        when (type) {
-            WorkspaceMountType.START -> {
+        when {
+            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
                 val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
                 if (timeLeft <= 0) {
                     throw ErrorCodeException(
@@ -366,6 +367,7 @@ class WorkspaceCommon @Autowired constructor(
                     )
                 }
             }
+
             else -> {}
         }
     }
