@@ -56,7 +56,7 @@ interface OPProjectManageResource {
         userId: String,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
+        projectId: String
     ): Result<Boolean>
 
     @ApiOperation("解锁项目流水线构建权限")
@@ -68,6 +68,6 @@ interface OPProjectManageResource {
         userId: String,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
+        projectId: String
     ): Result<Boolean>
 }
