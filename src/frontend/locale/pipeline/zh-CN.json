@@ -698,7 +698,11 @@
     "pipelineErrorCode": "错误码",
     "pipelineErrorPos": "错误位置",
     "pipelineErrorInfo": "错误信息",
-    "Errors": "Errors"
+    "Errors": "Errors",
+    "directoryName": "目录名称",
+    "directoryPath": "目录路径",
+    "include": "包含",
+    "fileAndFolder": "{0} 个文件，{1} 个目录"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
