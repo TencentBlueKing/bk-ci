@@ -28,6 +28,7 @@
 
 package com.tencent.devops.repository.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -36,6 +37,7 @@ import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.RepoTriggerRefVo
 import com.tencent.devops.repository.pojo.Repository
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -168,6 +170,49 @@ class RepoPipelineService @Autowired constructor(
             limit = limit,
             offset = offset
         )
+        return SQLPage(count = count, records = records)
+    }
+
+    fun listTriggerRef(
+        projectId: String,
+        repositoryHashId: String,
+        triggerType: String?,
+        eventType: String?,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoTriggerRefVo> {
+        val repositoryId = HashUtil.decodeOtherIdToLong((repositoryHashId))
+        val count = repoPipelineRefDao.countTriggerRef(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            triggerType = triggerType,
+            eventType = eventType
+        )
+        val pipelineRefCountMap = repoPipelineRefDao.listTriggerRefIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            triggerType = triggerType,
+            eventType = eventType,
+            limit = limit,
+            offset = offset
+        )
+        val records = repoPipelineRefDao.listByIds(
+            dslContext = dslContext,
+            ids = pipelineRefCountMap.keys.toList()
+        ).map {
+            RepoTriggerRefVo(
+                projectId = it.projectId,
+                repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                atomCode = it.atomCode,
+                triggerType = it.triggerType,
+                eventType = it.eventType,
+                taskParams = JsonUtil.to(it.taskParams, object : TypeReference<MutableMap<String, Any>>() {}),
+                taskParamsMd5 = it.taskParamsMd5,
+                pipelineRefCount = pipelineRefCountMap[it.id] ?: 0
+            )
+        }
         return SQLPage(count = count, records = records)
     }
 }

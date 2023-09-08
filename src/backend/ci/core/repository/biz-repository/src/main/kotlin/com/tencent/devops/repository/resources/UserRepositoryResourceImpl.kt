@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.RepoRename
+import com.tencent.devops.repository.pojo.RepoTriggerRefVo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -311,6 +312,30 @@ class UserRepositoryResourceImpl @Autowired constructor(
             repoPipelineService.listPipelineRef(
                 projectId = projectId,
                 repositoryHashId = repositoryHashId,
+                limit = limit.limit,
+                offset = limit.offset
+            )
+        )
+    }
+
+    override fun listTriggerRef(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        triggerType: String?,
+        eventType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepoTriggerRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageSize
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repoPipelineService.listTriggerRef(
+                projectId = projectId,
+                repositoryHashId = repositoryHashId,
+                triggerType = triggerType,
+                eventType = eventType,
                 limit = limit.limit,
                 offset = limit.offset
             )

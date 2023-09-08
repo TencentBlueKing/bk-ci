@@ -33,11 +33,14 @@ import com.tencent.devops.model.repository.tables.TRepositoryPipelineRef
 import com.tencent.devops.model.repository.tables.records.TRepositoryPipelineRefRecord
 import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.enums.RepoAtomCategoryEnum
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("LongParameterList")
 class RepoPipelineRefDao {
 
     fun batchAdd(
@@ -152,6 +155,78 @@ class RepoPipelineRefDao {
                 .and(REPOSITORY_ID.eq(repositoryId))
                 .groupBy(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .fetchGroups(PIPELINE_ID).size.toLong()
+        }
+    }
+
+    fun listTriggerRefIds(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        triggerType: String?,
+        eventType: String?,
+        limit: Int,
+        offset: Int
+    ): Map<Long /*ID*/, Int /*pipelineCount*/> {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.select(DSL.max(ID), DSL.count()).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(ATOM_CATEGORY.eq(RepoAtomCategoryEnum.TRIGGER.name))
+                .let {
+                    if (triggerType.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(TRIGGER_TYPE.eq(triggerType))
+                    }
+                }
+                .let {
+                    if (eventType.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(EVENT_TYPE.eq(eventType))
+                    }
+                }.groupBy(PROJECT_ID, REPOSITORY_ID, TASK_PARAMS_MD5)
+                .limit(limit).offset(offset)
+                .fetch().associate { Pair(it.value1(), it.value2()) }
+        }
+    }
+
+    fun countTriggerRef(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        triggerType: String?,
+        eventType: String?
+    ): Long {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, TASK_PARAMS_MD5))
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(ATOM_CATEGORY.eq(RepoAtomCategoryEnum.TRIGGER.name))
+                .let {
+                    if (triggerType.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(TRIGGER_TYPE.eq(triggerType))
+                    }
+                }
+                .let {
+                    if (eventType.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(EVENT_TYPE.eq(eventType))
+                    }
+                }
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun listByIds(
+        dslContext: DSLContext,
+        ids: List<Long>
+    ): List<TRepositoryPipelineRefRecord> {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
         }
     }
 }
