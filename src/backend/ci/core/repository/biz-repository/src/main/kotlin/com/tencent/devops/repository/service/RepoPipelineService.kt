@@ -30,12 +30,14 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.Repository
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -92,6 +94,7 @@ class RepoPipelineService @Autowired constructor(
                 repoBuffer[refInfo.repositoryConfig.getRepositoryId()] = repo
                 repo
             }
+            val taskParamsMd5 = DigestUtils.md5Hex(JsonUtil.toJson(refInfo.taskParams))
             repoPipelineRefs.add(
                 RepoPipelineRef(
                     projectId = projectId,
@@ -100,10 +103,13 @@ class RepoPipelineService @Autowired constructor(
                     repositoryId = HashUtil.decodeOtherIdToLong((repository.repoHashId!!)),
                     taskId = refInfo.taskId,
                     taskName = refInfo.taskName,
-                    taskParams = refInfo.taskParams,
                     atomCode = refInfo.atomCode,
+                    atomCategory = refInfo.atomCategory,
+                    triggerType = refInfo.triggerType,
+                    eventType = refInfo.eventType,
                     atomVersion = refInfo.atomVersion,
-                    atomCategory = refInfo.atomCategory
+                    taskParams = refInfo.taskParams,
+                    taskParamsMd5 = taskParamsMd5
                 )
             )
         }

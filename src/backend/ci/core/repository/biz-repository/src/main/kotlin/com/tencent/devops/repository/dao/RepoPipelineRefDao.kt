@@ -28,6 +28,7 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.repository.tables.TRepositoryPipelineRef
 import com.tencent.devops.model.repository.tables.records.TRepositoryPipelineRefRecord
 import com.tencent.devops.repository.pojo.RepoPipelineRef
@@ -59,6 +60,10 @@ class RepoPipelineRefDao {
                     TASK_NAME,
                     ATOM_CODE,
                     ATOM_CATEGORY,
+                    TRIGGER_TYPE,
+                    EVENT_TYPE,
+                    TASK_PARAMS,
+                    TASK_PARAMS_MD5,
                     CREATE_TIME,
                     UPDATE_TIME
                 ).values(
@@ -70,6 +75,10 @@ class RepoPipelineRefDao {
                     it.taskName,
                     it.atomCode,
                     it.atomCategory,
+                    it.triggerType,
+                    it.eventType,
+                    JsonUtil.toJson(it.taskParams),
+                    it.taskParamsMd5,
                     now,
                     now
                 ).onDuplicateKeyUpdate()

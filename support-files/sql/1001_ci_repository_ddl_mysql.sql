@@ -192,4 +192,27 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_TGIT_TOKEN`
         unique (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';
 
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PIPELINE_REF`
+(
+    `ID`              bigint auto_increment,
+    `PROJECT_ID`      varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `PIPELINE_ID`     varchar(64)  NOT NULL COMMENT '流水线ID',
+    `PIPELINE_NAME`   varchar(255) NOT NULL COMMENT '流水线名称',
+    `REPOSITORY_ID`   bigint(20)   NOT NULL COMMENT '代码库ID',
+    `TASK_ID`         varchar(64)  NOT NULL COMMENT '任务ID',
+    `TASK_NAME`       varchar(128) NULL COMMENT '原子名称，用户是可以修改',
+    `ATOM_CODE`       varchar(32)  NOT NULL DEFAULT '' COMMENT '插件的唯一标识',
+    `ATOM_CATEGORY`   varchar(10)  NOT NULL DEFAULT '' COMMENT '插件类别',
+    `TRIGGER_TYPE`    varchar(64)  NULL COMMENT '触发类型',
+    `EVENT_TYPE`      varchar(64)  NULL COMMENT '事件类型',
+    `TASK_PARAMS`     text         NOT NULL COMMENT '插件参数',
+    `TASK_PARAMS_MD5` varchar(64)  NOT NULL COMMENT '插件参数md5',
+    `CREATE_TIME`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UQE_PROJECT_PIPELINE_TASK` (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`),
+    INDEX `IDX_PROJECT_REPOSITORY` (`PROJECT_ID`, `REPOSITORY_ID`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '流水线引用代码库表';
+
+
 SET FOREIGN_KEY_CHECKS = 1;

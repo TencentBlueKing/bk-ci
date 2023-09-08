@@ -53,5 +53,9 @@ data class RepoPipelineRefInfo(
     @ApiModelProperty("插件版本")
     val atomVersion: String? = null,
     @ApiModelProperty("插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
-    val atomCategory: String
+    val atomCategory: String,
+    @ApiModelProperty("触发类型,只有触发插件才有值")
+    val triggerType: String? = null,
+    @ApiModelProperty("事件类型,只有触发插件才有值")
+    val eventType: String? = null
 )

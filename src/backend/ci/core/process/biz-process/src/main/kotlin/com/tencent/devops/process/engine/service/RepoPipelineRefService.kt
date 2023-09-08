@@ -31,6 +31,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -47,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -226,42 +228,60 @@ class RepoPipelineRefService @Autowired constructor(
         repoPipelineRefInfos: MutableList<RepoPipelineRefInfo>
     ) {
         container.elements.forEach e@{ element ->
-            val repositoryConfig = when (element) {
-                is CodeGitWebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
-                )
+            val (triggerType, eventType, repositoryConfig) = when (element) {
+                is CodeGitWebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                        repositoryType = element.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.CODE_GIT.name, element.eventType?.name, repositoryConfig)
+                }
 
-                is CodeSVNWebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
-                )
+                is CodeSVNWebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                        repositoryType = element.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.CODE_SVN.name, CodeEventType.PUSH_COMMIT.name, repositoryConfig)
+                }
 
-                is CodeGitlabWebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
-                )
+                is CodeGitlabWebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                        repositoryType = element.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.CODE_GITLAB.name, element.eventType?.name, repositoryConfig)
+                }
 
-                is CodeGithubWebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
-                )
+                is CodeGithubWebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                        repositoryType = element.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.GITHUB.name, element.eventType?.name, repositoryConfig)
+                }
 
-                is CodeTGitWebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.data.input.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
-                )
+                is CodeTGitWebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.data.input.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                        repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.CODE_TGIT.name, element.data.input.eventType?.name, repositoryConfig)
+                }
 
-                is CodeP4WebHookTriggerElement -> RepositoryConfig(
-                    repositoryHashId = element.data.input.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
-                )
+                is CodeP4WebHookTriggerElement -> {
+                    val repositoryConfig = RepositoryConfig(
+                        repositoryHashId = element.data.input.repositoryHashId,
+                        repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                        repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                    )
+                    Triple(ScmType.CODE_P4.name, element.data.input.eventType?.name, repositoryConfig)
+                }
 
                 else -> return@e
             }
@@ -277,7 +297,9 @@ class RepoPipelineRefService @Autowired constructor(
                     taskParams = element.genTaskParams(),
                     atomCode = element.getAtomCode(),
                     atomVersion = element.version,
-                    atomCategory = RepoAtomCategoryEnum.TRIGGER.name
+                    atomCategory = RepoAtomCategoryEnum.TRIGGER.name,
+                    triggerType = triggerType,
+                    eventType = eventType
                 )
             )
         }
@@ -340,7 +362,7 @@ class RepoPipelineRefService @Autowired constructor(
                         taskParams = element.genTaskParams(),
                         atomCode = element.getAtomCode(),
                         atomVersion = element.version,
-                        atomCategory = RepoAtomCategoryEnum.TRIGGER.name
+                        atomCategory = RepoAtomCategoryEnum.TASK.name
                     )
                 )
             }
