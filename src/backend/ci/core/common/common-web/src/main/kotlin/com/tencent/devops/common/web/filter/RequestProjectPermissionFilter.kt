@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.web.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -61,16 +60,11 @@ class RequestProjectPermissionFilter : ContainerRequestFilter {
     @Value("\${api.project.permission.switch:false}")
     private val apiProjectPermissionSwitch: Boolean = false
 
-    @Value("\${api.project.permission.checkMicroServices:#{\"process\"}}")
-    private val checkMicroServices = "process"
-
     @Context
     private var resourceInfo: ResourceInfo? = null
 
     override fun filter(requestContext: ContainerRequestContext) {
-        val serviceName = requestContext.headers.getFirst(AUTH_HEADER_DEVOPS_SERVICE_NAME)
-        val serviceCheckFlag = checkMicroServices.split(",").contains(serviceName)
-        if (resourceInfo == null || !serviceCheckFlag) {
+        if (resourceInfo == null) {
             return
         }
         // 判断接口是否标注了免权限校验的注解
