@@ -171,16 +171,6 @@ class BkRepoService @Autowired constructor(
         return FolderSize(sizeInfo.size)
     }
 
-    override fun setDockerProperties(
-        projectId: String,
-        imageName: String,
-        tag: String,
-        properties: Map<String, String>
-    ) {
-        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String, properties: $properties")
-        throw OperationException("not supported")
-    }
-
     override fun setProperties(
         userId: String,
         projectId: String,
@@ -370,7 +360,6 @@ class BkRepoService @Autowired constructor(
             ).records
 
             val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
-            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
             val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
             return fileInfoList.map {
@@ -415,9 +404,7 @@ class BkRepoService @Autowired constructor(
                 var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
-                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID &&
-                            pipelineCanDownloadList.contains(property.value)
-                        ) {
+                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID) {
                             canDownload = true
                         }
 

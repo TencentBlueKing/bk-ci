@@ -48,8 +48,6 @@ interface RepoService {
 
     fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): FolderSize
 
-    fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>)
-
     fun setProperties(
         userId: String,
         projectId: String,
