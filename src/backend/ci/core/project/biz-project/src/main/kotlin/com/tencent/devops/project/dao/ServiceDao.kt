@@ -41,10 +41,11 @@ import java.time.LocalDateTime
 @Suppress("ComplexMethod", "LongMethod")
 class ServiceDao {
 
-    fun getServiceList(dslContext: DSLContext): Result<TServiceRecord> {
+    fun getServiceList(dslContext: DSLContext, clusterType: String = ""): Result<TServiceRecord> {
         with(TService.T_SERVICE) {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
+                .and(CLUSTER_TYPE.eq(clusterType))
                 .fetch()
         }
     }

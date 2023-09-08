@@ -39,6 +39,15 @@ BEGIN
         ADD COLUMN `PROJECT_TYPE` int(10) comment '项目类型';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_SERVICE'
+                    AND COLUMN_NAME = 'CLUSTER_TYPE') THEN
+    ALTER TABLE `T_SERVICE`
+        ADD COLUMN `CLUSTER_TYPE` VARCHAR(32) DEFAULT '' comment '集群类型';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
