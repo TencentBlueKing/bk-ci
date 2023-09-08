@@ -216,8 +216,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildInfo(projectId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
-        return pipelineBuildDao.convert(t)
+        return pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
     }
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
@@ -664,7 +663,7 @@ class PipelineRuntimeService @Autowired constructor(
         val lastTimeBuildContainers = pipelineContainerService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(context.projectId, context.buildId)
 
-        val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
+        val buildHistory = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
         context.watcher.stop()
         // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
@@ -894,26 +893,26 @@ class PipelineRuntimeService @Autowired constructor(
 
         val modelJson = JsonUtil.toJson(fullModel, formatted = false)
 
-        if (buildHistoryRecord != null) {
+        if (buildHistory != null) {
             if (context.retryStartTaskId.isNullOrBlank()) { // 完整重试,重置启动时间
-                buildHistoryRecord.startTime = context.now
+                buildHistory.startTime = context.now.timestampmilli()
             }
-            buildHistoryRecord.endTime = null
-            buildHistoryRecord.queueTime = context.now // for EPC
-            buildHistoryRecord.status = context.startBuildStatus.ordinal
-            buildHistoryRecord.concurrencyGroup = context.concurrencyGroup
+            buildHistory.endTime = null
+            buildHistory.queueTime = context.now.timestampmilli() // for EPC
+            buildHistory.status = context.startBuildStatus
+            buildHistory.concurrencyGroup = context.concurrencyGroup
             // 重试时启动参数只需要刷新执行次数
-            buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+            buildHistory.buildParameters = buildHistory.buildParameters?.let { self ->
+                val newList = self.toMutableList()
                 val retryCount = context.executeCount - 1
-                val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
-                list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                newList.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
                     param.value = retryCount
                 } ?: run {
-                    list.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
+                    newList.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
                 }
-                JsonUtil.toJson(list, formatted = false)
+                newList
             }
-            context.buildNum = buildHistoryRecord.buildNum
+            context.buildNum = buildHistory.buildNum
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
             context.genBuildNumAlias()
@@ -921,8 +920,8 @@ class PipelineRuntimeService @Autowired constructor(
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            if (buildHistoryRecord != null) {
-                transactionContext.batchStore(buildHistoryRecord).execute()
+            if (buildHistory != null) {
+
                 // 重置状态和人
                 buildDetailDao.update(
                     dslContext = transactionContext,
@@ -1211,7 +1210,8 @@ class PipelineRuntimeService @Autowired constructor(
                 firstTaskId = buildInfo.firstTaskId,
                 actionType = ActionType.START,
                 startBuildStatus = BuildStatus.QUEUE,
-                startType = StartType.toStartType(buildInfo.trigger)
+                startType = StartType.toStartType(buildInfo.trigger),
+                debug = buildInfo.debug
             ).apply {
                 buildNoType = null // 该字段是需要遍历Model获得，不过在审核阶段为null，目前不影响功能逻辑。
             }.sendBuildStartEvent()
