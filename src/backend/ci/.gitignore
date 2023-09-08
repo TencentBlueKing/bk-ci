@@ -18,3 +18,4 @@ build.yml
 *.log.gz
 i18n/
 core/mutijar/boot-mutijar/src/main/resources/application-*.yml
+core/mutijar/boot-mutijar/bkenv.properties

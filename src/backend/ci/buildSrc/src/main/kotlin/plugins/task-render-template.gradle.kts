@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import java.util.Properties
-import java.io.File
 
 tasks.register("replacePlaceholders") {
     doLast {
@@ -36,7 +35,7 @@ tasks.register("replacePlaceholders") {
             "${File.separator}src${File.separator}backend${File.separator}ci",
             ""
         )
-        val bkEnvPath = joinPath(rootDirPath, "scripts", "bkenv.properties")
+        val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
         val templatesDir = joinPath(rootDirPath, "support-files", "templates")
         val bkEnvProperties = loadProperties(bkEnvPath)
         val bkEnvFileContent = renderTemplate(bkEnvPath, bkEnvProperties)
@@ -45,7 +44,7 @@ tasks.register("replacePlaceholders") {
     }
 }
 
-tasks.register("deleteApplicationTemplate"){
+tasks.register("deleteApplicationTemplate") {
     val destDir = joinPath(projectDir.absolutePath, "src", "main", "resources")
     deleteFiles(destDir)
 }
