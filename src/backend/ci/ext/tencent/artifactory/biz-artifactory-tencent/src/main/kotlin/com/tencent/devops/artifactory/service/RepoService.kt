@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
-import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FilePipelineInfo
@@ -100,8 +99,6 @@ interface RepoService {
         targetProjectId: String,
         targetPath: String
     ): Count
-
-    fun createDockerUser(projectCode: String): DockerUser
 
     fun listCustomFiles(userId: String, projectId: String, condition: CustomFileSearchCondition): List<String>
 
