@@ -28,6 +28,7 @@
 package com.tencent.devops.monitoring.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.monitoring.consumer.AtomMonitorReportListener
@@ -44,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.lang.Integer.max
 
 @Configuration
 class ListenerConfiguration {
@@ -81,16 +81,16 @@ class ListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(atomMonitorDataReportQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = atomMonitorDataReportQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 10,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
     }
 
     companion object {

@@ -28,6 +28,7 @@
 package com.tencent.devops.project.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.project.listener.ProjectEventListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -115,15 +116,18 @@ class ProjectMQConfiguration {
         @Autowired listener: ProjectEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectCreateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = projectCreateQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 10
+        )
     }
 
     @Bean
@@ -134,15 +138,18 @@ class ProjectMQConfiguration {
         @Autowired listener: ProjectEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = projectUpdateQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 10
+        )
     }
 
     @Bean
@@ -153,14 +160,17 @@ class ProjectMQConfiguration {
         @Autowired listener: ProjectEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateLogoQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = projectUpdateLogoQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 10
+        )
     }
 }

@@ -59,7 +59,7 @@ object Tools {
     ): SimpleMessageListenerContainer {
         logger.info(
             "createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=$concurrency" +
-                "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|interval=$startConsumerMinInterval"
+                    "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|interval=$startConsumerMinInterval"
         )
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
@@ -88,9 +88,13 @@ object Tools {
         prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(queue.name)
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
+        container.setQueues(queue)
+        if (connectionFactory.virtualHost == "default-vhost") {
+            container.lazyLoad()
+        } else {
+            container.setConcurrentConsumers(concurrency)
+            container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
+        }
         container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)

@@ -36,6 +36,7 @@ import com.tencent.devops.auth.service.AuthUserBlackListService
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -113,17 +114,18 @@ class AuthCoreConfiguration {
         @Autowired refreshListener: AuthRefreshEventListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(authRefreshQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(refreshListener, refreshListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = authRefreshQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 5
+        )
     }
 
     @Bean
