@@ -255,6 +255,4 @@ interface UserPipelineVersionResource {
         @QueryParam("version")
         version: Int
     ): Result<Boolean>
-
-    // TODO #8161 模板查询：返回模板的model和yaml用于展示，在新建预览页带简要配置信息：3个bool
 }

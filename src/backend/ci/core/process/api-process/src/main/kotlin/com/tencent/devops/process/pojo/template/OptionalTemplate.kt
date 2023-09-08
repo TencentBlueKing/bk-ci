@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -64,5 +65,27 @@ data class OptionalTemplate(
     @ApiModelProperty("模版logo", required = true)
     val logoUrl: String,
     @ApiModelProperty("阶段集合", required = true)
-    val stages: List<Stage>
+    val stages: List<Stage>,
+    @ApiModelProperty("克隆模板设置项是否存在", required = false)
+    val cloneTemplateSettingExist: CloneTemplateSettingExist
 )
+
+@ApiModel("克隆模板设置")
+data class CloneTemplateSettingExist(
+    val notifySettingExist: Boolean,
+    val concurrencySettingExist: Boolean,
+    val labelSettingExist: Boolean
+) {
+    companion object {
+        fun fromSetting(setting: PipelineSetting?): CloneTemplateSettingExist {
+            if (setting == null) {
+                return CloneTemplateSettingExist(false, false, false)
+            }
+            return CloneTemplateSettingExist(
+                notifySettingExist = !setting.notifySettingIsNull(),
+                concurrencySettingExist = !setting.concurrencySettingIsNull(),
+                labelSettingExist = setting.labels.isNotEmpty()
+            )
+        }
+    }
+}
