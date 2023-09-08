@@ -1,44 +1,74 @@
 <template>
     <article class="detail-artifactory-home" v-bkloading="{ isLoading }">
-        <bk-table :data="artifactories"
+        <bk-table
+            :data="artifactories"
             :outer-border="false"
             :header-border="false"
             :header-cell-style="{ background: '#f1f2f3' }"
         >
-            <bk-table-column :label="$t('details.artifactName')" width="220" prop="name" show-overflow-tooltip>
+            <bk-table-column
+                :label="$t('details.artifactName')"
+                width="220"
+                prop="name"
+                show-overflow-tooltip
+            >
                 <template slot-scope="props">
                     <div class="table-part-item part-item-name">
-                        <Logo v-if="props.row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
+                        <Logo
+                            v-if="props.row.artifactoryType === 'IMAGE'"
+                            class="image-icon"
+                            name="docker-svgrepo-com"
+                            size="30"
+                        />
                         <i v-else :class="['devops-icon', `icon-${props.row.icon}`]"></i>
                         <span class="ml5" :title="props.row.name">{{ props.row.name }}</span>
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('details.path')" prop="fullName" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('details.filesize')" width="150" prop="size" :formatter="sizeFormatter" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('details.repoType')" width="150" prop="artifactoryType" :formatter="repoTypeFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column
+                :label="$t('details.path')"
+                prop="fullName"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('details.filesize')"
+                width="150"
+                prop="size"
+                :formatter="sizeFormatter"
+                show-overflow-tooltip
+            ></bk-table-column>
+            <bk-table-column
+                :label="$t('details.repoType')"
+                width="150"
+                prop="artifactoryType"
+                :formatter="repoTypeFormatter"
+                show-overflow-tooltip
+            ></bk-table-column>
             <bk-table-column :label="$t('operate')" width="150">
                 <template slot-scope="props">
-                    <bk-button text
-                        @click="downLoadFile(props.row)"
-                        v-if="hasPermission && props.row.artifactoryType !== 'IMAGE'"
-                        :disabled="!hasPermission"
-                        v-bk-tooltips="{ content: $t('details.noDownloadPermTips'), disabled: hasPermission, allowHTML: false }"
-                    >{{ $t('download') }}</bk-button>
+                    <artifact-download-button
+                        :has-permission="hasPermission"
+                        :path="props.row.path"
+                        :name="props.row.name"
+                        :artifactory-type="props.row.artifactoryType"
+                    />
                 </template>
             </bk-table-column>
         </bk-table>
+        
     </article>
 </template>
 
 <script>
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import Logo from '@/components/Logo'
     import { extForFile } from '@/utils/pipelineConst'
     import { convertFileSize } from '@/utils/util'
 
     export default {
         components: {
-            Logo
+            Logo,
+            ArtifactDownloadButton
         },
 
         props: {
@@ -105,22 +135,6 @@
                 })
             },
 
-            downLoadFile (row) {
-                Promise.all([
-                    this.$store.dispatch('common/requestDevnetGateway'),
-                    this.$store.dispatch('common/requestDownloadUrl', {
-                        projectId: this.$route.params.projectId,
-                        artifactoryType: row.artifactoryType,
-                        path: row.path
-                    })
-                ]).then(([isDevnet, res]) => {
-                    const url = isDevnet ? res.url : res.url2
-                    window.location.href = url
-                }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
-                })
-            },
-
             repoTypeFormatter (row, column, cellValue, index) {
                 const typeMap = {
                     CUSTOM_DIR: this.$t('details.customRepo'),
@@ -138,32 +152,34 @@
 </script>
 
 <style lang="scss" scoped>
-    .detail-artifactory-home {
-        padding: 32px;
-        height: calc(100% - 59px);
-        ::v-deep .bk-table {
-            border: none;
-            height: 100%;
-            &::before {
-                background-color: #fff;
-            }
-            td, th.is-leaf {
-                border-bottom-color: #f0f1f5;
-            }
-            .bk-table-body-wrapper {
-                max-height: calc(100% - 43px);
-                overflow-y: auto;
-            }
-            .cell {
-                overflow: hidden;
-            }
-            .bk-table-header, .bk-table-body {
-                width: auto !important;
-            }
-        }
-        .part-item-name {
-            display: flex;
-            align-items: center;
-        }
+.detail-artifactory-home {
+  padding: 32px;
+  height: calc(100% - 59px);
+  ::v-deep .bk-table {
+    border: none;
+    height: 100%;
+    &::before {
+      background-color: #fff;
     }
+    td,
+    th.is-leaf {
+      border-bottom-color: #f0f1f5;
+    }
+    .bk-table-body-wrapper {
+      max-height: calc(100% - 43px);
+      overflow-y: auto;
+    }
+    .cell {
+      overflow: hidden;
+    }
+    .bk-table-header,
+    .bk-table-body {
+      width: auto !important;
+    }
+  }
+  .part-item-name {
+    display: flex;
+    align-items: center;
+  }
+}
 </style>
