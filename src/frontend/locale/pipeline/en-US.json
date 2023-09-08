@@ -1210,5 +1210,7 @@
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
   "runs": "runs",
-  "nonManual": "Non Manual"
+  "nonManual": "Non Manual",
+  "needSignTips": "{0} is an internal test version and is being downloaded, please wait",
+  "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute."
 }

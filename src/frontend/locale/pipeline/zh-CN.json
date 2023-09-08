@@ -1215,5 +1215,7 @@
   "skipSuc": "已跳过失败的步骤，继续运行",
   "skipFail": "跳过失败",
   "runs": "次",
-  "nonManual": "非手动"
+  "nonManual": "非手动",
+  "needSignTips": "{0} 为内部测试版本，正在准备下载，请稍等",
+  "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟"
 }
