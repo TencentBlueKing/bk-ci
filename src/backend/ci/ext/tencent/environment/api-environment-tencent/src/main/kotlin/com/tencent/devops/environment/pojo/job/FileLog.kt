@@ -8,11 +8,11 @@ data class FileLog(
     @ApiModelProperty(value = "分发模式", notes = "0:上传, 1:下载", required = true)
     val mode: Int,
     @ApiModelProperty(value = "文件源主机信息", required = true)
-    val srcHost: HostInfo,
+    val srcHost: Host,
     @ApiModelProperty(value = "源文件路径", required = true)
     val srcPath: String,
     @ApiModelProperty(value = "分发目标主机信息", notes = "mode == 1 时有值", required = true)
-    val destHost: HostInfo,
+    val destHost: Host,
     @ApiModelProperty(value = "目标路径", notes = "mode == 1 时有值", required = true)
     val destPath: String,
     @ApiModelProperty(value = "任务状态", notes = "1-等待开始，2-上传中，3-下载中，4-成功，5-失败", required = true)

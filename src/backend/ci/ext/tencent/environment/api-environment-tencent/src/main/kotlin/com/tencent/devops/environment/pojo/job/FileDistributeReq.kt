@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("文件分发的信息")
-data class FileDistributeInfoReq(
+data class FileDistributeReq(
     @ApiModelProperty(value = "源文件列表", required = true)
     val fileSourceList: List<FileSource>,
     @ApiModelProperty(value = "文件传输目标路径", required = true)

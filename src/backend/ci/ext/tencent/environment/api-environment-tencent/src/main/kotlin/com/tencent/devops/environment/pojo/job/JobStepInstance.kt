@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("作业步骤详细信息")
-data class JobStepInstanceInfo(
+data class JobStepInstance(
     @ApiModelProperty(value = "作业步骤实例ID", required = true)
     val stepInstanceId: Long,
     @ApiModelProperty(value = "步骤类型", notes = "1：脚本步骤，2：文件步骤，4：SQL步骤", required = true)

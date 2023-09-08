@@ -30,14 +30,14 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
+import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
+import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
-import com.tencent.devops.environment.pojo.job.TaskTerminateInfoReq
+import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -68,7 +68,7 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
-        scriptExecuteInfo: ScriptExecuteInfoReq
+        scriptExecuteReq: ScriptExecuteReq
     ): Result<ScriptExecuteResult>
 
     @ApiOperation("文件分发的Job接口")
@@ -82,7 +82,7 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "文件分发的信息", required = true)
-        fileDistributeInfo: FileDistributeInfoReq
+        fileDistributeReq: FileDistributeReq
     ): Result<FileDistributeResult>
 
     @ApiOperation("终止任务的Job接口")
@@ -96,7 +96,7 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "终止任务的信息", required = true)
-        taskTerminateInfoReq: TaskTerminateInfoReq
+        taskTerminateReq: TaskTerminateReq
     ): Result<TaskTerminateResult>
 
     @ApiOperation("查询任务状态的Job接口")

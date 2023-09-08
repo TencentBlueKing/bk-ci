@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("作业实例基本信息")
-data class JobInstanceInfo(
+data class JobInstance(
     @ApiModelProperty(value = "作业实例名称", required = true)
     val name: String,
     @ApiModelProperty(

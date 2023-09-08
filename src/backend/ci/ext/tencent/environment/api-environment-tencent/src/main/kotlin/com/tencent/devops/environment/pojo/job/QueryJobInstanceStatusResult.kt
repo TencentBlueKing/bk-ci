@@ -8,7 +8,7 @@ data class QueryJobInstanceStatusResult(
     @ApiModelProperty(value = "作业是否结束", required = true)
     val finished: Boolean,
     @ApiModelProperty(value = "作业实例基本信息", required = true)
-    val jobInstanceInfo: JobInstanceInfo,
+    val jobInstance: JobInstance,
     @ApiModelProperty(value = "作业步骤列表", required = true)
-    val stepInstanceList: List<JobStepInstanceInfo>
+    val stepInstanceList: List<JobStepInstance>
 )

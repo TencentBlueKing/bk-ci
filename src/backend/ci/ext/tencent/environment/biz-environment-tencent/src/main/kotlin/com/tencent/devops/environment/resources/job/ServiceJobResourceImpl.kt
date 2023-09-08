@@ -30,27 +30,27 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
-import com.tencent.devops.environment.pojo.job.FileDistributeInfoReq
+import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
+import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
-import com.tencent.devops.environment.pojo.job.TaskTerminateInfoReq
+import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 
 @RestResource
 class ServiceJobResourceImpl : ServiceJobResource {
-    override fun executeScript(userId: String, projectId: String, scriptExecuteInfo: ScriptExecuteInfoReq): Result<ScriptExecuteResult> {
+    override fun executeScript(userId: String, projectId: String, scriptExecuteReq: ScriptExecuteReq): Result<ScriptExecuteResult> {
         TODO("Not yet implemented")
     }
 
-    override fun distributeFile(userId: String, projectId: String, fileDistributeInfo: FileDistributeInfoReq): Result<FileDistributeResult> {
+    override fun distributeFile(userId: String, projectId: String, fileDistributeReq: FileDistributeReq): Result<FileDistributeResult> {
         TODO("Not yet implemented")
     }
 
-    override fun terminateTask(userId: String, projectId: String, fileDistributeInfo: TaskTerminateInfoReq): Result<TaskTerminateResult> {
+    override fun terminateTask(userId: String, projectId: String, taskTerminateReq: TaskTerminateReq): Result<TaskTerminateResult> {
         TODO("Not yet implemented")
     }
 

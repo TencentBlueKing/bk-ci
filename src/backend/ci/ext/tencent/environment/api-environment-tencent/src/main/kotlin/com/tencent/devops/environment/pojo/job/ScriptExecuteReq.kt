@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("执行脚本的信息")
-data class ScriptExecuteInfoReq(
+data class ScriptExecuteReq(
     @ApiModelProperty(value = "脚本内容Base64", required = true)
     val scriptContent: String,
     @ApiModelProperty(value = "脚本执行超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400")

@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("批量查询日志的结果")
 data class QueryJobInstanceLogsResult(
     @ApiModelProperty(value = "主机信息", required = true)
-    val hostInfo: HostInfo,
+    val host: Host,
     @ApiModelProperty(value = "日志类型", notes = "1-脚本执行任务日志，2-文件分发任务日志", required = true)
     val logType: Int,
     @ApiModelProperty(value = "脚本执行任务日志", allowEmptyValue = true)

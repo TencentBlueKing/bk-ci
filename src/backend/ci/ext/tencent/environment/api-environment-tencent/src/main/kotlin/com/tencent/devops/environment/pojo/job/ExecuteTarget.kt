@@ -10,5 +10,5 @@ data class ExecuteTarget(
     @ApiModelProperty(value = "节点hashId列表", required = true)
     val nodeHashIdList: List<String>,
     @ApiModelProperty(value = "主机列表", required = true)
-    val hostList: List<HostInfo>
+    val hostList: List<Host>
 )
