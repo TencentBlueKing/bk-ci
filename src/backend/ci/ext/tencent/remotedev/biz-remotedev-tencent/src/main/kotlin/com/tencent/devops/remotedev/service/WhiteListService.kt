@@ -1,7 +1,9 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -15,7 +17,8 @@ import javax.ws.rs.core.Response
 class WhiteListService @Autowired constructor(
     @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation,
-    private val cacheService: RedisCacheService
+    private val cacheService: RedisCacheService,
+    private val client: Client
 ) {
 
     companion object {
@@ -37,6 +40,24 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
+    fun checkInWhiteList(user: String): Boolean {
+        return cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) ?: false
+    }
+
+    fun removeWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to remove whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        if (whiteListUser.isEmpty()) return false
+        val whiteListUserArray = whiteListUser.split(";")
+        for (user in whiteListUserArray) {
+            if (cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) == true) {
+                logger.info("whiteListUser($user) in the whiteList")
+                redisOperation.removeSetMember(RedisKeys.REDIS_WHITE_LIST_KEY, user, false)
+            }
+        }
+        return true
+    }
+
     fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
         logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
@@ -47,10 +68,31 @@ class WhiteListService @Autowired constructor(
                     logger.info("whiteListUser($user) not in the GPU whiteList")
                     redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
                 }
+                client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }
         }
 
         return true
+    }
+
+    fun removeGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+        logger.info("userId($userId) wants to remove GPU whiteListUser($whiteListUser)")
+        // whiteListUser支持多个用;分隔，需要解析。
+        whiteListUser.apply {
+            val whiteListUserArray = this.split(";")
+            for (user in whiteListUserArray) {
+                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user).run {
+                    logger.info("whiteListUser($user) in the GPU whiteList")
+                    redisOperation.hdelete(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, isDistinguishCluster = false)
+                }
+            }
+        }
+
+        return true
+    }
+
+    fun checkInGPUWhiteList(user: String): Boolean {
+        return cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?.isNotEmpty() ?: false
     }
 
     /* 有关数量的限制:

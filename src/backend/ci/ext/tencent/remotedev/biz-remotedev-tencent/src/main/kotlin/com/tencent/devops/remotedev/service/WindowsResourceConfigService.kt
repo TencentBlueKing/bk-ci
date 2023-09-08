@@ -61,10 +61,12 @@ class WindowsResourceConfigService @Autowired constructor(
                 it.zone,
                 it.shortName,
                 it.size,
+                it.type,
                 it.gpu,
                 it.cpu,
                 it.memory,
                 it.disk,
+                it.hdisk,
                 it.description
             )
         }
@@ -81,10 +83,12 @@ class WindowsResourceConfigService @Autowired constructor(
                 it.zone,
                 it.shortName,
                 it.size,
+                it.type,
                 it.gpu,
                 it.cpu,
                 it.memory,
                 it.disk,
+                it.hdisk,
                 it.description
             )
         }
@@ -101,10 +105,12 @@ class WindowsResourceConfigService @Autowired constructor(
                 it.zone,
                 it.shortName,
                 it.size,
+                it.type,
                 it.gpu,
                 it.cpu,
                 it.memory,
                 it.disk,
+                it.hdisk,
                 it.description
             )
         }
