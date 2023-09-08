@@ -72,4 +72,9 @@ object PropertyUtil {
         properties.load(propertyFileContent.reader())
         return properties[propertyKey]?.toString()
     }
+
+    /**
+     * 判断是否为本地运行
+     */
+    fun isLocalRun() = System.getProperty("local.run") == "true"
 }

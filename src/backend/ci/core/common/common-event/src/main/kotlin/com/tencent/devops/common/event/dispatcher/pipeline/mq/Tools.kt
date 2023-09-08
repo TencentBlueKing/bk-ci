@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
@@ -89,16 +90,17 @@ object Tools {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueues(queue)
-        if (connectionFactory.virtualHost == "default-vhost") {
+        if (PropertyUtil.isLocalRun()) {
             container.lazyLoad()
+            container.setMismatchedQueuesFatal(false)
         } else {
             container.setConcurrentConsumers(concurrency)
             container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
+            container.setMismatchedQueuesFatal(true)
         }
         container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
-        container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         container.setPrefetchCount(prefetchCount)
         container.addAfterReceivePostProcessors(traceMessagePostProcessor)

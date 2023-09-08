@@ -40,6 +40,7 @@ tasks.register<BootRun>("multiBootRun") {
         systemProperty("spring.cloud.consul.enabled", "false")
         systemProperty("spring.cloud.consul.discovery.enabled", "false")
         systemProperty("server.port", "8081")
+        systemProperty("local.run", "true")
         systemProperty("service.log.dir", joinPath(projectDir.absolutePath, "log"))
     }
     dependsOn("multiBootJar")
