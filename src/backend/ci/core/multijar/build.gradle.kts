@@ -25,25 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.mutijar
-
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops",
-    excludeFilters = [
-        ComponentScan.Filter(
-            type = FilterType.REGEX,
-            pattern = ["com\\.tencent\\.devops\\.common\\..*"]
-        )
-    ]
-)
-class MutijarApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MutijarApplication::class, args)
+subprojects {
+    group = "com.tencent.bk.devops.ci.multijar"
 }

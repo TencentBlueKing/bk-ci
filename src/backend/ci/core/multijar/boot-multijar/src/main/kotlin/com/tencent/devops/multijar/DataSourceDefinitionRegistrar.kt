@@ -1,7 +1,6 @@
-package com.tencent.devops.mutijar
+package com.tencent.devops.multijar
 
 import com.mysql.jdbc.Driver
-import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import com.zaxxer.hikari.HikariDataSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean
@@ -12,11 +11,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar
 import org.springframework.core.Ordered
-import org.springframework.core.env.Environment
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.type.AnnotationMetadata
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import java.util.Properties
 
 
 @Configuration

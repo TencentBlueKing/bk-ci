@@ -268,5 +268,5 @@ include(":core:metrics:biz-metrics-sample")
 include(":core:metrics:boot-metrics")
 include(":core:metrics:model-metrics")
 
-include("core:mutijar")
-include("core:mutijar:boot-mutijar")
+include("core:multijar")
+include("core:multijar:boot-multijar")

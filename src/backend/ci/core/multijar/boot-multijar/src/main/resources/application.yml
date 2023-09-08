@@ -27,7 +27,7 @@ spring:
       - store
       - quality
   application:
-    name: mutijar
-    desc: DevOps MUTIJAR Service
+    name: multijar
+    desc: DevOps MULTIJAR Service
     version: 4.0.0
-    packageName: com.tencent.devops.mutijar
+    packageName: com.tencent.devops.multijar

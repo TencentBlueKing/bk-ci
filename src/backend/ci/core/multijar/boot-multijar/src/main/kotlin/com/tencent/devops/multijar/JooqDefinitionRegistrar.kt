@@ -1,11 +1,10 @@
-package com.tencent.devops.mutijar
+package com.tencent.devops.multijar
 
 import com.tencent.devops.common.db.listener.BkJooqExecuteListener
 import org.jooq.SQLDialect
 import org.jooq.impl.DataSourceConnectionProvider
 import org.jooq.impl.DefaultConfiguration
 import org.jooq.impl.DefaultExecuteListenerProvider
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
 import org.springframework.beans.factory.support.BeanNameGenerator

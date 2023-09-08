@@ -56,7 +56,7 @@ import javax.sql.DataSource
  */
 @Configuration
 @Import(DataSourceConfig::class, DBBaseConfiguration::class)
-@ConditionalOnMissingClass("com.tencent.devops.mutijar.MutijarDslContextConfiguration")
+@ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
 @AutoConfigureAfter(DBBaseConfiguration::class)
 class JooqConfiguration {
 

@@ -24,13 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.mutijar
+package com.tencent.devops.multijar
 
 import com.tencent.devops.common.db.config.DBBaseConfiguration
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -43,7 +42,6 @@ import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
-import java.lang.reflect.Parameter
 
 /**
  *
@@ -51,7 +49,7 @@ import java.lang.reflect.Parameter
  */
 @Configuration
 @Import(DBBaseConfiguration::class, DataSourceDefinitionRegistrar::class, JooqDefinitionRegistrar::class)
-class MutijarDslContextConfiguration {
+class MultijarDslContextConfiguration {
     @Bean
     @Primary
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
