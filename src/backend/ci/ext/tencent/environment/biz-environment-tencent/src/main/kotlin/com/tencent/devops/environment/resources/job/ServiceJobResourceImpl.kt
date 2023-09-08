@@ -37,6 +37,8 @@ import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteInfoReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
+import com.tencent.devops.environment.pojo.job.TaskTerminateInfoReq
+import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 
 @RestResource
 class ServiceJobResourceImpl : ServiceJobResource {
@@ -45,6 +47,10 @@ class ServiceJobResourceImpl : ServiceJobResource {
     }
 
     override fun distributeFile(userId: String, projectId: String, fileDistributeInfo: FileDistributeInfoReq): Result<FileDistributeResult> {
+        TODO("Not yet implemented")
+    }
+
+    override fun terminateTask(userId: String, projectId: String, fileDistributeInfo: TaskTerminateInfoReq): Result<TaskTerminateResult> {
         TODO("Not yet implemented")
     }
 
