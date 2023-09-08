@@ -17,5 +17,5 @@ build.yml
 .codecc
 *.log.gz
 i18n/
-core/mutijar/boot-mutijar/src/main/resources/application-*.yml
-core/mutijar/boot-mutijar/bkenv.properties
+core/multijar/boot-multijar/src/main/resources/application-*.yml
+core/multijar/boot-multijar/bkenv.properties
