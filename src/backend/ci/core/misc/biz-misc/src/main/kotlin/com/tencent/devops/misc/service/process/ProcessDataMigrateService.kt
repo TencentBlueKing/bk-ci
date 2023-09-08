@@ -66,13 +66,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
-import javax.annotation.Resource
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service
 class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
-    @Resource(name = MIGRATING_SHARDING_DSL_CONTEXT) private val migratingShardingDslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataMigrateDao: ProcessDataMigrateDao,
     private val processDataDeleteDao: ProcessDataDeleteDao,
@@ -120,6 +118,15 @@ class ProcessDataMigrateService @Autowired constructor(
         cancelFlag: Boolean = false,
         dataTag: String
     ): Boolean {
+        val migratingShardingDslContext = try {
+            SpringContextUtil.getBean(DSLContext::class.java, MIGRATING_SHARDING_DSL_CONTEXT)
+        } catch (ignored: Throwable) {
+            logger.warn("migratingShardingDslContext is not exist", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR,
+                defaultMessage = "migratingShardingDslContext is not exist"
+            )
+        }
         // 执行迁移前的逻辑
         val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(projectId, dataTag)
         // 开启异步任务迁移项目的数据
@@ -181,7 +188,7 @@ class ProcessDataMigrateService @Autowired constructor(
             } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
             try {
                 // 迁移与项目直接相关的数据
-                doMigrationBus(projectId)
+                doMigrationBus(migratingShardingDslContext, projectId)
             } catch (ignored: Throwable) {
                 logger.warn("migrateProjectData doMigrationBus fail|params:[$userId|$projectId]", ignored)
                 // 删除迁移库的数据
@@ -207,6 +214,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 logger.warn("migrateProjectData fail|params:[$userId|$projectId]|error=$errorMsg", ignored)
                 // 执行迁移出错的逻辑
                 doMigrationErrorBus(
+                    migratingShardingDslContext = migratingShardingDslContext,
                     projectExecuteCount = projectExecuteCount,
                     migrateProjectExecuteCountKey = migrateProjectExecuteCountKey,
                     projectId = projectId,
@@ -224,6 +232,7 @@ class ProcessDataMigrateService @Autowired constructor(
     }
 
     private fun doMigrationErrorBus(
+        migratingShardingDslContext: DSLContext,
         projectExecuteCount: Int,
         migrateProjectExecuteCountKey: String,
         projectId: String,
@@ -383,21 +392,21 @@ class ProcessDataMigrateService @Autowired constructor(
         processDataDeleteDao.deletePipelineRecentUse(context, projectId)
     }
 
-    private fun doMigrationBus(projectId: String) {
-        migrateAuditResourceData(projectId)
-        migratePipelineGroupData(projectId)
-        migratePipelineJobMutexGroupData(projectId)
-        migratePipelineLabelData(projectId)
-        migratePipelineViewData(projectId)
-        migratePipelineViewUserLastViewData(projectId)
-        migratePipelineViewUserSettingsData(projectId)
-        migrateProjectPipelineCallbackData(projectId)
-        migrateProjectPipelineCallbackHistoryData(projectId)
-        migrateTemplateData(projectId)
-        migrateTemplatePipelineData(projectId)
-        migratePipelineViewGroupData(projectId)
-        migratePipelineViewTopData(projectId)
-        migratePipelineRecentUseData(projectId)
+    private fun doMigrationBus(migratingShardingDslContext: DSLContext, projectId: String) {
+        migrateAuditResourceData(migratingShardingDslContext, projectId)
+        migratePipelineGroupData(migratingShardingDslContext, projectId)
+        migratePipelineJobMutexGroupData(migratingShardingDslContext, projectId)
+        migratePipelineLabelData(migratingShardingDslContext, projectId)
+        migratePipelineViewData(migratingShardingDslContext, projectId)
+        migratePipelineViewUserLastViewData(migratingShardingDslContext, projectId)
+        migratePipelineViewUserSettingsData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineCallbackData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineCallbackHistoryData(migratingShardingDslContext, projectId)
+        migrateTemplateData(migratingShardingDslContext, projectId)
+        migrateTemplatePipelineData(migratingShardingDslContext, projectId)
+        migratePipelineViewGroupData(migratingShardingDslContext, projectId)
+        migratePipelineViewTopData(migratingShardingDslContext, projectId)
+        migratePipelineRecentUseData(migratingShardingDslContext, projectId)
     }
 
     private fun doAfterMigrationBus(userId: String, projectId: String, routingRuleMap: Map<String, String>) {
@@ -556,7 +565,7 @@ class ProcessDataMigrateService @Autowired constructor(
         return mapOf(routingRule to dataSourceNames[randomIndex])
     }
 
-    private fun migrateAuditResourceData(projectId: String) {
+    private fun migrateAuditResourceData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val auditResourceRecords = processDataMigrateDao.getAuditResourceRecords(
@@ -572,7 +581,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (auditResourceRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineGroupData(projectId: String) {
+    private fun migratePipelineGroupData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineGroupRecords = processDataMigrateDao.getPipelineGroupRecords(
@@ -588,7 +597,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineGroupRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineJobMutexGroupData(projectId: String) {
+    private fun migratePipelineJobMutexGroupData(migratingShardingDslContext: DSLContext, projectId: String) {
         val jobMutexGroupRecords = processDataMigrateDao.getPipelineJobMutexGroupRecords(
             dslContext = dslContext,
             projectId = projectId
@@ -598,7 +607,7 @@ class ProcessDataMigrateService @Autowired constructor(
         }
     }
 
-    private fun migratePipelineLabelData(projectId: String) {
+    private fun migratePipelineLabelData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineLabelRecords = processDataMigrateDao.getPipelineLabelRecords(
@@ -614,7 +623,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineLabelRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineViewData(projectId: String) {
+    private fun migratePipelineViewData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineViewRecords = processDataMigrateDao.getPipelineViewRecords(
@@ -633,7 +642,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineViewRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineViewUserLastViewData(projectId: String) {
+    private fun migratePipelineViewUserLastViewData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineViewUserLastViewRecords = processDataMigrateDao.getPipelineViewUserLastViewRecords(
@@ -652,7 +661,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineViewUserLastViewRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineViewUserSettingsData(projectId: String) {
+    private fun migratePipelineViewUserSettingsData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineViewUserSettingsRecords = processDataMigrateDao.getPipelineViewUserSettingsRecords(
@@ -671,7 +680,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineViewUserSettingsRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migrateProjectPipelineCallbackData(projectId: String) {
+    private fun migrateProjectPipelineCallbackData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val projectPipelineCallbackRecords = processDataMigrateDao.getProjectPipelineCallbackRecords(
@@ -690,7 +699,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (projectPipelineCallbackRecords.size == MEDIUM_PAGE_SIZE)
     }
 
-    private fun migrateProjectPipelineCallbackHistoryData(projectId: String) {
+    private fun migrateProjectPipelineCallbackHistoryData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineCallbackHistoryRecords = processDataMigrateDao.getProjectPipelineCallbackHistoryRecords(
@@ -709,7 +718,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineCallbackHistoryRecords.size == MEDIUM_PAGE_SIZE)
     }
 
-    private fun migrateTemplateData(projectId: String) {
+    private fun migrateTemplateData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val templateRecords = processDataMigrateDao.getTemplateRecords(
@@ -728,7 +737,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (templateRecords.size == SHORT_PAGE_SIZE)
     }
 
-    private fun migrateTemplatePipelineData(projectId: String) {
+    private fun migrateTemplatePipelineData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val templatePipelineRecords = processDataMigrateDao.getTemplatePipelineRecords(
@@ -747,7 +756,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (templatePipelineRecords.size == SHORT_PAGE_SIZE)
     }
 
-    private fun migratePipelineViewGroupData(projectId: String) {
+    private fun migratePipelineViewGroupData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineViewGroupRecords = processDataMigrateDao.getPipelineViewGroupRecords(
@@ -766,7 +775,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineViewGroupRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineViewTopData(projectId: String) {
+    private fun migratePipelineViewTopData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineViewTopRecords = processDataMigrateDao.getPipelineViewTopRecords(
@@ -785,7 +794,7 @@ class ProcessDataMigrateService @Autowired constructor(
         } while (pipelineViewTopRecords.size == LONG_PAGE_SIZE)
     }
 
-    private fun migratePipelineRecentUseData(projectId: String) {
+    private fun migratePipelineRecentUseData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
             val pipelineRecentUseRecords = processDataMigrateDao.getPipelineRecentUseRecords(
