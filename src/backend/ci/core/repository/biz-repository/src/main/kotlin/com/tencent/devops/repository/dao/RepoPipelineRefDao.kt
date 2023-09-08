@@ -86,7 +86,13 @@ class RepoPipelineRefDao {
                     now
                 ).onDuplicateKeyUpdate()
                     .set(TASK_NAME, it.taskName)
+                    .set(PIPELINE_NAME, it.pipelineName)
                     .set(REPOSITORY_ID, it.repositoryId)
+                    .set(ATOM_CODE, it.atomCode)
+                    .set(TRIGGER_TYPE, it.triggerType)
+                    .set(EVENT_TYPE, it.eventType)
+                    .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams))
+                    .set(TASK_PARAMS_MD5, it.taskParamsMd5)
                     .set(UPDATE_TIME, now)
             }
         }).execute()
@@ -200,6 +206,7 @@ class RepoPipelineRefDao {
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, TASK_PARAMS_MD5))
+                .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
                 .and(ATOM_CATEGORY.eq(RepoAtomCategoryEnum.TRIGGER.name))

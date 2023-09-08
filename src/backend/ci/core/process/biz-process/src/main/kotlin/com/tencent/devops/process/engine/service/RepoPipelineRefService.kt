@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
@@ -56,6 +57,8 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.enums.RepoAtomCategoryEnum
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -294,7 +297,7 @@ class RepoPipelineRefService @Autowired constructor(
                     repositoryConfig = repositoryConfig,
                     taskId = element.id!!,
                     taskName = element.name,
-                    taskParams = element.genTaskParams(),
+                    taskParams = propertiesToMap(element),
                     atomCode = element.getAtomCode(),
                     atomVersion = element.version,
                     atomCategory = RepoAtomCategoryEnum.TRIGGER.name,
@@ -303,6 +306,14 @@ class RepoPipelineRefService @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun propertiesToMap(element: Element): MutableMap<String, Any> {
+        val properties = element.javaClass.kotlin.declaredMemberProperties
+        return properties.filter { it.get(element) != null }.associate {
+            it.isAccessible = true
+            it.name to it.get(element)!!
+        }.toMutableMap()
     }
 
     private fun analysisOtherContainer(
