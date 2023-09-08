@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/scm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface StreamExternalScmResource {
+interface ExternalScmResource {
 
     @ApiOperation("Code平台Git仓库提交")
     @POST

@@ -23,29 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.stream.resources.external
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.external.StreamExternalStreamResource
-import com.tencent.devops.stream.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.api.external.ExternalStreamLoginResource
+import com.tencent.devops.stream.service.StreamLoginService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class StreamExternalStreamResourceImpl(
-    private val streamPipelineBadgeService: StreamPipelineBadgeService
-) : StreamExternalStreamResource {
-    override fun getPipelineBadge(
-        gitProjectId: Long,
-        filePath: String,
-        branch: String?,
-        objectKind: String?
-    ): String {
-        return streamPipelineBadgeService.get(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            objectKind = objectKind
-        )
+class ExternalStreamLoginResourceImpl @Autowired constructor(
+    private val streamLoginService: StreamLoginService
+) : ExternalStreamLoginResource {
+
+    override fun loginUrl(type: String): Result<String> {
+        return Result(streamLoginService.loginUrl(type))
     }
 }

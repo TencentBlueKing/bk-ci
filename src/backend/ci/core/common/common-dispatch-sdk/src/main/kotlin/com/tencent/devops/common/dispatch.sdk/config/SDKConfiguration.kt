@@ -86,7 +86,6 @@ class SDKConfiguration {
         DockerRoutingSdkService(redisOperation)
 
     @Bean
-    @Primary
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
         return MQEventDispatcher(rabbitTemplate)
     }
@@ -95,5 +94,4 @@ class SDKConfiguration {
     fun channelUtils(
         @Autowired bkTag: BkTag
     ) = ChannelUtils(bkTag)
-
 }

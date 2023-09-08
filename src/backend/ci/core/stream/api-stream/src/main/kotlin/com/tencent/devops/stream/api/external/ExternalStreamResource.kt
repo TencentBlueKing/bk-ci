@@ -23,34 +23,43 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.stream.api.external
 
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_STREAM_LOGIN"], description = "External-STREAM_LOGIN")
-@Path("/external/stream/login")
+@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
+@Path("/external/stream")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface StreamExternalStreamLoginResource {
+interface ExternalStreamResource {
 
-    @ApiOperation("获取登录url")
+    @ApiOperation("获取流水线徽章")
+    @Produces("image/svg+xml")
     @GET
-    @Path("url")
-    fun loginUrl(
-        @ApiParam(value = "type")
-        @QueryParam("type")
-        type: String
-    ): Result<String>
+    @Path("/projects/{gitProjectId}/pipelines/badge")
+    fun getPipelineBadge(
+        @ApiParam("Git仓库ID", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("流水线文件名称", required = true)
+        @QueryParam("file_path")
+        filePath: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("object_kind")
+        objectKind: String?
+    ): String
 }

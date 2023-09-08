@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.external.StreamExternalGithubResource
+import com.tencent.devops.stream.api.external.ExternalGithubResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.service.StreamLoginService
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
@@ -44,14 +44,14 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @RestResource
-class StreamExternalGithubResourceImpl @Autowired constructor(
+class ExternalGithubResourceImpl @Autowired constructor(
     private val streamLoginService: StreamLoginService,
     private val streamGitConfig: StreamGitConfig,
     private val rabbitTemplate: RabbitTemplate
-) : StreamExternalGithubResource {
+) : ExternalGithubResource {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamExternalGithubResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ExternalGithubResourceImpl::class.java)
     }
 
     override fun webhookCommit(event: String, guid: String, signature: String, body: String): Result<Boolean> {
