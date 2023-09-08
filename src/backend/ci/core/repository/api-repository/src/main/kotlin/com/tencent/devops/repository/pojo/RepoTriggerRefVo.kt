@@ -41,9 +41,11 @@ data class RepoTriggerRefVo(
     @ApiModelProperty("事件类型")
     val eventType: String,
     @ApiModelProperty("插件参数")
-    val taskParams: MutableMap<String, Any>,
-    @ApiModelProperty("插件参数md5")
-    val taskParamsMd5: String,
+    val taskParams: Map<String, Any>,
+    @ApiModelProperty("触发条件")
+    val triggerCondition: Map<String, Any>?,
+    @ApiModelProperty("触发条件md5")
+    val triggerConditionMd5: String?,
     @ApiModelProperty("流水线引用数量")
     val pipelineRefCount: Int
 )

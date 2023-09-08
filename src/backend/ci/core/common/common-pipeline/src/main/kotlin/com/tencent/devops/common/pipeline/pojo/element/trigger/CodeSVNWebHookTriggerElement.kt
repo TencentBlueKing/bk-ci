@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -70,5 +71,15 @@ data class CodeSVNWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): Map<String, Any?> {
+        return mapOf(
+            "relativePath" to relativePath,
+            "excludePaths" to excludePaths,
+            "includeUsers" to includeUsers,
+            "excludeUsers" to excludeUsers
+        )
     }
 }

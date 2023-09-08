@@ -57,6 +57,28 @@ data class CodeP4WebHookTriggerElement(
             super.findFirstTaskIdByStartType(startType)
         }
     }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): Map<String, Any?> {
+        return with(data.input) {
+            when (eventType) {
+                CodeEventType.CHANGE_COMMIT,CodeEventType.CHANGE_SUBMIT,CodeEventType.CHANGE_CONTENT  -> {
+                    mapOf(
+                        "includePaths" to includePaths,
+                        "excludePaths" to excludePaths
+                    )
+                }
+                CodeEventType.SHELVE_COMMIT,CodeEventType.SHELVE_SUBMIT,CodeEventType.SHELVE_DELETE  -> {
+                    mapOf(
+                        "includePaths" to includePaths,
+                        "excludePaths" to excludePaths
+                    )
+                }
+                else ->
+                    emptyMap()
+            }
+        }
+    }
 }
 
 data class CodeP4WebHookTriggerData(

@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -91,6 +92,8 @@ class RepoPipelineRefService @Autowired constructor(
         // 代码库拉取插件
         private val repoCheckoutAtomCodes =
             setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout", "svnCodeRepo")
+
+        private val removeElementProperties = setOf("name", "id", "status")
     }
 
     fun updateRepoPipelineRef(
@@ -297,23 +300,43 @@ class RepoPipelineRefService @Autowired constructor(
                     repositoryConfig = repositoryConfig,
                     taskId = element.id!!,
                     taskName = element.name,
-                    taskParams = propertiesToMap(element),
+                    taskParams = getTaskParams(element),
                     atomCode = element.getAtomCode(),
                     atomVersion = element.version,
                     atomCategory = RepoAtomCategoryEnum.TRIGGER.name,
                     triggerType = triggerType,
-                    eventType = eventType
+                    eventType = eventType,
+                    triggerCondition = (element as WebHookTriggerElement).triggerCondition()
                 )
             )
         }
     }
 
-    private fun propertiesToMap(element: Element): MutableMap<String, Any> {
-        val properties = element.javaClass.kotlin.declaredMemberProperties
-        return properties.filter { it.get(element) != null }.associate {
-            it.isAccessible = true
-            it.name to it.get(element)!!
-        }.toMutableMap()
+    @Suppress("UNCHECKED_CAST")
+    private fun getTaskParams(element: Element): Map<String, Any> {
+        return when (element) {
+            is CodeTGitWebHookTriggerElement -> {
+                propertiesToMap(element.data.input)
+            }
+            is CodeP4WebHookTriggerElement -> {
+                propertiesToMap(element.data.input)
+            }
+            is MarketBuildAtomElement -> {
+                element.data["input"] as Map<String, Any>
+            }
+            else -> {
+                propertiesToMap(element)
+            }
+        }
+    }
+
+    private fun propertiesToMap(any: Any): Map<String, Any> {
+        val properties = any.javaClass.kotlin.declaredMemberProperties
+        return properties.filterNot { removeElementProperties.contains(it.name) }
+            .filter { it.get(any) != null }.associate {
+                it.isAccessible = true
+                it.name to it.get(any)!!
+            }
     }
 
     private fun analysisOtherContainer(
@@ -370,7 +393,7 @@ class RepoPipelineRefService @Autowired constructor(
                         repositoryConfig = repositoryConfig,
                         taskId = element.id!!,
                         taskName = element.name,
-                        taskParams = element.genTaskParams(),
+                        taskParams = getTaskParams(element),
                         atomCode = element.getAtomCode(),
                         atomVersion = element.version,
                         atomCategory = RepoAtomCategoryEnum.TASK.name

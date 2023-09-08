@@ -69,4 +69,33 @@ data class CodeGithubWebHookTriggerElement(
             super.findFirstTaskIdByStartType(startType)
         }
     }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): Map<String, Any?> {
+        return when (eventType) {
+            CodeEventType.PUSH -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            CodeEventType.CREATE -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            CodeEventType.PULL_REQUEST -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            else ->
+                emptyMap()
+        }
+    }
 }

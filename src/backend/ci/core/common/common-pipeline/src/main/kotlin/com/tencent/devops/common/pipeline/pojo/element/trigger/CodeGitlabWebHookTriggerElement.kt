@@ -92,4 +92,52 @@ data class CodeGitlabWebHookTriggerElement(
             super.findFirstTaskIdByStartType(startType)
         }
     }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): Map<String, Any?> {
+        return when (eventType) {
+            CodeEventType.PUSH -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "includePaths" to includePaths,
+                    "excludePaths" to excludePaths,
+                    "includeUsers" to includeUsers,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            CodeEventType.MERGE_REQUEST -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "includeSourceBranchName" to includeSourceBranchName,
+                    "excludeSourceBranchName" to excludeSourceBranchName,
+                    "includePaths" to includePaths,
+                    "excludePaths" to excludePaths,
+                    "includeUsers" to includeUsers,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                mapOf(
+                    "branchName" to branchName,
+                    "excludeBranchName" to excludeBranchName,
+                    "includeSourceBranchName" to includeSourceBranchName,
+                    "excludeSourceBranchName" to excludeSourceBranchName,
+                    "includePaths" to includePaths,
+                    "excludePaths" to excludePaths,
+                    "includeUsers" to includeUsers,
+                    "excludeUsers" to excludeUsers
+                )
+            }
+            CodeEventType.TAG_PUSH -> {
+                mapOf(
+                    "tagName" to tagName,
+                    "excludeTagName" to excludeTagName
+                )
+            }
+            else ->
+                emptyMap()
+        }
+    }
 }

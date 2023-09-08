@@ -96,7 +96,6 @@ class RepoPipelineService @Autowired constructor(
                 repoBuffer[refInfo.repositoryConfig.getRepositoryId()] = repo
                 repo
             }
-            val taskParamsMd5 = DigestUtils.md5Hex(JsonUtil.toJson(refInfo.taskParams))
             repoPipelineRefs.add(
                 RepoPipelineRef(
                     projectId = projectId,
@@ -106,12 +105,15 @@ class RepoPipelineService @Autowired constructor(
                     taskId = refInfo.taskId,
                     taskName = refInfo.taskName,
                     atomCode = refInfo.atomCode,
+                    atomVersion = refInfo.atomVersion,
                     atomCategory = refInfo.atomCategory,
+                    taskParams = refInfo.taskParams,
                     triggerType = refInfo.triggerType,
                     eventType = refInfo.eventType,
-                    atomVersion = refInfo.atomVersion,
-                    taskParams = refInfo.taskParams,
-                    taskParamsMd5 = taskParamsMd5
+                    triggerCondition = refInfo.triggerCondition,
+                    triggerConditionMd5 = refInfo.triggerCondition?.let {
+                        DigestUtils.md5Hex(JsonUtil.toJson(it))
+                    },
                 )
             )
         }
@@ -208,8 +210,13 @@ class RepoPipelineService @Autowired constructor(
                 atomCode = it.atomCode,
                 triggerType = it.triggerType,
                 eventType = it.eventType,
-                taskParams = JsonUtil.to(it.taskParams, object : TypeReference<MutableMap<String, Any>>() {}),
-                taskParamsMd5 = it.taskParamsMd5,
+                taskParams = JsonUtil.to(it.taskParams, object : TypeReference<Map<String, Any>>() {}),
+                triggerCondition = it.triggerCondition?.let { condition ->
+                    JsonUtil.to(
+                        condition,
+                        object : TypeReference<Map<String, Any>>() {})
+                },
+                triggerConditionMd5 = it.triggerConditionMd5,
                 pipelineRefCount = pipelineRefCountMap[it.id] ?: 0
             )
         }

@@ -33,4 +33,7 @@ abstract class WebHookTriggerElement(
     override val name: String = "webhook base class",
     override var id: String? = null,
     override var status: String? = null
-) : Element(name, id, status)
+) : Element(name, id, status) {
+
+    open fun triggerCondition(): Map<String, Any?> = emptyMap()
+}

@@ -63,10 +63,11 @@ class RepoPipelineRefDao {
                     TASK_NAME,
                     ATOM_CODE,
                     ATOM_CATEGORY,
+                    TASK_PARAMS,
                     TRIGGER_TYPE,
                     EVENT_TYPE,
-                    TASK_PARAMS,
-                    TASK_PARAMS_MD5,
+                    TRIGGER_CONDITION,
+                    TRIGGER_CONDITION_MD5,
                     CREATE_TIME,
                     UPDATE_TIME
                 ).values(
@@ -78,10 +79,11 @@ class RepoPipelineRefDao {
                     it.taskName,
                     it.atomCode,
                     it.atomCategory,
+                    JsonUtil.toJson(it.taskParams),
                     it.triggerType,
                     it.eventType,
-                    JsonUtil.toJson(it.taskParams),
-                    it.taskParamsMd5,
+                    it.triggerCondition?.let { JsonUtil.toJson(it) },
+                    it.triggerConditionMd5,
                     now,
                     now
                 ).onDuplicateKeyUpdate()
@@ -92,7 +94,8 @@ class RepoPipelineRefDao {
                     .set(TRIGGER_TYPE, it.triggerType)
                     .set(EVENT_TYPE, it.eventType)
                     .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams))
-                    .set(TASK_PARAMS_MD5, it.taskParamsMd5)
+                    .set(TRIGGER_CONDITION, it.triggerCondition?.let { JsonUtil.toJson(it) })
+                    .set(TRIGGER_CONDITION_MD5, it.triggerConditionMd5)
                     .set(UPDATE_TIME, now)
             }
         }).execute()
@@ -191,7 +194,7 @@ class RepoPipelineRefDao {
                     } else {
                         it.and(EVENT_TYPE.eq(eventType))
                     }
-                }.groupBy(PROJECT_ID, REPOSITORY_ID, TASK_PARAMS_MD5)
+                }.groupBy(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE,TRIGGER_CONDITION_MD5)
                 .limit(limit).offset(offset)
                 .fetch().associate { Pair(it.value1(), it.value2()) }
         }
@@ -205,7 +208,7 @@ class RepoPipelineRefDao {
         eventType: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
-            dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, TASK_PARAMS_MD5))
+            dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE,TRIGGER_CONDITION_MD5))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))

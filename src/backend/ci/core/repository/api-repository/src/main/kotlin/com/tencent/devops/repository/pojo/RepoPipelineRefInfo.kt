@@ -47,7 +47,7 @@ data class RepoPipelineRefInfo(
     @ApiModelProperty("插件名")
     val taskName: String,
     @ApiModelProperty("插件参数")
-    val taskParams: MutableMap<String, Any>,
+    val taskParams: Map<String, Any>,
     @ApiModelProperty("插件code")
     val atomCode: String,
     @ApiModelProperty("插件版本")
@@ -57,5 +57,7 @@ data class RepoPipelineRefInfo(
     @ApiModelProperty("触发类型,只有触发插件才有值")
     val triggerType: String? = null,
     @ApiModelProperty("事件类型,只有触发插件才有值")
-    val eventType: String? = null
+    val eventType: String? = null,
+    @ApiModelProperty("触发条件")
+    val triggerCondition: Map<String, Any?>? = null
 )
