@@ -33,7 +33,7 @@ enum class WorkspaceSystemType {
 
     fun needHeartbeat() = this == LINUX
 
-    fun needReminderUser() = this == WINDOWS_GPU
+    fun checkWindows() = this == WINDOWS_GPU
 
     fun needUpdateBkTicket() = this == LINUX
 

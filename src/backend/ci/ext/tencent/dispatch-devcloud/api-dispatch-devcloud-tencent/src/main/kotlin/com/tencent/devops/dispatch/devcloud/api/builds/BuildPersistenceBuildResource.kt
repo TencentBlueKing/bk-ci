@@ -25,46 +25,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.user
+package com.tencent.devops.dispatch.devcloud.api.builds
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.enums.Permission
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildInfo
+import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildWithStatus
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE"], description = "版本仓库-流水线目录")
-@Path("/user/pipelines")
+@Api(tags = ["BUILD_DEVCLOUD_AGENT_BUILD"], description = "DevCloud接入agent资源")
+@Path("/buildAgent/agent/devcloud")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPipelineResource {
-    @ApiOperation("获取有权限目录列表")
-    // @Path("/projects/{projectId}/hasPermissionList")
-    @Path("/{projectId}/hasPermissionList")
+interface BuildPersistenceBuildResource {
+
+    @ApiOperation("尝试启动构建")
     @GET
-    fun hasPermissionList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+    @Path("/startup")
+    fun startBuild(
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("路径", required = false)
-        @QueryParam("path")
-        path: String,
-        @ApiParam("权限", required = true)
-        @QueryParam("permission")
-        permission: Permission
-    ): Result<List<FileInfo>>
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String
+    ): Result<PersistenceBuildInfo?>
+
+    @ApiOperation("worker构建结束")
+    @POST
+    @Path("/workerBuildFinish")
+    fun workerBuildFinish(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("构建信息", required = true)
+        buildInfo: PersistenceBuildWithStatus
+    ): Result<Boolean>
 }

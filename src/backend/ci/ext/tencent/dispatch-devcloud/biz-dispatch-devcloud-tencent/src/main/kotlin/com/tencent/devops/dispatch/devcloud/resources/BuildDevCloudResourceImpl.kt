@@ -6,11 +6,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.devcloud.api.builds.BuildDevCloudResource
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
-import com.tencent.devops.dispatch.devcloud.service.DispatchDevcloudService
+import com.tencent.devops.dispatch.devcloud.service.DevcloudJobService
 
 @RestResource
 class BuildDevCloudResourceImpl constructor(
-    private val dispatchDevcloudService: DispatchDevcloudService
+    private val devcloudJobService: DevcloudJobService
 ) : BuildDevCloudResource {
     override fun createJob(
         userId: String,
@@ -20,7 +20,7 @@ class BuildDevCloudResourceImpl constructor(
         jobReq: DevCloudJobReq
     ): Result<JobResponse> {
         checkUserId(userId)
-        return Result(dispatchDevcloudService.createJob(
+        return Result(devcloudJobService.createJob(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -36,7 +36,7 @@ class BuildDevCloudResourceImpl constructor(
         jobName: String
     ): Result<String> {
         checkUserId(userId)
-        return Result(dispatchDevcloudService.getJobStatus(userId, projectId, pipelineId, jobName))
+        return Result(devcloudJobService.getJobStatus(userId, projectId, pipelineId, jobName))
     }
 
     override fun getJobLogs(
@@ -46,7 +46,7 @@ class BuildDevCloudResourceImpl constructor(
         jobName: String
     ): Result<String> {
         checkUserId(userId)
-        return Result(dispatchDevcloudService.getJobLogs(userId, projectId, pipelineId, jobName))
+        return Result(devcloudJobService.getJobLogs(userId, projectId, pipelineId, jobName))
     }
 
     override fun getTask(
@@ -56,7 +56,7 @@ class BuildDevCloudResourceImpl constructor(
         taskId: String
     ): Result<String> {
         checkUserId(userId)
-        return Result(dispatchDevcloudService.getTask(userId, projectId, pipelineId, taskId))
+        return Result(devcloudJobService.getTask(userId, projectId, pipelineId, taskId))
     }
 
     private fun checkUserId(userId: String) {

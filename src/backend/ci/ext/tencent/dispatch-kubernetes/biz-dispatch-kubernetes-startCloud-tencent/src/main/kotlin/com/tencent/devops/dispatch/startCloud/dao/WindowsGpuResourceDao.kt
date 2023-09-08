@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.startCloud.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
@@ -36,6 +37,7 @@ import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWork
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -109,6 +111,19 @@ class WindowsGpuResourceDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .fetchAny()
+        }
+    }
+
+    /**
+     * 获取cgs的机型和区域列表
+     */
+    fun getCgsConfig(
+        dslContext: DSLContext
+    ): List<Record2<String, String>> {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            return dslContext.selectDistinct(ZONE_ID, MACHINE_TYPE).from(this)
+                .skipCheck()
+                .fetch()
         }
     }
 }

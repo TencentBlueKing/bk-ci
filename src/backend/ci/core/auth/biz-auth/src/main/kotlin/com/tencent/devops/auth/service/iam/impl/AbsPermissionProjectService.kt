@@ -10,6 +10,7 @@ import com.tencent.devops.auth.common.Constants.ALL_ACTION
 import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.IamCacheService
@@ -24,9 +25,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
@@ -199,6 +200,10 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             roleList.add(role)
         }
         return roleList
+    }
+
+    override fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO {
+        return ProjectPermissionInfoVO("", "", "", emptyList(), emptyList())
     }
 
     fun getProjectId(projectCode: String): Int {

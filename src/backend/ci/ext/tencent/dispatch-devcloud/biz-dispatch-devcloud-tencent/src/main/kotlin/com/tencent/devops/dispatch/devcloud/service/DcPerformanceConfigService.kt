@@ -1,19 +1,33 @@
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevcloudPerformanceConfigDao
 import com.tencent.devops.dispatch.devcloud.pojo.performance.ListPage
 import com.tencent.devops.dispatch.devcloud.pojo.performance.OPPerformanceConfigVO
 import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceConfigVO
+import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceMap
+import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class DcPerformanceConfigService constructor(
     private val dslContext: DSLContext,
-    private val devcloudPerformanceConfigDao: DevcloudPerformanceConfigDao
+    private val devcloudPerformanceConfigDao: DevcloudPerformanceConfigDao,
+    private val dcPerformanceOptionsDao: DcPerformanceOptionsDao
 ) {
     private val logger = LoggerFactory.getLogger(DcPerformanceConfigService::class.java)
+
+    @Value("\${devCloud.cpu}")
+    var cpu: Int = 32
+
+    @Value("\${devCloud.memory}")
+    var memory: String = "65535M"
+
+    @Value("\${devCloud.disk}")
+    var disk: String = "500G"
 
     fun listDcPerformanceConfig(
         userId: String,
@@ -96,6 +110,75 @@ class DcPerformanceConfigService constructor(
         checkParameter(userId, projectId)
         val result = devcloudPerformanceConfigDao.delete(dslContext, projectId)
         return result == 1
+    }
+
+    fun getDcPerformanceConfigList(userId: String, projectId: String): UserPerformanceOptionsVO {
+        val projectPerformance = devcloudPerformanceConfigDao.getByProjectId(dslContext, projectId)
+
+        val memoryG = (memory.dropLast(1).toInt() / 1024).toString() + "G"
+        var default = "0"
+        val performanceMaps = mutableListOf<PerformanceMap>()
+        if (projectPerformance != null) {
+            val cpuInt = projectPerformance["CPU"] as Int
+            val memoryInt = projectPerformance["MEMORY"] as Int
+            val diskInt = projectPerformance["DISK"] as Int
+
+            val optionList = dcPerformanceOptionsDao.getOptionsList(dslContext, cpuInt, memoryInt, diskInt)
+            if (optionList.size == 0) {
+                performanceMaps.add(
+                    PerformanceMap(
+                        id = "0",
+                        performanceConfigVO = PerformanceConfigVO(
+                            projectId = projectId,
+                            cpu = cpu,
+                            memory = memoryG,
+                            disk = disk,
+                            description = "Basic"
+                        )
+                    )
+                )
+
+                return UserPerformanceOptionsVO(default, true, performanceMaps)
+            }
+
+            optionList.forEach {
+                if (it.memory == memory.dropLast(1).toInt()) {
+                    default = it.id.toString()
+                }
+                performanceMaps.add(
+                    PerformanceMap(
+                        id = it.id.toString(),
+                        performanceConfigVO = PerformanceConfigVO(
+                            projectId = projectId,
+                            cpu = it.cpu,
+                            memory = "${it.memory / 1024}G",
+                            disk = "${it.disk}G",
+                            description = it.description
+                        )
+                    )
+                )
+            }
+
+            // 若没有application默认的配置，默认第一个
+            if (default == "0") {
+                default = optionList[0].id.toString()
+            }
+        } else {
+            performanceMaps.add(
+                PerformanceMap(
+                    id = "0",
+                    performanceConfigVO = PerformanceConfigVO(
+                        projectId = projectId,
+                        cpu = cpu,
+                        memory = memoryG,
+                        disk = disk,
+                        description = "Basic"
+                    )
+                )
+            )
+        }
+
+        return UserPerformanceOptionsVO(default, true, performanceMaps)
     }
 
     private fun checkParameter(userId: String, projectId: String) {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
@@ -48,19 +49,23 @@ class WindowsResourceConfigDao {
                 ZONE,
                 SHORT_NAME,
                 SIZE,
+                TYPE,
                 GPU,
                 CPU,
                 MEMORY,
                 DISK,
+                HDISK,
                 DESCRIPTION
             ).values(
                 config.zone,
                 config.zoneShortName,
                 config.size,
+                config.type ?: "",
                 config.gpu,
                 config.cpu,
                 config.memory,
                 config.disk,
+                config.hdisk ?: 1,
                 config.description
             ).returning(ID).fetchOne()!!.id
         }
@@ -73,7 +78,9 @@ class WindowsResourceConfigDao {
         return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
-            }.fetch()
+            }
+                .skipCheck()
+                .fetch()
         }
     }
 
@@ -113,10 +120,12 @@ class WindowsResourceConfigDao {
                 .set(ZONE, config.zone)
                 .set(SHORT_NAME, config.zoneShortName)
                 .set(SIZE, config.size)
+                .set(TYPE, config.type ?: "")
                 .set(GPU, config.gpu)
                 .set(CPU, config.cpu)
                 .set(MEMORY, config.memory)
                 .set(DISK, config.disk)
+                .set(HDISK, config.hdisk ?: 1)
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())
