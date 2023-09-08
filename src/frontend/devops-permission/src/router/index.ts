@@ -63,10 +63,6 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  if (to.name === 'my-project') {
-    const devopsApp = window.top.document.getElementsByClassName('devops-app')[0];
-    devopsApp?.setAttribute('class', 'devops-app permission-model');
-  }
   window.$syncUrl?.(to.fullPath);
 });
 

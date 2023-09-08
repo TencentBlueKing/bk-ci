@@ -48,12 +48,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <section>
+  <section style="padding: 20px;">
     <bk-table
         class="resources-table"
         :data="groupPermissionDetail"
         :border="['row', 'outer']">
-        <bk-table-column :label="t('操作')" width="150" show-overflow-tooltip>
+        <bk-table-column :label="t('操作')" width="250" show-overflow-tooltip>
             <template #default="{ data }">
             {{ data?.name }}
             </template>
@@ -100,7 +100,7 @@ onMounted(() => {
 <style lang="postcss" scoped>
     .resources-table {
         ::v-deep .cell {
-            line-height: 30px !important;
+            line-height: 46px !important;
         }
     }
     .resources-info {
@@ -116,6 +116,8 @@ onMounted(() => {
         }
     }
     .resources-content {
+        height: 24px;
+        line-height: 24px;
         .item {
             position: relative;
             display: inline-block;
