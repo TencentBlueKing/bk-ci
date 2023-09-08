@@ -192,6 +192,7 @@ class ItsmService @Autowired constructor(
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
             .value(emptyList())
+            .lable("resource detail")
             .build()
         return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
     }
