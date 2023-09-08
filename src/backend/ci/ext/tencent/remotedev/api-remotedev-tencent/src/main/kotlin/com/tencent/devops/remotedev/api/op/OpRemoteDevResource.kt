@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
@@ -298,6 +299,17 @@ interface OpRemoteDevResource {
         workspaceShared: WorkspaceSharedOpUse
     ): Result<Boolean>
 
+    @ApiOperation("分享或删除工作空间")
+    @POST
+    @Path("/workspace/share/update")
+    fun shareWorkspace4OP(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间共享信息", required = true)
+        shareWorkspace: ShareWorkspace
+    ): Result<Boolean>
+
     @ApiOperation("获取分享工作空间列表")
     @GET
     @Path("/workspace/share/list")
@@ -355,6 +367,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "machineType", required = false)
         @QueryParam("machineType")
         machineType: String?,
+        @ApiParam(value = "ip", required = false)
+        @QueryParam("ip")
+        ip: String?,
         @ApiParam(value = "status", required = false)
         @QueryParam("status")
         status: Int?,

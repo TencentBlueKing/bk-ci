@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
@@ -164,6 +165,18 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
+    override fun shareWorkspace4OP(
+        userId: String,
+        shareWorkspace: ShareWorkspace
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.shareWorkspace4OP(
+                userId = userId,
+                shareWorkspace = shareWorkspace
+            )
+        )
+    }
+
     override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
         return Result(workspaceService.getShareWorkspace(workspaceName))
     }
@@ -186,6 +199,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         zoneId: String?,
         machineType: String?,
+        ip: String?,
         status: Int?,
         page: Int?,
         pageSize: Int?
@@ -196,6 +210,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                     (machineType.isNullOrEmpty() || it.machineType == machineType) &&
+                (ip.isNullOrEmpty() || it.cgsIp == ip) &&
                     (status == null || it.status == status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull

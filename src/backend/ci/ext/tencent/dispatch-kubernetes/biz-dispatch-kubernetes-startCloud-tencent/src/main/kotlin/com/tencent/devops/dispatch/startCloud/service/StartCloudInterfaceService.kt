@@ -78,6 +78,9 @@ class StartCloudInterfaceService @Autowired constructor(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
+        receivers.forEach {
+            createStartCloudUser(it)
+        }
         return workspaceClient.shareWorkspace(
             userId,
             EnvironmentShare(
@@ -146,12 +149,12 @@ class StartCloudInterfaceService @Autowired constructor(
         val zoneList = mutableListOf<String>()
         val cgsConfigList = windowsGpuResourceDao.getCgsConfig(dslContext)
         cgsConfigList.forEach { cgs ->
-                if (!machineTypeList.contains(cgs.value2())) {
-                    machineTypeList.add(cgs.value2())
-                }
-                if (!zoneList.contains(cgs.value1())) {
-                    zoneList.add(cgs.value1())
-                }
+            if (!machineTypeList.contains(cgs.value2())) {
+                machineTypeList.add(cgs.value2())
+            }
+            if (!zoneList.contains(cgs.value1())) {
+                zoneList.add(cgs.value1())
+            }
         }
         logger.info("getCgsConfig|machineTypeList|$machineTypeList|zoneList|$zoneList")
 

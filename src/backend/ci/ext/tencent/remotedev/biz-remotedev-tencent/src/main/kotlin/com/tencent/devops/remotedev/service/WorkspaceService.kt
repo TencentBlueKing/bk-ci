@@ -56,6 +56,7 @@ import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -70,6 +71,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -136,6 +138,33 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
+    fun shareWorkspace4OP(
+        userId: String,
+        shareWorkspace: ShareWorkspace
+    ): Boolean {
+        if (shareWorkspace.sharedUser.isEmpty()) return false
+        when (shareWorkspace.opType) {
+            ShareWorkspace.OpType.ADD -> shareWorkspace.sharedUser.forEach { user ->
+                shareWorkspace(
+                    userId = userId,
+                    workspaceName = shareWorkspace.workspaceName,
+                    sharedUser = user,
+                    needPermission = false
+                )
+            }
+            ShareWorkspace.OpType.DELETE -> shareWorkspace.sharedUser.forEach { user ->
+                deleteSharedWorkspace(
+                    workspaceName = shareWorkspace.workspaceName,
+                    sharedUser = user
+                )
+            }
+
+            else -> Unit
+        }
+
+        return true
+    }
+
     fun shareWorkspace(
         userId: String,
         workspaceName: String,
@@ -196,11 +225,13 @@ class WorkspaceService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 6666
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
-            projectId = projectId
+            projectId = projectId,
+            queryType = QueryType.WEB
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -219,12 +250,14 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
-            systemType = systemType
+            systemType = systemType,
+            queryType = QueryType.OP
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             systemType = systemType,
+            queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
@@ -428,13 +461,17 @@ class WorkspaceService @Autowired constructor(
             it.usageTime + if (it.status.checkRunning()) {
                 // 如果正在运行，需要加上目前距离该次启动的时间
                 Duration.between(latestHistory[it.workspaceName]?.startTime ?: now, now).seconds
-            } else 0
+            } else {
+                0
+            }
         }
         val sleepingTime = workspaces.sumOf {
             it.sleepingTime + if (it.status.checkSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
                 Duration.between(latestSleepHistory[it.workspaceName]?.endTime ?: now, now).seconds
-            } else 0
+            } else {
+                0
+            }
         }
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
@@ -495,12 +532,16 @@ class WorkspaceService @Autowired constructor(
         val usageTime = workspace.usageTime + if (workspace.status.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
             Duration.between(lastHistory?.startTime ?: now, now).seconds
-        } else 0
+        } else {
+            0
+        }
 
         val sleepingTime = workspace.sleepingTime + if (workspace.status.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
             Duration.between(lastHistory?.endTime ?: now, now).seconds
-        } else 0
+        } else {
+            0
+        }
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
             Duration.between(it, now).seconds
@@ -537,7 +578,7 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
+        workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType, workspace.ownerType)
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !workspace.status.checkRunning()) {
             throw ErrorCodeException(
@@ -756,7 +797,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun deleteSharedWorkspace(id: Long): Boolean {
-        val info = workspaceDao.fetchSharedWorkspaceById(
+        val info = workspaceSharedDao.fetchSharedWorkspaceById(
             id = id,
             dslContext = dslContext
         )
@@ -767,6 +808,28 @@ class WorkspaceService @Autowired constructor(
                 sharedUsers = listOf(info.sharedUser),
                 assignType = WorkspaceShared.AssignType.valueOf(info.assignType),
                 mountType = if (info.resourceId.isNotBlank()) WorkspaceMountType.START else null
+            )
+            return true
+        }
+        return false
+    }
+
+    fun deleteSharedWorkspace(
+        workspaceName: String,
+        sharedUser: String
+    ): Boolean {
+        logger.info("deleteSharedWorkspace|workspaceName|$workspaceName|sharedUser|$sharedUser")
+        workspaceSharedDao.fetchSharedWorkspaceByUser(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = sharedUser
+        )?.let {
+            workspaceCommon.unShareWorkspace(
+                workspaceName = it.workspaceName,
+                operator = ADMIN_NAME,
+                sharedUsers = listOf(it.sharedUser),
+                assignType = WorkspaceShared.AssignType.valueOf(it.assignType),
+                mountType = if (it.resourceId.isNotBlank()) WorkspaceMountType.START else null
             )
             return true
         }
