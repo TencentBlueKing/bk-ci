@@ -28,11 +28,16 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -63,4 +68,25 @@ interface OpProjectWorkspaceResource {
         @QueryParam("cgsId")
         cgsId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取项目下空间列表实例列表")
+    @GET
+    @Path("/list")
+    fun getProjectWorkspaceList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @ApiParam(value = "systemType", required = false)
+        @QueryParam("systemType")
+        systemType: WorkspaceSystemType?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<ProjectWorkspace>>
 }
