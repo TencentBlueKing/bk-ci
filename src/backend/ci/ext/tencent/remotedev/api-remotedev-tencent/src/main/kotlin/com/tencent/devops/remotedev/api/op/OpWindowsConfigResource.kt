@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
-import com.tencent.devops.remotedev.pojo.windows.ZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -92,52 +91,6 @@ interface OpWindowsConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板信息", required = true)
-        @QueryParam("id")
-        id: Long
-    ): Result<Boolean>
-
-    @ApiOperation("获取windows区域配置")
-    @GET
-    @Path("/zone/list")
-    fun getWindowsZoneList(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<ZoneConfig>>
-
-    @ApiOperation("新增windows区域配置")
-    @POST
-    @Path("/zone/add")
-    fun addWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "模板信息", required = true)
-        zoneConfig: ZoneConfig
-    ): Result<Boolean>
-
-    @ApiOperation("更新windows区域配置")
-    @PUT
-    @Path("/zone/update")
-    fun updateWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "模板ID", required = true)
-        @QueryParam("id")
-        id: Long,
-        @ApiParam(value = "模板信息", required = true)
-        zoneConfig: ZoneConfig
-    ): Result<Boolean>
-
-    @ApiOperation("删除windows区域配置")
-    @DELETE
-    @Path("/zone/delete")
-    fun deleteWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "区域id信息", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>

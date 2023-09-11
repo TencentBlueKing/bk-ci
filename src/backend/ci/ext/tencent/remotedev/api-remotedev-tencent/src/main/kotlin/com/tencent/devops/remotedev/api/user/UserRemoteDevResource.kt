@@ -34,7 +34,6 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
-import com.tencent.devops.remotedev.pojo.windows.ZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -130,12 +129,4 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceConfig>>
-
-    @ApiOperation("获取所有的WINDOWS 地域配置")
-    @GET
-    @Path("/get_zone_config")
-    fun getWindowsZoneConfig(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<ZoneConfig>>
 }

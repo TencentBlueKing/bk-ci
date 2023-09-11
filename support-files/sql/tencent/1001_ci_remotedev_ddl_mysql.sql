@@ -208,17 +208,6 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
 );
 
 -- ----------------------------
--- Table structure for T_ZONE 云桌面地域配置
--- ----------------------------
-CREATE TABLE IF NOT EXISTS `T_ZONE` (
-    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
-    `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
-    PRIMARY KEY (`ID`),
-    UNIQUE `ukey`(`ZONE`,`SHORT_NAME`)
-    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='云桌面地域配置';
-
--- ----------------------------
 -- Table structure for T_WINDOWS_RESOURCE_CONFIG WINDOWS硬件资源配置
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_CONFIG` (
