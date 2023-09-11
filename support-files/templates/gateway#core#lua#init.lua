@@ -48,6 +48,10 @@ config = {
         suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
         nodes_url = "/v1/catalog/nodes"
     },
+    local_run = {
+        enabled = __BK_CI_LOCAL_RUN_ENABLED__,
+        target = "__BK_CI_LOCAL_RUN_TARGET__"
+    },
     paasCIDomain = "__BK_CI_PAASCI_FQDN__",
     job = {domain = "__BK_CI_JOB_FQDN__"},
     redis = {
