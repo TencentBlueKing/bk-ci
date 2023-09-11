@@ -55,10 +55,11 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun getProjectWorkspaceList(
         userId: String,
         projectId: String?,
+        workspaceName: String?,
         systemType: WorkspaceSystemType?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
+        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, workspaceName, systemType, page, pageSize))
     }
 }
