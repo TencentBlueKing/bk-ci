@@ -54,7 +54,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceNameConverter: AuthResourceNameConverter,
+    private val authResourceNameConverter: AuthResourceNameConverter
 ) {
 
     companion object {

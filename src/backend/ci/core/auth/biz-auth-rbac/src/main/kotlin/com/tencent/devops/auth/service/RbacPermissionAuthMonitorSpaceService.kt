@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Value
 class RbacPermissionAuthMonitorSpaceService constructor(
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
+    private val objectMapper: ObjectMapper
 ) : AuthMonitorSpaceService {
     @Value("\${auth.appCode:}")
     private val appCode = ""

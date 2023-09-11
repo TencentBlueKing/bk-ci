@@ -83,7 +83,7 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceNameConverter: AuthResourceNameConverter,
+        authResourceNameConverter: AuthResourceNameConverter
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authAuthorizationScopesService = authAuthorizationScopesService,

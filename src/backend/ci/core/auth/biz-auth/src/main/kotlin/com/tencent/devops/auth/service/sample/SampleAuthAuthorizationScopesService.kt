@@ -1,8 +1,6 @@
 package com.tencent.devops.auth.service.sample
 
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
-import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 
 class SampleAuthAuthorizationScopesService : AuthAuthorizationScopesService {
