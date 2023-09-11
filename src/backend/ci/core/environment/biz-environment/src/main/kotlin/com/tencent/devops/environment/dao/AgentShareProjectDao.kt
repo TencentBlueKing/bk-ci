@@ -13,10 +13,11 @@ class AgentShareProjectDao {
         sharedProjectId: String
     ): Int {
         with(TAgentShareProject.T_AGENT_SHARE_PROJECT) {
-            return dslContext.selectFrom(this)
-                .where(AGENT_ID.eq(agentId))
-                .and(SHARED_PROJECT_ID.eq(sharedProjectId))
-                .fetchOne(0, Int::class.java)!!
+            return dslContext.fetchCount(
+                dslContext.selectFrom(this)
+                    .where(AGENT_ID.eq(agentId))
+                    .and(SHARED_PROJECT_ID.eq(sharedProjectId))
+            )
         }
     }
 

@@ -596,6 +596,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return getResultByRecord(projectId, agentId, agentGlobalRecord)
         }
         // 没有则按 agent 的状态返回，但是不返回 agent 实例
+        logger.warn("not allow $projectId use agent $agentId")
         return AgentResult(
             status = 1,
             message = "not allow use this agent",
