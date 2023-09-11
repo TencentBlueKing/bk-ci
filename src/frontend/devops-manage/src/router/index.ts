@@ -66,7 +66,9 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath);
+  if (!location.search.includes('disableSyncUrl=true')) {
+    window.$syncUrl?.(to.fullPath);
+  }
 });
 
 // 导出默认数据
