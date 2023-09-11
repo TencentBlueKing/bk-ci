@@ -378,7 +378,7 @@ class WorkspaceService @Autowired constructor(
         createUserId = it.createUserId,
         workPath = it.workPath,
         workspaceFolder = it.workspaceFolder,
-        hostName = it.hostName,
+        hostName = workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP,
         workspaceMountType = it.workspaceMountType,
         workspaceSystemType = it.workspaceSystemType,
         ownerType = it.ownerType,
