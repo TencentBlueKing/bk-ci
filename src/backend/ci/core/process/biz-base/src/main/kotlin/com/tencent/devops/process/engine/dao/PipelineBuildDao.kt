@@ -27,10 +27,11 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -39,18 +40,13 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.db.utils.JooqUtils
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
-import com.tencent.devops.model.process.Tables.T_PIPELINE_DEBUG_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
-import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryDebugRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
@@ -60,7 +56,6 @@ import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
 import org.jooq.RecordMapper
-import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -187,16 +182,16 @@ class PipelineBuildDao {
         }
     }
 
-    fun updateBuildInfo(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildInfo: BuildInfo
-    ): Int {
-        transactionContext.batchStore(buildHistory).execute()
-        mapper.
-    }
+//    fun updateBuildInfo(
+//        dslContext: DSLContext,
+//        projectId: String,
+//        pipelineId: String,
+//        buildId: String,
+//        buildInfo: BuildInfo
+//    ): Int {
+//        transactionContext.batchStore(buildHistory).execute()
+//        mapper.
+//    }
 
     /**
      * 读取指定状态下的构建
@@ -314,7 +309,7 @@ class PipelineBuildDao {
         projectId: String? = null,
         startBeginTime: String? = null,
         endBeginTime: String? = null
-    ): Result<TPipelineBuildHistoryRecord> {
+    ): List<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(BUILD_ID.`in`(buildIds))
@@ -340,7 +335,7 @@ class PipelineBuildDao {
         offset: Int,
         limit: Int,
         updateTimeDesc: Boolean? = null
-    ): Collection<TPipelineBuildHistoryRecord> {
+    ): Collection<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -351,7 +346,7 @@ class PipelineBuildDao {
                 null -> select.orderBy(BUILD_NUM.desc())
             }
             select.limit(offset, limit)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -378,7 +373,7 @@ class PipelineBuildDao {
         pipelineId: String,
         buildNum: Int?,
         statusSet: Set<BuildStatus>?
-    ): TPipelineBuildHistoryRecord? {
+    ): BuildInfo? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -393,7 +388,7 @@ class PipelineBuildDao {
             } else { // 取最新的
                 select.orderBy(BUILD_NUM.desc()).limit(1)
             }
-            select.fetchOne()
+            select.fetchOne(mapper)
         }
     }
 
@@ -648,6 +643,10 @@ class PipelineBuildDao {
                 material = t.material?.let {
                     JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                 },
+                buildNumAlias = t.buildNumAlias,
+                recommendVersion = t.recommendVersion,
+                webhookType = t.webhookType,
+                updateTime = t.updateTime.timestampmilli(),
                 remark = t.remark,
                 debug = false // #8164 原历史表中查出的记录均为非调试的记录
             )
@@ -748,7 +747,7 @@ class PipelineBuildDao {
         buildMsg: String?,
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null
-    ): Collection<TPipelineBuildHistoryRecord> {
+    ): Collection<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
             makeCondition(
@@ -781,7 +780,7 @@ class PipelineBuildDao {
                 null -> where.orderBy(BUILD_NUM.desc())
             }
 
-            where.limit(offset, limit).fetch()
+            where.limit(offset, limit).fetch(mapper)
         }
     }
 
@@ -1129,8 +1128,6 @@ class PipelineBuildDao {
 
     class PipelineBuildInfoJooqMapper : RecordMapper<TPipelineBuildHistoryRecord, BuildInfo> {
         override fun map(record: TPipelineBuildHistoryRecord?): BuildInfo? {
-            // TODO 增加路由
-            convert(record)
             return record?.let { t ->
                 BuildInfo(
                     projectId = t.projectId,
@@ -1167,6 +1164,7 @@ class PipelineBuildDao {
                     executeCount = t.executeCount,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     buildMsg = t.buildMsg,
                     errorType = t.errorType,
@@ -1175,6 +1173,9 @@ class PipelineBuildDao {
                     material = t.material?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                     },
+                    updateTime = t.updateTime.timestampmilli(),
+                    recommendVersion = t.recommendVersion,
+                    buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = false // #8164 原历史表中查出的记录均为非调试的记录
                 )
@@ -1220,7 +1221,11 @@ class PipelineBuildDao {
                     executeCount = t.executeCount,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                    artifactList = t.artifactInfo?.let { self ->
+                        JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
+                    },
                     buildMsg = t.buildMsg,
                     errorType = t.errorType,
                     errorCode = t.errorCode,
@@ -1228,6 +1233,9 @@ class PipelineBuildDao {
                     material = t.material?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                     },
+                    updateTime = t.updateTime.timestampmilli(),
+                    recommendVersion = t.recommendVersion,
+                    buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = false // #8164 原历史表中查出的记录均为非调试的记录
                 )

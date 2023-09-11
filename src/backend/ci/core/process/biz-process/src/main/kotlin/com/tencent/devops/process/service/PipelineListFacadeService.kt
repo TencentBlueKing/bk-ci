@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -35,7 +34,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -52,7 +50,6 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
-import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -88,10 +85,10 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.template.TemplatePipelineInfo
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
@@ -1360,7 +1357,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineBuildSummaryMap: Map<String, TPipelineBuildSummaryRecord>,
         pipelineSettingMap: Map<String, Record4<String, String, Int, String>>,
         pipelineViewNameMap: Map<String, MutableList<String>>,
-        pipelineBuildMap: Map<String, TPipelineBuildHistoryRecord>,
+        pipelineBuildMap: Map<String, BuildInfo>,
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>
     ) {
@@ -1395,12 +1392,10 @@ class PipelineListFacadeService @Autowired constructor(
                 it.lastBuildMsg = BuildMsgUtils.getBuildMsg(
                     buildMsg = lastBuild.buildMsg,
                     startType = StartType.toStartType(lastBuild.trigger),
-                    channelCode = ChannelCode.getChannel(lastBuild.channel)
+                    channelCode = lastBuild.channelCode
                 )
                 it.trigger = lastBuild.trigger
-                val webhookInfo = lastBuild.webhookInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})
-                }
+                val webhookInfo = lastBuild.webhookInfo
                 if (webhookInfo != null) {
                     it.webhookAliasName = webhookInfo.webhookAliasName ?: getProjectName(webhookInfo.webhookRepoUrl)
                     it.webhookRepoUrl = webhookInfo.webhookRepoUrl

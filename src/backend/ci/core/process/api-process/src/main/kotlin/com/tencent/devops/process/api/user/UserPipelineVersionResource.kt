@@ -168,7 +168,6 @@ interface UserPipelineVersionResource {
         pageSize: Int?
     ): Result<Page<String>>
 
-    // TODO 给出主路径的bool
     @ApiOperation("流水线编排版本列表（搜索、分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/versions")

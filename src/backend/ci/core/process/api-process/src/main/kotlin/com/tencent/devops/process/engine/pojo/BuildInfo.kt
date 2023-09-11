@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -62,10 +63,15 @@ data class BuildInfo(
     val retryFlag: Boolean? = null,
     val executeCount: Int? = 1,
     var concurrencyGroup: String? = null,
+    val webhookType: String?,
     val webhookInfo: WebhookInfo? = null,
     val buildMsg: String? = null,
     val material: List<PipelineBuildMaterial>? = null,
+    val artifactList: List<FileInfo>? = null,
     val remark: String? = null,
+    val recommendVersion: String?,
+    val buildNumAlias: String?,
+    val updateTime: Long? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
     val errorMsg: String? = null

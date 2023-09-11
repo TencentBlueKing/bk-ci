@@ -132,7 +132,6 @@ object ModelCommon {
         else ifString
     }
 
-
     fun revertCustomVariableNotMatch(input: String): List<NameAndValue>? {
         if (input.indexOf("||") == -1) return null
         val res = mutableListOf<NameAndValue>()
