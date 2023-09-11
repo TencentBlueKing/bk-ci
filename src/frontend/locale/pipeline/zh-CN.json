@@ -1178,5 +1178,6 @@
   "exitFullscreen": "退出全屏",
   "skipSuc": "已跳过失败的步骤，继续运行",
   "skipFail": "跳过失败",
-  "nonManual": "非手动"
+  "nonManual": "非手动",
+  "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载"
 }

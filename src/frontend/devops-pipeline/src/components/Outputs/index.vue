@@ -81,9 +81,17 @@
                                 theme="primary"
                                 v-for="btn in btns"
                                 :key="btn.text"
+                                :disabled="btn.disabled"
                                 @click="btn.handler"
                             >
-                                {{ btn.text }}
+                                <bk-popover
+                                    :disabled="!btn.disabled"
+                                >
+                                    {{ btn.text }}
+                                    <template slot="content">
+                                        <p>{{ btn.disabledTips }}</p>
+                                    </template>
+                                </bk-popover>
                             </bk-button>
                             <output-qrcode
                                 :output="activeOutput"
@@ -244,7 +252,9 @@
                         case this.activeOutput.artifactoryType !== 'IMAGE':
                             defaultBtns.unshift({
                                 text: this.$t('download'),
-                                handler: () => window.open(this.activeOutputDetail.url, '_blank')
+                                handler: () => window.open(this.activeOutputDetail.url, '_blank'),
+                                disabled: this.activeOutputDetail.size.includes('GB') && this.activeOutputDetail.size.split(' ')[0] > 10,
+                                disabledTips: this.$t('downloadDisabledTips')
                             })
                             break
                     }
