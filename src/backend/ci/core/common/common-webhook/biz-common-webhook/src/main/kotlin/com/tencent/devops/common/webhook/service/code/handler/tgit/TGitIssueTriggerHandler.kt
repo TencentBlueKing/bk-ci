@@ -50,8 +50,10 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
+import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -59,7 +61,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 @CodeWebhookHandler
 class TGitIssueTriggerHandler(
     private val eventCacheService: EventCacheService
-) : GitHookTriggerHandler<GitIssueEvent> {
+) : CodeWebhookTriggerHandler<GitIssueEvent> {
 
     override fun eventClass(): Class<GitIssueEvent> {
         return GitIssueEvent::class.java
@@ -87,6 +89,35 @@ class TGitIssueTriggerHandler(
 
     override fun getEventType(): CodeEventType {
         return CodeEventType.ISSUES
+    }
+
+    override fun getWebhookFilters(
+        event: GitIssueEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): List<WebhookFilter> {
+        with(webHookParams) {
+            val urlFilter = GitUrlFilter(
+                pipelineId = pipelineId,
+                triggerOnUrl = getUrl(event),
+                repositoryUrl = repository.url,
+                includeHost = includeHost
+            )
+            val eventTypeFilter = EventTypeFilter(
+                pipelineId = pipelineId,
+                triggerOnEventType = getEventType(),
+                eventType = eventType
+            )
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "issueAction",
+                triggerOn = event.objectAttributes.action ?: "",
+                included = WebhookUtils.convert(includeIssueAction)
+            )
+            return listOf(urlFilter, eventTypeFilter, actionFilter)
+        }
     }
 
     override fun getMessage(event: GitIssueEvent): String? {
@@ -122,21 +153,5 @@ class TGitIssueTriggerHandler(
         }
         startParams[PIPELINE_GIT_EVENT_URL] = event.objectAttributes.url ?: ""
         return startParams
-    }
-
-    override fun getEventFilters(
-        event: GitIssueEvent,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): List<WebhookFilter> {
-        val actionFilter = ContainsFilter(
-            pipelineId = pipelineId,
-            filterName = "issueAction",
-            triggerOn = event.objectAttributes.action ?: "",
-            included = WebhookUtils.convert(webHookParams.includeIssueAction)
-        )
-        return listOf(actionFilter)
     }
 }

@@ -71,7 +71,7 @@ object BuildMsgUtils {
     }
 
     fun getBuildMsg(buildMsg: String?, startType: StartType, channelCode: ChannelCode?): String {
-        return if (buildMsg.isNullOrBlank() || startType != WEB_HOOK) {
+        return if (buildMsg.isNullOrBlank()) {
             getDefaultValue(startType = startType, channelCode = channelCode)
         } else {
             buildMsg

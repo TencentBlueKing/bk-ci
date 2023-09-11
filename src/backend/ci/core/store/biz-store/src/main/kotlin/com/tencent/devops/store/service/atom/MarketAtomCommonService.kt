@@ -89,4 +89,6 @@ interface MarketAtomCommonService {
     fun getValidOsNameFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean
 
     fun getValidOsArchFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean
+
+    fun getInitProjectCode(atomCode: String, classType: String, htmlTemplateVersion: String): String?
 }

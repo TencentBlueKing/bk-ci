@@ -42,14 +42,7 @@ class ErrorCodeInfoDao {
         queryCondition: QueryErrorCodeInfoQO
     ): List<ErrorCodeInfoDO> {
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            val conditions = mutableListOf<Condition>()
-            if (!queryCondition.keyword.isNullOrBlank()) {
-                conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
-            }
-            conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
-            if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
-            }
+            val conditions = this.getConditions(queryCondition)
             return dslContext.select(ERROR_TYPE, ERROR_CODE, ERROR_MSG)
                 .from(this)
                 .where(conditions)
@@ -65,20 +58,25 @@ class ErrorCodeInfoDao {
         dslContext: DSLContext,
         queryCondition: QueryErrorCodeInfoQO
     ): Long {
-        val conditions = mutableListOf<Condition>()
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
-            if (!queryCondition.keyword.isNullOrBlank()) {
-                conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
-            }
-            if (!queryCondition.errorTypes.isNullOrEmpty()) {
-                conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
-            }
+            val conditions = this.getConditions(queryCondition)
             return dslContext.select(ERROR_CODE)
                 .from(this)
                 .where(conditions)
                 .groupBy(ERROR_CODE)
                 .execute().toLong()
         }
+    }
+
+    private fun TErrorCodeInfo.getConditions(queryCondition: QueryErrorCodeInfoQO): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
+        if (!queryCondition.keyword.isNullOrBlank()) {
+            conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
+        }
+        if (!queryCondition.errorTypes.isNullOrEmpty()) {
+            conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
+        }
+        return conditions
     }
 }

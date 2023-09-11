@@ -39,7 +39,7 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record13
+import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
@@ -132,7 +132,7 @@ class MarketAtomEnvInfoDao {
     private fun getAtomBaseInfoStep(
         dslContext: DSLContext,
         tAtom: TAtom
-    ): SelectJoinStep<Record13<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime>> {
+    ): SelectJoinStep<Record18<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, String, Int, String, String, String, LocalDateTime, LocalDateTime>> {
         return dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -145,6 +145,11 @@ class MarketAtomEnvInfoDao {
             tAtom.DOCS_LINK,
             tAtom.BUILD_LESS_RUN_FLAG,
             tAtom.JOB_TYPE,
+            tAtom.PROPS,
+            tAtom.VISIBILITY_LEVEL,
+            tAtom.CLASSIFY_ID,
+            tAtom.HTML_TEMPLATE_VERSION,
+            tAtom.CLASS_TYPE,
             tAtom.CREATE_TIME,
             tAtom.UPDATE_TIME
         ).from(tAtom)

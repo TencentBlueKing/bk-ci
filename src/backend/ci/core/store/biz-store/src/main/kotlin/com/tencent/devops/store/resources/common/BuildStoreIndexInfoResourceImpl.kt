@@ -32,7 +32,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -41,33 +40,16 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     private val storeIndexManageService: StoreIndexManageService
 ) : BuildStoreIndexInfoResource {
 
-    @SensitiveApiPermission("syc_atom_index")
-    override fun createIndexComputeDetail(
+    @SensitiveApiPermission("update_trustworthy_index")
+    override fun updateTrustworthyIndexInfo(
         userId: String,
-        storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
-    ): Result<Boolean> {
-        return storeIndexManageService.createIndexComputeDetail(userId, storeIndexElementCreateRequest)
-    }
-
-    @SensitiveApiPermission("syc_atom_index")
-    override fun getCertifiedPlugins(
-        userId: String,
-        indexCode: String,
-        elementName: String
-    ): Result<List<String>> {
-        return storeIndexManageService.getStoreCodeByElementValue(indexCode, elementName)
-    }
-
-    @SensitiveApiPermission("syc_atom_index")
-    override fun deleteStoreIndexResultByStoreCode(
-        userId: String,
-        indexCode: String,
+        deptCode: String,
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean> {
-        return storeIndexManageService.deleteStoreIndexResultByStoreCode(
+        return storeIndexManageService.updateTrustworthyIndexInfo(
             userId = userId,
-            indexCode = indexCode,
+            deptCode = deptCode,
             storeType = storeType,
             storeCodes = storeCodes
         )
