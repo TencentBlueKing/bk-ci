@@ -1,7 +1,7 @@
 version: "v2.0"
-name: "前端部署Test[U]"
+name: "bk-ci前端部署【test-devx】"
 variables:
-  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream"
+  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream,metrics,permission,manage"
   ips: "11.185.145.49"
   # 9.134.78.69,10.123.135.151,9.66.32.218
   #
@@ -22,7 +22,7 @@ stages:
           - checkout: "http://git.woa.com/bkdevops/bk-ci.git"
             name: Checkout
             with:
-              refName: integration
+              refName: test
               enableGitCleanIgnore: true
           - name: "拉取前端占位符"
             checkout: "http://git.woa.com/bkdevops/devops-config.git"
@@ -86,8 +86,8 @@ stages:
                 rm -rf frontend
                 mkdir -p frontend
                 unzip -o frontend.zip -d frontend
-                mkdir -p /data/bkee/ci/frontend
-                cp -rf /data/tmp/frontend/* /data/bkee/ci/frontend
+                mkdir -p /data/bkee/ci/frontend-devx
+                cp -rf /data/tmp/frontend/* /data/bkee/ci/frontend-devx
 
               account: "root"
               targetIpList: ${{ variables.ips }}
