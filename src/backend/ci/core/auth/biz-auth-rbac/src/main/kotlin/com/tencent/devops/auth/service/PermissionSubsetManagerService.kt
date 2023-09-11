@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
