@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `gray_iframe_url` varchar(255) DEFAULT NULL COMMENT '灰度iframe Url地址',
   `new_window` bit(1) DEFAULT b'0' COMMENT '是否打开新标签页',
   `new_windowUrl` varchar(200) DEFAULT '' COMMENT '新标签页地址',
+  `cluster_type` VARCHAR(32) NOT NULL DEFAULT '' comment '集群类型',
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`name`),
   UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
