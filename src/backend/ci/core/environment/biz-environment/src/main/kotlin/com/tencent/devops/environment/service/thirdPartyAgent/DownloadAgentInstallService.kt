@@ -403,7 +403,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun checkAgent(projectId: String, agentId: String, secretKey: String): Boolean {
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: return false
 
         val key = SecurityUtil.decrypt(agentRecord.secretKey)

@@ -309,18 +309,6 @@ class ThirdPartyAgentDao {
 
     fun getAgent(
         dslContext: DSLContext,
-        id: Long,
-        projectId: String
-    ): TEnvironmentThirdpartyAgentRecord? {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-        }
-    }
-
-    fun getAgent(
-        dslContext: DSLContext,
         id: Long
     ): TEnvironmentThirdpartyAgentRecord? {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
