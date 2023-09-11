@@ -240,6 +240,7 @@ class WorkspaceService @Autowired constructor(
 
     fun getProjectWorkspaceList4Op(
         projectId: String?,
+        workspaceName: String?,
         systemType: WorkspaceSystemType?,
         page: Int?,
         pageSize: Int?
@@ -250,12 +251,14 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            workspaceName = workspaceName,
             systemType = systemType,
             queryType = QueryType.OP
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            workspaceName = workspaceName,
             systemType = systemType,
             queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)

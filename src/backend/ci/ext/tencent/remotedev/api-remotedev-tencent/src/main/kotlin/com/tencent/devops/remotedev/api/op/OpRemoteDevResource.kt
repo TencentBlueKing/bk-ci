@@ -248,6 +248,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "projectId", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @ApiParam(value = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @ApiParam(value = "systemType", required = false)
         @QueryParam("systemType")
         systemType: WorkspaceSystemType?,
