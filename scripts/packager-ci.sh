@@ -11,6 +11,7 @@ on_ERR (){
 my_path="$(readlink -f "$0")"
 my_dir=${my_path%/*}
 [ -d "$my_dir" ] || { echo >&2 "ERROR: my_dir is NOT an existed dir: $my_dir."; return 3; }
+# shellcheck disable=SC2034
 cmd_collect_ci_ms_name="$my_dir/bk-ci-collect-ms-name.sh"
 cmd_ci_slim="$my_dir/bk-ci-slim.sh"
 
@@ -83,6 +84,13 @@ prepare_agentless (){
   cp -r "$ci_pkg_dir/dockerhost" "$ci_pkg_dir/agentless"
 }
 
+copy_license_files () {
+  echo "copy license files: $ci_code_dir/LICENSE.txt to $ci_pkg_dir/LICENSE.txt"
+  cp -f "$ci_code_dir/LICENSE.txt" "$ci_pkg_dir/LICENSE.txt"
+  echo "copy license files: $ci_bin_msjar_dir/THIRD-PARTY-NOTICES.txt $ci_pkg_dir/THIRD-PARTY-NOTICES.txt"
+  cp -f "$ci_bin_msjar_dir/THIRD-PARTY-NOTICES.txt" "$ci_pkg_dir/THIRD-PARTY-NOTICES.txt"
+}
+
 packager_ci (){
   mkdir -p "$ci_pkg_dir"
   echo "ci_code_dir is $ci_code_dir."
@@ -95,6 +103,7 @@ packager_ci (){
   collect_backend
   collect_frontend
   prepare_agentless
+  copy_license_files
   echo "gen version:"
   echo "$VERSION" | tee "$ci_pkg_dir/VERSION"
   echo "BK_CI_VERSION=\"$VERSION\"" | tee -a "$ci_pkg_dir/scripts/bkenv.properties"
