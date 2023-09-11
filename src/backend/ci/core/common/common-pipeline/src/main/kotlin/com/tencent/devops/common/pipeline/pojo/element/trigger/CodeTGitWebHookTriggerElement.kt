@@ -79,6 +79,8 @@ data class CodeTGitWebHookTriggerInput(
     val includePaths: String?,
     @ApiModelProperty("用于排除的路径", required = false)
     val excludePaths: String?,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @ApiModelProperty("事件类型", required = false)
@@ -97,6 +99,22 @@ data class CodeTGitWebHookTriggerInput(
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
+    @ApiModelProperty("tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
     @ApiModelProperty("code review 状态", required = false)
-    val includeCrState: List<String>? = null
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("是否启用回写")
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("mr事件action")
+    val includeMrAction: List<String>? = null,
+    @ApiModelProperty("push事件action")
+    val includePushAction: List<String>? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false
 )

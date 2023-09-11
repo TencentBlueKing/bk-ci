@@ -698,7 +698,11 @@
     "pipelineErrorCode": "错误码",
     "pipelineErrorPos": "错误位置",
     "pipelineErrorInfo": "错误信息",
-    "Errors": "Errors"
+    "Errors": "Errors",
+    "directoryName": "目录名称",
+    "directoryPath": "目录路径",
+    "include": "包含",
+    "fileAndFolder": "{0} 个文件，{1} 个目录"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
@@ -956,7 +960,9 @@
       "otherChoice": "其他选项"
     },
     "stageOption": "流程控制选项",
-    "pipelineVersionSaveAt": "版本{0}保存于{1}"
+    "pipelineVersionSaveAt": "版本{0}保存于{1}",
+    "every": "每隔",
+    "remindTime": "小时提醒一次"
   },
   "storeMap": {
     "textarea": "文本框",
