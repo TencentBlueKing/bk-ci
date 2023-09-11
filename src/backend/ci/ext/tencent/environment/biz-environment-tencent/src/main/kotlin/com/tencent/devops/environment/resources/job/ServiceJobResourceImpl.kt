@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.resources.job
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
@@ -39,26 +40,72 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
+import com.tencent.devops.environment.service.job.ScriptExecuteService
+import com.tencent.devops.environment.service.job.FileDistributeService
+import com.tencent.devops.environment.service.job.TaskTerminateService
+import com.tencent.devops.environment.service.job.QueryJobInstanceStatusService
+import com.tencent.devops.environment.service.job.QueryJobInstanceLogsService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceJobResourceImpl : ServiceJobResource {
-    override fun executeScript(userId: String, projectId: String, scriptExecuteReq: ScriptExecuteReq): Result<ScriptExecuteResult> {
-        TODO("Not yet implemented")
+class ServiceJobResourceImpl @Autowired constructor(
+    private val scriptExecuteService: ScriptExecuteService,
+    private val fileDistributeService: FileDistributeService,
+    private val taskTerminateService: TaskTerminateService,
+    private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
+    private val queryJobInstanceLogsService: QueryJobInstanceLogsService
+) : ServiceJobResource {
+    override fun executeScript(
+        userId: String,
+        projectId: String,
+        scriptExecuteReq: ScriptExecuteReq
+    ): Result<ScriptExecuteResult> {
+        checkParam(userId, projectId)
+        return Result(scriptExecuteService.executeScript(userId, projectId, scriptExecuteReq))
     }
 
-    override fun distributeFile(userId: String, projectId: String, fileDistributeReq: FileDistributeReq): Result<FileDistributeResult> {
-        TODO("Not yet implemented")
+    override fun distributeFile(
+        userId: String,
+        projectId: String,
+        fileDistributeReq: FileDistributeReq
+    ): Result<FileDistributeResult> {
+        checkParam(userId, projectId)
+        return Result(fileDistributeService.distributeFile(userId, projectId, fileDistributeReq))
     }
 
-    override fun terminateTask(userId: String, projectId: String, taskTerminateReq: TaskTerminateReq): Result<TaskTerminateResult> {
-        TODO("Not yet implemented")
+    override fun terminateTask(
+        userId: String,
+        projectId: String,
+        taskTerminateReq: TaskTerminateReq
+    ): Result<TaskTerminateResult> {
+        checkParam(userId, projectId)
+        return Result(taskTerminateService.terminateTask(userId, projectId, taskTerminateReq))
     }
 
-    override fun queryJobInstanceStatus(userId: String, projectId: String, jobInstanceId: Long): Result<QueryJobInstanceStatusResult> {
-        TODO("Not yet implemented")
+    override fun queryJobInstanceStatus(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long
+    ): Result<QueryJobInstanceStatusResult> {
+        checkParam(userId, projectId)
+        return Result(queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId))
     }
 
-    override fun queryJobInstanceLogs(userId: String, projectId: String, queryLogsReq: QueryJobInstanceLogsReq): Result<QueryJobInstanceLogsResult> {
-        TODO("Not yet implemented")
+    override fun queryJobInstanceLogs(
+        userId: String,
+        projectId: String,
+        queryJobInstanceLogsReq: QueryJobInstanceLogsReq
+    ): Result<QueryJobInstanceLogsResult> {
+        checkParam(userId, projectId)
+        return Result(queryJobInstanceLogsService.queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq))
+    }
+
+    private fun checkParam(userId: String, projectId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
     }
 }
