@@ -3,7 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 
 /**
- * 蓝盾权限对接监控平台配置类
+ * 分级管理员、用户组授权范围类
  */
 interface AuthAuthorizationScopesService {
     /**

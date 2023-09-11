@@ -46,6 +46,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
@@ -57,6 +58,7 @@ import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionApplyService
+import com.tencent.devops.auth.service.RbacPermissionAuthMonitorSpaceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.service.RbacPermissionAuthorizationScopesService
@@ -480,15 +482,24 @@ class RbacAuthConfiguration {
     @Bean
     fun rbacPermissionAuthorizationScopesService(
         systemService: SystemService,
-        authMonitorSpaceDao: AuthMonitorSpaceDao,
-        dslContext: DSLContext,
+        authMonitorSpaceService: AuthMonitorSpaceService,
         objectMapper: ObjectMapper,
         iamConfiguration: IamConfiguration
     ) = RbacPermissionAuthorizationScopesService(
         systemService = systemService,
-        authMonitorSpaceDao = authMonitorSpaceDao,
-        dslContext = dslContext,
+        authMonitorSpaceService = authMonitorSpaceService,
         objectMapper = objectMapper,
         iamConfiguration = iamConfiguration
+    )
+
+    @Bean
+    fun rbacPermissionAuthMonitorSpaceService(
+        authMonitorSpaceDao: AuthMonitorSpaceDao,
+        dslContext: DSLContext,
+        objectMapper: ObjectMapper
+    ) = RbacPermissionAuthMonitorSpaceService(
+        authMonitorSpaceDao = authMonitorSpaceDao,
+        dslContext = dslContext,
+        objectMapper = objectMapper
     )
 }

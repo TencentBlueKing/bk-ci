@@ -3,6 +3,7 @@ package com.tencent.devops.auth.common
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.LocalManagerService
@@ -23,6 +24,7 @@ import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.auth.service.sample.SampleAuthAuthorizationScopesService
+import com.tencent.devops.auth.service.sample.SampleAuthMonitorSpaceService
 import com.tencent.devops.auth.service.sample.SampleAuthPermissionProjectService
 import com.tencent.devops.auth.service.sample.SampleAuthPermissionService
 import com.tencent.devops.auth.service.sample.SampleGrantPermissionServiceImpl
@@ -129,4 +131,8 @@ class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(AuthAuthorizationScopesService::class)
     fun sampleAuthAuthorizationScopesService() = SampleAuthAuthorizationScopesService()
+
+    @Bean
+    @ConditionalOnMissingBean(AuthMonitorSpaceService::class)
+    fun sampleAuthMonitorSpaceService() = SampleAuthMonitorSpaceService()
 }

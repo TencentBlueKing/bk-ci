@@ -2,7 +2,6 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
@@ -12,29 +11,16 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
-import com.tencent.devops.auth.pojo.MonitorSpaceCreateInfo
-import com.tencent.devops.auth.pojo.MonitorSpaceDetailVO
-import com.tencent.devops.auth.pojo.MonitorSpaceUpdateInfo
-import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
 
-@Suppress("TooManyFunctions", "LongParameterList")
 class RbacPermissionAuthorizationScopesService constructor(
     private val systemService: SystemService,
-    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
-    private val dslContext: DSLContext,
+    private val authMonitorSpaceService: AuthMonitorSpaceService,
     private val objectMapper: ObjectMapper,
     private val iamConfiguration: IamConfiguration
 ) : AuthAuthorizationScopesService {
@@ -44,17 +30,9 @@ class RbacPermissionAuthorizationScopesService constructor(
         .expireAfterWrite(7, TimeUnit.DAYS)
         .build<String/*配置名称*/, String/*配置*/>()
 
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
-
-    @Value("\${monitor.url:#{null}}")
-    private val monitorUrlPrefix = ""
-
     @Value("\${monitor.register:false}")
     private val registerMonitor: Boolean = false
+
     override fun generateBkciAuthorizationScopes(
         authorizationScopesStr: String,
         projectCode: String,
@@ -72,6 +50,7 @@ class RbacPermissionAuthorizationScopesService constructor(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun buildAuthorizationScopes(
         systemId: String,
         authorizationScopesStr: String,
@@ -99,7 +78,7 @@ class RbacPermissionAuthorizationScopesService constructor(
     ): List<AuthorizationScopes> {
         if (!registerMonitor)
             return listOf()
-        val spaceBizId = getSpaceBizId(
+        val spaceBizId = authMonitorSpaceService.getMonitorSpaceBizId(
             projectName = projectName,
             projectCode = projectCode,
             groupCode = groupCode,
@@ -116,125 +95,6 @@ class RbacPermissionAuthorizationScopesService constructor(
         )
     }
 
-    private fun getSpaceBizId(
-        projectName: String,
-        projectCode: String,
-        groupCode: String,
-        userId: String?
-    ): String {
-        logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
-        // 如果组id为GRADE_ADMIN，并且数据库中有数据，那么得修改空间名称
-        val monitorSpaceRecord = authMonitorSpaceDao.get(dslContext, projectCode)
-        if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
-            return if (monitorSpaceRecord != null) {
-                updateMonitorSpace(
-                    projectCode = projectCode,
-                    monitorSpaceUpdateInfo = MonitorSpaceUpdateInfo(
-                        spaceName = projectName,
-                        spaceTypeId = appCode,
-                        spaceUid = monitorSpaceRecord.spaceUid,
-                        updater = userId!!
-                    )
-                )
-            } else {
-                createMonitorSpace(
-                    MonitorSpaceCreateInfo(
-                        spaceName = projectName,
-                        spaceTypeId = appCode,
-                        spaceId = projectCode,
-                        creator = requireNotNull(userId)
-                    )
-                )
-            }
-        }
-        return monitorSpaceRecord?.spaceBizId?.toString()
-            ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                defaultMessage = "The monitoring space($projectCode) does not exist "
-            )
-    }
-
-    private fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String {
-        executeHttpRequest(
-            urlSuffix = MONITOR_SPACE_CREATE_SUFFIX,
-            method = POST_METHOD,
-            body = monitorSpaceCreateInfo
-        ).data?.let { monitorSpaceDetailData ->
-            val monitorSpaceDetail = generateMonitorSpaceDetail(monitorSpaceDetailData)
-                ?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                    defaultMessage = "The monitoring space(${monitorSpaceCreateInfo.spaceId}) does not exist "
-                )
-            authMonitorSpaceDao.create(
-                dslContext = dslContext,
-                projectCode = monitorSpaceDetail.spaceId!!,
-                spaceBizId = monitorSpaceDetail.id!!,
-                spaceUid = monitorSpaceDetail.spaceUid!!,
-                creator = monitorSpaceCreateInfo.creator
-            )
-            return monitorSpaceDetail.id.toString()
-        }
-        throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-            defaultMessage = "Failed to create the monitoring space(${monitorSpaceCreateInfo.spaceId})"
-        )
-    }
-
-    private fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? {
-        val monitorSpaceDetailData = executeHttpRequest(
-            urlSuffix = MONITOR_SPACE_DETAIL_SUFFIX.format(spaceUid),
-            method = GET_METHOD
-        ).data
-        return generateMonitorSpaceDetail(monitorSpaceDetailData)
-    }
-
-    private fun updateMonitorSpace(
-        projectCode: String,
-        monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo
-    ): String {
-        executeHttpRequest(
-            urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
-            method = POST_METHOD,
-            body = monitorSpaceUpdateInfo
-        ).data?.let { monitorSpaceDetailData ->
-            val monitorSpaceDetail = generateMonitorSpaceDetail(monitorSpaceDetailData)
-                ?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                    defaultMessage = "The monitoring space(${monitorSpaceUpdateInfo.spaceName}) does not exist "
-                )
-            // 修改数据库
-            authMonitorSpaceDao.update(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                spaceUid = monitorSpaceDetail.spaceUid!!,
-                updateUser = monitorSpaceUpdateInfo.updater
-            )
-            return monitorSpaceDetail.id.toString()
-        }
-        throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-            defaultMessage = "Failed to create the monitoring space(${monitorSpaceUpdateInfo.spaceName})"
-        )
-    }
-
-    private fun generateMonitorSpaceDetail(monitorSpaceDetailData: Any?): MonitorSpaceDetailVO? {
-        if (monitorSpaceDetailData == null)
-            return null
-        val monitorSpaceDetailMap = monitorSpaceDetailData as Map<*, *>
-        val monitorSpaceDetailVO =
-            MonitorSpaceDetailVO(
-                id = monitorSpaceDetailMap["id"]?.toString()?.toLong(),
-                spaceName = monitorSpaceDetailMap["space_name"] as String?,
-                spaceTypeId = monitorSpaceDetailMap["space_type_id"] as String?,
-                spaceId = monitorSpaceDetailMap["space_id"] as String?,
-                spaceUid = monitorSpaceDetailMap["space_uid"] as String?,
-                status = monitorSpaceDetailMap["status"] as String?,
-                creator = monitorSpaceDetailMap["creator"] as String?
-            )
-        logger.info("generateMonitorSpaceDetail:monitorSpaceDetailVO($monitorSpaceDetailVO)")
-        return monitorSpaceDetailVO
-    }
-
     private fun getMonitorGroupConfig(groupCode: String): String? {
         val configName = when (groupCode) {
             BkAuthGroup.GRADE_ADMIN.value -> MANAGER_GROUP_CONFIG_NAME
@@ -245,7 +105,7 @@ class RbacPermissionAuthorizationScopesService constructor(
     }
 
     private fun putAndGetMonitorGroupConfigCache(configName: String): String? {
-        // 0、构造 三个授权范围组，分别为管理员配置、业务只读配置、业务运维配置
+        // 0、构造 三个授权范围组，分别为管理员配置、业务运维配置、业务只读配置
         val managerGroupConfig = mutableListOf<AuthorizationScopes>()
         val opGroupConfig = mutableListOf<AuthorizationScopes>()
         val readOnlyGroupConfig = mutableListOf<AuthorizationScopes>()
@@ -338,42 +198,6 @@ class RbacPermissionAuthorizationScopesService constructor(
         }
     }
 
-    private fun executeHttpRequest(urlSuffix: String, method: String, body: Any? = null): ResponseDTO {
-        val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
-        val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
-        val url = monitorUrlPrefix + urlSuffix
-
-        val requestBody = body?.let {
-            objectMapper.writeValueAsString(it).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        }
-
-        val requestBuilder = Request.Builder()
-            .url(url)
-            .addHeader("x-bkapi-authorization", headerStr)
-
-        when (method) {
-            GET_METHOD -> requestBuilder.get()
-            POST_METHOD -> requestBuilder.post(requestBody!!)
-        }
-        OkhttpUtils.doHttp(requestBuilder.build()).use {
-            if (!it.isSuccessful) {
-                logger.warn("request failed, uri:($url)|response: ($it)")
-                throw RemoteServiceException("request failed, response:($it)")
-            }
-            logger.info("executeHttpRequest:${it.body!!}")
-            val responseStr = it.body!!.string()
-            logger.info("executeHttpRequest:$responseStr")
-            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
-            if (responseDTO.code != REQUEST_SUCCESS_CODE) {
-                // 请求错误
-                logger.warn("request failed, url:($url)|response :($it)")
-                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
-            }
-            logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
-            return responseDTO
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionAuthorizationScopesService::class.java)
         private const val SYSTEM_PLACEHOLDER = "#system#"
@@ -387,12 +211,6 @@ class RbacPermissionAuthorizationScopesService constructor(
         private const val READ_ONLY_GROUP_CONFIG_NAME = "readOnlyGroupConfig"
         private const val READ_ONLY_ACTIONS = "Read-only Actions"
         private const val OPS_ACTIONS = "Ops Actions"
-        private const val MONITOR_SPACE_CREATE_SUFFIX = "metadata_create_space"
-        private const val MONITOR_SPACE_UPDATE_SUFFIX = "metadata_update_space"
-        private const val MONITOR_SPACE_DETAIL_SUFFIX = "metadata_get_space_detail?space_uid=%s"
-        private const val POST_METHOD = "POST"
-        private const val GET_METHOD = "GET"
         private const val MONITOR_SYSTEM_ID = "bk_monitorv3"
-        private const val REQUEST_SUCCESS_CODE = 200L
     }
 }
