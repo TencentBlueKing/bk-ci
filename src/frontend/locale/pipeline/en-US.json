@@ -1176,5 +1176,5 @@
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
   "nonManual": "Non Manual",
-  "downloadDisabledTips": "The file size in the directory exceeds 10 G. Please go to the BKrepo to download in batches."
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository."
 }
