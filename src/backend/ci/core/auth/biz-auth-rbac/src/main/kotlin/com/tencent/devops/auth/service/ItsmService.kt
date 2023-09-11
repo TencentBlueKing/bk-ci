@@ -192,7 +192,7 @@ class ItsmService @Autowired constructor(
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
             .value(emptyList())
-            .label(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_APPLY_TO_JOIN_PROJECT))
+            .label(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_APPLY_TO_JOIN_GROUP))
             .build()
         return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
     }
