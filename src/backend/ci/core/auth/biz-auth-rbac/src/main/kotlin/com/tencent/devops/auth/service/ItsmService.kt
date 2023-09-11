@@ -159,7 +159,7 @@ class ItsmService @Autowired constructor(
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
-            .lable(
+            .label(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
             )
             .value(listOf(value))
@@ -192,7 +192,7 @@ class ItsmService @Autowired constructor(
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
             .value(emptyList())
-            .lable("resource detail")
+            .label(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_APPLY_TO_JOIN_PROJECT))
             .build()
         return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
     }
