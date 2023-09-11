@@ -43,9 +43,9 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_SERVICE'
-                    AND COLUMN_NAME = 'CLUSTER_TYPE') THEN
+                    AND COLUMN_NAME = 'cluster_type') THEN
     ALTER TABLE `T_SERVICE`
-        ADD COLUMN `CLUSTER_TYPE` VARCHAR(32) DEFAULT '' comment '集群类型';
+        ADD COLUMN `cluster_type` VARCHAR(32) NOT NULL DEFAULT '' comment '集群类型';
     END IF;
 
     COMMIT;
