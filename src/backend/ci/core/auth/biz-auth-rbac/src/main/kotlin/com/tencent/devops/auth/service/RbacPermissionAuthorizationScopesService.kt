@@ -1,8 +1,10 @@
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -17,9 +19,9 @@ import com.tencent.devops.auth.pojo.MonitorSpaceUpdateInfo
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -28,16 +30,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList")
-class RbacPermissionMonitorService constructor(
+@Suppress("TooManyFunctions", "LongParameterList")
+class RbacPermissionAuthorizationScopesService constructor(
     private val systemService: SystemService,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper
-) : AuthMonitorService {
+    private val objectMapper: ObjectMapper,
+    private val iamConfiguration: IamConfiguration
+) : AuthAuthorizationScopesService {
     /*监控平台组配置*/
     private val monitorGroupConfigCache = Caffeine.newBuilder()
-        .maximumSize(10)
+        .maximumSize(20)
         .expireAfterWrite(7, TimeUnit.DAYS)
         .build<String/*配置名称*/, String/*配置*/>()
 
@@ -52,6 +55,41 @@ class RbacPermissionMonitorService constructor(
 
     @Value("\${monitor.register:false}")
     private val registerMonitor: Boolean = false
+    override fun generateBkciAuthorizationScopes(
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        iamResourceCode: String,
+        resourceName: String
+    ): List<AuthorizationScopes> {
+        return buildAuthorizationScopes(
+            systemId = iamConfiguration.systemId,
+            authorizationScopesStr = authorizationScopesStr,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = iamResourceCode,
+            resourceName = resourceName
+        )
+    }
+
+    private fun buildAuthorizationScopes(
+        systemId: String,
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        iamResourceCode: String,
+        resourceName: String
+    ): List<AuthorizationScopes> {
+        val replaceAuthorizationScopesStr =
+            authorizationScopesStr.replace(SYSTEM_PLACEHOLDER, systemId)
+                .replace(PROJECT_ID_PLACEHOLDER, projectCode)
+                .replace(PROJECT_NAME_PLACEHOLDER, projectName)
+                .replace(RESOURCE_CODE_PLACEHOLDER, iamResourceCode)
+                // 如果资源名中有\,需要转义,不然json序列化时会报错
+                .replace(RESOURCE_NAME_PLACEHOLDER, resourceName.replace("\\", "\\\\"))
+        logger.info("$systemId|$projectCode authorization scopes after replace $replaceAuthorizationScopesStr ")
+        return JsonUtil.to(replaceAuthorizationScopesStr, object : TypeReference<List<AuthorizationScopes>>() {})
+    }
 
     override fun generateMonitorAuthorizationScopes(
         projectName: String,
@@ -68,7 +106,7 @@ class RbacPermissionMonitorService constructor(
             userId = userId
         )
         logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$spaceBizId")
-        return RbacAuthUtils.buildAuthorizationScopes(
+        return buildAuthorizationScopes(
             systemId = MONITOR_SYSTEM_ID,
             authorizationScopesStr = getMonitorGroupConfig(groupCode)!!,
             projectCode = "-$spaceBizId",
@@ -116,7 +154,7 @@ class RbacPermissionMonitorService constructor(
             )
     }
 
-    override fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String {
+    private fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String {
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_CREATE_SUFFIX,
             method = POST_METHOD,
@@ -142,7 +180,7 @@ class RbacPermissionMonitorService constructor(
         )
     }
 
-    override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? {
+    private fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? {
         val monitorSpaceDetailData = executeHttpRequest(
             urlSuffix = MONITOR_SPACE_DETAIL_SUFFIX.format(spaceUid),
             method = GET_METHOD
@@ -337,9 +375,12 @@ class RbacPermissionMonitorService constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionMonitorService::class.java)
+        private val logger = LoggerFactory.getLogger(RbacPermissionAuthorizationScopesService::class.java)
+        private const val SYSTEM_PLACEHOLDER = "#system#"
         private const val PROJECT_ID_PLACEHOLDER = "#projectId#"
         private const val PROJECT_NAME_PLACEHOLDER = "#projectName#"
+        private const val RESOURCE_CODE_PLACEHOLDER = "#resourceCode#"
+        private const val RESOURCE_NAME_PLACEHOLDER = "#resourceName#"
         private const val SPACE_RESOURCE_TYPE = "space"
         private const val MANAGER_GROUP_CONFIG_NAME = "managerGroupConfig"
         private const val OP_GROUP_CONFIG_NAME = "opGroupConfig"

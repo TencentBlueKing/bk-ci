@@ -74,7 +74,6 @@ import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS_NAME
 import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -100,7 +99,7 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val itsmService: ItsmService,
-    private val authMonitorService: AuthMonitorService
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService
 ) {
 
     companion object {
@@ -148,8 +147,7 @@ class PermissionGradeManagerService @Autowired constructor(
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
         val description = manageGroupConfig.description
-        var authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
-            systemId = iamConfiguration.systemId,
+        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -167,7 +165,7 @@ class PermissionGradeManagerService @Autowired constructor(
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             logger.info("create grade manager|$name|$userId")
             // 若为不需要审批的项目，直接注册
-            val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
                 projectCode = projectCode,
                 groupCode = BkAuthGroup.GRADE_ADMIN.value,
@@ -374,15 +372,14 @@ class PermissionGradeManagerService @Autowired constructor(
         creator: String,
         bkciManagerGroupConfig: String
     ): List<AuthorizationScopes> {
-        val bkciAuthorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
-            systemId = iamConfiguration.systemId,
+        val bkciAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = bkciManagerGroupConfig,
             projectCode = projectCode,
             projectName = projectName,
             iamResourceCode = projectCode,
             resourceName = projectName
         )
-        val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
+        val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
             projectName = projectName,
             projectCode = projectCode,
             groupCode = BkAuthGroup.GRADE_ADMIN.value,

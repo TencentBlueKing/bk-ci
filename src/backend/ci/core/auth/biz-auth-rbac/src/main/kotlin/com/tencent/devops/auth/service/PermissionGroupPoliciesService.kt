@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST
@@ -40,7 +39,6 @@ import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 
 /**
@@ -48,13 +46,12 @@ import org.jooq.DSLContext
  */
 @Suppress("LongParameterList", "LongMethod")
 class PermissionGroupPoliciesService(
-    private val iamConfiguration: IamConfiguration,
     private val iamV2ManagerService: V2ManagerService,
     private val authActionDao: AuthActionDao,
     private val dslContext: DSLContext,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authMonitorService: AuthMonitorService
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService
 ) {
     fun grantGroupPermission(
         authorizationScopesStr: String,
@@ -66,8 +63,7 @@ class PermissionGroupPoliciesService(
         resourceName: String,
         iamGroupId: Int
     ) {
-        var authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
-            systemId = iamConfiguration.systemId,
+        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
@@ -76,7 +72,7 @@ class PermissionGroupPoliciesService(
         )
         if (resourceType == AuthResourceType.PROJECT.value) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
-            val monitorAuthorizationScopes = authMonitorService.generateMonitorAuthorizationScopes(
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
                 projectCode = projectCode,
                 groupCode = groupCode

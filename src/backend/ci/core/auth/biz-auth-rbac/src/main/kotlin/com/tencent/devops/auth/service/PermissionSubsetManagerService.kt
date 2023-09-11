@@ -43,19 +43,18 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class PermissionSubsetManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val authResourceNameConverter: AuthResourceNameConverter,
-    private val iamConfiguration: IamConfiguration
 ) {
 
     companion object {
@@ -91,8 +90,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
         val description = managerGroupConfig.description
-        val authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
-            systemId = iamConfiguration.systemId,
+        val authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -144,8 +142,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
 
-        val authorizationScopes = RbacAuthUtils.buildAuthorizationScopes(
-            systemId = iamConfiguration.systemId,
+        val authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,

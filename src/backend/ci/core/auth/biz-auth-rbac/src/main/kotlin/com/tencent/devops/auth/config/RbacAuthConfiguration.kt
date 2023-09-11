@@ -59,7 +59,7 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionApplyService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
-import com.tencent.devops.auth.service.RbacPermissionMonitorService
+import com.tencent.devops.auth.service.RbacPermissionAuthorizationScopesService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
@@ -478,15 +478,17 @@ class RbacAuthConfiguration {
     ) = SystemServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    fun rbacPermissionMonitorService(
+    fun rbacPermissionAuthorizationScopesService(
         systemService: SystemService,
         authMonitorSpaceDao: AuthMonitorSpaceDao,
         dslContext: DSLContext,
-        objectMapper: ObjectMapper
-    ) = RbacPermissionMonitorService(
+        objectMapper: ObjectMapper,
+        iamConfiguration: IamConfiguration
+    ) = RbacPermissionAuthorizationScopesService(
         systemService = systemService,
         authMonitorSpaceDao = authMonitorSpaceDao,
         dslContext = dslContext,
-        objectMapper = objectMapper
+        objectMapper = objectMapper,
+        iamConfiguration = iamConfiguration
     )
 }
