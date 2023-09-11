@@ -33,7 +33,7 @@ import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService

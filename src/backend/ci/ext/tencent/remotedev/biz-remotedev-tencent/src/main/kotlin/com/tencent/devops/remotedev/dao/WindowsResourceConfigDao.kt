@@ -29,8 +29,11 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
+import com.tencent.devops.model.remotedev.tables.TZone
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.model.remotedev.tables.records.TZoneRecord
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.ZoneConfig
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -71,6 +74,22 @@ class WindowsResourceConfigDao {
         }
     }
 
+    fun saveZone(
+        dslContext: DSLContext,
+        config: ZoneConfig
+    ): Long {
+        return with(TZone.T_ZONE) {
+            dslContext.insertInto(
+                this,
+                ZONE,
+                SHORT_NAME
+            ).values(
+                config.zone,
+                config.shortName
+            ).returning(ID).fetchOne()!!.id
+        }
+    }
+
     fun fetchAll(
         dslContext: DSLContext,
         withUnavailable: Boolean = false
@@ -79,6 +98,16 @@ class WindowsResourceConfigDao {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
             }
+                .skipCheck()
+                .fetch()
+        }
+    }
+
+    fun fetchAllZone(
+        dslContext: DSLContext
+    ): List<TZoneRecord> {
+        return with(TZone.T_ZONE) {
+            dslContext.selectFrom(this)
                 .skipCheck()
                 .fetch()
         }
@@ -134,11 +163,37 @@ class WindowsResourceConfigDao {
         }
     }
 
+    fun updateWindowsZoneConfig(
+        id: Long,
+        config: ZoneConfig,
+        dslContext: DSLContext
+    ) {
+        with(TZone.T_ZONE) {
+            dslContext.update(this)
+                .set(ZONE, config.zone)
+                .set(SHORT_NAME, config.shortName)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun deleteWindowsResource(
         id: Long,
         dslContext: DSLContext
     ) {
         with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+            dslContext.delete(this)
+                .where(ID.eq(id))
+                .limit(1)
+                .execute()
+        }
+    }
+
+    fun deleteWindowsZone(
+        id: Long,
+        dslContext: DSLContext
+    ) {
+        with(TZone.T_ZONE) {
             dslContext.delete(this)
                 .where(ID.eq(id))
                 .limit(1)

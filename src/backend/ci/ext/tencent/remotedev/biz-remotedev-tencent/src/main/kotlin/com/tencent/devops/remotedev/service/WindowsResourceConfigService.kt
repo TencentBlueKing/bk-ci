@@ -29,7 +29,8 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.remotedev.dao.WindowsResourceConfigDao
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.ZoneConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,6 +69,17 @@ class WindowsResourceConfigService @Autowired constructor(
                 it.disk,
                 it.hdisk,
                 it.description
+            )
+        }
+    }
+
+    fun getAllZone(): List<ZoneConfig> {
+        logger.info("get all windows zone config")
+        return windowsResourceConfigDao.fetchAllZone(dslContext).map {
+            ZoneConfig(
+                it.id,
+                it.zone,
+                it.shortName
             )
         }
     }
@@ -142,6 +154,24 @@ class WindowsResourceConfigService @Autowired constructor(
         return true
     }
 
+    fun updateWindowsZone(
+        id: Long,
+        zoneConfig: ZoneConfig
+    ): Boolean {
+        logger.info(
+            "WorkspaceTemplateService|updateWindowsZone|" +
+                "id|$id|zoneConfig|$zoneConfig"
+        )
+
+        // 更新模板信息
+        windowsResourceConfigDao.updateWindowsZoneConfig(
+            id = id,
+            config = zoneConfig,
+            dslContext = dslContext
+        )
+        return true
+    }
+
     fun deleteWindowsResource(
         id: Long
     ): Boolean {
@@ -152,6 +182,27 @@ class WindowsResourceConfigService @Autowired constructor(
             dslContext = dslContext
         )
 
+        return true
+    }
+
+    fun deleteWindowsZone(
+        id: Long
+    ): Boolean {
+        logger.info("WindowsResourceConfigService|deleteWindowsZone|id|$id")
+        // 删除模板信息
+        windowsResourceConfigDao.deleteWindowsZone(
+            id = id,
+            dslContext = dslContext
+        )
+
+        return true
+    }
+
+    // 添加地域信息
+    fun addWindowsZone(zoneConfig: ZoneConfig): Boolean {
+        logger.info("WorkspaceTemplateService|addWindowsZone|zoneConfig|$zoneConfig")
+        // 地域信息写入DB
+        windowsResourceConfigDao.saveZone(dslContext, zoneConfig)
         return true
     }
 }
