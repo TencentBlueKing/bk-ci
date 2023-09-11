@@ -28,7 +28,6 @@
 package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired

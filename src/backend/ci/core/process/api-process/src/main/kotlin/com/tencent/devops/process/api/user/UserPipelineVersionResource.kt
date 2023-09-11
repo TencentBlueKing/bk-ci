@@ -168,7 +168,6 @@ interface UserPipelineVersionResource {
         pageSize: Int?
     ): Result<Page<String>>
 
-    // TODO 给出主路径的bool
     @ApiOperation("流水线编排版本列表（搜索、分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/versions")
@@ -255,6 +254,4 @@ interface UserPipelineVersionResource {
         @QueryParam("version")
         version: Int
     ): Result<Boolean>
-
-    // TODO #8161 模板查询：返回模板的model和yaml用于展示，在新建预览页带简要配置信息：3个bool
 }

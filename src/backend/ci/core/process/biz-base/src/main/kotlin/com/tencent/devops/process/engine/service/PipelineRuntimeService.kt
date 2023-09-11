@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -67,7 +65,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
-import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -114,7 +111,6 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.app.StartBuildContext
-import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -141,7 +137,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.LocalDateTime
 import java.util.Date
 
@@ -216,8 +211,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildInfo(projectId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
-        return pipelineBuildDao.convert(t)
+        return pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
     }
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
@@ -450,12 +444,11 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun genBuildHistory(
-        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
+        buildInfo: BuildInfo,
         buildStatus: Array<BuildStatus>,
         currentTimestamp: Long
     ): BuildHistory {
-        return with(tPipelineBuildHistoryRecord) {
-            val channelCode = ChannelCode.valueOf(channel)
+        return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
             BuildHistory(
                 id = buildId,
@@ -467,44 +460,27 @@ class PipelineRuntimeService @Autowired constructor(
                 ),
                 buildNum = buildNum,
                 pipelineVersion = version,
-                startTime = startTime?.timestampmilli() ?: 0L,
-                endTime = endTime?.timestampmilli(),
-                status = buildStatus[status].name,
-                stageStatus = stageStatus?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<BuildStageStatus>>() {})
-                },
+                startTime = startTime ?: 0L,
+                endTime = endTime,
+                status = status.name,
+                stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material =
-                material?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<PipelineBuildMaterial>?>() {})
-                        ?.sortedBy { it.aliasName }
-                },
-                queueTime = queueTime?.timestampmilli(),
-                artifactList = artifactInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
-                },
+                material = material?.sortedBy { it.aliasName },
+                queueTime = queueTime,
+                artifactList = artifactList,
                 remark = remark,
-                totalTime = startTime?.let { s -> endTime?.let { e -> Duration.between(s, e).toMillis() } ?: 0 } ?: 0,
-                executeTime = executeTime ?: 0L,
-                buildParameters = buildParameters?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<List<BuildParameters>?>() {})
-                },
+                totalTime = startTime?.let { s -> endTime?.let { e -> e - s } ?: 0 } ?: 0,
+                executeTime = executeTime,
+                buildParameters = buildParameters,
                 webHookType = webhookType,
-                webhookInfo = webhookInfo?.let { self -> JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {}) },
+                webhookInfo = webhookInfo,
                 startType = StartType.transform(trigger, webhookType),
                 recommendVersion = recommendVersion,
                 retry = executeCount?.let { it > 1 } == true,
-                errorInfoList = errorInfo?.let { self ->
-                    // 特殊兼容修改数据类型前的老数据，必须保留try catch
-                    try {
-                        JsonUtil.to(self, object : TypeReference<List<ErrorInfo>?>() {})
-                    } catch (ignore: Throwable) {
-                        null
-                    }
-                },
+                errorInfoList = errorInfoList,
                 buildMsg = BuildMsgUtils.getBuildMsg(buildMsg, startType = startType, channelCode = channelCode),
                 buildNumAlias = buildNumAlias,
-                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L, // 防止空异常
+                updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount
             )
@@ -664,7 +640,7 @@ class PipelineRuntimeService @Autowired constructor(
         val lastTimeBuildContainers = pipelineContainerService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(context.projectId, context.buildId)
 
-        val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
+        val buildHistory = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
         context.watcher.stop()
         // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
@@ -894,26 +870,26 @@ class PipelineRuntimeService @Autowired constructor(
 
         val modelJson = JsonUtil.toJson(fullModel, formatted = false)
 
-        if (buildHistoryRecord != null) {
+        if (buildHistory != null) {
             if (context.retryStartTaskId.isNullOrBlank()) { // 完整重试,重置启动时间
-                buildHistoryRecord.startTime = context.now
+                buildHistory.startTime = context.now.timestampmilli()
             }
-            buildHistoryRecord.endTime = null
-            buildHistoryRecord.queueTime = context.now // for EPC
-            buildHistoryRecord.status = context.startBuildStatus.ordinal
-            buildHistoryRecord.concurrencyGroup = context.concurrencyGroup
+            buildHistory.endTime = null
+            buildHistory.queueTime = context.now.timestampmilli() // for EPC
+            buildHistory.status = context.startBuildStatus
+            buildHistory.concurrencyGroup = context.concurrencyGroup
             // 重试时启动参数只需要刷新执行次数
-            buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
+            buildHistory.buildParameters = buildHistory.buildParameters?.let { self ->
+                val newList = self.toMutableList()
                 val retryCount = context.executeCount - 1
-                val list = JsonUtil.getObjectMapper().readValue(self) as MutableList<BuildParameters>
-                list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                newList.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
                     param.value = retryCount
                 } ?: run {
-                    list.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
+                    newList.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
                 }
-                JsonUtil.toJson(list, formatted = false)
+                newList
             }
-            context.buildNum = buildHistoryRecord.buildNum
+            context.buildNum = buildHistory.buildNum
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
             context.genBuildNumAlias()
@@ -921,8 +897,8 @@ class PipelineRuntimeService @Autowired constructor(
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            if (buildHistoryRecord != null) {
-                transactionContext.batchStore(buildHistoryRecord).execute()
+            if (buildHistory != null) {
+
                 // 重置状态和人
                 buildDetailDao.update(
                     dslContext = transactionContext,
@@ -1211,7 +1187,8 @@ class PipelineRuntimeService @Autowired constructor(
                 firstTaskId = buildInfo.firstTaskId,
                 actionType = ActionType.START,
                 startBuildStatus = BuildStatus.QUEUE,
-                startType = StartType.toStartType(buildInfo.trigger)
+                startType = StartType.toStartType(buildInfo.trigger),
+                debug = buildInfo.debug
             ).apply {
                 buildNoType = null // 该字段是需要遍历Model获得，不过在审核阶段为null，目前不影响功能逻辑。
             }.sendBuildStartEvent()

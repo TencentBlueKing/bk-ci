@@ -87,6 +87,7 @@ import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -898,7 +899,8 @@ class TemplateFacadeService @Autowired constructor(
                     logoUrl = logoUrl ?: "",
                     category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
                         .readValue(categoryStr, List::class.java) as List<String> else listOf(),
-                    stages = model.stages
+                    stages = model.stages,
+                    cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(setting)
                 )
             }
         }

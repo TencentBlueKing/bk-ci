@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -39,7 +41,9 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryDebugRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -51,7 +55,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
-import org.jooq.Result
+import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -63,58 +67,111 @@ import javax.ws.rs.core.Response
 class PipelineBuildDao {
 
     companion object {
+        private val mapper = PipelineBuildInfoJooqMapper()
+        private val debugMapper = PipelineDebugBuildInfoJooqMapper()
         private const val DEFAULT_PAGE_SIZE = 10
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
-            with(T_PIPELINE_BUILD_HISTORY) {
-                dslContext.insertInto(
-                    this,
-                    BUILD_ID,
-                    BUILD_NUM,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    PARENT_BUILD_ID,
-                    PARENT_TASK_ID,
-                    START_USER,
-                    TRIGGER_USER,
-                    STATUS,
-                    TRIGGER,
-                    TASK_COUNT,
-                    FIRST_TASK_ID,
-                    CHANNEL,
-                    VERSION,
-                    QUEUE_TIME,
-                    BUILD_PARAMETERS,
-                    WEBHOOK_TYPE,
-                    WEBHOOK_INFO,
-                    BUILD_MSG,
-                    BUILD_NUM_ALIAS,
-                    CONCURRENCY_GROUP
-                ).values(
-                    startBuildContext.buildId,
-                    startBuildContext.buildNum,
-                    startBuildContext.projectId,
-                    startBuildContext.pipelineId,
-                    startBuildContext.parentBuildId,
-                    startBuildContext.parentTaskId,
-                    startBuildContext.userId,
-                    startBuildContext.triggerUser,
-                    startBuildContext.startBuildStatus.ordinal,
-                    startBuildContext.startType.name,
-                    startBuildContext.taskCount,
-                    startBuildContext.firstTaskId,
-                    startBuildContext.channelCode.name,
-                    startBuildContext.resourceVersion,
-                    LocalDateTime.now(),
-                    JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
-                    startBuildContext.webhookInfo?.webhookType,
-                    startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                    startBuildContext.buildMsg,
-                    startBuildContext.buildNumAlias,
-                    startBuildContext.concurrencyGroup
-                ).execute()
+            if (!startBuildContext.debug) {
+                with(T_PIPELINE_BUILD_HISTORY) {
+                    dslContext.insertInto(
+                        this,
+                        BUILD_ID,
+                        BUILD_NUM,
+                        PROJECT_ID,
+                        PIPELINE_ID,
+                        PARENT_BUILD_ID,
+                        PARENT_TASK_ID,
+                        START_USER,
+                        TRIGGER_USER,
+                        STATUS,
+                        TRIGGER,
+                        TASK_COUNT,
+                        FIRST_TASK_ID,
+                        CHANNEL,
+                        VERSION,
+                        QUEUE_TIME,
+                        BUILD_PARAMETERS,
+                        WEBHOOK_TYPE,
+                        WEBHOOK_INFO,
+                        BUILD_MSG,
+                        BUILD_NUM_ALIAS,
+                        CONCURRENCY_GROUP
+                    ).values(
+                        startBuildContext.buildId,
+                        startBuildContext.buildNum,
+                        startBuildContext.projectId,
+                        startBuildContext.pipelineId,
+                        startBuildContext.parentBuildId,
+                        startBuildContext.parentTaskId,
+                        startBuildContext.userId,
+                        startBuildContext.triggerUser,
+                        startBuildContext.startBuildStatus.ordinal,
+                        startBuildContext.startType.name,
+                        startBuildContext.taskCount,
+                        startBuildContext.firstTaskId,
+                        startBuildContext.channelCode.name,
+                        startBuildContext.resourceVersion,
+                        LocalDateTime.now(),
+                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                        startBuildContext.webhookInfo?.webhookType,
+                        startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                        startBuildContext.buildMsg,
+                        startBuildContext.buildNumAlias,
+                        startBuildContext.concurrencyGroup
+                    ).execute()
+                }
+            } else {
+                with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                    dslContext.insertInto(
+                        this,
+                        BUILD_ID,
+                        BUILD_NUM,
+                        PROJECT_ID,
+                        PIPELINE_ID,
+                        PARENT_BUILD_ID,
+                        PARENT_TASK_ID,
+                        START_USER,
+                        TRIGGER_USER,
+                        STATUS,
+                        TRIGGER,
+                        TASK_COUNT,
+                        FIRST_TASK_ID,
+                        CHANNEL,
+                        VERSION,
+                        QUEUE_TIME,
+                        BUILD_PARAMETERS,
+                        WEBHOOK_TYPE,
+                        WEBHOOK_INFO,
+                        BUILD_MSG,
+                        BUILD_NUM_ALIAS,
+                        CONCURRENCY_GROUP
+                    ).values(
+                        startBuildContext.buildId,
+                        startBuildContext.buildNum,
+                        startBuildContext.projectId,
+                        startBuildContext.pipelineId,
+                        startBuildContext.parentBuildId,
+                        startBuildContext.parentTaskId,
+                        startBuildContext.userId,
+                        startBuildContext.triggerUser,
+                        startBuildContext.startBuildStatus.ordinal,
+                        startBuildContext.startType.name,
+                        startBuildContext.taskCount,
+                        startBuildContext.firstTaskId,
+                        startBuildContext.channelCode.name,
+                        startBuildContext.resourceVersion,
+                        LocalDateTime.now(),
+                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                        startBuildContext.webhookInfo?.webhookType,
+                        startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                        startBuildContext.buildMsg,
+                        startBuildContext.buildNumAlias,
+                        startBuildContext.concurrencyGroup
+                    ).execute()
+                }
             }
         } catch (t: Throwable) {
             throw ErrorCodeException(
@@ -125,6 +182,17 @@ class PipelineBuildDao {
         }
     }
 
+//    fun updateBuildInfo(
+//        dslContext: DSLContext,
+//        projectId: String,
+//        pipelineId: String,
+//        buildId: String,
+//        buildInfo: BuildInfo
+//    ): Int {
+//        transactionContext.batchStore(buildHistory).execute()
+//        mapper.
+//    }
+
     /**
      * 读取指定状态下的构建
      */
@@ -133,16 +201,25 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         statusSet: Set<BuildStatus>?
-    ): Result<TPipelineBuildHistoryRecord?> {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+    ): List<BuildInfo> {
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
             if (!statusSet.isNullOrEmpty()) {
                 where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
-            where.fetch()
+            where.fetch(mapper)
         }
+        return if (normal.isEmpty()) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val where = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            if (!statusSet.isNullOrEmpty()) {
+                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
+            }
+            where.fetch(debugMapper)
+        } else normal
     }
 
     fun getBuildTasksByConcurrencyGroup(
@@ -151,13 +228,21 @@ class PipelineBuildDao {
         concurrencyGroup: String,
         statusSet: List<BuildStatus>
     ): List<Record2<String, String>> {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
                 .fetch()
         }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
+                .fetch()
+        }
+        return normal.plus(debug)
     }
 
     fun getBuildTasksByConcurrencyGroupNull(
@@ -166,7 +251,7 @@ class PipelineBuildDao {
         pipelineId: String,
         statusSet: List<BuildStatus>
     ): List<Record2<String, String>> {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -174,23 +259,41 @@ class PipelineBuildDao {
                 .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
                 .fetch()
         }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
+                .fetch()
+        }
+        return normal.plus(debug)
     }
 
     fun getBuildInfo(
         dslContext: DSLContext,
         projectId: String,
         buildId: String
-    ): TPipelineBuildHistoryRecord? {
+    ): BuildInfo? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                .fetchAny()
+                .fetchAny(mapper)
+        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchAny(debugMapper)
         }
     }
 
     fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            return dslContext.select(START_USER)
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(START_USER)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, String::class.java)
+        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.select(START_USER)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
                 .fetchOne(0, String::class.java)
@@ -206,7 +309,7 @@ class PipelineBuildDao {
         projectId: String? = null,
         startBeginTime: String? = null,
         endBeginTime: String? = null
-    ): Result<TPipelineBuildHistoryRecord> {
+    ): List<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(BUILD_ID.`in`(buildIds))
@@ -221,7 +324,7 @@ class PipelineBuildDao {
             }
             dslContext.selectFrom(this)
                 .where(conditions)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -232,7 +335,7 @@ class PipelineBuildDao {
         offset: Int,
         limit: Int,
         updateTimeDesc: Boolean? = null
-    ): Collection<TPipelineBuildHistoryRecord> {
+    ): Collection<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -243,7 +346,7 @@ class PipelineBuildDao {
                 null -> select.orderBy(BUILD_NUM.desc())
             }
             select.limit(offset, limit)
-                .fetch()
+                .fetch(mapper)
         }
     }
 
@@ -270,7 +373,7 @@ class PipelineBuildDao {
         pipelineId: String,
         buildNum: Int?,
         statusSet: Set<BuildStatus>?
-    ): TPipelineBuildHistoryRecord? {
+    ): BuildInfo? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -285,7 +388,7 @@ class PipelineBuildDao {
             } else { // 取最新的
                 select.orderBy(BUILD_NUM.desc()).limit(1)
             }
-            select.fetchOne()
+            select.fetchOne(mapper)
         }
     }
 
@@ -540,7 +643,12 @@ class PipelineBuildDao {
                 material = t.material?.let {
                     JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                 },
-                remark = t.remark
+                buildNumAlias = t.buildNumAlias,
+                recommendVersion = t.recommendVersion,
+                webhookType = t.webhookType,
+                updateTime = t.updateTime.timestampmilli(),
+                remark = t.remark,
+                debug = false // #8164 原历史表中查出的记录均为非调试的记录
             )
         }
     }
@@ -639,7 +747,7 @@ class PipelineBuildDao {
         buildMsg: String?,
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null
-    ): Collection<TPipelineBuildHistoryRecord> {
+    ): Collection<BuildInfo> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
             makeCondition(
@@ -672,7 +780,7 @@ class PipelineBuildDao {
                 null -> where.orderBy(BUILD_NUM.desc())
             }
 
-            where.limit(offset, limit).fetch()
+            where.limit(offset, limit).fetch(mapper)
         }
     }
 
@@ -1015,6 +1123,123 @@ class PipelineBuildDao {
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    class PipelineBuildInfoJooqMapper : RecordMapper<TPipelineBuildHistoryRecord, BuildInfo> {
+        override fun map(record: TPipelineBuildHistoryRecord?): BuildInfo? {
+            return record?.let { t ->
+                BuildInfo(
+                    projectId = t.projectId,
+                    pipelineId = t.pipelineId,
+                    buildId = t.buildId,
+                    version = t.version,
+                    buildNum = t.buildNum,
+                    trigger = t.trigger,
+                    status = BuildStatus.values()[t.status],
+                    queueTime = t.queueTime?.timestampmilli() ?: 0L,
+                    startUser = t.startUser,
+                    triggerUser = t.triggerUser,
+                    startTime = t.startTime?.timestampmilli() ?: 0L,
+                    endTime = t.endTime?.timestampmilli() ?: 0L,
+                    taskCount = t.taskCount,
+                    firstTaskId = t.firstTaskId,
+                    parentBuildId = t.parentBuildId,
+                    parentTaskId = t.parentTaskId,
+                    channelCode = ChannelCode.valueOf(t.channel),
+                    errorInfoList = try {
+                        if (t.errorInfo != null) {
+                            JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo>
+                        } else null
+                    } catch (ignored: Exception) {
+                        null
+                    },
+                    stageStatus = kotlin.runCatching {
+                        JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                    }.getOrNull(),
+                    buildParameters = t.buildParameters?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                    },
+                    retryFlag = t.isRetry,
+                    executeCount = t.executeCount,
+                    executeTime = t.executeTime ?: 0,
+                    concurrencyGroup = t.concurrencyGroup,
+                    webhookType = t.webhookType,
+                    webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                    buildMsg = t.buildMsg,
+                    errorType = t.errorType,
+                    errorCode = t.errorCode,
+                    errorMsg = t.errorMsg,
+                    material = t.material?.let {
+                        JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
+                    },
+                    updateTime = t.updateTime.timestampmilli(),
+                    recommendVersion = t.recommendVersion,
+                    buildNumAlias = t.buildNumAlias,
+                    remark = t.remark,
+                    debug = false // #8164 原历史表中查出的记录均为非调试的记录
+                )
+            }
+        }
+    }
+
+    class PipelineDebugBuildInfoJooqMapper : RecordMapper<TPipelineBuildHistoryDebugRecord, BuildInfo> {
+        override fun map(record: TPipelineBuildHistoryDebugRecord?): BuildInfo? {
+            return record?.let { t ->
+                BuildInfo(
+                    projectId = t.projectId,
+                    pipelineId = t.pipelineId,
+                    buildId = t.buildId,
+                    version = t.version,
+                    buildNum = t.buildNum,
+                    trigger = t.trigger,
+                    status = BuildStatus.values()[t.status],
+                    queueTime = t.queueTime?.timestampmilli() ?: 0L,
+                    startUser = t.startUser,
+                    triggerUser = t.triggerUser,
+                    startTime = t.startTime?.timestampmilli() ?: 0L,
+                    endTime = t.endTime?.timestampmilli() ?: 0L,
+                    taskCount = t.taskCount,
+                    firstTaskId = t.firstTaskId,
+                    parentBuildId = t.parentBuildId,
+                    parentTaskId = t.parentTaskId,
+                    channelCode = ChannelCode.valueOf(t.channel),
+                    errorInfoList = try {
+                        if (t.errorInfo != null) {
+                            JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo>
+                        } else null
+                    } catch (ignored: Exception) {
+                        null
+                    },
+                    stageStatus = kotlin.runCatching {
+                        JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                    }.getOrNull(),
+                    buildParameters = t.buildParameters?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                    },
+                    retryFlag = t.isRetry,
+                    executeCount = t.executeCount,
+                    executeTime = t.executeTime ?: 0,
+                    concurrencyGroup = t.concurrencyGroup,
+                    webhookType = t.webhookType,
+                    webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                    artifactList = t.artifactInfo?.let { self ->
+                        JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
+                    },
+                    buildMsg = t.buildMsg,
+                    errorType = t.errorType,
+                    errorCode = t.errorCode,
+                    errorMsg = t.errorMsg,
+                    material = t.material?.let {
+                        JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
+                    },
+                    updateTime = t.updateTime.timestampmilli(),
+                    recommendVersion = t.recommendVersion,
+                    buildNumAlias = t.buildNumAlias,
+                    remark = t.remark,
+                    debug = false // #8164 原历史表中查出的记录均为非调试的记录
+                )
+            }
         }
     }
 }

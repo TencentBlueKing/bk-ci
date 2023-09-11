@@ -112,7 +112,7 @@ data class VariableProps(
     val glob: String? = null,
     @ApiModelProperty("文件元数据", required = false)
     val properties: Map<String, String>? = null,
-    val payload: Any? = null,
+    val payload: Any? = null
 )
 
 /**
