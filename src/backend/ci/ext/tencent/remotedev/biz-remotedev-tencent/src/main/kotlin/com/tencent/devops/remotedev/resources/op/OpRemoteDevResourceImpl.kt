@@ -10,14 +10,12 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
@@ -37,7 +35,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val dataTransferService: DataTransferService
 ) : OpRemoteDevResource {
 
@@ -129,26 +126,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
                 userId = userId, workspaceName = workspaceName, needPermission = false
             )
         )
-    }
-
-    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
-        return Result(windowsResourceConfigService.getAllConfig())
-    }
-
-    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceConfig): Result<Boolean> {
-        return Result(windowsResourceConfigService.addWindowsResource(windowsResourceConfig))
-    }
-
-    override fun updateWindowsResource(
-        userId: String,
-        id: Long,
-        windowsResourceConfig: WindowsResourceConfig
-    ): Result<Boolean> {
-        return Result(windowsResourceConfigService.updateWindowsResource(id, windowsResourceConfig))
-    }
-
-    override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
-        return Result(windowsResourceConfigService.deleteWindowsResource(id))
     }
 
     override fun getProjectWorkspaceList(
