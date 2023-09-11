@@ -29,6 +29,10 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.common.cache.CacheBuilder
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.constants.AuditAttributeNames
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -236,6 +240,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
+    @AuditEntry(actionId = "pipeline_create")
+    @ActionAuditRecord(
+        actionId = "pipeline_create",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline",
+            instanceNames = "#model?.name",
+            instanceIds = "#$"
+        ),
+        content = "create pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun createPipeline(
         userId: String,
         projectId: String,
@@ -646,6 +661,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = "pipeline_edit")
+    @ActionAuditRecord(
+        actionId = "pipeline_edit",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline",
+            instanceNames = "#pipelineId",
+            instanceIds = "#model?.name"
+        ),
+        content = "edit pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun editPipeline(
         userId: String,
         projectId: String,
@@ -797,6 +823,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineResult
     }
 
+    @AuditEntry(actionId = "pipeline_view")
+    @ActionAuditRecord(
+        actionId = "pipeline_view",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline",
+            instanceNames = "#pipelineId",
+            instanceIds = "#$?.name"
+        ),
+        content = "get pipeline info [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun getPipeline(
         userId: String,
         projectId: String,
@@ -892,6 +929,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = "pipeline_delete")
+    @ActionAuditRecord(
+        actionId = "pipeline_delete",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline",
+            instanceNames = "#pipelineId",
+            instanceIds = "#$?.pipelineName"
+        ),
+        content = "delete pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun deletePipeline(
         userId: String,
         projectId: String,
