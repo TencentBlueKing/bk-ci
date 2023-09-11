@@ -54,7 +54,7 @@ function _M:isSafe()
             "/process/api/external/scm/p4/commit", -- p4回调
             "/process/api/external/pipelines/projects/.+/.+/badge", -- 勋章
             "/artifactory/api/external/url/visit", -- 短链接
-            "/bkrepo/bkci-desktop" -- 蓝盾桌面端
+            "/bkrepo/bkci%-desktop" -- 蓝盾桌面端
         }
         local is_secure = false
         for _, item in ipairs(security_paths) do
