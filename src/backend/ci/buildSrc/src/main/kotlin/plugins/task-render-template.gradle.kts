@@ -35,11 +35,23 @@ tasks.register("replacePlaceholders") {
             "${File.separator}src${File.separator}backend${File.separator}ci",
             ""
         )
-        val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
-        val templatesDir = joinPath(rootDirPath, "support-files", "templates")
-        val bkEnvProperties = loadProperties(bkEnvPath)
-        val bkEnvFileContent = renderTemplate(bkEnvPath, bkEnvProperties)
+
+        // 基础变量
+        val baseBkEnvPath = joinPath(rootDirPath, "scripts", "bkenv.properties")
+        val bkEnvProperties = loadProperties(baseBkEnvPath)
+        val bkEnvFileContent = renderTemplate(baseBkEnvPath, bkEnvProperties)
         bkEnvProperties.load(bkEnvFileContent.byteInputStream())
+
+        // 自定义变量
+        val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
+        file(bkEnvPath).let {
+            if (it.exists()) {
+                bkEnvProperties.load(it.inputStream())
+            }
+        }
+
+        // 渲染模板
+        val templatesDir = joinPath(rootDirPath, "support-files", "templates")
         generateFiles(templatesDir, destDir, bkEnvProperties)
     }
 }
@@ -58,9 +70,9 @@ fun deleteFiles(dir: String) {
     }
 }
 
-fun loadProperties(path: String): Properties {
+fun loadProperties(basePath: String): Properties {
     val properties = Properties()
-    properties.load(file(path).inputStream())
+    properties.load(file(basePath).inputStream())
     return properties
 }
 
