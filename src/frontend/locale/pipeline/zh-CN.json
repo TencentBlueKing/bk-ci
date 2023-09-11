@@ -1217,5 +1217,7 @@
   "runs": "次",
   "nonManual": "非手动",
   "needSignTips": "{0} 为内部测试版本，正在准备下载，请稍等",
-  "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟"
+  "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟",
+  "apkSignSuccess": "{0} 已经准备完成，开始下载",
+  "downloadLater": "稍后再下载"
 }

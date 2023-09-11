@@ -36,7 +36,7 @@
                 <bk-button
                     @click="cancelDownloading"
                 >
-                    {{ $t('稍后再下载') }}
+                    {{ $t('downloadLater') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -98,6 +98,12 @@
                         this.setVisible(true)
                         const result = await this.pollingCheckSignedApk(url2)
                         if (result) {
+                            this.setVisible(false)
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('apkSignSuccess', [this.name])
+                            })
+                            
                             window.location.href = url2
                         }
                         this.signingMap.delete(this.path)
