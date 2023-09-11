@@ -45,7 +45,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_WORKSPACE"], description = "OP_WORKSPACE")
+@Api(tags = ["OP_WINDOWS"], description = "OP_WINDOWS")
 @Path("/op/windowsResource")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
