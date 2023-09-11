@@ -7,8 +7,8 @@
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 -- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---- 蓝鲸平台登录对接
---- 获取Cookie中bk_token
+
+--- 内部蓝鲸登录
 local bk_token, err = cookieUtil:get_cookie("bk_ticket")
 if bk_token == nil then
   bk_token = ngx.var.http_x_devops_bk_ticket
@@ -34,7 +34,24 @@ if bk_token ~= nil or devops_access_token ~= nil then
     end
 end
 
---- 移动网关登录对接(下面ms表示mobile site的意思)
+--- 太湖登录
+bk_token, err = cookieUtil:get_cookie("bk_token")
+if bk_token == nil then
+    bk_token = ngx.var.http_x_devops_bk_token
+end
+if bk_token == nil then
+    bk_token = urlUtil:parseUrl(ngx.var.request_uri)["x-devops-bk-token"]
+  end
+if bk_token ~= nil then
+    local ticket = oauthUtil:verify_tai_token(bk_token)
+    if ticket ~= nil then
+        ngx.header["x-devops-uid"] = ticket.username
+        ngx.header["x-devops-bk-token"] = bk_token
+        ngx.exit(200)
+    end
+end
+
+--- 移动网关登录(下面ms表示mobile site的意思)
 local ms_timestamp = ngx.var.http_timestamp
 local ms_signature = ngx.var.http_signature
 local ms_staffid = ngx.var.http_staffid

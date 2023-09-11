@@ -306,4 +306,49 @@ function _M:verify_token(access_token)
     return result.data
 end
 
+function _M:verify_tai_token(bk_token)
+    -- 创建HTTP客户端实例
+    local httpc = http.new()
+
+    -- 发送HTTP GET请求
+    local res, err = httpc:request_uri("http://login.bkdevops.woa.com/login/accounts/is_login/?bk_token=" .. bk_token,
+                                       {method = "GET"})
+
+    --- 判断是否出错了
+    if not res then
+        ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
+        ngx.exit(401)
+        return
+    end
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
+        ngx.exit(401)
+        return
+    end
+
+    --- 获取所有回复
+    local responseBody = res.body
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+    --- 判断JSON转换是否成功
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    --- 判断返回码:Q!
+    if result.code ~= "00" then
+        ngx.log(ngx.STDERR, "invalid get_ticket: ", result.message)
+        ngx.exit(401)
+        return
+    end
+    --- 设置用户信息
+    return result.data
+end
+
 return _M
