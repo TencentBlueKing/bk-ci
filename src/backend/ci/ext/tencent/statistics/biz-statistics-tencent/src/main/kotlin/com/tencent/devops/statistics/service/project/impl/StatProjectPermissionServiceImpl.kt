@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 class StatProjectPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     private val bkTag: BkTag,
-    private val tokenService: ClientTokenService,
+    private val tokenService: ClientTokenService
 ) : ProjectPermissionService {
 
     @Value("\${tag.rbac:#{null}}")
