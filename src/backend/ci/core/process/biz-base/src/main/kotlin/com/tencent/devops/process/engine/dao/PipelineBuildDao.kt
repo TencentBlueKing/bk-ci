@@ -1102,10 +1102,19 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): TPipelineBuildHistoryRecord? {
+    ): BuildInfo? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchAny(mapper)
+        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchAny(debugMapper)
         }
     }
 

@@ -75,6 +75,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
@@ -116,6 +117,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
     private val pipelineBranchVersionService: PipelineBranchVersionService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val pipelineRecentUseService: PipelineRecentUseService
 ) {
@@ -779,6 +781,47 @@ class PipelineInfoFacadeService @Autowired constructor(
                 params = arrayOf(e.message ?: "")
             )
         }
+    }
+
+    fun releaseDraftVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): DeployPipelineResult {
+        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
+            )
+        }
+
+        val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        )
+        if (draftVersion?.status != VersionStatus.COMMITTING) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_IS_NOT_DRAFT
+        )
+        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
+            val debugBuild = pipelineRuntimeService.getBuildInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = debugBuildId
+            )
+            debugBuild?.status?.isSuccess() == true
+        } ?: false
+        if (!latestDebugPassed) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
+        )
+        // TODO #8161 具体发布动作
+        return DeployPipelineResult(
+            pipelineId = pipelineId,
+            pipelineName = draftVersion.model.name,
+            version = draftVersion.version,
+            versionName = draftVersion.versionName
+        )
     }
 
     fun editPipeline(

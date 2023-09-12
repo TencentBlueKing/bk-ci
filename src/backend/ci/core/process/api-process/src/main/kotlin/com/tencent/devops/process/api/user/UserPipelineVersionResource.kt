@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 interface UserPipelineVersionResource {
 
     @ApiOperation("获取流水线信息（含草稿）")
@@ -75,6 +75,24 @@ interface UserPipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineDetail>
+
+    @ApiOperation("将当前模板发布为正式版本")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}")
+    fun releaseVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("通过指定模板创建流水线")
     @POST

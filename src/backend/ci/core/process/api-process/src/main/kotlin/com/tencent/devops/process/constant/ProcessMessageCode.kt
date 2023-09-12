@@ -284,6 +284,8 @@ object ProcessMessageCode {
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101183" // 流水线版本[{0}]不存在
     const val ERROR_NO_PIPELINE_DRAFT_EXISTS = "2101184" // 该流水不存在草稿版本
     const val ERROR_OCCURRED_IN_TRANSFER = "2101185" // 转换时出现报错
+    const val ERROR_RELEASE_VERSION_IS_NOT_DRAFT = "2101186" // 发布的版本不是草稿
+    const val ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING = "2101187" // 发布的版本未通过调试
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

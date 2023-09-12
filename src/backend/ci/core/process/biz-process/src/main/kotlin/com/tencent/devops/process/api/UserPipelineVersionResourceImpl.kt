@@ -101,14 +101,22 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+            params = arrayOf(pipelineId)
         )
-        val setting = latestResource?.let {
-            pipelineSettingFacadeService.userGetSetting(
-                userId = userId,
+        val setting = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = latestResource.settingVersion ?: latestResource.version,
+            detailInfo = detailInfo
+        )
+        val baseResource = latestResource.baseVersion?.let {
+            repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = latestResource.settingVersion ?: latestResource.version,
-                detailInfo = detailInfo
+                version = it
             )
         }
         pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -125,9 +133,45 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 createTime = detailInfo.createTime,
                 updateTime = detailInfo.updateTime,
                 viewNames = detailInfo.viewNames,
-                version = latestResource?.version,
-                versionName = latestResource?.versionName,
-                runLockType = setting?.runLockType
+                version = latestResource.version,
+                versionName = latestResource.versionName,
+                baseVersion = latestResource.baseVersion,
+                baseVersionName = baseResource?.versionName,
+                runLockType = setting.runLockType
+            )
+        )
+    }
+
+    override fun releaseVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<DeployPipelineResult> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineInfoFacadeService.releaseDraftVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
             )
         )
     }
