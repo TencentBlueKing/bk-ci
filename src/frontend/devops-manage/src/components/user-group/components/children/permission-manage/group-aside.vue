@@ -38,6 +38,7 @@
             class="group-more-option"
             placement="bottom"
             theme="light dot-menu"
+            :popoverDelay="[100, 0]"
             :arrow="false"
             offset="15"
             :distance="0">

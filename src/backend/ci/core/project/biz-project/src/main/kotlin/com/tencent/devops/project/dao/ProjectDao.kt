@@ -370,7 +370,7 @@ class ProjectDao {
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
                 channelCode!!.name,
-                true,
+                projectCreateInfo.enabled,
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 },
