@@ -133,6 +133,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
                     "&tokenType=${TokenTypeEnum.OAUTH.name}&filePath=file&format=zip&isProjectPathWrapped=false"
             val response = OkhttpUtils.doPost(url, "")
+            logger.info("descriptionAnalysis response isSuccessful:${response.isSuccessful} code:${response.code}" +
+                    "message:${response.message}")
             OkhttpUtils.downloadFile(response, file)
             ZipUtil.unZipFile(file, "$atomPath/file", false)
             result = storeFileService.descriptionAnalysis(
