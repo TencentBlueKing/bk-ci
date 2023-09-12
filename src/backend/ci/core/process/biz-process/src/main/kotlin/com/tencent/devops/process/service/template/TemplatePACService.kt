@@ -8,7 +8,6 @@ import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -31,8 +30,8 @@ class TemplatePACService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val transferYamlService: PipelineTransferYamlService
+    private val transferYamlService: PipelineTransferYamlService,
+    private val templateCommonService: TemplateCommonService
 ) {
 
     fun previewTemplate(
@@ -76,7 +75,7 @@ class TemplatePACService @Autowired constructor(
                 setting = null
             )
         }
-        val hasPermission = pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
+        val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
         setting.labels = labels
         setting.hasPermission = hasPermission
 
