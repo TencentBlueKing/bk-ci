@@ -1,18 +1,15 @@
 package com.tencent.devops.environment.service.job
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.pojo.ResponseDTO
-import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService.Companion.logger
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -43,7 +40,6 @@ class ScriptExecuteService {
             "script_language" to scriptExecuteReq.scriptType,
             "target_server" to scriptExecuteReq.executeTarget,
         )
-        val client = OkHttpClient()
         val request = Request.Builder()
             .url(scriptExecuteUrl)
             .post(
@@ -60,11 +56,32 @@ class ScriptExecuteService {
                     "\"access_token\": \"${access_token}\"}"
             )
             .build()
-        val response = client.newCall(request).execute()
-        val responseBody = response.body?.string()
-        print("[executeScript] responseBody msg: ${responseBody}")
+        OkhttpUtils.doHttp(request).use { response ->
+            try {
+                val responseBody = response.body?.string()
+                logger.info("responseBody: $responseBody")
 
-        val scriptExecuteResult = ScriptExecuteResult(111, "111", 111)
-        return scriptExecuteResult
+                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
+                if (responseData["result"] == false) {
+                    val errorMsg = responseData["message"]
+                    logger.error("execute script failed: $errorMsg")
+                }
+
+                val jobRequestId = responseData["job_request_id"] as String
+                val data = responseData["data"] as Map<*, *>
+                val jobInstanceId = data["job_instance_id"] as Long
+                val jobInstanceName = data["job_instance_name"] as String
+                val stepInstanceId = data["step_instance_id"] as Long
+
+                return ScriptExecuteResult(
+                    jobInstanceId = jobInstanceId,
+                    jobInstanceName = jobInstanceName,
+                    stepInstanceId = stepInstanceId
+                )
+            } catch (exception: Exception) {
+                logger.error("script execute error：", exception)
+                // TODO：抛出异常
+            }
+        }
     }
 }
