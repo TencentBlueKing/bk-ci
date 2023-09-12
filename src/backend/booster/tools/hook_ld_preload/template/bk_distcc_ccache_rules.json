@@ -1,8 +1,0 @@
-{
-	"hooks":[
-		{"src_command":"*/g++","target_command":"$CCACHEPATH $DISTCCPATH $SRC_CMD"},
-		{"src_command":"*/gcc","target_command":"$CCACHEPATH $DISTCCPATH $SRC_CMD"},
-		{"src_command":"*/clang++","target_command":"$CCACHEPATH $DISTCCPATH $SRC_CMD"},
-		{"src_command":"*/clang","target_command":"$CCACHEPATH $DISTCCPATH $SRC_CMD"}
-	]
-}
