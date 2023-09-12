@@ -40,7 +40,7 @@ import java.io.File
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
-class TxStoreFileServiceImpl : StoreFileService() {
+class   TxStoreFileServiceImpl : StoreFileService() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreFileServiceImpl::class.java)
@@ -104,5 +104,4 @@ class TxStoreFileServiceImpl : StoreFileService() {
             return JsonUtil.to(responseContent, object : TypeReference<Result<String>>() {})
         }
     }
-
 }

@@ -331,7 +331,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         val serviceUrlPrefix = client.getScmUrl(ServiceGitResource::class)
         val serviceUrl = "$serviceUrlPrefix/service/git/downloadGitRepoFile" +
                 "?repoName=$repoName&sha=$sha&token=$token&tokenType=$tokenType&filePath=$filePath" +
-                "&format=${format}&isProjectPathWrapped=$isProjectPathWrapped"
+                "&format=$format&isProjectPathWrapped=$isProjectPathWrapped"
         OkhttpUtils.downloadFile(serviceUrl, response)
     }
 

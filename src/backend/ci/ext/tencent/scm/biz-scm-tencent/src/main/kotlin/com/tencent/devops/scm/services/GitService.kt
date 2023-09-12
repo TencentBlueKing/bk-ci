@@ -1737,7 +1737,7 @@ class GitService @Autowired constructor(
         url.append("&format=$format")
         url.append("&is_project_path_wrapped=$isProjectPathWrapped")
         response.contentType = "application/$format"
-        response.setHeader("Content-Disposition", "attachment; filename=${repoName}.$format")
+        response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
         OkhttpUtils.downloadFile(url.toString(), response)
     }
 

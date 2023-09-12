@@ -142,7 +142,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 client = client,
                 language = language
             )
-        }  catch (ignored: Throwable) {
+        } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|archive atom file fail|error=${ignored.message}")
         } finally {
             file.delete()
