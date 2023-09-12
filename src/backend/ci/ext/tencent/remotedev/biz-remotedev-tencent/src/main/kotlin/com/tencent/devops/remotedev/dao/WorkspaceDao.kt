@@ -211,6 +211,7 @@ class WorkspaceDao {
     fun countProjectWorkspace(
         dslContext: DSLContext,
         projectId: String?,
+        workspaceName: String? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null,
         queryType: QueryType? = QueryType.WEB
@@ -222,6 +223,14 @@ class WorkspaceDao {
                     conditions.add(PROJECT_ID.like("%$it%"))
                 } else {
                     conditions.add(PROJECT_ID.eq(it))
+                }
+            }
+
+            workspaceName?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(NAME.like("%$it%"))
+                } else {
+                    conditions.add(NAME.eq(it))
                 }
             }
 
@@ -304,6 +313,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
+        workspaceName: String? = null,
         systemType: WorkspaceSystemType? = null,
         queryType: QueryType? = QueryType.WEB
     ): List<WorkspaceRecord>? {
@@ -315,6 +325,14 @@ class WorkspaceDao {
                     conditions.add(PROJECT_ID.like("%$it%"))
                 } else {
                     conditions.add(PROJECT_ID.eq(it))
+                }
+            }
+
+            workspaceName?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(NAME.like("%$it%"))
+                } else {
+                    conditions.add(NAME.eq(it))
                 }
             }
             return dslContext.selectFrom(this)
