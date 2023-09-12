@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.Result
@@ -55,10 +54,7 @@ interface UserProjectUserResource {
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("蓝鲸登录token", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        bkToken: String?
+        userId: String
     ): Result<ProjectUser>
 
     @GET

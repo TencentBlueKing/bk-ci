@@ -36,7 +36,6 @@ import com.tencent.devops.project.service.UserService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -65,27 +64,6 @@ class BKUserServiceImpl constructor(
     lateinit var bkAppSecret: String
 
     override fun getStaffInfo(userId: String, bkToken: String?): UserVO {
-        val userVO =
-            UserVO(chineseName = "", avatarUrl = "", bkpaasUserId = userId, username = userId, permissions = "")
-
-        val responseContent = if (userId.endsWith("@tai")) {
-            getTaiUser(bkToken)
-        } else {
-            getInnerUser(userId)
-        }
-        val resultMap =
-            objectMapper.readValue(responseContent, Result(LinkedHashMap<String, String>())::class.java)
-        val data = resultMap.data
-        if (data != null) {
-            userVO.chineseName = data["chname"] ?: ""
-        }
-        return userVO
-    }
-
-    /**
-     * 获取内部用户信息
-     */
-    private fun getInnerUser(userId: String): String {
         val url = (path + getUser)
         val map = HashMap<String, String>()
         map["bk_app_code"] = bkAppCode
@@ -95,7 +73,7 @@ class BKUserServiceImpl constructor(
         val mediaType = "application/json".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(map)
         logger.info("Get the user from url $url with body $json")
-        val requestBody = json.toRequestBody(mediaType)
+        val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
@@ -108,24 +86,14 @@ class BKUserServiceImpl constructor(
                 throw RemoteServiceException("CommitResourceApi $path$getUser fail")
             }
             logger.info("Get the user response - $responseContent")
-            return responseContent
-        }
-    }
-
-    /**
-     * 获取太湖账号信息
-     */
-    private fun getTaiUser(bkToken: String?): String {
-        val url = "http://login.bkdevops.woa.com/login/accounts/get_user/?bk_token=$bkToken"
-        val request = Request.Builder().url(url).get().build()
-        OkhttpUtils.doHttp(request).use {
-            val resp = it.body!!.string()
-            if (!it.isSuccessful) {
-                logger.error("get tai user error , resp: $resp")
-                throw RemoteServiceException("Get tai user fail")
+            val resultMap = objectMapper.readValue(responseContent, Result(LinkedHashMap<String, String>())::class.java)
+            val data = resultMap.data
+            val userVO =
+                UserVO(chineseName = "", avatarUrl = "", bkpaasUserId = userId, username = userId, permissions = "")
+            if (data != null) {
+                userVO.chineseName = data["chname"] ?: ""
             }
-            logger.info("Get tai user resp : $resp")
-            return resp
+            return userVO
         }
     }
 }

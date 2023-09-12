@@ -42,8 +42,9 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val userCacheService: UserCacheService
 ) : UserProjectUserResource {
 
-    override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
-        val staff = userService.getStaffInfo(userId, bkToken)
+    override fun get(userId: String): Result<ProjectUser> {
+
+        val staff = userService.getStaffInfo(userId)
         return Result(
             ProjectUser(
                 chineseName = staff.chineseName,
