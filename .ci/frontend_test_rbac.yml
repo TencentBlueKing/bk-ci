@@ -75,7 +75,7 @@ stages:
               srcPath: "frontend.zip"
               targetIpList: ${{ variables.ips }}
               targetAccount: "root"
-              targetPath: "/data/tmp"
+              targetPath: "/data/tmp-rbac"
           - name: "发布"
             uses: "jobExecuteScriptForOA@1.*"
             with:
@@ -87,7 +87,7 @@ stages:
                 mkdir -p frontend
                 unzip -o frontend.zip -d frontend
                 mkdir -p /data/bkee/ci/frontend-rbac
-                cp -rf /data/tmp/frontend/* /data/bkee/ci/frontend-rbac
+                cp -rf /data/tmp-rbac/frontend/* /data/bkee/ci/frontend-rbac
 
               account: "root"
               targetIpList: ${{ variables.ips }}
