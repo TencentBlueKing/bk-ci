@@ -368,5 +368,4 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         repositoryHashId: String? = null,
         branch: String? = null
     ): String
-
 }

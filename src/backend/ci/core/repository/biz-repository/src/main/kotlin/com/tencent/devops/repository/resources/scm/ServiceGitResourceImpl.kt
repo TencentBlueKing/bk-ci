@@ -277,7 +277,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         format: String?,
         isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
-    ){
+    ) {
         val repo = repositoryService.serviceGet(
                 "",
             RepositoryConfigUtils.buildConfig(repoId, repositoryType)
