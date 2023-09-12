@@ -148,7 +148,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("BKSystemErrorMonitor|archive atom file fail|error=${ignored.message}")
+            logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
         } finally {
             file.delete()
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
