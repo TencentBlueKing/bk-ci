@@ -57,28 +57,30 @@ class AgentShareProjectDao {
         creator: String
     ) {
         val now = LocalDateTime.now()
-        dslContext.batch(sharedProjectIds.map {
-            with(TAgentShareProject.T_AGENT_SHARE_PROJECT) {
-                dslContext.insertInto(
-                    this,
-                    AGENT_ID,
-                    MAIN_PROJECT_ID,
-                    SHARED_PROJECT_ID,
-                    CREATOR,
-                    CREATE_TIME,
-                    UPDATE_TIME
-                ).values(
-                    agentId,
-                    mainProjectId,
-                    it,
-                    creator,
-                    now,
-                    now
-                ).onDuplicateKeyUpdate()
-                    .set(CREATOR, creator)
-                    .set(UPDATE_TIME, now)
-            }
-        }).execute()
+        with(TAgentShareProject.T_AGENT_SHARE_PROJECT) {
+            dslContext.insertInto(
+                this,
+                AGENT_ID,
+                MAIN_PROJECT_ID,
+                SHARED_PROJECT_ID,
+                CREATOR,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).also { insertSql ->
+                sharedProjectIds.forEach { projectId ->
+                    insertSql.values(
+                        agentId,
+                        mainProjectId,
+                        projectId,
+                        creator,
+                        now,
+                        now
+                    ).onDuplicateKeyUpdate()
+                        .set(CREATOR, creator)
+                        .set(UPDATE_TIME, now)
+                }
+            }.execute()
+        }
     }
 
     fun delete(
