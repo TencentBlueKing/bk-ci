@@ -259,7 +259,8 @@ export default {
     handleChooseGroup(group) {
       this.$router.replace({
         query: {
-          groupId: group.groupId
+          ...this.$route.query,
+          groupId: group.groupId,
         }
       })
       this.activeTab = group.groupId;
