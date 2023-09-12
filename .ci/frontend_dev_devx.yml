@@ -60,6 +60,7 @@ stages:
               sh ./render_ci -m ci ../support-files/templates/*
 
               cd ${{ ci.workspace }}/ci/frontend/
+              sed -i "s/dev-static\.devops\.woa\.com/dev.devx.tencent.com/g" console/index.html
               zip -r frontend.zip ./* && cp frontend.zip ${{ ci.workspace }}
           - name: "Upload"
             uses: "UploadArtifactory@1.*"
