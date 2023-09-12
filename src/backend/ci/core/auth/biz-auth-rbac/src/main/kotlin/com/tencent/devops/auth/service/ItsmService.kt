@@ -199,9 +199,7 @@ class ItsmService @Autowired constructor(
         value["projectName"] = ItsmStyle.builder().value(formData.projectName).build()
         value["resourceName"] = ItsmStyle.builder()
             .label(formData.resourceTypeName.plus("-").plus(formData.resourceName))
-            .value(
-                formData.resourceRedirectUri ?: formData.resourceTypeName.plus("-").plus(formData.resourceName)
-            ).build()
+            .value(formData.resourceRedirectUri).build()
         value["groupName"] = ItsmStyle.builder().label(formData.groupName)
             .value(formData.groupPermissionDetailRedirectUri).build()
         value["validityPeriod"] = ItsmStyle.builder().value(formData.validityPeriod).build()
