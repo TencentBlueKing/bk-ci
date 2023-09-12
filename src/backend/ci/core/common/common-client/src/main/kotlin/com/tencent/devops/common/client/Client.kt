@@ -60,6 +60,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import kotlin.reflect.KClass
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -67,7 +68,6 @@ import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryCl
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
-import kotlin.reflect.KClass
 
 /**
  *
@@ -278,6 +278,12 @@ class Client @Autowired constructor(
                     bkTag = bkTag
                 )
             )
+    }
+
+    // devnet区域的，只能直接通过ip访问
+    fun <T : Any> getScmUrl(clz: KClass<T>): String {
+        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        return buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY)
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
