@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
@@ -39,14 +40,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import java.util.Properties
+import java.util.concurrent.Executors
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Properties
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList")
@@ -61,11 +66,15 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     @Autowired
     lateinit var commonConfig: CommonConfig
 
+    @Autowired
+    lateinit var storeFileService: StoreFileService
+
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
         private const val BATCH_HANDLE_NUM = 50
         private val executors = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
+        private const val BK_CI_PATH_REGEX = "\\$\\{\\{indexFile\\((?:\"([^\"]*)\")"
     }
 
     override fun parseJsonMapI18nInfo(
@@ -223,6 +232,17 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
+                val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
+                if (!description.isNullOrBlank()) {
+                    fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = getDescriptionI18nContent(
+                        userId = userId,
+                        projectCode = projectCode,
+                        fileDir = fileDir,
+                        repositoryHashId = repositoryHashId,
+                        content = description,
+                        language = language
+                    )
+                }
                 val i18nMessages = generateI18nMessages(
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
@@ -275,11 +295,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileName: String,
         repositoryHashId: String?
     ): Properties? {
-        val fileStr = getPropertiesFileStr(
+        val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
-            i18nDir = i18nDir,
-            fileName = fileName,
+            fileName = "$i18nDir/$fileName",
             repositoryHashId = repositoryHashId
         )
         return if (fileStr.isNullOrBlank()) {
@@ -289,10 +308,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         }
     }
 
-    abstract fun getPropertiesFileStr(
+    abstract fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String? = null,
         branch: String? = null
@@ -305,4 +323,50 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         repositoryHashId: String? = null,
         branch: String? = null
     ): List<String>?
+
+    private fun getDescriptionI18nContent(
+        userId: String,
+        projectCode: String,
+        fileDir: String,
+        repositoryHashId: String? = null,
+        branch: String? = null,
+        content: String,
+        language: String
+    ): String {
+        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
+        val matcher: Matcher = pattern.matcher(content)
+        val path: String
+        if (matcher.find()) {
+            path = matcher.group(1).replace("\"", "")
+        } else {
+            return content
+        }
+        val fileStr = getFileStr(
+            projectCode = projectCode,
+            fileDir = fileDir,
+            fileName = "file/$path",
+            repositoryHashId = repositoryHashId,
+            branch = branch
+        ) ?: return content
+        return descriptionAnalysis(
+            userId = userId,
+            description = fileStr,
+            atomPath = storeFileService.buildAtomArchivePath(
+                userId = userId,
+                atomDir = fileDir
+            ),
+            language = language,
+            repositoryHashId = repositoryHashId
+        )
+    }
+
+    abstract fun descriptionAnalysis(
+        userId: String,
+        description: String,
+        atomPath: String,
+        language: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ): String
+
 }
