@@ -172,9 +172,6 @@ class ItsmService @Autowired constructor(
             ItsmColumn.builder().key("projectName").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)
             ).type(TEXT_TYPE).build(),
-            ItsmColumn.builder().key("resourceTypeName").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_RESOURCE_TYPE_NAME)
-            ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("resourceName").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_RESOURCE_NAME)
             ).type(URL_TYPE).build(),
@@ -200,8 +197,8 @@ class ItsmService @Autowired constructor(
     fun buildGroupApplyItsmValue(formData: ApplyJoinGroupFormDataInfo): Map<String, ItsmStyle> {
         val value = HashMap<String, ItsmStyle>()
         value["projectName"] = ItsmStyle.builder().value(formData.projectName).build()
-        value["resourceTypeName"] = ItsmStyle.builder().value(formData.resourceTypeName).build()
-        value["resourceName"] = ItsmStyle.builder().label(formData.resourceName).value(formData.resourceName)
+        value["resourceName"] = ItsmStyle.builder()
+            .label(formData.resourceTypeName.plus("-").plus(formData.resourceName))
             .value(formData.resourceRedirectUri).build()
         value["groupName"] = ItsmStyle.builder().label(formData.groupName)
             .value(formData.groupPermissionDetailRedirectUri).build()

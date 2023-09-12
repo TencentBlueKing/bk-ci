@@ -71,10 +71,10 @@ class RbacPermissionApplyService @Autowired constructor(
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
         "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s"
-    private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
-    private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
-    private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
-    private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s"
+    private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history?x-devops-project-id=%s"
+    private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s?x-devops-project-id=%s"
+    private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest&x-devops-project-id=%s"
+    private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s&x-devops-project-id=%s"
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
     }
@@ -298,7 +298,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     ApplyJoinGroupFormDataInfo(
                         projectName = projectInfo.projectName,
                         resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceGroupInfo.resourceType).name,
-                        resourceName = if (relatedResourceType == AuthResourceType.PROJECT.value) "--" else resourceGroupInfo.resourceName,
+                        resourceName = resourceGroupInfo.resourceName,
                         groupName = resourceGroupInfo.groupName,
                         validityPeriod = generateValidityPeriod(applyJoinGroupInfo.expiredAt.toLong()),
                         resourceRedirectUri = generateResourceRedirectUri(
@@ -306,7 +306,7 @@ class RbacPermissionApplyService @Autowired constructor(
                             resourceType = relatedResourceType,
                             resourceCode = resourceGroupInfo.resourceCode
                         ),
-                        groupPermissionDetailRedirectUri = String.format(groupPermissionDetailRedirectUri, it)
+                        groupPermissionDetailRedirectUri = String.format(groupPermissionDetailRedirectUri, it, projectCode)
                     )
                 )
             }
@@ -347,13 +347,13 @@ class RbacPermissionApplyService @Autowired constructor(
     ): String? {
         return when (resourceType) {
             AuthResourceType.PIPELINE_DEFAULT.value -> {
-                String.format(pipelineDetailRedirectUri, projectCode, resourceCode)
+                String.format(pipelineDetailRedirectUri, projectCode, resourceCode, projectCode)
             }
             AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> {
-                String.format(environmentDetailRedirectUri, projectCode, resourceCode)
+                String.format(environmentDetailRedirectUri, projectCode, resourceCode, projectCode)
             }
             AuthResourceType.CODECC_TASK.value -> {
-                String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode)
+                String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode, projectCode)
             }
             else -> null
         }
