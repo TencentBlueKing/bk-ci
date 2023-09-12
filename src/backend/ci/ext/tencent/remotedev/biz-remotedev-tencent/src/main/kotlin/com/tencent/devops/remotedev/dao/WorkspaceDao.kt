@@ -483,6 +483,34 @@ class WorkspaceDao {
             .fetch()
     }
 
+    fun fetchWorkspaceWithOwner(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null,
+        assignType: WorkspaceShared.AssignType? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        status?.let {
+            conditions.add(t1.STATUS.eq(it.ordinal))
+        }
+        mountType?.let {
+            conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        projectId?.let {
+            conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
+        assignType?.let {
+            conditions.add(t2.ASSIGN_TYPE.eq(assignType.name))
+        }
+        return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
+            .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .fetch()
+    }
+
     private fun mixCondition(
         userId: String? = null,
         workspaceName: String? = null,
