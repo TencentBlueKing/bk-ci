@@ -32,6 +32,7 @@ import com.google.common.cache.CacheBuilder
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.bk.audit.constants.AuditAttributeNames
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
@@ -254,6 +255,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     fun createPipeline(
         userId: String,
         projectId: String,
+        @AuditRequestBody
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
@@ -666,8 +668,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         actionId = "pipeline_edit",
         instance = AuditInstanceRecord(
             resourceType = "pipeline",
-            instanceNames = "#pipelineId",
-            instanceIds = "#model?.name"
+            instanceNames = "#model?.name",
+            instanceIds = "#pipelineId"
         ),
         content = "edit pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
@@ -676,6 +678,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        @AuditRequestBody
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
@@ -828,8 +831,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         actionId = "pipeline_view",
         instance = AuditInstanceRecord(
             resourceType = "pipeline",
-            instanceNames = "#pipelineId",
-            instanceIds = "#$?.name"
+            instanceNames = "#$?.name",
+            instanceIds = "#pipelineId"
         ),
         content = "get pipeline info [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
@@ -934,8 +937,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         actionId = "pipeline_delete",
         instance = AuditInstanceRecord(
             resourceType = "pipeline",
-            instanceNames = "#pipelineId",
-            instanceIds = "#$?.pipelineName"
+            instanceNames = "#$?.pipelineName",
+            instanceIds = "#pipelineId"
         ),
         content = "delete pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
