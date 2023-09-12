@@ -131,7 +131,6 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<List<WindowsResourceTypeConfig>>
 
-
     @ApiOperation("获取所有的WINDOWS 配额")
     @GET
     @Path("/get_all_windows_resource_quota")
