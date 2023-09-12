@@ -80,8 +80,25 @@ class MacVmTypeService @Autowired constructor(
         }
     }
 
-    fun getSystemVersionByVersion(version: String?): String? {
-        return virtualMachineTypeDao.getSystemVersionByVersion(dslContext, version)
+    fun getSystemVersionByVersion(version: String?, xcodeVersion: String?): Pair<String?, String> {
+        // 兼容stream旧版语法
+        if (version == "latest" || version.isNullOrBlank()) {
+            val formatXcodeVersion = if (xcodeVersion.isNullOrBlank()) {
+                "14.1"
+            } else {
+                xcodeVersion
+            }
+            return Pair("Monterey12.4", formatXcodeVersion)
+        }
+
+        // 不存在的系统版本默认macos12
+        val systemVersionRecord = virtualMachineTypeDao.getSystemVersionByVersion(dslContext, version)
+            ?: return Pair("Monterey12.4", "14.1")
+
+        return Pair(
+            systemVersionRecord.systemVersion,
+            systemVersionRecord.xcodeVersion.trim().split(";").first()
+        )
     }
 
     fun listVMType(): List<VMType>? {

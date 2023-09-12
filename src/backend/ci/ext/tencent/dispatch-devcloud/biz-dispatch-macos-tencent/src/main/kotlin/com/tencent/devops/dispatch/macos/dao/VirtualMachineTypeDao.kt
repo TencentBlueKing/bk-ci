@@ -21,15 +21,10 @@ class VirtualMachineTypeDao {
     }
 
     // 根据英文短名获取系统版本
-    fun getSystemVersionByVersion(dslContext: DSLContext, version: String?): String? {
-        if (version.isNullOrEmpty()) return null
+    fun getSystemVersionByVersion(dslContext: DSLContext, version: String?): TVirtualMachineTypeRecord? {
         with(TVirtualMachineType.T_VIRTUAL_MACHINE_TYPE) {
-            return if (version != "latest") {
-                dslContext.selectFrom(this).where(VERSION.eq(version)).fetchOne()?.systemVersion
-            } else {
-                dslContext.selectFrom(this).orderBy(VERSION.desc()).limit(1)
-                    .fetchOne()!!.systemVersion
-            }
+            return dslContext.selectFrom(this).where(VERSION.eq(version)).fetchOne()
+
         }
     }
 
