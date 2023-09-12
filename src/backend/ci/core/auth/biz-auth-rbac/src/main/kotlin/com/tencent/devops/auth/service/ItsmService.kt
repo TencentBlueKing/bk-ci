@@ -170,7 +170,7 @@ class ItsmService @Autowired constructor(
     fun buildGroupApplyItsmContentDTO(): ItsmContentDTO {
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_BELONG_PROJECT_NAME)
             ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("resourceName").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_RESOURCE_NAME)

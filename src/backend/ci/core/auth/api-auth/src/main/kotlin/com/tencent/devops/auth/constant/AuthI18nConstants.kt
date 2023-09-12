@@ -24,6 +24,7 @@ object AuthI18nConstants {
     const val BK_CREATE_BKCI_PROJECT_APPLICATION = "bkCreateBkciProjectApplication" // 创建蓝盾项目{0}申请
     const val BK_REVISE_BKCI_PROJECT_APPLICATION = "bkReviseBkciProjectApplication" // 修改蓝盾项目{0}申请
     const val BK_PROJECT_NAME = "bkProjectName" // 项目名称
+    const val BK_BELONG_PROJECT_NAME = "bkBelongProjectName" // 所属项目
     const val BK_PROJECT_ID = "bkProjectId" // 项目ID
     const val BK_PROJECT_DESC = "bkProjectDesc" // 项目描述
     const val BK_ORGANIZATION = "bkOrganization" // 所属组织
