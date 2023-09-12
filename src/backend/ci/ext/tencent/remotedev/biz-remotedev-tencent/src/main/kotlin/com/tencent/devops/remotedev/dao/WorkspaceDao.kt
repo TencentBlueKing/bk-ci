@@ -507,10 +507,12 @@ class WorkspaceDao {
             .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .let { if (assignType != null) { it.and(t2.ASSIGN_TYPE.eq(assignType.name)) } else it }
+            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
                     .from(t1)
                     .where(conditions)
+                    .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
             )
             .fetch()
     }
