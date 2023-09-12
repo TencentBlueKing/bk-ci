@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
@@ -114,6 +115,11 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
         logger.info("getAllWindowsResourceConfig|$userId")
         return Result(windowsResourceConfigService.getAllType())
+    }
+
+    override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
+        logger.info("getAllWindowsResourceZone|$userId")
+        return Result(windowsResourceConfigService.getAllZone())
     }
 
     override fun allWindowsQuota(userId: String): Result<Map<String, Map<String, Int>>> {
