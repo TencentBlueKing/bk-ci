@@ -8,13 +8,15 @@ import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
+import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,6 +26,7 @@ import javax.ws.rs.NotFoundException
 /**
  * 因为 PAC 的改动较多，所以将pac中的的代码较大专门抽出来，方便排查错误以及不要影响历史接口
  */
+@Suppress("ALL")
 @Service
 class TemplatePACService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -31,15 +34,15 @@ class TemplatePACService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val transferYamlService: PipelineTransferYamlService
+    private val transferYamlService: PipelineTransferYamlService,
+    private val templateCommonService: TemplateCommonService
 ) {
 
     fun previewTemplate(
         userId: String,
         projectId: String,
         templateId: String,
-        needSetting: Boolean?
+        highlightType: HighlightType?
     ): TemplatePreviewDetail {
         var template = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         val isConstrainedFlag = template.type == TemplateType.CONSTRAINT.name
@@ -73,10 +76,11 @@ class TemplatePACService @Autowired constructor(
             return TemplatePreviewDetail(
                 template = model,
                 templateYaml = null,
-                setting = null
+                setting = null,
+                highlightMark = null
             )
         }
-        val hasPermission = pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
+        val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
         setting.labels = labels
         setting.hasPermission = hasPermission
 
@@ -91,14 +95,36 @@ class TemplatePACService @Autowired constructor(
             )
         )
 
+        // highlight mark
+        var highlightMark: TransferMark? = null
+        if (yaml != null && highlightType != null) {
+            run outside@{
+                TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+                    when {
+                        highlightType == HighlightType.LABEL && key == "label" -> {
+                            highlightMark = value
+                            return@outside
+                        }
+
+                        highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
+                            highlightMark = value
+                            return@outside
+                        }
+
+                        highlightType == HighlightType.LABEL && key == "notices" -> {
+                            highlightMark = value
+                            return@outside
+                        }
+                    }
+                }
+            }
+        }
+
         return TemplatePreviewDetail(
             template = model,
             templateYaml = yaml,
-            setting = if (needSetting == true) {
-                setting
-            } else {
-                null
-            }
+            setting = setting,
+            highlightMark = highlightMark
         )
     }
 
