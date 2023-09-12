@@ -381,7 +381,11 @@ class WorkspaceService @Autowired constructor(
         createUserId = it.createUserId,
         workPath = it.workPath,
         workspaceFolder = it.workspaceFolder,
-        hostName = workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP,
+        hostName = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP
+        } else {
+            it.hostName
+        },
         workspaceMountType = it.workspaceMountType,
         workspaceSystemType = it.workspaceSystemType,
         ownerType = it.ownerType,
