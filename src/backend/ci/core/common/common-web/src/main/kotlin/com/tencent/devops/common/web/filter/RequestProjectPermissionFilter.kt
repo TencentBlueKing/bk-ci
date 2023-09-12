@@ -52,8 +52,7 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 class RequestProjectPermissionFilter(
     private val redisOperation: RedisOperation
-) :  ContainerRequestFilter {
-
+) : ContainerRequestFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(RequestProjectPermissionFilter::class.java)
     }
