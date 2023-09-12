@@ -173,7 +173,6 @@ enum class VariablePropType(val value: String) {
     CUSTOM_FILE("custom_file"),
     TIPS("tips");
 
-
     fun toBuildFormPropertyType() = when (this) {
         VUEX_INPUT -> BuildFormPropertyType.STRING
         VUEX_TEXTAREA -> BuildFormPropertyType.TEXTAREA

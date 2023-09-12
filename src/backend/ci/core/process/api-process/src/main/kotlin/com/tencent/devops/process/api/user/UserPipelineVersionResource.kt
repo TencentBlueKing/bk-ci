@@ -34,17 +34,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
-import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -61,10 +61,10 @@ import javax.ws.rs.core.MediaType
 @Suppress("LongParameterList")
 interface UserPipelineVersionResource {
 
-    @ApiOperation("获取流水线信息")
+    @ApiOperation("获取流水线信息（含草稿）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/detail")
-    fun getPipelineDetail(
+    fun getPipelineDetailIncludeDraft(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -73,10 +73,7 @@ interface UserPipelineVersionResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @QueryParam("draft")
-        @DefaultValue("false")
-        includeDraft: Boolean? = false
+        pipelineId: String
     ): Result<PipelineDetail>
 
     @ApiOperation("通过指定模板创建流水线")
@@ -199,7 +196,7 @@ interface UserPipelineVersionResource {
         @ApiParam("每页多少条", required = false, defaultValue = "5")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<PipelineVersionInfo>>
+    ): Result<Page<PipelineVersionWithInfo>>
 
     @ApiOperation("获取流水线操作日志列表（分页）")
     @GET
@@ -253,5 +250,5 @@ interface UserPipelineVersionResource {
         @ApiParam(value = "回回滚目标版本", required = true)
         @QueryParam("version")
         version: Int
-    ): Result<Boolean>
+    ): Result<PipelineVersionSimple>
 }

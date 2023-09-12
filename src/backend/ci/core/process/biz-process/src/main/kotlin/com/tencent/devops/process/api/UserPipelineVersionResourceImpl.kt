@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
@@ -45,15 +46,17 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
-import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
@@ -78,15 +81,15 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineOperationLogService: PipelineOperationLogService,
     private val transferService: PipelineTransferYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService
 ) : UserPipelineVersionResource {
 
-    override fun getPipelineDetail(
+    override fun getPipelineDetailIncludeDraft(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        includeDraft: Boolean?
+        pipelineId: String
     ): Result<PipelineDetail> {
         checkParam(userId, projectId)
         val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
@@ -97,7 +100,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         val latestResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            includeDraft = includeDraft
+            includeDraft = true
         )
         val setting = latestResource?.let {
             pipelineSettingFacadeService.userGetSetting(
@@ -210,6 +213,13 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             actionType = TransferActionType.FULL_MODEL2YAML,
             data = TransferBody(modelAndSetting)
         ).newYaml
+        val baseResource = resource.baseVersion?.let {
+            repositoryVersionService.getPipelineVersionSimple(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         return Result(
             PipelineModelWithYaml(
                 modelAndSetting = modelAndSetting,
@@ -217,7 +227,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 description = resource.description,
                 canDebug = resource.status == VersionStatus.COMMITTING,
                 version = resource.version,
-                versionName = resource.versionName
+                versionName = resource.versionName,
+                baseVersion = resource.baseVersion,
+                baseVersionName = baseResource?.versionName
             )
         )
     }
@@ -370,7 +382,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         description: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<PipelineVersionInfo>> {
+    ): Result<Page<PipelineVersionWithInfo>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -474,7 +486,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<Boolean> {
+    ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(
@@ -493,8 +505,29 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        pipelineRepositoryService.rollbackDraftFromVersion(userId, projectId, pipelineId, version)
-        return Result(true)
+        val resource = pipelineRepositoryService.rollbackDraftFromVersion(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        return Result(
+            PipelineVersionSimple(
+                pipelineId = pipelineId,
+                creator = resource.creator,
+                createTime = resource.createTime.timestampmilli(),
+                version = resource.version,
+                versionName = resource.versionName ?: "init",
+                referFlag = resource.referFlag,
+                referCount = resource.referCount,
+                pipelineVersion = resource.pipelineVersion,
+                triggerVersion = resource.triggerVersion,
+                settingVersion = resource.settingVersion,
+                status = resource.status,
+                debugBuildId = resource.debugBuildId,
+                baseVersion = resource.baseVersion
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,7 +92,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         versionName: String?,
         creator: String? = null,
         description: String? = null
-    ): Page<PipelineVersionInfo> {
+    ): Page<PipelineVersionWithInfo> {
         var slqLimit: SQLLimit? = null
         if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 
@@ -102,7 +102,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         // 如果有要插队的版本需要提到第一页，则在查询list时排除，单独查出来放在第一页
         val fromResource = if (fromVersion != null && page == 1) {
             limit -= 1
-            pipelineRepositoryVersionService.getPipelineVersion(
+            pipelineRepositoryVersionService.getPipelineVersionWithInfo(
                 pipelineInfo = pipelineInfo,
                 projectId = projectId,
                 pipelineId = pipelineId,
