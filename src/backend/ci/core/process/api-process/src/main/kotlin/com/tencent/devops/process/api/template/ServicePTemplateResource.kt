@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
@@ -218,6 +220,7 @@ interface ServicePTemplateResource {
     @ApiOperation("根据id获取模版列表")
     @POST
     @Path("/listTemplateById")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listTemplateById(
         @ApiParam("模板ID", required = true)
         templateIds: Collection<String>,

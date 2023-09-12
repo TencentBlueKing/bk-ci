@@ -320,7 +320,7 @@ class ProcessDataMigrateService @Autowired constructor(
             )
         }
         // 锁定项目,不允许用户发起新构建等操作
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         // 为项目分配路由规则
         val routingRuleMap = assignShardingRoutingRule(projectId, dataTag)
         // 把同时迁移的项目数量存入redis中
@@ -420,7 +420,7 @@ class ProcessDataMigrateService @Autowired constructor(
         // 删除项目执行次数记录
         redisOperation.delete(getMigrateProjectExecuteCountKey(projectId))
         // 解锁项目,允许用户发起新构建等操作
-        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         // 发送迁移成功消息
         val titleParams = mapOf(KEY_PROJECT_ID to projectId)
         val bodyParams = mapOf(KEY_PROJECT_ID to projectId)

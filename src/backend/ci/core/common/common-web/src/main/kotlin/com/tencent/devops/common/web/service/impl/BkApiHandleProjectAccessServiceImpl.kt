@@ -63,7 +63,7 @@ class BkApiHandleProjectAccessServiceImpl : BkApiHandleService {
         }
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
         // 判断项目是否在限制接口访问的列表中
-        if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
+        if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
             val requestURI = request.requestURI
             logger.info("Project[$projectId] does not have access permission for interface[$requestURI]")
             throw ErrorCodeException(
