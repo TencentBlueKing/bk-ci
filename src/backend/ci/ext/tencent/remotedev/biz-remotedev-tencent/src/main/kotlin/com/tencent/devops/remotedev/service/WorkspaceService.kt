@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -343,7 +344,7 @@ class WorkspaceService @Autowired constructor(
                 creator = it["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
-                createTime = it["CREATE_TIME"] as String,
+                createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
                 owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
                 )
             }
