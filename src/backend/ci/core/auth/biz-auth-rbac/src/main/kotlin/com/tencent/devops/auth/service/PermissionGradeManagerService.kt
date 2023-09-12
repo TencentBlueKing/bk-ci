@@ -165,7 +165,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
                 organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
+                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
@@ -280,7 +280,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
                 organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
+                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
