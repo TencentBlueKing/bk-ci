@@ -99,5 +99,4 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             return Result(true)
         }
     }
-
 }
