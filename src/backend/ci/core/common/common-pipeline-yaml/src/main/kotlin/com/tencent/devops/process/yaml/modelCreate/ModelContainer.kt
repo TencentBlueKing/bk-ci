@@ -53,7 +53,8 @@ import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.job.*
+import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import javax.ws.rs.core.Response

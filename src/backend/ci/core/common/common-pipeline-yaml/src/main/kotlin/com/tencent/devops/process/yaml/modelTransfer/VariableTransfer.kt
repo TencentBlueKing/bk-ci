@@ -121,7 +121,7 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
                     type = VariablePropType.CUSTOM_FILE.value,
                     description = it.desc.nullIfDefault("")
-                )  // 自定义仓库文件
+                ) // 自定义仓库文件
                 it.type == BuildFormPropertyType.PASSWORD -> null // not use
                 it.type == BuildFormPropertyType.TEMPORARY -> null // not use
                 else -> null

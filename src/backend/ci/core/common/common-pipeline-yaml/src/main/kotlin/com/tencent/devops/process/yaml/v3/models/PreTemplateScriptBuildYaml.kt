@@ -40,8 +40,6 @@ import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
-import com.tencent.devops.process.yaml.v3.models.TriggerType
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,

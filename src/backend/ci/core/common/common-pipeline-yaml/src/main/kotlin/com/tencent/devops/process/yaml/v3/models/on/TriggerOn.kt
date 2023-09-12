@@ -34,7 +34,6 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MAN
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import io.swagger.annotations.ApiModelProperty
 
 /**

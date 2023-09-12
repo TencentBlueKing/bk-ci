@@ -35,6 +35,8 @@ data class TemplateInstanceCreateRequest(
     var templateId: String,
     @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
     var templateVersion: Long?,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
     @ApiModelProperty("是否使用通知配置", required = false)
     var useSubscriptionSettings: Boolean?,
     @ApiModelProperty("是否使用标签配置", required = false)
@@ -42,5 +44,12 @@ data class TemplateInstanceCreateRequest(
     @ApiModelProperty("是否使用并发组配置", required = false)
     var useConcurrencyGroup: Boolean?,
     @ApiModelProperty("创建实例的模式", required = false)
-    var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
+    var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
+    // TODO #8161 增加空模板的处理逻辑
+    @ApiModelProperty("是否为空模板", required = false)
+    var emptyTemplate: Boolean? = false,
+    @ApiModelProperty("标签", required = false)
+    var labels: List<String> = emptyList(),
+    @ApiModelProperty("静态流水线组", required = false)
+    var staticViews: List<String> = emptyList()
 )

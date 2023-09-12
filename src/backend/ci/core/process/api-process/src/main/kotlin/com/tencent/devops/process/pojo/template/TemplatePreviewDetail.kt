@@ -2,7 +2,6 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import io.swagger.annotations.ApiModelProperty
 
 data class TemplatePreviewDetail(
