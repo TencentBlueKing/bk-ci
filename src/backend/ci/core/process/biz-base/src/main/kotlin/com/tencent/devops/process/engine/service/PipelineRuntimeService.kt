@@ -83,6 +83,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -639,7 +640,7 @@ class PipelineRuntimeService @Autowired constructor(
         val lastTimeBuildContainers = pipelineContainerService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(context.projectId, context.buildId)
 
-        val buildHistory = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
+        val buildInfo = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
         context.watcher.stop()
         // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
@@ -869,35 +870,40 @@ class PipelineRuntimeService @Autowired constructor(
 
         val modelJson = JsonUtil.toJson(fullModel, formatted = false)
 
-        if (buildHistory != null) {
-            if (context.retryStartTaskId.isNullOrBlank()) { // 完整重试,重置启动时间
-                buildHistory.startTime = context.now.timestampmilli()
-            }
-            buildHistory.endTime = null
-            buildHistory.queueTime = context.now.timestampmilli() // for EPC
-            buildHistory.status = context.startBuildStatus
-            buildHistory.concurrencyGroup = context.concurrencyGroup
-            // 重试时启动参数只需要刷新执行次数
-            buildHistory.buildParameters = buildHistory.buildParameters?.let { self ->
-                val newList = self.toMutableList()
-                val retryCount = context.executeCount - 1
-                newList.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
-                    param.value = retryCount
-                } ?: run {
-                    newList.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
-                }
-                newList
-            }
-            context.buildNum = buildHistory.buildNum
+        val retryInfo = if (buildInfo != null) {
+            context.buildNum = buildInfo.buildNum
+            BuildRetryInfo(
+                status = context.startBuildStatus,
+                rebuild = context.retryStartTaskId.isNullOrBlank(),
+                nowTime = context.now,
+                buildParameters = buildInfo.buildParameters?.let { self ->
+                    val newList = self.toMutableList()
+                    val retryCount = context.executeCount - 1
+                    newList.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
+                        param.value = retryCount
+                    } ?: run {
+                        newList.add(BuildParameters(key = PIPELINE_RETRY_COUNT, value = retryCount)) // 不加readOnly，历史原因
+                    }
+                    newList
+                },
+                concurrencyGroup = context.concurrencyGroup
+            )
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
             context.genBuildNumAlias()
+            null
         }
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            if (buildHistory != null) {
-
+            if (buildInfo != null) {
+                pipelineBuildDao.updateBuildRetryInfo(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    retryInfo = retryInfo!!
+                )
                 // 重置状态和人
                 buildDetailDao.update(
                     dslContext = transactionContext,
