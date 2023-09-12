@@ -132,9 +132,12 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
                     "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
                     "&tokenType=${TokenTypeEnum.OAUTH.name}&filePath=file&format=zip&isProjectPathWrapped=false"
+            logger.info("descriptionAnalysis get url:$url")
             val response = OkhttpUtils.doPost(url, "")
-            logger.info("descriptionAnalysis response isSuccessful:${response.isSuccessful} code:${response.code}" +
-                    "message:${response.message}")
+            if (!response.isSuccessful) {
+                logger.warn("descriptionAnalysis response code:${response.code} message:${response.message}")
+                return  description
+            }
             OkhttpUtils.downloadFile(response, file)
             ZipUtil.unZipFile(file, "$atomPath/file", false)
             result = storeFileService.descriptionAnalysis(
