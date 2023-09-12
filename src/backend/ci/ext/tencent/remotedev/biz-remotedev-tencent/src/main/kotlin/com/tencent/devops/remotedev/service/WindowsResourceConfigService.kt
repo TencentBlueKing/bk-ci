@@ -29,7 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.remotedev.dao.WindowsResourceConfigDao
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
