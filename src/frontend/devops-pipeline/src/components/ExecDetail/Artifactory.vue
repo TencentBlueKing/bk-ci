@@ -15,20 +15,27 @@
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('details.path')" prop="fullName" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('details.filesize')" width="150" prop="size" show-overflow-tooltip>
-                <template slot-scope="props">
-                    {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
-                </template>
-            </bk-table-column>
+            <bk-table-column :label="$t('details.filesize')" width="150" prop="size" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('details.repoType')" width="150" prop="artifactoryType" :formatter="repoTypeFormatter" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('operate')" width="150">
                 <template slot-scope="props">
                     <bk-button text
                         @click="downLoadFile(props.row)"
                         v-if="hasPermission && props.row.artifactoryType !== 'IMAGE'"
-                        :disabled="!hasPermission"
-                        v-bk-tooltips="{ content: $t('details.noDownloadPermTips'), disabled: hasPermission, allowHTML: false }"
-                    >{{ $t('download') }}</bk-button>
+                        :disabled="props.row.disabled"
+                    >
+                        <span v-bk-tooltips="{ content: props.row.disabledTips, disabled: !props.row.disabled }">
+                            {{ $t('download') }}
+                        </span>
+                    </bk-button>
+                    <bk-button text
+                        v-else-if="!hasPermission && props.row.artifactoryType !== 'IMAGE'"
+                        disabled
+                    >
+                        <span v-bk-tooltips="{ content: $t('details.noDownloadPermTips') }">
+                            {{ $t('download') }}
+                        </span>
+                    </bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -95,7 +102,10 @@
                 ]).then(([res, permission]) => {
                     this.artifactories = res.records.map(item => ({
                         ...item,
-                        icon: item.folder ? 'folder' : extForFile(item.name)
+                        icon: item.folder ? 'folder' : extForFile(item.name),
+                        size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size),
+                        disabled: this.sizeFormatter(this.getFolderSize(item)).includes('GB') && this.sizeFormatter(this.getFolderSize(item)).split(' ')[0] > 10,
+                        disabledTips: this.$t('downloadDisabledTips')
                     })) || []
                     this.hasPermission = permission
                     if (this.artifactories.length <= 0) {
