@@ -11,8 +11,6 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
-import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -21,7 +19,6 @@ import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
@@ -41,7 +38,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val dataTransferService: DataTransferService
 ) : OpRemoteDevResource {
 
@@ -135,46 +131,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        return Result(windowsResourceConfigService.getAllType())
-    }
-
-    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceTypeConfig): Result<Boolean> {
-        return Result(windowsResourceConfigService.addWindowsResource(windowsResourceConfig))
-    }
-
-    override fun updateWindowsResource(
-        userId: String,
-        id: Long,
-        windowsResourceConfig: WindowsResourceTypeConfig
-    ): Result<Boolean> {
-        return Result(windowsResourceConfigService.updateWindowsResource(id, windowsResourceConfig))
-    }
-
-    override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
-        return Result(windowsResourceConfigService.deleteWindowsResource(id))
-    }
-
-    override fun addWindowsZone(userId: String, windowsResourceConfig: WindowsResourceZoneConfig): Result<Boolean> {
-        return Result(windowsResourceConfigService.addWindowsResourceZone(windowsResourceConfig))
-    }
-
-    override fun getWindowsResourceZoneList(userId: String): Result<List<WindowsResourceZoneConfig>> {
-        return Result(windowsResourceConfigService.getAllZone())
-    }
-
-    override fun updateWindowsZone(
-        userId: String,
-        id: Long,
-        windowsResourceConfig: WindowsResourceZoneConfig
-    ): Result<Boolean> {
-        return Result(windowsResourceConfigService.updateWindowsResourceZone(id, windowsResourceConfig))
-    }
-
-    override fun deleteWindowsZone(userId: String, id: Long): Result<Boolean> {
-        return Result(windowsResourceConfigService.deleteWindowsResourceZone(id))
-    }
-
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
         return Result(
             workspaceService.shareWorkspace(
@@ -232,7 +188,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                     (machineType.isNullOrEmpty() || it.machineType == machineType) &&
-                (ip.isNullOrEmpty() || it.cgsIp == ip) &&
+                    (ip.isNullOrEmpty() || it.cgsIp == ip) &&
                     (status == null || it.status == status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
