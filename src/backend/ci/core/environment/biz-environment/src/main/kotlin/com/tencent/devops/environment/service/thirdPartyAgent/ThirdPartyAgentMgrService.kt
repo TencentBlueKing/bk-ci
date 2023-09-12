@@ -605,6 +605,22 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
+    /**
+     * 老的使用全局构建机的先走这个逻辑，未来评估慢慢下掉
+     *
+     */
+    @Deprecated("getAgent")
+    fun getAgentGlobal(
+        projectId: String,
+        agentId: String
+    ): AgentResult<ThirdPartyAgent?> {
+        logger.info("Get the agent($agentId) of project($projectId)")
+        val id = HashUtil.decodeIdToLong(agentId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
+            ?: return AgentResult(AgentStatus.DELETE, null)
+        return getResultByRecord(projectId, agentId, agentRecord)
+    }
+
     private fun getResultByRecord(
         projectId: String,
         agentId: String,

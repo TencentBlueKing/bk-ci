@@ -71,6 +71,11 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return thirdPartyAgentService.getAgent(projectId, agentId)
     }
 
+    @Deprecated("getAgentById")
+    override fun getAgentByIdGlobal(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
+        return thirdPartyAgentService.getAgentGlobal(projectId, agentId)
+    }
+
     override fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgentByDisplayName(projectId, displayName)
     }
