@@ -27,6 +27,11 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.constants.AuditAttributeNames
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -552,6 +557,17 @@ class PipelineBuildFacadeService(
         }
     }
 
+
+    @AuditEntry(actionId = "pipeline_execute")
+    @ActionAuditRecord(
+        actionId = "pipeline_execute",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline",
+            instanceIds = "#pipelineId"
+        ),
+        content = "execute pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun buildManualStartup(
         userId: String,
         startType: StartType,
@@ -593,9 +609,12 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
         val startEpoch = System.currentTimeMillis()
         try {
+            /**
+             * 设置审计上下文实例名称
+             */
+            ActionAuditContext.current().setInstanceName(readyToBuildPipelineInfo.pipelineName)
 
             val model = getModel(projectId, pipelineId)
 

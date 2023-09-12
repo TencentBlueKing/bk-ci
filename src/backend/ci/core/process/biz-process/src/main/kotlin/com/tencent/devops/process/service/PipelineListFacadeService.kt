@@ -28,6 +28,11 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.constants.AuditAttributeNames
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -108,7 +113,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_RECENT_USE
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -117,6 +121,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -429,6 +434,15 @@ class PipelineListFacadeService @Autowired constructor(
      * 其中 PIPELINE_VIEW_FAVORITE_PIPELINES，PIPELINE_VIEW_MY_PIPELINES，PIPELINE_VIEW_ALL_PIPELINES
      * 分别对应 我的收藏，我的流水线，全部流水线
      */
+    @AuditEntry(actionId = "pipeline_list")
+    @ActionAuditRecord(
+        actionId = "pipeline_list",
+        instance = AuditInstanceRecord(
+            resourceType = "pipeline"
+        ),
+        content = "list pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
+            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+    )
     fun listViewPipelines(
         userId: String,
         projectId: String,
@@ -691,6 +705,12 @@ class PipelineListFacadeService @Autowired constructor(
                     )
                 }
             }
+            // 审计
+            ActionAuditContext.current().apply {
+                instanceIdList = pipelineList.map { it.pipelineId }
+                instanceNameList = pipelineList.map { it.pipelineName }
+            }
+
             watcher.stop()
 
             return PipelineViewPipelinePage(
