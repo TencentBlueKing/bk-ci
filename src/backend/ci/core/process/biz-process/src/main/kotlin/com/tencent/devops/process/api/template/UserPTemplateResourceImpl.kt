@@ -36,6 +36,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateId
@@ -43,8 +44,10 @@ import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.TemplatePACService
+import com.tencent.devops.process.service.template.TemplateSettingService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -58,7 +61,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPTemplateResourceImpl @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
-    private val templatePACService: TemplatePACService
+    private val templatePACService: TemplatePACService,
+    private val templateSettingService: TemplateSettingService,
+    private val templateCommonService: TemplateCommonService
 ) : UserPTemplateResource {
 
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
@@ -159,7 +164,7 @@ class UserPTemplateResourceImpl @Autowired constructor(
                 )
             }
         }
-        return Result(templateFacadeService.updateTemplateSetting(projectId, userId, templateId, setting))
+        return Result(templateSettingService.updateTemplateSetting(projectId, userId, templateId, setting))
     }
 
     override fun getTemplateSetting(
@@ -167,7 +172,7 @@ class UserPTemplateResourceImpl @Autowired constructor(
         projectId: String,
         templateId: String
     ): Result<PipelineSetting> {
-        return Result(templateFacadeService.getTemplateSetting(projectId, userId, templateId))
+        return Result(templateSettingService.getTemplateSetting(projectId, userId, templateId))
     }
 
     override fun copyTemplate(
@@ -188,15 +193,15 @@ class UserPTemplateResourceImpl @Autowired constructor(
     }
 
     override fun hasManagerPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(templateFacadeService.hasManagerPermission(projectId, userId))
+        return Result(templateCommonService.hasManagerPermission(projectId, userId))
     }
 
     override fun previewTemplate(
         userId: String,
         projectId: String,
         templateId: String,
-        needSetting: Boolean?
+        highlightType: HighlightType?
     ): Result<TemplatePreviewDetail> {
-        return Result(templatePACService.previewTemplate(userId, projectId, templateId, needSetting))
+        return Result(templatePACService.previewTemplate(userId, projectId, templateId, highlightType))
     }
 }

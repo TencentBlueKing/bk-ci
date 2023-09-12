@@ -237,11 +237,13 @@ class PipelineBuildFacadeService(
 
         var canManualStartup = false
         var canElementSkip = false
+        var useLatestParameters = false
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
+                    useLatestParameters = it.useLatestParameters ?: false
                     return@lit
                 }
             }
@@ -312,7 +314,8 @@ class PipelineBuildFacadeService(
             canManualStartup = canManualStartup,
             canElementSkip = canElementSkip,
             properties = params,
-            buildNo = currentBuildNo
+            buildNo = currentBuildNo,
+            useLatestParameters = useLatestParameters
         )
     }
 

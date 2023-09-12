@@ -1068,7 +1068,7 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineResourceVersion? {
+    ): PipelineResourceVersion {
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -1114,7 +1114,7 @@ class PipelineRepositoryService constructor(
                 description = null
             )
         }
-        return resultVersion
+        return resultVersion!!
     }
 
     private fun str2model(

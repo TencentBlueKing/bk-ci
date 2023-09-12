@@ -215,8 +215,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId) ?: return null
-        return pipelineBuildDao.convert(t)
+        return pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId)
     }
 
     /** 根据状态信息获取并发组构建列表

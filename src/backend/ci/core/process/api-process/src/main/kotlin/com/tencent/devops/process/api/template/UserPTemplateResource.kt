@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateId
@@ -311,7 +312,7 @@ interface UserPTemplateResource {
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @QueryParam("needSetting")
-        needSetting: Boolean?
+        @QueryParam("highlightType")
+        highlightType: HighlightType?
     ): Result<TemplatePreviewDetail>
 }

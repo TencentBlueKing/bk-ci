@@ -35,7 +35,8 @@ import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.PipelineVersionInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
@@ -108,12 +109,12 @@ class PipelineRepositoryVersionService(
         }
     }
 
-    fun getPipelineVersion(
+    fun getPipelineVersionWithInfo(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineVersionInfo? {
+    ): PipelineVersionWithInfo? {
         if (pipelineInfo == null) {
             return null
         }
@@ -124,7 +125,7 @@ class PipelineRepositoryVersionService(
             version = version,
             includeDraft = true
         ) ?: return null
-        return PipelineVersionInfo(
+        return PipelineVersionWithInfo(
             createTime = pipelineInfo.createTime,
             creator = pipelineInfo.creator,
             canElementSkip = pipelineInfo.canElementSkip,
@@ -149,6 +150,19 @@ class PipelineRepositoryVersionService(
         )
     }
 
+    fun getPipelineVersionSimple(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple? {
+        return pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+    }
+
     fun listPipelineVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
@@ -159,7 +173,7 @@ class PipelineRepositoryVersionService(
         versionName: String?,
         creator: String?,
         description: String?
-    ): Pair<Int, MutableList<PipelineVersionInfo>> {
+    ): Pair<Int, MutableList<PipelineVersionWithInfo>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
         }
@@ -182,11 +196,11 @@ class PipelineRepositoryVersionService(
             offset = offset,
             limit = limit
         )
-        val list = mutableListOf<PipelineVersionInfo>()
+        val list = mutableListOf<PipelineVersionWithInfo>()
 
         result.forEach {
             list.add(
-                PipelineVersionInfo(
+                PipelineVersionWithInfo(
                     createTime = pipelineInfo.createTime,
                     creator = pipelineInfo.creator,
                     canElementSkip = pipelineInfo.canElementSkip,
