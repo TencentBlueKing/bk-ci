@@ -44,7 +44,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
-import javax.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -53,6 +52,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED", "LongParameterList", "LongMethod")
 @Service
@@ -182,7 +182,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     messageCode = BK_CONTAINER_SERVICE,
                     language = I18nUtil.getLanguage(userId)
                 )
-        ) &&
+            ) &&
             tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
             request != null &&
             bkToken != null &&
@@ -196,7 +196,8 @@ class UserProjectServiceImpl @Autowired constructor(
             logger.info("listService interface containerBgIdList:$containerBgIdList")
             if (containerBgIdList.isNotEmpty() &&
                 containerUrlList.isNotEmpty() &&
-                containerUrlList.size == containerBgIdList.size
+                containerUrlList.size == containerBgIdList.size &&
+                !userId.endsWith("@tai")
             ) {
                 val userDeptDetail = tofService.getUserDeptDetail(userId)
                 run breaking@{
