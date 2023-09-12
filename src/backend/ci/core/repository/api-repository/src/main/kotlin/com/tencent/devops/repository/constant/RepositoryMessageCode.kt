@@ -73,6 +73,7 @@ object RepositoryMessageCode {
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

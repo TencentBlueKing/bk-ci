@@ -51,6 +51,11 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeP4Repository
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
@@ -63,12 +68,15 @@ import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistr
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import java.time.LocalDateTime
 import java.util.Base64
 import javax.ws.rs.NotFoundException
@@ -588,7 +596,7 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
+        checkRepositoryUrl(record, repository, userId)
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -1086,6 +1094,53 @@ class RepositoryService @Autowired constructor(
             token = token,
             tokenType = finalTokenType
         )
+    }
+
+    fun checkRepositoryUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: Repository,
+        userId: String
+    ) {
+        val sourceRepoUrl = sourceRepo.url
+        val targetRepoUrl = targetRepo.url
+        val result = when (targetRepo) {
+            is CodeSvnRepository -> {
+                val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
+                val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
+                val targetSubPath = targetRepoUrl.substring(
+                    targetRepoUrl.indexOf(targetRepoUrl)
+                        + targetRepoUrl.length
+                )
+                val sourceSubPath = targetRepoUrl.substring(
+                    targetRepoUrl.indexOf(targetRepoUrl)
+                        + targetRepoUrl.length
+                )
+                sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
+            }
+
+            is CodeTGitRepository, is CodeGitRepository, is CodeGitlabRepository, is GithubRepository -> {
+                val sourceRepoInfo = GitUtils.getDomainAndRepoName(sourceRepoUrl)
+                val targetRepoInfo = GitUtils.getDomainAndRepoName(targetRepoUrl)
+                sourceRepoInfo.first != targetRepoInfo.first || sourceRepoInfo.second != targetRepoInfo.second
+            }
+
+            is CodeP4Repository -> {
+                sourceRepoUrl != targetRepoUrl
+            }
+
+            else -> {
+                logger.warn("unknown repository type")
+                false
+            }
+        }
+        if (result) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
     }
 
     companion object {
