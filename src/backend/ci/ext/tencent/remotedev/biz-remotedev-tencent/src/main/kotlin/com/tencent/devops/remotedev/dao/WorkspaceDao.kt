@@ -510,6 +510,7 @@ class WorkspaceDao {
             .unionAll(
                 dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
                     .from(t1)
+                    .where(conditions)
             )
             .fetch()
     }
