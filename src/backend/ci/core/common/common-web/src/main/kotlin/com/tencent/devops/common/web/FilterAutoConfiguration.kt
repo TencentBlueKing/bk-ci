@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.web
 
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.web.filter.RequestProjectPermissionFilter
 import com.tencent.devops.common.web.filter.ServiceSecurityFilter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -51,5 +53,7 @@ class FilterAutoConfiguration(
     fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
 
     @Bean
-    fun requestProjectPermissionFilter() = RequestProjectPermissionFilter()
+    fun requestProjectPermissionFilter(
+        @Autowired redisOperation: RedisOperation
+    ) = RequestProjectPermissionFilter(redisOperation)
 }

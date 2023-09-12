@@ -152,7 +152,7 @@ class PipelineJobBean(
         val projectId = comboKeys[2]
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
-            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)) {
+            if (redisOperation.isMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)) {
                 logger.warn("Project[$projectId] has restricted build permissions,please try again later!")
                 return
             }

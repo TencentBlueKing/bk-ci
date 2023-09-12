@@ -38,12 +38,12 @@ class ProjectManageServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : ProjectManageService {
     override fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         return true
     }
 
     override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
-        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectKey(), projectId)
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         return true
     }
 }

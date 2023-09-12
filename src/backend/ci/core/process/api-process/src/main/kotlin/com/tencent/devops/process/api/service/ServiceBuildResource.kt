@@ -40,7 +40,9 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -151,6 +153,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/batchBasic")
     @Path("/batchBasic")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun batchServiceBasic(
         @ApiParam("构建ID", required = true)
         buildIds: Set<String>
@@ -178,6 +181,7 @@ interface ServiceBuildResource {
     @ApiOperation("搜索流水线参数")
     @POST
     @Path("/{projectId}/{pipelineId}/manualSearchOptions")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun manualSearchOptions(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -574,6 +578,7 @@ interface ServiceBuildResource {
     @ApiOperation("获取构建中的变量值")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/variables")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildVariableValue(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -598,6 +603,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBatchBuildStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -637,6 +643,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
     @Path("/{projectId}/getPipelineLatestBuild")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineLatestBuildByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
