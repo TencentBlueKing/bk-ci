@@ -70,5 +70,4 @@ class ApigwJobResourceV4Impl @Autowired constructor(
     ): Result<QueryJobInstanceLogsResult> {
         return client.get(ServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
     }
-
 }
