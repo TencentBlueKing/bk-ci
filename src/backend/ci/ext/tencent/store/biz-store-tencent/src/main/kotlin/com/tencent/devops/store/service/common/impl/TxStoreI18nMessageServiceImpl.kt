@@ -31,12 +31,19 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.constant.MASTER
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import java.io.File
+import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
+import org.springframework.util.FileSystemUtils
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
@@ -48,10 +55,9 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
     }
 
-    override fun getPropertiesFileStr(
+    override fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
@@ -61,7 +67,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
                     repoId = repositoryHashId,
-                    filePath = "$i18nDir/$fileName",
+                    filePath = fileName,
                     reversion = null,
                     branch = branch,
                     repositoryType = null
@@ -73,7 +79,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         } else {
             // 直接从仓库拉取文件
             val filePath =
-                URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
+                URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
             return client.get(ServiceArtifactoryResource::class).getFileContent(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = bkrepoStoreProjectId,
@@ -108,5 +114,40 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 filePath = filePath
             ).data
         }
+    }
+
+    override fun descriptionAnalysis(
+        userId: String,
+        description: String,
+        atomPath: String,
+        language: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): String {
+        if (repositoryHashId.isNullOrBlank()) return description
+        var result = description
+        val file = File(atomPath, "file.zip")
+        try {
+            val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
+            val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
+                    "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
+                    "&tokenType=${TokenTypeEnum.OAUTH.name}&filePath=file&format=zip&isProjectPathWrapped=false"
+            val response = OkhttpUtils.doPost(url, "")
+            OkhttpUtils.downloadFile(response, file)
+            ZipUtil.unZipFile(file, "$atomPath/file", false)
+            result = storeFileService.descriptionAnalysis(
+                userId = userId,
+                description = description,
+                atomPath = atomPath,
+                client = client,
+                language = language
+            )
+        }  catch (ignored: Throwable) {
+            logger.warn("BKSystemErrorMonitor|archive atom file fail|error=${ignored.message}")
+        } finally {
+            file.delete()
+            FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
+        }
+        return result
     }
 }

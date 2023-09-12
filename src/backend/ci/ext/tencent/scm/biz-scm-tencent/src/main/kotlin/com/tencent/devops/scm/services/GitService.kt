@@ -1719,6 +1719,9 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String? = null,
+        format: String? = "zip",
+        isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
         logger.info("downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
@@ -1728,6 +1731,13 @@ class GitService @Autowired constructor(
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        url.append("&format=$format")
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        response.contentType = "application/$format"
+        response.setHeader("Content-Disposition", "attachment; filename=${repoName}.$format")
         OkhttpUtils.downloadFile(url.toString(), response)
     }
 
