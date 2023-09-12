@@ -18,6 +18,8 @@ class MacVmTypeService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(MacVmTypeService::class.java)
+        private const val STREAM_DEFAULT_SYSTEM_VERSION = "Monterey12.4"
+        private const val STREAM_DEFAULT_XCODE_VERSION = "14.1"
     }
 
     fun listSystemVersion(): List<String> {
@@ -80,24 +82,24 @@ class MacVmTypeService @Autowired constructor(
         }
     }
 
-    fun getSystemVersionByVersion(version: String?, xcodeVersion: String?): Pair<String?, String> {
+    fun getStreamSystemVersionByVersion(version: String?, xcodeVersion: String?): Pair<String, String> {
         // 兼容stream旧版语法
         if (version == "latest" || version.isNullOrBlank()) {
             val formatXcodeVersion = if (xcodeVersion.isNullOrBlank()) {
-                "14.1"
+                STREAM_DEFAULT_XCODE_VERSION
             } else {
                 xcodeVersion
             }
-            return Pair("Monterey12.4", formatXcodeVersion)
+            return Pair(STREAM_DEFAULT_SYSTEM_VERSION, formatXcodeVersion)
         }
 
         // 不存在的系统版本默认macos12
         val systemVersionRecord = virtualMachineTypeDao.getSystemVersionByVersion(dslContext, version)
-            ?: return Pair("Monterey12.4", "14.1")
+            ?: return Pair(STREAM_DEFAULT_SYSTEM_VERSION, STREAM_DEFAULT_XCODE_VERSION)
 
         return Pair(
             systemVersionRecord.systemVersion,
-            systemVersionRecord.xcodeVersion.trim().split(";").first()
+            systemVersionRecord.xcodeVersion.trim().split(";").first { it.isNotEmpty() }
         )
     }
 

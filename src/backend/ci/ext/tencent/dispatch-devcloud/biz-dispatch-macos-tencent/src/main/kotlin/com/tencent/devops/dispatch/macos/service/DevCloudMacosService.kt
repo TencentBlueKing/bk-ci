@@ -126,7 +126,7 @@ class DevCloudMacosService @Autowired constructor(
         val isStreamProject = dispatchMessage.projectId.startsWith("git_")
 
         if (isStreamProject) {
-            val (streamSystemVersion, streamXcodeVersion) = macVmTypeService.getSystemVersionByVersion(
+            val (streamSystemVersion, streamXcodeVersion) = macVmTypeService.getStreamSystemVersionByVersion(
                 systemVersion,
                 xcodeVersion
             )
