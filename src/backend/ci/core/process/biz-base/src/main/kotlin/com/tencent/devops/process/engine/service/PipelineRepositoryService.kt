@@ -1034,11 +1034,15 @@ class PipelineRepositoryService constructor(
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
         return if (version == null) { // 取最新版，直接从旧版本表读
-            pipelineResourceDao.getLatestVersionResource(
+            pipelineResourceVersionDao.getDraftVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: return null
+            ) ?: pipelineResourceDao.getLatestVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         } else {
             pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,

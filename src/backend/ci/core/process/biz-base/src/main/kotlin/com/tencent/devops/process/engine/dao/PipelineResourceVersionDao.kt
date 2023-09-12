@@ -194,6 +194,44 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun getDraftVersionResource(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val record = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.COMMITTING.name))
+                .fetchAny() ?: return null
+            return PipelineResourceVersion(
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                version = record.version,
+                model = record.model?.let { str ->
+                    try {
+                        JsonUtil.to(str, Model::class.java)
+                    } catch (ignore: Exception) {
+                        null
+                    }
+                } ?: return null,
+                yaml = record.yaml,
+                creator = record.creator,
+                versionName = record.versionName,
+                createTime = record.createTime,
+                pipelineVersion = record.pipelineVersion,
+                triggerVersion = record.triggerVersion,
+                settingVersion = record.settingVersion,
+                referFlag = record.referFlag,
+                referCount = record.referCount,
+                status = record.status?.let { VersionStatus.valueOf(it) },
+                description = record.description,
+                debugBuildId = record.debugBuildId,
+                baseVersion = record.baseVersion
+            )
+        }
+    }
+
     fun clearDraftVersion(
         dslContext: DSLContext,
         projectId: String,
