@@ -136,17 +136,17 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             val response = OkhttpUtils.doPost(url, "")
             if (!response.isSuccessful) {
                 logger.warn("descriptionAnalysis response code:${response.code} message:${response.message}")
-                return description
+            } else {
+                OkhttpUtils.downloadFile(response, file)
+                ZipUtil.unZipFile(file, "$atomPath/file", false)
+                result = storeFileService.descriptionAnalysis(
+                    userId = userId,
+                    description = description,
+                    atomPath = atomPath,
+                    client = client,
+                    language = language
+                )
             }
-            OkhttpUtils.downloadFile(response, file)
-            ZipUtil.unZipFile(file, "$atomPath/file", false)
-            result = storeFileService.descriptionAnalysis(
-                userId = userId,
-                description = description,
-                atomPath = atomPath,
-                client = client,
-                language = language
-            )
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|archive atom file fail|error=${ignored.message}")
         } finally {
