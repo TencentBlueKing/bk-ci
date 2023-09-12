@@ -85,7 +85,7 @@ stages:
               bizId: "100205"
               scriptType: "1"
               scriptContent: |
-                cd /data/tmp
+                cd /data/tmp-rbac
                 rm -rf frontend
                 mkdir -p frontend
                 unzip -o frontend.zip -d frontend
