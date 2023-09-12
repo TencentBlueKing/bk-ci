@@ -33,17 +33,18 @@ import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.Executors
+import javax.ws.rs.core.HttpHeaders
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
@@ -52,7 +53,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val bkgptService: BKGPTService,
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceCommon: WorkspaceCommon
 ) : UserRemoteDevResource {
 
     companion object {
@@ -109,8 +111,21 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceConfig>> {
+    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
         logger.info("getAllWindowsResourceConfig|$userId")
-        return Result(windowsResourceConfigService.getAllConfig())
+        return Result(windowsResourceConfigService.getAllType())
+    }
+
+    override fun allWindowsQuota(userId: String): Result<Map<String, Map<String, Int>>> {
+        val res = mutableMapOf<String, MutableMap<String, Int>>()
+        logger.info("allWindowsQuota|$userId")
+        workspaceCommon.syncStartCloudResourceList().forEach {
+            val key = it.zoneId.replace(Regex("\\d+"), "")
+            val map = res.getOrPut(key) { mutableMapOf() }
+            if (it.status == 11) {
+                map[it.machineType] = (map[it.machineType] ?: 0) + 1
+            }
+        }
+        return Result(res)
     }
 }

@@ -28,44 +28,31 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.db.utils.skipCheck
-import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
-import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.model.remotedev.tables.TWindowsResourceZone
+import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceZoneRecord
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.jooq.RecordMapper
+import org.springframework.stereotype.Repository
 
 @Repository
-class WindowsResourceConfigDao {
+class WindowsResourceZoneDao {
 
     fun save(
         dslContext: DSLContext,
-        config: WindowsResourceConfig
+        config: WindowsResourceZoneConfig
     ): Long {
-        return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+        return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
             dslContext.insertInto(
                 this,
                 ZONE,
                 SHORT_NAME,
-                SIZE,
-                TYPE,
-                GPU,
-                CPU,
-                MEMORY,
-                DISK,
-                HDISK,
                 DESCRIPTION
             ).values(
                 config.zone,
                 config.zoneShortName,
-                config.size,
-                config.type ?: "",
-                config.gpu,
-                config.cpu,
-                config.memory,
-                config.disk,
-                config.hdisk ?: 1,
                 config.description
             ).returning(ID).fetchOne()!!.id
         }
@@ -74,58 +61,36 @@ class WindowsResourceConfigDao {
     fun fetchAll(
         dslContext: DSLContext,
         withUnavailable: Boolean = false
-    ): List<TWindowsResourceConfigRecord> {
-        return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+    ): List<WindowsResourceZoneConfig> {
+        return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
             }
                 .skipCheck()
-                .fetch()
+                .fetch(mapper)
         }
     }
 
     fun fetchAny(
         dslContext: DSLContext,
-        id: Int
-    ): TWindowsResourceConfigRecord? {
-        return with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+        zoneId: String
+    ): WindowsResourceZoneConfig? {
+        return with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
             dslContext.selectFrom(this)
-                .where(ID.eq(id.toLong()))
-                .fetchAny()
+                .where(SHORT_NAME.eq(zoneId))
+                .fetchAny(mapper)
         }
     }
 
-    fun fetchCgsData(
-        dslContext: DSLContext,
-        zoneId: String?,
-        machineType: String?
-    ): TWindowsResourceConfigRecord? {
-        with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
-            val conditions = mutableListOf<Condition>()
-            zoneId?.let { conditions.add(SHORT_NAME.eq(it)) }
-            machineType?.let { conditions.add(SIZE.eq(it)) }
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchAny()
-        }
-    }
-
-    fun updateWindowsResourceConfig(
+    fun updateWindowsResourceZoneConfig(
         id: Long,
-        config: WindowsResourceConfig,
+        config: WindowsResourceZoneConfig,
         dslContext: DSLContext
     ) {
-        with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+        with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
             dslContext.update(this)
                 .set(ZONE, config.zone)
                 .set(SHORT_NAME, config.zoneShortName)
-                .set(SIZE, config.size)
-                .set(TYPE, config.type ?: "")
-                .set(GPU, config.gpu)
-                .set(CPU, config.cpu)
-                .set(MEMORY, config.memory)
-                .set(DISK, config.disk)
-                .set(HDISK, config.hdisk ?: 1)
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -138,11 +103,29 @@ class WindowsResourceConfigDao {
         id: Long,
         dslContext: DSLContext
     ) {
-        with(TWindowsResourceConfig.T_WINDOWS_RESOURCE_CONFIG) {
+        with(TWindowsResourceZone.T_WINDOWS_RESOURCE_ZONE) {
             dslContext.delete(this)
                 .where(ID.eq(id))
                 .limit(1)
                 .execute()
         }
+    }
+
+    class TWindowsResourceZoneJooqMapper : RecordMapper<TWindowsResourceZoneRecord, WindowsResourceZoneConfig> {
+        override fun map(record: TWindowsResourceZoneRecord?): WindowsResourceZoneConfig? {
+            return record?.run {
+                WindowsResourceZoneConfig(
+                    id = id,
+                    available = ByteUtils.byte2Bool(availabled),
+                    zone = zone,
+                    zoneShortName = shortName,
+                    description = description
+                )
+            }
+        }
+    }
+
+    companion object {
+        val mapper = TWindowsResourceZoneJooqMapper()
     }
 }

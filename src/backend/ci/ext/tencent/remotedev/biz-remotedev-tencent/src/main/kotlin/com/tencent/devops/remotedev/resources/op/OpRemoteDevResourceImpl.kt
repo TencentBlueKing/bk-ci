@@ -12,6 +12,8 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -134,24 +136,44 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
-        return Result(windowsResourceConfigService.getAllConfig())
+    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceTypeConfig>> {
+        return Result(windowsResourceConfigService.getAllType())
     }
 
-    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceConfig): Result<Boolean> {
+    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceTypeConfig): Result<Boolean> {
         return Result(windowsResourceConfigService.addWindowsResource(windowsResourceConfig))
     }
 
     override fun updateWindowsResource(
         userId: String,
         id: Long,
-        windowsResourceConfig: WindowsResourceConfig
+        windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean> {
         return Result(windowsResourceConfigService.updateWindowsResource(id, windowsResourceConfig))
     }
 
     override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteWindowsResource(id))
+    }
+
+    override fun addWindowsZone(userId: String, windowsResourceConfig: WindowsResourceZoneConfig): Result<Boolean> {
+        return Result(windowsResourceConfigService.addWindowsResourceZone(windowsResourceConfig))
+    }
+
+    override fun getWindowsResourceZoneList(userId: String): Result<List<WindowsResourceZoneConfig>> {
+        return Result(windowsResourceConfigService.getAllZone())
+    }
+
+    override fun updateWindowsZone(
+        userId: String,
+        id: Long,
+        windowsResourceConfig: WindowsResourceZoneConfig
+    ): Result<Boolean> {
+        return Result(windowsResourceConfigService.updateWindowsResourceZone(id, windowsResourceConfig))
+    }
+
+    override fun deleteWindowsZone(userId: String, id: Long): Result<Boolean> {
+        return Result(windowsResourceConfigService.deleteWindowsResourceZone(id))
     }
 
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {

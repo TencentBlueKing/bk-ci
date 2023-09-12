@@ -30,25 +30,26 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间信息-创建")
-data class WorkspaceCreate(
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    var devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("是否使用官方devfile")
-    val useOfficialDevfile: Boolean?,
-    @ApiModelProperty("当前运行客户端的OS")
-    val currentOS: String?,
-    @ApiModelProperty("windows 配置id")
-    @Deprecated("not use")
-    val windowsResourceConfigId: Int?,
-    @ApiModelProperty("windows 配置")
-    val windowsType: String?,
-    @ApiModelProperty("云桌面 地域")
-    val windowsZone: String?
+@ApiModel("WINDOWS GPU资源配置表")
+data class WindowsResourceTypeConfig(
+    @ApiModelProperty("Id")
+    val id: Long?,
+    @ApiModelProperty("是否可用")
+    val available: Boolean?,
+    @ApiModelProperty("资源类型：M，L，XL，S")
+    val size: String,
+    @ApiModelProperty("GPU卡类型")
+    val type: String? = null,
+    @ApiModelProperty("vGPU")
+    val gpu: Int,
+    @ApiModelProperty("CPU")
+    val cpu: Int,
+    @ApiModelProperty("内存")
+    val memory: Int,
+    @ApiModelProperty("本地SSD盘")
+    val disk: Int,
+    @ApiModelProperty("云SSD盘")
+    val hdisk: Int? = 1,
+    @ApiModelProperty("描述")
+    val description: String
 )
