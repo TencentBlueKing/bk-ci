@@ -40,5 +40,4 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:process:api-process"))
     api("com.github.ben-manes.caffeine:caffeine")
-    api(project(":core:common:common-audit"))
 }

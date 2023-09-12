@@ -27,10 +27,6 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditEntry
-import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.constants.AuditAttributeNames
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -39,16 +35,6 @@ interface PermissionProjectService {
 
     fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
 
-    @AuditEntry(actionId = "getProjectGroupAndUserList")
-    @ActionAuditRecord(
-        actionId = "getProjectGroupAndUserList",
-        instance = AuditInstanceRecord(
-            resourceType = "test",
-            instanceIds = "#projectCode"
-        ),
-        content = "getProjectGroupAndUserList [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
-    )
     fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
 
     fun getUserProjects(userId: String): List<String>
