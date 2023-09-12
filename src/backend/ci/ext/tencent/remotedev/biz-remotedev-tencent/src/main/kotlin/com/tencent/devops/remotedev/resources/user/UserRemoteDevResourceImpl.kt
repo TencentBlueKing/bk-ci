@@ -78,10 +78,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         data: BKGPT
     ): ChunkedOutput<String> {
         /* http/2 streaming
-        *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
-        *  所以不能使用 StreamingOutput
-        *  而改用 ChunkedOutput
-        * */
+         *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
+         *  所以不能使用 StreamingOutput
+         *  而改用 ChunkedOutput
+         * */
         val output: ChunkedOutput<String> = ChunkedOutput<String>(String::class.java, SEPARATOR)
         executor.execute {
             try {

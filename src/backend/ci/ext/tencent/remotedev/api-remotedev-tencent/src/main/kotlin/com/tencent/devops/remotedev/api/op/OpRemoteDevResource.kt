@@ -37,7 +37,6 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -391,6 +390,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "projectId", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @ApiParam(value = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @ApiParam(value = "systemType", required = false)
         @QueryParam("systemType")
         systemType: WorkspaceSystemType?,
@@ -437,17 +439,6 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
-
-    @ApiOperation("转移工作空间detail数据到db")
-    @GET
-    @Path("/workspace/detail/move")
-    fun moveWorkspaceDetail(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
 
     @ApiOperation("转移数据到workspace windows 表")
     @GET

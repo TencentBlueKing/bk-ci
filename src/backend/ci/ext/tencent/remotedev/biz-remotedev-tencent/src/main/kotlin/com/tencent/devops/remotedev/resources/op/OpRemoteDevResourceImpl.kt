@@ -11,7 +11,6 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -210,11 +209,12 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun getProjectWorkspaceList(
         userId: String,
         projectId: String?,
+        workspaceName: String?,
         systemType: WorkspaceSystemType?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
+        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, workspaceName, systemType, page, pageSize))
     }
 
     override fun getStartCloudResourceList(
@@ -256,15 +256,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
-    }
-
-    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
-        // 先获取工作空间信息
-        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
-            ?: return Result(false)
-
-        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
-        return Result(true)
     }
 
     override fun windowsWorkspaceDaoInit(userId: String): Result<Boolean> {
