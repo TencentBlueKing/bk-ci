@@ -10,7 +10,4 @@ class QueryJobInstanceStatusService {
     ): QueryJobInstanceStatusResult {
         TODO()
     }
-
-
-
 }
