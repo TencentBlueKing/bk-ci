@@ -795,23 +795,19 @@ class PipelineRepositoryService constructor(
                 val transactionContext = DSL.using(configuration)
                 watcher.start("updatePipelineInfo")
                 // 写入INFO表后进行了version的自动+1
-                version = when (versionStatus == VersionStatus.RELEASED) {
-                    pipelineInfoDao.update(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = if (updateLastModifyUser == false) null else userId,
-                        updateVersion = true,
-                        pipelineName = null,
-                        pipelineDesc = null,
-                        manualStartup = canManualStartup,
-                        canElementSkip = canElementSkip,
-                        taskCount = taskCount,
-                        latestVersion = model.latestVersion
-                    )
-                } else {
-
-                }
+                version = pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = if (updateLastModifyUser == false) null else userId,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
 
                 if (version == 0) {
                     // 传过来的latestVersion已经不是最新
