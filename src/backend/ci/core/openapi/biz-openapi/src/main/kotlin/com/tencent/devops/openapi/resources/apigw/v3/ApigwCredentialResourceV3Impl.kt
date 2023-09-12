@@ -61,7 +61,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
             credentialTypesString = credentialTypesString,
             page = page ?: 1,
             pageSize = pageSize ?: 20,
-            keyword = null
+            keyword = keyword
         )
     }
 
