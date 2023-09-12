@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
-import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryDebugRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -74,104 +73,53 @@ class PipelineBuildDao {
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
-            if (!startBuildContext.debug) {
-                with(T_PIPELINE_BUILD_HISTORY) {
-                    dslContext.insertInto(
-                        this,
-                        BUILD_ID,
-                        BUILD_NUM,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        PARENT_BUILD_ID,
-                        PARENT_TASK_ID,
-                        START_USER,
-                        TRIGGER_USER,
-                        STATUS,
-                        TRIGGER,
-                        TASK_COUNT,
-                        FIRST_TASK_ID,
-                        CHANNEL,
-                        VERSION,
-                        QUEUE_TIME,
-                        BUILD_PARAMETERS,
-                        WEBHOOK_TYPE,
-                        WEBHOOK_INFO,
-                        BUILD_MSG,
-                        BUILD_NUM_ALIAS,
-                        CONCURRENCY_GROUP
-                    ).values(
-                        startBuildContext.buildId,
-                        startBuildContext.buildNum,
-                        startBuildContext.projectId,
-                        startBuildContext.pipelineId,
-                        startBuildContext.parentBuildId,
-                        startBuildContext.parentTaskId,
-                        startBuildContext.userId,
-                        startBuildContext.triggerUser,
-                        startBuildContext.startBuildStatus.ordinal,
-                        startBuildContext.startType.name,
-                        startBuildContext.taskCount,
-                        startBuildContext.firstTaskId,
-                        startBuildContext.channelCode.name,
-                        startBuildContext.resourceVersion,
-                        LocalDateTime.now(),
-                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
-                        startBuildContext.webhookInfo?.webhookType,
-                        startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                        startBuildContext.buildMsg,
-                        startBuildContext.buildNumAlias,
-                        startBuildContext.concurrencyGroup
-                    ).execute()
-                }
-            } else {
-                with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-                    dslContext.insertInto(
-                        this,
-                        BUILD_ID,
-                        BUILD_NUM,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        PARENT_BUILD_ID,
-                        PARENT_TASK_ID,
-                        START_USER,
-                        TRIGGER_USER,
-                        STATUS,
-                        TRIGGER,
-                        TASK_COUNT,
-                        FIRST_TASK_ID,
-                        CHANNEL,
-                        VERSION,
-                        QUEUE_TIME,
-                        BUILD_PARAMETERS,
-                        WEBHOOK_TYPE,
-                        WEBHOOK_INFO,
-                        BUILD_MSG,
-                        BUILD_NUM_ALIAS,
-                        CONCURRENCY_GROUP
-                    ).values(
-                        startBuildContext.buildId,
-                        startBuildContext.buildNum,
-                        startBuildContext.projectId,
-                        startBuildContext.pipelineId,
-                        startBuildContext.parentBuildId,
-                        startBuildContext.parentTaskId,
-                        startBuildContext.userId,
-                        startBuildContext.triggerUser,
-                        startBuildContext.startBuildStatus.ordinal,
-                        startBuildContext.startType.name,
-                        startBuildContext.taskCount,
-                        startBuildContext.firstTaskId,
-                        startBuildContext.channelCode.name,
-                        startBuildContext.resourceVersion,
-                        LocalDateTime.now(),
-                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
-                        startBuildContext.webhookInfo?.webhookType,
-                        startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
-                        startBuildContext.buildMsg,
-                        startBuildContext.buildNumAlias,
-                        startBuildContext.concurrencyGroup
-                    ).execute()
-                }
+            with(T_PIPELINE_BUILD_HISTORY) {
+                dslContext.insertInto(
+                    this,
+                    BUILD_ID,
+                    BUILD_NUM,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    PARENT_BUILD_ID,
+                    PARENT_TASK_ID,
+                    START_USER,
+                    TRIGGER_USER,
+                    STATUS,
+                    TRIGGER,
+                    TASK_COUNT,
+                    FIRST_TASK_ID,
+                    CHANNEL,
+                    VERSION,
+                    QUEUE_TIME,
+                    BUILD_PARAMETERS,
+                    WEBHOOK_TYPE,
+                    WEBHOOK_INFO,
+                    BUILD_MSG,
+                    BUILD_NUM_ALIAS,
+                    CONCURRENCY_GROUP
+                ).values(
+                    startBuildContext.buildId,
+                    startBuildContext.buildNum,
+                    startBuildContext.projectId,
+                    startBuildContext.pipelineId,
+                    startBuildContext.parentBuildId,
+                    startBuildContext.parentTaskId,
+                    startBuildContext.userId,
+                    startBuildContext.triggerUser,
+                    startBuildContext.startBuildStatus.ordinal,
+                    startBuildContext.startType.name,
+                    startBuildContext.taskCount,
+                    startBuildContext.firstTaskId,
+                    startBuildContext.channelCode.name,
+                    startBuildContext.resourceVersion,
+                    LocalDateTime.now(),
+                    JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                    startBuildContext.webhookInfo?.webhookType,
+                    startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    startBuildContext.buildMsg,
+                    startBuildContext.buildNumAlias,
+                    startBuildContext.concurrencyGroup
+                ).execute()
             }
         } catch (t: Throwable) {
             throw ErrorCodeException(
@@ -202,7 +150,7 @@ class PipelineBuildDao {
         pipelineId: String,
         statusSet: Set<BuildStatus>?
     ): List<BuildInfo> {
-        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -211,15 +159,6 @@ class PipelineBuildDao {
             }
             where.fetch(mapper)
         }
-        return if (normal.isEmpty()) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val where = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (!statusSet.isNullOrEmpty()) {
-                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
-            }
-            where.fetch(debugMapper)
-        } else normal
     }
 
     fun getBuildTasksByConcurrencyGroup(
@@ -228,21 +167,13 @@ class PipelineBuildDao {
         concurrencyGroup: String,
         statusSet: List<BuildStatus>
     ): List<Record2<String, String>> {
-        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
                 .fetch()
         }
-        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
-                .fetch()
-        }
-        return normal.plus(debug)
     }
 
     fun getBuildTasksByConcurrencyGroupNull(
@@ -251,7 +182,7 @@ class PipelineBuildDao {
         pipelineId: String,
         statusSet: List<BuildStatus>
     ): List<Record2<String, String>> {
-        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -259,15 +190,6 @@ class PipelineBuildDao {
                 .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
                 .fetch()
         }
-        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
-                .fetch()
-        }
-        return normal.plus(debug)
     }
 
     fun getBuildInfo(
@@ -279,20 +201,11 @@ class PipelineBuildDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
                 .fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                .fetchAny(debugMapper)
         }
     }
 
     fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(START_USER)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
-                .fetchOne(0, String::class.java)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.select(START_USER)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
@@ -1109,12 +1022,6 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .fetchAny(debugMapper)
         }
     }
 
