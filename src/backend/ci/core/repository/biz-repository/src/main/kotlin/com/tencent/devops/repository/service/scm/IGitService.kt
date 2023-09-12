@@ -180,6 +180,9 @@ interface IGitService {
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     )
 

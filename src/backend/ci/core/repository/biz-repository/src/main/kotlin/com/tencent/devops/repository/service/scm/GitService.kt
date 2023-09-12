@@ -58,6 +58,7 @@ import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.utils.scm.GitCodeUtils
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
@@ -113,7 +114,8 @@ import org.springframework.util.StringUtils
 @Suppress("ALL")
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val repositoryService: RepositoryService
 ) : IGitService {
 
     companion object {
@@ -452,9 +454,15 @@ class GitService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
+        val resetType = (authParams["resetType"] as? String)?:""
+        val queryParam = if (resetType.isNotBlank()) {
+            "resetType=$resetType"
+        } else {
+            ""
+        }
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
-            RedirectUrlTypeEnum.DEFAULT -> redirectUrl
+            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?${queryParam}"
             else -> {
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String
@@ -1172,8 +1180,11 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
-    ) {
+    ){
         logger.info("downloadGitRepoFile  repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
@@ -1181,6 +1192,13 @@ class GitService @Autowired constructor(
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        if (!format.isNullOrBlank()) {
+            url.append("&format=$format")
+        }
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
         OkhttpUtils.downloadFile(url.toString(), response)
     }
 
