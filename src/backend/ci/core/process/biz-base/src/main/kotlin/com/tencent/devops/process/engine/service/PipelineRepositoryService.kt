@@ -732,7 +732,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yaml = yamlStr,
                     baseVersion = baseVersion ?: 0,
-                    versionName = versionName ?: "init",
+                    versionName = versionName,
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -869,7 +869,7 @@ class PipelineRepositoryService constructor(
                     version = version,
                     model = model,
                     yaml = yamlStr,
-                    versionName = versionName ?: "init",
+                    versionName = versionName,
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -1064,6 +1064,8 @@ class PipelineRepositoryService constructor(
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+
+            // 获取最新的版本用于比较差异
             val latestVersion = pipelineResourceDao.getLatestVersionResource(
                 dslContext = context,
                 projectId = projectId,
@@ -1073,6 +1075,18 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(version.toString())
             )
+            val latestSetting = pipelineSettingVersionDao.getSettingVersion(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = latestVersion.settingVersion ?: latestVersion.version
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(version.toString())
+            )
+
+            // 获取目标的版本用于更新草稿
             val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
                 projectId = projectId,
@@ -1083,7 +1097,27 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
                 params = arrayOf(version.toString())
             )
-            resultVersion = targetVersion.copy(version = latestVersion.version + 1, versionName = "init")
+
+            // 计算版本号
+            val pipelineVersion = PipelineVersionUtils.getPipelineVersion(
+                currVersion = latestVersion.pipelineVersion ?: 1,
+                originModel = latestVersion.model,
+                newModel = targetVersion.model
+            )
+            val triggerVersion = PipelineVersionUtils.getTriggerVersion(
+                currVersion = latestVersion.pipelineVersion ?: 1,
+                originModel = latestVersion.model,
+                newModel = targetVersion.model
+            )
+            resultVersion = targetVersion.copy(
+                version = latestVersion.version + 1,
+                pipelineVersion = pipelineVersion,
+                triggerVersion = triggerVersion,
+                settingVersion = targetVersion.settingVersion,
+                versionName = PipelineVersionUtils.getVersionName(
+                    pipelineVersion, triggerVersion, targetVersion.settingVersion
+                )
+            )
             pipelineResourceVersionDao.clearDraftVersion(
                 dslContext = context,
                 projectId = projectId,
@@ -1095,7 +1129,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 creator = userId,
                 version = resultVersion!!.version,
-                versionName = resultVersion!!.versionName ?: "init",
+                versionName = resultVersion!!.versionName,
                 model = resultVersion!!.model,
                 baseVersion = targetVersion.version,
                 yaml = resultVersion!!.yaml,
