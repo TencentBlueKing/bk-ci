@@ -5,6 +5,8 @@ import com.tencent.bk.audit.constants.AccessTypeEnum
 import com.tencent.bk.audit.constants.UserIdentifyTypeEnum
 import com.tencent.bk.audit.exception.AuditException
 import com.tencent.bk.audit.model.AuditHttpRequest
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -12,12 +14,12 @@ import javax.servlet.http.HttpServletRequest
 
 class BkAuditRequestProvider : AuditRequestProvider {
     companion object {
-        private const val HEADER_USERNAME = "X-DEVOPS-UID"
+        private const val HEADER_USERNAME = AUTH_HEADER_USER_ID
         private const val HEADER_USER_IDENTIFY_TENANT_ID = "X-User-Identify-Tenant-Id"
         private const val HEADER_USER_IDENTIFY_TYPE = "X-User-Identify-Type"
         private const val HEADER_ACCESS_TYPE = "X-Access-Type"
-        private const val HEADER_REQUEST_ID = "X-Request-Id"
-        private const val HEADER_BK_APP_CODE = "X-Bk-App-Code"
+        private const val HEADER_REQUEST_ID = "X-DEVOPS-RID"
+        private const val HEADER_BK_APP_CODE = AUTH_HEADER_DEVOPS_APP_CODE
         private val logger = LoggerFactory.getLogger(BkAuditRequestProvider::class.java)
     }
 
