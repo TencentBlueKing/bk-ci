@@ -112,7 +112,6 @@ object BkServiceUtil {
         }
     }
 
-
     /**
      * 从class对象解析出微服务名称
      * @param clz class对象
