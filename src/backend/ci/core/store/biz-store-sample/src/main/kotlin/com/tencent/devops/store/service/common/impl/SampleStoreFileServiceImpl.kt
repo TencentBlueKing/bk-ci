@@ -38,7 +38,9 @@ import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.utils.StoreUtils
 import java.io.File
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
+@Service
 @Suppress("ALL")
 class SampleStoreFileServiceImpl : StoreFileService() {
 
