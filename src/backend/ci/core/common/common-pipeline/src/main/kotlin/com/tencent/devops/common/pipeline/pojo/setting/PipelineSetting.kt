@@ -50,8 +50,10 @@ data class PipelineSetting(
     val desc: String = "",
     @ApiModelProperty("Lock 类型", required = false)
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    @Deprecated("被successSubscriptionList取代")
     @ApiModelProperty("订阅成功相关", required = false)
     var successSubscription: Subscription = Subscription(),
+    @Deprecated("被failSubscriptionList取代")
     @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
     @ApiModelProperty("订阅成功相关", required = false)
@@ -83,4 +85,31 @@ data class PipelineSetting(
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
-)
+) {
+    // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
+    fun notifySettingIsNull(): Boolean {
+        var res = true
+        if (this.successSubscription.types.isNotEmpty()) {
+            res = false
+        }
+        if (this.failSubscription.types.isNotEmpty()) {
+            res = false
+        }
+        if (!this.successSubscriptionList.isNullOrEmpty() &&
+            this.successSubscriptionList!!.any { it.types.isNotEmpty() }
+        ) {
+            res = false
+        }
+        if (!this.failSubscriptionList.isNullOrEmpty() &&
+            this.failSubscriptionList!!.any { it.types.isNotEmpty() }
+        ) {
+            res = false
+        }
+        return res
+    }
+
+    // 校验流水线的并发组设置是否为空，即用户为配置或使用默认配置
+    fun concurrencySettingIsNull(): Boolean {
+        return this.runLockType != PipelineRunLockType.GROUP_LOCK
+    }
+}

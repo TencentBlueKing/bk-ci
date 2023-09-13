@@ -27,11 +27,9 @@
 
 package com.tencent.devops.process.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,10 +56,8 @@ class PipelineBuildMaterialService @Autowired constructor(
             return 0
         }
         val material = pipelineBuildHistoryRecord.material
-        if (StringUtils.isNoneBlank(material)) {
-            val originPipelineBuildMaterials =
-                JsonUtil.to(material, object : TypeReference<List<PipelineBuildMaterial>>() {})
-            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
+        if (!material.isNullOrEmpty()) {
+            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(material)
         }
 
         val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)

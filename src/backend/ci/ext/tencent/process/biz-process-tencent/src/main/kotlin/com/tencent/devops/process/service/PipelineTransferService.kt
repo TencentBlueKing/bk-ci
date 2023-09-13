@@ -143,7 +143,9 @@ class PipelineTransferService @Autowired constructor(
                                         signPipelineId = pipeline.pipelineId,
                                         userId = pipeline.lastModifyUser,
                                         channelCode = pipeline.channelCode,
-                                        create = false
+                                        create = false,
+                                        baseVersion = null,
+                                        yamlStr = null
                                     )
 
                                     pipelineTransferHistoryDao.save(
@@ -350,7 +352,9 @@ class PipelineTransferService @Autowired constructor(
                                     signPipelineId = it.pipelineId,
                                     userId = pipelineInfo.lastModifyUser,
                                     channelCode = pipelineInfo.channelCode,
-                                    create = false
+                                    create = false,
+                                    baseVersion = null,
+                                    yamlStr = null
                                 )
 
                                 pipelineTransferHistoryDao.save(

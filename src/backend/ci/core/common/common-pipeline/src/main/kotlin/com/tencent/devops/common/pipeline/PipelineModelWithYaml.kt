@@ -35,6 +35,10 @@ data class PipelineModelWithYaml(
     val version: Int,
     @ApiModelProperty("版本名称", required = true)
     val versionName: String?,
+    @ApiModelProperty("该版本的源版本号", required = true)
+    val baseVersion: Int?,
+    @ApiModelProperty("该版本的版本号名", required = true)
+    val baseVersionName: String?,
     @ApiModelProperty("流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
     @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)

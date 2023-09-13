@@ -621,40 +621,6 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
-        return if (t == null) {
-            null
-        } else {
-            BuildInfo(
-                projectId = t.projectId,
-                pipelineId = t.pipelineId,
-                buildId = t.buildId,
-                version = t.version,
-                buildNum = t.buildNum,
-                trigger = t.trigger,
-                status = BuildStatus.values()[t.status],
-                startUser = t.startUser,
-                triggerUser = t.triggerUser,
-                queueTime = t.queueTime?.timestampmilli() ?: 0L,
-                startTime = t.startTime?.timestampmilli() ?: 0L,
-                endTime = t.endTime?.timestampmilli() ?: 0L,
-                taskCount = t.taskCount,
-                firstTaskId = t.firstTaskId,
-                parentBuildId = t.parentBuildId,
-                parentTaskId = t.parentTaskId,
-                channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = null,
-                executeTime = t.executeTime ?: 0,
-                buildParameters = t.buildParameters?.let { self ->
-                    JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                },
-                stageStatus = kotlin.runCatching {
-                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
-                }.getOrNull()
-            )
-        }
-    }
-
     private fun genBuildHistory(
         projectInfo: ProjectOrganize,
         tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,

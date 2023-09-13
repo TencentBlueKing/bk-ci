@@ -36,13 +36,18 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.template.TemplatePACService
+import com.tencent.devops.process.service.template.TemplateSettingService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -54,8 +59,12 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-08
  */
 @RestResource
-class UserPTemplateResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
-    UserPTemplateResource {
+class UserPTemplateResourceImpl @Autowired constructor(
+    private val templateFacadeService: TemplateFacadeService,
+    private val templatePACService: TemplatePACService,
+    private val templateSettingService: TemplateSettingService,
+    private val templateCommonService: TemplateCommonService
+) : UserPTemplateResource {
 
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
         return Result(TemplateId(templateFacadeService.createTemplate(projectId, userId, template)))
@@ -66,12 +75,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
     }
 
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
-        return Result(templateFacadeService.deleteTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            version = version
-        ))
+        return Result(
+            templateFacadeService.deleteTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version
+            )
+        )
     }
 
     override fun deleteTemplate(
@@ -80,12 +91,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         templateId: String,
         versionName: String
     ): Result<Boolean> {
-        return Result(templateFacadeService.deleteTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            versionName = versionName
-        ))
+        return Result(
+            templateFacadeService.deleteTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                versionName = versionName
+            )
+        )
     }
 
     override fun updateTemplate(
@@ -136,7 +149,8 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         setting: PipelineSetting
     ): Result<Boolean> {
         if (setting.runLockType == PipelineRunLockType.SINGLE ||
-            setting.runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+        ) {
             if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
             ) {
@@ -150,7 +164,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
                 )
             }
         }
-        return Result(templateFacadeService.updateTemplateSetting(projectId, userId, templateId, setting))
+        return Result(templateSettingService.updateTemplateSetting(projectId, userId, templateId, setting))
     }
 
     override fun getTemplateSetting(
@@ -158,7 +172,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         projectId: String,
         templateId: String
     ): Result<PipelineSetting> {
-        return Result(templateFacadeService.getTemplateSetting(projectId, userId, templateId))
+        return Result(templateSettingService.getTemplateSetting(projectId, userId, templateId))
     }
 
     override fun copyTemplate(
@@ -179,6 +193,15 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
     }
 
     override fun hasManagerPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(templateFacadeService.hasManagerPermission(projectId, userId))
+        return Result(templateCommonService.hasManagerPermission(projectId, userId))
+    }
+
+    override fun previewTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        highlightType: HighlightType?
+    ): Result<TemplatePreviewDetail> {
+        return Result(templatePACService.previewTemplate(userId, projectId, templateId, highlightType))
     }
 }

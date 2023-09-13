@@ -121,7 +121,8 @@ data class StartBuildContext(
     // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNoType: BuildNoType? = null,
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
-    var currentBuildNo: Int? = null
+    var currentBuildNo: Int? = null,
+    val debug: Boolean
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -222,6 +223,7 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
+            debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
             realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
@@ -287,7 +289,8 @@ data class StartBuildContext(
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
                 needUpdateStage = false,
                 pipelineSetting = pipelineSetting,
-                pipelineParamMap = pipelineParamMap
+                pipelineParamMap = pipelineParamMap,
+                debug = debug
             )
         }
 
@@ -337,7 +340,8 @@ data class StartBuildContext(
             executeCount: Int,
             firstTaskId: String,
             startType: StartType,
-            startBuildStatus: BuildStatus
+            startBuildStatus: BuildStatus,
+            debug: Boolean
         ): StartBuildContext = StartBuildContext(
             now = LocalDateTime.now(),
             projectId = projectId,
@@ -366,8 +370,8 @@ data class StartBuildContext(
             pipelineParamMap = mutableMapOf(),
             buildParameters = mutableListOf(),
             concurrencyGroup = null,
-            pipelineSetting = null
-
+            pipelineSetting = null,
+            debug = debug
         )
 
         private const val CONTEXT_PREFIX = "variables."

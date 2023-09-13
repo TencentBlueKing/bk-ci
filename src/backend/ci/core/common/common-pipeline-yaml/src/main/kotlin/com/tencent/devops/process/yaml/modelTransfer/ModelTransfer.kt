@@ -38,7 +38,14 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefau
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.*
+import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.GitNotices
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.IfType
+import com.tencent.devops.process.yaml.v3.models.Notices
+import com.tencent.devops.process.yaml.v3.models.PacNotices
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3

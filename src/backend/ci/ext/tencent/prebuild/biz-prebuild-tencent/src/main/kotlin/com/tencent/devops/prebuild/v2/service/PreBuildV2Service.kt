@@ -131,7 +131,7 @@ class PreBuildV2Service @Autowired constructor(
         // 2.标准化处理
         val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(
             YamlTemplate(
-                filePath = TemplatePath(""),
+                filePath = "",
                 yamlObject = YamlUtil.getObjectMapper()
                         .readValue(startUpReq.yaml, PreTemplateScriptBuildYaml::class.java),
                 extraParameters = null,

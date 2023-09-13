@@ -237,11 +237,13 @@ class PipelineBuildFacadeService(
 
         var canManualStartup = false
         var canElementSkip = false
+        var useLatestParameters = false
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
+                    useLatestParameters = it.useLatestParameters ?: false
                     return@lit
                 }
             }
@@ -312,7 +314,8 @@ class PipelineBuildFacadeService(
             canManualStartup = canManualStartup,
             canElementSkip = canElementSkip,
             properties = params,
-            buildNo = currentBuildNo
+            buildNo = currentBuildNo,
+            useLatestParameters = useLatestParameters
         )
     }
 
@@ -610,7 +613,7 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            val model = if (version != null) {
+            val (model, debug) = if (version != null) {
                 val resource = pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -623,9 +626,9 @@ class PipelineBuildFacadeService(
                         errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                     )
                 }
-                resource.model
+                Pair(resource.model, true)
             } else {
-                getModel(projectId, pipelineId)
+                Pair(getModel(projectId, pipelineId), false)
             }
 
             /**
@@ -675,7 +678,8 @@ class PipelineBuildFacadeService(
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
-                triggerReviewers = triggerReviewers
+                triggerReviewers = triggerReviewers,
+                debug = debug
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
