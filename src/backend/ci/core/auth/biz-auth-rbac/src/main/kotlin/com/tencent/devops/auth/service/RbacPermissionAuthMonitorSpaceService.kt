@@ -33,6 +33,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
     @Value("\${monitor.url:#{null}}")
     private val monitorUrlPrefix = ""
     override fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String {
+        logger.info("RbacPermissionMonitorService|createMonitorSpace|$monitorSpaceCreateInfo")
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_CREATE_SUFFIX,
             method = POST_METHOD,
@@ -83,20 +84,30 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         userId: String?
     ): String {
         logger.info("RbacPermissionMonitorService|getOrCreateMonitorSpace|$projectName|$projectCode|$groupCode|$userId")
-        // 如果组id为GRADE_ADMIN，并且数据库中有数据，那么得修改空间名称
-        val monitorSpaceRecord = authMonitorSpaceDao.get(dslContext, projectCode)
-        if (groupCode == BkAuthGroup.GRADE_ADMIN.value) {
-            return if (monitorSpaceRecord != null) {
-                updateMonitorSpace(
-                    projectCode = projectCode,
-                    monitorSpaceUpdateInfo = MonitorSpaceUpdateInfo(
-                        spaceName = projectName,
-                        spaceTypeId = appCode,
-                        spaceUid = monitorSpaceRecord.spaceUid,
-                        updater = userId!!
-                    )
+        val dbMonitorSpaceRecord = authMonitorSpaceDao.get(dslContext, projectCode)
+        // 若为项目下其他组，由于在创建分级管理员时，已经创建好监控空间，并已经落库，只需要直接从数据库返回数据。
+        if (groupCode != BkAuthGroup.GRADE_ADMIN.value) {
+            return dbMonitorSpaceRecord?.spaceBizId?.toString()
+                ?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
+                    defaultMessage = "The monitoring space($projectCode) does not exist "
                 )
-            } else {
+        }
+        // 如果组id为GRADE_ADMIN，则为创建或者修改项目，需要同步修改或者创建监控空间，并存储数据库信息。
+        return if (dbMonitorSpaceRecord != null) {
+            updateMonitorSpace(
+                projectCode = projectCode,
+                monitorSpaceUpdateInfo = MonitorSpaceUpdateInfo(
+                    spaceName = projectName,
+                    spaceTypeId = appCode,
+                    spaceUid = dbMonitorSpaceRecord.spaceUid,
+                    updater = userId!!
+                )
+            )
+        } else {
+            val spaceUid = appCode.plus("__".plus(projectCode))
+            val monitorSpaceDetailInfo = getMonitorSpaceDetail(spaceUid = spaceUid)
+            if (monitorSpaceDetailInfo == null) {
                 createMonitorSpace(
                     MonitorSpaceCreateInfo(
                         spaceName = projectName,
@@ -105,19 +116,28 @@ class RbacPermissionAuthMonitorSpaceService constructor(
                         creator = requireNotNull(userId)
                     )
                 )
+            } else {
+                updateMonitorSpace(
+                    projectCode = projectCode,
+                    monitorSpaceUpdateInfo = MonitorSpaceUpdateInfo(
+                        spaceName = projectName,
+                        spaceTypeId = appCode,
+                        spaceUid = spaceUid,
+                        updater = userId!!
+                    ),
+                    needCreateDbRecord = true
+                )
             }
         }
-        return monitorSpaceRecord?.spaceBizId?.toString()
-            ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                defaultMessage = "The monitoring space($projectCode) does not exist "
-            )
     }
 
     private fun updateMonitorSpace(
         projectCode: String,
-        monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo
+        monitorSpaceUpdateInfo: MonitorSpaceUpdateInfo,
+        /*若为false,说明数据库已有数据，只需对记录进行修改；否则插入新的数据库记录*/
+        needCreateDbRecord: Boolean = false
     ): String {
+        logger.info("RbacPermissionMonitorService|updateMonitorSpace|$projectCode|$needCreateDbRecord|$monitorSpaceUpdateInfo")
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
             method = POST_METHOD,
@@ -128,13 +148,22 @@ class RbacPermissionAuthMonitorSpaceService constructor(
                     errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
                     defaultMessage = "The monitoring space(${monitorSpaceUpdateInfo.spaceName}) does not exist "
                 )
-            // 修改数据库
-            authMonitorSpaceDao.update(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                spaceUid = monitorSpaceDetail.spaceUid!!,
-                updateUser = monitorSpaceUpdateInfo.updater
-            )
+            if (needCreateDbRecord) {
+                authMonitorSpaceDao.create(
+                    dslContext = dslContext,
+                    projectCode = monitorSpaceDetail.spaceId!!,
+                    spaceBizId = monitorSpaceDetail.id!!,
+                    spaceUid = monitorSpaceDetail.spaceUid!!,
+                    creator = monitorSpaceUpdateInfo.updater
+                )
+            } else {
+                authMonitorSpaceDao.update(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    spaceUid = monitorSpaceDetail.spaceUid!!,
+                    updateUser = monitorSpaceUpdateInfo.updater
+                )
+            }
             return monitorSpaceDetail.id.toString()
         }
         throw ErrorCodeException(
@@ -144,11 +173,13 @@ class RbacPermissionAuthMonitorSpaceService constructor(
     }
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? {
-        val monitorSpaceDetailData = executeHttpRequest(
+        val monitorSpaceDetailResp = executeHttpRequest(
             urlSuffix = MONITOR_SPACE_DETAIL_SUFFIX.format(spaceUid),
             method = GET_METHOD
-        ).data
-        return generateMonitorSpaceDetail(monitorSpaceDetailData)
+        )
+        if (monitorSpaceDetailResp.code == MONITOR_SPACE_NOT_EXIST)
+            return null
+        return generateMonitorSpaceDetail(monitorSpaceDetailResp.data)
     }
 
     private fun executeHttpRequest(urlSuffix: String, method: String, body: Any? = null): ResponseDTO {
@@ -195,5 +226,6 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         private const val POST_METHOD = "POST"
         private const val GET_METHOD = "GET"
         private const val REQUEST_SUCCESS_CODE = 200L
+        private const val MONITOR_SPACE_NOT_EXIST = 404L
     }
 }
