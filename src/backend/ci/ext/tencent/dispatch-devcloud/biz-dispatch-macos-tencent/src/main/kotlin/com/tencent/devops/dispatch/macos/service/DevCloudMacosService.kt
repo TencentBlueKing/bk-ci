@@ -123,10 +123,15 @@ class DevCloudMacosService @Autowired constructor(
             }
         }
 
-        val isGitProject = dispatchMessage.projectId.startsWith("git_")
+        val isStreamProject = dispatchMessage.projectId.startsWith("git_")
 
-        if (isGitProject && xcodeVersion.isNullOrBlank()) {
-            xcodeVersion = "14.1"
+        if (isStreamProject) {
+            val (streamSystemVersion, streamXcodeVersion) = macVmTypeService.getStreamSystemVersionByVersion(
+                systemVersion,
+                xcodeVersion
+            )
+            xcodeVersion = streamXcodeVersion
+            systemVersion = streamSystemVersion
         }
 
         return with(dispatchMessage) {
@@ -135,11 +140,8 @@ class DevCloudMacosService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                source = if (isGitProject) "gongfeng" else "landun",
-                os = if (isGitProject)
-                    macVmTypeService.getSystemVersionByVersion(systemVersion)
-                else
-                    systemVersion,
+                source = if (isStreamProject) "gongfeng" else "landun",
+                os = systemVersion,
                 xcode = xcodeVersion,
                 env = mapOf(
                     DockerConstants.ENV_KEY_PROJECT_ID to projectId,
