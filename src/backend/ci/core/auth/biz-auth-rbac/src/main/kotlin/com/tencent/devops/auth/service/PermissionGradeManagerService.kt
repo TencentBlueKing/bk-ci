@@ -164,7 +164,7 @@ class PermissionGradeManagerService @Autowired constructor(
 
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             logger.info("create grade manager|$name|$userId")
-            // 若为不需要审批的项目，直接注册
+            // 若为不需要审批的项目，直接注册监控权限
             val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
                 projectName = projectName,
                 projectCode = projectCode,

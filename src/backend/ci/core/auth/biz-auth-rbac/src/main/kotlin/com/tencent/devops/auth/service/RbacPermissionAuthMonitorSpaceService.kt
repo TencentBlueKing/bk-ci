@@ -137,7 +137,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         /*若为false,说明数据库已有数据，只需对记录进行修改；否则插入新的数据库记录*/
         needCreateDbRecord: Boolean = false
     ): String {
-        logger.info("RbacPermissionMonitorService|updateMonitorSpace|$projectCode|$needCreateDbRecord|$monitorSpaceUpdateInfo")
+        logger.info("update monitor Space|$projectCode|$needCreateDbRecord|$monitorSpaceUpdateInfo")
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
             method = POST_METHOD,
