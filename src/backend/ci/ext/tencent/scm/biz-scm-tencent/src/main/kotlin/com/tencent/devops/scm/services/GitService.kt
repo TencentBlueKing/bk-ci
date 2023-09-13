@@ -45,6 +45,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -135,7 +137,8 @@ import org.springframework.util.StringUtils
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
-    private val sampleProjectGitFileService: SampleProjectGitFileService
+    private val sampleProjectGitFileService: SampleProjectGitFileService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -1738,7 +1741,14 @@ class GitService @Autowired constructor(
         url.append("&is_project_path_wrapped=$isProjectPathWrapped")
         response.contentType = "application/$format"
         response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
-        OkhttpUtils.downloadFile(url.toString(), response)
+        val redisLock =
+            RedisLock(redisOperation, getDownloadGitRepoFileRedisKey(repoName, filePath ?: repoName), 20)
+        try {
+            redisLock.lock()
+            OkhttpUtils.downloadFile(url.toString(), response)
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
@@ -2501,4 +2511,7 @@ class GitService @Autowired constructor(
             )
         )
     }
+
+    private fun getDownloadGitRepoFileRedisKey(repoName: String, filePath: String)
+    = "download:$repoName:$filePath:lock:key"
 }

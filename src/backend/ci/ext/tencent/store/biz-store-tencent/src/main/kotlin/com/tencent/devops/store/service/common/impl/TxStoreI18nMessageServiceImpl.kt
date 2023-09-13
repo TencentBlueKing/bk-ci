@@ -89,10 +89,32 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         }
     }
 
-    override fun getPropertiesFileNames(
+    override fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?,
+        format: String?
+    ) {
+        val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
+        val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
+                "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
+                "&tokenType=${TokenTypeEnum.OAUTH.name}" +
+                "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
+                "&format=${format ?: "zip"}"
+        logger.info("descriptionAnalysis get url:$url")
+        val response = OkhttpUtils.doPost(url, "")
+        if (!response.isSuccessful) {
+            logger.warn("descriptionAnalysis response code:${response.code} message:${response.message}")
+        } else {
+            OkhttpUtils.downloadFile(response, file)
+        }
+    }
+
+    override fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
+        i18nDir: String?,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
@@ -118,40 +140,42 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     override fun descriptionAnalysis(
         userId: String,
+        projectCode: String,
         description: String,
-        atomPath: String,
+        fileDir: String,
         language: String,
         repositoryHashId: String?,
         branch: String?
     ): String {
         if (repositoryHashId.isNullOrBlank()) return description
         var result = description
-        val file = File(atomPath, "file.zip")
+        val fileDirPath = storeFileService.buildAtomArchivePath(
+            userId = userId,
+            atomDir = fileDir
+        ) + "file/$language"
+        val file = File(fileDirPath, "file.zip")
         try {
-            val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
-            val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
-                    "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
-                    "&tokenType=${TokenTypeEnum.OAUTH.name}&filePath=file&format=zip&isProjectPathWrapped=false"
-            logger.info("descriptionAnalysis get url:$url")
-            val response = OkhttpUtils.doPost(url, "")
-            if (!response.isSuccessful) {
-                logger.warn("descriptionAnalysis response code:${response.code} message:${response.message}")
-            } else {
-                OkhttpUtils.downloadFile(response, file)
-                ZipUtil.unZipFile(file, "$atomPath/file", false)
+            downloadFile(
+                filePath = "$fileDir/file$language",
+                file = file,
+                repositoryHashId = repositoryHashId,
+                branch = branch
+            )
+            if (file.exists()) {
+                ZipUtil.unZipFile(file, file.parentFile.path, false)
                 result = storeFileService.descriptionAnalysis(
                     userId = userId,
                     description = description,
-                    atomPath = atomPath,
                     client = client,
-                    language = language
+                    language = language,
+                    fileDirPath = fileDirPath
                 )
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
         } finally {
             file.delete()
-            FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
+            FileSystemUtils.deleteRecursively(File(fileDirPath).parentFile)
         }
         return result
     }
