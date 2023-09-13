@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
 
 /**
@@ -63,4 +64,11 @@ interface TransferCreator {
     fun transferMarketBuildAtomElement(
         step: Step
     ): MarketBuildAtomElement
+
+    /**
+     * 构造编译类的插件
+     */
+    fun transferMarketBuildLessAtomElement(
+        step: Step
+    ): MarketBuildLessAtomElement
 }

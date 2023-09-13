@@ -55,10 +55,10 @@ data class PreStep(
     val with: Map<String, Any?>?,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
-    var timeoutMinutes: Int? = null,
+    var timeoutMinutes: String? = null,
     @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
-    var continueOnError: Boolean? = null,
+    var continueOnError: Any? = null,
     @ApiModelProperty(name = "retry-times")
     @JsonProperty("retry-times")
     var retryTimes: Int? = null,

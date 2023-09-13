@@ -56,7 +56,7 @@ data class Job(
     val ifModify: List<String>? = null,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = 480,
+    val timeoutMinutes: String? = null,
     val env: Map<String, String>? = emptyMap(),
     @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
@@ -64,7 +64,10 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList()
+    val dependOn: List<String>? = emptyList(),
+    @ApiModelProperty(name = "depend-on-type")
+    @JsonProperty("depend-on-type")
+    val dependOnType: String? = null
 )
 
 data class Container(
@@ -150,7 +153,17 @@ enum class JobRunsOnType(val type: String) {
     AGENT_LESS("agentless"),
     DEV_CLOUD("docker-on-devcloud"),
     BCS("docker-on-bcs"),
-    LOCAL("local")
+    LOCAL("local");
+
+    companion object {
+        fun parse(type: String?): JobRunsOnType? {
+            if (type == null) return null
+            values().forEach {
+                if (it.type == type) return it
+            }
+            return null
+        }
+    }
 }
 
 enum class JobRunsOnPoolType {
@@ -165,7 +178,7 @@ data class Mutex(
     @JsonProperty("queue-length")
     val queueLength: Int? = 0,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = 10,
+    val timeoutMinutes: String? = null,
     @JsonProperty("queue-enable")
     val queueEnable: Boolean? = false
 )

@@ -33,7 +33,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 data class StageReviews(
     val flows: List<Flow>?,
     val variables: Map<String, ReviewVariable>?,
-    val description: String?
+    val description: String?,
+    val timeout: Int?,
+    val sendMarkdown: Boolean?,
+    val notifyType: List<String>?,
+    val notifyGroups: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

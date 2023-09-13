@@ -42,9 +42,9 @@ data class Step(
     val uses: String?,
     val with: Map<String, Any?>?,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = 480,
+    val timeoutMinutes: String? = null,
     @JsonProperty("continue-on-error")
-    val continueOnError: Boolean?,
+    val continueOnError: String?,
     @JsonProperty("retry-times")
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
@@ -57,4 +57,20 @@ data class Step(
     // 在系统内唯一标识step唯一性，不参与yaml打印
     @JsonIgnore
     val taskId: String? = null
-)
+) {
+    enum class ContinueOnErrorType(val alis: String) {
+        AUTO_SKIP("auto"),
+        MANUAL_SKIP("manual");
+
+        companion object {
+            fun parse(alis: String?): ContinueOnErrorType? {
+                if (alis == null) return null
+                values().forEach {
+                    if (it.alis == alis) return it
+                }
+                if (alis == "true") return AUTO_SKIP
+                return null
+            }
+        }
+    }
+}

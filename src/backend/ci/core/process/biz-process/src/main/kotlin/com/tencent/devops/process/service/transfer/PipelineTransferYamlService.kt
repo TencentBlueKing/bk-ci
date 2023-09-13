@@ -73,6 +73,7 @@ class PipelineTransferYamlService @Autowired constructor(
         private val trigger_key = listOf("on")
         private val notice_key = listOf("notices")
         private val setting_key = listOf("concurrency", "name", "version", "label")
+
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {
@@ -165,7 +166,7 @@ class PipelineTransferYamlService @Autowired constructor(
     ): Element {
         val tYml = TransferMapper.getObjectMapper()
             .readValue(yaml, object : TypeReference<PreStep>() {})
-        return elementTransfer.yaml2element(ScriptYmlUtils.preStepToStep(tYml), null)
+        return elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
     fun buildPreview(

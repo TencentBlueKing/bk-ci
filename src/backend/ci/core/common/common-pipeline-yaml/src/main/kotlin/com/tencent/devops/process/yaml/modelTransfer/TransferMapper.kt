@@ -18,6 +18,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
+import java.io.StringWriter
+import java.io.Writer
+import java.util.function.Supplier
+import java.util.regex.Pattern
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
@@ -40,10 +44,6 @@ import org.yaml.snakeyaml.parser.Parser
 import org.yaml.snakeyaml.representer.Representer
 import org.yaml.snakeyaml.resolver.Resolver
 import org.yaml.snakeyaml.serializer.AnchorGenerator
-import java.io.StringWriter
-import java.io.Writer
-import java.util.function.Supplier
-import java.util.regex.Pattern
 
 object TransferMapper {
     private val logger = LoggerFactory.getLogger(TransferMapper::class.java)
@@ -190,6 +190,7 @@ object TransferMapper {
                     anchorNode(item, anchors)
                 }
             }
+
             NodeId.mapping -> {
                 val mNode = realNode as MappingNode
                 val map = mNode.value
@@ -226,6 +227,7 @@ object TransferMapper {
                     }
                 }
             }
+
             NodeId.mapping -> {
                 val mNode = node as MappingNode
                 val map = mNode.value
@@ -279,16 +281,19 @@ object TransferMapper {
                 val rn = r as ScalarNode
                 if (ln.value != rn.value) return false
             }
+
             NodeId.sequence -> {
                 val ls = node2JsonString(l)
                 val rs = node2JsonString(r)
                 return JSONArray(ls).similar(JSONArray(rs))
             }
+
             NodeId.mapping -> {
                 val ls = node2JsonString(l)
                 val rs = node2JsonString(r)
                 return JSONObject(ls).similar(JSONObject(rs))
             }
+
             NodeId.anchor -> {
                 val ln = l as AnchorNode
                 val rn = r as AnchorNode
@@ -413,6 +418,8 @@ object TransferMapper {
         return getObjectMapper().writeValueAsString(bean)!!
     }
 
+    fun <T> to(str: String): T = getObjectMapper().readValue(str, object : TypeReference<T>() {})
+
     fun <T> anyTo(any: Any?): T = getObjectMapper().readValue(
         getObjectMapper().writeValueAsString(any), object : TypeReference<T>() {}
     )
@@ -453,6 +460,7 @@ object TransferMapper {
                         }
                     }
                 }
+
                 DeltaType.DELETE -> {
                     val sourceComment = checkCommentEvent(delta.source.lines)
                     if (sourceComment.isNotEmpty()) {

@@ -13,7 +13,16 @@ data class RunAtomParam(
         UTF_8,
 
         /*GBK*/
-        GBK
+        GBK;
+
+        companion object {
+            fun parse(charset: String?): CharsetType {
+                values().forEach {
+                    if (it.name == charset) return it
+                }
+                return DEFAULT
+            }
+        }
     }
 
     enum class ShellType(val shellName: String) {
