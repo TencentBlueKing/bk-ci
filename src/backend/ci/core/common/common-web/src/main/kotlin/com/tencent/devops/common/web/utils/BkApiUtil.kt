@@ -2,6 +2,13 @@ package com.tencent.devops.common.web.utils
 
 import com.tencent.devops.common.web.constant.BkApiHandleType
 
+/**
+ * API接口工具类
+ *
+ * @since: 2023-09-12
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
 object BkApiUtil {
 
     private val apiPermissionThreadLocal = ThreadLocal<Boolean>()

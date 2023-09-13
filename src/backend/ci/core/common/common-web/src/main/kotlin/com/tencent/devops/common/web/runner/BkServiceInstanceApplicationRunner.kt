@@ -12,12 +12,8 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.context.annotation.DependsOn
 import org.springframework.core.env.Environment
-import org.springframework.stereotype.Component
 
-@Component
-@DependsOn("rabbitAdmin")
 class BkServiceInstanceApplicationRunner constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
     private val bkTag: BkTag,

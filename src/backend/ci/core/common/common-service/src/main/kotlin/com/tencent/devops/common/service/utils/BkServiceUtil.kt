@@ -15,6 +15,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
+/**
+ * 微服务工具类
+ *
+ * @since: 2023-09-12
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
 object BkServiceUtil {
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
