@@ -10,8 +10,7 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody
-import org.json.JSONException
+import okhttp3.RequestBod
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -30,7 +29,6 @@ class ScriptExecuteService {
     ): ScriptExecuteResult {
         val bkAppCode = appCode
         val bkAppSecret = appSecret
-        val access_token = "C7Lr9b3Eopjf456446lCTiNN3rgg99" // TODO：改为配置项
         val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script/" // TODO：改为配置项
         val scriptExecuteReqBody = mapOf(
             "bk_scope_type" to "biz", // TODO：改为配置项
@@ -56,7 +54,7 @@ class ScriptExecuteService {
                 "X-Bkapi-Authorization",
                 "{\"bk_app_code\": \"${bkAppCode}\", " +
                     "\"bk_app_secret\": \"${bkAppSecret}\", " +
-                    "\"access_token\": \"${access_token}\"}"
+                    "\"userId\": \"${userId}\"}"
             )
             .build()
         OkhttpUtils.doHttp(request).use { response ->
