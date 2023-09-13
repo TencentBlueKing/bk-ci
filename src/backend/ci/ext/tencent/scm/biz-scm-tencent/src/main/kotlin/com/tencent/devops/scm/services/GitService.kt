@@ -2512,6 +2512,8 @@ class GitService @Autowired constructor(
         )
     }
 
-    private fun getDownloadGitRepoFileRedisKey(repoName: String, filePath: String)
-    = "download:$repoName:$filePath:lock:key"
+    private fun getDownloadGitRepoFileRedisKey(
+        repoName: String,
+        filePath: String
+    ) = "download:$repoName:$filePath:lock:key"
 }
