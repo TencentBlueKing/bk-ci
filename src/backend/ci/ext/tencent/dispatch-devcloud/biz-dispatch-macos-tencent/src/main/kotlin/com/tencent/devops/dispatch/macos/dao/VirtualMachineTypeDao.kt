@@ -24,7 +24,6 @@ class VirtualMachineTypeDao {
     fun getSystemVersionByVersion(dslContext: DSLContext, version: String?): TVirtualMachineTypeRecord? {
         with(TVirtualMachineType.T_VIRTUAL_MACHINE_TYPE) {
             return dslContext.selectFrom(this).where(VERSION.eq(version)).fetchOne()
-
         }
     }
 
