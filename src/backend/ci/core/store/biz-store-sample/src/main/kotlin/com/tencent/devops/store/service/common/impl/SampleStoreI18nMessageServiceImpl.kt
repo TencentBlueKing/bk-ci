@@ -69,6 +69,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     override fun getFileNames(
         projectCode: String,
         fileDir: String,
+        i18nDir: String?,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
