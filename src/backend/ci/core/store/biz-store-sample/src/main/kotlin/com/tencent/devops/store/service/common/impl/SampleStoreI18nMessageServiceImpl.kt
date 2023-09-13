@@ -60,8 +60,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     override fun downloadFile(
         filePath: String,
         file: File,
-        i18nDir: String?,
         repositoryHashId: String?,
+        branch: String?,
         format: String?
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
