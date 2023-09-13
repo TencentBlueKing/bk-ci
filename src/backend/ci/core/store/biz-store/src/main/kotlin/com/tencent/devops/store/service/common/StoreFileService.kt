@@ -62,7 +62,6 @@ abstract class StoreFileService {
     fun descriptionAnalysis(
         userId: String,
         description: String,
-        fileDir: String,
         client: Client,
         language: String,
         fileDirPath: String
