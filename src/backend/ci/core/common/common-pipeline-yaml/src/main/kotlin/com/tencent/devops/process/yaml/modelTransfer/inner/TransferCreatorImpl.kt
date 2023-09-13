@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.modelTransfer.inner
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
@@ -35,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Primary
 @Component

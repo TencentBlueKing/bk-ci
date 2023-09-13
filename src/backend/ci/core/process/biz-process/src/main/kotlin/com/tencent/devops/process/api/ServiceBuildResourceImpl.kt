@@ -130,14 +130,19 @@ class ServiceBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
             pipelineBuildFacadeService.buildManualStartupInfo(
-                userId, projectId, pipelineId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -723,7 +728,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        startType: StartType
+        startType: StartType,
+        version: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -736,6 +742,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 values = values,
                 channelCode = channelCode,
                 buildNo = buildNo,
+                version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true
             )

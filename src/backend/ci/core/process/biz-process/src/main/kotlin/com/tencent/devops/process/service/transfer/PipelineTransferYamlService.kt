@@ -73,7 +73,6 @@ class PipelineTransferYamlService @Autowired constructor(
         private val trigger_key = listOf("on")
         private val notice_key = listOf("notices")
         private val setting_key = listOf("concurrency", "name", "version", "label")
-
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {

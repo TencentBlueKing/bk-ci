@@ -193,7 +193,7 @@ class ElementTransfer @Autowired(required = false) constructor(
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun yaml2Elements(
         job: Job,
-        yamlInput: YamlTransferInput,
+        yamlInput: YamlTransferInput
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)

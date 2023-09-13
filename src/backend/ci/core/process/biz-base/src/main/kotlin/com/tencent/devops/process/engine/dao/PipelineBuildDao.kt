@@ -67,6 +67,8 @@ import javax.ws.rs.core.Response
 @Repository
 class PipelineBuildDao {
 
+    // TODO #8161 增加对debug的分表处理和查询
+
     companion object {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
