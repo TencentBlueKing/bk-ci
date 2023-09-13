@@ -3,6 +3,7 @@ package com.tencent.devops.environment.service.job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService.Companion.logger
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
@@ -10,8 +11,10 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.json.JSONException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.IOException
 
 @Service("ScriptExecuteService")
 class ScriptExecuteService {
@@ -59,12 +62,13 @@ class ScriptExecuteService {
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("responseBody: $responseBody")
+                logger.info("[executeScript] responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
-                if (responseData["result"] == false) {
+                if (false == responseData["result"]) {
                     val errorMsg = responseData["message"]
-                    logger.error("execute script failed: $errorMsg")
+                    logger.error("[executeScript] Execute script failed! Error message: ${errorMsg}")
+                    throw RemoteServiceException("Execute script failed! Error message: ${errorMsg}")
                 }
 
                 val jobRequestId = responseData["job_request_id"] as String
@@ -79,8 +83,17 @@ class ScriptExecuteService {
                     stepInstanceId = stepInstanceId
                 )
             } catch (exception: Exception) {
-                logger.error("script execute error：", exception)
-                // TODO：抛出异常
+                logger.error("[executeScript] Execute script error: ${exception}")
+                when (exception) {
+                    is IOException ->
+                        throw IOException("Connection or server exception：${exception}")
+
+                    is JSONException ->
+                        throw JSONException("Parse json response exception：${exception}")
+
+                    else ->
+                        throw Exception("Execute script exception occur：${exception}")
+                }
             }
         }
     }
