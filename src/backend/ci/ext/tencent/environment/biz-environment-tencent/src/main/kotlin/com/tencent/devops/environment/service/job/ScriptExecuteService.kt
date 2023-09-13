@@ -10,7 +10,7 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBod
+import okhttp3.RequestBody
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -29,7 +29,8 @@ class ScriptExecuteService {
     ): ScriptExecuteResult {
         val bkAppCode = appCode
         val bkAppSecret = appSecret
-        val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script/" // TODO：改为配置项
+//        val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script/" // 正式 TODO：改为配置项
+        val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_execute_script/" // 预发布 TODO：改为配置项
         val scriptExecuteReqBody = mapOf(
             "bk_scope_type" to "biz", // TODO：改为配置项
             "bk_scope_id" to "309", // TODO：改为配置项
