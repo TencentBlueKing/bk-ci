@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.modelTransfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -49,6 +50,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_MINUTES
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.Variable
@@ -56,7 +59,11 @@ import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
-import com.tencent.devops.process.yaml.v3.stageCheck.*
+import com.tencent.devops.process.yaml.v3.stageCheck.PreFlow
+import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
+import com.tencent.devops.process.yaml.v3.stageCheck.PreStageReviews
+import com.tencent.devops.process.yaml.v3.stageCheck.ReviewVariable
+import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -72,7 +79,6 @@ class StageTransfer @Autowired(required = false) constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StageTransfer::class.java)
-        private const val VARIABLE_PREFIX = "variables."
     }
 
     fun yaml2TriggerStage(yamlInput: YamlTransferInput, stageIndex: Int): Stage {
@@ -154,9 +160,24 @@ class StageTransfer @Autowired(required = false) constructor(
 
         // 根据if设置stageController
         val stageControlOption = if (!finalStage && !stage.ifField.isNullOrBlank()) {
+            var customVariables: List<NameAndValue>? = null
+            val runCondition = ModelCommon.revertCustomVariableMatch(stage.ifField)?.let {
+                customVariables = it
+                StageRunCondition.CUSTOM_VARIABLE_MATCH
+            } ?: ModelCommon.revertCustomVariableNotMatch(stage.ifField)?.let {
+                customVariables = it
+                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+            } ?: kotlin.run {
+                if (!stage.ifField.isNullOrBlank()) StageRunCondition.CUSTOM_CONDITION_MATCH else null
+            } ?: StageRunCondition.AFTER_LAST_FINISHED
             StageControlOption(
-                runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = ModelCreateUtil.removeIfBrackets(stage.ifField.toString())
+                runCondition = runCondition,
+                customCondition = if (runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
+                    ModelCreateUtil.removeIfBrackets(stage.ifField)
+                } else {
+                    null
+                },
+                customVariables = customVariables
             )
         } else StageControlOption()
 
@@ -242,7 +263,11 @@ class StageTransfer @Autowired(required = false) constructor(
                     description = it.desc
                 )
             },
-            description = stage.checkIn?.reviewDesc
+            description = stage.checkIn?.reviewDesc,
+            timeout = stage.checkIn?.timeout?.nullIfDefault(DEFAULT_CHECKIN_TIMEOUT_MINUTES),
+            sendMarkdown = stage.checkIn?.markdownContent?.nullIfDefault(false),
+            notifyType = stage.checkIn?.notifyType?.ifEmpty { null },
+            notifyGroups = stage.checkIn?.notifyGroup?.ifEmpty { null }
         )
         if (reviews.flows.isNullOrEmpty()) {
             return null
@@ -270,6 +295,10 @@ class StageTransfer @Autowired(required = false) constructor(
                     reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
                 )
             }.toMutableList()
+            check.timeout = stageCheck.reviews.timeout ?: DEFAULT_CHECKIN_TIMEOUT_MINUTES
+            check.markdownContent = stageCheck.reviews.sendMarkdown ?: false
+            check.notifyType = stageCheck.reviews.notifyType?.toMutableList() ?: mutableListOf()
+            check.notifyGroup = stageCheck.reviews.notifyGroups?.toMutableList() ?: mutableListOf()
         }
         return check
     }
@@ -280,7 +309,7 @@ class StageTransfer @Autowired(required = false) constructor(
         variables.forEach { (key, variable) ->
             params.add(
                 ManualReviewParam(
-                    key = "variables.$key",
+                    key = key,
                     value = variable.default,
                     required = true,
                     valueType = when (variable.type) {

@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
@@ -61,6 +62,7 @@ import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.IfType
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
@@ -191,13 +193,18 @@ class ElementTransfer @Autowired(required = false) constructor(
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun yaml2Elements(
         job: Job,
-        yamlInput: YamlTransferInput
+        yamlInput: YamlTransferInput,
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
-            val element: Element = yaml2element(step, job.runsOn.agentSelector?.first())
+            val element: Element = yaml2element(
+                userId = yamlInput.userId,
+                step = step,
+                agentSelector = job.runsOn.agentSelector?.first(),
+                jobRunsOnType = JobRunsOnType.parse(job.runsOn.poolName)
+            )
             elementList.add(element)
         }
 
@@ -205,10 +212,11 @@ class ElementTransfer @Autowired(required = false) constructor(
     }
 
     fun yaml2element(
+        userId: String,
         step: Step,
-        agentSelector: String?
+        agentSelector: String?,
+        jobRunsOnType: JobRunsOnType? = null
     ): Element {
-        val timeout = setupTimeout(step)
         var customVariables: List<NameAndValue>? = null
         val runCondition = when {
             step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
@@ -236,19 +244,22 @@ class ElementTransfer @Autowired(required = false) constructor(
         } else {
             ModelCreateUtil.removeIfBrackets(step.ifFiled)
         }
+        val continueOnError = Step.ContinueOnErrorType.parse(step.continueOnError)
         val additionalOptions = ElementAdditionalOptions(
             enable = step.enable ?: true,
-            continueWhenFailed = step.continueOnError ?: VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED,
-            timeout = timeout.toLong(),
-            timeoutVar = timeout.toString(),
+            continueWhenFailed = continueOnError != null,
+            manualSkip = continueOnError == Step.ContinueOnErrorType.MANUAL_SKIP,
+            timeout = step.timeoutMinutes?.toLongOrNull() ?: VariableDefault.DEFAULT_TASK_TIME_OUT,
+            timeoutVar = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT.toString(),
             retryWhenFailed = step.retryTimes != null,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
-            enableCustomEnv = step.env != null,
+            enableCustomEnv = false,
             customEnv = getElementEnv(step.env),
             runCondition = runCondition,
             customCondition = if (customVariables == null) customCondition else null,
             customVariables = customVariables,
-            manualRetry = step.manualRetry ?: false
+            manualRetry = step.manualRetry ?: false,
+            subscriptionPauseUser = userId
         )
 
         // bash
@@ -257,8 +268,39 @@ class ElementTransfer @Autowired(required = false) constructor(
                 makeRunElement(step, agentSelector)
             }
 
+            step.uses?.contains("${LinuxScriptElement.classType}@") == true -> {
+                LinuxScriptElement(
+                    id = step.taskId,
+                    name = step.name ?: "linuxScript",
+                    stepId = step.id,
+                    scriptType = BuildScriptType.SHELL,
+                    script = step.with?.get(LinuxScriptElement::script.name) as String,
+                    continueNoneZero = (step.with?.get(LinuxScriptElement::continueNoneZero.name) as Boolean?) ?: false,
+                    enableArchiveFile = (step.with?.get(LinuxScriptElement::enableArchiveFile.name) as Boolean?)
+                        ?: false,
+                    archiveFile = step.with?.get(LinuxScriptElement::archiveFile.name) as String?
+                )
+            }
+
+            step.uses?.contains("${WindowsScriptElement.classType}@") == true -> {
+                WindowsScriptElement(
+                    id = step.taskId,
+                    name = step.name ?: "windowsScript",
+                    stepId = step.id,
+                    scriptType = BuildScriptType.BAT,
+                    script = step.with?.get(WindowsScriptElement::script.name) as String,
+                    charsetType = (step.with?.get(WindowsScriptElement::charsetType.name) as String?)?.let {
+                        CharsetType.valueOf(it)
+                    }
+                )
+            }
+
             step.checkout != null -> {
                 creator.transferCheckoutElement(step)
+            }
+
+            jobRunsOnType == JobRunsOnType.AGENT_LESS -> {
+                creator.transferMarketBuildLessAtomElement(step)
             }
 
             else -> {
@@ -269,8 +311,6 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         return element
     }
-
-    private fun setupTimeout(step: Step) = step.timeoutMinutes ?: VariableDefault.DEFAULT_TASK_TIME_OUT
 
     private fun makeRunElement(
         step: Step,
@@ -285,28 +325,33 @@ class ElementTransfer @Autowired(required = false) constructor(
                 else -> RunAtomParam.ShellType.BASH.shellName
             }
         return when (type) {
-            RunAtomParam.ShellType.BASH.shellName -> LinuxScriptElement(
-                id = step.taskId,
-                name = step.name ?: "run",
-                stepId = step.id,
-                scriptType = BuildScriptType.SHELL,
-                script = step.run ?: "",
-                continueNoneZero = false
-            )
-
-            RunAtomParam.ShellType.CMD.shellName -> WindowsScriptElement(
-                id = step.taskId,
-                name = step.name ?: "run",
-                stepId = step.id,
-                scriptType = BuildScriptType.BAT,
-                script = step.run ?: ""
-            )
+//            RunAtomParam.ShellType.BASH.shellName -> LinuxScriptElement(
+//                id = step.taskId,
+//                name = step.name ?: "run",
+//                stepId = step.id,
+//                scriptType = BuildScriptType.SHELL,
+//                script = step.run ?: "",
+//                continueNoneZero = false
+//            )
+//
+//            RunAtomParam.ShellType.CMD.shellName -> WindowsScriptElement(
+//                id = step.taskId,
+//                name = step.name ?: "run",
+//                stepId = step.id,
+//                scriptType = BuildScriptType.BAT,
+//                script = step.run ?: "",
+//                charsetType = step.with?.get(RunAtomParam::charsetType.name)?.toString()
+//                    ?.let { CharsetType.valueOf(it) }
+//            )
 
             else -> {
                 val data = mutableMapOf<String, Any>()
                 data["input"] = mapOf(
                     RunAtomParam::script.name to step.run,
-                    RunAtomParam::shell.name to type
+                    RunAtomParam::shell.name to type,
+                    RunAtomParam::charsetType.name to RunAtomParam.CharsetType.parse(
+                        step.with?.get(RunAtomParam::charsetType.name)?.toString()
+                    ),
                 )
                 MarketBuildAtomElement(
                     id = step.taskId,
@@ -344,9 +389,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                     id = element.stepId,
                     // bat插件上的
                     ifFiled = parseStepIfFiled(element),
-                    uses = null,
-                    with = null,
-                    run = element.script,
+                    uses = uses,
+                    with = bashParams(element),
                     shell = RunAtomParam.ShellType.BASH.shellName
                 )
             }
@@ -357,9 +401,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                     id = element.stepId,
                     // bat插件上的
                     ifFiled = parseStepIfFiled(element),
-                    uses = null,
-                    with = null,
-                    run = element.script,
+                    uses = uses,
+                    with = batchParams(element),
                     shell = RunAtomParam.ShellType.CMD.shellName
                 )
             }
@@ -445,16 +488,25 @@ class ElementTransfer @Autowired(required = false) constructor(
             else -> null
         }?.apply {
             this.enable = element.isElementEnable().nullIfDefault(true)
-            this.timeoutMinutes = element.additionalOptions?.timeout?.toInt()
-                .nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)
-            this.continueOnError = element.additionalOptions?.continueWhenFailed
-                .nullIfDefault(VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED)
+            this.timeoutMinutes = element.additionalOptions?.timeoutVar.nullIfDefault(
+                VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
+            ) ?: element.additionalOptions?.timeout.nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)?.toString()
+
+            this.continueOnError = when {
+                element.additionalOptions?.manualSkip == true -> Step.ContinueOnErrorType.MANUAL_SKIP.alis
+                element.additionalOptions?.continueWhenFailed == true -> true
+                else -> null
+            }
             this.retryTimes = if (element.additionalOptions?.retryWhenFailed == true) {
                 element.additionalOptions?.retryCount
             } else null
             this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
-            this.env = element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }
-                ?.ifEmpty { null }
+            this.env = if (element.additionalOptions?.enableCustomEnv == true) {
+                element.additionalOptions?.customEnv?.associateBy({ it.key ?: "" }) { it.value }
+                    ?.ifEmpty { null }
+            } else {
+                null
+            }
         }
     }
 
@@ -500,26 +552,50 @@ class ElementTransfer @Autowired(required = false) constructor(
         return out
     }
 
+
+    private fun bashParams(element: LinuxScriptElement): Map<String, Any>? {
+        val res = mutableMapOf<String, Any>(LinuxScriptElement::script.name to element.script)
+        if (element.continueNoneZero == true) {
+            res[LinuxScriptElement::continueNoneZero.name] = true
+        }
+        if (element.enableArchiveFile == true && element.archiveFile != null) {
+            res[LinuxScriptElement::enableArchiveFile.name] = true
+            res[LinuxScriptElement::archiveFile.name] = element.archiveFile!!
+
+        }
+        return res
+    }
+
+    private fun batchParams(element: WindowsScriptElement): Map<String, Any>? {
+        val res = mutableMapOf<String, Any>(WindowsScriptElement::script.name to element.script)
+        if (element.charsetType != null && element.charsetType != CharsetType.DEFAULT) {
+            res[WindowsScriptElement::charsetType.name] = element.charsetType!!.name
+        }
+        return res
+    }
+
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
     }
 
     private fun getElementEnv(env: Map<String, Any?>?): List<NameAndValue>? {
-        if (env == null) {
-            return null
-        }
-
-        val nameAndValueList = mutableListOf<NameAndValue>()
-        env.forEach {
-            // todo 001
-            nameAndValueList.add(
-                NameAndValue(
-                    key = it.key,
-                    value = it.value.toString()
-                )
-            )
-        }
-
-        return nameAndValueList
+        return emptyList()
+        // 互转暂不支持 element env
+//        if (env == null) {
+//            return null
+//        }
+//
+//        val nameAndValueList = mutableListOf<NameAndValue>()
+//        env.forEach {
+//            // todo 001
+//            nameAndValueList.add(
+//                NameAndValue(
+//                    key = it.key,
+//                    value = it.value.toString()
+//                )
+//            )
+//        }
+//
+//        return nameAndValueList
     }
 }

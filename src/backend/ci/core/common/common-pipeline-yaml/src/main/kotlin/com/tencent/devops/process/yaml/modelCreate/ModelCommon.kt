@@ -38,8 +38,8 @@ import org.slf4j.LoggerFactory
 object ModelCommon {
 
     private val logger = LoggerFactory.getLogger(ModelCommon::class.java)
-    val regexMatch = Regex("""(.*)\s*==\s*'(.*)'""")
-    val regexNotMatch = Regex("""(.*)\s*!=\s*'(.*)'""")
+    private val regexMatch = Regex("""([^ ]+)\s*==\s*'(.*)'""")
+    private val regexNotMatch = Regex("""([^ ]+)\s*!=\s*'(.*)'""")
 
     fun getBranchName(ref: String): String {
         return when {
@@ -111,7 +111,7 @@ object ModelCommon {
     }
 
     fun revertCustomVariableMatch(input: String): List<NameAndValue>? {
-        if (input.indexOf("&&") == -1) return null
+        if (input.indexOf("==") == -1) return null
         val res = mutableListOf<NameAndValue>()
         kotlin.runCatching {
             input.split("&&").forEach {
@@ -133,7 +133,7 @@ object ModelCommon {
     }
 
     fun revertCustomVariableNotMatch(input: String): List<NameAndValue>? {
-        if (input.indexOf("||") == -1) return null
+        if (input.indexOf("!=") == -1) return null
         val res = mutableListOf<NameAndValue>()
         kotlin.runCatching {
             input.split("||").forEach {

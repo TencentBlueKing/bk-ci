@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -76,16 +77,6 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             inputMap.putAll(step.with!!)
         }
 
-        // 用户不允许指定 stream的开启人参数
-        if ((inputMap["authType"] != null && inputMap["authType"] == STREAM_CHECK_AUTH_TYPE) ||
-            inputMap["authUserId"] != null
-        ) {
-            throw CustomException(
-                Response.Status.BAD_REQUEST,
-                "The parameter authType:AUTH_USER_TOKEN or authUserId does not support user-specified"
-            )
-        }
-
         inputMap["repositoryUrl"] = step.checkout!!
 
         // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
@@ -115,6 +106,19 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
         val data = mutableMapOf<String, Any>()
         data["input"] = step.with ?: Any()
         return MarketBuildAtomElement(
+            id = step.taskId,
+            name = step.name ?: step.uses!!.split('@')[0],
+            stepId = step.id,
+            atomCode = step.uses!!.split('@')[0],
+            version = step.uses!!.split('@')[1],
+            data = data
+        )
+    }
+
+    override fun transferMarketBuildLessAtomElement(step: Step): MarketBuildLessAtomElement {
+        val data = mutableMapOf<String, Any>()
+        data["input"] = step.with ?: Any()
+        return MarketBuildLessAtomElement(
             id = step.taskId,
             name = step.name ?: step.uses!!.split('@')[0],
             stepId = step.id,
