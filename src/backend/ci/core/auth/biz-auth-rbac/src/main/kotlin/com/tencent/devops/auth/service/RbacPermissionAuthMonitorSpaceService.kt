@@ -177,7 +177,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
             urlSuffix = MONITOR_SPACE_DETAIL_SUFFIX.format(spaceUid),
             method = GET_METHOD
         )
-        if (monitorSpaceDetailResp.code == MONITOR_SPACE_NOT_EXIST)
+        if (monitorSpaceDetailResp.code == MONITOR_SPACE_NOT_EXIST_CODE)
             return null
         return generateMonitorSpaceDetail(monitorSpaceDetailResp.data)
     }
@@ -208,7 +208,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
             val responseStr = it.body!!.string()
             logger.info("executeHttpRequest:$responseStr")
             val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
-            if (responseDTO.code != REQUEST_SUCCESS_CODE) {
+            if (responseDTO.code != REQUEST_SUCCESS_CODE && responseDTO.code != MONITOR_SPACE_NOT_EXIST_CODE) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response :($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
@@ -226,6 +226,6 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         private const val POST_METHOD = "POST"
         private const val GET_METHOD = "GET"
         private const val REQUEST_SUCCESS_CODE = 200L
-        private const val MONITOR_SPACE_NOT_EXIST = 404L
+        private const val MONITOR_SPACE_NOT_EXIST_CODE = 404L
     }
 }
