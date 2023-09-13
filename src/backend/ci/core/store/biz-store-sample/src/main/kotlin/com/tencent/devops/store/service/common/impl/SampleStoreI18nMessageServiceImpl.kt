@@ -61,7 +61,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         filePath: String,
         file: File,
         repositoryHashId: String?,
-        branch: String?
+        branch: String?,
+        format: String?
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                 "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
