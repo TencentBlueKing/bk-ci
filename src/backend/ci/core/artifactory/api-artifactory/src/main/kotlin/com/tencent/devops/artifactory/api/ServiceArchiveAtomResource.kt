@@ -32,15 +32,18 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_ARTIFACTORY"], description = "仓库-插件")
@@ -57,6 +60,17 @@ interface ServiceArchiveAtomResource {
         @QueryParam("filePath")
         filePath: String
     ): Result<String>
+
+    @ApiOperation("下载插件包文件")
+    @POST
+    @Path("/atom/file/content")
+    fun downloadAtomFile(
+        @ApiParam("文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
 
     @ApiOperation("删除插件包文件")
     @DELETE
