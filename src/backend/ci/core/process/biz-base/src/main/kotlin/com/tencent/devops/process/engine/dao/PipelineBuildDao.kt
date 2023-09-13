@@ -47,6 +47,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryDebu
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
@@ -182,16 +183,40 @@ class PipelineBuildDao {
         }
     }
 
-//    fun updateBuildInfo(
-//        dslContext: DSLContext,
-//        projectId: String,
-//        pipelineId: String,
-//        buildId: String,
-//        buildInfo: BuildInfo
-//    ): Int {
-//        transactionContext.batchStore(buildHistory).execute()
-//        mapper.
-//    }
+    fun updateBuildRetryInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        retryInfo: BuildRetryInfo
+    ) {
+        val result = with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
+                .setNull(END_TIME)
+                .set(QUEUE_TIME, retryInfo.nowTime)
+                .set(STATUS, retryInfo.status.ordinal)
+                .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+
+            retryInfo.buildParameters?.let {
+                update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
+            }
+            if (retryInfo.rebuild) update.set(START_TIME, retryInfo.nowTime)
+            update.execute()
+        }
+        if (result != 1) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val update = dslContext.update(this)
+                .setNull(END_TIME)
+                .set(QUEUE_TIME, retryInfo.nowTime)
+                .set(STATUS, retryInfo.status.ordinal)
+                .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+
+            retryInfo.buildParameters?.let {
+                update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
+            }
+            if (retryInfo.rebuild) update.set(START_TIME, retryInfo.nowTime)
+            update.execute()
+        }
+    }
 
     /**
      * 读取指定状态下的构建
