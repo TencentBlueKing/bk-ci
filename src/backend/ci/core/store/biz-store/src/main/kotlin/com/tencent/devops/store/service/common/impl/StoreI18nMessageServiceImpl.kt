@@ -321,6 +321,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     abstract fun getFileNames(
         projectCode: String,
         fileDir: String,
+        i18nDir: String? = null,
         repositoryHashId: String? = null,
         branch: String? = null
     ): List<String>?
