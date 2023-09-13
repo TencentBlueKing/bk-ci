@@ -35,22 +35,22 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 class V0AuthPermissionProjectServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
-    val authServiceCode: BSCommonAuthServiceCode,
+    private val bsProjectAuthServiceCode: BSProjectServiceCodec,
     val client: Client
 ) : PermissionProjectService {
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
 
         return authProjectApi.getProjectUsers(
-            serviceCode = authServiceCode,
+            serviceCode = bsProjectAuthServiceCode,
             projectCode = projectCode,
             group = group
         )
@@ -58,14 +58,14 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         return authProjectApi.getProjectGroupAndUserList(
-            serviceCode = authServiceCode,
+            serviceCode = bsProjectAuthServiceCode,
             projectCode = projectCode
         )
     }
 
     override fun getUserProjects(userId: String): List<String> {
         return authProjectApi.getUserProjects(
-            serviceCode = authServiceCode,
+            serviceCode = bsProjectAuthServiceCode,
             userId = userId,
             supplier = null
         )
@@ -83,7 +83,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
             user = userId,
             projectCode = projectCode,
             group = group,
-            serviceCode = authServiceCode
+            serviceCode = bsProjectAuthServiceCode
         )
     }
 
@@ -91,7 +91,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
         return authProjectApi.checkProjectManager(
             userId = userId,
             projectCode = projectCode,
-            serviceCode = authServiceCode
+            serviceCode = bsProjectAuthServiceCode
         )
     }
 
@@ -108,7 +108,7 @@ class V0AuthPermissionProjectServiceImpl @Autowired constructor(
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return authProjectApi.getProjectRoles(
-            serviceCode = authServiceCode,
+            serviceCode = bsProjectAuthServiceCode,
             projectCode = projectCode,
             projectId = projectId
         )
