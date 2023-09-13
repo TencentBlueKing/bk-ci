@@ -201,7 +201,10 @@ class PipelineBuildDao {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }
             if (retryInfo.rebuild) update.set(START_TIME, retryInfo.nowTime)
-            update.execute()
+            update.where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
         }
         if (result != 1) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val update = dslContext.update(this)
@@ -214,7 +217,10 @@ class PipelineBuildDao {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }
             if (retryInfo.rebuild) update.set(START_TIME, retryInfo.nowTime)
-            update.execute()
+            update.where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 
