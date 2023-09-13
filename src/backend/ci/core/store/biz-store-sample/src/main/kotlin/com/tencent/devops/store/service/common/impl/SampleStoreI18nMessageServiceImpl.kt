@@ -33,7 +33,6 @@ import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.store.service.common.StoreFileService
 import java.io.File
 import java.net.URLEncoder
 import org.springframework.stereotype.Service
@@ -99,7 +98,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileDirPath = storeFileService.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
-        ) + "file${StoreFileService.fileSeparator}$language"
+        ) + "file$separator$language"
         fileNameList.forEach {
             downloadFile(
                 "$projectCode/$fileDir/file/$it", File(fileDirPath, it)
