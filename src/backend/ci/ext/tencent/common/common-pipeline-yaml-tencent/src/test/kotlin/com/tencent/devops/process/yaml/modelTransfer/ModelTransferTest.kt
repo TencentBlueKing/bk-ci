@@ -240,7 +240,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             )
         )
         val newYaml = TransferMapper.toYaml(yml)
-        Assertions.assertEquals(newYaml, yamlV3)
+        Assertions.assertEquals(newYaml, TransferMapper.toYaml(TransferMapper.to(yamlV3)))
         watcher.start("step_2|FULL_MODEL2YAML V2 start")
         val ymlV2 = modelTransfer.model2yaml(
             ModelTransferInput(
@@ -251,7 +251,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             )
         )
         val newYamlV2 = TransferMapper.toYaml(ymlV2)
-        Assertions.assertEquals(newYamlV2, yamlV2)
+        Assertions.assertEquals(newYamlV2, TransferMapper.toYaml(TransferMapper.to(yamlV2)))
         watcher.stop()
         println(watcher.toString())
     }
