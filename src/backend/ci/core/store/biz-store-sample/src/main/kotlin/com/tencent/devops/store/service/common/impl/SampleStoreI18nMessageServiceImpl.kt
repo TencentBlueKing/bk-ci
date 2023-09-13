@@ -102,7 +102,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ) + "file${StoreFileService.fileSeparator}$language"
         fileNameList.forEach {
             downloadFile(
-                "$projectCode/$fileDir/file/$it", File("$fileDirPath$separator$it")
+                "$projectCode/$fileDir/file/$it", File(fileDirPath, it)
 
             )
         }
