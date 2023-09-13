@@ -87,9 +87,6 @@ class ScriptExecuteService {
                     is IOException ->
                         throw IOException("Connection or server exception：${exception}")
 
-                    is JSONException ->
-                        throw JSONException("Parse json response exception：${exception}")
-
                     else ->
                         throw Exception("Execute script exception occur：${exception}")
                 }
