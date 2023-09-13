@@ -110,7 +110,6 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             fileDirPath = fileDirPath,
             userId = userId,
             description = description,
-            fileDir = fileDir,
             client = client,
             language = language
         )
