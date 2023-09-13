@@ -35,6 +35,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4ShelveEvent
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -42,13 +43,15 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
 class P4ShelveTriggerHandler(
-    private val client: Client
+    private val client: Client,
+    private val eventCacheService: EventCacheService
 ) : CodeWebhookTriggerHandler<P4ShelveEvent> {
     override fun eventClass(): Class<P4ShelveEvent> {
         return P4ShelveEvent::class.java
@@ -123,12 +126,17 @@ class P4ShelveTriggerHandler(
                         p4ServerInfo.data?.run {
                             caseSensitive = this.caseSensitive
                         }
-                        client.get(ServiceP4Resource::class).getShelvedFiles(
+
+                        eventCacheService.getP4ShelvedChangelistFiles(
                             projectId = projectId,
+                            repo = repository,
                             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                             repositoryType = repositoryConfig.repositoryType,
                             change = event.change
-                        ).data?.map { it.depotPathString } ?: emptyList()
+                        )?.run {
+                            event.description = this.description
+                            this.fileList.map { it.depotPathString }
+                        } ?: emptyList()
                     }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
@@ -153,6 +161,7 @@ class P4ShelveTriggerHandler(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
+        startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ShelveEvent.DEFAULT_SHELVE_DESCRIPTION
         return startParams
     }
 }
