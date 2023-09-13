@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -327,21 +328,24 @@ class WorkspaceService @Autowired constructor(
         projectId: String?
     ): List<WeSecProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
-        val result = workspaceDao.fetchWorkspace(
+        val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
-            projectId = projectId
+            projectId = projectId,
+            assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
 
         return result.map {
-            val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
+            val detail = workspaceCommon.getWorkspaceDetail(it["NAME"] as String)
             WeSecProjectWorkspace(
-                workspaceName = it.workspaceName,
-                projectId = it.projectId,
-                creator = it.createUserId,
+                workspaceName = it["NAME"] as String,
+                projectId = it["PROJECT_ID"] as String,
+                creator = it["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
-                innerIp = detail?.hostIP
+                innerIp = detail?.hostIP,
+                createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
+                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
                 )
             }
     }
