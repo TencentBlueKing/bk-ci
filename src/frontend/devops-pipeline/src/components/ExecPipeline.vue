@@ -757,19 +757,11 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
-                                }
-                            ],
-                            projectId: this.routerParams.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.routerParams.projectId,
+                        resourceCode: this.routerParams.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     message
                         && this.$showTips({
