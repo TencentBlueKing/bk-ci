@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePacResource
+import com.tencent.devops.process.api.service.ServicePipelinePacResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepoPacSyncDetailDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -99,7 +99,7 @@ class RepositoryPacService @Autowired constructor(
             repository = repository
         )
         repositoryDao.enablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
-        client.get(ServicePacResource::class).enable(
+        client.get(ServicePipelinePacResource::class).enable(
             userId = userId,
             projectId = projectId,
             repoHashId = repositoryHashId,
@@ -194,6 +194,7 @@ class RepositoryPacService @Autowired constructor(
         commitId: String,
         syncFileInfo: RepoPacSyncFileInfo
     ) {
+        logger.info("update pac sync status|$projectId|$repositoryHashId|$commitId|${syncFileInfo.filePath}")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         repoPacSyncDetailDao.updateSyncStatus(
             dslContext = dslContext,
@@ -202,6 +203,22 @@ class RepositoryPacService @Autowired constructor(
             commitId = commitId,
             syncFileInfo = syncFileInfo
         )
+        // 统计同步状态的文件
+        val count = repoPacSyncDetailDao.countPacSyncDetail(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            commitId = commitId,
+            syncStatus = RepoPacSyncStatusEnum.SYNC.name
+        )
+        if (count == 0) {
+            logger.info("update repo pac sync status to success|$projectId|$repositoryHashId")
+            repositoryDao.updatePacSyncStatus(
+                dslContext = dslContext,
+                repositoryId = repositoryId,
+                syncStatus = RepoPacSyncStatusEnum.SUCCEED.name
+            )
+        }
     }
 
     fun getPacSyncDetail(

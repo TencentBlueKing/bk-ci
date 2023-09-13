@@ -112,4 +112,21 @@ class RepoPacSyncDetailDao {
                 }
         }
     }
+
+    fun countPacSyncDetail(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        commitId: String,
+        syncStatus: String
+    ): Int {
+        with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(COMMIT_ID.eq(commitId))
+                .and(SYNC_STATUS.eq(syncStatus))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
 }

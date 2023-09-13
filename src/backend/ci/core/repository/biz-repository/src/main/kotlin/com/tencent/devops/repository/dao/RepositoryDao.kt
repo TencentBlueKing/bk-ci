@@ -457,4 +457,17 @@ class RepositoryDao {
                 .execute()
         }
     }
+
+    fun updatePacSyncStatus(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        syncStatus: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(PAC_SYNC_STATUS, syncStatus)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
 }
