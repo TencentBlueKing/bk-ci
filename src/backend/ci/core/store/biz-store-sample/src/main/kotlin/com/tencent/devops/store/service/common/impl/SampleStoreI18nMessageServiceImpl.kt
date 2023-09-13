@@ -91,9 +91,10 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): String {
+        val separator = File.separator
         val fileNameList = getFileNames(
             projectCode = projectCode,
-            fileDir = "$fileDir/file/$language"
+            fileDir = "$fileDir${separator}file$separator$language"
         ) ?: return description
         val fileDirPath = storeFileService.buildAtomArchivePath(
             userId = userId,
@@ -101,7 +102,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ) + "file${StoreFileService.fileSeparator}$language"
         fileNameList.forEach {
             downloadFile(
-                "$projectCode/$fileDir/file/$it", File("$fileDirPath${File.separator}$it")
+                "$projectCode/$fileDir/file/$it", File("$fileDirPath$separator$it")
+
             )
         }
 
