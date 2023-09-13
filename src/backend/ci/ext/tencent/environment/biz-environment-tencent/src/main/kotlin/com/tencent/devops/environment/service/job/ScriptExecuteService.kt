@@ -65,13 +65,12 @@ class ScriptExecuteService {
                 logger.info("[executeScript] responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
+                val jobRequestId = responseData["job_request_id"] as String
                 if (false == responseData["result"]) {
                     val errorMsg = responseData["message"]
-                    logger.error("[executeScript] Execute script failed! Error message: ${errorMsg}")
+                    logger.error("[executeScript] Execute failed! Req ID: ${jobRequestId}, Error msg: ${errorMsg}")
                     throw RemoteServiceException("Execute script failed! Error message: ${errorMsg}")
                 }
-
-                val jobRequestId = responseData["job_request_id"] as String
                 val data = responseData["data"] as Map<*, *>
                 val jobInstanceId = data["job_instance_id"] as Long
                 val jobInstanceName = data["job_instance_name"] as String
