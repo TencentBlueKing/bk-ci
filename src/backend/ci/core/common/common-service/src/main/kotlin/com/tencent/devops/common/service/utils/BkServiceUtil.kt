@@ -79,15 +79,7 @@ object BkServiceUtil {
      * @return 微服务名称
      */
     fun findServiceName(clz: KClass<*>? = null, serviceName: String? = null): String {
-        // 从缓存中获取environment对象
-        val environmentCacheKey = Environment::class.java.canonicalName
-        var environment: Environment? = environmentCache.getIfPresent(environmentCacheKey)
-        if (environment == null) {
-            // 缓存中未获取到environment对象，则去spring上下文中获取
-            environment = SpringContextUtil.getBean(Environment::class.java)
-            // 把environment对象放入本地缓存中
-            environmentCache.put(environmentCacheKey, environment)
-        }
+        val environment = getEnvironment()
         val assemblyServiceName: String? = environment.getProperty("spring.cloud.consul.discovery.service-name")
         // 单体结构，不分微服务的方式
         if (!assemblyServiceName.isNullOrBlank()) {
@@ -117,6 +109,19 @@ object BkServiceUtil {
         } else {
             "$tmpServiceName$serviceSuffix"
         }
+    }
+
+    private fun getEnvironment(): Environment {
+        // 从缓存中获取environment对象
+        val environmentCacheKey = Environment::class.java.canonicalName
+        var environment: Environment? = environmentCache.getIfPresent(environmentCacheKey)
+        if (environment == null) {
+            // 缓存中未获取到environment对象，则去spring上下文中获取
+            environment = SpringContextUtil.getBean(Environment::class.java)
+            // 把environment对象放入本地缓存中
+            environmentCache.put(environmentCacheKey, environment)
+        }
+        return environment
     }
 
     /**
