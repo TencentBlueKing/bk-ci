@@ -147,7 +147,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             createdUser = tServiceRecord.createdUser ?: "",
             createdTime = DateTimeUtil.toDateTime(tServiceRecord.createdTime),
             updatedUser = tServiceRecord.updatedUser ?: "",
-            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime)
+            updatedTime = DateTimeUtil.toDateTime(tServiceRecord.updatedTime),
+            clusterType = tServiceRecord.clusterType
         )
     }
 
