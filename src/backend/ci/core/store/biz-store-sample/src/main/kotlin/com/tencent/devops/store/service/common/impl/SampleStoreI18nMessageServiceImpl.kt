@@ -27,10 +27,14 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.store.service.common.StoreFileService
+import java.io.File
 import java.net.URLEncoder
 import org.springframework.stereotype.Service
 
@@ -54,14 +58,22 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ).data
     }
 
-    override fun getPropertiesFileNames(
+    override fun downloadFile(filePath: String, file: File) {
+        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        val response = OkhttpUtils.doPost(url, "")
+        if (response.isSuccessful) {
+            OkhttpUtils.downloadFile(response, file)
+        }
+    }
+
+    override fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
+        val filePath = URLEncoder.encode("$projectCode/$fileDir", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
@@ -72,16 +84,32 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     override fun descriptionAnalysis(
         userId: String,
+        projectCode: String,
         description: String,
-        atomPath: String,
+        fileDir: String,
         language: String,
         repositoryHashId: String?,
         branch: String?
     ): String {
+        val fileNameList = getFileNames(
+            projectCode = projectCode,
+            fileDir = "$fileDir/file/$language"
+        ) ?: return description
+        val fileDirPath = storeFileService.buildAtomArchivePath(
+            userId = userId,
+            atomDir = fileDir
+        ) + "file${StoreFileService.fileSeparator}$language"
+        fileNameList.forEach {
+            downloadFile(
+                "$projectCode/$fileDir/file/$it", File("$fileDirPath${File.separator}$it")
+            )
+        }
+
         return storeFileService.descriptionAnalysis(
+            fileDirPath = fileDirPath,
             userId = userId,
             description = description,
-            atomPath = atomPath,
+            fileDir = fileDir,
             client = client,
             language = language
         )

@@ -51,11 +51,11 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         userId: String,
         pathList: List<String>,
         client: Client,
-        atomPath: String,
+        fileDirPath: String,
         result: MutableMap<String, String>
     ): Map<String, String> {
         pathList.forEach { path ->
-            val file = File("$atomPath${fileSeparator}file${fileSeparator}$path")
+            val file = File("$fileDirPath${fileSeparator}$path")
             if (file.exists()) {
                 val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
                 val fileUrl = CommonUtils.serviceUploadFile(

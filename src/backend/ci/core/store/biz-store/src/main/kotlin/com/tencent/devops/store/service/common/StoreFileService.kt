@@ -62,9 +62,10 @@ abstract class StoreFileService {
     fun descriptionAnalysis(
         userId: String,
         description: String,
-        atomPath: String,
+        fileDir: String,
         client: Client,
-        language: String
+        language: String,
+        fileDirPath: String
     ): String {
         val pathList = mutableListOf<String>()
         val result = mutableMapOf<String, String>()
@@ -72,7 +73,7 @@ abstract class StoreFileService {
         if (description.startsWith("http") && description.endsWith(".md")) {
             // 读取远程文件
             var inputStream: InputStream? = null
-            val file = File("$atomPath${fileSeparator}file${fileSeparator}description_$language.md")
+            val file = File("$fileDirPath${fileSeparator}description.md")
             try {
                 inputStream = URL(description).openStream()
                 FileOutputStream(file).use { outputStream ->
@@ -92,14 +93,14 @@ abstract class StoreFileService {
         }
         descriptionText = regexAnalysis(
             input = descriptionText,
-            atomPath = atomPath,
+            fileDirPath = fileDirPath,
             pathList = pathList
         )
         val uploadFileToPathResult = uploadFileToPath(
             userId = userId,
             pathList = pathList,
             client = client,
-            atomPath = atomPath,
+            fileDirPath = fileDirPath,
             result = result
         )
         return filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
@@ -111,22 +112,21 @@ abstract class StoreFileService {
 
     fun regexAnalysis(
         input: String,
-        atomPath: String,
+        fileDirPath: String,
         pathList: MutableList<String>
     ): String {
         var descriptionContent = input
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(descriptionContent)
-        logger.info("regexAnalysis file str:$descriptionContent")
         while (matcher.find()) {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
             logger.info("regexAnalysis file pash:$path")
             if (path.endsWith(".md")) {
-                val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
+                val file = File("$fileDirPath$fileSeparator$path")
                 if (file.exists()) {
                     descriptionContent = regexAnalysis(
                         input = file.readText(),
-                        atomPath = atomPath,
+                        fileDirPath = fileDirPath,
                         pathList = pathList
                     )
                 }
@@ -157,7 +157,7 @@ abstract class StoreFileService {
         userId: String,
         pathList: List<String>,
         client: Client,
-        atomPath: String,
+        fileDirPath: String,
         result: MutableMap<String, String>
     ): Map<String, String>
 
