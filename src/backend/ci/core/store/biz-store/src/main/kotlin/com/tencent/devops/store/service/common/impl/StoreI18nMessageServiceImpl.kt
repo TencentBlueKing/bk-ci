@@ -42,7 +42,9 @@ import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.service.common.StoreFileService
+import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import java.io.File
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.regex.Matcher
@@ -74,7 +76,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         private const val BATCH_HANDLE_NUM = 50
         private val executors = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
-        private const val BK_CI_PATH_REGEX = "\\$\\{\\{indexFile\\((?:\"([^\"]*)\")"
     }
 
     override fun parseJsonMapI18nInfo(
@@ -213,10 +214,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     ) {
         executors.submit {
             // 获取资源文件名称列表
-            val propertiesFileNames = getPropertiesFileNames(
+            val propertiesFileNames = getFileNames(
                 projectCode = projectCode,
-                fileDir = fileDir,
-                i18nDir = i18nDir,
+                fileDir = "$fileDir/$i18nDir",
                 repositoryHashId = repositoryHashId
             )
             logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
@@ -316,10 +316,11 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): String?
 
-    abstract fun getPropertiesFileNames(
+    abstract fun downloadFile(filePath: String, file: File)
+
+    abstract fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         repositoryHashId: String? = null,
         branch: String? = null
     ): List<String>?
@@ -350,11 +351,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         ) ?: return content
         return descriptionAnalysis(
             userId = userId,
+            projectCode = projectCode,
             description = fileStr,
-            atomPath = storeFileService.buildAtomArchivePath(
-                userId = userId,
-                atomDir = fileDir
-            ),
+            fileDir = fileDir,
             language = language,
             repositoryHashId = repositoryHashId
         )
@@ -362,8 +361,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     abstract fun descriptionAnalysis(
         userId: String,
+        projectCode: String,
         description: String,
-        atomPath: String,
+        fileDir: String,
         language: String,
         repositoryHashId: String? = null,
         branch: String? = null
