@@ -203,8 +203,8 @@ object YamlObjects {
             } else {
                 transValue<Map<String, Any>>(fromPath, "with", step["with"])
             },
-            timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
-            continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
+            timeoutMinutes = getNullValue("timeout-minutes", step),
+            continueOnError = getNullValue("continue-on-error", step),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
             env = if (step["env"] == null) {
                 null
@@ -241,7 +241,8 @@ object YamlObjects {
         return Mutex(
             label = getNotNullValue(key = "label", mapName = "mutex", map = resourceMap),
             queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
-            timeoutMinutes = resourceMap["timeout-minutes"]?.toString()?.toInt()
+            timeoutMinutes = resourceMap["timeout-minutes"]?.toString(),
+            queueEnable = transNullValue(fromPath, "queue-enable", "queue-enable", resourceMap)
         )
     }
 
@@ -557,7 +558,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
             }
             list
         },
-        timeoutMinutes = YamlObjects.getNullValue("timeout-minutes", job)?.toInt(),
+        timeoutMinutes = YamlObjects.getNullValue("timeout-minutes", job),
         env = if (job["env"] == null) {
             null
         } else {
@@ -574,6 +575,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         } else {
             YamlObjects.transValue<List<String>>(fromPath, "depend-on", job["depend-on"])
         },
+        dependOnType = YamlObjects.getNullValue("depend-on-type", job),
         yamlMetaData = if (job["yamlMetaData"] == null) {
             MetaData(
                 templateInfo = TemplateInfo(

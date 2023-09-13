@@ -375,7 +375,8 @@ object ScriptYmlUtils {
                     env = preJob.env,
                     continueOnError = preJob.continueOnError,
                     strategy = preJob.strategy,
-                    dependOn = preJob.dependOn
+                    dependOn = preJob.dependOn,
+                    dependOnType = preJob.dependOnType
                 )
             )
 
@@ -480,7 +481,7 @@ object ScriptYmlUtils {
             uses = preStep.uses,
             with = preStep.with,
             timeoutMinutes = preStep.timeoutMinutes,
-            continueOnError = preStep.continueOnError,
+            continueOnError = preStep.continueOnError?.toString(),
             retryTimes = preStep.retryTimes,
             env = preStep.env,
             run = preStep.run,
@@ -529,7 +530,11 @@ object ScriptYmlUtils {
                         )
                     },
                     variables = preCheck.reviews.variables,
-                    description = preCheck.reviews.description
+                    description = preCheck.reviews.description,
+                    timeout = preCheck.reviews.timeout,
+                    sendMarkdown = preCheck.reviews.sendMarkdown,
+                    notifyType = preCheck.reviews.notifyType,
+                    notifyGroups = preCheck.reviews.notifyGroups
                 )
             } else {
                 null

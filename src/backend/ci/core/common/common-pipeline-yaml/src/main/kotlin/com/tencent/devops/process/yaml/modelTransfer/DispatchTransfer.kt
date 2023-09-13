@@ -54,11 +54,11 @@ import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
+import javax.ws.rs.core.Response
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 class DispatchTransfer @Autowired(required = false) constructor(
@@ -70,6 +70,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchTransfer::class.java)
+        val LINUX_TYPE = setOf("docker", "linux")
+        val MACOS_TYPE = setOf("macos-11.4", "macos-12.4", "macos-latest", "macos")
+        val WINDOWS_TYPE = setOf("windows-2016", "windows")
     }
 
     private val defaultRunsOn = JSONObject(
@@ -84,15 +87,15 @@ class DispatchTransfer @Autowired(required = false) constructor(
     fun makeDispatchType(
         job: Job,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): DispatchType {
+    ): Pair<DispatchType, VMBaseOS> {
         // linux构建机
-        dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return it }
+        dispatcherLinux(job, buildTemplateAcrossInfo)?.let { return Pair(it, VMBaseOS.LINUX) }
         // 第三方构建机
-        dispatcherThirdPartyAgent(job, buildTemplateAcrossInfo)?.let { return it }
+        dispatcherThirdPartyAgent(job, buildTemplateAcrossInfo)?.let { return Pair(it, getBaseOs(job)) }
         // windows构建机
-        dispatcherWindows(job)?.let { return it }
+        dispatcherWindows(job)?.let { return Pair(it, VMBaseOS.WINDOWS) }
         // macos构建机
-        dispatcherMacos(job)?.let { return it }
+        dispatcherMacos(job)?.let { return Pair(it, VMBaseOS.MACOS) }
         // 转换失败
         throw CustomException(
             Response.Status.BAD_REQUEST,
@@ -223,4 +226,22 @@ class DispatchTransfer @Autowired(required = false) constructor(
     fun dispatch2RunsOn(dispatcher: DispatchType) =
         PoolType.SelfHosted.toRunsOn(dispatcher)
             ?: PoolType.DockerOnVm.toRunsOn(dispatcher)
+
+    private fun getBaseOs(job: Job): VMBaseOS {
+        val poolName = job.runsOn.poolName
+        when {
+            LINUX_TYPE.contains(poolName) -> return VMBaseOS.LINUX
+            MACOS_TYPE.contains(poolName) -> return VMBaseOS.MACOS
+            WINDOWS_TYPE.contains(poolName) -> return VMBaseOS.WINDOWS
+        }
+
+        val selector = job.runsOn.agentSelector?.get(0)
+        return when {
+            selector == null -> VMBaseOS.ALL
+            LINUX_TYPE.contains(selector) -> VMBaseOS.LINUX
+            MACOS_TYPE.contains(selector) -> VMBaseOS.MACOS
+            WINDOWS_TYPE.contains(selector) -> VMBaseOS.WINDOWS
+            else -> VMBaseOS.LINUX
+        }
+    }
 }
