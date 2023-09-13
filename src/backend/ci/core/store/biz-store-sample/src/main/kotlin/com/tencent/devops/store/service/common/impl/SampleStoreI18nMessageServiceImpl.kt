@@ -57,7 +57,12 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ).data
     }
 
-    override fun downloadFile(filePath: String, file: File) {
+    override fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?
+    ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                 "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
         val response = OkhttpUtils.doPost(url, "")
@@ -102,8 +107,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ) + "file$separator$language"
         fileNameList.forEach {
             downloadFile(
-                "$projectCode/$fileDir/file/$it", File(fileDirPath, it)
-
+                "$projectCode$separator$fileDir${separator}file$separator$language$separator$it",
+                File(fileDirPath, it)
             )
         }
 

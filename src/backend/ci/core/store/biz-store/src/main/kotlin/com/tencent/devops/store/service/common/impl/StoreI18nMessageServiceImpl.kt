@@ -316,7 +316,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): String?
 
-    abstract fun downloadFile(filePath: String, file: File)
+    abstract fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String? = null,
+        branch: String? = null,
+        format: String? = null
+    )
 
     abstract fun getFileNames(
         projectCode: String,
