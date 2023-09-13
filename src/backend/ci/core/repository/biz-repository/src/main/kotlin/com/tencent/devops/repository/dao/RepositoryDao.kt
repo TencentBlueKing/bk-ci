@@ -35,14 +35,14 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -298,6 +298,16 @@ class RepositoryDao {
         }
     }
 
+    fun getOrNull(dslContext: DSLContext, repositoryId: Long, projectId: String? = null): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            val query = dslContext.selectFrom(this).where(REPOSITORY_ID.eq(repositoryId))
+            if (!projectId.isNullOrBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            return query.and(IS_DELETED.eq(false)).fetchOne()
+        }
+    }
+
     fun getByName(dslContext: DSLContext, projectId: String, repositoryName: String): TRepositoryRecord {
         with(TRepository.T_REPOSITORY) {
             return dslContext.selectFrom(this)
@@ -389,6 +399,61 @@ class RepositoryDao {
         return with(TRepository.T_REPOSITORY) {
             dslContext.update(this).set(URL, DSL.replace(URL, oldGitDomain, newGitDomain))
                 .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun getPacRepositoryByIds(dslContext: DSLContext, repositoryIds: List<Long>): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ENABLE_PAC.eq(true))
+                .and(IS_DELETED.eq(false))
+                .fetchOne()
+        }
+    }
+
+    fun enablePac(
+        dslContext: DSLContext,
+        userId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .set(ENABLE_PAC, true)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun disablePac(
+        dslContext: DSLContext,
+        userId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updatePacSyncInfo(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        syncStatus: String,
+        commitId: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(PAC_SYNC_STATUS, syncStatus)
+                .set(PAC_SYNC_COMMIT_ID, commitId)
+                .set(PAC_SYNC_TIME, LocalDateTime.now())
+                .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }

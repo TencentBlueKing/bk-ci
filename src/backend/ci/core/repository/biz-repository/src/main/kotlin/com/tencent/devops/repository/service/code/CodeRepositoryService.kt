@@ -28,7 +28,7 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 
 interface CodeRepositoryService<T> {
 
@@ -55,5 +55,17 @@ interface CodeRepositoryService<T> {
     /**
      * 获取授权信息
      */
-    fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
+    fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo>
+
+    /**
+     * 获取开启pac的项目ID
+     */
+    fun getPacProjectId(userId: String, repoUrl: String): String?
+
+    /**
+     * 开启pac校验
+     */
+    fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord)
+
+    fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean
 }

@@ -52,9 +52,9 @@ import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -69,15 +69,15 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -684,20 +684,20 @@ class RepositoryService @Autowired constructor(
             sortType = sortType
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
-        val repoAuthInfoMap = mutableMapOf<Long, RepoAuthInfo>()
+        val repoDetailInfoMap = mutableMapOf<Long, RepositoryDetailInfo>()
         repoGroup.forEach { (type, repositoryIds) ->
             run {
                 // 1. 获取处理类
                 val codeGitRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = type)
                 // 2. 得到授权身份<repoId, authInfo>
-                repoAuthInfoMap.putAll(codeGitRepositoryService.getAuthInfo(repositoryIds))
+                repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
-            val authInfo = repoAuthInfoMap[it.repositoryId]
+            val repoDetailInfo = repoDetailInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -707,9 +707,10 @@ class RepositoryService @Autowired constructor(
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
                 canUse = hasUsePermission,
-                authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
-                svnType = authInfo?.svnType,
-                authIdentity = authInfo?.credentialId?.ifBlank { it.userId }
+                authType = repoDetailInfo?.authType ?: RepoAuthType.HTTP.name,
+                svnType = repoDetailInfo?.svnType,
+                authIdentity = repoDetailInfo?.credentialId?.ifBlank { it.userId },
+                enablePac = repoDetailInfo?.enablePac
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)

@@ -73,6 +73,12 @@ object RepositoryMessageCode {
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115027" // 代码库已开启PAC。
+    const val ERROR_REPO_ENABLE_PAC_FAIL = "2115028" // 代码库开启PAC失败。
+    const val ERROR_REPO_CI_DIR_EXISTS = "2115029" // 代码库关闭PAC失败，CI文件夹仍存在。
+    const val ERROR_GET_GIT_PROJECT_ID = "2115030" // 获取工蜂仓库({0})信息失败
+    const val ERROR_REPO_URL_HAS_ENABLED_PAC = "2115031" // 代码库已在项目[{0}]开启pac
+    const val ERROR_REPO_NOT_ENABLED_PAC = "2115032" // 代码库没有开启pac
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

@@ -37,7 +37,7 @@ import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -175,12 +175,12 @@ class CodeP4RepositoryService @Autowired constructor(
         )
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeP4Dao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(RepoAuthType.HTTP.name, it.credentialId)
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(RepoAuthType.HTTP.name, it.credentialId)
         }) ?: mapOf()
     }
 
@@ -194,6 +194,20 @@ class CodeP4RepositoryService @Autowired constructor(
             repository = repository
         )
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = Unit
+
+    override fun checkCiDirExists(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = false
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeP4RepositoryService::class.java)

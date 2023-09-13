@@ -39,7 +39,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -275,12 +275,12 @@ class CodeTGitRepositoryService @Autowired constructor(
         return repositoryProjectInfo?.id ?: 0L
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeGitDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(it.authType ?: RepoAuthType.SSH.name, it.credentialId)
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(it.authType ?: RepoAuthType.SSH.name, it.credentialId)
         }) ?: mapOf()
     }
 
@@ -300,6 +300,20 @@ class CodeTGitRepositoryService @Autowired constructor(
             )
         }
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = Unit
+
+    override fun checkCiDirExists(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = false
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitRepositoryService::class.java)

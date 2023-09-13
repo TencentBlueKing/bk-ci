@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY` (
   `CREATED_TIME` timestamp NOT NULL DEFAULT '2019-08-01 00:00:00' COMMENT '创建时间',
   `UPDATED_TIME` timestamp NOT NULL DEFAULT '2019-08-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除 0 可用 1删除',
+  `ENABLE_PAC` bit(1) NOT NULL DEFAULT false COMMENT '是否开启pac',
+  `PAC_SYNC_STATUS` VARCHAR(10) NULL COMMENT 'pac同步状态',
+  `PAC_SYNC_COMMIT_ID` VARCHAR(64) NULL COMMENT 'pac同步的commitId',
+  `PAC_SYNC_TIME` timestamp NULL COMMENT 'pac同步时间',
   PRIMARY KEY (`REPOSITORY_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`),
   KEY `inx_alias_name` (`ALIAS_NAME`)
@@ -36,7 +40,8 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_CODE_GIT` (
   `CREDENTIAL_ID` varchar(64) NOT NULL COMMENT '凭据 ID',
   `AUTH_TYPE` varchar(8) DEFAULT NULL COMMENT '认证方式',
   `GIT_PROJECT_ID` bigint(20) DEFAULT 0 COMMENT 'GIT项目ID',
-  PRIMARY KEY (`REPOSITORY_ID`)
+  PRIMARY KEY (`REPOSITORY_ID`),
+  INDEX IDX_GIT_PROJECT_ID('GIT_PROJECT_ID')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工蜂代码库明细表';
 
 -- ----------------------------
@@ -190,5 +195,21 @@ create table T_REPOSITORY_TGIT_TOKEN
     constraint `USER_ID`
         unique (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';
+
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PAC_SYNC_DETAIL`
+(
+    `ID`            bigint auto_increment,
+    `PROJECT_ID`    varchar(64)  not null comment '项目ID',
+    `REPOSITORY_ID` bigint(20)   NOT NULL COMMENT '代码库ID',
+    `COMMIT_ID`     VARCHAR(64)  NOT NULL COMMENT '同步的commitId',
+    `FILE_PATH`     varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
+    `SYNC_STATUS`   VARCHAR(10)  NULL COMMENT 'ci文件同步状态',
+    `REASON`         varchar(100)         DEFAULT NULL COMMENT '失败原因',
+    `REASON_DETAIL`  text                 DEFAULT NULL COMMENT '原因详情',
+    `CREATE_TIME`   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`  timestamp   default CURRENT_TIMESTAMP null comment '更新时间',
+    PRIMARY KEY (`ID`, `CREATE_TIME`),
+    UNIQUE KEY `UQE_COMMIT_FILE` (`PROJECT_ID`, `REPOSITORY_ID`, `COMMIT_ID`, `FILE_PATH`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='pac文件同步详情';
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -23,37 +23,50 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.repository.resources
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
+import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.service.RepositoryPacService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("代码库模型-多态基类")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = CodeSvnRepository::class, name = CodeSvnRepository.classType),
-    JsonSubTypes.Type(value = CodeGitRepository::class, name = CodeGitRepository.classType),
-    JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
-    JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
-    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
-)
-interface Repository {
-    val aliasName: String
-    val url: String
-    val credentialId: String
-    val projectName: String
-    var userName: String
-    val projectId: String?
-    val repoHashId: String?
-    val enablePac: Boolean?
+@RestResource
+class ServiceRepositoryPacResourceImpl @Autowired constructor(
+    private val repositoryPacService: RepositoryPacService
+) : ServiceRepositoryPacResource {
 
-    fun isLegal() = url.startsWith(getStartPrefix())
+    override fun initPacSyncDetail(
+        projectId: String,
+        repositoryHashId: String,
+        commitId: String,
+        syncFileInfoList: List<RepoPacSyncFileInfo>
+    ): Result<Boolean> {
+        repositoryPacService.initPacSyncDetail(
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            commitId = commitId,
+            syncFileInfoList = syncFileInfoList
+        )
+        return Result(true)
+    }
 
-    fun getStartPrefix(): String
-
-    fun getFormatURL() = url
+    override fun updatePacSyncStatus(
+        projectId: String,
+        repositoryHashId: String,
+        commitId: String,
+        syncFileInfo: RepoPacSyncFileInfo
+    ): Result<Boolean> {
+        repositoryPacService.updatePacSyncStatus(
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            commitId = commitId,
+            syncFileInfo = syncFileInfo
+        )
+        return Result(true)
+    }
 }

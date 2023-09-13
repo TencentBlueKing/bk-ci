@@ -23,19 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
-package com.tencent.devops.repository.pojo.auth
+
+package com.tencent.devops.repository.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import org.apache.commons.lang3.StringUtils
 
-@ApiModel("代码库授权信息")
-data class RepoAuthInfo(
+@ApiModel("代码库详情信息")
+data class RepositoryDetailInfo(
     @ApiModelProperty("授权类型", required = true)
     val authType: String,
     @ApiModelProperty("授权凭证ID", required = true)
     val credentialId: String,
     @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = StringUtils.EMPTY
+    val svnType: String? = StringUtils.EMPTY,
+    @ApiModelProperty("是否启用pac", required = true)
+    val enablePac: Boolean? = false
 )

@@ -41,7 +41,7 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_HTTP
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_SSH
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -222,12 +222,12 @@ class CodeSvnRepositoryService @Autowired constructor(
         return repoCredentialInfo
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeSvnDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
         ).associateBy({ it.repositoryId }, {
-            RepoAuthInfo(
+            RepositoryDetailInfo(
                 authType = it.svnType?.toUpperCase() ?: RepoAuthType.SSH.name,
                 credentialId = it.credentialId,
                 svnType = it.svnType
@@ -245,6 +245,20 @@ class CodeSvnRepositoryService @Autowired constructor(
             repository = repository
         )
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = Unit
+
+    override fun checkCiDirExists(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord
+    ) = false
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
