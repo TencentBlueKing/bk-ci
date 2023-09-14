@@ -25,18 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web
+package com.tencent.devops.common.web.constant
 
-import com.tencent.devops.common.web.aop.BuildApiAspect
-import org.springframework.beans.factory.annotation.Configurable
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.core.Ordered
-
-@Configurable
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BuildApiAutoConfiguration {
-
-    @Bean
-    fun buildApiAspect() = BuildApiAspect()
+enum class BkApiHandleType {
+    BUILD_API_AUTH_CHECK, // build接口权限校验
+    PROJECT_API_ACCESS_LIMIT, // 限制项目接口访问权限
+    API_NO_AUTH_CHECK // 接口免权限校验
 }

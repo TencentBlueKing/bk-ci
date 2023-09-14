@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -193,6 +195,7 @@ interface UserPipelineViewResource {
     @ApiOperation("预览视图")
     @POST
     @Path("/projects/{projectId}/preview")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun preview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -231,6 +234,7 @@ interface UserPipelineViewResource {
     @ApiOperation("命中动态组情况")
     @POST
     @Path("/projects/{projectId}/matchDynamicView")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun matchDynamicView(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
