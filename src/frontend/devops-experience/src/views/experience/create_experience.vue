@@ -3,14 +3,6 @@
         <content-header>
             <div slot="left">{{ $route.meta.title }}</div>
         </content-header>
-        <bk-alert
-            v-if="isAlphaApk"
-            type="info"
-            class="alpha-apk-tips"
-            closable
-            :title="createInnerApkExpTips"
-        >
-        </bk-alert>
         <section class="create-experience-wrapper sub-view-port"
             v-bkloading="{
                 isLoading: loading.isLoading,
@@ -182,7 +174,7 @@
                     </template>
                 </bk-form>
                 <div class="submit-btn-bar">
-                    <bk-button theme="primary" @click.prevent="submitFn">{{ submitText }}</bk-button>
+                    <bk-button theme="primary" @click.prevent="beforeSubmit">{{ submitText }}</bk-button>
                     <bk-button theme="default" @click="cancel">取消</bk-button>
                 </div>
             </template>
@@ -690,6 +682,19 @@
                 })
                 localStorage.setItem('groupIdStr', this.groupIdStorage.sort().join(';'))
             },
+            beforeSubmit () {
+                if (!this.isAlphaApk) {
+                    this.submitFn()
+                    return
+                }
+                this.$bkInfo({
+                    subTitle: this.createInnerApkExpTips,
+                    type: 'warning',
+                    confirmFn: () => {
+                        this.submitFn()
+                    }
+                })
+            },
             async submitFn () {
                 if (this.isPublicExp) {
                     this.createReleaseForm.experienceGroups = ['kygplomw']
@@ -839,9 +844,6 @@
 <style lang="scss">
     @import './../../scss/conf';
     @import '@/scss/mixins/ellipsis';
-    .alpha-apk-tips {
-        margin: 20px 20px 0 20px;
-    }
     .create-experience-wrapper {
         .experience-form {
             width: 800px;
