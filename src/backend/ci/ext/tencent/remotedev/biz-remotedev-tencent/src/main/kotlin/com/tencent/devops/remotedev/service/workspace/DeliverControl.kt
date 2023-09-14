@@ -273,7 +273,6 @@ class DeliverControl @Autowired constructor(
                                         type = WorkspaceShared.AssignType.OWNER
                                     )
                                 )
-
                             )
                         }
                     }

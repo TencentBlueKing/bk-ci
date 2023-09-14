@@ -132,7 +132,7 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<List<WindowsResourceTypeConfig>>
 
-    @ApiOperation("获取所有的WINDOWS GPU资源配置信息")
+    @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
     @GET
     @Path("/get_all_windows_resource_zone")
     fun getAllWindowsResourceZone(
