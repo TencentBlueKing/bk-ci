@@ -27,19 +27,51 @@
 
 package com.tencent.devops.statistics.service.project.impl
 
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.statistics.service.project.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class StatProjectPermissionServiceImpl @Autowired constructor(
-    private val authProjectApi: AuthProjectApi,
-    private val bsProjectAuthServiceCode: BSProjectServiceCodec
+    private val client: Client,
+    private val bkTag: BkTag,
+    private val tokenService: ClientTokenService
 ) : ProjectPermissionService {
 
+    @Value("\${tag.rbac:#{null}}")
+    private var rbacTag: String = ""
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
+
     override fun getUserProjects(userId: String): List<String> {
-        return authProjectApi.getUserProjects(bsProjectAuthServiceCode, userId, null)
+        val projectList = mutableListOf<String>()
+        getIamProjectList(tag = rbacTag, projectList = projectList, userId = userId)
+        getIamProjectList(tag = prodTag, projectList = projectList, userId = userId)
+        return projectList
+    }
+
+    private fun getIamProjectList(
+        tag: String?,
+        projectList: MutableList<String>,
+        userId: String
+    ): List<String> {
+        if (!tag.isNullOrBlank()) {
+            val iamProjectList = bkTag.invokeByTag(tag) {
+                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
+                    userId = userId,
+                    token = tokenService.getSystemToken(null)!!
+                ).data
+            }
+            if (iamProjectList != null) {
+                projectList.addAll(iamProjectList)
+            }
+        }
+        return projectList
     }
 }

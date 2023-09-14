@@ -211,6 +211,7 @@ class WorkspaceDao {
     fun countProjectWorkspace(
         dslContext: DSLContext,
         projectId: String?,
+        workspaceName: String? = null,
         status: Set<WorkspaceStatus>? = null,
         systemType: WorkspaceSystemType? = null,
         queryType: QueryType? = QueryType.WEB
@@ -222,6 +223,14 @@ class WorkspaceDao {
                     conditions.add(PROJECT_ID.like("%$it%"))
                 } else {
                     conditions.add(PROJECT_ID.eq(it))
+                }
+            }
+
+            workspaceName?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(NAME.like("%$it%"))
+                } else {
+                    conditions.add(NAME.eq(it))
                 }
             }
 
@@ -304,6 +313,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
+        workspaceName: String? = null,
         systemType: WorkspaceSystemType? = null,
         queryType: QueryType? = QueryType.WEB
     ): List<WorkspaceRecord>? {
@@ -315,6 +325,14 @@ class WorkspaceDao {
                     conditions.add(PROJECT_ID.like("%$it%"))
                 } else {
                     conditions.add(PROJECT_ID.eq(it))
+                }
+            }
+
+            workspaceName?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(NAME.like("%$it%"))
+                } else {
+                    conditions.add(NAME.eq(it))
                 }
             }
             return dslContext.selectFrom(this)
@@ -462,6 +480,40 @@ class WorkspaceDao {
         return dslContext.select(t2.ID, t2.WORKSPACE_NAME, t2.OPERATOR, t2.SHARED_USER, t2.ASSIGN_TYPE, t2.RESOURCE_ID)
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
+            .fetch()
+    }
+
+    fun fetchWorkspaceWithOwner(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null,
+        assignType: WorkspaceShared.AssignType? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        status?.let {
+            conditions.add(t1.STATUS.eq(it.ordinal))
+        }
+        mountType?.let {
+            conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        projectId?.let {
+            conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
+
+        return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
+            .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .let { if (assignType != null) { it.and(t2.ASSIGN_TYPE.eq(assignType.name)) } else it }
+            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            .unionAll(
+                dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
+                    .from(t1)
+                    .where(conditions)
+                    .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+            )
             .fetch()
     }
 

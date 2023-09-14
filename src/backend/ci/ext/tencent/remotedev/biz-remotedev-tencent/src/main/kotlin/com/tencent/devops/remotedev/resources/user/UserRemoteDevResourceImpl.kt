@@ -33,7 +33,7 @@ import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
@@ -76,10 +76,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         data: BKGPT
     ): ChunkedOutput<String> {
         /* http/2 streaming
-        *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
-        *  所以不能使用 StreamingOutput
-        *  而改用 ChunkedOutput
-        * */
+         *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
+         *  所以不能使用 StreamingOutput
+         *  而改用 ChunkedOutput
+         * */
         val output: ChunkedOutput<String> = ChunkedOutput<String>(String::class.java, SEPARATOR)
         executor.execute {
             try {

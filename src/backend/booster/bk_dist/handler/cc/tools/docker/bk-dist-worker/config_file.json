@@ -1,7 +1,0 @@
-{
-  "address": "0.0.0.0",
-  "port": 30811,
-  "debug": true,
-  "v": 3,
-  "default_work_dir":"./default_work_dir"
-}

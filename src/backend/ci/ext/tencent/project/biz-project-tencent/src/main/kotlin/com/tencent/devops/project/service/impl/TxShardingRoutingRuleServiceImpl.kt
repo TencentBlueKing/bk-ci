@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_DB_BUILD_PROJEC
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_TABLE_BUILD_NUM_REDIS_KEY
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM_REDIS_KEY
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.pojo.TableShardingConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,11 +48,13 @@ import org.springframework.stereotype.Service
 class TxShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
     redisOperation: RedisOperation,
-    shardingRoutingRuleDao: ShardingRoutingRuleDao
+    shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
     redisOperation,
-    shardingRoutingRuleDao
+    shardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher
 ) {
 
     companion object {

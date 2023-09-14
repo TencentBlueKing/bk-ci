@@ -1,4 +1,0 @@
-op:
-  security:
-    admin-username: __BK_REPO_OP_ADMIN_USERNAME__
-    admin-password: __BK_REPO_OP_ADMIN_PASSWORD__
