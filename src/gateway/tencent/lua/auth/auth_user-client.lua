@@ -22,7 +22,7 @@ if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
 end
 
 -- 判断devx访问
-local is_devx = string.find(ngx.var.http_host, "dexv") ~= nil
+local is_devx = string.find(ngx.var.http_host, "devx") ~= nil
 
 if is_devx then
     --- 太湖登录
