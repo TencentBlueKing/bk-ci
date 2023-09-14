@@ -78,15 +78,20 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 null
             }
         } else {
-            // 直接从仓库拉取文件
-            val filePath =
-                URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
-            return client.get(ServiceArtifactoryResource::class).getFileContent(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = bkrepoStoreProjectId,
-                repoName = BkRepoEnum.PLUGIN.repoName,
-                filePath = filePath
-            ).data
+            try {
+                // 直接从仓库拉取文件
+                val filePath =
+                    URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
+                return client.get(ServiceArtifactoryResource::class).getFileContent(
+                    userId = BKREPO_DEFAULT_USER,
+                    projectId = bkrepoStoreProjectId,
+                    repoName = BkRepoEnum.PLUGIN.repoName,
+                    filePath = filePath
+                ).data
+            } catch (ignored: Throwable) {
+                logger.warn("getPropertiesFileStr ffilePath:${"$projectCode/$fileDir/$fileName"} error", ignored)
+                null
+            }
         }
     }
 
