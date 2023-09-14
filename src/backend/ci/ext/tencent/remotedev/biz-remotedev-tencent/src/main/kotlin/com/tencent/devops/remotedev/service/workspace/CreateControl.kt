@@ -188,6 +188,7 @@ class CreateControl @Autowired constructor(
                     ownerType = ws.ownerType
                 )
             )
+            Thread.sleep(100)
         }
     }
 
