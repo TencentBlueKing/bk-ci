@@ -426,7 +426,7 @@ class WorkspaceService @Autowired constructor(
             records = result.map {
                 var status = it.status
                 run {
-                    if (status.notOk2doNextAction() && Duration.between(
+                    if (status.notOk2doNextAction(it) && Duration.between(
                             it.lastStatusUpdateTime ?: LocalDateTime.now(),
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
