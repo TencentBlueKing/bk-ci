@@ -31,9 +31,9 @@ class ApigwOauth2EndpointResourceV4Impl @Autowired constructor(
                 accessTokenRequest = accessTokenRequest
             )
         } catch (ex: ErrorCodeException) {
-            Result(ex.errorCode, ex.defaultMessage)
+            Result(status = ex.errorCode.toInt(), message = ex.defaultMessage)
         } catch (rex: RemoteServiceException) {
-            Result(rex.errorCode.toString(), rex.errorMessage)
+            Result(status = rex.errorCode ?: REMOTE_EXCEPTION_CODE, message = rex.errorMessage)
         } catch (ignore: Exception) {
             throw ignore
         }
@@ -41,5 +41,6 @@ class ApigwOauth2EndpointResourceV4Impl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(ApigwOauth2EndpointResourceV4Impl::class.java)
+        private const val REMOTE_EXCEPTION_CODE = 500
     }
 }
