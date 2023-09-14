@@ -37,7 +37,8 @@ config = {
         domain = "__BK_CI_CONSUL_DOMAIN__",
         tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
         suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
-        nodes_url = "/v1/catalog/nodes"
+        nodes_url = "/v1/catalog/nodes",
+        use_default_tag=__BK_CI_USE_DEFAULT_TAG__
     },
     ns_devnet = {
         ip = {"__BK_CI_CONSUL_DEVNET_IP__"},

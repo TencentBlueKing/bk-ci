@@ -46,3 +46,6 @@ bkCiEsHttps: false
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
+bkCiLocalRunEnabled: false
+bkCiLocalRunTarget: host.docker.internal:8081
+bkCiUseDefaultTag: false
