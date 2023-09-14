@@ -82,7 +82,6 @@ class RbacPermissionMigrateService constructor(
         private const val ALL_MEMBERS_NAME = "allMembersName"
         private val toRbacExecutorService = Executors.newFixedThreadPool(5)
         private val migrateProjectsExecutorService = Executors.newFixedThreadPool(5)
-        private val migrateMonitorExecutorService = Executors.newFixedThreadPool(5)
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -205,17 +204,18 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
-        projectCodes.filter {
-            // 仅迁移"迁移成功"的项目
-            authMigrationDao.get(
-                dslContext = dslContext,
-                projectCode = it
-            )?.status == AuthMigrateStatus.SUCCEED.value
-        }.map {
-            val traceId = MDC.get(TraceTag.BIZID)
-            migrateMonitorExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                migrateResourceService.migrateMonitorResource(projectCode = it)
+        toRbacExecutorService.submit {
+            client.get(ServiceProjectResource::class).listByProjectCode(
+                projectCodes = projectCodes.toSet()
+            ).data?.filter {
+                // 仅迁移已迁移成功的项目
+                it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+            }?.map {
+                val traceId = MDC.get(TraceTag.BIZID)
+                migrateProjectsExecutorService.submit {
+                    MDC.put(TraceTag.BIZID, traceId)
+                    migrateResourceService.migrateMonitorResource(projectCode = it.englishName)
+                }
             }
         }
         return true
