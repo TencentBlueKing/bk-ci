@@ -35,7 +35,10 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+    ::v-deep .bk-exception-img.part-img {
+        margin-top: 200px;
+    }
     .empty-tips {
         margin-top: 8px;
         font-size: 12px;

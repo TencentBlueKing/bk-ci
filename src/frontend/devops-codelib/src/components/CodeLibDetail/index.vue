@@ -56,12 +56,19 @@
                     size="16"
                 />
                 <a
+                    v-if="repoInfo.url && repoInfo.url.startsWith('http')"
                     class="codelib-address"
                     v-bk-overflow-tips
                     @click="handleToRepo(repoInfo.url)"
                 >
                     {{ repoInfo.url }}
                 </a>
+                <p
+                    v-else
+                    class="codelib-address"
+                >
+                    {{ repoInfo.url }}
+                </p>
                 <span @click="handleCopy">
                     <Icon
                         name="copy2"

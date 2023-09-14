@@ -23,7 +23,7 @@
                 <bk-radio
                     value="HTTP"
                 >
-                    {{ $t('codelib.用户名密码+个人token') }}
+                    {{ $t('codelib.访问令牌') }}
                 </bk-radio>
             </bk-radio-group>
 

@@ -7,6 +7,7 @@
         :quick-close="false"
         render-directive="if"
         :show-footer="!isOAUTH"
+        @value-change="handleClose"
     >
         <h3
             slot="header"
@@ -17,7 +18,46 @@
         <bk-form
             :label-width="120"
         >
+            <!-- Github 重置授权 -->
             <bk-form-item
+                v-if="isGithub"
+                :label="$t('codelib.authType')"
+                :required="true"
+                property="authType"
+            >
+                <bk-radio-group
+                    v-model="newRepoInfo.authType"
+                >
+                    <bk-radio
+                        class="mr20"
+                        value="OAUTH"
+                    >
+                        OAUTH
+                    </bk-radio>
+                </bk-radio-group>
+
+                <div class="codelib-oauth" v-if="isOAUTH">
+                    <bk-button
+                        theme="primary"
+                        :loading="isSaveLoading"
+                        @click="openValidate"
+                    >
+                        {{ $t('codelib.oauthCert') }}
+                    </bk-button>
+                    
+                    <div class="oauth-tips">
+                        <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
+                        <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
+                        <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
+                        <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                        <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
+                    </div>
+                </div>
+            </bk-form-item>
+
+            <!-- Git、 TGit 重置授权 -->
+            <bk-form-item
+                v-if="isGit || isTGit"
                 :label="$t('codelib.authType')"
                 :required="true"
                 property="authType"
@@ -32,12 +72,14 @@
                         OAUTH
                     </bk-radio>
                     <bk-radio
+                        v-if="!isTGit"
                         class="mr20"
                         value="SSH"
                     >
                         SSH
                     </bk-radio>
                     <bk-radio
+                        v-if="!isTGit"
                         value="HTTP"
                     >
                         {{ $t('codelib.用户名密码+个人token') }}
@@ -47,12 +89,12 @@
                 <div class="codelib-oauth" v-if="isOAUTH">
                     <bk-button
                         theme="primary"
+                        :loading="isSaveLoading"
                         @click="openValidate"
                     >
                         {{ $t('codelib.oauthCert') }}
                     </bk-button>
                     <div
-                        v-if="isGit || isTGit"
                         class="oauth-tips"
                     >
                         <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
@@ -62,56 +104,108 @@
                         <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
                         <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
                     </div>
-                    <div
-                        v-else-if="isGithub"
-                        class="oauth-tips"
-                    >
-                        <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
-                        <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-                        <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
-                        <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                        <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
-                    </div>
                 </div>
             </bk-form-item>
+
+            <!-- Gitlab 重置授权 -->
             <bk-form-item
-                v-if="!isOAUTH"
-                :label="$t('codelib.codelibCredential')"
+                v-if="isGitLab"
+                :label="$t('codelib.authType')"
                 :required="true"
-                property="credentialId"
+                property="authType"
             >
-                <bk-select
-                    v-model="newRepoInfo.credentialId"
-                    :loading="isLoadingTickets"
-                    searchable
-                    :clearable="false"
-                    name="credentialId"
-                    class="codelib-credential-selector"
-                    :placeholder="$t('codelib.credentialPlaceholder')"
-                    @toggle="getTickets"
+                <bk-radio-group
+                    v-model="newRepoInfo.authType"
                 >
-                    <bk-option
-                        v-for="(option, index) in tickets"
-                        :key="option.credentialId"
-                        :id="option.credentialId"
-                        :name="option.credentialId">
-                        <span>
-                            {{option.credentialId}}
-                        </span>
-                        <i
-                            class="devops-icon icon-edit2 cre-icon"
-                            @click.stop="goToEditCre(index)"
-                        >
-                        </i>
-                    </bk-option>
-                </bk-select>
-                <span
-                    class="text-link"
-                    @click="addCredential"
-                >
-                    {{ $t('codelib.new') }}
-                </span>
+                    <bk-radio
+                        class="mr20"
+                        value="SSH"
+                    >
+                        SSH
+                    </bk-radio>
+                    <bk-radio
+                        value="HTTP"
+                    >
+                        {{ $t('codelib.访问令牌') }}
+                    </bk-radio>
+                </bk-radio-group>
             </bk-form-item>
+            <!-- SVN 重置授权 -->
+            <bk-form-item
+                v-if="isSvn"
+                :label="$t('codelib.authType')"
+                :required="true"
+                property="svnType"
+            >
+                <bk-radio-group
+                    v-model="newRepoInfo.svnType"
+                >
+                    <bk-radio
+                        class="mr20"
+                        value="ssh"
+                    >
+                        SSH
+                    </bk-radio>
+                    <bk-radio
+                        value="http"
+                    >
+                        {{ $t('codelib.用户名密码') }}
+                    </bk-radio>
+                </bk-radio-group>
+            </bk-form-item>
+            <template
+                v-if="!isOAUTH">
+                <bk-form-item
+                    :label="$t('codelib.address')"
+                    :required="true"
+                    property="url"
+                    error-display-type="normal"
+                >
+                    <bk-input
+                        v-model.trim="newRepoInfo.url"
+                        :disabled="!isSvn"
+                    >
+                    </bk-input>
+                </bk-form-item>
+                <bk-form-item
+                    v-if="!isOAUTH"
+                    :label="$t('codelib.codelibCredential')"
+                    :required="true"
+                    property="credentialId"
+                >
+                    <bk-select
+                        v-model="newRepoInfo.credentialId"
+                        :loading="isLoadingTickets"
+                        searchable
+                        :clearable="false"
+                        name="credentialId"
+                        class="codelib-credential-selector"
+                        :placeholder="$t('codelib.credentialPlaceholder')"
+                        @toggle="getTickets"
+                    >
+                        <bk-option
+                            v-for="(option, index) in tickets"
+                            :key="option.credentialId"
+                            :id="option.credentialId"
+                            :name="option.credentialId">
+                            <span>
+                                {{option.credentialId}}
+                            </span>
+                            <i
+                                class="devops-icon icon-edit2 cre-icon"
+                                @click.stop="goToEditCre(index)"
+                            >
+                            </i>
+                        </bk-option>
+                    </bk-select>
+                    <span
+                        class="text-link"
+                        @click="addCredential"
+                    >
+                        {{ $t('codelib.new') }}
+                    </span>
+                </bk-form-item>
+            </template>
         </bk-form>
         <footer slot="footer">
             <bk-button
@@ -132,6 +226,7 @@
 </template>
 
 <script>
+    import _ from 'lodash'
     import {
         mapState,
         mapActions
@@ -153,6 +248,9 @@
                 type: String,
                 default: ''
             },
+            isP4: Boolean,
+            isSvn: Boolean,
+            isGitLab: Boolean,
             isTGit: Boolean,
             isGit: Boolean,
             isGithub: Boolean,
@@ -163,7 +261,8 @@
                 isShow: false,
                 isSaveLoading: false,
                 isLoadingTickets: false,
-                newRepoInfo: {}
+                newRepoInfo: {},
+                cacheRepoInfo: {}
             }
         },
         computed: {
@@ -173,16 +272,13 @@
             isOAUTH () {
                 return this.newRepoInfo.authType === 'OAUTH'
             },
-            isSSH () {
-                return this.newRepoInfo.authType === 'SSH'
-            },
             projectId () {
                 return this.$route.params.projectId
             },
 
             codelibTypeName () {
-                return this.repoInfo && this.repoInfo['@type']
-                    ? this.repoInfo['@type']
+                return this.newRepoInfo && this.newRepoInfo['@type']
+                    ? this.newRepoInfo['@type']
                     : ''
             },
 
@@ -193,27 +289,109 @@
                 return (
                     getCodelibConfig(
                         this.codelibTypeName,
-                        this.curRepo.svnType,
-                        this.curRepo.authType
+                        this.newRepoInfo.svnType,
+                        this.newRepoInfo.authType
                     ) || {}
                 )
+            },
+            credentialList () {
+                return this.tickets || []
             }
         },
         watch: {
-            repoInfo (val) {
-                this.newRepoInfo = {
-                    ...this.newRepoInfo,
-                    ...val
+            isShow (val) {
+                if (val) {
+                    if (!this.isOAUTH) this.getTickets()
                 }
             },
-            curRepo (val) {
-                this.newRepoInfo = {
-                    ...this.newRepoInfo,
-                    ...val
-                }
+            repoInfo: {
+                handler (val) {
+                    this.newRepoInfo = {
+                        ...this.newRepoInfo,
+                        ...val
+                    }
+                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                },
+                deep: true,
+                immediate: true
             },
-            credentialTypes () {
-                if (!this.isOAUTH) this.getTickets(true)
+            curRepo: {
+                handler (val) {
+                    this.newRepoInfo = {
+                        ...this.newRepoInfo,
+                        ...val
+                    }
+                    this.cacheRepoInfo = _.cloneDeep(this.newRepoInfo)
+                },
+                deep: true,
+                immediate: true
+            },
+            'newRepoInfo.authType': {
+                handler (val) {
+                    if (val === this.cacheRepoInfo.authType) {
+                        this.newRepoInfo.url = this.cacheRepoInfo.url
+                        this.newRepoInfo.credentialId = this.cacheRepoInfo.credentialId
+                        return
+                    }
+                    if (this.isGitLab) {
+                        if (val === 'HTTP' && this.cacheRepoInfo.authType === 'SSH') {
+                            const { url } = this.newRepoInfo
+                            this.newRepoInfo.url = `https://${url.split('@')[1].replace(':', '/')}`
+                            this.newRepoInfo.credentialId = ''
+                        }
+
+                        if (val === 'SSH' && this.cacheRepoInfo.authType === 'HTTP') {
+                            const { url } = this.newRepoInfo
+                            this.newRepoInfo.url = `git@${url.split('://')[1].replace('.com/', '.com:')}`
+                            this.newRepoInfo.credentialId = ''
+                        }
+                    }
+
+                    if (this.isGit) {
+                        if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
+                            const { url } = this.newRepoInfo
+                            this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                            this.newRepoInfo.credentialId = ''
+                        }
+                        if (val === 'SSH' && this.cacheRepoInfo.authType === 'OAUTH') {
+                            const { url } = this.newRepoInfo
+                            this.newRepoInfo.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                            this.newRepoInfo.credentialId = ''
+                        }
+
+                        if (val === 'HTTP' && this.cacheRepoInfo.authType === 'OAUTH') {
+                            this.newRepoInfo.url = this.cacheRepoInfo.url
+                            this.newRepoInfo.credentialId = ''
+                        }
+
+                        // 老数据存在http开头的仓库处理
+                        if (val === 'OAUTH' && this.cacheRepoInfo.authType === 'HTTP') {
+                            const { url } = this.newRepoInfo
+                            if (url.startsWith('http://')) {
+                                this.newRepoInfo.url = url.replace.replace('http://', 'https://')
+                            }
+                        }
+                    }
+                },
+                deep: true
+            },
+            'newRepoInfo.svnType': {
+                handler (val) {
+                    if (this.isSvn) {
+                        if (val === this.cacheRepoInfo.svnType) {
+                            this.newRepoInfo.url = this.cacheRepoInfo.url
+                            this.newRepoInfo.credentialId = this.cacheRepoInfo.credentialId
+                            return
+                        }
+                        const { url } = this.newRepoInfo
+                        const urlArr = url.split('://')
+                        this.newRepoInfo.url = val === 'ssh'
+                            ? `svn+ssh://${urlArr[1]}`
+                            : `https://${urlArr[1]}`
+                        this.newRepoInfo.credentialId = ''
+                    }
+                },
+                deep: true
             }
         },
         methods: {
@@ -277,16 +455,14 @@
                 }
             },
 
-            async getTickets (val) {
-                if (val) {
-                    const { projectId, credentialTypes } = this
-                    this.isLoadingTickets = true
-                    await this.requestTickets({
-                        projectId,
-                        credentialTypes
-                    })
-                    this.isLoadingTickets = false
-                }
+            async getTickets () {
+                const { projectId, credentialTypes } = this
+                this.isLoadingTickets = true
+                await this.requestTickets({
+                    projectId,
+                    credentialTypes
+                })
+                this.isLoadingTickets = false
             },
 
             goToEditCre (index) {
@@ -330,6 +506,14 @@
             handleConfirm () {
                 if (this.isOAUTH) return
                 this.handleUpdateRepo()
+            },
+            handleClose (val) {
+                if (!val) {
+                    this.newRepoInfo = {
+                        ...this.newRepoInfo,
+                        ...this.cacheRepoInfo
+                    }
+                }
             }
         }
     }

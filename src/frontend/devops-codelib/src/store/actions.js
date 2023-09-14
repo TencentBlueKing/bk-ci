@@ -441,10 +441,10 @@ const actions = {
         eventType = '',
         triggerUser = '',
         pipelineName = '',
-        startTimeEndTime = '',
-        endTimeStartTime = ''
+        startTime = '',
+        endTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTimeEndTime=${startTimeEndTime}&endTimeStartTime=${endTimeStartTime}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}`)
     },
 
     /**
@@ -481,8 +481,8 @@ const actions = {
      * 获取事件类型
      */
 
-    fetchEventType ({ commit }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listEventType`)
+    fetchEventType ({ commit }, { scmType }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listEventType?scmType=${scmType}`)
     },
 
     /**

@@ -49,6 +49,7 @@
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
+        {{ scmType}}
     </section>
 </template>
 <script>
@@ -83,7 +84,8 @@
                 catchRepoId: '',
                 isLoadingMore: false,
                 hasLoadEnd: false,
-                pageLoading: false
+                pageLoading: false,
+                isInitTime: true
             }
         },
         computed: {
@@ -96,67 +98,6 @@
             triggerType () {
                 return this.curRepo.type || ''
             },
-            // triggerTypeList () {
-            //     return [
-            //         { name: this.$t('codelib.手动触发'), id: 'MANUAL' },
-            //         { name: this.$t('codelib.定时触发'), id: 'TIME_TRIGGER' },
-            //         { name: this.$t('codelib.服务触发'), id: 'SERVICE' },
-            //         { name: this.$t('codelib.流水线触发'), id: 'PIPELINE' },
-            //         { name: this.$t('codelib.远程触发'), id: 'REMOTE' }
-            //     ]
-            // },
-            // eventTypeList () {
-            //     const listMap = {
-            //         GITHUB: [
-            //             { name: this.$t('codelib.创建Branch/Tag事件'), id: 'CREATE' },
-            //             { name: this.$t('codelib.PR事件'), id: 'PULL_REQUEST' }
-            //         ],
-            //         CODE_SVN: [
-            //             { name: this.$t('codelib.POST_COMMIT事件'), id: 'POST_COMMIT' },
-            //             { name: this.$t('codelib.LOCK_COMMIT事件'), id: 'LOCK_COMMIT' },
-            //             { name: this.$t('codelib.PRE_COMMIT事件'), id: 'PRE_COMMIT' }
-            //         ],
-            //         CODE_GIT: [
-            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-            //         ],
-            //         CODE_GITLAB: [
-            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-            //         ],
-            //         CODE_TGIT: [
-            //             { name: this.$t('codelib.推送事件'), id: 'PUSH' },
-            //             { name: this.$t('codelib.标签推送事件'), id: 'TAG_PUSH' },
-            //             { name: this.$t('codelib.合并请求事件'), id: 'MERGE_REQUEST' },
-            //             { name: this.$t('codelib.议题事件'), id: 'ISSUES' },
-            //             { name: this.$t('codelib.评论事件'), id: 'NOTE' },
-            //             { name: this.$t('codelib.评审事件'), id: 'REVIEW' }
-            //         ],
-            //         CODE_P4: [
-            //             { name: this.$t('codelib.CHANGE_COMMIT事件'), id: 'CHANGE_COMMIT' },
-            //             { name: this.$t('codelib.PUSH_SUBMIT事件'), id: '.PUSH_SUBMIT' },
-            //             { name: this.$t('codelib.CHANGE_CONTENT事件'), id: 'CHANGE_CONTENT' },
-            //             { name: this.$t('codelib.CHANGE_SUBMIT事件'), id: 'CHANGE_SUBMIT' },
-            //             { name: this.$t('codelib.PUSH_CONTENT事件'), id: 'PUSH_CONTENT' },
-            //             { name: this.$t('codelib.PUSH_COMMIT事件'), id: 'PUSH_COMMIT' },
-            //             { name: this.$t('codelib.FIX_ADD事件'), id: 'FIX_ADD' },
-            //             { name: this.$t('codelib.FIX_DELETE事件'), id: 'FIX_DELETE' },
-            //             { name: this.$t('codelib.FORM_COMMIT事件'), id: 'FORM_COMMIT' },
-            //             { name: this.$t('codelib.SHELVE_COMMIT事件'), id: 'SHELVE_COMMIT' },
-            //             { name: this.$t('codelib.SHELVE_DELETE事件'), id: 'SHELVE_DELETE' },
-            //             { name: this.$t('codelib.SHELVE_SUBMIT事件'), id: 'SHELVE_SUBMIT' }
-            //         ]
-            //     }
-            //     return listMap[this.triggerType] || []
-            // },
             searchList () {
                 const list = [
                     {
@@ -183,6 +124,9 @@
                 })
             },
             isSearch () {
+                if (this.isInitTime) {
+                    return false
+                }
                 return this.daterange[0] || this.searchValue.length
             }
         },
@@ -191,16 +135,19 @@
                 await this.resetFilter()
                 this.catchRepoId = id
             },
-            daterange () {
+            daterange (newVal, oldVal) {
+                if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
                 this.timelineMap = {}
+                console.log(this.catchRepoId === this.repoId, 'this.catchRepoId === this.repoId')
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
             },
-            searchValue () {
+            searchValue (newVal, oldVal) {
+                this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
@@ -215,6 +162,10 @@
             this.getEventTypeList()
             this.getTriggerTypeList()
             this.getListData()
+            const endTime = new Date()
+            const startTime = new Date()
+            startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
+            this.daterange = [startTime, endTime]
         },
         methods: {
             ...mapActions('codelib', [
@@ -223,7 +174,9 @@
                 'fetchTriggerType'
             ]),
             getEventTypeList () {
-                this.fetchEventType().then(res => {
+                this.fetchEventType({
+                    scmType: this.triggerType
+                }).then(res => {
                     this.eventTypeList = res.map(i => {
                         return {
                             ...i,
@@ -267,8 +220,8 @@
                     pageSize: this.pageSize,
                     ...params,
                     triggerType: params.triggerType || this.triggerType,
-                    startTimeEndTime: daterange[0],
-                    endTimeStartTime: daterange[1]
+                    startTime: daterange[0],
+                    endTime: daterange[1]
                 }).then(res => {
                     this.eventList = [...this.eventList, ...res.records]
                     this.timelineMap = {}
