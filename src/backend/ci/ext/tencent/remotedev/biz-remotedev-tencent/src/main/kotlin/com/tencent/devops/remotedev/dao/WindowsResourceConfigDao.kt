@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceConfig
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceConfigRecord
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -79,6 +79,8 @@ class WindowsResourceConfigDao {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
             }
+                .groupBy(ZONE, SIZE)
+                .orderBy(MEMORY)
                 .skipCheck()
                 .fetch()
         }

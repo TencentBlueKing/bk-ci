@@ -1,7 +1,9 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -15,7 +17,8 @@ import javax.ws.rs.core.Response
 class WhiteListService @Autowired constructor(
     @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation,
-    private val cacheService: RedisCacheService
+    private val cacheService: RedisCacheService,
+    private val client: Client
 ) {
 
     companion object {
@@ -65,6 +68,7 @@ class WhiteListService @Autowired constructor(
                     logger.info("whiteListUser($user) not in the GPU whiteList")
                     redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
                 }
+                client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }
         }
 

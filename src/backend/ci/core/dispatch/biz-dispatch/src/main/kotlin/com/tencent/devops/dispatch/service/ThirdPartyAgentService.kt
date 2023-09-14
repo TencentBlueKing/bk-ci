@@ -413,7 +413,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
-            .getAgentById(record.projectId, record.agentId)
+            .getAgentByIdGlobal(record.projectId, record.agentId)
         if (agentResult.isNotOk()) {
             logger.warn("Fail to get the third party agent(${record.agentId}) because of ${agentResult.message}")
             throw RemoteServiceException("Fail to get the third party agent")

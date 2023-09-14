@@ -188,6 +188,7 @@ class CreateControl @Autowired constructor(
                     ownerType = ws.ownerType
                 )
             )
+            Thread.sleep(100)
         }
     }
 
@@ -381,7 +382,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -413,7 +414,7 @@ class CreateControl @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -497,7 +498,7 @@ class CreateControl @Autowired constructor(
         }
 
         windowsGpuCheck(workspaceCreate, userId)
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -613,7 +614,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

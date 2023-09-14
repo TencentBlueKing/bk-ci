@@ -12,6 +12,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceReportResource
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.text.Collator
+import java.util.Locale
 
 @Primary
 @Service
@@ -63,6 +65,8 @@ class TxPipelineOutputService(
         pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
-        return pipelineOutputList.sortedByDescending { it.createTime }
+        return pipelineOutputList.sortedWith { o1, o2 ->
+            Collator.getInstance(Locale.CHINESE).compare(o1.name, o2.name)
+        }
     }
 }

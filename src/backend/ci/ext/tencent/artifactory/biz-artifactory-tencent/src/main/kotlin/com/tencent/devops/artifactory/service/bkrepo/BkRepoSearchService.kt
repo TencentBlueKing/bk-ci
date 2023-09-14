@@ -35,6 +35,8 @@ import com.tencent.devops.artifactory.service.RepoSearchService
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -78,7 +80,7 @@ class BkRepoSearchService @Autowired constructor(
         )
         val nodeList = queryData.records
 
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
+        val pipelineHasPermissionList = getHasPermissionPipelineIdList(nodeList, userId, projectId)
         logger.info("pipelineHasPermissionList is $pipelineHasPermissionList")
         logger.info("nodeList is $nodeList")
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
@@ -146,10 +148,20 @@ class BkRepoSearchService @Autowired constructor(
         )
         val nodeList = queryData.records
 
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
+        val pipelineHasPermissionList = getHasPermissionPipelineIdList(nodeList, userId, projectId)
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
             .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
         return Pair(queryData.totalRecords, fileInfoList)
+    }
+
+    private fun getHasPermissionPipelineIdList(
+        nodeList: List<QueryNodeInfo>,
+        userId: String,
+        projectId: String
+    ): List<String> {
+        return nodeList.filter { RepoUtils.isPipelineFile(it) }
+            .map { pipelineService.getPipelineId(it.path) }.distinct()
+            .filter { pipelineService.hasPermission(userId, projectId, it, AuthPermission.VIEW) }
     }
 
     override fun serviceSearchFileByRegex(

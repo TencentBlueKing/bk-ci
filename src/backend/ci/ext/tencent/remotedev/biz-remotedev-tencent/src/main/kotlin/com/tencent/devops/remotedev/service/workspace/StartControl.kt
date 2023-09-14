@@ -131,7 +131,10 @@ class StartControl @Autowired constructor(
                     logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                        params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't start now")
+                        params = arrayOf(
+                            workspace.workspaceName,
+                            "status is already ${workspace.status}, can't start now"
+                        )
                     )
                 }
 
@@ -139,12 +142,16 @@ class StartControl @Autowired constructor(
                     permissionService.checkUserCreate(userId, true)
                     /*处理异常的情况*/
                     workspaceCommon.checkAndFixExceptionWS(
-                        workspace.status,
-                        userId,
-                        workspaceName,
-                        workspace.workspaceMountType
+                        status = workspace.status,
+                        userId = userId,
+                        workspaceName = workspaceName,
+                        mountType = workspace.workspaceMountType
                     )
-                    workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
+                    workspaceCommon.checkWorkspaceAvailability(
+                        userId = userId,
+                        type = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType
+                    )
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
@@ -230,7 +237,7 @@ class StartControl @Autowired constructor(
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }

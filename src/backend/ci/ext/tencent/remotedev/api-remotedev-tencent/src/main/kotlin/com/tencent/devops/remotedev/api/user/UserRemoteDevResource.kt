@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
