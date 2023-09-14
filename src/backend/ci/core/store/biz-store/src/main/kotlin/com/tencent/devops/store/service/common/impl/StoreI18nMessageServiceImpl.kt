@@ -352,10 +352,11 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
-            fileName = "file/$path",
+            fileName = "file/$language/$path",
             repositoryHashId = repositoryHashId,
             branch = branch
         ) ?: return content
+        logger.info("getDescriptionI18nContent fileStr:$fileStr")
         return descriptionAnalysis(
             userId = userId,
             projectCode = projectCode,
