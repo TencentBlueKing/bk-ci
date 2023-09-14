@@ -60,6 +60,14 @@ interface ShardingRoutingRuleService {
     fun updateShardingRoutingRule(userId: String, id: String, shardingRoutingRule: ShardingRoutingRule): Boolean
 
     /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
+    fun updateShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
+
+    /**
      * 根据ID查找分片路由规则
      * @param id 规则ID
      * @return 分片路由规则信息

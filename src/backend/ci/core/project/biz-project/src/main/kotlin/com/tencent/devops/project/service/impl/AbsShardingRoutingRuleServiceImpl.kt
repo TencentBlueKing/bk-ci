@@ -28,15 +28,18 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.CrudEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
+import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val redisOperation: RedisOperation,
-    private val shardingRoutingRuleDao: ShardingRoutingRuleDao
+    private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
 
     /**
@@ -85,6 +89,10 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 value = shardingRoutingRule.routingRule,
                 expired = false
             )
+            // 发送规则新增事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
+            )
         } finally {
             lock.unlock()
         }
@@ -112,6 +120,10 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 tableName = shardingRoutingRuleRecord.tableName
             )
             redisOperation.delete(key)
+            // 发送规则删除事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.DELETE)
+            )
         }
         return true
     }
@@ -120,7 +132,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
      * 更新分片路由规则
      * @param userId 用户ID
      * @param id 规则ID
-     * @param shardingRoutingRule 片路由规则
+     * @param shardingRoutingRule 路由规则
      * @return 布尔值
      */
     override fun updateShardingRoutingRule(
@@ -165,8 +177,40 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 value = shardingRoutingRule.routingRule,
                 expired = false
             )
+            // 发送规则更新事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(
+                    routingName = key,
+                    routingRule = shardingRoutingRule.routingRule,
+                    actionType = CrudEnum.UPDATE
+                )
+            )
         } finally {
             lock.unlock()
+        }
+        return true
+    }
+
+    /**
+     * 更新分片路由规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 片路由规则
+     * @return 布尔值
+     */
+    override fun updateShardingRoutingRule(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Boolean {
+        val record = shardingRoutingRuleDao.get(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = shardingRoutingRule.routingName,
+            tableName = shardingRoutingRule.tableName
+        )
+        record?.let {
+            updateShardingRoutingRule(userId, record.id, shardingRoutingRule)
         }
         return true
     }

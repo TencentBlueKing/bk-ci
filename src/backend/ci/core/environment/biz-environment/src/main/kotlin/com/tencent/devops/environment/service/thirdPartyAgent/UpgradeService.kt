@@ -215,7 +215,7 @@ class UpgradeService @Autowired constructor(
         secretKey: String
     ): Triple<AgentStatus, AgentProps?, String?> {
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: return Triple(AgentStatus.DELETE, null, null)
 
         val key = SecurityUtil.decrypt(agentRecord.secretKey)

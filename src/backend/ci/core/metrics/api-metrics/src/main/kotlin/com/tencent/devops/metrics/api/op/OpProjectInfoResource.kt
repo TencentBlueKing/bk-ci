@@ -62,4 +62,13 @@ interface OpProjectInfoResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("同步项目插件关联信息")
+    @Path("/atom/relevancy/sync")
+    @GET
+    fun syncProjectAtomData(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Boolean
 }

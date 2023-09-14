@@ -35,5 +35,8 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class DataSourceProperties(
     val dataSourceConfigs: List<DataSourceConfig>, // 数据源配置
     val tableRuleConfigs: List<TableRuleConfig>, // 数据库表规则配置
-    val bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null // 绑定表规则配置
+    val bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null, // 绑定表规则配置
+    val migratingDataSourceConfigs: List<DataSourceConfig>? = null, // 迁移数据源配置
+    val migratingTableRuleConfigs: List<TableRuleConfig>? = null, // 迁移数据库表规则配置
+    val migratingBindingTableGroupConfigs: List<BindingTableGroupConfig>? = null // 迁移绑定表规则配置
 )

@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# get current file dir
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-# ensure all the env profiles
-source $DIR/tbs_env.profile
-
-$LAUNCHER_COMMAND "${@}"

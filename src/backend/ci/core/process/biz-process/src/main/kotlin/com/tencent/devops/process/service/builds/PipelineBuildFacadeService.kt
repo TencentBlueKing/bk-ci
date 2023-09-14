@@ -812,7 +812,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        terminateFlag: Boolean? = false
     ) {
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
@@ -839,7 +840,8 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             userId = userId,
-            channelCode = channelCode
+            channelCode = channelCode,
+            terminateFlag = terminateFlag
         )
     }
 
@@ -2064,7 +2066,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         userId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        terminateFlag: Boolean? = false
     ) {
 
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
@@ -2087,19 +2090,24 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
-            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作(第二次取消直接强制终止流水线构建)
-            val cancelActionTime = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toLong() ?: 0
-            val intervalTime = System.currentTimeMillis() - cancelActionTime
-            var terminateFlag = false // 是否强制终止
-            if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
-                val timeTip = cancelIntervalLimitTime - intervalTime / 1000
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    params = arrayOf(userId, timeTip.toString())
-                )
-            } else if (cancelActionTime > 0) {
-                terminateFlag = true
+            val finalTerminateFlag = if (terminateFlag == true) {
+                terminateFlag
+            } else {
+                // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作(第二次取消直接强制终止流水线构建)
+                val cancelActionTime = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toLong() ?: 0
+                val intervalTime = System.currentTimeMillis() - cancelActionTime
+                var flag = false // 是否强制终止
+                if (intervalTime <= cancelIntervalLimitTime * 1000) {
+                    logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
+                    val timeTip = cancelIntervalLimitTime - intervalTime / 1000
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
+                        params = arrayOf(userId, timeTip.toString())
+                    )
+                } else if (cancelActionTime > 0) {
+                    flag = true
+                }
+                flag
             }
 
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
@@ -2161,7 +2169,7 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED,
-                    terminateFlag = terminateFlag
+                    terminateFlag = finalTerminateFlag
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {

@@ -1,9 +1,0 @@
-
-type("enterprise") # The default type, can be: appstore, adhoc, enterprise or development
-
-app_identifier("com.devopsapp")
-username("xxx") # Your Apple Developer Portal username
-
-
-
-# The docs are available on https://docs.fastlane.tools/actions/match

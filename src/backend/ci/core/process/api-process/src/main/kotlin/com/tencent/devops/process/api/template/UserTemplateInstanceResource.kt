@@ -30,7 +30,9 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -87,6 +89,7 @@ interface UserTemplateInstanceResource {
     @ApiOperation("通过流水线ID获取流水线启动参数")
     @POST
     @Path("/projects/{projectId}/templates/{templateId}/pipelines")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listTemplateInstancesParams(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -107,6 +110,7 @@ interface UserTemplateInstanceResource {
     @ApiOperation("差异对比")
     @POST
     @Path("/projects/{projectId}/templates/{templateId}/pipelines/{pipelineId}/compare")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun compareTemplateInstances(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

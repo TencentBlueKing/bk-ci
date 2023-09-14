@@ -116,7 +116,7 @@ class DataSourceDao {
             } else {
                 conditions.add(TAG.isNull)
             }
-            dslContext.selectFrom(this).where(conditions).fetch()
+            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
         }
     }
 

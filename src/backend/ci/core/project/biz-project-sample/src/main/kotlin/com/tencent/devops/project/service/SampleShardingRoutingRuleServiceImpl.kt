@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
+import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.service.impl.AbsShardingRoutingRuleServiceImpl
 import org.jooq.DSLContext
@@ -39,11 +40,13 @@ import org.springframework.stereotype.Service
 class SampleShardingRoutingRuleServiceImpl(
     dslContext: DSLContext,
     redisOperation: RedisOperation,
-    shardingRoutingRuleDao: ShardingRoutingRuleDao
+    shardingRoutingRuleDao: ShardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : AbsShardingRoutingRuleServiceImpl(
     dslContext,
     redisOperation,
-    shardingRoutingRuleDao
+    shardingRoutingRuleDao,
+    shardingRoutingRuleDispatcher
 ) {
 
     /**
