@@ -60,18 +60,19 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
 
+    @Value("\${bcsCloud.token}")
+    val bcsCloudToken: String = ""
+
+    @Value("\${bcsCloud.apiUrl}")
+    val bcsCloudUrl: String = ""
+
     fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
-        val url = "$apiUrl/openapi/computer/create"
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
         val body = JsonUtil.toJson(environment, false)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    body
-                )
-                    .toHeaders()
-            )
+            .headers(makeBcsHeaders().toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
@@ -437,6 +438,12 @@ class WorkspaceStartCloudClient @Autowired constructor(
         headerBuilder["x-start-timestamp"] = timestampMillis
         headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
 
+        return headerBuilder
+    }
+
+    fun makeBcsHeaders(): Map<String, String> {
+        val headerBuilder = mutableMapOf<String, String>()
+        headerBuilder["BK-Devops-Token"] = bcsCloudToken
         return headerBuilder
     }
 }
