@@ -626,3 +626,33 @@
       PC端审核：${reviewUrl} 移动端审核：${reviewAppUrl}
   creator: "system"
   modifior: "system"
+- index: 40
+  id: "ea98239a51a74f8db0a012a809bc2016"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据失败提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2001"
+    sender: "DevOps"
+    title: "迁移PROCESS数据库中项目【${projectId}】的数据失败"
+    body: "迁移PROCESS数据库中项目【${projectId}】的数据失败，失败原因: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 41
+  id: "ea98239a51a74f8db0a012a809bc2017"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2002"
+    sender: "DevOps"
+    title: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
+    body: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
+  creator: "system"
+  modifior: "system"

@@ -25,15 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.service
+package com.tencent.devops.misc.resources
 
-interface BuildApiHandleService {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.misc.api.OpProcessDbMigrateResource
+import com.tencent.devops.misc.service.process.ProcessDataMigrateService
+import org.springframework.beans.factory.annotation.Autowired
 
-    /**
-     * 处理build接口切面逻辑
-     * @param parameterNames 切点参数名列表
-     * @param parameterValue 切点参数列表
-     * @return 处理后的操作系统名称
-     */
-    fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>)
+@RestResource
+class OpProcessDbMigrateResourceImpl @Autowired constructor(
+    private val processDataMigrateService: ProcessDataMigrateService
+) : OpProcessDbMigrateResource {
+
+    override fun migrateProjectData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean,
+        dataTag: String
+    ): Result<Boolean> {
+        return Result(
+            processDataMigrateService.migrateProjectData(
+                userId = userId,
+                projectId = projectId,
+                cancelFlag = cancelFlag,
+                dataTag = dataTag
+            )
+        )
+    }
 }

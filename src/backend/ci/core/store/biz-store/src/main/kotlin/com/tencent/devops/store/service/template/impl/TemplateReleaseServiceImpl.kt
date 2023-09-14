@@ -35,7 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -176,7 +176,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, true)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(
+                userId = userId,
+                projectId = projectCode,
+                templateId = templateCode,
+                storeFlag = true
+            )
         }
         return Result(true)
     }
@@ -415,7 +420,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = template.templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
-            val addMarketTemplateRequest = AddMarketTemplateRequest(
+            val addMarketTemplateRequest = MarketTemplateRequest(
                 projectCodeList = arrayListOf(projectCode!!),
                 templateCode = template.templateCode,
                 templateName = template.templateName,
@@ -426,7 +431,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             )
             logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
             val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
-                .updateMarketTemplateReference("system", addMarketTemplateRequest)
+                .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
             logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
         }
     }

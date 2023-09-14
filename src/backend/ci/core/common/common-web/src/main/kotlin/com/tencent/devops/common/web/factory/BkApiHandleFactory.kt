@@ -27,27 +27,37 @@
 
 package com.tencent.devops.common.web.factory
 
-import com.tencent.devops.common.web.constant.BuildApiHandleType
-import com.tencent.devops.common.web.service.BuildApiHandleService
-import com.tencent.devops.common.web.service.impl.BuildApiHandleAuthServiceImpl
+import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.common.web.service.BkApiHandleService
+import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImpl
+import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
-object BuildApiHandleFactory {
+object BkApiHandleFactory {
 
-    private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
+    private val bkApiHandleMap = ConcurrentHashMap<String, BkApiHandleService>()
 
     fun createBuildApiHandleService(
-        type: BuildApiHandleType
-    ): BuildApiHandleService {
-        var buildApiHandleMapService = buildApiHandleMap[type.name]
+        type: BkApiHandleType
+    ): BkApiHandleService? {
+        var bkApiHandleService = bkApiHandleMap[type.name]
         when (type) {
-            BuildApiHandleType.AUTH_CHECK -> {
-                if (buildApiHandleMapService == null) {
-                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl()
-                    buildApiHandleMap[type.name] = buildApiHandleMapService
+            BkApiHandleType.BUILD_API_AUTH_CHECK -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleBuildAuthServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }
+
+            BkApiHandleType.PROJECT_API_ACCESS_LIMIT -> {
+                if (bkApiHandleService == null) {
+                    bkApiHandleService = BkApiHandleProjectAccessServiceImpl()
+                    bkApiHandleMap[type.name] = bkApiHandleService
+                }
+            }
+
+            else -> {}
         }
-        return buildApiHandleMapService
+        return bkApiHandleService
     }
 }

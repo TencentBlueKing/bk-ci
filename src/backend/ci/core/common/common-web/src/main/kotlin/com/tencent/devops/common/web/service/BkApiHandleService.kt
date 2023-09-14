@@ -24,47 +24,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.common.web.annotation.BuildApiPermission
-import com.tencent.devops.common.web.factory.BuildApiHandleFactory
-import org.aspectj.lang.JoinPoint
-import org.aspectj.lang.annotation.Aspect
-import org.aspectj.lang.annotation.Before
-import org.aspectj.lang.annotation.Pointcut
-import org.aspectj.lang.reflect.MethodSignature
-import org.slf4j.LoggerFactory
+package com.tencent.devops.common.web.service
 
-@Aspect
-class BuildApiAspect {
-
-    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
-    fun pointCut() = Unit
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildApiAspect::class.java)
-    }
+interface BkApiHandleService {
 
     /**
-     * 前置增强：目标方法执行之前执行
-     *
-     * @param jp
+     * 处理build接口切面逻辑
+     * @param parameterNames 切点参数名列表
+     * @param parameterValue 切点参数列表
+     * @return 处理后的操作系统名称
      */
-    @Before("pointCut()")
-    fun doBefore(jp: JoinPoint) {
-        val method = (jp.signature as MethodSignature).method
-        val methodName: String = method.name
-        val types = method.getAnnotation(BuildApiPermission::class.java)?.types?.toList()
-        logger.info("[doBefore] the method 【$methodName】 types$types")
-        // 参数value
-        val parameterValue = jp.args
-        // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
-        types?.forEach { type ->
-            BuildApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
-                parameterNames,
-                parameterValue
-            )
-        }
-    }
+    fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>)
 }
