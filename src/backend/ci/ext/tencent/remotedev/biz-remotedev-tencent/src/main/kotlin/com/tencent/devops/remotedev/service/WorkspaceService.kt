@@ -325,7 +325,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getProjectWorkspaceList4WeSec(
-        projectId: String?
+        projectId: String?,
+        ip: String?
     ): List<WeSecProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
         val result = workspaceDao.fetchWorkspaceWithOwner(

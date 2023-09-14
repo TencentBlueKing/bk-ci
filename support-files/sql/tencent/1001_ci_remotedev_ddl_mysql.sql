@@ -53,8 +53,10 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称',
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
+    `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     PRIMARY KEY (`ID`),
-    UNIQUE `ukey`(`WORKSPACE_NAME`)
+    UNIQUE `ukey`(`WORKSPACE_NAME`),
+    KEY `ipKey`(`HOST_IP`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 
