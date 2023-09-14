@@ -140,7 +140,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 projectName = GitUtils.getProjectName(repository.url),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                authType = repository.authType?.name ?: RepoAuthType.HTTP.name
             )
         }
     }
@@ -155,7 +156,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            authType = RepoAuthType.valueOf(record.authType)
         )
     }
 
