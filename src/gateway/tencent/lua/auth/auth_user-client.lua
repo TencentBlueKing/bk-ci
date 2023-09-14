@@ -8,12 +8,25 @@
 -- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+-- 二进制网关转发
+local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
+if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
+    ngx.header["x-devops-uid"] = ngx.var.http_x_devops_uid
+    if ngx.var.http_x_devops_bk_token ~= nil then
+        ngx.header["x-devops-bk-token"] = ngx.var.http_x_devops_bk_token
+    end
+    if ngx.var.http_x_devops_access_token ~= nil then
+        ngx.header["x-devops-access-token"] = ngx.var.http_x_devops_access_token
+    end
+    return
+end
+
 -- 判断devx访问
 local is_devx = string.find(ngx.var.http_host, "dexv") ~= nil
 
 if is_devx then
     --- 太湖登录
-    bk_token, err = cookieUtil:get_cookie("bk_token")
+    local bk_token, err = cookieUtil:get_cookie("bk_token")
     if bk_token == nil then
         bk_token = ngx.var.http_x_devops_bk_token
     end
