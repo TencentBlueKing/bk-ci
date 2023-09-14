@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.Pipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -53,6 +55,7 @@ interface ServiceProjectPipelineResource {
     @ApiOperation("根据多个项目获取流水线编排列表")
     @POST
     @Path("/projectIds")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelinesByProjectIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

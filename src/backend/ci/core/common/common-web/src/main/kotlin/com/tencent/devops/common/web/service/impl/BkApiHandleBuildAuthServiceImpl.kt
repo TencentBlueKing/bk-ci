@@ -31,17 +31,17 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.service.BuildApiHandleService
+import com.tencent.devops.common.web.service.BkApiHandleService
 import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 @Suppress("ComplexCondition")
-class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
+class BkApiHandleBuildAuthServiceImpl : BkApiHandleService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildApiHandleAuthServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BkApiHandleBuildAuthServiceImpl::class.java)
     }
 
     override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {

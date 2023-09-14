@@ -60,7 +60,7 @@ class SpringContextUtil : ApplicationContextAware {
          * @throws BeansException 异常
         </T> */
         @Throws(BeansException::class)
-        fun <T> getBean(clazz: Class<T>): T {
+        fun <T : Any> getBean(clazz: Class<T>): T {
             return applicationContext!!.getBean(clazz)
         }
 
