@@ -62,6 +62,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): String? {
+        logger.info("getFileStr repositoryHashId:$repositoryHashId")
         return if (!repositoryHashId.isNullOrBlank()) {
             // 从工蜂拉取文件
             try {
