@@ -1,7 +1,6 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
-import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
@@ -44,5 +43,5 @@ interface ApigwOauth2EndpointResourceV4 {
         clientSecret: String,
         @ApiParam("oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
-    ): Result<Oauth2AccessTokenVo?>
+    ): Result<Any?>
 }
