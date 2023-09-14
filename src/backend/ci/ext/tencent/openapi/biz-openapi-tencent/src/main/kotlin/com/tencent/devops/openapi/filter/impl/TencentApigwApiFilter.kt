@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -72,6 +73,7 @@ class TencentApigwApiFilter(
         private const val appSecHeader = "app_secret"
         private const val jwtHeader = "X-Bkapi-JWT"
         private const val apigwSourceHeader = "X-DEVOPS-APIGW-TYPE"
+        private const val REMOTE_EXCEPTION_CODE = 500
     }
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
@@ -136,12 +138,6 @@ class TencentApigwApiFilter(
                         } else {
                             requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
                         }
-                        val verifyOauth2Result = verifyOauth2Authorization(
-                            requestContext = requestContext
-                        )
-                        if (!verifyOauth2Result) {
-                            return false
-                        }
                     }
                 }
             }
@@ -176,22 +172,29 @@ class TencentApigwApiFilter(
         return true
     }
 
-    fun verifyOauth2Authorization(
-        requestContext: ContainerRequestContext
-    ): Boolean {
-        val oauth2AccessToken = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_AUTHORIZATION)
+    fun verifyOauth2Authorization(requestContext: ContainerRequestContext): Boolean {
+        val bkApiJwt = requestContext.getHeaderString(jwtHeader)
+        val apigwSource = requestContext.getHeaderString(apigwSourceHeader)
+        val jwt = parseJwt(bkApiJwt, apigwSource)
+        // oauth2接口只提供给app调用方式
+        if (!jwt.contains("app")) return true
+        val oauth2AccessToken = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_AUTHORIZATION) ?: return true
+        val clientId = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_ID)
+        val clientSecret = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
+        if (clientId == null || clientSecret == null) {
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = AuthMessageCode.ERROR_CLIENT_NOT_EXIST.toInt(),
+                            message = "The client id or client secret cannot be empty!",
+                            data = null
+                        )
+                    ).build()
+            )
+            return false
+        }
         try {
-            if (oauth2AccessToken == null) {
-                return true
-            }
-            val clientId = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_ID)
-            val clientSecret = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
-            if (clientId == null || clientSecret == null) {
-                throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_CLIENT_NOT_EXIST,
-                    defaultMessage = "The client id or client secret cannot be empty!"
-                )
-            }
             val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
                 clientId = clientId,
                 clientSecret = clientSecret,
@@ -199,14 +202,31 @@ class TencentApigwApiFilter(
             ).data
             requestContext.headers.putSingle(AUTH_HEADER_DEVOPS_USER_ID, username)
         } catch (ex: ErrorCodeException) {
-            throw ex
-        } catch (ignore: RemoteServiceException) {
-            throw ErrorCodeException(
-                errorCode = ignore.errorCode.toString(),
-                defaultMessage = ignore.errorMessage
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = ex.errorCode.toInt(),
+                            message = ex.defaultMessage,
+                            data = null
+                        )
+                    ).build()
             )
-        } catch (ignore: Exception) {
             return false
+        } catch (ignore: RemoteServiceException) {
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = ignore.errorCode ?: REMOTE_EXCEPTION_CODE,
+                            message = ignore.errorMessage,
+                            data = null
+                        )
+                    ).build()
+            )
+            return false
+        } catch (ignore: Exception) {
+            throw ignore
         }
         return true
     }
@@ -225,6 +245,8 @@ class TencentApigwApiFilter(
                 )
                 return
             }
+            // 校验oauth2授权方式
+            if (!verifyOauth2Authorization(requestContext)) return
         }
     }
 
