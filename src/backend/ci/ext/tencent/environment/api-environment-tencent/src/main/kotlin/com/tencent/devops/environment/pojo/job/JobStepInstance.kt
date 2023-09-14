@@ -17,7 +17,7 @@ data class JobStepInstance(
     )
     val stepStatus: Int,
     @ApiModelProperty(value = "作业步骤实例创建时间", notes = "Unix时间戳，单位毫秒", required = true)
-    val creatTime: Long,
+    val createTime: Long,
     @ApiModelProperty(value = "开始执行时间", notes = "Unix时间戳，单位毫秒", required = true)
     val startTime: Long,
     @ApiModelProperty(value = "执行结束时间", notes = "Unix时间戳，单位毫秒", required = true)

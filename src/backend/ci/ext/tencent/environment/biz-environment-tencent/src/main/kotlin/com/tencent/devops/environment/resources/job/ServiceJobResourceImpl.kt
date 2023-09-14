@@ -102,10 +102,10 @@ class ServiceJobResourceImpl @Autowired constructor(
 
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
+            throw ParamBlankException("userId is blank.")
         }
         if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
+            throw ParamBlankException("projectId is blank.")
         }
     }
 }
