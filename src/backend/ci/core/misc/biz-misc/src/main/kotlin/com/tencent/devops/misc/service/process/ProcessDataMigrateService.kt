@@ -571,14 +571,14 @@ class ProcessDataMigrateService @Autowired constructor(
             val auditResourceRecords = processDataMigrateDao.getAuditResourceRecords(
                 dslContext = dslContext,
                 projectId = projectId,
-                limit = LONG_PAGE_SIZE,
+                limit = MEDIUM_PAGE_SIZE,
                 offset = offset
             )
             if (auditResourceRecords.isNotEmpty()) {
                 processDataMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
             }
-            offset += LONG_PAGE_SIZE
-        } while (auditResourceRecords.size == LONG_PAGE_SIZE)
+            offset += MEDIUM_PAGE_SIZE
+        } while (auditResourceRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun migratePipelineGroupData(migratingShardingDslContext: DSLContext, projectId: String) {
