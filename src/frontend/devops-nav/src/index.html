@@ -25,52 +25,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
   <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
-  <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
-
-  <!-- devops:preload -->
-  <% for (key in htmlWebpackPlugin.files.js) { %>
-    <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
-    <% } %>
-      <!-- end devops:preload -->
-
-      <!-- devops:css -->
-      <% for (key in htmlWebpackPlugin.files.css) { %>
-        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
-        <% } %>
-
-
-          <!-- end devops:css -->
-          <title></title>
-</head>
-
-<body>
-  <!-- gulp inject: svg sprite js -->
-  <!-- inject:js -->
-  <!-- endinject -->
-  <div id="devops-root">
-    <div class="bk-loading" style="position: absolute">
-      <div class="bk-loading-wrapper">
-        <div class="bk-loading1">
-          <div class="point point1"></div>
-          <div class="point point2"></div>
-          <div class="point point3"></div>
-          <div class="point point4"></div>
-        </div>
-        <div class="bk-loading-title"></div>
-      </div>
-    </div>
-  </div>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
-
-  <!-- devops:assets -->
-  <!-- end devops:assets -->
 
   <script>
+    window.SERVICE_ASSETS = {"codelib": {"js": "codelib.10388f3d782675845094.min.js", "css": "codelib.e21acd5576dd34b0756f.css"}, "vs": {"js": "vs.76edaf32871456ae2390.min.js", "css": "vs.9f20c2da789de64a4256.css"}, "ticket": {"js": "ticket.03caedaf0562127439ba.min.js", "css": "ticket.d0590e26057483a9777c.css"}, "experience": {"js": "experience.4468c38eb5dbd4f7a562.min.js", "css": "experience.d7cbab52b17db9e82014.css"}, "turbo": {"js": "turbo.a374db8edb0fe6db8951.min.js", "css": "turbo.2838880f27ff773827db.css"}, "environment": {"js": "environment.fa11e2cf9b1a08f4050e.min.js", "css": "environment.8000d16047b1a3108e68.css"}, "quality": {"js": "quality.5a4b6b6f3b55002fc946.min.js", "css": "quality.190a6df7c889a0a0ff80.css"}, "main": {"js": "main.33cd63995ded1605a92a.min.js", "css": "main.1b8e47ae56eaa1138f50.css"}, "store": {"js": "store.40f5dc8fa17224036179.min.js", "css": "store.546818c4e438d5484b4e.css"}, "pipeline": {"js": "pipeline.57374b8fa66283f8b8ab.min.js", "css": "pipeline.2097daeb52a0a4a3ac7a.css"}, "setting": {"js": "setting.7455565a40942d117e54.min.js", "css": "setting.9fbe9ca59a2a4611eb83.css"}, "artifactory": {"js": "artifactory.62aaaa9676deaec65960.min.js", "css": "artifactory.273990263bee4b422c10.css"}}
     var API_URL_PREFIX = '/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
     var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
@@ -86,6 +43,7 @@
     var ENTERPRISE_VERSION = false
   </script>
   <script>
+
     // 动态加载js
     function importScript(src, oHead, fOnload) {
       var oScript = document.createElement('script')
@@ -107,23 +65,6 @@
       oStyle.setAttribute('type', 'text/css')
       oStyle.setAttribute('href', href)
       oHead.appendChild(oStyle)
-    }
-
-    function isValidPid(projectList, pid) {
-      for (var i = 0; i < projectList.length; i++) {
-        var proj = projectList[i]
-        if (proj.projectCode === pid) {
-          return true
-        }
-      }
-      return false
-    }
-
-    for (var i = 0; i < window.jsAssets.length; i++) {
-      var js = window.jsAssets[i]
-      if (js.indexOf('vendors') > -1) {
-        importScript(js, document.body)
-      }
     }
 
     function getCookie(cname) {
@@ -184,7 +125,7 @@
       }
     }
 
-    window.setProjectIdCookie = function (projectId) {
+    function setProjectIdCookie(projectId) {
       try {
         if (projectId) {
           var subDomains = getSubDomain()
@@ -202,18 +143,10 @@
     function matchPathProjectId() {
       try {
         var reg = /^\/console\/\w+\/([\w\-]+)?/
-        if (location.pathname.match(/^\/console\/perm\/(\w+)?/)) {
-          var query = location.search.slice(1)
-          var queryArr = query.split('&')
-          for (var i = 0; i < queryArr.length; i++) {
-            var item = queryArr[i].split('=')
-            var key = decodeURIComponent(item[0])
-            if (key === 'projectCode') {
-              return decodeURIComponent(item[1])
-            }
-          }
-          return ''
-        } else if (location.pathname.match(/^\/console\/store\/(\w+)?/)) {
+        var query = new URLSearchParams(location.search)
+        if (query.has('projectCode') || query.has(X_DEVOPS_PROJECT_ID.toLocaleLowerCase())) {
+          return query.get('projectCode') || query.get(X_DEVOPS_PROJECT_ID.toLocaleLowerCase()) || ''
+        } else if (location.pathname.match(/^\/console\/(store|permission)\/(\w+)?/)) {
           // TODO store没有projectId
           return ''
         } else {
@@ -225,11 +158,73 @@
         return ''
       }
     }
+    (function () {
+      var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
+      var pathPid = matchPathProjectId()
+      console.log('cookiePid:', cookiePid, '\npathPid: ', pathPid)
+      setProjectIdCookie(pathPid)
 
-    var pathPid = matchPathProjectId() || getCookie(X_DEVOPS_PROJECT_ID)
-    window.setProjectIdCookie(pathPid)
+      if (cookiePid && pathPid && cookiePid !== pathPid) {
+        location.reload()
+      }
+    }())
+  </script>
+
+
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
+  <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
+
+  <!-- devops:preload -->
+  <% for (key in htmlWebpackPlugin.files.js) { %>
+    <link href="<%= htmlWebpackPlugin.files.js[key] %>" as="script" rel="preload" />
+    <% } %>
+      <!-- end devops:preload -->
+
+      <!-- devops:css -->
+      <% for (key in htmlWebpackPlugin.files.css) { %>
+        <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
+        <% } %>
+
+
+          <!-- end devops:css -->
+          <title></title>
+</head>
+
+<body>
+  <!-- gulp inject: svg sprite js -->
+  <!-- inject:js -->
+  <!-- endinject -->
+  <div id="devops-root">
+    <div class="bk-loading" style="position: absolute">
+      <div class="bk-loading-wrapper">
+        <div class="bk-loading1">
+          <div class="point point1"></div>
+          <div class="point point2"></div>
+          <div class="point point3"></div>
+          <div class="point point4"></div>
+        </div>
+        <div class="bk-loading-title"></div>
+      </div>
+    </div>
+  </div>
+  <!-- devops:assets -->
+  <!-- end devops:assets -->
+
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+  <script>
+    for (var i = 0; i < window.jsAssets.length; i++) {
+      var js = window.jsAssets[i]
+      if (js.indexOf('vendors') > -1) {
+        importScript(js, document.body)
+      }
+    }
   </script>
   <script>
+    var pathPid = getCookie(X_DEVOPS_PROJECT_ID)
     window.getLoginUrl = function () {
       var loginUrlPlaceholder =
         location.hostname.indexOf('.woa.com') > -1
@@ -386,11 +381,7 @@
             return proj.projectCode
           }
         }
-        if (firstPid) {
-          // 如果cookie为空，而项目列表中找不到非灰度的项目时，将cookie值设置为首个项目id, 同时自动刷新页面
-          window.setProjectIdCookie(firstPid)
-          location.reload()
-        }
+        return firstPid
       }
     }
 
@@ -403,11 +394,6 @@
       var serviceMatchResult = path.match(pathReg)
       var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
       var page = serviceMap[subServiceId] || null
-      var isPidOk = isValidPid(projectList, pathPid)
-      if (!isPidOk && !pathPid) {
-        var defaultPid = getDefaultPid(projectList)
-        window.setProjectIdCookie(defaultPid)
-      }
 
       window.allServices = allServices
       window.serviceObject = serviceObject
@@ -478,7 +464,6 @@
             }
           }
         }
-        console.log(response, project, projectList.length)
 
         for (var i = 0; i < cahceArray.length; i++) {
           if (
@@ -581,7 +566,7 @@
 
     function handleVisibilityChange() {
       if (!document.hidden && window.GLOBAL_PID) {
-        window.setProjectIdCookie(window.GLOBAL_PID)
+        setProjectIdCookie(window.GLOBAL_PID)
       }
     }
 
