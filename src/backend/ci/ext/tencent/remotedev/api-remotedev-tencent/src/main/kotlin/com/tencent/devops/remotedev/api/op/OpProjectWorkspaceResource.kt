@@ -65,7 +65,7 @@ interface OpProjectWorkspaceResource {
         @QueryParam("owner")
         owner: String? = null,
         @ApiParam(value = "云桌面ID", required = true)
-        @QueryParam("cgsId")
+        @QueryParam("cgsIds")
         cgsIds: List<String>
     ): Result<Boolean>
 
