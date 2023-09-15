@@ -36,10 +36,13 @@ import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.ScriptExecuteJobCloudReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
+import com.tencent.devops.environment.pojo.job.ExecuteTargetJobCloudReq
+import com.tencent.devops.environment.pojo.job.HostJobCloudReq
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.TaskTerminateService
@@ -61,7 +64,31 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): Result<ScriptExecuteResult> {
         checkParam(userId, projectId)
-        return Result(scriptExecuteService.executeScript(userId, projectId, scriptExecuteReq))
+        val scriptExecuteJobCloudReq = ScriptExecuteJobCloudReq(
+            bk_scope_type = "",
+            bk_scope_id = "",
+            script_content = scriptExecuteReq.scriptContent,
+            script_param = scriptExecuteReq.scriptParam,
+            timeout = scriptExecuteReq.timeout,
+            account_alias = scriptExecuteReq.account,
+            is_param_sensitive = scriptExecuteReq.isSensiveParam,
+            script_language = scriptExecuteReq.scriptType,
+            target_server = ExecuteTargetJobCloudReq(
+                dynamic_group_list = scriptExecuteReq.executeTarget.envHashIdList,
+                topo_node_list = scriptExecuteReq.executeTarget.envHashIdList,
+                ip_list = scriptExecuteReq.executeTarget.hostList?.map {
+                    HostJobCloudReq(
+                        bk_host_id = it.bkHostId ?: 0,
+                        bk_cloud_id = it.bkCloudId ?: 0,
+                        ip = it.ip ?: ""
+                    )
+                }
+            ),
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = userId,
+        )
+        return scriptExecuteService.executeScript(scriptExecuteJobCloudReq)
     }
 
     override fun distributeFile(
