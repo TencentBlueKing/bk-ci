@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
@@ -56,6 +57,7 @@ import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.audit.Audit
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
@@ -525,6 +527,38 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pageSize = null
         )
         return Result(pipelineInfos)
+    }
+
+    override fun pagingSearchByName(
+        userId: String,
+        projectId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        checkParam(userId, projectId)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
+                )
+            )
+        }
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSize ?: 20)
+        return Result(
+            pipelineListFacadeService.searchByPipelineName(
+                projectId = projectId,
+                pipelineName = pipelineName,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+        )
     }
 
     override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
