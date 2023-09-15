@@ -334,6 +334,7 @@ class WorkspaceService @Autowired constructor(
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
             projectId = projectId,
+            ip = ip,
             assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
 
