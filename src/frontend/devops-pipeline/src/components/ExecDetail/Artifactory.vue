@@ -104,7 +104,7 @@
                         ...item,
                         icon: item.folder ? 'folder' : extForFile(item.name),
                         size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size),
-                        disabled: this.sizeFormatter(this.getFolderSize(item)).includes('GB') && this.sizeFormatter(this.getFolderSize(item)).split(' ')[0] > 10,
+                        disabled: item.folder && this.sizeFormatter(this.getFolderSize(item)).includes('GB') && this.sizeFormatter(this.getFolderSize(item)).split(' ')[0] > 10,
                         disabledTips: this.$t('downloadDisabledTips')
                     })) || []
                     this.hasPermission = permission

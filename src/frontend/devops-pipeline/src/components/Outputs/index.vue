@@ -81,7 +81,7 @@
                                 theme="primary"
                                 v-for="btn in btns"
                                 :key="btn.text"
-                                :disabled="btn.disabled"
+                                :disabled="!btn.disabled"
                                 @click="btn.handler"
                             >
                                 <bk-popover
@@ -248,12 +248,13 @@
                     }
                 ]
                 if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
+                    console.log(this.activeOutputDetail, 'this.activeOutputDetail')
                     switch (true) {
                         case this.activeOutput.artifactoryType !== 'IMAGE':
                             defaultBtns.unshift({
                                 text: this.$t('download'),
                                 handler: () => window.open(this.activeOutputDetail.url, '_blank'),
-                                disabled: this.activeOutputDetail.size.includes('GB') && this.activeOutputDetail.size.split(' ')[0] > 10,
+                                disabled: this.activeOutputDetail.folder && this.activeOutputDetail.size.includes('GB') && this.activeOutputDetail.size.split(' ')[0] > 10,
                                 disabledTips: this.$t('downloadDisabledTips')
                             })
                             break
