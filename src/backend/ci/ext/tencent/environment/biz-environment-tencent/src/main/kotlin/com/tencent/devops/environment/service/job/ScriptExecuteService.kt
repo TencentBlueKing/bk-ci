@@ -1,18 +1,9 @@
 package com.tencent.devops.environment.service.job
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService.Companion.logger
 import com.tencent.devops.environment.pojo.job.ScriptExecuteJobCloudReq
-import com.tencent.devops.environment.pojo.job.ScriptExecuteJobCloudResp
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
+import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -34,50 +25,22 @@ class ScriptExecuteService {
         scriptExecuteJobCloudReq.bk_app_secret = appSecret!!
 //        scriptExecuteJobCloudReq.bk_scope_type = bkScopeType!! // TODO：改为配置项
 //        scriptExecuteJobCloudReq.bk_scope_id = bkScopeId!! // TODO：改为配置项
-        val request = Request.Builder()
-            .url(scriptExecuteUrl)
-            .post(
-                RequestBody.create(
-                    "application/json;charset=utf-8".toMediaTypeOrNull(),
-                    ObjectMapper().writeValueAsString(scriptExecuteJobCloudReq)
-                )
-            )
-            .addHeader("Content-Type", "application/json")
-            .addHeader("X-Bkapi-Authorization", bkAuthorization)
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            try {
-                val responseBody = response.body?.string()
-                logger.info("[executeScript] responseBody: $responseBody")
 
-                val scriptExecuteResp = jacksonObjectMapper().readValue<ScriptExecuteJobCloudResp>(responseBody!!)
-
-                if (!scriptExecuteResp.result) {
-                    logger.error(
-                        "[executeScript] Execute failed! Req ID: ${scriptExecuteResp.jobRequestId}, " +
-                            "Error code: ${scriptExecuteResp.code}, " +
-                            "Error msg: ${scriptExecuteResp.message}"
-                    )
-                    throw RemoteServiceException(
-                        "Execute script failed! Req ID: ${scriptExecuteResp.jobRequestId}, " +
-                            "Error code: ${scriptExecuteResp.code}, " +
-                            "Error msg: ${scriptExecuteResp.message}"
-                    )
-                }
-                val scriptExecuteResult = ScriptExecuteResult(
-                    jobInstanceId = scriptExecuteResp.data?.jobInstanceId ?: 0,
-                    jobInstanceName = scriptExecuteResp.data?.jobInstanceName ?: "",
-                    stepInstanceId = scriptExecuteResp.data?.stepInstanceId ?: 0
-                )
-                return Result(
-                    status = scriptExecuteResp.code,
-                    message = scriptExecuteResp.message,
-                    data = scriptExecuteResult
-                )
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-                throw exception
-            }
-        }
+        val request = NetworkUtil.createPostRequest(
+            url = scriptExecuteUrl,
+            bkAuthorization = bkAuthorization,
+            jobCloudReq = scriptExecuteJobCloudReq::class.java
+        )
+        val jobCloudResp = NetworkUtil.executeHttpRequest("executeScript", request)
+        val scriptExecuteResult = ScriptExecuteResult(
+            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0,
+            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
+            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0
+        )
+        return Result(
+            status = jobCloudResp.code,
+            message = jobCloudResp.message,
+            data = scriptExecuteResult
+        )
     }
 }

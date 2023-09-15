@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job
 
-data class ScriptExecuteJobCloudResp(
+data class JobCloudResp(
     var code : Int,
     var result : Boolean,
     var jobRequestId: String,

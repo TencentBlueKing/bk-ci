@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.pojo.job.AccountJobCloudReq
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
@@ -42,6 +43,8 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 import com.tencent.devops.environment.pojo.job.ExecuteTargetJobCloudReq
+import com.tencent.devops.environment.pojo.job.FileDistributeJobCloudReq
+import com.tencent.devops.environment.pojo.job.FileSourceJobCloudReq
 import com.tencent.devops.environment.pojo.job.HostJobCloudReq
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
@@ -86,7 +89,7 @@ class ServiceJobResourceImpl @Autowired constructor(
             ),
             bk_app_code = "",
             bk_app_secret = "",
-            bk_username = userId,
+            bk_username = userId
         )
         return scriptExecuteService.executeScript(scriptExecuteJobCloudReq)
     }
@@ -97,7 +100,48 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): Result<FileDistributeResult> {
         checkParam(userId, projectId)
-        return Result(fileDistributeService.distributeFile(userId, projectId, fileDistributeReq))
+        val fileDistributeJobCloudReq = FileDistributeJobCloudReq(
+            bk_scope_type = "",
+            bk_scope_id = "",
+            file_source_list = fileDistributeReq.fileSourceList.map { fileSourceList ->
+                FileSourceJobCloudReq(
+                    file_list = fileSourceList.fileList.toList(),
+                    server = ExecuteTargetJobCloudReq(
+                        dynamic_group_list = fileSourceList.sourceFileTarget.envHashIdList,
+                        topo_node_list = fileSourceList.sourceFileTarget.envHashIdList,
+                        ip_list = fileSourceList.sourceFileTarget.hostList?.map {
+                            HostJobCloudReq(
+                                bk_host_id = it.bkHostId ?: 0,
+                                bk_cloud_id = it.bkCloudId ?: 0,
+                                ip = it.ip ?: ""
+                            )
+                        }
+                    ),
+                    account = AccountJobCloudReq(
+                        id = null,
+                        alias = fileDistributeReq.account
+                    )
+                )
+            },
+            file_target_path = fileDistributeReq.fileTargetPath,
+            target_server = ExecuteTargetJobCloudReq(
+                dynamic_group_list = fileDistributeReq.executeTarget.envHashIdList,
+                topo_node_list = fileDistributeReq.executeTarget.envHashIdList,
+                ip_list = fileDistributeReq.executeTarget.hostList?.map {
+                    HostJobCloudReq(
+                        bk_host_id = it.bkHostId ?: 0,
+                        bk_cloud_id = it.bkCloudId ?: 0,
+                        ip = it.ip ?: ""
+                    )
+                }
+            ),
+            account_alias = fileDistributeReq.account,
+            timeout = fileDistributeReq.timeout,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = userId,
+        )
+        return fileDistributeService.distributeFile(fileDistributeJobCloudReq)
     }
 
     override fun terminateTask(
