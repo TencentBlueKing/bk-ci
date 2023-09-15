@@ -270,7 +270,8 @@ class RepositoryDao {
                 RepositorySortEnum.ALIAS_NAME.name -> ALIAS_NAME
                 RepositorySortEnum.URL.name -> URL
                 RepositorySortEnum.TYPE.name -> TYPE
-                else -> REPOSITORY_ID
+                RepositorySortEnum.REPOSITORY_ID.name -> REPOSITORY_ID
+                else -> UPDATED_TIME
             }
 
             val sort = when (sortType) {
