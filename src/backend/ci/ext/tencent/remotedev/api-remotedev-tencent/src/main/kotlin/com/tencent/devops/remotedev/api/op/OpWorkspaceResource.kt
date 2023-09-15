@@ -110,7 +110,7 @@ interface OpWorkspaceResource {
 
     @ApiOperation("变更工作空间状态")
     @GET
-    @Path("/detail/move")
+    @Path("/status_change")
     fun updateStatus(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
