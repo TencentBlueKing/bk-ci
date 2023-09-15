@@ -395,10 +395,6 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun isReturnProject(enableRemoteDev: Boolean?): Boolean {
-        return !profile.isDevTest() || enableRemoteDev == true
-    }
-
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
             bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
