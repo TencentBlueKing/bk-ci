@@ -66,7 +66,7 @@ interface OpProjectWorkspaceResource {
         owner: String,
         @ApiParam(value = "云桌面ID", required = true)
         @QueryParam("cgsId")
-        cgsId: String
+        cgsIds: List<String>
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
