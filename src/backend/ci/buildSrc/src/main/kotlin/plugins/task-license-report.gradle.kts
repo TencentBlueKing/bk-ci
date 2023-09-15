@@ -58,8 +58,10 @@ tasks.register("weCheckLicense") {
     this.dependsOn("checkLicense")
     doLast { // 检查结束后, 将第三方依赖项license复制到release目录, 以便随包发行
         println("weCheckLicense: copy THIRD-PARTY-NOTICES.txt to release")
-        File(/* pathname = */ "${rootProject.projectDir}/build/reports/dependency-license/THIRD-PARTY-NOTICES.txt")
-            .renameTo(File(/* pathname = */ "${rootProject.projectDir}/release/THIRD-PARTY-NOTICES.txt"))
+        val newFile = File("${rootProject.projectDir}/release/THIRD-PARTY-NOTICES.txt")
+        newFile.parentFile.mkdirs()
+        val oldFile = File("${rootProject.projectDir}/build/reports/dependency-license/THIRD-PARTY-NOTICES.txt")
+        oldFile.renameTo(newFile)
     }
 }
 

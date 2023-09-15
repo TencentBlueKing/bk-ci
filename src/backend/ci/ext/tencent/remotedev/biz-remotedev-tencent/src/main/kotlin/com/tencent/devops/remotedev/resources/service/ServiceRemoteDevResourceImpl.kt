@@ -18,8 +18,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(bkTicketService.validateUserTicket(userId, isOffshore, ticket))
     }
 
-    override fun getProjectWorkspace(projectId: String?): Result<List<WeSecProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId))
+    override fun getProjectWorkspace(projectId: String?, ip: String?): Result<List<WeSecProjectWorkspace>> {
+        return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId, ip))
     }
 
     override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
