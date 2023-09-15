@@ -321,7 +321,7 @@ variables:
             resourceExt?.put(pool.format(), pool)
         }
         val preScriptBuildYaml = YamlTemplate(
-            filePath = TemplatePath(""),
+            filePath = "",
             yamlObject = preTemplateYamlObject,
             extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
@@ -345,9 +345,9 @@ variables:
         param: GetTemplateParam<Any?>
     ): String {
         val newPath = if (param.targetRepo == null) {
-            "templates/${param.path.path}"
+            "templates/${param.path}"
         } else {
-            "templates/${param.targetRepo!!.repository}/templates/${param.path.path}"
+            "templates/${param.targetRepo!!.repository}/templates/${param.path}"
         }
         val sb = getStrFromResource(newPath)
         println(newPath)

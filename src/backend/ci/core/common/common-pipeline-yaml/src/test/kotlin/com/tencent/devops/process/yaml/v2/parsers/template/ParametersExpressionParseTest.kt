@@ -76,7 +76,7 @@ internal class ParametersExpressionParseTest {
                 }
             )
         }
-        val result = ParametersExpressionParse.fromJsonToArrayContext(TemplatePath(""), "lll", testData)
+        val result = ParametersExpressionParse.fromJsonToArrayContext("", "lll", testData)
         Assertions.assertTrue(expectDate.toJson() == result.toJson())
     }
 
