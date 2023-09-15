@@ -73,5 +73,7 @@ data class ServiceUpdateInfo(
     @ApiModelProperty("logo地址")
     val logoUrl: String?,
     @ApiModelProperty("支持webSocket的页面")
-    val webSocket: String?
+    val webSocket: String?,
+    @ApiModelProperty("集群类型")
+    val clusterType: String? = ""
 )
