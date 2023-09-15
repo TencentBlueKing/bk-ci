@@ -71,9 +71,9 @@ class RbacPermissionApplyService @Autowired constructor(
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
         "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s"
-    private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history?x-devops-project-id=%s"
-    private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s?x-devops-project-id=%s"
-    private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest&x-devops-project-id=%s"
+    private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
+    private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
+    private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
     private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s&x-devops-project-id=%s"
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
@@ -340,11 +340,8 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun generateValidityPeriod(expiredAt: Long): String {
-        val currentTime = DateTimeUtil.convertTimestampToLocalDateTime(System.currentTimeMillis() / 1000)
-        val expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt)
-        return ChronoUnit.DAYS.between(currentTime, expiredTime).plus(1).toString().plus(
-            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DAY)
-        )
+        val between = expiredAt * 1000 - System.currentTimeMillis()
+        return DateTimeUtil.formatDay(between)
     }
 
     private fun generateResourceRedirectUri(
@@ -354,13 +351,13 @@ class RbacPermissionApplyService @Autowired constructor(
     ): String? {
         return when (resourceType) {
             AuthResourceType.PIPELINE_DEFAULT.value -> {
-                String.format(pipelineDetailRedirectUri, projectCode, resourceCode, projectCode)
+                String.format(pipelineDetailRedirectUri, projectCode, resourceCode)
             }
             AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> {
-                String.format(environmentDetailRedirectUri, projectCode, resourceCode, projectCode)
+                String.format(environmentDetailRedirectUri, projectCode, resourceCode)
             }
             AuthResourceType.CODECC_TASK.value -> {
-                String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode, projectCode)
+                String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode)
             }
             else -> null
         }
