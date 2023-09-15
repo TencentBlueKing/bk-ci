@@ -254,9 +254,10 @@ class BuildStartControl @Autowired constructor(
                         userId = buildInfo.startUser,
                         status = BuildStatus.RUNNING,
                         taskCount = buildInfo.taskCount,
-                        buildNum = buildInfo.buildNum
-                    ),
-                    executeCount = executeCount
+                        buildNum = buildInfo.buildNum,
+                        executeCount = executeCount,
+                        debug = buildInfo.debug
+                    )
                 )
                 broadcastStartEvent(buildInfo)
             } else {
@@ -405,7 +406,9 @@ class BuildStartControl @Autowired constructor(
                     varValue = buildNo
                 )
 
-                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId = buildId)
+                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(
+                    projectId = projectId, buildId = buildId, debug = debug
+                )
                 val startParamMap = mutableMapOf<String, BuildParameters>()
                 parameters.associateByTo(startParamMap) { it.key }
                 startParamMap[BUILD_NO] = BuildParameters(key = BUILD_NO, value = buildNo, readOnly = true)
@@ -424,7 +427,8 @@ class BuildStartControl @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    buildParameters = parameters
+                    buildParameters = parameters,
+                    debug = debug ?: false
                 )
             }
         }

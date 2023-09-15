@@ -371,7 +371,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        startUser: List<String>?
+        startUser: List<String>?,
+        debug: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -403,7 +404,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            debug = debug
         )
         return Result(result)
     }
@@ -574,6 +576,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
+        debug: Boolean?,
         channelCode: ChannelCode
     ): Result<List<String>> {
         return Result(
@@ -582,6 +585,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildStatus = buildStatus,
+                debug = debug,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )

@@ -344,6 +344,9 @@ interface AppPipelineBuildResource {
         buildNoEnd: Int?,
         @ApiParam("构建信息", required = false)
         @QueryParam("buildMsg")
-        buildMsg: String?
+        buildMsg: String?,
+        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
+        @QueryParam("debug")
+        debug: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 }

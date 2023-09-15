@@ -38,6 +38,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PIPELINE_ARCHIVE"], description = "服务-流水线资源")
@@ -73,7 +74,10 @@ interface UserArchivePipelineResource {
         pipelineId: String,
         @ApiParam(value = "项目id", required = true)
         @PathParam(value = "projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
+        @QueryParam("debug")
+        debug: Boolean? = false
     ): Result<List<Map<String, String>>>
 
     @ApiOperation("获取某个项目用户可以下载归档的所有流水线")

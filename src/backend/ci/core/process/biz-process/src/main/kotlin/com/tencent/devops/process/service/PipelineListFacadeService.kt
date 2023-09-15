@@ -1497,11 +1497,11 @@ class PipelineListFacadeService @Autowired constructor(
         return list
     }
 
-    fun getAllBuildNo(projectId: String, pipelineId: String): List<Map<String, String>> {
+    fun getAllBuildNo(projectId: String, pipelineId: String, debug: Boolean?): List<Map<String, String>> {
         val watcher = Watcher(id = "getAllBuildNo|$pipelineId")
         try {
             watcher.start("s_r_all_bn")
-            val newBuildNums = pipelineRuntimeService.getAllBuildNum(projectId, pipelineId)
+            val newBuildNums = pipelineRuntimeService.getAllBuildNum(projectId, pipelineId, debug)
             watcher.stop()
             val result = mutableListOf<Map<String, String>>()
             newBuildNums.forEach {

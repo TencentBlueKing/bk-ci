@@ -482,7 +482,10 @@ interface ServiceBuildResource {
         buildMsg: String? = null,
         @ApiParam("触发人", required = false)
         @QueryParam("startUser")
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
+        @QueryParam("debug")
+        debug: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
@@ -629,6 +632,9 @@ interface ServiceBuildResource {
         @ApiParam("状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
+        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
+        @QueryParam("debug")
+        debug: Boolean? = false,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<List<String>>
