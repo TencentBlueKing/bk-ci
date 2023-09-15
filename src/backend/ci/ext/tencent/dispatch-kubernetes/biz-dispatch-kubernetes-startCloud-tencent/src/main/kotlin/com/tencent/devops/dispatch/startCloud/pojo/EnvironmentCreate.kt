@@ -5,18 +5,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class EnvironmentCreate(
-    @JsonProperty("UserID")
+    @JsonProperty("userId")
     val userId: String,
-    @JsonProperty("AppName")
+    @JsonProperty("appName")
     val appName: String,
-    @JsonProperty("PipeLineID")
+    @JsonProperty("pipeLineId")
     val pipeLineId: String?,
-    @JsonProperty("ZoneId")
+    @JsonProperty("zoneId")
     val zoneId: String?,
-    @JsonProperty("MachineType")
+    @JsonProperty("machineType")
     val machineType: String?,
-    @JsonProperty("CgsId")
-    val cgsId: String? = "",
-    @JsonProperty("CgsId")
-    val ip: String? = ""
+    @JsonProperty("ip")
+    val cgsId: String? = ""
 )
