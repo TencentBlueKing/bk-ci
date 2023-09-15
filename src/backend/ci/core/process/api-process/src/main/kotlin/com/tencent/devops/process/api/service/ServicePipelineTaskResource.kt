@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.ContainerStartInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.PipelineProjectRel
@@ -55,6 +57,7 @@ interface ServicePipelineTaskResource {
     @POST
     // @Path("/projects/{projectId}/list")
     @Path("/{projectId}/list")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -84,6 +87,7 @@ interface ServicePipelineTaskResource {
     @ApiOperation("获取使用插件的流水线数量")
     @POST
     @Path("/listPipelineNumByAtomCodes")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelineNumByAtomCodes(
         @ApiParam("项目ID", required = false)
         @QueryParam("projectId")

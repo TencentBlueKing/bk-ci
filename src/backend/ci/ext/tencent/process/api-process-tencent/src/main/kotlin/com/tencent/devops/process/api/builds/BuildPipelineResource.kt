@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.Pipeline
 import io.swagger.annotations.Api
@@ -53,6 +55,7 @@ interface BuildPipelineResource {
     @POST
     // @Path("/projects/{projectId}/getPipelineNames")
     @Path("/{projectId}/getPipelineNames")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
