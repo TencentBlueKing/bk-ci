@@ -14,7 +14,7 @@ data class EnvironmentCreateRsp(
         val cloudZoneId: String,
         val existed: Boolean,
         val resourceId: String,
-        val envId: String,
+        val envId: String? = "",
         val curLaunchId: String
     )
 }
