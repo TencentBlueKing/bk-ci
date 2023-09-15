@@ -89,7 +89,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val serviceList = serviceDao.getServiceList(
                 dslContext = dslContext,
                 // 根据集群类型，来获取对应的服务列表
-                clusterType = if (profile.isDevx()) devxClusterType else ""
+                clusterType = if (profile.isDevTest()) devxClusterType else ""
             )
             val groupService = serviceList.groupBy { it.serviceTypeId }
 
