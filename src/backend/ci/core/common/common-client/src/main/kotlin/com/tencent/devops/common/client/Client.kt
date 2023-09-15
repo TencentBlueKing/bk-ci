@@ -270,10 +270,12 @@ class Client @Autowired constructor(
             )
     }
 
-    // devnet区域的，只能直接通过ip访问
     fun <T : Any> getScmUrl(clz: KClass<T>): String {
-        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
-        return buildGatewayUrl(path = "/$serviceName/api", gatewayType = GatewayType.IDC_PROXY)
+        val serviceName = BkServiceUtil.findServiceName(clz).removeSuffix(serviceSuffix ?: "")
+        return buildGatewayUrl(
+            path = "/$serviceName/api",
+            gatewayType = GatewayType.IDC_PROXY
+        )
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
