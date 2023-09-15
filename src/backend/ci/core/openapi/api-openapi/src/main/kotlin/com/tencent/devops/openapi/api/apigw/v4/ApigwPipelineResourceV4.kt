@@ -591,7 +591,10 @@ interface ApigwPipelineResourceV4 {
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
 
-    @ApiOperation("根据流水线名称搜索", tags = ["v4_app_pipeline_paging_search_by_name", "v4_user_pipeline_paging_search_by_name"])
+    @ApiOperation(
+        "根据流水线名称搜索",
+        tags = ["v4_app_pipeline_paging_search_by_name", "v4_user_pipeline_paging_search_by_name"]
+    )
     @GET
     @Path("/paging_search_by_name")
     fun pagingSearchByName(
