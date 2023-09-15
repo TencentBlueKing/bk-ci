@@ -172,7 +172,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?,
+        version: Int? = null,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
