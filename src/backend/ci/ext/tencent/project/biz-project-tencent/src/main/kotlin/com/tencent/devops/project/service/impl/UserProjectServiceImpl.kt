@@ -152,7 +152,8 @@ class UserProjectServiceImpl @Autowired constructor(
                             logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
-                            newWindowUrl = newWindowUrl
+                            newWindowUrl = newWindowUrl,
+                            clusterType = it.clusterType
                         )
                     )
                 }
