@@ -60,10 +60,6 @@ class Profile(private val environment: Environment) {
         return activeProfiles.contains(PROFILE_DEVELOPMENT)
     }
 
-    fun isDevTest(): Boolean {
-        return activeProfiles.contains(PROFILE_DEVELOPMENT) && !activeProfiles.contains("dev-rbac")
-    }
-
     fun isTest(): Boolean {
         return activeProfiles.contains(PROFILE_TEST)
     }
