@@ -216,7 +216,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             // 获取资源文件名称列表
             val propertiesFileNames = getFileNames(
                 projectCode = projectCode,
-                fileDir = "$fileDir/$i18nDir",
+                fileDir = fileDir,
+                i18nDir = i18nDir,
                 repositoryHashId = repositoryHashId
             )
             logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
