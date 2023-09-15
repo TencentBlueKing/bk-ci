@@ -1744,6 +1744,8 @@ class GitService @Autowired constructor(
         val redisLock =
             RedisLock(redisOperation, getDownloadGitRepoFileRedisKey(repoName, filePath ?: repoName), 20)
         try {
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
             redisLock.lock()
             OkhttpUtils.downloadFile(url.toString(), response)
         } finally {
