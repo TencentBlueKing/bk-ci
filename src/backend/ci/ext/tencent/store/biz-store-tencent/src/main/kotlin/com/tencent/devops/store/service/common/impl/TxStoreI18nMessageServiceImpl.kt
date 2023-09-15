@@ -162,7 +162,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val file = File(fileDirPath, "file.zip")
         try {
             downloadFile(
-                filePath = "$fileDir/file$language",
+                filePath = "$fileDir/file/$language",
                 file = file,
                 repositoryHashId = repositoryHashId,
                 branch = branch
