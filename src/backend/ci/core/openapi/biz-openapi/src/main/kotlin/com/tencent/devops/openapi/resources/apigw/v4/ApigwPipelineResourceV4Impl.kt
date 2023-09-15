@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineResourceV4
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
