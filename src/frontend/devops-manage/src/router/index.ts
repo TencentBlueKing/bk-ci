@@ -17,6 +17,10 @@ const router = createRouter({
   history: createWebHistory('manage'),
   routes: [
     {
+      path: '/userManage',
+      component: UserGroup,
+    },
+    {
       path: '/',
       component: HomeEntry,
       children: [
