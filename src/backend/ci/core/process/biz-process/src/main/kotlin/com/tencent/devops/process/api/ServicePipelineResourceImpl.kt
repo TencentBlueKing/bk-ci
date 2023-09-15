@@ -557,7 +557,14 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 pipelineName = pipelineName,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
-            )
+            ).let {
+                PipelineViewPipelinePage(
+                    page = page ?: 0,
+                    pageSize = pageSize ?: 20,
+                    records = it.records,
+                    count = it.count
+                )
+            }
         )
     }
 
