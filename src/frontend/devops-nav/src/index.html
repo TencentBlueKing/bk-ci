@@ -27,7 +27,6 @@
   <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
 
   <script>
-    window.SERVICE_ASSETS = {"codelib": {"js": "codelib.10388f3d782675845094.min.js", "css": "codelib.e21acd5576dd34b0756f.css"}, "vs": {"js": "vs.76edaf32871456ae2390.min.js", "css": "vs.9f20c2da789de64a4256.css"}, "ticket": {"js": "ticket.03caedaf0562127439ba.min.js", "css": "ticket.d0590e26057483a9777c.css"}, "experience": {"js": "experience.4468c38eb5dbd4f7a562.min.js", "css": "experience.d7cbab52b17db9e82014.css"}, "turbo": {"js": "turbo.a374db8edb0fe6db8951.min.js", "css": "turbo.2838880f27ff773827db.css"}, "environment": {"js": "environment.fa11e2cf9b1a08f4050e.min.js", "css": "environment.8000d16047b1a3108e68.css"}, "quality": {"js": "quality.5a4b6b6f3b55002fc946.min.js", "css": "quality.190a6df7c889a0a0ff80.css"}, "main": {"js": "main.33cd63995ded1605a92a.min.js", "css": "main.1b8e47ae56eaa1138f50.css"}, "store": {"js": "store.40f5dc8fa17224036179.min.js", "css": "store.546818c4e438d5484b4e.css"}, "pipeline": {"js": "pipeline.57374b8fa66283f8b8ab.min.js", "css": "pipeline.2097daeb52a0a4a3ac7a.css"}, "setting": {"js": "setting.7455565a40942d117e54.min.js", "css": "setting.9fbe9ca59a2a4611eb83.css"}, "artifactory": {"js": "artifactory.62aaaa9676deaec65960.min.js", "css": "artifactory.273990263bee4b422c10.css"}}
     var API_URL_PREFIX = '/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
     var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
@@ -146,7 +145,7 @@
         var query = new URLSearchParams(location.search)
         if (query.has('projectCode') || query.has(X_DEVOPS_PROJECT_ID.toLocaleLowerCase())) {
           return query.get('projectCode') || query.get(X_DEVOPS_PROJECT_ID.toLocaleLowerCase()) || ''
-        } else if (location.pathname.match(/^\/console\/(store|permission)\/(\w+)?/)) {
+        } else if (location.pathname.match(/^\/console\/(store|permission|manage)\/(\w+)?/)) {
           // TODO store没有projectId
           return ''
         } else {
@@ -365,23 +364,6 @@
       return {
         serviceMap: serviceMap,
         iframeRoutes: iframeRoutes,
-      }
-    }
-
-    function getDefaultPid(projectList) {
-      if (Array.isArray(projectList) && projectList.length > 0) {
-        var firstProj = projectList[0]
-        var firstPid =
-          firstProj && firstProj.projectCode
-            ? firstProj.projectCode
-            : undefined
-        for (var i = 0; i < projectList.length; i++) {
-          var proj = projectList[i]
-          if (proj && !proj.routerTag) {
-            return proj.projectCode
-          }
-        }
-        return firstPid
       }
     }
 
