@@ -132,10 +132,7 @@ class ProcessDataMigrateService @Autowired constructor(
         Executors.newFixedThreadPool(1).submit {
             logger.info("migrateProjectData begin,params:[$userId|$projectId]")
             // 删除迁移库的数据以保证迁移接口的幂等性
-            migratingShardingDslContext.transaction { t ->
-                val context = DSL.using(t)
-                processDataDeleteService.deleteProcessData(context, projectId)
-            }
+            processDataDeleteService.deleteProcessData(migratingShardingDslContext, projectId)
             // 查询项目下流水线数量
             val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
             // 根据流水线数量计算线程数量
@@ -191,10 +188,7 @@ class ProcessDataMigrateService @Autowired constructor(
             } catch (ignored: Throwable) {
                 logger.warn("migrateProjectData doMigrationBus fail|params:[$userId|$projectId]", ignored)
                 // 删除迁移库的数据
-                migratingShardingDslContext.transaction { t ->
-                    val context = DSL.using(t)
-                    processDataDeleteService.deleteProjectDirectlyRelData(context, projectId)
-                }
+                processDataDeleteService.deleteProjectDirectlyRelData(migratingShardingDslContext, projectId)
                 return@submit
             }
             val historyShardingRoutingRule =
@@ -261,10 +255,7 @@ class ProcessDataMigrateService @Autowired constructor(
         )
         try {
             // 删除迁移库的数据
-            migratingShardingDslContext.transaction { t ->
-                val context = DSL.using(t)
-                processDataDeleteService.deleteProcessData(context, projectId)
-            }
+            processDataDeleteService.deleteProcessData(migratingShardingDslContext, projectId)
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
                 ?: ShardingRoutingRule(
