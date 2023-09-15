@@ -345,7 +345,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         val matcher: Matcher = pattern.matcher(content)
         val path: String
         if (matcher.find()) {
-            path = matcher.group(1).replace("\"", "")
+            path = matcher.group(2).replace("\"", "")
         } else {
             return content
         }
