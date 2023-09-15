@@ -67,7 +67,7 @@ data class OptionalTemplate(
     @ApiModelProperty("阶段集合", required = true)
     val stages: List<Stage>,
     @ApiModelProperty("克隆模板设置项是否存在", required = false)
-    val cloneTemplateSettingExist: CloneTemplateSettingExist
+    val cloneTemplateSettingExist: CloneTemplateSettingExist? = null
 )
 
 @ApiModel("克隆模板设置")
