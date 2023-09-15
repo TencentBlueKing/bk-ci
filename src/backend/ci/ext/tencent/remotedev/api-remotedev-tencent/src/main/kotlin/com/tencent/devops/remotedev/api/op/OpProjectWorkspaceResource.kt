@@ -63,7 +63,7 @@ interface OpProjectWorkspaceResource {
         projectId: String,
         @ApiParam(value = "拥有者", required = true)
         @QueryParam("owner")
-        owner: String,
+        owner: String? = null,
         @ApiParam(value = "云桌面ID", required = true)
         @QueryParam("cgsId")
         cgsId: String
