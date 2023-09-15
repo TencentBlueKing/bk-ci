@@ -396,7 +396,7 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun isReturnProject(enableRemoteDev: Boolean?): Boolean {
-        return !profile.isDevx() || enableRemoteDev == true
+        return !profile.isDevTest() || enableRemoteDev == true
     }
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
