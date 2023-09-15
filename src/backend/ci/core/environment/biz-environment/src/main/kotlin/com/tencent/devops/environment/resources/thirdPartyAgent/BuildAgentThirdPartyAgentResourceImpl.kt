@@ -105,7 +105,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentStatusRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getAgentStatus|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -131,7 +130,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("agentHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -157,7 +155,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("newHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -178,7 +175,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentPipelineRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getPipelines|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
