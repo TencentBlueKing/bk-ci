@@ -24,7 +24,7 @@ class WhiteListService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private val taiUser = "@tai"
+        private const val taiUser = "@tai"
     }
 
     fun shareWorkspace(userId: String, whiteListUser: String) {
