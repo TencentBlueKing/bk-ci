@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
@@ -57,7 +58,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val avatarUrl: String? = null
 
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
-        val name = if (userId.endsWith("@tai")) {
+        val name = if (UserUtil.isTaiUser(userId)) {
             getTaiUser(bkToken)
         } else {
             bkToken?.let { tofService.getStaffInfo(userId, it).chineseName } ?: userId

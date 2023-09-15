@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
@@ -197,7 +198,7 @@ class UserProjectServiceImpl @Autowired constructor(
             if (containerBgIdList.isNotEmpty() &&
                 containerUrlList.isNotEmpty() &&
                 containerUrlList.size == containerBgIdList.size &&
-                !userId.endsWith("@tai")
+                !UserUtil.isTaiUser(userId)
             ) {
                 val userDeptDetail = tofService.getUserDeptDetail(userId)
                 run breaking@{
