@@ -79,6 +79,8 @@ class WindowsResourceConfigDao {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
             }
+                .groupBy(ZONE, SIZE)
+                .orderBy(MEMORY)
                 .skipCheck()
                 .fetch()
         }
