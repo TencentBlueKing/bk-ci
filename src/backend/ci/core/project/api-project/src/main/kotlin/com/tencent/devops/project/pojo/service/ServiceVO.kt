@@ -86,5 +86,7 @@ data class ServiceVO(
     @ApiModelProperty("new_window")
     val newWindow: Boolean? = false,
     @ApiModelProperty("new_window_url")
-    val newWindowUrl: String? = null
+    val newWindowUrl: String? = null,
+    @ApiModelProperty("集群类型")
+    val clusterType: String = ""
 )
