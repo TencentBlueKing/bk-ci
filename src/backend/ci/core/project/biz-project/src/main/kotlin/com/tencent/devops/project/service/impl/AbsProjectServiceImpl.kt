@@ -584,14 +584,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     englishNameList = projectsWithVisitPermission.toList(),
                     enabled = enabled
                 ).forEach {
-                    val projectVo = ProjectUtils.packagingBean(
-                        tProjectRecord = it,
-                        managePermission = projectsWithManagePermission?.contains(it.englishName),
-                        showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                    projectsResp.add(
+                        ProjectUtils.packagingBean(
+                            tProjectRecord = it,
+                            managePermission = projectsWithManagePermission?.contains(it.englishName),
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                        )
                     )
-                    if (isReturnProject(enableRemoteDev = projectVo.properties?.remotedev)) {
-                        projectsResp.add(projectVo)
-                    }
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
@@ -1187,8 +1186,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
 
     abstract fun buildRouterTag(routerTag: String?): String?
-
-    abstract fun isReturnProject(enableRemoteDev: Boolean?): Boolean
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
