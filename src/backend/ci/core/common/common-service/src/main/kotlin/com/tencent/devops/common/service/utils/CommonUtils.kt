@@ -28,7 +28,9 @@
 package com.tencent.devops.common.service.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.NUM_ONE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -62,30 +64,43 @@ object CommonUtils {
 
     private const val ZH_HK = "ZH_HK" // 香港繁体中文
 
+    private const val BK_HOST_IP = "bkHostIp" // 主机IP
+
     private val simpleCnLanList = listOf(ZH_CN, "ZH-CN")
 
     private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
 
+    private val ipCache = Caffeine.newBuilder()
+        .maximumSize(NUM_ONE.toLong())
+        .build<String, String>()
+
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
     fun getInnerIP(): String {
+        var innerIp = ipCache.getIfPresent(BK_HOST_IP)
+        if (!innerIp.isNullOrBlank()) {
+            // 从本地缓存中取到的服务器IP不为空则直接返回
+            return innerIp
+        }
         val ipMap = getMachineIP()
-        var innerIp = ipMap["eth1"]
-        if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
+        innerIp = ipMap["eth1"]
+        if (innerIp.isNullOrBlank()) {
+            logger.info("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
-        if (StringUtils.isBlank(innerIp)) {
+        if (innerIp.isNullOrBlank()) {
             val ipSet = ipMap.entries
             for ((_, value) in ipSet) {
                 innerIp = value
-                if (!StringUtils.isBlank(innerIp)) {
+                if (innerIp.isNotBlank()) {
                     break
                 }
             }
         }
-
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp
+        innerIp = if (innerIp.isNullOrBlank()) "" else innerIp
+        // 把IP放入本地缓存中
+        ipCache.put(BK_HOST_IP, innerIp)
+        return innerIp
     }
 
     private fun getMachineIP(): Map<String, String> {
