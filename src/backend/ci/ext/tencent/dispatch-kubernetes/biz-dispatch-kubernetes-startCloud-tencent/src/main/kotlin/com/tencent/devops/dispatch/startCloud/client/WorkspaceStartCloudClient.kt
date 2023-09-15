@@ -108,7 +108,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        " ${environment.zoneId}地区${environment.machineType}型云桌面资源不足(${environmentRsp.code})"
+                        " ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
+                            "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw BuildFailureException(

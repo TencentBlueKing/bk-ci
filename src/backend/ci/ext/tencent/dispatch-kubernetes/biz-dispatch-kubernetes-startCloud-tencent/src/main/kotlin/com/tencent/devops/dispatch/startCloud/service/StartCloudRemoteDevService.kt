@@ -43,6 +43,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import org.jooq.DSLContext
@@ -75,20 +76,22 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val pipelineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
-                userId = userId,
-                appName = appName,
-                pipeLineId = pipeLineId,
-                zoneId = event.devFile.zoneId,
-                machineType = event.devFile.machineType,
-                cgsId = event.devFile.cgsId
+                basicBody = EnvironmentCreateBasicBody(
+                    userId = userId,
+                    appName = appName,
+                    pipelineId = pipelineId,
+                    zoneId = event.devFile.zoneId,
+                    machineType = event.devFile.machineType,
+                    cgsId = event.devFile.cgsId
+                )
             )
         )
-        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
+        return CreateWorkspaceRes(res.cgsIp, pipelineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
