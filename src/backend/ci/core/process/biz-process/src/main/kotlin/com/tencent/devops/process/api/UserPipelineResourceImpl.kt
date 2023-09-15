@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -139,6 +141,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun create(
         userId: String,
         projectId: String,
@@ -197,6 +200,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun copy(
         userId: String,
         projectId: String,
@@ -227,6 +231,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pid)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun edit(userId: String, projectId: String, pipelineId: String, pipeline: Model): Result<Boolean> {
         checkParam(userId, projectId)
         val pipelineResult = pipelineInfoFacadeService.editPipeline(
@@ -250,6 +255,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun saveAll(
         userId: String,
         projectId: String,
@@ -375,6 +381,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     override fun softDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         val deletePipeline = pipelineInfoFacadeService.deletePipeline(
@@ -595,6 +602,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return pipelineInfoFacadeService.exportPipeline(userId, projectId, pipelineId)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun uploadPipeline(
         userId: String,
         pipelineInfo: PipelineModelAndSetting,

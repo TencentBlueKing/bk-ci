@@ -32,7 +32,6 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.constants.AuditAttributeNames
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -46,7 +45,9 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -434,11 +435,12 @@ class PipelineListFacadeService @Autowired constructor(
      * 其中 PIPELINE_VIEW_FAVORITE_PIPELINES，PIPELINE_VIEW_MY_PIPELINES，PIPELINE_VIEW_ALL_PIPELINES
      * 分别对应 我的收藏，我的流水线，全部流水线
      */
-    @AuditEntry(actionId = "pipeline_list")
+    @AuditEntry(actionId = ActionId.PIPELINE_LIST)
     @ActionAuditRecord(
-        actionId = "pipeline_list",
+        actionId = ActionId.PIPELINE_LIST,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline"
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#projectId"
         ),
         content = "list pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
@@ -705,12 +707,6 @@ class PipelineListFacadeService @Autowired constructor(
                     )
                 }
             }
-            // 审计
-            ActionAuditContext.current().apply {
-                instanceIdList = pipelineList.map { it.pipelineId }
-                instanceNameList = pipelineList.map { it.pipelineName }
-            }
-
             watcher.stop()
 
             return PipelineViewPipelinePage(

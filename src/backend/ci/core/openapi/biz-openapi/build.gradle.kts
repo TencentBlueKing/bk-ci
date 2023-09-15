@@ -34,6 +34,7 @@ dependencies {
     api(project(":core:environment:api-environment"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-audit"))
     api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")

@@ -43,7 +43,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -558,11 +560,11 @@ class PipelineBuildFacadeService(
     }
 
 
-    @AuditEntry(actionId = "pipeline_execute")
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     @ActionAuditRecord(
-        actionId = "pipeline_execute",
+        actionId = ActionId.PIPELINE_EXECUTE,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline",
+            resourceType = ResourceTypeId.PIPELINE,
             instanceIds = "#pipelineId"
         ),
         content = "execute pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +

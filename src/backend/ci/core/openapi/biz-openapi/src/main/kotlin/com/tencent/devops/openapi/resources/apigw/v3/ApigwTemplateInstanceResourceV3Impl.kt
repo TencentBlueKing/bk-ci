@@ -26,7 +26,9 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
@@ -42,6 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwTemplateInstanceResourceV3 {
+
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,

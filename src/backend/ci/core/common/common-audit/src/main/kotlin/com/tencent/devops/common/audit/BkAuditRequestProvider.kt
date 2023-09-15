@@ -17,7 +17,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
         private const val HEADER_USERNAME = AUTH_HEADER_USER_ID
         private const val HEADER_USER_IDENTIFY_TENANT_ID = "X-User-Identify-Tenant-Id"
         private const val HEADER_USER_IDENTIFY_TYPE = "X-User-Identify-Type"
-        private const val HEADER_ACCESS_TYPE = "X-Access-Type"
+        private const val HEADER_ACCESS_TYPE = "USER-AGENT"
         private const val HEADER_REQUEST_ID = "X-DEVOPS-RID"
         private const val HEADER_BK_APP_CODE = AUTH_HEADER_DEVOPS_APP_CODE
         private val logger = LoggerFactory.getLogger(BkAuditRequestProvider::class.java)
@@ -54,9 +54,14 @@ class BkAuditRequestProvider : AuditRequestProvider {
         return httpServletRequest.getHeader(HEADER_USER_IDENTIFY_TENANT_ID)
     }
 
-    override fun getAccessType(): AccessTypeEnum? {
+    override fun getAccessType(): AccessTypeEnum {
         val httpServletRequest = getHttpServletRequest()
-        return AccessTypeEnum.valOf(httpServletRequest.getHeader(HEADER_ACCESS_TYPE))
+        val accessTypeHeader = httpServletRequest.getHeader(HEADER_ACCESS_TYPE)
+        return when {
+            accessTypeHeader.contains("Mozilla") -> AccessTypeEnum.WEB
+            accessTypeHeader.contains("API") -> AccessTypeEnum.API
+            else -> AccessTypeEnum.OTHER
+        }
     }
 
     override fun getRequestId(): String? {

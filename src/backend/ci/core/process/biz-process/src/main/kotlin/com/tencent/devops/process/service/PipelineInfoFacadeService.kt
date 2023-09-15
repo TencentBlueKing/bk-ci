@@ -34,6 +34,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.bk.audit.constants.AuditAttributeNames
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -43,7 +44,9 @@ import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -83,17 +86,17 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -241,13 +244,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
-    @AuditEntry(actionId = "pipeline_create")
     @ActionAuditRecord(
-        actionId = "pipeline_create",
+        actionId = ActionId.PIPELINE_CREATE,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline",
-            instanceNames = "#model?.name",
-            instanceIds = "#$"
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = "create pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
@@ -453,7 +453,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
-
+                ActionAuditContext.current()
+                    .setInstanceId(pipelineId)
+                    .setInstanceName(model.name)
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -663,13 +665,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = "pipeline_edit")
     @ActionAuditRecord(
-        actionId = "pipeline_edit",
+        actionId = ActionId.PIPELINE_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline",
-            instanceNames = "#model?.name",
-            instanceIds = "#pipelineId"
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = "edit pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
             "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
@@ -767,6 +766,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
+            // 审计
+            ActionAuditContext.current()
+                .setInstanceId(pipelineId)
+                .setInstanceName(model.name)
+                .setOriginInstance(existModel)
+                .setInstance(model)
             success = true
             return deployResult
         } finally {
@@ -826,11 +831,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineResult
     }
 
-    @AuditEntry(actionId = "pipeline_view")
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     @ActionAuditRecord(
-        actionId = "pipeline_view",
+        actionId = ActionId.PIPELINE_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline",
+            resourceType = ResourceTypeId.PIPELINE,
             instanceNames = "#$?.name",
             instanceIds = "#pipelineId"
         ),
@@ -932,11 +937,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = "pipeline_delete")
     @ActionAuditRecord(
-        actionId = "pipeline_delete",
+        actionId = ActionId.PIPELINE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = "pipeline",
+            resourceType = ResourceTypeId.PIPELINE,
             instanceNames = "#$?.pipelineName",
             instanceIds = "#pipelineId"
         ),
