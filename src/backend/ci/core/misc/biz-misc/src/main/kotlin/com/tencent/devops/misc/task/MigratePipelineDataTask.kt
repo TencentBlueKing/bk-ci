@@ -715,6 +715,7 @@ class MigratePipelineDataTask constructor(
         val pipelineId = migratePipelineDataParam.pipelineId
         var offset = 0
         var retryFlag = false
+        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         do {
             // 查询未结束的构建记录
             val historyInfoRecords = migratePipelineDataParam.processDao.getHistoryInfoList(
@@ -725,7 +726,6 @@ class MigratePipelineDataTask constructor(
                 limit = DEFAULT_PAGE_SIZE,
                 statusList = unFinishStatusList
             )
-            val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
             historyInfoRecords?.forEach { historyInfoRecord ->
                 val buildId = historyInfoRecord[tPipelineBuildHistory.BUILD_ID]
                 val channel = historyInfoRecord[tPipelineBuildHistory.CHANNEL]

@@ -46,7 +46,6 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
@@ -73,7 +72,7 @@ class ProcessDataMigrateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataMigrateDao: ProcessDataMigrateDao,
-    private val processDataDeleteDao: ProcessDataDeleteDao,
+    private val processDataDeleteService: ProcessDataDeleteService,
     private val dataSourceService: DataSourceService,
     private val redisOperation: RedisOperation,
     private val client: Client
@@ -135,7 +134,7 @@ class ProcessDataMigrateService @Autowired constructor(
             // 删除迁移库的数据以保证迁移接口的幂等性
             migratingShardingDslContext.transaction { t ->
                 val context = DSL.using(t)
-                deleteAllProjectData(context, projectId)
+                processDataDeleteService.deleteProcessData(context, projectId)
             }
             // 查询项目下流水线数量
             val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
@@ -194,7 +193,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 // 删除迁移库的数据
                 migratingShardingDslContext.transaction { t ->
                     val context = DSL.using(t)
-                    deleteProjectDirectlyRelData(context, projectId)
+                    processDataDeleteService.deleteProjectDirectlyRelData(context, projectId)
                 }
                 return@submit
             }
@@ -264,7 +263,7 @@ class ProcessDataMigrateService @Autowired constructor(
             // 删除迁移库的数据
             migratingShardingDslContext.transaction { t ->
                 val context = DSL.using(t)
-                deleteAllProjectData(context, projectId)
+                processDataDeleteService.deleteProcessData(context, projectId)
             }
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
@@ -346,52 +345,6 @@ class ProcessDataMigrateService @Autowired constructor(
         return "MIGRATE_PROJECT_PROCESS_DATA_EXECUTE_COUNT:$projectId"
     }
 
-    private fun deleteAllProjectData(context: DSLContext, projectId: String) {
-        deleteProjectDirectlyRelData(context, projectId)
-        processDataDeleteDao.deletePipelineBuildContainer(context, projectId)
-        processDataDeleteDao.deletePipelineBuildDetail(context, projectId)
-        processDataDeleteDao.deletePipelineBuildVar(context, projectId)
-        processDataDeleteDao.deletePipelinePauseValue(context, projectId)
-        processDataDeleteDao.deletePipelineWebhookBuildParameter(context, projectId)
-        processDataDeleteDao.deletePipelineBuildRecordContainer(context, projectId)
-        processDataDeleteDao.deletePipelineBuildRecordModel(context, projectId)
-        processDataDeleteDao.deletePipelineBuildRecordStage(context, projectId)
-        processDataDeleteDao.deletePipelineBuildRecordTask(context, projectId)
-        processDataDeleteDao.deletePipelineBuildHistory(context, projectId)
-        processDataDeleteDao.deletePipelineBuildStage(context, projectId)
-        processDataDeleteDao.deletePipelineBuildTask(context, projectId)
-        processDataDeleteDao.deletePipelineFavor(context, projectId)
-        processDataDeleteDao.deletePipelineBuildSummary(context, projectId)
-        processDataDeleteDao.deletePipelineInfo(context, projectId)
-        processDataDeleteDao.deletePipelineLabelPipeline(context, projectId)
-        processDataDeleteDao.deletePipelineModelTask(context, projectId)
-        processDataDeleteDao.deletePipelineResource(context, projectId)
-        processDataDeleteDao.deletePipelineResourceVersion(context, projectId)
-        processDataDeleteDao.deletePipelineSetting(context, projectId)
-        processDataDeleteDao.deletePipelineSettingVersion(context, projectId)
-        processDataDeleteDao.deletePipelineWebhookBuildLogDetail(context, projectId)
-        processDataDeleteDao.deletePipelineWebhookQueue(context, projectId)
-        processDataDeleteDao.deleteReport(context, projectId)
-        processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(context, projectId)
-    }
-
-    private fun deleteProjectDirectlyRelData(context: DSLContext, projectId: String) {
-        processDataDeleteDao.deleteAuditResource(context, projectId)
-        processDataDeleteDao.deletePipelineGroup(context, projectId)
-        processDataDeleteDao.deletePipelineJobMutexGroup(context, projectId)
-        processDataDeleteDao.deletePipelineLabel(context, projectId)
-        processDataDeleteDao.deletePipelineView(context, projectId)
-        processDataDeleteDao.deletePipelineViewUserLastView(context, projectId)
-        processDataDeleteDao.deletePipelineViewUserSettings(context, projectId)
-        processDataDeleteDao.deleteProjectPipelineCallback(context, projectId)
-        processDataDeleteDao.deleteProjectPipelineCallbackHistory(context, projectId)
-        processDataDeleteDao.deleteTemplate(context, projectId)
-        processDataDeleteDao.deleteTemplatePipeline(context, projectId)
-        processDataDeleteDao.deletePipelineViewGroup(context, projectId)
-        processDataDeleteDao.deletePipelineViewTop(context, projectId)
-        processDataDeleteDao.deletePipelineRecentUse(context, projectId)
-    }
-
     private fun doMigrationBus(migratingShardingDslContext: DSLContext, projectId: String) {
         migrateAuditResourceData(migratingShardingDslContext, projectId)
         migratePipelineGroupData(migratingShardingDslContext, projectId)
@@ -413,7 +366,7 @@ class ProcessDataMigrateService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 删除原库的数据
-            deleteAllProjectData(context, projectId)
+            processDataDeleteService.deleteProcessData(context, projectId)
             // 更新项目的路由规则
             updateShardingRoutingRule(projectId, routingRuleMap, userId)
         }
