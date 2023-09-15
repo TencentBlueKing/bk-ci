@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,6 +52,7 @@ interface ServiceBuildPermissionResource {
     @ApiOperation("检查相应构建是否有读权限")
     @PUT
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/permission/view")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun checkViewPermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

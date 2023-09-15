@@ -1,4 +1,0 @@
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-external-path name="devopsapp" path="devopsapp/"/>
-    <external-files-path name="share" path="share/"/>
-</paths>
