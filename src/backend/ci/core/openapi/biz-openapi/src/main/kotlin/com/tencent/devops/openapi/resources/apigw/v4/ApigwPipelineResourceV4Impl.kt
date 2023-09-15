@@ -34,11 +34,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineResourceV4
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -288,6 +290,25 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineName = pipelineName
+        )
+    }
+
+    override fun pagingSearchByName(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        logger.info("OPENAPI_PIPELINE_V4|$userId|paging search by name|$projectId|$pipelineName")
+        return client.get(ServicePipelineResource::class).pagingSearchByName(
+            userId = userId,
+            projectId = projectId,
+            pipelineName = pipelineName,
+            page = page,
+            pageSize = pageSize
         )
     }
 
