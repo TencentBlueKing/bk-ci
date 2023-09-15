@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
 import com.tencent.devops.project.dao.ServiceDao
@@ -38,12 +39,16 @@ import org.springframework.stereotype.Service
 
 @Service
 class ServiceProjectService @Autowired constructor(
+    private val profile: Profile,
     private val projectServiceDao: ServiceDao,
     private val dslContext: DSLContext
 ) {
     fun getServiceList(): Result<List<ServiceVO>> {
         val serviceList = mutableListOf<ServiceVO>()
-        val serviceRecodes = projectServiceDao.getServiceList(dslContext)
+        val serviceRecodes = projectServiceDao.getServiceList(
+            dslContext = dslContext,
+            clusterType = if (profile.isDevx()) "devx" else ""
+        )
         if (serviceRecodes != null) {
             for (serviceRecode in serviceRecodes) {
                 serviceList.add(
@@ -67,7 +72,8 @@ class ServiceProjectService @Autowired constructor(
                         collected = true,
                         weigHt = serviceRecode.weight ?: 0,
                         logoUrl = serviceRecode.logoUrl ?: "",
-                        webSocket = serviceRecode.webSocket ?: ""
+                        webSocket = serviceRecode.webSocket ?: "",
+                        clusterType = serviceRecode.clusterType
                     )
                 )
             }
