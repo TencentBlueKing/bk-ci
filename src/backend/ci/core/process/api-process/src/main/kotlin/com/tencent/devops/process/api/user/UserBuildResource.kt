@@ -82,7 +82,7 @@ interface UserBuildResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("指定草稿版本", required = false)
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
         version: Int?
     ): Result<BuildManualStartupInfo>
@@ -128,7 +128,7 @@ interface UserBuildResource {
         @ApiParam("触发审核人列表", required = false)
         @QueryParam("triggerReviewers")
         triggerReviewers: List<String>? = null,
-        @ApiParam("指定草稿版本", required = false)
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
         version: Int? = null
     ): Result<BuildId>

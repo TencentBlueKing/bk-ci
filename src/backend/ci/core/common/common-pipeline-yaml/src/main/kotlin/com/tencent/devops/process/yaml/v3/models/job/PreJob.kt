@@ -60,7 +60,7 @@ data class PreJob(
     val steps: List<PreStep>?,
     @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = null,
+    val timeoutMinutes: String? = null,
     val env: Map<String, String>? = emptyMap(),
     @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
@@ -69,5 +69,8 @@ data class PreJob(
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = null,
+    @ApiModelProperty(name = "depend-on-type")
+    @JsonProperty("depend-on-type")
+    val dependOnType: String? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreJob

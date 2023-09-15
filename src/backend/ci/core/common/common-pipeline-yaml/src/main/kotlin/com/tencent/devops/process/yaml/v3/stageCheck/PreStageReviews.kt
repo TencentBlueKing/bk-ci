@@ -28,12 +28,20 @@
 package com.tencent.devops.process.yaml.v3.stageCheck
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreStageReviews(
     val flows: List<PreFlow>?,
     val variables: Map<String, ReviewVariable>?,
-    val description: String?
+    val description: String?,
+    val timeout: Int?,
+    @JsonProperty("send-markdown")
+    val sendMarkdown: Boolean?,
+    @JsonProperty("notify-type")
+    val notifyType: List<String>?,
+    @JsonProperty("notify-groups")
+    val notifyGroups: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

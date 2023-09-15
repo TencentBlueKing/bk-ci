@@ -52,7 +52,7 @@ class PipelineResourceDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String,
+        versionName: String?,
         model: Model,
         pipelineVersion: Int,
         triggerVersion: Int,

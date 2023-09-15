@@ -75,7 +75,10 @@ interface AppPipelineBuildResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("手动启动流水线")
@@ -93,7 +96,10 @@ interface AppPipelineBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")

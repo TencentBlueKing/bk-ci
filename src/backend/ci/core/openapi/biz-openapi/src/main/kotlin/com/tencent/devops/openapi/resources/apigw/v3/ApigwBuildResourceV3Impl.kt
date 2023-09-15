@@ -54,13 +54,15 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        version: Int?
     ): Result<BuildManualStartupInfo> {
         logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            version = version,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }

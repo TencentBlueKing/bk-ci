@@ -170,6 +170,9 @@ interface ServiceBuildResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -796,7 +799,10 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @ApiParam("启动类型", required = false)
         @QueryParam("startType")
-        startType: StartType
+        startType: StartType,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("取消并发起新构建")

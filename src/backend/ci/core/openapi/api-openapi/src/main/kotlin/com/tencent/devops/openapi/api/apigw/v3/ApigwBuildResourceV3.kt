@@ -234,7 +234,10 @@ interface ApigwBuildResourceV3 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])

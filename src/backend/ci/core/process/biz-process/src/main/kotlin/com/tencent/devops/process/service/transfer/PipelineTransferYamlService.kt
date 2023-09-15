@@ -165,7 +165,7 @@ class PipelineTransferYamlService @Autowired constructor(
     ): Element {
         val tYml = TransferMapper.getObjectMapper()
             .readValue(yaml, object : TypeReference<PreStep>() {})
-        return elementTransfer.yaml2element(ScriptYmlUtils.preStepToStep(tYml), null)
+        return elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
     fun buildPreview(

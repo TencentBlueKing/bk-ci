@@ -30,13 +30,13 @@ package com.tencent.devops.process.yaml.modelTransfer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -44,7 +44,6 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_ENABLE
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_LENGTH
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
@@ -81,27 +80,31 @@ class ContainerTransfer @Autowired(required = false) constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
+        val buildEnv = if (job.runsOn.selfHosted == false) job.runsOn.needs?.ifEmpty { null } else null
+        val (dispatchType, baseOS) = dispatchTransfer.makeDispatchType(
+            job = job,
+            buildTemplateAcrossInfo = buildTemplateAcrossInfo
+        )
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
             elements = elementList,
             mutexGroup = getMutexModel(job.mutex),
-            baseOS = getBaseOs(job),
+            baseOS = baseOS,
             vmNames = setOf(),
             maxQueueMinutes = DEFAULT_JOB_MAX_QUEUE_MINUTES,
-            maxRunningMinutes = job.timeoutMinutes ?: DEFAULT_JOB_MAX_RUNNING_MINUTES,
-            buildEnv = if (job.runsOn.selfHosted == false) job.runsOn.needs else null,
+            maxRunningMinutes = job.timeoutMinutes?.toIntOrNull() ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES,
+            buildEnv = buildEnv,
             customBuildEnv = job.env,
             jobControlOption = getJobControlOption(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
-            dispatchType = dispatchTransfer.makeDispatchType(
-                job = job,
-                buildTemplateAcrossInfo = buildTemplateAcrossInfo
-            ),
+            dispatchType = dispatchType,
             matrixGroupFlag = job.strategy != null,
             matrixControlOption = getMatrixControlOption(job)
-        )
+        ).apply {
+            nfsSwitch = buildEnv != null
+        }
         containerList.add(vmContainer)
     }
 
@@ -117,7 +120,6 @@ class ContainerTransfer @Autowired(required = false) constructor(
         containerList.add(
             NormalContainer(
                 jobId = job.id,
-                id = job.id,
                 name = job.name ?: "Job-${jobIndex + 1}",
                 elements = elementList,
                 jobControlOption = getJobControlOption(
@@ -156,16 +158,23 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 else -> null
             },
             steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_MAX_RUNNING_MINUTES),
+            timeoutMinutes = makeJobTimeout(job.jobControlOption),
             env = null,
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
             } else null,
             // 蓝盾这边是自定义Job ID
-            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
-                job.jobControlOption?.dependOnId
-            } else null
+            dependOn = when (job.jobControlOption?.dependOnType) {
+                DependOnType.ID -> job.jobControlOption?.dependOnId
+                DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
+                else -> null
+            }?.ifEmpty { null },
+            dependOnType = when (job.jobControlOption?.dependOnType) {
+                DependOnType.ID -> null
+                DependOnType.NAME -> DependOnType.NAME.name
+                else -> null
+            }
         )
     }
 
@@ -192,16 +201,29 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 else -> null
             },
             steps = steps,
-            timeoutMinutes = job.jobControlOption?.timeout.nullIfDefault(DEFAULT_JOB_MAX_RUNNING_MINUTES),
+            timeoutMinutes = makeJobTimeout(job.jobControlOption),
             env = null,
             continueOnError = job.jobControlOption?.continueWhenFailed.nullIfDefault(DEFAULT_CONTINUE_WHEN_FAILED),
             strategy = if (job.matrixGroupFlag == true) {
                 getMatrixFromJob(job.matrixControlOption)
             } else null,
-            dependOn = if (!job.jobControlOption?.dependOnId.isNullOrEmpty()) {
-                job.jobControlOption?.dependOnId
-            } else null
+            dependOn = when (job.jobControlOption?.dependOnType) {
+                DependOnType.ID -> job.jobControlOption?.dependOnId
+                DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
+                else -> null
+            }?.ifEmpty { null },
+            dependOnType = when (job.jobControlOption?.dependOnType) {
+                DependOnType.ID -> null
+                DependOnType.NAME -> DependOnType.NAME.name
+                else -> null
+            }
         )
+    }
+
+    private fun makeJobTimeout(controlOption: JobControlOption?): String? {
+        return controlOption?.timeoutVar.nullIfDefault(
+            VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
+        ) ?: controlOption?.timeout.nullIfDefault(VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES)?.toString()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -248,50 +270,79 @@ class ContainerTransfer @Autowired(required = false) constructor(
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
-        val timeout = setUpTimeout(job)
+        val timeout = job.timeoutMinutes?.toIntOrNull() ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
+        val timeoutVar = job.timeoutMinutes ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
+
+        val dependOnType = DependOnType.parse(job.dependOnType)
+        val dependOnId = if (dependOnType == DependOnType.ID) {
+            job.dependOn
+        } else {
+            null
+        }
+        val dependOnName = if (dependOnType == DependOnType.NAME) {
+            job.dependOn?.joinToString(",")
+        } else {
+            null
+        }
         return if (!job.ifField.isNullOrBlank()) {
+            var customVariables: List<NameAndValue>? = null
             if (finalStage) {
                 JobControlOption(
                     timeout = timeout,
-                    timeoutVar = timeout.toString(),
+                    timeoutVar = timeoutVar,
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
                         IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
                         else -> JobRunCondition.STAGE_RUNNING
                     },
-                    dependOnType = DependOnType.ID,
-                    dependOnId = job.dependOn,
-                    prepareTimeout = job.runsOn.queueTimeoutMinutes,
+                    dependOnType = dependOnType,
+                    dependOnId = dependOnId,
+                    dependOnName = dependOnName,
+                    prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
                     continueWhenFailed = job.continueOnError
                 )
             } else {
+                val runCondition = ModelCommon.revertCustomVariableMatch(job.ifField)?.let {
+                    customVariables = it
+                    JobRunCondition.CUSTOM_VARIABLE_MATCH
+                } ?: ModelCommon.revertCustomVariableNotMatch(job.ifField)?.let {
+                    customVariables = it
+                    JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                } ?: kotlin.run {
+                    if (!job.ifField.isNullOrBlank()) JobRunCondition.CUSTOM_CONDITION_MATCH else null
+                } ?: JobRunCondition.STAGE_RUNNING
                 JobControlOption(
                     enable = jobEnable,
                     timeout = timeout,
-                    timeoutVar = timeout.toString(),
-                    runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                    customCondition = ModelCreateUtil.removeIfBrackets(job.ifField),
-                    dependOnType = DependOnType.ID,
-                    dependOnId = job.dependOn,
-                    prepareTimeout = job.runsOn.queueTimeoutMinutes,
-                    continueWhenFailed = job.continueOnError
+                    timeoutVar = timeoutVar,
+                    runCondition = runCondition,
+                    customCondition = if (runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                        ModelCreateUtil.removeIfBrackets(job.ifField)
+                    } else {
+                        null
+                    },
+                    dependOnType = dependOnType,
+                    dependOnId = dependOnId,
+                    dependOnName = dependOnName,
+                    prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
+                    continueWhenFailed = job.continueOnError,
+                    customVariables = customVariables
                 )
             }
         } else {
             JobControlOption(
                 enable = jobEnable,
                 timeout = timeout,
-                timeoutVar = timeout.toString(),
-                dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn,
-                prepareTimeout = job.runsOn.queueTimeoutMinutes,
+                timeoutVar = timeoutVar,
+                dependOnType = dependOnType,
+                dependOnId = dependOnId,
+                dependOnName = dependOnName,
+                prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
                 continueWhenFailed = job.continueOnError
             )
         }
     }
-
-    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: DEFAULT_JOB_MAX_RUNNING_MINUTES)
 
     private fun getMutexModel(resource: Mutex?): MutexGroup? {
         if (resource == null) {
@@ -302,7 +353,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             mutexGroupName = resource.label,
             queueEnable = resource.queueEnable ?: DEFAULT_MUTEX_QUEUE_ENABLE,
             queue = resource.queueLength ?: DEFAULT_MUTEX_QUEUE_LENGTH,
-            timeout = resource.timeoutMinutes ?: DEFAULT_MUTEX_TIMEOUT_MINUTES
+            timeout = resource.timeoutMinutes?.toIntOrNull() ?: DEFAULT_MUTEX_TIMEOUT_MINUTES,
+            timeoutVar = resource.timeoutMinutes ?: DEFAULT_MUTEX_TIMEOUT_MINUTES.toString()
         )
     }
 
@@ -314,7 +366,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             label = resource?.mutexGroupName!!,
             queueEnable = resource.queueEnable.nullIfDefault(DEFAULT_MUTEX_QUEUE_ENABLE),
             queueLength = resource.queue.nullIfDefault(DEFAULT_MUTEX_QUEUE_LENGTH),
-            timeoutMinutes = resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)
+            timeoutMinutes = resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
+                ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
         )
     }
 
@@ -329,29 +382,5 @@ class ContainerTransfer @Autowired(required = false) constructor(
             fastKill = matrixControlOption.fastKill,
             maxParallel = matrixControlOption.maxConcurrency
         )
-    }
-
-    private fun getBaseOs(job: Job): VMBaseOS {
-        val poolName = job.runsOn.poolName
-        when {
-            LINUX_TYPE.contains(poolName) -> return VMBaseOS.LINUX
-            MACOS_TYPE.contains(poolName) -> return VMBaseOS.MACOS
-            WINDOWS_TYPE.contains(poolName) -> return VMBaseOS.WINDOWS
-        }
-
-        val selector = job.runsOn.agentSelector?.get(0)
-        return when {
-            selector == null -> VMBaseOS.ALL
-            LINUX_TYPE.contains(selector) -> VMBaseOS.LINUX
-            MACOS_TYPE.contains(selector) -> VMBaseOS.MACOS
-            WINDOWS_TYPE.contains(selector) -> VMBaseOS.WINDOWS
-            else -> VMBaseOS.LINUX
-        }
-    }
-
-    companion object {
-        val LINUX_TYPE = setOf("docker", "linux")
-        val MACOS_TYPE = setOf("macos-11.4", "macos-12.4", "macos-latest", "macos")
-        val WINDOWS_TYPE = setOf("windows-2016", "windows")
     }
 }

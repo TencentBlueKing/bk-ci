@@ -75,6 +75,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 channelCode = ChannelCode.BS
             )
         )
@@ -111,6 +112,7 @@ class UserBuildResourceImpl @Autowired constructor(
             values = values,
             channelCode = ChannelCode.BS,
             buildNo = buildNo,
+            version = version,
             triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)

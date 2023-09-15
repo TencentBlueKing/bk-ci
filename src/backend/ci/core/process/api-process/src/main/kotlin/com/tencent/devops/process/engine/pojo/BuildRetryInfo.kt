@@ -25,23 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.engine.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import java.time.LocalDateTime
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StageReviews(
-    val flows: List<Flow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?,
-    val timeout: Int?,
-    val sendMarkdown: Boolean?,
-    val notifyType: List<String>?,
-    val notifyGroups: List<String>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Flow(
-    val name: String,
-    val reviewers: List<String>
+data class BuildRetryInfo(
+    var rebuild: Boolean,
+    var nowTime: LocalDateTime,
+    var status: BuildStatus,
+    var buildParameters: List<BuildParameters>?,
+    var concurrencyGroup: String?
 )
