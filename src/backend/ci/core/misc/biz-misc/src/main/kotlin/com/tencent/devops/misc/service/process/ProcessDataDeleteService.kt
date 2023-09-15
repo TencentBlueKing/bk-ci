@@ -129,6 +129,8 @@ class ProcessDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineWebhookBuildLogDetail(dslContext, projectId, pipelineId)
                 offset += DEFAULT_PAGE_SIZE
             } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
+        }
+        if (!pipelineIds.isNullOrEmpty()) {
             processDataDeleteDao.deletePipelineBuildSummary(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineLabelPipeline(dslContext, projectId, pipelineIds)
@@ -138,8 +140,8 @@ class ProcessDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
-            logger.info("project[$projectId] deleteProjectPipelineRelData success!")
         }
+        logger.info("project[$projectId] deleteProjectPipelineRelData success!")
     }
 
     /**
