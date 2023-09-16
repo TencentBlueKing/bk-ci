@@ -53,7 +53,7 @@ class WindowsResourceConfigService @Autowired constructor(
     }
 
     fun getAllType(): List<WindowsResourceTypeConfig> {
-        logger.info("get all windows resource zone")
+        logger.info("get all windows resource type")
         return windowsResourceTypeDao.fetchAll(dslContext, true)
     }
 

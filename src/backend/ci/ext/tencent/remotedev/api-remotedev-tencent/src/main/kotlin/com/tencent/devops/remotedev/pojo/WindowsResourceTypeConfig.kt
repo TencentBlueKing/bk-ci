@@ -46,10 +46,12 @@ data class WindowsResourceTypeConfig(
     val cpu: Int,
     @ApiModelProperty("内存")
     val memory: Int,
-    @ApiModelProperty("本地SSD盘")
+    @ApiModelProperty("数据盘，本地SSD盘")
     val disk: Int,
     @ApiModelProperty("云SSD盘")
     val hdisk: Int? = 1,
+    @ApiModelProperty("系统盘，本地SSD")
+    val sdisk: Int? = 200,
     @ApiModelProperty("描述")
     val description: String
 )
