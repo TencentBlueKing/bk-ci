@@ -205,6 +205,7 @@ class CreateControl @Autowired constructor(
                     ownerType = ws.ownerType
                 )
             )
+            Thread.sleep(100)
         }
     }
 
@@ -330,7 +331,12 @@ class CreateControl @Autowired constructor(
             }
 
             if (ws.workspaceSystemType.checkWindows()) {
-                workspaceWindowsDao.updateWindowsResourceId(dslContext, event.workspaceName, event.resourceId)
+                workspaceWindowsDao.updateWindowsResourceId(
+                    dslContext,
+                    event.workspaceName,
+                    event.resourceId,
+                    event.environmentIp
+                )
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {

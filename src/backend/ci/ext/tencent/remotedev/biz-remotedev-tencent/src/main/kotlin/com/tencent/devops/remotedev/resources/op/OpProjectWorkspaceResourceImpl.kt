@@ -24,7 +24,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun assignWorkspace(
         userId: String,
         projectId: String,
-        owner: String,
+        owner: String?,
         cgsId: String
     ): Result<Boolean> {
 
@@ -38,10 +38,10 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         ) ?: return Result(false)
         // 调用CreateControl.asyncCreateWorkspace发起创建
         createControl.asyncCreateWorkspace(
-            pmUserId = owner,
+            pmUserId = userId,
             projectId = projectId,
             cgsId = cgsId,
-            autoAssign = true,
+            autoAssign = false,
             workspaceCreate = ProjectWorkspaceCreate(
                 windowsType = windowsResourceConfigId.size,
                 windowsZone = cgsData.zoneId.replace(Regex("\\d+"), ""),

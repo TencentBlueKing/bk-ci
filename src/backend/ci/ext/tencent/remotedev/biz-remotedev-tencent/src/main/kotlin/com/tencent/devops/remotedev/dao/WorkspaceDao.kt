@@ -483,6 +483,52 @@ class WorkspaceDao {
             .fetch()
     }
 
+    fun fetchWorkspaceWithOwner(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null,
+        ip: String? = null,
+        assignType: WorkspaceShared.AssignType? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
+        val conditions = mutableListOf<Condition>()
+        status?.let {
+            conditions.add(t1.STATUS.eq(it.ordinal))
+        }
+        mountType?.let {
+            conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        projectId?.let {
+            conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
+
+        ip?.let {
+            conditions.add(
+                    t1.NAME.`in`(
+                    DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
+                        t3.HOST_IP.endsWith(".$ip")
+                    )
+                    )
+            )
+        }
+
+        return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
+            .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .let { if (assignType != null) { it.and(t2.ASSIGN_TYPE.eq(assignType.name)) } else it }
+            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            .unionAll(
+                dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
+                    .from(t1)
+                    .where(conditions)
+                    .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+            )
+            .fetch()
+    }
+
     private fun mixCondition(
         userId: String? = null,
         workspaceName: String? = null,

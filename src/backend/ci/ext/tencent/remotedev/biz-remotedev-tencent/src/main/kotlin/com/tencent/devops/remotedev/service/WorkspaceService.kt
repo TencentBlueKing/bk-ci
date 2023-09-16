@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -324,24 +325,29 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getProjectWorkspaceList4WeSec(
-        projectId: String?
+        projectId: String?,
+        ip: String?
     ): List<WeSecProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
-        val result = workspaceDao.fetchWorkspace(
+        val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
-            projectId = projectId
+            projectId = projectId,
+            ip = ip,
+            assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
 
         return result.map {
-            val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
+            val detail = workspaceCommon.getWorkspaceDetail(it["NAME"] as String)
             WeSecProjectWorkspace(
-                workspaceName = it.workspaceName,
-                projectId = it.projectId,
-                creator = it.createUserId,
+                workspaceName = it["NAME"] as String,
+                projectId = it["PROJECT_ID"] as String,
+                creator = it["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
-                innerIp = detail?.hostIP
+                innerIp = detail?.hostIP,
+                createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
+                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
                 )
             }
     }
@@ -381,7 +387,11 @@ class WorkspaceService @Autowired constructor(
         createUserId = it.createUserId,
         workPath = it.workPath,
         workspaceFolder = it.workspaceFolder,
-        hostName = workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP,
+        hostName = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP
+        } else {
+            it.hostName
+        },
         workspaceMountType = it.workspaceMountType,
         workspaceSystemType = it.workspaceSystemType,
         ownerType = it.ownerType,
@@ -418,7 +428,7 @@ class WorkspaceService @Autowired constructor(
             records = result.map {
                 var status = it.status
                 run {
-                    if (status.notOk2doNextAction() && Duration.between(
+                    if (status.notOk2doNextAction(it) && Duration.between(
                             it.lastStatusUpdateTime ?: LocalDateTime.now(),
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
