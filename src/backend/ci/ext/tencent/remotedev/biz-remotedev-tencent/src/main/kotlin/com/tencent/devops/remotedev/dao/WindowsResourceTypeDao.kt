@@ -56,6 +56,7 @@ class WindowsResourceTypeDao {
                 DISK,
                 HDISK,
                 SDISK,
+                WEIGHT,
                 DESCRIPTION
             ).values(
                 config.size,
@@ -66,6 +67,7 @@ class WindowsResourceTypeDao {
                 config.disk,
                 config.hdisk ?: 1,
                 config.sdisk ?: 200,
+                config.weight ?: 0,
                 config.description
             ).returning(ID).fetchOne()!!.id
         }
@@ -126,6 +128,7 @@ class WindowsResourceTypeDao {
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(WEIGHT, config.weight ?: 0)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -143,7 +146,7 @@ class WindowsResourceTypeDao {
         }
     }
 
-    class TWindowsResourceZoneJooqMapper : RecordMapper<TWindowsResourceTypeRecord, WindowsResourceTypeConfig> {
+    class TWindowsResourceTypeJooqMapper : RecordMapper<TWindowsResourceTypeRecord, WindowsResourceTypeConfig> {
         override fun map(record: TWindowsResourceTypeRecord?): WindowsResourceTypeConfig? {
             return record?.run {
                 WindowsResourceTypeConfig(
@@ -157,6 +160,7 @@ class WindowsResourceTypeDao {
                     disk = disk,
                     hdisk = hdisk,
                     sdisk = sdisk,
+                    weight = weight,
                     description = description
                 )
             }
@@ -164,6 +168,6 @@ class WindowsResourceTypeDao {
     }
 
     companion object {
-        val mapper = TWindowsResourceZoneJooqMapper()
+        val mapper = TWindowsResourceTypeJooqMapper()
     }
 }

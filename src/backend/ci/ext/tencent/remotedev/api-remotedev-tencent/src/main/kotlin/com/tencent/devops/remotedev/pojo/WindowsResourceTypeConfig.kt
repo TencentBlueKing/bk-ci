@@ -52,6 +52,8 @@ data class WindowsResourceTypeConfig(
     val hdisk: Int? = 1,
     @ApiModelProperty("系统盘，本地SSD")
     val sdisk: Int? = 200,
+    @ApiModelProperty("权重，用于页面展示先后顺序")
+    val weight: Int? = 0,
     @ApiModelProperty("描述")
     val description: String
 )
