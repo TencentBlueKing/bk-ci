@@ -1,0 +1,138 @@
+package com.tencent.devops.remotedev.service.gitproxy
+
+import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.constant.MediaTypes
+import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfig
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigWebHook
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import java.io.IOException
+
+@Component
+class BkRepoClient @Autowired constructor(
+    private val objectMapper: ObjectMapper
+) {
+
+    @Value("\${bkrepo.bkrepoDevxUrl:#{null}}")
+    val bkrepoDevxUrl: String? = null
+
+    @Value("\${bkrepo.bkrepoDevxHeaderUserId:#{null}}")
+    val bkrepoDevxHeaderUserId: String? = null
+
+    @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:#{null}}")
+    val bkrepoDevxHeaderUserAuth: String? = null
+
+    fun createRepo(userId: String, projectId: String, repoName: String, url: String) {
+        logger.info("createRepo, userId: $userId, projectId: $projectId")
+        val requestData = CreateRepoData(
+            projectId = projectId,
+            name = repoName,
+            type = "GIT",
+            category = "PROXT",
+            public = false,
+            description = "git-proxy",
+            configuration = CreateRepoDataConfig(
+                type = "proxy",
+                proxy = CreateRepoDataConfigProxy(
+                    public = false,
+                    name = "CloudDeskTestGroup-Download-proxy",
+                    url = url,
+                    credentialKey = null,
+                    username = null,
+                    password = null
+                ),
+                url = null,
+                settings = emptyMap(),
+                webHook = CreateRepoDataConfigWebHook(
+                    webHookList = emptyList()
+                )
+            ),
+            storageCredentialsKey = null
+        )
+        val request = Request.Builder()
+            .url("$bkrepoDevxUrl/repository/api/repo/create")
+            .headers(getCommonHeaders().toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    // TODO: 返回类型
+    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Map<String, String> {
+        logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
+        val url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize?type=GIT&category=PROXY"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders().toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
+    }
+
+    fun deleteRepo(userId: String, projectId: String, repoName: String) {
+        logger.info("deleteRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
+        val url = "$bkrepoDevxUrl/repository/api/repo/delete/$projectId/$repoName?forced=false"
+        // TODO: 删除是不是delete
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders().toHeaders())
+            .delete()
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    private fun getCommonHeaders(): MutableMap<String, String> {
+        val headers = mutableMapOf<String, String>()
+        headers["Authorization"] = bkrepoDevxHeaderUserAuth ?: ""
+        headers["X-BKREPO-UID"] = bkrepoDevxHeaderUserId ?: ""
+        return headers
+    }
+
+    private fun doRequest(request: Request): okhttp3.Response {
+        try {
+            return OkhttpUtils.doHttp(request)
+        } catch (e: IOException) {
+            throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+    }
+
+    private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
+        this.use {
+            val responseContent = this.body!!.string()
+            if (this.isSuccessful) {
+                return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
+            }
+
+            val responseData = try {
+                objectMapper.readValue<Response<Void>>(responseContent)
+            } catch (e: JacksonException) {
+                throw RemoteServiceException(responseContent, this.code)
+            }
+            if (allowCode == responseData.code) {
+                logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
+                return null
+            }
+            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
+        private val JSON_MEDIA_TYPE = MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()
+    }
+}
