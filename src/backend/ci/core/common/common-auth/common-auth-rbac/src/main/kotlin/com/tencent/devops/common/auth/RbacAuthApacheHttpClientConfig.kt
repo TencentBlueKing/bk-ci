@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.auth
 
+import com.tencent.bk.sdk.iam.util.http.DefaultApacheHttpClientBuilder.IdleConnectionMonitorThread
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.config.RegistryBuilder
 import org.apache.http.config.SocketConfig
@@ -48,14 +49,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import org.springframework.scheduling.TaskScheduler
-import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.security.KeyManagementException
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
-import java.util.concurrent.TimeUnit
 
 
 @Suppress("ALL")
@@ -65,7 +61,6 @@ import java.util.concurrent.TimeUnit
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@EnableScheduling
 class RbacAuthApacheHttpClientConfig(
     private val httpClientProperties: RbacAuthHttpClientProperties
 ) {
@@ -90,6 +85,13 @@ class RbacAuthApacheHttpClientConfig(
         connectionManager.defaultSocketConfig = SocketConfig.copy(SocketConfig.DEFAULT)
             .setSoTimeout(httpClientProperties.soTimeout)
             .build()
+
+        val idleConnectionMonitorThread = IdleConnectionMonitorThread(
+            connectionManager, httpClientProperties.idleConnTimeout, httpClientProperties.checkWaitTime
+        )
+        idleConnectionMonitorThread.isDaemon = true
+        idleConnectionMonitorThread.start()
+
         return connectionManager
     }
 
@@ -128,26 +130,5 @@ class RbacAuthApacheHttpClientConfig(
             logger.error(e.message, e)
         }
         return null
-    }
-
-    @Bean
-    @Scheduled(fixedDelay = 60000)
-    fun idleConnectionMonitor(pool: PoolingHttpClientConnectionManager?): Runnable? {
-        return Runnable { // only if connection pool is initialised
-            if (pool != null) {
-                pool.closeExpiredConnections()
-                pool.closeIdleConnections(httpClientProperties.idleConnTimeout, TimeUnit.MILLISECONDS)
-                logger.info("Idle connection monitor: Closing expired and idle connections")
-            }
-        }
-    }
-
-
-    @Bean
-    fun taskScheduler(): TaskScheduler {
-        val scheduler = ThreadPoolTaskScheduler()
-        scheduler.setThreadNamePrefix("idleMonitor")
-        scheduler.poolSize = 5
-        return scheduler
     }
 }

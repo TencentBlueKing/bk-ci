@@ -37,7 +37,8 @@ data class RbacAuthHttpClientProperties(
     val connectionRequestTimeout: Int = 3000,
     val connectionTimeout: Int = 5000,
     val soTimeout: Int = 60000,
-    val idleConnTimeout: Long = 60000,
+    val idleConnTimeout: Int = 60000,
+    val checkWaitTime: Int = 60000,
     val maxConnPerHost: Int = 10,
-    val maxTotalConn: Int = 50
+    val maxTotalConn: Int = 50,
 )
