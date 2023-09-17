@@ -48,12 +48,13 @@ import com.tencent.devops.common.auth.code.RbacTicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Value
+import org.apache.http.impl.client.CloseableHttpClient
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -65,29 +66,19 @@ import org.springframework.core.Ordered
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@EnableConfigurationProperties(RbacAuthProperties::class)
 class RbacAuthAutoConfiguration {
-
-    @Value("\${auth.url:}")
-    val iamBaseUrl = ""
-
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
-
-    @Value("\${auth.appCode:}")
-    val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    val appSecret = ""
-
-    @Value("\${auth.apigwUrl:#{null}}")
-    val iamApigw = ""
 
     @Bean
     @Primary
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+    fun iamConfiguration(properties: RbacAuthProperties) = with(properties) {
+        IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+    }
 
     @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
+    @Primary
+    fun apigwHttpClientServiceImpl(httpClient: CloseableHttpClient, iamConfiguration: IamConfiguration) =
+        ApigwHttpClientServiceImpl(httpClient, iamConfiguration)
 
     @Bean
     fun iamTokenService(

@@ -653,7 +653,7 @@ class PermissionGradeManagerService @Autowired constructor(
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
-            .lable(
+            .label(
                 I18nUtil.getCodeLanMessage(BK_CREATE_PROJECT_APPROVAL)
             )
             .value(listOf(value))
