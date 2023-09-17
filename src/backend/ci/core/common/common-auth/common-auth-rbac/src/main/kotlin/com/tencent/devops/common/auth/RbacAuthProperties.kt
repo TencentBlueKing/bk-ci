@@ -29,8 +29,10 @@
 package com.tencent.devops.common.auth
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConfigurationProperties("auth")
+@ConstructorBinding
 data class RbacAuthProperties(
     val iamBaseUrl: String = "",
     val systemId: String = "",
