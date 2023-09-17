@@ -81,6 +81,7 @@ class WindowsResourceTypeDao {
             dslContext.selectFrom(this).let {
                 if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
             }
+                .orderBy(WEIGHT)
                 .skipCheck()
                 .fetch(mapper)
         }
