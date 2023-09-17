@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.tencent.devops.common.auth.RbacAuthAutoConfiguration
+com.tencent.devops.common.auth.RbacAuthHttpClientAutoConfiguration

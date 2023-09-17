@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth
 
 import com.tencent.bk.sdk.iam.util.http.DefaultApacheHttpClientBuilder.IdleConnectionMonitorThread
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.binder.httpcomponents.MicrometerHttpRequestExecutor
 import io.micrometer.core.instrument.binder.httpcomponents.PoolingHttpClientConnectionManagerMetricsBinder
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.config.RegistryBuilder
@@ -43,7 +44,6 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.ssl.SSLContexts
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -60,15 +60,14 @@ import java.security.NoSuchAlgorithmException
 @Configuration
 @EnableConfigurationProperties(RbacAuthHttpClientProperties::class)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class RbacAuthApacheHttpClientConfig(
+class RbacAuthHttpClientAutoConfiguration(
     private val httpClientProperties: RbacAuthHttpClientProperties
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacAuthApacheHttpClientConfig::class.java)
+        private val logger = LoggerFactory.getLogger(RbacAuthHttpClientAutoConfiguration::class.java)
     }
 
     @Bean
@@ -96,14 +95,15 @@ class RbacAuthApacheHttpClientConfig(
 
         // 配置连接池监控
         PoolingHttpClientConnectionManagerMetricsBinder(
-            connectionManager, "auth-apache-http-client-pool"
+            connectionManager, "auth-http-client-pool"
         ).bindTo(meterRegistry)
         return connectionManager
     }
 
     @Bean
     fun httpClient(
-        poolingConnectionManager: PoolingHttpClientConnectionManager
+        poolingConnectionManager: PoolingHttpClientConnectionManager,
+        meterRegistry: MeterRegistry
     ): CloseableHttpClient {
         val httpClientBuilder = HttpClients.custom()
             .setConnectionManager(poolingConnectionManager)
@@ -116,6 +116,7 @@ class RbacAuthApacheHttpClientConfig(
                     .setConnectionRequestTimeout(httpClientProperties.connectionRequestTimeout)
                     .build()
             )
+            .setRequestExecutor(MicrometerHttpRequestExecutor.builder(meterRegistry).build())
         return httpClientBuilder.build()
     }
 
