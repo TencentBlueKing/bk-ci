@@ -29,6 +29,8 @@
 package com.tencent.devops.common.auth
 
 import com.tencent.bk.sdk.iam.util.http.DefaultApacheHttpClientBuilder.IdleConnectionMonitorThread
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.binder.httpcomponents.PoolingHttpClientConnectionManagerMetricsBinder
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.config.RegistryBuilder
 import org.apache.http.config.SocketConfig
@@ -70,7 +72,7 @@ class RbacAuthApacheHttpClientConfig(
     }
 
     @Bean
-    fun poolingConnectionManager(): PoolingHttpClientConnectionManager {
+    fun poolingConnectionManager(meterRegistry: MeterRegistry): PoolingHttpClientConnectionManager {
         val sslConnectionSocketFactory = SSLConnectionSocketFactory.getSocketFactory()
         val plainConnectionSocketFactory = PlainConnectionSocketFactory.getSocketFactory()
 
@@ -92,6 +94,10 @@ class RbacAuthApacheHttpClientConfig(
         idleConnectionMonitorThread.isDaemon = true
         idleConnectionMonitorThread.start()
 
+        // 配置连接池监控
+        PoolingHttpClientConnectionManagerMetricsBinder(
+            connectionManager, "auth-apache-http-client-pool"
+        ).bindTo(meterRegistry)
         return connectionManager
     }
 
