@@ -34,9 +34,12 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("auth")
 @ConstructorBinding
 data class RbacAuthProperties(
-    val iamBaseUrl: String = "",
-    val systemId: String = "",
+    // auth esb对应的url,rbac中已废弃
+    val url: String = "",
+    // auth 系统ID
+    val iamSystem: String = "",
     val appCode: String = "",
     val appSecret: String = "",
-    val iamApigw: String = ""
+    // auth api网关url
+    val apigwUrl: String = ""
 )

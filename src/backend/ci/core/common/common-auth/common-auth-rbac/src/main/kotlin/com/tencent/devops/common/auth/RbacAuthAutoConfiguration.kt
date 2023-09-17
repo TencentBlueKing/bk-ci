@@ -72,7 +72,7 @@ class RbacAuthAutoConfiguration {
     @Bean
     @Primary
     fun iamConfiguration(properties: RbacAuthProperties) = with(properties) {
-        IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+        IamConfiguration(iamSystem, appCode, appSecret, url, apigwUrl)
     }
 
     @Bean
