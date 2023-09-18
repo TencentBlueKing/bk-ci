@@ -57,6 +57,9 @@ class UserProjectUserResourceImpl @Autowired constructor(
     @Value("\${avatar.url:#{null}}")
     private val avatarUrl: String? = null
 
+    @Value("\${remoteDev.loginHost:#{null}}")
+    private val remoteDevLoginHost: String? = null
+
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
         val name = if (UserUtil.isTaiUser(userId)) {
             getTaiUser(bkToken)
@@ -99,7 +102,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
      * 获取太湖账号信息
      */
     private fun getTaiUser(bkToken: String?): String {
-        val url = "http://login.bkdevops.woa.com/login/accounts/get_user/?bk_token=$bkToken"
+        val url = "$remoteDevLoginHost/login/accounts/get_user/?bk_token=$bkToken"
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use {
             val resp = it.body!!.string()

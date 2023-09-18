@@ -311,7 +311,7 @@ function _M:verify_tai_token(bk_token)
     local httpc = http.new()
 
     -- 发送HTTP GET请求
-    local res, err = httpc:request_uri("http://login.bkdevops.woa.com/login/accounts/is_login/?bk_token=" .. bk_token,
+    local res, err = httpc:request_uri( config.devx.loginFqdn .. "/login/accounts/is_login/?bk_token=" .. bk_token,
                                        {method = "GET"})
 
     --- 判断是否出错了

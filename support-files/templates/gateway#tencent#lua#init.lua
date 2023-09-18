@@ -113,7 +113,10 @@ config = {
         }
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
-    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__"
+    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
+    devx = {
+        loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
+    }
 }
 
 require("init_common")
