@@ -446,12 +446,12 @@ class RepositoryDao {
         dslContext: DSLContext,
         repositoryId: Long,
         syncStatus: String,
-        commitId: String
+        ciDirId: String?
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(PAC_SYNC_STATUS, syncStatus)
-                .set(PAC_SYNC_COMMIT_ID, commitId)
+                .set(PAC_SYNC_CI_DIR_ID, ciDirId)
                 .set(PAC_SYNC_TIME, LocalDateTime.now())
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()

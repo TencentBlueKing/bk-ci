@@ -26,47 +26,44 @@
  *
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.service.RepositoryPacService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceRepositoryPacResourceImpl @Autowired constructor(
-    private val repositoryPacService: RepositoryPacService
-) : ServiceRepositoryPacResource {
+@Api(tags = ["SERVICE_PAC"], description = "服务-pac资源")
+@Path("/service/pipeline/pac/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelinePacResource {
 
-    override fun initPacSyncDetail(
+    @ApiOperation("开启PAC")
+    @POST
+    @Path("/{projectId}/{repoHashId}/enable")
+    fun enable(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
-        repositoryHashId: String,
-        ciDirId: String?,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
-    ): Result<Boolean> {
-        repositoryPacService.initPacSyncDetail(
-            projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
-            syncFileInfoList = syncFileInfoList
-        )
-        return Result(true)
-    }
-
-    override fun updatePacSyncStatus(
-        projectId: String,
-        repositoryHashId: String,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
-    ): Result<Boolean> {
-        repositoryPacService.updatePacSyncStatus(
-            projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
-            syncFileInfo = syncFileInfo
-        )
-        return Result(true)
-    }
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @ApiParam("代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    )
 }

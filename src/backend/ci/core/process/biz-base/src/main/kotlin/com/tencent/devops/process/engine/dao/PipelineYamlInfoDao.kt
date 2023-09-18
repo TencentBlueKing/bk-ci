@@ -28,9 +28,9 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.model.process.tables.TPipelineYamlRefer
-import com.tencent.devops.model.process.tables.records.TPipelineYamlReferRecord
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlRefer
+import com.tencent.devops.model.process.tables.TPipelineYamlInfo
+import com.tencent.devops.model.process.tables.records.TPipelineYamlInfoRecord
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -39,7 +39,7 @@ import java.time.LocalDateTime
  * 流水线与代码库yml文件关联表
  */
 @Repository
-class PipelineYamlReferDao {
+class PipelineYamlInfoDao {
 
     fun save(
         dslContext: DSLContext,
@@ -49,7 +49,7 @@ class PipelineYamlReferDao {
         pipelineId: String
     ) {
         val now = LocalDateTime.now()
-        with(TPipelineYamlRefer.T_PIPELINE_YAML_REFER) {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
@@ -74,8 +74,8 @@ class PipelineYamlReferDao {
         projectId: String,
         repoHashId: String,
         filePath: String
-    ): PipelineYamlRefer? {
-        with(TPipelineYamlRefer.T_PIPELINE_YAML_REFER) {
+    ): PipelineYamlInfo? {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
@@ -85,9 +85,24 @@ class PipelineYamlReferDao {
         }
     }
 
-    fun convert(record: TPipelineYamlReferRecord): PipelineYamlRefer {
+    fun getAllByRepo(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String
+    ): List<PipelineYamlInfo> {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .fetch {
+                    convert(it)
+                }
+        }
+    }
+
+    fun convert(record: TPipelineYamlInfoRecord): PipelineYamlInfo {
         return with(record) {
-            PipelineYamlRefer(
+            PipelineYamlInfo(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,

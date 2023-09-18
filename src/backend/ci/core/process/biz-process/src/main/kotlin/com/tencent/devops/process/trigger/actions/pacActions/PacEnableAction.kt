@@ -34,6 +34,7 @@ import com.tencent.devops.process.trigger.actions.GitActionCommon
 import com.tencent.devops.process.trigger.actions.data.ActionData
 import com.tencent.devops.process.trigger.actions.data.EventCommonData
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
+import com.tencent.devops.process.trigger.common.Constansts.ciFileDirectoryName
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
 import com.tencent.devops.process.trigger.git.pojo.tgit.TGitCred
@@ -106,6 +107,16 @@ class PacEnableAction : BaseAction {
                 retry = ApiRequestRetryInfo(true)
             )
         )
+    }
+
+    fun getCiDirId(): String? {
+        return api.getFileInfo(
+            cred = this.getGitCred(),
+            gitProjectId = getGitProjectIdOrName(),
+            fileName = ciFileDirectoryName,
+            ref = data.eventCommon.branch,
+            retry = ApiRequestRetryInfo(true)
+        )?.blobId
     }
 
     override fun getChangeSet(): Set<String>? = null

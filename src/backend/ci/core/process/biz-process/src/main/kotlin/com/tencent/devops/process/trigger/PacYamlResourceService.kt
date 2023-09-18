@@ -29,7 +29,7 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.dao.PipelineYamlReferDao
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.trigger.actions.BaseAction
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 class PacYamlResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val pipelineYamlReferDao: PipelineYamlReferDao,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
@@ -62,7 +62,7 @@ class PacYamlResourceService @Autowired constructor(
                 filePath = entry.yamlPath
             ).use {
                 it.lock()
-                val pipelineYamlRefer = pipelineYamlReferDao.get(
+                val pipelineYamlRefer = pipelineYamlInfoDao.get(
                     dslContext = dslContext,
                     projectId = projectId,
                     repoHashId = action.data.setting.repoHashId,
@@ -102,7 +102,7 @@ class PacYamlResourceService @Autowired constructor(
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            pipelineYamlReferDao.save(
+            pipelineYamlInfoDao.save(
                 dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = action.data.setting.repoHashId,

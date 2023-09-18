@@ -42,7 +42,7 @@ class RepoPacSyncDetailDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        commitId: String,
+        ciDirId: String,
         syncFileInfoList: List<RepoPacSyncFileInfo>
     ) {
         if (syncFileInfoList.isEmpty()) {
@@ -55,7 +55,7 @@ class RepoPacSyncDetailDao {
                     this,
                     PROJECT_ID,
                     REPOSITORY_ID,
-                    COMMIT_ID,
+                    CI_DIR_ID,
                     FILE_PATH,
                     SYNC_STATUS,
                     CREATE_TIME,
@@ -63,7 +63,7 @@ class RepoPacSyncDetailDao {
                 ).values(
                     projectId,
                     repositoryId,
-                    commitId,
+                    ciDirId,
                     it.filePath,
                     it.syncStatus.name,
                     now,
@@ -77,7 +77,7 @@ class RepoPacSyncDetailDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        commitId: String,
+        ciDirId: String,
         syncFileInfo: RepoPacSyncFileInfo
     ) {
         with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
@@ -87,7 +87,7 @@ class RepoPacSyncDetailDao {
                 .set(REASON_DETAIL, syncFileInfo.reasonDetail)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(COMMIT_ID.eq(commitId))
+                .and(CI_DIR_ID.eq(ciDirId))
         }
     }
 
@@ -95,13 +95,13 @@ class RepoPacSyncDetailDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        commitId: String
+        ciDirId: String
     ): List<RepoPacSyncFileInfo> {
         with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(COMMIT_ID.eq(commitId))
+                .and(CI_DIR_ID.eq(ciDirId))
                 .fetch().map {
                     RepoPacSyncFileInfo(
                         filePath = it.filePath,
@@ -117,14 +117,14 @@ class RepoPacSyncDetailDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        commitId: String,
+        ciDirId: String,
         syncStatus: String
     ): Int {
         with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(COMMIT_ID.eq(commitId))
+                .and(CI_DIR_ID.eq(ciDirId))
                 .and(SYNC_STATUS.eq(syncStatus))
                 .fetchOne(0, Int::class.java) ?: 0
         }

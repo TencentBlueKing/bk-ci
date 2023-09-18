@@ -165,7 +165,7 @@ class RepositoryPacService @Autowired constructor(
     fun initPacSyncDetail(
         projectId: String,
         repositoryHashId: String,
-        commitId: String,
+        ciDirId: String?,
         syncFileInfoList: List<RepoPacSyncFileInfo>
     ) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -174,33 +174,38 @@ class RepositoryPacService @Autowired constructor(
             repositoryDao.updatePacSyncInfo(
                 dslContext = context,
                 repositoryId = repositoryId,
-                syncStatus = RepoPacSyncStatusEnum.SYNC.name,
-                commitId = commitId
+                syncStatus = if (ciDirId == null) {
+                    RepoPacSyncStatusEnum.SUCCEED.name
+                } else {
+                    RepoPacSyncStatusEnum.SYNC.name
+                },
+                ciDirId = ciDirId
             )
-            repoPacSyncDetailDao.batchAdd(
-                dslContext = context,
-                projectId = projectId,
-                commitId = commitId,
-                repositoryId = repositoryId,
-                syncFileInfoList = syncFileInfoList
-            )
+            if (ciDirId != null) {
+                repoPacSyncDetailDao.batchAdd(
+                    dslContext = context,
+                    projectId = projectId,
+                    ciDirId = ciDirId,
+                    repositoryId = repositoryId,
+                    syncFileInfoList = syncFileInfoList
+                )
+            }
         }
-
     }
 
     fun updatePacSyncStatus(
         projectId: String,
         repositoryHashId: String,
-        commitId: String,
+        ciDirId: String,
         syncFileInfo: RepoPacSyncFileInfo
     ) {
-        logger.info("update pac sync status|$projectId|$repositoryHashId|$commitId|${syncFileInfo.filePath}")
+        logger.info("update pac sync status|$projectId|$repositoryHashId|$ciDirId|${syncFileInfo.filePath}")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         repoPacSyncDetailDao.updateSyncStatus(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
-            commitId = commitId,
+            ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
         // 统计同步状态的文件
@@ -208,7 +213,7 @@ class RepositoryPacService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
-            commitId = commitId,
+            ciDirId = ciDirId,
             syncStatus = RepoPacSyncStatusEnum.SYNC.name
         )
         if (count == 0) {
@@ -231,12 +236,12 @@ class RepositoryPacService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         )
-        val commitId = repository.pacSyncCommitId ?: return emptyList()
+        val commitId = repository.pacSyncCiDirId ?: return emptyList()
         return repoPacSyncDetailDao.getPacSyncDetail(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
-            commitId = commitId
+            ciDirId = commitId
         )
     }
 }

@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线yml关联")
-data class PipelineYamlRefer(
+data class PipelineYamlInfo(
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("代码库ID")

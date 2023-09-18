@@ -60,9 +60,9 @@ SELECT DATABASE() INTO db;
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REPOSITORY'
-                    AND COLUMN_NAME = 'PAC_SYNC_COMMIT_ID') THEN
+                    AND COLUMN_NAME = 'PAC_SYNC_CI_DIR_ID') THEN
     ALTER TABLE `T_REPOSITORY`
-        ADD COLUMN `PAC_SYNC_COMMIT_ID` VARCHAR(64) NULL COMMENT 'pac同步的commitId';
+        ADD COLUMN `PAC_SYNC_CI_DIR_ID` VARCHAR(64) NULL COMMENT 'pac同步的commitId';
     END IF;
 
     IF NOT EXISTS(SELECT 1

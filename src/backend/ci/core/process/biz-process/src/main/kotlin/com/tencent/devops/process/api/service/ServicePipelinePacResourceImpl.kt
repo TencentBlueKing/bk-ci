@@ -26,47 +26,23 @@
  *
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.service.RepositoryPacService
+import com.tencent.devops.process.trigger.PacYamlTriggerService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceRepositoryPacResourceImpl @Autowired constructor(
-    private val repositoryPacService: RepositoryPacService
-) : ServiceRepositoryPacResource {
-
-    override fun initPacSyncDetail(
-        projectId: String,
-        repositoryHashId: String,
-        ciDirId: String?,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
-    ): Result<Boolean> {
-        repositoryPacService.initPacSyncDetail(
+class ServicePipelinePacResourceImpl @Autowired constructor(
+    private val pacYamlTriggerService: PacYamlTriggerService
+) : ServicePipelinePacResource {
+    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+        pacYamlTriggerService.enablePac(
+            userId = userId,
             projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
-            syncFileInfoList = syncFileInfoList
+            repoHashId = repoHashId,
+            scmType = scmType
         )
-        return Result(true)
-    }
-
-    override fun updatePacSyncStatus(
-        projectId: String,
-        repositoryHashId: String,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
-    ): Result<Boolean> {
-        repositoryPacService.updatePacSyncStatus(
-            projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
-            syncFileInfo = syncFileInfo
-        )
-        return Result(true)
     }
 }

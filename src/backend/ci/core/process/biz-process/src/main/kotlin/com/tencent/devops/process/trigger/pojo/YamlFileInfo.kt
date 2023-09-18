@@ -26,44 +26,8 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.trigger.pojo
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-
-@Api(tags = ["SERVICE_PAC"], description = "服务-pac资源")
-@Path("/service/pac/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServicePacResource {
-
-    @ApiOperation("开启PAC")
-    @POST
-    @Path("/{projectId}/{repoHashId}/enable")
-    fun enable(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @ApiParam("代码库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
-    )
-}
+data class YamlFileInfo(
+    val blobId: String
+)

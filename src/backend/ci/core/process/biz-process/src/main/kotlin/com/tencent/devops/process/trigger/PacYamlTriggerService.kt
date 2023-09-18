@@ -31,10 +31,16 @@ package com.tencent.devops.process.trigger
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
+import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -43,7 +49,9 @@ import org.springframework.stereotype.Service
 class PacYamlTriggerService @Autowired constructor(
     private val client: Client,
     private val eventActionFactory: EventActionFactory,
-    private val pacYamlResourceService: PacYamlResourceService
+    private val pacYamlResourceService: PacYamlResourceService,
+    private val dslContext: DSLContext,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao
 ) {
 
     companion object {
@@ -65,6 +73,39 @@ class PacYamlTriggerService @Autowired constructor(
             scmType = scmType
         )
         val action = eventActionFactory.loadEnableEvent(setting = setting, event = event)
-        pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
+
+        val ciDirId = action.getCiDirId()
+        val yamlPathList = action.getYamlPathList()
+        client.get(ServiceRepositoryPacResource::class).initPacSyncDetail(
+            projectId = projectId,
+            repositoryHashId = repoHashId,
+            ciDirId = ciDirId,
+            syncFileInfoList = yamlPathList.map {
+                RepoPacSyncFileInfo(
+                    filePath = it.yamlPath,
+                    syncStatus = RepoPacSyncStatusEnum.SYNC
+                )
+            }
+        )
+        // 如果没有Yaml文件则不初始化
+        if (yamlPathList.isEmpty()) {
+            logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
+            return
+        }
+        val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
+            dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
+        ).associate {
+            it.filePath to PacTriggerPipeline(
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                filePath = it.filePath,
+                pipelineId = it.pipelineId,
+                userId = userId
+            )
+        }
+        pacYamlResourceService.syncYamlPipeline(
+            projectId = projectId,
+            action = action
+        )
     }
 }

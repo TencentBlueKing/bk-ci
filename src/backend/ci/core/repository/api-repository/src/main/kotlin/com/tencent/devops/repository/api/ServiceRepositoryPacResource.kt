@@ -57,9 +57,9 @@ interface ServiceRepositoryPacResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam("commitId", required = true)
-        @QueryParam("commitId")
-        commitId: String,
+        @ApiParam("ciDirId", required = true)
+        @QueryParam("ciDirId")
+        ciDirId: String?,
         @ApiParam("文件同步详情", required = true)
         syncFileInfoList: List<RepoPacSyncFileInfo>
     ): Result<Boolean>
@@ -74,9 +74,9 @@ interface ServiceRepositoryPacResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam("commitId", required = true)
-        @QueryParam("commitId")
-        commitId: String,
+        @ApiParam("ciDirId", required = true)
+        @QueryParam("ciDirId")
+        ciDirId: String,
         @ApiParam("文件同步详情", required = true)
         syncFileInfo: RepoPacSyncFileInfo
     ): Result<Boolean>
