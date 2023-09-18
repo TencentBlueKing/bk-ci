@@ -99,7 +99,7 @@ abstract class StoreFileService {
             userId = userId,
             pathList = pathList,
             client = client,
-            fileDirPath = "$fileDirPath$fileDirPath$language",
+            fileDirPath = "$fileDirPath$fileSeparator$language",
             result = result
         )
         return filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
