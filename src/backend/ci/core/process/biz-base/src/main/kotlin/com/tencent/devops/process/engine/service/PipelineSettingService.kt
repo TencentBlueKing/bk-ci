@@ -132,7 +132,7 @@ class PipelineSettingService @Autowired constructor(
             pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime,
-            debug = false // 度量数据只关注正式构建
+            debugVersion = null // 度量数据只关注正式构建
         )
         // 把当前流水线当日构建次数存入redis，失效期设置为1天
         redisOperation.set(

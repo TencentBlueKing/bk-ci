@@ -65,7 +65,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         userId: String,
         pipelineId: String,
         projectId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<Map<String, String>>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -77,6 +77,6 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId, debug))
+        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId, debugVersion))
     }
 }

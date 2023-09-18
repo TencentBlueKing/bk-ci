@@ -372,7 +372,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -405,7 +405,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc,
-            debug = debug
+            debugVersion = debugVersion
         )
         return Result(result)
     }
@@ -576,7 +576,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
-        debug: Boolean?,
+        debugVersion: Int?,
         channelCode: ChannelCode
     ): Result<List<String>> {
         return Result(
@@ -585,7 +585,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildStatus = buildStatus,
-                debug = debug,
+                debugVersion = debugVersion,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
@@ -733,7 +733,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -746,7 +746,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 values = values,
                 channelCode = channelCode,
                 buildNo = buildNo,
-                version = version,
+                debugVersion = debugVersion,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true
             )

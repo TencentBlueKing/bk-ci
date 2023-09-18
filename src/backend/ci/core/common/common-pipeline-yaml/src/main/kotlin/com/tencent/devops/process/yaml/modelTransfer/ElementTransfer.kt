@@ -351,7 +351,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     RunAtomParam::shell.name to type,
                     RunAtomParam::charsetType.name to RunAtomParam.CharsetType.parse(
                         step.with?.get(RunAtomParam::charsetType.name)?.toString()
-                    ),
+                    )
                 )
                 MarketBuildAtomElement(
                     id = step.taskId,

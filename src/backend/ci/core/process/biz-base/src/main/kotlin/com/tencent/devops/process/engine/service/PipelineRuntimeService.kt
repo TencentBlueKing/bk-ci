@@ -364,7 +364,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String?,
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -397,7 +397,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debug = debug
+            debugVersion = debugVersion
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -411,8 +411,8 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildDao.updateBuildRemark(dslContext, projectId, pipelineId, buildId, remark)
     }
 
-    fun getHistoryConditionRepo(projectId: String, pipelineId: String, debug: Boolean): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debug)
+    fun getHistoryConditionRepo(projectId: String, pipelineId: String, debugVersion: Int?): List<String> {
+        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
         val materialObjList = mutableListOf<PipelineBuildMaterial>()
         history.forEach {
             if (!it.material.isNullOrEmpty()) {
@@ -426,9 +426,9 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         aliasList: List<String>?,
-        debug: Boolean
+        debugVersion: Int? = null
     ): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debug)
+        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
         val materialObjList = mutableListOf<PipelineBuildMaterial>()
         history.forEach {
             if (!it.material.isNullOrEmpty()) {
@@ -1683,12 +1683,16 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)
     }
 
-    fun getPipelineBuildHistoryCount(projectId: String, pipelineId: String, debug: Boolean): Int {
+    fun getPipelineBuildHistoryCount(
+        projectId: String,
+        pipelineId: String,
+        debugVersion: Int?
+    ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            debug = debug
+            debugVersion = debugVersion
         )
     }
 
@@ -1696,14 +1700,14 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<String> {
         return pipelineBuildDao.getBuilds(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildStatus = buildStatus,
-            debug = debug
+            debugVersion = debugVersion
         )
     }
 
@@ -1730,7 +1734,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoEnd: Int? = null,
         buildMsg: String? = null,
         startUser: List<String>? = null,
-        debug: Boolean? = null
+        debugVersion: Int? = null
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
@@ -1756,7 +1760,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debug = debug
+            debugVersion = debugVersion
         )
     }
 
@@ -1766,31 +1770,31 @@ class PipelineRuntimeService @Autowired constructor(
         status: List<BuildStatus>?,
         startTimeEndTime: Long? = null
     ): Int {
-        val normal = pipelineBuildDao.count(
+        val normal = pipelineBuildDao.countByStatus(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             status = status,
             startTimeEndTime = startTimeEndTime,
-            debug = false
+            onlyDebug = false
         )
-        val debug = pipelineBuildDao.count(
+        val debug = pipelineBuildDao.countByStatus(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             status = status,
             startTimeEndTime = startTimeEndTime,
-            debug = true
+            onlyDebug = true
         )
         return normal + debug
     }
 
-    fun getAllBuildNum(projectId: String, pipelineId: String, debug: Boolean? = false): Collection<Int> {
+    fun getAllBuildNum(projectId: String, pipelineId: String, debugVersion: Int? = null): Collection<Int> {
         return pipelineBuildDao.listPipelineBuildNum(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            debug = debug,
+            debugVersion = debugVersion,
             offset = 0,
             limit = Int.MAX_VALUE
         )
@@ -1820,14 +1824,14 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debug: Boolean?
+        debugVersion: Int?
     ): String? {
         return pipelineBuildDao.getBuildByBuildNum(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildNum = buildNum,
-            debug = debug
+            debugVersion = debugVersion
         )?.buildId
     }
 

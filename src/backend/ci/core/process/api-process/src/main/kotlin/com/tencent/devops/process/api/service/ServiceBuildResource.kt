@@ -483,9 +483,9 @@ interface ServiceBuildResource {
         @ApiParam("触发人", required = false)
         @QueryParam("startUser")
         startUser: List<String>? = null,
-        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
-        @QueryParam("debug")
-        debug: Boolean? = false
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
@@ -632,9 +632,9 @@ interface ServiceBuildResource {
         @ApiParam("状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
-        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
-        @QueryParam("debug")
-        debug: Boolean? = false,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<List<String>>
@@ -808,7 +808,7 @@ interface ServiceBuildResource {
         startType: StartType,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        debugVersion: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("取消并发起新构建")

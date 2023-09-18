@@ -204,7 +204,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                                 elements = listOf(
                                     ManualTriggerElement(
                                         id = "T-1-1-1",
-                                        name = "manualTrigger",
+                                        name = "manualTrigger"
                                     )
                                 )
                             )

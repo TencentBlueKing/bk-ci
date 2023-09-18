@@ -340,7 +340,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        debug: Boolean?
+        version: Int?
     ): List<BuildParameters> {
 
         pipelinePermissionService.validPipelinePermission(
@@ -354,7 +354,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, "")
             )
         )
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, debug)
+        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, version)
     }
 
     fun retry(
@@ -582,7 +582,7 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        debugVersion: Int? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -614,11 +614,11 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            val (model, debug) = if (version != null) {
+            val (model, debug) = if (debugVersion != null) {
                 val resource = pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = version,
+                    version = debugVersion,
                     includeDraft = true
                 )
                 if (resource == null || resource.status == VersionStatus.COMMITTING) {
@@ -1379,7 +1379,7 @@ class PipelineBuildFacadeService(
         buildNo: Int,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        debug: Boolean?
+        debugVersion: Int?
     ): ModelDetail {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -1392,7 +1392,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo, debug)
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo, debugVersion)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1410,7 +1410,7 @@ class PipelineBuildFacadeService(
         buildNum: Int,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        debug: Boolean?
+        debugVersion: Int?
     ): ModelRecord {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -1423,7 +1423,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum, debug)
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum, debugVersion)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1721,10 +1721,10 @@ class PipelineBuildFacadeService(
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
         checkPermission: Boolean,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<String> {
         return pipelineRuntimeService.getBuilds(
-            projectId, pipelineId, buildStatus, debug
+            projectId, pipelineId, buildStatus, debugVersion
         )
     }
 
@@ -1737,7 +1737,7 @@ class PipelineBuildFacadeService(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         updateTimeDesc: Boolean? = null,
-        debug: Boolean? = false
+        debugVersion: Int? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1770,7 +1770,7 @@ class PipelineBuildFacadeService(
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
-                projectId = projectId, pipelineId = pipelineId, debug = debug ?: false
+                projectId = projectId, pipelineId = pipelineId, debugVersion = debugVersion
             )
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 projectId = projectId,
@@ -1834,7 +1834,7 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true,
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
-        debug: Boolean?
+        debugVersion: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1890,7 +1890,7 @@ class PipelineBuildFacadeService(
                 buildNoEnd = buildNoEnd,
                 buildMsg = buildMsg,
                 startUser = startUser,
-                debug = debug
+                debugVersion = debugVersion
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1919,7 +1919,7 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
-                debug = debug
+                debugVersion = debugVersion
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2001,7 +2001,7 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<String> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2014,7 +2014,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, debug ?: false)
+        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, debugVersion)
     }
 
     fun getHistoryConditionBranch(
@@ -2022,7 +2022,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         alias: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<String> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2035,7 +2035,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias, debug ?: false)
+        return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias, debugVersion)
     }
 
     fun serviceBuildBasicInfo(projectId: String, buildId: String): BuildBasicInfo {
