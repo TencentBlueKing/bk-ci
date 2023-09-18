@@ -1742,11 +1742,11 @@ class GitService @Autowired constructor(
         response.contentType = "application/$format"
         response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
         val redisLock =
-            RedisLock(redisOperation, getDownloadGitRepoFileRedisKey(repoName, filePath ?: repoName), 20)
+            RedisLock(redisOperation, "download:$repoName:lock:key", 20)
         try {
-            // 避免限流，增加一秒休眠时间
-            Thread.sleep(1 * 1000)
             redisLock.lock()
+            // 避免限流，增加两秒休眠时间
+            Thread.sleep(2 * 1000)
             OkhttpUtils.downloadFile(url.toString(), response)
         } finally {
             redisLock.unlock()
@@ -2513,9 +2513,4 @@ class GitService @Autowired constructor(
             )
         )
     }
-
-    private fun getDownloadGitRepoFileRedisKey(
-        repoName: String,
-        filePath: String
-    ) = "download:$repoName:$filePath:lock:key"
 }

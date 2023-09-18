@@ -158,11 +158,11 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileDirPath = storeFileService.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
-        ) + "file/$language"
+        ) + "/file"
         val file = File(fileDirPath, "file.zip")
         try {
             downloadFile(
-                filePath = "$fileDir/file/$language",
+                filePath = "file/$language",
                 file = file,
                 repositoryHashId = repositoryHashId,
                 branch = branch
