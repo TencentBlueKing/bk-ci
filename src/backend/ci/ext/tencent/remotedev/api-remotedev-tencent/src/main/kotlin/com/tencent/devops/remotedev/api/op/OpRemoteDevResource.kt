@@ -36,10 +36,6 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.ShareWorkspace
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
-import com.tencent.devops.remotedev.pojo.WorkspaceShared
-import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
@@ -242,97 +238,6 @@ interface OpRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("获取windows硬件配置")
-    @GET
-    @Path("/windowsResource/list")
-    fun getWindowsResourceList(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<WindowsResourceConfig>>
-
-    @ApiOperation("新增windows硬件配置")
-    @POST
-    @Path("/windowsResource/add")
-    fun addWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "模板信息", required = true)
-        windowsResourceConfig: WindowsResourceConfig
-    ): Result<Boolean>
-
-    @ApiOperation("更新windows硬件配置")
-    @PUT
-    @Path("/windowsResource/update")
-    fun updateWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "模板ID", required = true)
-        @QueryParam("id")
-        id: Long,
-        @ApiParam(value = "模板信息", required = true)
-        windowsResourceConfig: WindowsResourceConfig
-    ): Result<Boolean>
-
-    @ApiOperation("删除windows硬件配置")
-    @DELETE
-    @Path("/windowsResource/delete")
-    fun deleteWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "模板信息", required = true)
-        @QueryParam("id")
-        id: Long
-    ): Result<Boolean>
-
-    @ApiOperation("分享工作空间")
-    @POST
-    @Path("/workspace/share/add")
-    fun shareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "工作空间共享", required = true)
-        workspaceShared: WorkspaceSharedOpUse
-    ): Result<Boolean>
-
-    @ApiOperation("分享或删除工作空间")
-    @POST
-    @Path("/workspace/share/update")
-    fun shareWorkspace4OP(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "工作空间共享信息", required = true)
-        shareWorkspace: ShareWorkspace
-    ): Result<Boolean>
-
-    @ApiOperation("获取分享工作空间列表")
-    @GET
-    @Path("/workspace/share/list")
-    fun getShareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String?
-    ): Result<List<WorkspaceShared>>
-
-    @ApiOperation("删除分享工作空间")
-    @DELETE
-    @Path("/workspace/share/delete")
-    fun deleteShareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "id", required = true)
-        @QueryParam("id")
-        id: Long
-    ): Result<Boolean>
-
     @ApiOperation("获取项目下空间列表实例列表")
     @GET
     @Path("/project_workspaces/list")
@@ -343,6 +248,9 @@ interface OpRemoteDevResource {
         @ApiParam(value = "projectId", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @ApiParam(value = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @ApiParam(value = "systemType", required = false)
         @QueryParam("systemType")
         systemType: WorkspaceSystemType?,
@@ -389,17 +297,6 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
-
-    @ApiOperation("转移工作空间detail数据到db")
-    @GET
-    @Path("/workspace/detail/move")
-    fun moveWorkspaceDetail(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
 
     @ApiOperation("转移数据到workspace windows 表")
     @GET

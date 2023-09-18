@@ -29,8 +29,12 @@ package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -44,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
+import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
@@ -52,6 +57,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -66,6 +72,9 @@ class DeliverControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService
 ) {
+
+    @Value("\${notice.wework:#{null}}")
+    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeliverControl::class.java)
@@ -208,38 +217,6 @@ class DeliverControl @Autowired constructor(
         }
     }
 
-    fun updateStatusAndCreateHistory(
-        type: String,
-        workspace: WorkspaceRecord,
-        newStatus: WorkspaceStatus,
-        softwareList: SoftwareCallbackRes,
-        action: WorkspaceAction
-    ) {
-        logger.info("updateStatusAndCreateHistory|type|$type|workspace|$workspace|" +
-                        "newStatus|$newStatus|softwareList|$softwareList|action|$action")
-        workspaceDao.updateWorkspaceStatus(
-            dslContext = dslContext,
-            workspaceName = workspace.workspaceName,
-            status = newStatus
-        )
-        workspaceOpHistoryDao.createWorkspaceHistory(
-            dslContext = dslContext,
-            workspaceName = workspace.workspaceName,
-            operator = workspace.createUserId,
-            action = action,
-            actionMessage = String.format(
-                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                workspace.status.name,
-                newStatus.name
-            )
-        )
-        // 添加软件安装历史
-        softwareManageService.updateSoftwareInstalledRecords(
-            type = type,
-            softwareList = softwareList
-        )
-    }
-
     fun softwareInstallationCompleteCallback(
         type: String,
         workspaceName: String,
@@ -248,18 +225,24 @@ class DeliverControl @Autowired constructor(
         autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
-        logger.info("softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                        "|projectId|$projectId|userId|$userId|softwareList|$softwareList")
+        logger.info(
+            "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
+                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+        )
+        // 添加软件安装历史
+        softwareManageService.updateSoftwareInstalledRecords(
+            type = type,
+            softwareList = softwareList
+        )
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (workspace.status) {
                 // 交付中安装IOA后
                 WorkspaceStatus.DELIVERING -> {
                     if (type == "SYSTEM") {
-                        updateStatusAndCreateHistory(
-                            type = type,
+                        checkSafeInitSuccess(softwareList, workspace)
+                        workspaceCommon.updateStatusAndCreateHistory(
                             workspace = workspace,
                             newStatus = WorkspaceStatus.DISTRIBUTING,
-                            softwareList = softwareList,
                             action = WorkspaceAction.CREATE
                         )
                         if (autoAssign == true) {
@@ -273,24 +256,23 @@ class DeliverControl @Autowired constructor(
                                         type = WorkspaceShared.AssignType.OWNER
                                     )
                                 )
-
                             )
                         }
                     }
                 }
+
                 WorkspaceStatus.RUNNING -> {
                     if (type != "SYSTEM") {
-                        updateStatusAndCreateHistory(
-                            type = type,
+                        workspaceCommon.updateStatusAndCreateHistory(
                             workspace = workspace,
                             newStatus = WorkspaceStatus.RUNNING,
-                            softwareList = softwareList,
                             action = WorkspaceAction.CREATE
                         )
                     }
                 }
                 // 个人云桌面
                 WorkspaceStatus.PREPARING -> {
+                    checkSafeInitSuccess(softwareList, workspace)
                     workspaceDao.updateWorkspaceStatus(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
@@ -322,6 +304,36 @@ class DeliverControl @Autowired constructor(
 
                 else -> {
                     logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                }
+            }
+        }
+    }
+
+    private fun checkSafeInitSuccess(
+        softwareList: SoftwareCallbackRes,
+        ws: WorkspaceRecord
+    ) {
+        if (softwareList.taskStatus == TaskStatusEnum.FAILED) {
+            workspaceCommon.updateStatusAndCreateHistory(
+                workspace = ws,
+                newStatus = WorkspaceStatus.DELIVERING_FAILED,
+                action = WorkspaceAction.CREATE
+            )
+            // 通知
+            if (!weworkId.isNullOrBlank()) {
+                val request = SendNotifyMessageTemplateRequest(
+                    templateCode = "WINDOWS_GPU_SAFE_INIT_FAILED",
+                    bodyParams = mapOf(
+                        WorkspaceRecord::workspaceName.name to ws.workspaceName,
+                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                    ),
+                    notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+                    markdownContent = false
+                )
+                kotlin.runCatching {
+                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                }.onFailure {
+                    logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
                 }
             }
         }

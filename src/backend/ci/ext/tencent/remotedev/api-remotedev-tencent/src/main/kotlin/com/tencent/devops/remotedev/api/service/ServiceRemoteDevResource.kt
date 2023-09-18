@@ -41,7 +41,10 @@ interface ServiceRemoteDevResource {
     fun getProjectWorkspace(
         @ApiParam("project_id", required = false)
         @QueryParam("project_id")
-        projectId: String?
+        projectId: String?,
+        @ApiParam("ip", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @ApiOperation("提供给wesec获取创建云桌面的项目")
