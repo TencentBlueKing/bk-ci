@@ -2,27 +2,38 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WhiteListDao
+import com.tencent.devops.remotedev.pojo.WhiteList
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys
+import javax.ws.rs.core.Response
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class WhiteListService @Autowired constructor(
-    @Qualifier("redisStringHashOperation")
-    private val redisOperation: RedisOperation,
+    private val dslContext: DSLContext,
     private val cacheService: RedisCacheService,
-    private val client: Client
+    private val client: Client,
+    private val whiteListDao: WhiteListDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
+        private const val taiUser = "@tai"
+    }
+
+    fun shareWorkspace(userId: String, whiteListUser: String) {
+        addWhiteListUser(userId = userId, whiteListUser = whiteListUser)
+        addGPUWhiteListUser(
+            userId = userId,
+            whiteListUser = whiteListUser,
+            limit = if (whiteListUser.contains(taiUser)) 0 else 1
+        )
     }
 
     // 添加客户端白名单用户。目前对接redis配置，后续需要对接权限系统。
@@ -32,16 +43,17 @@ class WhiteListService @Autowired constructor(
         if (whiteListUser.isEmpty()) return false
         val whiteListUserArray = whiteListUser.split(";")
         for (user in whiteListUserArray) {
-            if (cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) != true) {
-                logger.info("whiteListUser($user) not in the whiteList")
-                redisOperation.addSetValue(RedisKeys.REDIS_WHITE_LIST_KEY, user, false)
+            if (whiteListDao.add(dslContext, WhiteList(user, WhiteListType.API)) == 1) {
+                logger.info("whiteListUser($user) in the whiteList has add.")
+            } else {
+                logger.info("whiteListUser($user) in the whiteList already exists.")
             }
         }
         return true
     }
 
     fun checkInWhiteList(user: String): Boolean {
-        return cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) ?: false
+        return cacheService.checkApiWhiteList(user)
     }
 
     fun removeWhiteListUser(userId: String, whiteListUser: String): Boolean {
@@ -50,23 +62,33 @@ class WhiteListService @Autowired constructor(
         if (whiteListUser.isEmpty()) return false
         val whiteListUserArray = whiteListUser.split(";")
         for (user in whiteListUserArray) {
-            if (cacheService.getSetMembers(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) == true) {
-                logger.info("whiteListUser($user) in the whiteList")
-                redisOperation.removeSetMember(RedisKeys.REDIS_WHITE_LIST_KEY, user, false)
+            if (whiteListDao.delete(dslContext, user, WhiteListType.API) == 1) {
+                logger.info("whiteListUser($user) in the whiteList has removed.")
+            } else {
+                logger.info("whiteListUser($user) in the whiteList already removed.")
             }
         }
         return true
     }
 
-    fun addGPUWhiteListUser(userId: String, whiteListUser: String): Boolean {
+    fun addGPUWhiteListUser(userId: String, whiteListUser: String, limit: Int = 1): Boolean {
         logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
         whiteListUser.apply {
             val whiteListUserArray = this.split(";")
             for (user in whiteListUserArray) {
-                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user) ?: run {
-                    logger.info("whiteListUser($user) not in the GPU whiteList")
-                    redisOperation.hset(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, "1")
+                if (whiteListDao.add(
+                        dslContext,
+                        WhiteList(
+                            name = user,
+                            type = WhiteListType.WINDOWS_GPU,
+                            windowsGpuLimit = limit
+                        )
+                    ) == 1
+                ) {
+                    logger.info("whiteListUser($user) in the gpu whiteList has add.")
+                } else {
+                    logger.info("whiteListUser($user) in the gpu whiteList already exists.")
                 }
                 client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }
@@ -81,9 +103,10 @@ class WhiteListService @Autowired constructor(
         whiteListUser.apply {
             val whiteListUserArray = this.split(";")
             for (user in whiteListUserArray) {
-                cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user).run {
-                    logger.info("whiteListUser($user) in the GPU whiteList")
-                    redisOperation.hdelete(RedisKeys.REDIS_WHITE_LIST_GPU_KEY, user, isDistinguishCluster = false)
+                if (whiteListDao.delete(dslContext, user, WhiteListType.WINDOWS_GPU) == 1) {
+                    logger.info("whiteListUser($user) in the gpu whiteList has removed.")
+                } else {
+                    logger.info("whiteListUser($user) in the gpu whiteList already removed.")
                 }
             }
         }
@@ -92,7 +115,7 @@ class WhiteListService @Autowired constructor(
     }
 
     fun checkInGPUWhiteList(user: String): Boolean {
-        return cacheService.hentries(RedisKeys.REDIS_WHITE_LIST_GPU_KEY)?.get(user)?.isNotEmpty() ?: false
+        return cacheService.checkWindowsGpuLimit(user) > 0
     }
 
     /* 有关数量的限制:
@@ -116,7 +139,7 @@ class WhiteListService @Autowired constructor(
     /**
      * 校验云桌面白名单的运行OS只能是windows
      */
-    fun checkRunsOnOs(key: String, runsOnKey: String, currentOs: String ? = null) {
+    fun checkRunsOnOs(key: String, runsOnKey: String, currentOs: String? = null) {
         val runsOnValue = cacheService.hentries(key)?.get(runsOnKey)
         logger.info("checkRunsOnOS|key|$key|runsOnKey|$runsOnKey|currentOs|$currentOs|runsOnValue|$runsOnValue")
         if (runsOnValue == null || currentOs == null) {
