@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
-import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml

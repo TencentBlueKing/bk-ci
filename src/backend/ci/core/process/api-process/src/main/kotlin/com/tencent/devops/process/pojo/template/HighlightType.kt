@@ -3,5 +3,6 @@ package com.tencent.devops.process.pojo.template
 enum class HighlightType {
     NOTIFY,
     LABEL,
-    CONCURRENCY
+    CONCURRENCY,
+    PIPELINE_MODEL
 }

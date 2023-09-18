@@ -52,8 +52,8 @@ class PipelineRuntimeExtService @Autowired constructor(
         val redisLock = PipelineNextQueueLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getOneQueueBuild(dslContext, projectId = projectId, pipelineId = pipelineId)
+            val buildInfo = pipelineBuildDao.getOneQueueBuild(
+                dslContext, projectId = projectId, pipelineId = pipelineId
             )
             if (buildInfo != null) {
                 pipelineBuildDao.updateStatus(
@@ -106,13 +106,11 @@ class PipelineRuntimeExtService @Autowired constructor(
         buildId: String? = null,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getOneConcurrencyQueueBuild(
-                dslContext = dslContext,
-                projectId = projectId,
-                concurrencyGroup = concurrencyGroup,
-                pipelineId = pipelineId
-            )
+        val buildInfo = pipelineBuildDao.getOneConcurrencyQueueBuild(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            pipelineId = pipelineId
         )
         val updateBuildId = buildId ?: buildInfo?.buildId
         if (buildInfo != null && updateBuildId == buildInfo.buildId) {
