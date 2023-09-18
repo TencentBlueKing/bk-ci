@@ -99,7 +99,7 @@ abstract class StoreFileService {
             userId = userId,
             pathList = pathList,
             client = client,
-            fileDirPath = fileDirPath,
+            fileDirPath = "$fileDirPath$fileSeparator$language",
             result = result
         )
         return filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
@@ -119,7 +119,7 @@ abstract class StoreFileService {
         val matcher: Matcher = pattern.matcher(descriptionContent)
         while (matcher.find()) {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
-            logger.info("regexAnalysis file pash:$path")
+            logger.info("regexAnalysis file path:$path")
             if (path.endsWith(".md")) {
                 val file = File("$fileDirPath$fileSeparator$path")
                 if (file.exists()) {
