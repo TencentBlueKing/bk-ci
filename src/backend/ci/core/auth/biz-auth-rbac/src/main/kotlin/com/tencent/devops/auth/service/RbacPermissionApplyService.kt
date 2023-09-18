@@ -340,7 +340,9 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun generateValidityPeriod(expiredAt: Long): String {
         val between = expiredAt * 1000 - System.currentTimeMillis()
-        return DateTimeUtil.formatDay(between)
+        return DateTimeUtil.formatDay(between).plus(
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DAY)
+        )
     }
 
     private fun generateResourceRedirectUri(
