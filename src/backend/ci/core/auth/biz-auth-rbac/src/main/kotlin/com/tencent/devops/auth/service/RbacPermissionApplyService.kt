@@ -15,6 +15,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants.RESOURCE_TYPE_NAME_SUF
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.ManagerRoleGroupInfo
@@ -29,6 +30,8 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -37,7 +40,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineViewResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +61,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val config: CommonConfig,
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,
-    val permissionService: PermissionService
+    val permissionService: PermissionService,
+    val itsmService: ItsmService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -64,7 +70,10 @@ class RbacPermissionApplyService @Autowired constructor(
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
         "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s"
-
+    private val pipelineDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/%s/history"
+    private val environmentDetailRedirectUri = "${config.devopsHostGateway}/console/environment/%s/envDetail/%s"
+    private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
+    private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s&x-devops-project-id=%s"
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
     }
@@ -264,13 +273,60 @@ class RbacPermissionApplyService @Autowired constructor(
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
         try {
-            logger.info("RbacPermissionApplyService|applyToJoinGroup: applyJoinGroupInfo=$applyJoinGroupInfo")
+            logger.info("apply to join group: applyJoinGroupInfo=$applyJoinGroupInfo")
+            val projectCode = applyJoinGroupInfo.projectCode
+            val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
+                ?: throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                        defaultMessage = "The project does not exist! | englishName = $projectCode"
+                    )
+                )
+            // 构造itsm表格中对应组的详细内容
+            val groupContent = applyJoinGroupInfo.groupIds.map { it.toString() }.associateWith {
+                val resourceGroupInfo = authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    relationId = it
+                ) ?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+                    defaultMessage = "group($it) not exist"
+                )
+                val relatedResourceType = resourceGroupInfo.resourceType
+                itsmService.buildGroupApplyItsmValue(
+                    ApplyJoinGroupFormDataInfo(
+                        projectName = projectInfo.projectName,
+                        resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceGroupInfo.resourceType).name,
+                        resourceName = resourceGroupInfo.resourceName,
+                        groupName = resourceGroupInfo.groupName,
+                        validityPeriod = generateValidityPeriod(applyJoinGroupInfo.expiredAt.toLong()),
+                        resourceRedirectUri = generateResourceRedirectUri(
+                            projectCode = resourceGroupInfo.projectCode,
+                            resourceType = relatedResourceType,
+                            resourceCode = resourceGroupInfo.resourceCode
+                        ),
+                        groupPermissionDetailRedirectUri = String.format(
+                            groupPermissionDetailRedirectUri,
+                            it,
+                            projectCode
+                        )
+                    )
+                )
+            }
+            logger.info("apply to join group: groupContent=$groupContent")
             val iamApplicationDTO = ApplicationDTO
                 .builder()
                 .groupId(applyJoinGroupInfo.groupIds)
                 .applicant(userId)
+                .contentTemplate(itsmService.buildGroupApplyItsmContentDTO())
+                .groupContent(groupContent)
                 .expiredAt(applyJoinGroupInfo.expiredAt.toLong())
+                .titlePrefix(
+                    I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_APPLY_TO_JOIN_PROJECT) +
+                        "[${projectInfo.projectName}]"
+                )
                 .reason(applyJoinGroupInfo.reason).build()
+            logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
         } catch (e: Exception) {
             throw ErrorCodeException(
@@ -280,6 +336,32 @@ class RbacPermissionApplyService @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun generateValidityPeriod(expiredAt: Long): String {
+        val between = expiredAt * 1000 - System.currentTimeMillis()
+        return DateTimeUtil.formatDay(between).plus(
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DAY)
+        )
+    }
+
+    private fun generateResourceRedirectUri(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): String? {
+        return when (resourceType) {
+            AuthResourceType.PIPELINE_DEFAULT.value -> {
+                String.format(pipelineDetailRedirectUri, projectCode, resourceCode)
+            }
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> {
+                String.format(environmentDetailRedirectUri, projectCode, resourceCode)
+            }
+            AuthResourceType.CODECC_TASK.value -> {
+                String.format(codeccTaskDetailRedirectUri, projectCode, resourceCode)
+            }
+            else -> null
+        }
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {

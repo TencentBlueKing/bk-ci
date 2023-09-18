@@ -27,17 +27,15 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WorkspaceAction {
-    CREATE, // 0
-    START, // 1
-    SLEEP, // 2
-    DELETE, // 3
-    SHARE, // 4
-    PREPARING,
-    STARTING,
-    SLEEPING,
-    DELETING,
-    COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
-    NEED_RENEWAL,
-    SYSTEM_CHANGES
+data class WhiteList(
+    val name: String,
+    val type: WhiteListType,
+    val windowsGpuLimit: Int? = null
+)
+
+enum class WhiteListType {
+    // 限制访问所有 remotedev api
+    API,
+    // 限制访问云桌面
+    WINDOWS_GPU;
 }

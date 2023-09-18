@@ -325,7 +325,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getProjectWorkspaceList4WeSec(
-        projectId: String?
+        projectId: String?,
+        ip: String?
     ): List<WeSecProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
         val result = workspaceDao.fetchWorkspaceWithOwner(
@@ -333,6 +334,7 @@ class WorkspaceService @Autowired constructor(
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
             projectId = projectId,
+            ip = ip,
             assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
 
@@ -426,7 +428,7 @@ class WorkspaceService @Autowired constructor(
             records = result.map {
                 var status = it.status
                 run {
-                    if (status.notOk2doNextAction() && Duration.between(
+                    if (status.notOk2doNextAction(it) && Duration.between(
                             it.lastStatusUpdateTime ?: LocalDateTime.now(),
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
