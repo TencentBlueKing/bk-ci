@@ -747,7 +747,7 @@ class PipelineBuildDao {
         newBuildStatus: BuildStatus,
         startTime: LocalDateTime? = null,
         errorInfoList: List<ErrorInfo>? = null
-    ) {
+    ): Boolean {
         val success = with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
@@ -762,7 +762,7 @@ class PipelineBuildDao {
                 .and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute() == 1
         }
-        if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+        return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
             startTime?.let {
@@ -771,11 +771,11 @@ class PipelineBuildDao {
             errorInfoList?.let {
                 update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false))
             }
-            update.where(BUILD_ID.eq(buildId))
+            return update.where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(oldBuildStatus.ordinal))
-                .execute()
-        }
+                .execute() == 1
+        } else false
     }
 
     fun updateExecuteCount(
