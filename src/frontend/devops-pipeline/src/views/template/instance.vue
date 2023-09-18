@@ -187,7 +187,7 @@
             // 初始化url中携带的分页信息
             this.$route.query.limit > 0 && (this.pagination.limit = parseInt(this.$route.query.limit))
             this.$route.query.page > 0 && (this.pagination.current = parseInt(this.$route.query.page))
-        
+
             this.renderData()
         },
         methods: {
@@ -407,9 +407,6 @@
 
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
     .instance-manage-wrapper {
         flex-direction: column;

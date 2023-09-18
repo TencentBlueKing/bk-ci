@@ -106,10 +106,6 @@
                     }
                 ]
             },
-            sourceColumns () {
-                const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
-                return historyTableColumns.filter(x => !x.hiddenInHistory)
-            },
             isEmptyList () {
                 const list = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.list : []
                 const isLoading = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.isLoading : []

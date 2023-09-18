@@ -10,10 +10,10 @@
 </template>
 
 <script>
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { debounce } from '@/utils/util'
-    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -29,9 +29,11 @@
         },
         computed: {
             ...mapGetters({
-                pipelineList: 'pipelines/getPipelineList',
-                curPipeline: 'pipelines/getCurPipeline'
+                pipelineList: 'pipelines/getPipelineList'
             }),
+            ...mapState('pipelines', [
+                'pipelineInfo'
+            ]),
             breadCrumbs () {
                 return [{
                     icon: 'pipeline',
@@ -42,10 +44,8 @@
                 }, {
                     paramId: 'pipelineId',
                     paramName: 'pipelineName',
-                    selectedValue: this.curPipeline?.pipelineName || '--',
-                    records: [
-                        ...this.pipelineList
-                    ],
+                    selectedValue: this.pipelineInfo?.pipelineName ?? '--',
+                    records: this.pipelineList,
                     showTips: true,
                     tipsName: 'switch_pipeline_hint',
                     tipsContent: this.$t('subpage.switchPipelineTooltips'),
@@ -66,25 +66,28 @@
             this.fetchPipelineList()
         },
         methods: {
-            ...mapActions('pipelines', {
-                searchPipelineList: 'searchPipelineList',
-                requestPipelineDetail: 'requestPipelineDetail'
-            }),
+            ...mapActions('pipelines', [
+                'searchPipelineList',
+                'requestPipelineSummary'
+            ]),
             async fetchPipelineList (searchName) {
                 try {
                     const { projectId, pipelineId } = this.$route.params
-                    const [list, curPipeline] = await Promise.all([
+
+                    const [list, pipelineInfo] = await Promise.all([
                         this.searchPipelineList({
                             projectId,
                             searchName
                         }),
-                        this.updateCurPipeline({
-                            projectId,
-                            pipelineId
-                        })
+                        ...(this.pipelineInfo?.pipelineId !== pipelineId
+                            ? [this.requestPipelineSummary({
+                                projectId,
+                                pipelineId
+                            })]
+                        : [])
                     ])
 
-                    this.setBreadCrumbPipelineList(list, curPipeline)
+                    this.setBreadCrumbPipelineList(list, pipelineInfo ?? this.pipelineInfo)
                 } catch (err) {
                     console.log(err)
                     this.$showTips({
@@ -103,37 +106,31 @@
                         ...list
                     ]
                 }
+
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
-            async updateCurPipeline ({ projectId, pipelineId }) {
-                const curPipeline = await this.requestPipelineDetail({
-                    projectId,
-                    pipelineId
-                })
-                this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-                return curPipeline
-            },
-            doSelectPipeline (pipelineId, cur) {
-                const { projectId, buildNo } = this.$route.params
-                this.updateCurPipeline({
+            async doSelectPipeline (pipelineId, cur) {
+                const { $route } = this
+                await this.requestPipelineSummary({
                     pipelineId,
-                    projectId
+                    projectId: $route.params.projectId
                 })
                 // 清空搜索
                 this.searchPipelineList({
-                    projectId
+                    projectId: $route.params.projectId
                 }).then((list) => {
                     this.setBreadCrumbPipelineList(list, {
                         pipelineId,
                         pipelineName: cur.pipelineName
                     })
                 })
+                const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
 
-                const name = buildNo ? 'pipelinesHistory' : this.$route.name
                 this.$router.push({
                     name,
                     params: {
-                        projectId,
+                        ...this.$route.params,
+                        projectId: $route.params.projectId,
                         pipelineId
                     }
                 })
@@ -149,5 +146,5 @@
 </script>
 
 <style lang="scss">
-    
+
 </style>

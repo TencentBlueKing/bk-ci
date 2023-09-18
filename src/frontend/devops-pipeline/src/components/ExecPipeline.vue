@@ -53,11 +53,7 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <!-- <div class="bk-button-group">
-                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
-                        {{ item.label }}
-                    </bk-button>
-                </div> -->
+                <mode-switch />
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -243,12 +239,13 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
-        
+
     </div>
 </template>
 
 <script>
     import CheckAtomDialog from '@/components/CheckAtomDialog'
+    import ModeSwitch from '@/components/ModeSwitch'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
@@ -263,6 +260,7 @@
             CheckAtomDialog,
             CompleteLog,
             Logo,
+            ModeSwitch,
             MiniMap
         },
         props: {
@@ -280,7 +278,6 @@
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
-                pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
@@ -292,13 +289,16 @@
             }
         },
         computed: {
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapState('common', ['ruleList', 'templateRuleList']),
             ...mapState('atom', [
                 'hideSkipExecTask',
                 'showPanelType',
                 'isPropertyPanelVisible'
             ]),
-            
+
             panels () {
                 return [
                     {
@@ -390,21 +390,6 @@
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
             },
-            pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
-            },
             timeSteps () {
                 return [
                     {
@@ -490,7 +475,7 @@
                 const viewportContent = this.$refs.scrollViewPort.querySelector('p')
                 this.$refs.scrollViewPort.style.width = `${this.$refs.scrollBox?.scrollElement?.offsetWidth}px`
                 this.$refs.scrollViewPort.style.height = `${parent.offsetHeight}px`
-                
+
                 viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
@@ -565,7 +550,7 @@
                 const scrollViewPort = this.$refs.scrollViewPort
                 if (scrollEle && scrollViewPort) {
                     scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
-                    parent.removeEventListener('scroll', this.handelVerticalScroll)
+                    parent?.removeEventListener('scroll', this.handelVerticalScroll)
                     scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
                 }
             },

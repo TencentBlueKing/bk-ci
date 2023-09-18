@@ -12,7 +12,6 @@
             <div class="scroll-wraper">
                 <bk-pipeline
                     v-if="pipeline"
-
                     :pipeline="pipeline"
                     :user-name="userName"
                     :editable="pipelineEditable"
@@ -49,7 +48,7 @@
             <atom-selector :container="container" :element="element" v-bind="editingElementPos" />
         </template>
         <template v-if="editingElementPos">
-            <template v-if="typeof editingElementPos.elementIndex !== 'undefined'">
+            <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
                 <atom-property-panel
                     :element-index="editingElementPos.elementIndex"
                     :container-index="editingElementPos.containerIndex"
@@ -59,7 +58,7 @@
                     :is-instance-template="pipeline.instanceFromTemplate"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.containerIndex !== 'undefined'">
+            <template v-else-if="(typeof editingElementPos.containerIndex !== 'undefined')">
                 <container-property-panel
                     :title="panelTitle"
                     :container-index="editingElementPos.containerIndex"
@@ -68,14 +67,14 @@
                     :editable="pipelineEditable"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel.isShow">
+            <template v-else-if="(typeof editingElementPos.stageIndex !== 'undefined') && showStageReviewPanel.isShow">
                 <stage-review-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
                     :editable="pipelineEditable"
                 />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+            <template v-else-if="(typeof editingElementPos.stageIndex !== 'undefined')">
                 <stage-property-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
@@ -145,7 +144,7 @@
                 'getStage'
             ]),
             ...mapState('atom', [
-                'isPropertyPanelVisible',
+                'originPipeline',
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
@@ -277,7 +276,8 @@
                 return getStage(pipeline.stages, stageIndex)
             },
             handlePipelineChange (pipeline) {
-                this.setPipeline(pipeline)
+                if (!this.editable) return
+                Object.assign(this.pipeline, pipeline)
                 this.setPipelineEditing(true)
             },
             resetInsertStageState () {
@@ -434,5 +434,4 @@
     .bk-tooltip-inner {
         max-width: 450px;
     }
-
 </style>

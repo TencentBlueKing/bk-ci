@@ -43,11 +43,10 @@
         methods: {
             ...mapActions('atom', [
                 'setImportedPipelineJson',
-                'setPipeline'
-            ]),
-            ...mapActions('pipelines', [
+                'setPipeline',
                 'setPipelineSetting'
             ]),
+
             handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
                 const reader = new FileReader()
                 reader.readAsText(fileObj.origin)

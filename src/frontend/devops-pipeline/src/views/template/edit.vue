@@ -140,7 +140,7 @@
             this.requestMatchTemplateRules()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
             this.removeLeaveListenr()
             this.errors.clear()
         },
@@ -151,6 +151,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
+            // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',

@@ -67,8 +67,5 @@
 <style lang="scss">
     .pipeline-subpages {
         min-height: 100%;
-        .bk-exception {
-            position: absolute;
-        }
     }
 </style>

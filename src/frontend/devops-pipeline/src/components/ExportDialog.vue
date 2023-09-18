@@ -21,7 +21,7 @@
 
 <script>
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         props: {
@@ -35,9 +35,9 @@
         },
 
         computed: {
-            ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
-            }),
+            ...mapState('pipelines', [
+                'pipelineInfo'
+            ]),
 
             projectId () {
                 return this.$route.params.projectId
@@ -48,8 +48,7 @@
             },
 
             pipelineName () {
-                const pipeline = this.curPipeline || {}
-                return pipeline.pipelineName
+                return this.pipelineInfo?.pipelineName ?? '--'
             },
 
             exportList () {

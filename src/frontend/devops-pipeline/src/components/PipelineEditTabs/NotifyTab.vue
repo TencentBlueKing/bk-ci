@@ -178,6 +178,7 @@
                     this[this.editType].push(this.sliderEditItem)
                 }
                 console.log(this[this.editType], 'aftersave')
+                this.updateSubscription(this.editType, this[this.editType])
                 this.hideSlider()
             },
             updateEditItem (name, value) {
@@ -273,5 +274,5 @@
             }
         }
     }
-    
+
 </style>

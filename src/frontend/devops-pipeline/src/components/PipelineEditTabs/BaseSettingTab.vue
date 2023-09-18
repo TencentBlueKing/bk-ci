@@ -34,28 +34,14 @@
                     name: this.$t('settings.baseInfo'),
                     component: 'BaseInfo',
                     componentProps: {
-                        pipelineSetting: this.pipelineSetting,
-                        handleBaseInfoChange: (name, value) => {
-                            this.updatePipelineSetting({
-                                container: this.pipelineSetting,
-                                param: {
-                                    [name]: value
-                                }
-                            })
-                        }
+                        pipelineSetting: this.pipelineSetting
                     }
                 }, {
                     id: 'runningLock',
                     name: this.$t('settings.runLock'),
                     component: 'RunningLock',
                     componentProps: {
-                        pipelineSetting: this.pipelineSetting,
-                        handleRunningLockChange: (param) => {
-                            this.updatePipelineSetting({
-                                container: this.pipelineSetting,
-                                param
-                            })
-                        }
+                        pipelineSetting: this.pipelineSetting
                     }
                 }
                 ]
@@ -64,7 +50,7 @@
         methods: {
             handleBaseInfoChange (name, value) {
                 this.updatePipelineSetting({
-                    container: this.pipelineSetting,
+                    setting: this.pipelineSetting,
                     param: {
                         [name]: value
                     }
@@ -72,7 +58,7 @@
             },
             handleRunningLockChange (param) {
                 this.updatePipelineSetting({
-                    container: this.pipelineSetting,
+                    setting: this.pipelineSetting,
                     param
                 })
             }

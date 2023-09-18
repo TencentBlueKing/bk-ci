@@ -50,12 +50,12 @@
                         </p>
                     </li>
                 </ul>
-    
+
                 <div v-else class="no-outputs-placeholder">
                     <logo name="empty" size="180" />
                     <span>{{ $t("empty") }}</span>
                 </div>
-            
+
             </aside>
             <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
                 <iframe-report
@@ -127,6 +127,40 @@
             </section>
         </bk-resize-layout>
         <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
+        <!-- <aside :class="['pipeline-outputs-filter-aside', {
+            'pipeline-outputs-filter-aside-show': outputsFilterAsideVisible
+        }]">
+            <header>
+                {{$t('条件查询')}}
+                <i class="devops-icon icon-close" @click="closeOutputsFilterAside"></i>
+            </header>
+            <section class="pipeline-outputs-filter-conditions">
+                <bk-form form-type="vertical" :model="filterConditionMap">
+                    <bk-form-item
+                        v-for="condition in conditions"
+                        :key="condition.id"
+                        :label="condition.label"
+                    >
+                        <component :is="condition.component" v-bind="condition.props" v-on="condition.listeners" />
+                    </bk-form-item>
+                </bk-form>
+            </section>
+            <footer>
+                <bk-button
+                    size="large"
+                    theme="primary"
+                    @click="submitFilter"
+                >
+                    {{$t('查询')}}
+                </bk-button>
+                <bk-button
+                    size="large"
+                    @click="closeOutputsFilterAside(true)"
+                >
+                    {{$t('history.reset')}}
+                </bk-button>
+            </footer>
+        </aside> -->
     </div>
 </template>
 
@@ -140,7 +174,7 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
-    
+
     export default {
         components: {
             Logo,
@@ -149,6 +183,7 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             OutputQrcode
+            // ArtifactsList
         },
         props: {
             currentTab: {
@@ -158,10 +193,10 @@
         },
         data () {
             return {
-                keyWord: '',
                 isCopyDialogShow: false,
                 isCopying: false,
                 outputs: [],
+                keyWord: '',
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
@@ -175,6 +210,12 @@
             filterPlaceholder () {
                 return this.$t(`${this.currentTab}FilterPlaceholder`)
             },
+            thirdPartyReportList () {
+                return this.outputs.filter((report) => this.isThirdReport(report.reportType))
+            },
+            hasNext () {
+                return this.pagination.count < this.outputs.length
+            },
             reports () {
                 return this.outputs.filter(
                     (item) =>
@@ -183,9 +224,6 @@
             },
             artifacts () {
                 return this.outputs.filter((item) => this.isArtifact(item.artifactoryType))
-            },
-            thirdPartyReportList () {
-                return this.outputs.filter((report) => this.isThirdReport(report.reportType))
             },
             visibleOutputs () {
                 const thirdReportList
@@ -278,7 +316,7 @@
                         block: this.checkSumRows,
                         value: this.activeOutputDetail.checksums
                     }
-                    
+
                 ]
             },
             baseInfoRows () {
@@ -286,7 +324,7 @@
                     { key: 'name', name: this.$t('details.name') },
                     { key: 'fullName', name: this.$t('details.filePath') },
                     { key: 'size', name: this.$t('details.size') },
-                    { key: 'createdTime', name: this.$t('details.created') },
+                    { key: 'createdTime', name: this.$t('createdTime') },
                     { key: 'modifiedTime', name: this.$t('details.lastModified') }
                 ]
             },
@@ -297,6 +335,119 @@
                     { key: 'md5', name: 'MD5' }
                 ]
             }
+            // filterConditionLength () {
+            //     if (!this.filtering) return 0
+            //     return Object.keys(this.filterConditionMap).filter(key => {
+            //         if (Array.isArray(this.filterConditionMap[key])) {
+            //             return this.filterConditionMap[key].length > 0
+            //         }
+            //         return !!this.filterConditionMap[key]
+            //     }).length
+            // },
+            // conditions () {
+            //     return [
+            //         {
+            //             id: 'triggerTime',
+            //             label: this.$t('details.triggerTime'),
+            //             component: 'bk-date-picker',
+            //             props: {
+            //                 type: 'datetimerange',
+            //                 shortcuts: this.shortcuts,
+            //                 value: this.filterConditionMap.timeRange
+            //             },
+            //             listeners: {
+            //                 change: (range) => {
+            //                     this.filterConditionMap.timeRange = range
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'buildNo',
+            //             label: this.$t('构建号'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.buildNo
+            //             },
+            //             listeners: {
+            //                 change: (buildNo) => {
+            //                     this.filterConditionMap.buildNo = buildNo
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'filename',
+            //             label: this.$t('文件名'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.filename
+            //             },
+            //             listeners: {
+            //                 change: (filename) => {
+            //                     this.filterConditionMap.filename = filename
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'creator',
+            //             label: this.$t('触发人'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.creator
+            //             },
+            //             listeners: {
+            //                 change: (creator) => {
+            //                     this.filterConditionMap.creator = creator
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'property',
+            //             label: this.$t('元数据'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.property
+            //             },
+            //             listeners: {
+            //                 change: (property) => {
+            //                     this.filterConditionMap.property = property
+            //                 }
+            //             }
+            //         }
+            //     ]
+            // },
+            // shortcuts () {
+            //     return [
+            //         {
+            //             text: '今天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+            //                 return [start, end]
+            //             },
+            //             onClick: picker => {
+            //                 console.log(picker)
+            //             }
+            //         },
+            //         {
+            //             text: '近7天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date()
+            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+            //                 return [start, end]
+            //             }
+            //         },
+            //         {
+            //             text: '近15天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date()
+            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
+            //                 return [start, end]
+            //             }
+            //         }
+            //     ]
+            // }
         },
         watch: {
             visibleOutputs (outputs) {
@@ -306,7 +457,7 @@
                     this.activeOutputDetail = null
                 }
             },
-            '$route.params.buildNo': function () {
+            currentTab: function () {
                 this.$nextTick(this.init)
             }
         },
@@ -321,25 +472,36 @@
                 'requestExternalUrl',
                 'requestDownloadUrl'
             ]),
-            
+
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
 
                 try {
                     this.isLoading = true
-                    const [hasPermission, res] = await Promise.all([
+                    const [hasPermission, outputsResponse] = await Promise.all([
                         this.requestHasPermission(),
                         this.requestOutputs({
                             projectId,
                             pipelineId,
-                            buildId
+                            buildId,
+                            // pipelineOutputType: this.currentTab,
+                            // ...(Object.keys(this.filterConditionMap).filter(key => !!this.filterConditionMap[key]).reduce((result, key) => {
+                            //     result[key] = this.filterConditionMap[key]
+                            //     return result
+                            // }, {})),
+                            ...this.pagination
                         })
                     ])
-
-                    this.outputs = res.map((item) => {
+                    const { records, page, pageSize, count } = outputsResponse
+                    this.pagination = {
+                        page,
+                        pageSize,
+                        count
+                    }
+                    this.outputs = records.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
                         const icon = isReportOutput ? 'order' : extForFile(item.name)
-                        const id = isReportOutput ? item.createTime : item.fullPath
+                        const id = isReportOutput ? (item.createTime + item.indexFileUrl) : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
                             type,
@@ -351,11 +513,72 @@
                             downloadable: hasPermission && this.isArtifact(item.artifactoryType) && item.artifactoryType !== 'IMAGE'
                         }
                     })
+                    console.log(this.outputs)
                 } catch (err) {
                     this.$showTips({
                         message: err.message ? err.message : err,
                         theme: 'error'
                     })
+                    this.outputs = [
+                        {
+                            name: 'output1',
+                            createTime: '2022-07-06',
+                            buildNum: '22'
+                        },
+                        {
+                            name: 'output2',
+                            createTime: '2022-07-06',
+                            buildNum: '22'
+                        },
+                        {
+                            name: 'output3',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output4',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output5',
+                            createTime: '2022-07-06',
+                            buildNum: '21'
+                        },
+                        {
+                            name: 'output6',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output7',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output8',
+                            createTime: '2022-07-05',
+                            buildNum: '20'
+                        },
+                        {
+                            name: 'output9',
+                            createTime: '2022-07-03',
+                            buildNum: '19'
+                        },
+                        {
+                            name: 'output10',
+                            createTime: '2022-07-03',
+                            buildNum: '19'
+                        }, {
+                            name: 'output11',
+                            createTime: '2022-07-02',
+                            buildNum: '18'
+                        }, {
+                            name: 'output12',
+                            createTime: '2022-07-01',
+                            buildNum: '17'
+                        }
+                    ]
                 } finally {
                     this.isLoading = false
                 }
@@ -379,6 +602,7 @@
                     })
                 }
             },
+
             async showDetail (output) {
                 const { projectId } = this.$route.params
                 try {
@@ -480,7 +704,7 @@
     }
     .pipeline-exec-outputs-filter {
       position: relative;
-      margin: 16px 0 21px 0;
+      margin: 16px 0 6px 0;
       width: 100%;
       display: flex;
       align-items: center;
@@ -491,6 +715,10 @@
       border-radius: 2px;
       font-size: 14px;
       cursor: pointer;
+      &.filter-active {
+        color: $primaryColor;
+        border-color: $primaryColor;
+      }
       .output-filter-condition-count {
         margin: 0;
         position: absolute;
@@ -600,6 +828,42 @@
           }
         }
       }
+    }
+  }
+  .pipeline-outputs-filter-aside {
+    width: 480px;
+    background: white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    border: 1px solid #DCDEE5;
+    display: grid;
+    grid-template-rows: 52px 1fr 48px;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    &.pipeline-outputs-filter-aside-show {
+        transform: translateX(0);
+    }
+    > header {
+        padding: 0 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #FFFFFF;
+        box-shadow: inset 0 -1px 0 0 #DCDEE5;
+        color: #313238;
+    }
+    .pipeline-outputs-filter-conditions {
+        padding: 16px 24px;
+    }
+    > footer {
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        grid-gap: 8px;
+        background: #FAFBFD;
+        box-shadow: 0 -1px 0 0 #DCDEE5;
     }
   }
 }

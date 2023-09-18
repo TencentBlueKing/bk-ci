@@ -207,7 +207,7 @@
                             theme="primary"
                             class="exec-pipeline-btn"
                             :disabled="props.row.disabled || props.row.lock"
-                            
+
                             @click="execPipeline(props.row)"
                         >
                             {{ props.row.lock ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}

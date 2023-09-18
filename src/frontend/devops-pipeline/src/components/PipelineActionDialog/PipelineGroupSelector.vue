@@ -5,7 +5,7 @@
                 <span>{{ $t('label') }}</span>
                 <span class="pipeline-label-action-span">
                     <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
-                        <logo name="plus" size="18" />
+                        <logo name="plus" size="20" />
                         {{$t('addLabel')}}
                     </router-link>
                     <span @click="refreshLabel" class="pipeline-label-action-span-btn">
@@ -204,6 +204,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 12px;
         .pipeline-label-action-span {
             display: grid;
             grid-gap: 20px;

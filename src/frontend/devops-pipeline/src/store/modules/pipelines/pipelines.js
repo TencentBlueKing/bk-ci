@@ -17,19 +17,21 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
+    BACKEND_API_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    BACKEND_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_SETTING_MUTATION, UPDATE_PIPELINE_SETTING_MUNTATION, RESET_PIPELINE_SETTING_MUNTATION, PIPELINE_AUTHORITY_MUTATION } from './constants'
+import { PIPELINE_AUTHORITY_MUTATION, RESET_TEMPLATE_SETTING_MUNTATION, TEMPLATE_SETTING_MUTATION, UPDATE_TEMPLATE_SETTING_MUNTATION } from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
+const versionPrefix = `/${PROCESS_API_URL_PREFIX}/user/version`
+const triggerPrefix = `/${PROCESS_API_URL_PREFIX}/user/trigger/event`
 const backpre = `${BACKEND_API_URL_PREFIX}/api`
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -38,11 +40,10 @@ function rootCommit (commit, ACTION_CONST, payload) {
 
 const state = {
     pipelineList: [],
-    curPipeline: {},
-    curPipelineAtomParams: null,
+    pipelineInfo: null,
     allPipelineList: [],
     hasCreatePermission: false,
-    pipelineSetting: {},
+    templateSetting: {},
     pipelineAuthority: {},
     pipelineActionState: {
         activePipeline: null,
@@ -57,19 +58,14 @@ const state = {
 
 const getters = {
     getPipelineList: state => state.pipelineList,
-    getCurPipeline: state => state.curPipeline,
-    getAllPipelineList: state => state.allPipelineList,
-    getCurAtomPrams: state => state.curPipelineAtomParams
+    isCurPipelineLocked: state => {
+        return state.pipelineInfo?.runLockType === 'LOCK'
+    },
+    isDraftPipeline: state => {
+        return state.pipelineInfo?.pipelineResource?.status === 'COMMITTING'
+    },
+    getAllPipelineList: state => state.allPipelineList
 }
-
-// function cancellableWrap (commit, actionType) {
-//     const source = CancelToken.source()
-//     commit('setCancelToken', {
-//         token: source,
-//         actionType
-//     }, { root: true })
-//     return source.token
-// }
 
 const mutations = {
     [PIPELINE_AUTHORITY_MUTATION]: (state, { pipelineAuthority }) => {
@@ -80,18 +76,18 @@ const mutations = {
             }
         })
     },
-    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
+    [RESET_TEMPLATE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
-            pipelineSetting: {}
+            templateSetting: {}
         })
     },
-    [PIPELINE_SETTING_MUTATION]: (state, { pipelineSetting }) => {
+    [TEMPLATE_SETTING_MUTATION]: (state, { templateSetting }) => {
         return Object.assign(state, {
-            pipelineSetting
+            templateSetting
         })
     },
-    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
-        Object.assign(container, param)
+    [UPDATE_TEMPLATE_SETTING_MUNTATION]: (state, { templateSetting, param }) => {
+        Object.assign(templateSetting, param)
         return state
     },
     updateCreatePermission (state, hasPermission) {
@@ -140,22 +136,17 @@ const mutations = {
         })
     },
     /**
-     * 更新 store.pipeline 中的 curPipeline
+     * 更新 store.pipeline 中的 pipelineInfo
      *
      * @param {Object} state store state
-     * @param {Object} obj curPipeline 对象
+     * @param {Object} obj pipelineInfo 对象
      */
-    updateCurPipeline (state, obj) {
-        state.curPipeline = obj
+    setPipelineInfo (state, obj) {
+        state.pipelineInfo = obj
     },
-    /**
-     * 更新 store.pipeline 中的 curPipeline 的某个字段
-     *
-     * @param {Object} state store state
-     * @param {Object} obj key-value
-     */
-    updateCurPipelineByKeyValue (state, { key, value }) {
-        state.curPipeline[key] = value
+    updatePipelineInfo (state, { key, value }) {
+        console.log(key, value)
+        state.pipelineInfo[key] = value
     },
     /**
      * 更新 store.pipeline 中的 pipelineList 中的某一项的某个key的value
@@ -196,15 +187,6 @@ const mutations = {
             }
         }
     },
-    /**
-     * 更新 store.curPipelineAtomParams
-     *
-     * @param {Object} state store state
-     * @param {Array} obj curPipelineAtomParams 列表Fha
-     */
-    updateCurAtomPrams (state, res) {
-        state.curPipelineAtomParams = res
-    },
     updatePipelineActionState (state, params) {
         Object.assign(state.pipelineActionState, params)
     }
@@ -243,33 +225,11 @@ const actions = {
     requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
     },
-
-    resetPipelineSetting: ({ commit }, payload) => {
-        commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
-    },
-    setPipelineSetting: ({ commit }, pipelineSetting) => {
-        commit(PIPELINE_SETTING_MUTATION, {
-            pipelineSetting
-        })
-    },
-    requestPipelineSetting: async ({ commit }, { projectId, pipelineId }) => {
-        try {
-            const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get?pipelineId=${pipelineId}&projectId=${projectId}`)
-            commit(PIPELINE_SETTING_MUTATION, {
-                pipelineSetting: response.data
-            })
-        } catch (e) {
-            if (e.code === 403) {
-                e.message = ''
-            }
-            rootCommit(commit, FETCH_ERROR, e)
-        }
-    },
     requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
         try {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/settings`)
-            commit(PIPELINE_SETTING_MUTATION, {
-                pipelineSetting: response.data
+            commit(TEMPLATE_SETTING_MUTATION, {
+                templateSetting: response.data
             })
         } catch (e) {
             if (e.code === 403) {
@@ -278,8 +238,8 @@ const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    updatePipelineSetting: ({ commit }, payload) => {
-        commit(UPDATE_PIPELINE_SETTING_MUNTATION, payload)
+    updateTemplateSetting: ({ commit }, payload) => {
+        commit(UPDATE_TEMPLATE_SETTING_MUNTATION, payload)
     },
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
@@ -344,9 +304,11 @@ const actions = {
             return response.data
         })
     },
-    requestPipelineDetail ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/${pipelineId}/detail`
+    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+
         return ajax.get(url).then(response => {
+            commit('setPipelineInfo', response.data)
             return response.data
         })
     },
@@ -504,33 +466,31 @@ const actions = {
             return response.data
         })
     },
-
-    // 流水线历史版本列表
-    requestPipelineVersionList (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/version`, {
+    requestPiplineCreators ({ commit, state, dispatch }, { projectId, pipelineId, page = 1, pageSize = 15 }) {
+        return ajax.get(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/creatorList`, {
             params: {
                 page,
                 pageSize
             }
         })
     },
-    // 查询流水线历史版本编排内容
-    requestPipelineByVersion: (_, { projectId, pipelineId, version }) => {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/${version}`)
-    },
-    // 查询流水线历史版本设置内容
-    requestPipelineSettingByVersion: (_, { projectId, pipelineId, version }) => {
-        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get`, {
-            params: {
-                projectId,
-                pipelineId,
-                version
-            }
-        })
+    // 流水线历史版本列表
+    requestPipelineVersionList (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`, {
+            params
+        }).then(res => res.data)
     },
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+    async rollbackPipelineVersion ({ rootCommit }, { projectId, pipelineId, version }) {
+        try {
+            const res = await ajax.post(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?version=${version}`)
+            return res.data
+        } catch (error) {
+
+        }
     },
     updateBuildRemark (_, { projectId, pipelineId, buildId, remark }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`, {
@@ -541,6 +501,36 @@ const actions = {
         return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
             name
         })
+    },
+    // 流水线操作日志列表
+    requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
+            params
+        }).then(res => res.data)
+    },
+    // 流水线操作日志列表
+    requestPipelineOperatorList (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`, {
+            params
+        }).then(res => res.data)
+    },
+    // 获取触发事件列表
+    getTriggerEventList (_, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${triggerPrefix}/${projectId}/${pipelineId}/listPipelineTriggerEvent`, {
+            params
+        }).then(res => res.data)
+    },
+    // 获取触发类型列表
+    getTriggerTypeList () {
+        return ajax.get(`${triggerPrefix}/listTriggerType`).then(res => res.data)
+    },
+    // 获取事件类型列表
+    getEventTypeList () {
+        return ajax.get(`${triggerPrefix}/listEventType`).then(res => res.data)
+    },
+    // 重新触发事件
+    reTriggerEvent (_, { projectId, detailId }) {
+        return ajax.post(`${triggerPrefix}/${projectId}/${detailId}/replay`)
     }
 }
 

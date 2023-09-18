@@ -19,7 +19,7 @@
         </bk-dropdown-menu>
         <rename-dialog
             :is-show="isRenameDialogShow"
-            v-bind="curPipeline"
+            v-bind="pipelineInfo"
             :project-id="$route.params.projectId"
             @close="toggleRenameDialog"
             @done="renameDone"
@@ -50,12 +50,13 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
+    import { mapState, mapMutations, mapActions } from 'vuex'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
+    import CopyIcon from '@/components/copyIcon'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     export default {
@@ -65,7 +66,9 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RenameDialog,
-            RemoveConfirmDialog
+            RemoveConfirmDialog,
+            // eslint-disable-next-line vue/no-unused-components
+            CopyIcon
         },
         mixins: [pipelineActionMixin],
         data () {
@@ -77,16 +80,13 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
-            }),
+            ...mapState('pipelines', ['pipelineActionState', 'pipelineInfo']),
             isTemplatePipeline () {
-                return this.curPipeline?.instanceFromTemplate ?? false
+                return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             actionConfMenus () {
                 const pipeline = {
-                    ...this.curPipeline,
+                    ...this.pipelineInfo,
                     projectId: this.$route.params.projectId
                 }
                 return [
@@ -98,7 +98,7 @@
                             }
                         },
                         {
-                            label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
+                            label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
                         }
                     ],
@@ -124,6 +124,12 @@
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
+                        }
+                    ],
+                    [
+                        {
+                            label: 'disable',
+                            handler: () => this.disablePipeline(pipeline)
                         },
                         {
                             label: 'delete',
@@ -134,15 +140,15 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
-            ...mapActions('pipelines', ['setPipelineSetting', 'requestToggleCollect']),
-            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
+            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom', 'updatePipelineSetting']),
+            ...mapActions('pipelines', ['requestToggleCollect']),
+            ...mapMutations('pipelines', ['updatePipelineInfo']),
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
             renameDone (name) {
                 this.$nextTick(() => {
-                    this.updateCurPipelineByKeyValue({
+                    this.updatePipelineInfo({
                         key: 'pipelineName',
                         value: name
                     })
@@ -159,6 +165,43 @@
             exportPipeline () {
                 this.showExportDialog = true
             },
+            disablePipeline (pipeline) {
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('disablePipelineConfirmTips'),
+                    subHeader: this.$createElement('div', {
+                    }, [
+                        this.$createElement(
+                            'p',
+                            {},
+                            this.$t(pipeline.enablePac ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc')
+                        ),
+                        this.$createElement(
+                            'pre',
+                            {
+                                class: 'disable-pac-code'
+                            },
+                            [
+                                this.$t('codeConfig'),
+                                this.$createElement(CopyIcon, {
+                                    props: {
+                                        value: 'abc'
+                                    }
+                                })
+                            ]
+                        )
+                    ]),
+                    confirmFn (vm) {
+                        console.warn(vm)
+                    },
+                    cancelFn (vm) {
+                        console.warn(vm)
+                    },
+                    afterLeaveFn (vm) {
+                        console.log(vm)
+                    }
+                })
+            },
             importModifyPipeline () {
                 this.showImportDialog = true
             },
@@ -166,15 +209,8 @@
                 this.showImportDialog = false
                 this.setEditFrom(true)
                 this.$nextTick(() => {
-                    console.log('this.curPipeline', this.curPipeline)
-                    const pipelineVersion = this.curPipeline.pipelineVersion
-                    const pipelineName = this.curPipeline.pipelineName
-                    this.setPipelineSetting({
-                        ...result.setting,
-                        pipelineName,
-                        pipelineId: this.curPipeline.pipelineId,
-                        projectId: this.$route.params.projectId
-                    })
+                    const pipelineVersion = this.pipelineInfo?.version
+                    const pipelineName = this.pipelineInfo?.pipelineName
                     this.setPipeline({
                         ...result.model,
                         name: pipelineName,
@@ -189,16 +225,16 @@
             },
 
             async toggleCollect () {
-                const isCollect = !this.curPipeline.hasCollect
+                const isCollect = !this.pipelineInfo?.hasCollect
                 let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
                 let theme = 'success'
                 try {
                     await this.requestToggleCollect({
                         projectId: this.$route.params.projectId,
-                        ...this.curPipeline,
+                        ...this.pipelineInfo,
                         isCollect
                     })
-                    this.updateCurPipelineByKeyValue({
+                    this.updatePipelineInfo({
                         key: 'hasCollect',
                         value: isCollect
                     })
@@ -254,6 +290,9 @@
     &:first-child {
       border-bottom: 1px solid #dcdee5;
     }
+    &:last-child {
+      border-top: 1px solid #dcdee5;
+    }
     > li {
       font-size: 12px;
       line-height: 32px;
@@ -269,5 +308,17 @@
       }
     }
   }
+}
+.disable-pac-code {
+    position: relative;
+    background: #F0F1F5;
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px 0;
+    .icon-clipboard {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
 }
 </style>

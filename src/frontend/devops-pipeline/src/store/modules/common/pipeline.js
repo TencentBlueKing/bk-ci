@@ -35,11 +35,9 @@ import {
     QUALITY_ATOM_MUTATION,
     REFRESH_QUALITY_LOADING_MUNTATION,
     REPOSITORY_MUTATION,
-    RESET_PIPELINE_SETTING_MUNTATION,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
-    TEMPLATE_MUTATION,
-    UPDATE_PIPELINE_SETTING_MUNTATION
+    TEMPLATE_MUTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -49,12 +47,11 @@ function rootCommit (commit, ACTION_CONST, payload) {
 export const state = {
     templateCategory: null,
     refreshLoading: false,
-    pipelineTemplate: null,
+    pipelineTemplateMap: null,
     storeTemplate: null,
     template: null,
     reposList: null,
     appNodes: {},
-    pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
     qualityAtom: []
@@ -74,9 +71,9 @@ export const mutations = {
             templateCategory: [customCategory, ...categoryList, storeCategory]
         })
     },
-    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplate }) => {
+    [PIPELINE_TEMPLATE_MUTATION]: (state, { pipelineTemplateMap }) => {
         return Object.assign(state, {
-            pipelineTemplate
+            pipelineTemplateMap
         })
     },
     [STORE_TEMPLATE_MUTATION]: (state, { storeTemplate }) => {
@@ -120,15 +117,6 @@ export const mutations = {
         })
         return state
     },
-    [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
-        Object.assign(container, param)
-        return state
-    },
-    [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
-        return Object.assign(state, {
-            pipelineSetting: {}
-        })
-    },
     [REFRESH_QUALITY_LOADING_MUNTATION]: (state, status) => {
         const refreshLoading = status
         Object.assign(state, {
@@ -156,7 +144,7 @@ export const actions = {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
             commit(PIPELINE_TEMPLATE_MUTATION, {
-                pipelineTemplate: (response.data || {}).templates
+                pipelineTemplateMap: (response.data || {}).templates
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -181,10 +169,7 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestInterceptAtom: async ({ commit }, { projectId, pipelineId }) => {
-        const params = {
-            pipelineId: pipelineId
-        }
+    requestInterceptAtom: async ({ commit }, { projectId, ...params }) => {
         try {
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchRuleList`, { params })
 
@@ -243,8 +228,14 @@ export const actions = {
         })
     },
     requestOutputs: async ({ commit }, { projectId, pipelineId, buildId, ...params }) => {
-        const res = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${buildId}/search`, params)
-        return res.data
+        const hasBuildId = !!buildId
+        const { data } = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${hasBuildId ? `${buildId}/` : ''}search`, params)
+        return {
+            page: 1,
+            pageSize: data.pageSize ?? data.length,
+            count: data.count ?? data.length,
+            records: data.records ?? data
+        }
     },
     requestExternalUrl: async ({ commit }, { projectId, type, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {

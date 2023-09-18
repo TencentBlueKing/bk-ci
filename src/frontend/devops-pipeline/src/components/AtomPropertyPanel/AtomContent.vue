@@ -435,7 +435,6 @@
                 'requestGlobalEnvs',
                 'updateAtom',
                 'updateAtomType',
-                'fetchAtoms',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
                 'togglePropertyPanel',

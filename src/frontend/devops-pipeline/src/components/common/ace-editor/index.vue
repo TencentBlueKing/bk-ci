@@ -58,6 +58,10 @@
             hasError: {
                 type: Boolean,
                 default: false
+            },
+            highlightRanges: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -112,7 +116,6 @@
                 readOnly: this.readOnly
             })
             this.isLoading = false
-
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -135,13 +138,23 @@
                 return langMap[lang] || lang
             },
             calcSize (size) {
+                console.log(size, size.toString().match(/^[0-9]{1,2}%$/))
                 const _size = size.toString()
 
                 if (_size.match(/^\d*$/)) return `${size}px`
-                if (_size.match(/^[0-9]?%$/)) return _size
+                if (_size.match(/^[0-9]{1,2}%$/)) return _size
 
                 return '100%'
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .code-highlight-block {
+        background: #3A84FF;
+        opacity: .1;
+
+    }
+
+</style>

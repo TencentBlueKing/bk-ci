@@ -64,7 +64,7 @@
             buildNo () {
                 return this.container?.buildNo || {}
             }
-            
+
         },
         methods: {
             ...mapActions('atom', [
@@ -85,12 +85,13 @@
             selectTab (tab) {
                 this.active = tab
             }
-            
+
         }
     }
 </script>
 
 <style lang="scss">
+    @import "@/scss/mixins/ellipsis.scss";
     .edit-var-container {
         .edit-var-content {
             padding: 20px 24px;
@@ -208,11 +209,16 @@
                             font-size: 12px;
                             letter-spacing: 0;
                             line-height: 20px;
+                            flex: 1;
+                            overflow: hidden;
                             .var-names {
                                 color: #313238;
+                                flex-shrink: 0;
                             }
                             .default-value {
                                 color: #979BA5;
+                                @include ellipsis();
+                                width: 100%;
                             }
                         }
                         .var-operate {

@@ -98,14 +98,15 @@
         border-radius: 2px;
         border: 1px solid #DCDEE5;
         padding: 16px;
+        display: grid;
+        grid-gap: 16px;
         > li {
             display: flex;
-            &:not(:last-child) {
-                padding-bottom: 16px;
-            }
+
             .pipeline-selector-label {
                 width: 80px;
                 text-align: right;
+                font-size: 12px;
                 @include ellipsis();
                 margin-right: 22px;
             }

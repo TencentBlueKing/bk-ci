@@ -135,7 +135,7 @@
                 }
             },
             isSingleLock () {
-                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting.runLockType)
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting?.runLockType)
             },
             formRule () {
                 const requiredRule = {
@@ -173,7 +173,7 @@
             }
         },
         created () {
-            if (this.pipelineSetting.runLockType === this.runTypeMap.SINGLE) {
+            if (this.pipelineSetting?.runLockType === this.runTypeMap.SINGLE) {
                 this.handleLockTypeChange(this.runTypeMap.GROUP)
             }
         },
@@ -181,7 +181,7 @@
             handleLockTypeChange (runLockType) {
                 this.handleRunningLockChange({
                     runLockType,
-                    concurrencyGroup: this.pipelineSetting.concurrencyGroup || '${{ci.pipeline_id}}'
+                    concurrencyGroup: this.pipelineSetting?.concurrencyGroup || '${{ci.pipeline_id}}'
                 })
             },
             handleConCurrencyCancel (val) {

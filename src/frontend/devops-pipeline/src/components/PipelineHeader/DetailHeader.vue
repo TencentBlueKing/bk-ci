@@ -8,19 +8,33 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
+                v-if="isRunning"
                 :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
-                :theme="isRunning ? 'warning' : 'default'"
+                theme="warning"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("cancel") : $t("history.reBuild") }}
+                {{ $t("cancel") }}
+            </bk-button>
+            <bk-button
+                v-else
+                :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                :icon="loading ? 'loading' : ''"
+                outline
+                @click="handleClick"
+            >
+                {{ $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <router-link :to="editRouteName">
                 <bk-button>{{ $t("edit") }}</bk-button>
             </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                theme="primary"
+                :loading="executeStatus"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
             </bk-button>
             <more-actions />
@@ -46,12 +60,16 @@
             }
         },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail']),
+            ...mapState('atom', ['execDetail']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
+                isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
+            ...mapState('pipelines', ['pipelineInfo', 'executeStatus']),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            canManualStartup () {
+                return this.pipelineInfo?.canManualStartup ?? false
             },
             buildNumConf () {
                 return {
@@ -96,7 +114,7 @@
                             instanceId: [
                                 {
                                     id: this.$route.params.pipelineId,
-                                    name: this.curPipeline.pipelineName
+                                    name: this.pipelineInfo.pipelineName
                                 }
                             ],
                             projectId: this.$route.params.projectId
@@ -155,7 +173,11 @@
             },
             goExecPreview () {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

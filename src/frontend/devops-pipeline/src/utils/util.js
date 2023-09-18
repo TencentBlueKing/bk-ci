@@ -597,9 +597,13 @@ export function navConfirm ({ content, title, ...restProps }) {
 
         window.globalVue.$leaveConfirm({ content, title, ...restProps })
 
-        window.globalVue.$once('order::leaveConfirm', resolve)
+        window.globalVue.$once('order::leaveConfirm', () => {
+            resolve(true)
+        })
 
-        window.globalVue.$once('order::leaveCancel', reject)
+        window.globalVue.$once('order::leaveCancel', () => {
+            resolve(false)
+        })
     })
 }
 
@@ -611,16 +615,28 @@ export function getQueryParamList (arr = [], key) {
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
-    } else if (arr && typeof arr === 'string') {
+    } else if (typeof arr !== 'undefined') {
         return `${key}=${encodeURIComponent(arr)}`
     }
 }
 
-export function getParamsValuesMap (params = []) {
+// 将vue-router的query参数转换成字符串
+export function getQueryParamString (query) {
+    const params = []
+    for (const key in query) {
+        if (Object.prototype.hasOwnProperty.call(query, key)) {
+            const value = query[key].indexOf(',') > -1 ? query[key].split(',') : query[key]
+            params.push(getQueryParamList(value, key))
+        }
+    }
+    return params.join('&')
+}
+
+export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
         if (param.id) {
-            values[param.id] = param.defaultValue
+            values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values
     }, {})

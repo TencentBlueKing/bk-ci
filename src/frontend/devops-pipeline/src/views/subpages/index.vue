@@ -16,7 +16,9 @@
             })
         },
         beforeDestroy () {
-            this.$store.commit('pipelines/updateCurPipeline', {})
+            this.$store.dispatch('atom/setPipeline', null)
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit('pipelines/setPipelineInfo', null)
             this.$store.commit('pipelines/updatePipelineList', [])
         }
     }
@@ -27,9 +29,7 @@
 .bkdevops-history-subpage {
   min-height: 100%;
   flex-direction: column;
-  .bk-exception {
-    position: absolute;
-  }
+  background: #F5F7FA;
   .pipeline-subpages-header {
     display: flex;
     align-items: center;
