@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
@@ -58,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("TooManyFunctions")
 class GithubReviewTriggerHandler @Autowired constructor(
     val eventCacheService: EventCacheService
-): CodeWebhookTriggerHandler<GithubReviewEvent> {
+) : CodeWebhookTriggerHandler<GithubReviewEvent> {
     override fun eventClass(): Class<GithubReviewEvent> {
         return GithubReviewEvent::class.java
     }
@@ -167,7 +166,7 @@ class GithubReviewTriggerHandler @Autowired constructor(
         return startParams
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(GithubReviewTriggerHandler::class.java)
     }
 }

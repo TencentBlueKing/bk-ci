@@ -50,7 +50,7 @@ data class GithubReviewEvent(
 
     fun convertState() = when {
         isApproved() -> "approved"
-        isChangeRequired()-> "change_required"
+        isChangeRequired() -> "change_required"
         isChangeDenied() -> "change_denied"
         isApproving() -> "approving"
         else -> ""
