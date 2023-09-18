@@ -65,8 +65,8 @@ class WindowsResourceTypeDao {
                 config.cpu,
                 config.memory,
                 config.disk,
-                config.hdisk ?: 1,
-                config.sdisk ?: 200,
+                config.hdisk,
+                config.sdisk,
                 config.weight ?: 0,
                 config.description
             ).returning(ID).fetchOne()!!.id
@@ -124,8 +124,8 @@ class WindowsResourceTypeDao {
                 .set(CPU, config.cpu)
                 .set(MEMORY, config.memory)
                 .set(DISK, config.disk)
-                .set(HDISK, config.hdisk ?: 1)
-                .set(SDISK, config.sdisk ?: 200)
+                .set(HDISK, config.hdisk)
+                .set(SDISK, config.sdisk)
                 .set(AVAILABLED, if (config.available == true) 1 else 0)
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())

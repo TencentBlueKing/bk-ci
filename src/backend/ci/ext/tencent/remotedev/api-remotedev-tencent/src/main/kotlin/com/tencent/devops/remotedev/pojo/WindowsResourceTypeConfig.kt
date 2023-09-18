@@ -47,13 +47,27 @@ data class WindowsResourceTypeConfig(
     @ApiModelProperty("内存")
     val memory: Int,
     @ApiModelProperty("数据盘，本地SSD盘")
-    val disk: Int,
+    val disk: String,
     @ApiModelProperty("云SSD盘")
-    val hdisk: Int? = 1,
+    val hdisk: String,
     @ApiModelProperty("系统盘，本地SSD")
-    val sdisk: Int? = 200,
+    val sdisk: String,
     @ApiModelProperty("权重，用于页面展示先后顺序")
     val weight: Int? = 0,
     @ApiModelProperty("描述")
     val description: String
-)
+) {
+
+    companion object {
+        const val GB = "GB"
+        const val TB = "TB"
+    }
+
+    fun workspaceDisk() = transferGb(disk)
+
+    private fun transferGb(disk: String): Int = when {
+        disk.contains(GB) -> disk.removeSuffix(GB).trim().toIntOrNull() ?: 0
+        disk.contains(TB) -> (disk.removeSuffix(TB).trim().toIntOrNull() ?: 0) * 1024
+        else -> 0
+    }
+}

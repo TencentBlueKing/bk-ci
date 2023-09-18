@@ -171,7 +171,7 @@ class CreateControl @Autowired constructor(
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
-                disk = windowsConfig.disk,
+                disk = windowsConfig.workspaceDisk(),
                 winConfigId = windowsConfig.id?.toInt()
             )
 
@@ -561,7 +561,7 @@ class CreateControl @Autowired constructor(
             gpu = windowsConfig.gpu,
             cpu = windowsConfig.cpu,
             memory = windowsConfig.memory,
-            disk = windowsConfig.disk,
+            disk = windowsConfig.workspaceDisk(),
             winConfigId = windowsConfig.id?.toInt()
         )
 
