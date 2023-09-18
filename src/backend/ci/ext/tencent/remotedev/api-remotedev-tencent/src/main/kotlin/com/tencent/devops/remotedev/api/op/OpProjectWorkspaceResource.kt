@@ -71,7 +71,7 @@ interface OpProjectWorkspaceResource {
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
-    @GET
+    @POST
     @Path("/list")
     fun getProjectWorkspaceList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
