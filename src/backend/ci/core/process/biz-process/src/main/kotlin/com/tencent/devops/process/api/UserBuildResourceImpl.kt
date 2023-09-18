@@ -86,7 +86,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<BuildParameters>> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -94,7 +94,7 @@ class UserBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.getBuildParameters(
-                userId, projectId, pipelineId, buildId, debug
+                userId, projectId, pipelineId, buildId, debugVersion
             )
         )
     }
@@ -106,7 +106,7 @@ class UserBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         buildNo: Int?,
         triggerReviewers: List<String>?,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         val manualStartup = pipelineBuildFacadeService.buildManualStartup(
@@ -117,7 +117,7 @@ class UserBuildResourceImpl @Autowired constructor(
             values = values,
             channelCode = ChannelCode.BS,
             buildNo = buildNo,
-            version = version,
+            debugVersion = debugVersion,
             triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -311,7 +311,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNo: Int,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<ModelDetail> {
         checkParam(userId, projectId, pipelineId)
         if (buildNo <= 0) {
@@ -324,7 +324,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNo = buildNo,
                 channelCode = ChannelCode.BS,
-                debug = debug
+                debugVersion = debugVersion
             )
         )
     }
@@ -334,7 +334,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildNum <= 0) {
@@ -347,7 +347,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 channelCode = ChannelCode.BS,
-                debug = debug
+                debugVersion = debugVersion
             )
         )
     }
@@ -370,7 +370,7 @@ class UserBuildResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         checkPermission: Boolean?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val check = checkPermission ?: true
@@ -382,7 +382,7 @@ class UserBuildResourceImpl @Autowired constructor(
             pageSize = pageSize,
             channelCode = ChannelCode.BS,
             checkPermission = check,
-            debug = debug
+            debugVersion = debugVersion
         )
         return Result(result)
     }
@@ -413,7 +413,7 @@ class UserBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -441,7 +441,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            debug = debug
+            debugVersion = debugVersion
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(result)
@@ -487,10 +487,12 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(userId, projectId, pipelineId, debug))
+        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(
+            userId, projectId, pipelineId, debugVersion
+        ))
     }
 
     override fun getHistoryConditionBranch(
@@ -498,7 +500,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         alias: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -507,7 +509,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 alias = alias,
-                debug = debug
+                debugVersion = debugVersion
             )
         )
     }

@@ -51,7 +51,7 @@ class PipelineRepositoryVersionService(
     private val redisOperation: RedisOperation
 ) {
 
-    fun addVerRef(projectId: String, pipelineId: String, resourceVersion: Int, debug: Boolean?) {
+    fun addVerRef(projectId: String, pipelineId: String, resourceVersion: Int) {
         PipelineVersionLock(redisOperation, pipelineId, resourceVersion).use { versionLock ->
             versionLock.lock()
             // 查询流水线版本记录

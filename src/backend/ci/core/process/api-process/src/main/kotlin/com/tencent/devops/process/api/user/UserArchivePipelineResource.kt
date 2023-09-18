@@ -75,9 +75,9 @@ interface UserArchivePipelineResource {
         @ApiParam(value = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String,
-        @ApiParam("仅查看调试数据", required = false, defaultValue = "false")
-        @QueryParam("debug")
-        debug: Boolean? = false
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("version")
+        debugVersion: Int? = null
     ): Result<List<Map<String, String>>>
 
     @ApiOperation("获取某个项目用户可以下载归档的所有流水线")

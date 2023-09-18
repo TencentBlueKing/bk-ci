@@ -420,9 +420,9 @@ class PipelineBuildDao {
         pipelineId: String,
         offset: Int,
         limit: Int,
-        debug: Boolean?
+        debugVersion: Int?
     ): Collection<Int> {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 dslContext.select(BUILD_NUM).from(this)
                     .where(PROJECT_ID.eq(projectId))
@@ -436,6 +436,7 @@ class PipelineBuildDao {
                 dslContext.select(BUILD_NUM).from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
+                    .and(VERSION.eq(debugVersion))
                     .orderBy(BUILD_NUM.desc())
                     .limit(offset, limit)
                     .fetch(0, Int::class.java)
@@ -806,9 +807,47 @@ class PipelineBuildDao {
         pipelineId: String,
         status: List<BuildStatus>? = null,
         startTimeEndTime: Long? = null,
-        debug: Boolean? = false
+        debugVersion: Int? = null
     ): Int {
-        return if (debug != true) {
+        return if (debugVersion == null) {
+            with(T_PIPELINE_BUILD_HISTORY) {
+                val where = dslContext.selectCount().from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                if (!status.isNullOrEmpty()) {
+                    where.and(STATUS.`in`(status.map { it.ordinal }))
+                }
+                if (startTimeEndTime != null && startTimeEndTime > 0) {
+                    where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+                }
+                where.fetchOne(0, Int::class.java)!!
+            }
+        } else {
+            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val where = dslContext.selectCount().from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(VERSION.eq(debugVersion))
+                if (!status.isNullOrEmpty()) {
+                    where.and(STATUS.`in`(status.map { it.ordinal }))
+                }
+                if (startTimeEndTime != null && startTimeEndTime > 0) {
+                    where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+                }
+                where.fetchOne(0, Int::class.java)!!
+            }
+        }
+    }
+
+    fun countByStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        status: List<BuildStatus>? = null,
+        startTimeEndTime: Long? = null,
+        onlyDebug: Boolean? = false
+    ): Int {
+        return if (onlyDebug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val where = dslContext.selectCount().from(this)
                     .where(PROJECT_ID.eq(projectId))
@@ -861,9 +900,9 @@ class PipelineBuildDao {
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Int {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val where = dslContext.selectCount()
                     .from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
@@ -895,7 +934,9 @@ class PipelineBuildDao {
         } else {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val where = dslContext.selectCount()
-                    .from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .and(VERSION.eq(debugVersion))
                 makeDebugCondition(
                     where = where,
                     materialAlias = materialAlias,
@@ -951,9 +992,9 @@ class PipelineBuildDao {
         buildMsg: String?,
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
-        debug: Boolean?
+        debugVersion: Int?
     ): Collection<BuildInfo> {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
                 makeCondition(
@@ -990,7 +1031,9 @@ class PipelineBuildDao {
             }
         } else {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-                val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                val where = dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                    .and(VERSION.eq(debugVersion))
                 makeDebugCondition(
                     where = where,
                     materialAlias = materialAlias,
@@ -1314,9 +1357,9 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): Collection<BuildInfo> {
-        return if (debug != null) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
@@ -1327,6 +1370,7 @@ class PipelineBuildDao {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 dslContext.selectFrom(this)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                    .and(VERSION.eq(debugVersion))
                     .orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                     .fetch(debugMapper)
             }
@@ -1338,9 +1382,9 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debug: Boolean?
+        debugVersion: Int?
     ): BuildInfo? {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
@@ -1354,6 +1398,7 @@ class PipelineBuildDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
                     .and(BUILD_NUM.eq(buildNum))
+                    .and(VERSION.eq(debugVersion))
                     .fetchAny(debugMapper)
             }
         }
@@ -1364,9 +1409,9 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): List<String> {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val dsl = dslContext.select(BUILD_ID).from(this)
                     .where(PROJECT_ID.eq(projectId))
@@ -1382,6 +1427,7 @@ class PipelineBuildDao {
             with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
                 val dsl = dslContext.select(BUILD_ID).from(this)
                     .where(PROJECT_ID.eq(projectId))
+                    .and(VERSION.eq(debugVersion))
                 if (!pipelineId.isNullOrBlank()) {
                     dsl.and(PIPELINE_ID.eq(pipelineId))
                 }
@@ -1536,9 +1582,9 @@ class PipelineBuildDao {
         pipelineId: String,
         startTime: LocalDateTime,
         endTime: LocalDateTime,
-        debug: Boolean?
+        debugVersion: Int?
     ): Int {
-        return if (debug != true) {
+        return if (debugVersion == null) {
             with(T_PIPELINE_BUILD_HISTORY) {
                 val conditions = mutableListOf<Condition>()
                 conditions.add(PROJECT_ID.eq(projectId))
@@ -1556,6 +1602,7 @@ class PipelineBuildDao {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
                 conditions.add(START_TIME.ge(startTime))
                 conditions.add(END_TIME.lt(endTime))
+                conditions.add(VERSION.eq(debugVersion))
                 dslContext.selectCount().from(this)
                     .where(conditions)
                     .fetchOne(0, Int::class.java)!!

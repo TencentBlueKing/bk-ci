@@ -76,7 +76,6 @@ class TemplateSettingService @Autowired constructor(
             projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             userId = userId,
-            updateVersion = false,
             pipelineName = setting.pipelineName,
             pipelineDesc = setting.desc
         )
