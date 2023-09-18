@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.auth
 
+import com.tencent.bk.sdk.iam.util.http.AuthUrlMapper
 import com.tencent.bk.sdk.iam.util.http.DefaultApacheHttpClientBuilder.IdleConnectionMonitorThread
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.httpcomponents.MicrometerHttpRequestExecutor
@@ -115,7 +116,12 @@ class RbacAuthHttpClientAutoConfiguration(
                     .setConnectionRequestTimeout(httpClientProperties.connectionRequestTimeout)
                     .build()
             )
-            .setRequestExecutor(MicrometerHttpRequestExecutor.builder(meterRegistry).build())
+            .setRequestExecutor(
+                MicrometerHttpRequestExecutor
+                    .builder(meterRegistry)
+                    .uriMapper(AuthUrlMapper())
+                    .build()
+            )
         return httpClientBuilder.build()
     }
 
