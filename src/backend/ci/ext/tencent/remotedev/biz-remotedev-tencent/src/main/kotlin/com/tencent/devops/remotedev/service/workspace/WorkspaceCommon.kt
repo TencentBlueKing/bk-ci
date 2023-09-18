@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -65,6 +66,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
+import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -84,6 +86,7 @@ class WorkspaceCommon @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
     private val sshService: SshPublicKeysService,
     private val client: Client,
@@ -98,7 +101,8 @@ class WorkspaceCommon @Autowired constructor(
     private val sleepControl: SleepControl,
     @org.springframework.context.annotation.Lazy
     private val deleteControl: DeleteControl,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val whiteListService: WhiteListService
 ) {
 
     companion object {
@@ -288,11 +292,51 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-                workspace.status.notOk2doNextAction() && Duration.between(
+                workspace.status.notOk2doNextAction(workspace) && Duration.between(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
                 ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
+    }
+
+    fun updateStatusAndCreateHistory(
+        workspaceName: String,
+        newStatus: WorkspaceStatus,
+        action: WorkspaceAction
+    ) {
+        logger.info("updateStatusAndCreateHistory|$workspaceName|$newStatus|$action")
+        workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)?.let {
+            updateStatusAndCreateHistory(
+                it, newStatus, action
+            )
+        }
+    }
+
+    fun updateStatusAndCreateHistory(
+        workspace: WorkspaceRecord,
+        newStatus: WorkspaceStatus,
+        action: WorkspaceAction
+    ) {
+        logger.info(
+            "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
+                    "newStatus|$newStatus|action|$action"
+        )
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+            status = newStatus
+        )
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+            operator = workspace.createUserId,
+            action = action,
+            actionMessage = String.format(
+                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                workspace.status.name,
+                newStatus.name
+            )
+        )
     }
 
     fun updateLastHistory(
@@ -456,6 +500,9 @@ class WorkspaceCommon @Autowired constructor(
             ""
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
+        assigns.forEach {
+            whiteListService.shareWorkspace(operator, it.userId)
+        }
     }
 
     fun unShareWorkspace(

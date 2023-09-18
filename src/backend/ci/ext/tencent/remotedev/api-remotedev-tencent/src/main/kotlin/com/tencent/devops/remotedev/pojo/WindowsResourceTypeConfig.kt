@@ -27,17 +27,47 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WorkspaceAction {
-    CREATE, // 0
-    START, // 1
-    SLEEP, // 2
-    DELETE, // 3
-    SHARE, // 4
-    PREPARING,
-    STARTING,
-    SLEEPING,
-    DELETING,
-    COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
-    NEED_RENEWAL,
-    SYSTEM_CHANGES
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("WINDOWS GPU资源配置表")
+data class WindowsResourceTypeConfig(
+    @ApiModelProperty("Id")
+    val id: Long?,
+    @ApiModelProperty("是否可用")
+    val available: Boolean?,
+    @ApiModelProperty("资源类型：M，L，XL，S")
+    val size: String,
+    @ApiModelProperty("GPU卡类型")
+    val type: String? = null,
+    @ApiModelProperty("vGPU")
+    val gpu: Int,
+    @ApiModelProperty("CPU")
+    val cpu: Int,
+    @ApiModelProperty("内存")
+    val memory: Int,
+    @ApiModelProperty("数据盘，本地SSD盘")
+    val disk: String,
+    @ApiModelProperty("云SSD盘")
+    val hdisk: String,
+    @ApiModelProperty("系统盘，本地SSD")
+    val sdisk: String,
+    @ApiModelProperty("权重，用于页面展示先后顺序")
+    val weight: Int? = 0,
+    @ApiModelProperty("描述")
+    val description: String
+) {
+
+    companion object {
+        const val GB = "GB"
+        const val TB = "TB"
+    }
+
+    fun workspaceDisk() = transferGb(disk)
+
+    private fun transferGb(disk: String): Int = when {
+        disk.contains(GB) -> disk.removeSuffix(GB).trim().toIntOrNull() ?: 0
+        disk.contains(TB) -> (disk.removeSuffix(TB).trim().toIntOrNull() ?: 0) * 1024
+        else -> 0
+    }
 }

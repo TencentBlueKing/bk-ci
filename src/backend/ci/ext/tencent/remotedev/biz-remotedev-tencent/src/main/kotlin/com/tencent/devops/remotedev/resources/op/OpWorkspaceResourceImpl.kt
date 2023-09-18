@@ -4,8 +4,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,6 +55,15 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             ?: return Result(false)
 
         workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
+        return Result(true)
+    }
+
+    override fun updateStatus(
+        userId: String,
+        workspaceName: String,
+        workspaceStatus: WorkspaceStatus
+    ): Result<Boolean> {
+        workspaceCommon.updateStatusAndCreateHistory(workspaceName, workspaceStatus, WorkspaceAction.SYSTEM_CHANGES)
         return Result(true)
     }
 }
