@@ -49,6 +49,7 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
@@ -105,6 +106,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         variableTransfer = variableTransfer,
         transferCache = transferCache
     )
+
+    private val yamlIndexService: YamlIndexService = YamlIndexService(dispatchTransfer)
+
     private val pipelineInfo = PipelineInfo(
         projectId = "",
         pipelineId = "",
@@ -299,6 +303,19 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         Assertions.assertEquals(newModel, JsonUtil.toJson(JsonUtil.to(modelFile)))
         watcher.stop()
         println(watcher.toString())
+    }
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "yaml-model-001-v3"
+        ]
+    )
+    fun markerYaml(value: String) {
+        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
+        val index = TransferMapper.indexYaml(yaml, 198,30)!!
+        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
+        val res = yamlIndexService.checkYamlIndex(pYml, index)
+        println(res)
     }
 
     @Test
