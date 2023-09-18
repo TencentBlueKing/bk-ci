@@ -158,7 +158,6 @@ class GithubReviewTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH] = event.pullRequest.base.ref
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID] = event.pullRequest.head.repo.id
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = event.pullRequest.base.repo.id
-            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS] = event
             event.pullRequest.requestedReviewers.run {
                 startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = this.joinToString(",") {
                     it.login

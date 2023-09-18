@@ -66,8 +66,7 @@ data class GithubReviewEvent(
     // 当存在多个必要评审人时,一个用户评审通过但仍不允许merge，次状态为approving
     private fun isApproving() =
         (review.state == GithubReviewState.APPROVING.value || review.state == GithubReviewState.APPROVED.value) &&
-            pullRequest.mergeable != true &&
-            pullRequest.mergeableState != "clean"
+            !isApproved()
 }
 data class GithubReview(
     override val id: Long,
