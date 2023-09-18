@@ -45,7 +45,6 @@ data class TemplateInstanceCreateRequest(
     var useConcurrencyGroup: Boolean?,
     @ApiModelProperty("创建实例的模式", required = false)
     var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
-    // TODO #8161 增加空模板的处理逻辑
     @ApiModelProperty("是否为空模板", required = false)
     var emptyTemplate: Boolean? = false,
     @ApiModelProperty("标签", required = false)

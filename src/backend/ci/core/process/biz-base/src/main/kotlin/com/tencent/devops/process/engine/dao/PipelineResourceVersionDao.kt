@@ -36,6 +36,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionR
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
+import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -43,6 +44,12 @@ import java.time.LocalDateTime
 @Suppress("Unused", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Repository
 class PipelineResourceVersionDao {
+
+    companion object {
+        private val mapper = PipelineResourceVersionJooqMapper()
+        private val sampleMapper = PipelineVersionSimpleJooqMapper()
+        private const val DEFAULT_PAGE_SIZE = 10
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -165,32 +172,7 @@ class PipelineResourceVersionDao {
                 if (includeDraft != true) where.and(STATUS.ne(VersionStatus.COMMITTING.name))
                 where.orderBy(VERSION.desc()).limit(1)
             }
-            val record = where.fetchAny() ?: return null
-            return PipelineResourceVersion(
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                version = record.version,
-                model = record.model?.let { str ->
-                    try {
-                        JsonUtil.to(str, Model::class.java)
-                    } catch (ignore: Exception) {
-                        null
-                    }
-                } ?: return null,
-                yaml = record.yaml,
-                creator = record.creator,
-                versionName = record.versionName,
-                createTime = record.createTime,
-                pipelineVersion = record.pipelineVersion,
-                triggerVersion = record.triggerVersion,
-                settingVersion = record.settingVersion,
-                referFlag = record.referFlag,
-                referCount = record.referCount,
-                status = record.status?.let { VersionStatus.valueOf(it) },
-                description = record.description,
-                debugBuildId = record.debugBuildId,
-                baseVersion = record.baseVersion
-            )
+            return where.fetchAny(mapper)
         }
     }
 
@@ -283,7 +265,6 @@ class PipelineResourceVersionDao {
         versionName: String?,
         description: String?
     ): List<PipelineVersionSimple> {
-        val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
@@ -298,29 +279,8 @@ class PipelineResourceVersionDao {
             excludeVersion?.let {
                 query.and(VERSION.notEqual(excludeVersion))
             }
-            val result = query
-                .orderBy(VERSION.desc()).limit(limit).offset(offset).fetch()
-            result.forEach { record ->
-                list.add(
-                    PipelineVersionSimple(
-                        pipelineId = pipelineId,
-                        creator = record.creator ?: "unknown",
-                        createTime = record.createTime?.timestampmilli() ?: 0,
-                        version = record.version ?: 1,
-                        versionName = record.versionName ?: "init",
-                        referFlag = record.referFlag,
-                        referCount = record.referCount,
-                        pipelineVersion = record.pipelineVersion,
-                        triggerVersion = record.triggerVersion,
-                        settingVersion = record.settingVersion,
-                        status = record.status?.let { VersionStatus.valueOf(it) },
-                        debugBuildId = record.debugBuildId,
-                        baseVersion = record.baseVersion
-                    )
-                )
-            }
+            return query.orderBy(VERSION.desc()).limit(limit).offset(offset).fetch(sampleMapper)
         }
-        return list
     }
 
     fun listPipelineVersionInList(
@@ -329,33 +289,12 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         versions: Set<Int>
     ): List<PipelineVersionSimple> {
-        val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val result = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.`in`(versions))
-                .fetch()
-            result.forEach { record ->
-                list.add(
-                    PipelineVersionSimple(
-                        pipelineId = pipelineId,
-                        creator = record.creator ?: "unknown",
-                        createTime = record.createTime?.timestampmilli() ?: 0,
-                        version = record.version ?: 1,
-                        versionName = record.versionName ?: "init",
-                        referFlag = record.referFlag,
-                        referCount = record.referCount,
-                        pipelineVersion = record.pipelineVersion,
-                        triggerVersion = record.triggerVersion,
-                        settingVersion = record.settingVersion,
-                        status = record.status?.let { VersionStatus.valueOf(it) },
-                        debugBuildId = record.debugBuildId,
-                        baseVersion = record.baseVersion
-                    )
-                )
-            }
+                .fetch(sampleMapper)
         }
-        return list
     }
 
     fun getVersionCreatorInPage(
@@ -462,6 +401,60 @@ class PipelineResourceVersionDao {
                 .set(SETTING_VERSION, settingVersion)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
                 .execute()
+        }
+    }
+
+    class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
+        override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
+            return record?.let {
+                PipelineResourceVersion(
+                    projectId = record.projectId,
+                    pipelineId = record.pipelineId,
+                    version = record.version,
+                    model = record.model?.let { str ->
+                        try {
+                            JsonUtil.to(str, Model::class.java)
+                        } catch (ignore: Exception) {
+                            null
+                        }
+                    } ?: return null,
+                    yaml = record.yaml,
+                    creator = record.creator,
+                    versionName = record.versionName,
+                    createTime = record.createTime,
+                    pipelineVersion = record.pipelineVersion,
+                    triggerVersion = record.triggerVersion,
+                    settingVersion = record.settingVersion,
+                    referFlag = record.referFlag,
+                    referCount = record.referCount,
+                    status = record.status?.let { VersionStatus.valueOf(it) },
+                    description = record.description,
+                    debugBuildId = record.debugBuildId,
+                    baseVersion = record.baseVersion
+                )
+            }
+        }
+    }
+
+    class PipelineVersionSimpleJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineVersionSimple> {
+        override fun map(record: TPipelineResourceVersionRecord?): PipelineVersionSimple? {
+            return record?.let {
+                PipelineVersionSimple(
+                    pipelineId = record.pipelineId,
+                    creator = record.creator ?: "unknown",
+                    createTime = record.createTime?.timestampmilli() ?: 0,
+                    version = record.version ?: 1,
+                    versionName = record.versionName ?: "init",
+                    referFlag = record.referFlag,
+                    referCount = record.referCount,
+                    pipelineVersion = record.pipelineVersion,
+                    triggerVersion = record.triggerVersion,
+                    settingVersion = record.settingVersion,
+                    status = record.status?.let { VersionStatus.valueOf(it) },
+                    debugBuildId = record.debugBuildId,
+                    baseVersion = record.baseVersion
+                )
+            }
         }
     }
 }

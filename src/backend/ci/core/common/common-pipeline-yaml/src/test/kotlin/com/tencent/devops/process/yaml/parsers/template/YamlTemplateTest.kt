@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
-import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
@@ -321,7 +320,7 @@ variables:
             resourceExt?.put(pool.format(), pool)
         }
         val preScriptBuildYaml = YamlTemplate(
-            filePath = TemplatePath(""),
+            filePath = "",
             yamlObject = preTemplateYamlObject,
             extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
@@ -345,9 +344,9 @@ variables:
         param: GetTemplateParam<Any?>
     ): String {
         val newPath = if (param.targetRepo == null) {
-            "templates/${param.path.path}"
+            "templates/${param.path}"
         } else {
-            "templates/${param.targetRepo!!.repository}/templates/${param.path.path}"
+            "templates/${param.targetRepo!!.repository}/templates/${param.path}"
         }
         val sb = getStrFromResource(newPath)
         println(newPath)

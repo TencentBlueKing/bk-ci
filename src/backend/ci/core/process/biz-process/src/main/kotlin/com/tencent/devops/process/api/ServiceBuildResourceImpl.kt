@@ -130,14 +130,19 @@ class ServiceBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
             pipelineBuildFacadeService.buildManualStartupInfo(
-                userId, projectId, pipelineId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -366,7 +371,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        startUser: List<String>?
+        startUser: List<String>?,
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -398,7 +404,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            debugVersion = debugVersion
         )
         return Result(result)
     }
@@ -569,6 +576,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
+        debugVersion: Int?,
         channelCode: ChannelCode
     ): Result<List<String>> {
         return Result(
@@ -577,6 +585,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildStatus = buildStatus,
+                debugVersion = debugVersion,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
@@ -723,7 +732,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        startType: StartType
+        startType: StartType,
+        debugVersion: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -736,6 +746,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 values = values,
                 channelCode = channelCode,
                 buildNo = buildNo,
+                debugVersion = debugVersion,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true
             )

@@ -183,7 +183,8 @@ class BuildEndControl @Autowired constructor(
             latestRunningBuild = LatestRunningBuild(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                endTime = endTime, buildNum = buildInfo.buildNum
+                endTime = endTime, buildNum = buildInfo.buildNum, executeCount = buildInfo.executeCount ?: 1,
+                debug = buildInfo.debug
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList,

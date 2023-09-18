@@ -64,7 +64,7 @@ class PipelineRepositoryVersionService(
             val referFlag = pipelineVersionInfo?.referFlag ?: true
             val referCount = pipelineVersionInfo?.referCount?.let { self -> self + 1 }
             // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
-                ?: pipelineBuildDao.countBuildNumByVersion(
+                ?: pipelineBuildDao.countTotalBuildNumByVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -88,7 +88,7 @@ class PipelineRepositoryVersionService(
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
-            val count = pipelineBuildDao.countBuildNumByVersion(
+            val count = pipelineBuildDao.countTotalBuildNumByVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,

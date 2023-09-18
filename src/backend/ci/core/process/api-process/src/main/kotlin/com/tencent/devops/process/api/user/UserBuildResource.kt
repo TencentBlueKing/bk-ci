@@ -82,9 +82,9 @@ interface UserBuildResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("指定草稿版本", required = false)
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("获取流水线构建参数")
@@ -103,7 +103,10 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<List<BuildParameters>>
 
     @ApiOperation("手动启动流水线")
@@ -128,9 +131,9 @@ interface UserBuildResource {
         @ApiParam("触发审核人列表", required = false)
         @QueryParam("triggerReviewers")
         triggerReviewers: List<String>? = null,
-        @ApiParam("指定草稿版本", required = false)
-        @QueryParam("version")
-        version: Int? = null
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")
@@ -282,7 +285,10 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("构建BuildNo", required = true)
         @PathParam("buildNo")
-        buildNo: Int
+        buildNo: Int,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<ModelDetail>
 
     @ApiOperation("获取构建详情")
@@ -301,7 +307,10 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("构建序号（buildNum）", required = true)
         @PathParam("buildNum")
-        buildNum: Int
+        buildNum: Int,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<ModelRecord>
 
     @ApiOperation("获取已完成的最新构建详情")
@@ -342,7 +351,10 @@ interface UserBuildResource {
         pageSize: Int?,
         @ApiParam("是否检测权限", required = false, defaultValue = "true")
         @QueryParam("checkPermission")
-        checkPermission: Boolean?
+        checkPermission: Boolean?,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线构建历史-new")
@@ -421,7 +433,10 @@ interface UserBuildResource {
         buildNoEnd: Int?,
         @ApiParam("构建信息", required = false)
         @QueryParam("buildMsg")
-        buildMsg: String?
+        buildMsg: String?,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("修改流水线备注")
@@ -490,7 +505,10 @@ interface UserBuildResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<List<String>>
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
@@ -509,7 +527,10 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("仓库", required = false)
         @QueryParam("alias")
-        alias: List<String>?
+        alias: List<String>?,
+        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
+        @QueryParam("debugVersion")
+        debugVersion: Int? = null
     ): Result<List<String>>
 
     @ApiOperation("触发审核")
