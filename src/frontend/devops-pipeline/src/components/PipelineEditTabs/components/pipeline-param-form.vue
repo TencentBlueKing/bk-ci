@@ -141,6 +141,8 @@
                 // ])
             },
             handleUpdateParam (key, value) {
+                console.log(key, value, 'pipeline-param')
+                this.param[key] = value
                 this.updateParam(key, value)
             }
         }

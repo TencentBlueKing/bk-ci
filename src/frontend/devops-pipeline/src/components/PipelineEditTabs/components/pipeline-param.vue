@@ -19,13 +19,8 @@
             </div>
         </div>
         <div class="variable-content">
-            <div
-                v-for="(param, index) in globalParams"
-                :key="param.id"
-                class="variable-item"
-                @mouseenter="hoverIndex = index"
-                @mouseleave="hoverIndex = -1"
-            >
+            <div v-for="(param, index) in globalParams" :key="param.id" class="variable-item"
+                @mouseenter="hoverIndex = index" @mouseleave="hoverIndex = -1">
                 <div class="var-con">
                     <div class="var-names" v-bk-tooltips="{ content: param.desc, disabled: !param.desc }">
                         <span>{{ param.id }}</span>
@@ -52,24 +47,18 @@
             </div>
         </div>
 
-        <bk-sideslider
-            quick-close
-            :transfer="true"
-            :width="640"
-            :title="sliderTitle"
-            :is-show.sync="showSlider"
-            ext-cls="edit-var-container"
-            @hidden="closeSlider"
-        >
+        <bk-sideslider :quick-close="false" :transfer="true" :width="640" :title="sliderTitle"
+            :is-show.sync="showSlider" ext-cls="edit-var-container" @hidden="closeSlider">
             <div class="edit-var-content" slot="content">
-                <pipeline-param-form :edit-item="sliderEditItem" :global-params="globalParams" :edit-index="editIndex" :update-param="updateEditItem" />
+                <pipeline-param-form :edit-item="sliderEditItem" :global-params="globalParams" :edit-index="editIndex"
+                    :update-param="updateEditItem" />
             </div>
             <div class="edit-var-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveVar">
-                    新增
+                    {{ $t('添加') }}
                 </bk-button>
                 <bk-button style="margin-left: 4px;" @click="hideSlider">
-                    取消
+                    {{ $t('cancel') }}
                 </bk-button>
             </div>
         </bk-sideslider>
@@ -115,7 +104,7 @@
                 }
             },
             sliderTitle () {
-                return '新增变量'
+                return this.editIndex === -1 ? this.$t('添加变量') : this.$t('编辑变量')
             }
         },
         methods: {

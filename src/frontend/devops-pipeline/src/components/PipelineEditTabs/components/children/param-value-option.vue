@@ -1,20 +1,41 @@
 <template>
     <section class="bk-form-item">
+        {{param}}
+
+        <select-type-param
+            v-if="isSelectorParam(param.type)"
+            :param="param"
+            :handle-update-options="handleUpdateOptions"
+            :handle-update-payload="handleUpdatePayload"
+            :reset-default-val="handleResetDefaultVal" />
+        
         <form-field :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`defaultValue`)" :error-msg="errors.first(`defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
-            <selector
-                :popover-min-width="250"
-                v-if="isSelectorParam(param.type)"
-                :handle-change="(name, value) => handleUpdateParam(name, value)"
-                :list="transformOpt(param.options)"
-                :multi-select="isMultipleParam(param.type)"
-                name="defaultValue"
-                :placeholder="$t('editPage.defaultValueTips')"
-                :disabled="disabled"
-                show-select-all
-                :key="param.type"
-                :value="getSelectorDefaultVal(param)"
-            >
-            </selector>
+            <template v-if="isSelectorParam(param.type)">
+                <request-selector
+                    v-if="param.payload && param.payload.type === 'remote'"
+                    v-bind="remoteParamOption"
+                    :popover-min-width="250"
+                    :disabled="disabled"
+                    name="defaultValue"
+                    :value="param.defaultValue"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                >
+                </request-selector>
+                <selector
+                    v-else
+                    :popover-min-width="250"
+                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :list="optionList"
+                    :multi-select="isMultipleParam(param.type)"
+                    name="defaultValue"
+                    :placeholder="$t('editPage.defaultValueTips')"
+                    :disabled="disabled"
+                    show-select-all
+                    :key="param.type"
+                    :value="selectDefautVal"
+                >
+                </selector>
+            </template>
             <enum-input
                 v-if="isBooleanParam(param.type)"
                 name="defaultValue"
@@ -30,8 +51,6 @@
             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value)" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
             <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value)" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
         </form-field>
-
-        <select-type-param v-if="isSelectorParam(param.type)" :param="param" :handle-update-options="handleUpdateOptions" />
 
         <form-field v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`repoHashId`)" :error-msg="errors.first(`repoHashId`)">
             <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value)" v-validate.initial="'required'" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
@@ -68,6 +87,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -134,9 +154,25 @@
                 type: Function,
                 default: () => {}
             }
-
+        },
+        data () {
+            return {
+                optionList: [],
+                selectDefautVal: '',
+                remoteParamOption: {}
+            }
         },
         computed: {
+            ...mapGetters('atom', [
+                'osList',
+                'getBuildResourceTypeList'
+            ]),
+            baseOSList () {
+                return this.osList.filter(os => os.value !== 'NONE').map(os => ({
+                    id: os.value,
+                    name: os.label
+                }))
+            },
             boolList () {
                 return BOOLEAN
             },
@@ -149,6 +185,14 @@
             subPipelineOption () {
                 return SUB_PIPELINE_OPTION
             }
+        },
+        created () {
+            if (this.isSelectorParam(this.param.type) && !this.isRemoteSelect) {
+                this.transformOpt(this.param.options || [])
+                this.selectDefautVal = this.param.defaultValue
+                this.setSelectorDefaultVal(this.param)
+            }
+            this.setRemoteParamOption(this.param.payload)
         },
         methods: {
             isTextareaParam,
@@ -166,18 +210,42 @@
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
+            setRemoteParamOption (payload) {
+                payload = payload || {}
+                const remoteOpion = {
+                    url: payload.url || '',
+                    dataPath: payload.dataPath || 'data',
+                    paramId: payload.paramId || 'id',
+                    paramName: payload.paramName || 'name'
+                }
+                this.remoteParamOption = remoteOpion
+            },
             getRepoOption (type) {
                 return getRepoOption(type)
             },
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
             },
-            getSelectorDefaultVal ({ type, defaultValue = '' }) {
-                if (isMultipleParam(type)) {
-                    return defaultValue && typeof defaultValue === 'string' ? defaultValue.split(',') : []
-                }
+            handleBuildResourceChange (name, value, param) {
+                const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
 
-                return defaultValue
+                this.handleUpdateParam('containerType', Object.assign({
+                    ...param.containerType,
+                    [name]: value
+                }, resetBuildType))
+                this.handleUpdateParam('defaultValue', '')
+            },
+            setSelectorDefaultVal ({ type, defaultValue = '' }) {
+                if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
+                    const dv = this.param.defaultValue.split(',').filter(v => this.param.options.map(k => k.key).includes(v))
+                    if (isMultipleParam(this.param.type)) {
+                        this.handleUpdateParam('defaultValue', dv.join(','))
+                        this.selectDefautVal = dv
+                    } else {
+                        this.handleUpdateParam('defaultValue', dv.join(','))
+                        this.selectDefautVal = dv.join(',')
+                    }
+                }
             },
             transformOpt (opts) {
                 const uniqueMap = {}
@@ -191,8 +259,7 @@
                         return false
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
-                console.log('final options', final)
-                return final
+                this.optionList = final
             },
             editOption (name, value, index) {
                 try {
@@ -228,16 +295,6 @@
                 }
             },
 
-            handleBuildResourceChange (name, value, index, param) {
-                const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
-
-                this.handleUpdateParam('containerType', Object.assign({
-                    ...param.containerType,
-                    [name]: value
-                }, resetBuildType), index)
-                this.handleUpdateParam('defaultValue', '', index)
-            },
-
             getBuildResourceUrl ({ os, buildType }) {
                 return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
@@ -255,10 +312,21 @@
             getSearchUrl () {
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
             },
-
-            // handleChange (params) {
-            //     this.updateContainerParams(this.settingKey, params)
-            // },
+            handleUpdatePayload (key, val) {
+                this.handleChange(key, val)
+                if (val.type === 'remote') {
+                    this.setRemoteParamOption(val)
+                }
+            },
+            handleResetDefaultVal () {
+                console.log('enter reset')
+                if (isMultipleParam(this.param.type)) {
+                    this.selectDefautVal = []
+                } else {
+                    this.selectDefautVal = ''
+                }
+                this.handleUpdateParam('defaultValue', '')
+            },
             handleUpdateOptions (key, val) {
                 this.handleChange(key, val)
                 this.transformOpt(val)
@@ -273,7 +341,7 @@
                         this.handleUpdateParam('defaultValue', dv.join(','))
                     }
                 }
-                this.getSelectorDefaultVal(this.param)
+                this.setSelectorDefaultVal(this.param)
             },
             handleUpdateParam (key, value) {
                 console.log(key, value, 'inner')

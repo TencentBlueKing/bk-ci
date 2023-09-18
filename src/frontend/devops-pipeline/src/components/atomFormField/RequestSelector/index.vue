@@ -96,7 +96,7 @@
             }
         },
         created () {
-            this.freshList()
+            this.url && this.freshList()
         },
         methods: {
             edit (index) {
