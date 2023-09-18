@@ -524,7 +524,7 @@ class BkRepoService @Autowired constructor(
                     val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
                         shortUrlService.createShortUrl(
                             PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
-                            24 * 3600 * 30
+                            TimeUnit.DAYS.toSeconds(90L).toInt()
                         )
                     } else {
                         ""
