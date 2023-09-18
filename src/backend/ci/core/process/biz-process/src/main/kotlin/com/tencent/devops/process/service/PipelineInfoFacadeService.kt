@@ -801,6 +801,18 @@ class PipelineInfoFacadeService @Autowired constructor(
             version = version,
             includeDraft = true
         )
+        val draftSetting = draftVersion?.version?.let {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        } ?: pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         if (draftVersion?.status != VersionStatus.COMMITTING) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_IS_NOT_DRAFT
         )
@@ -815,7 +827,20 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (!latestDebugPassed) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
         )
-        // TODO #8161 具体发布动作
+        pipelineRepositoryService.deployPipeline(
+            model = draftVersion.model,
+            projectId = projectId,
+            signPipelineId = pipelineId,
+            userId = draftVersion.creator,
+            channelCode = ChannelCode.BS,
+            create = false,
+            updateLastModifyUser = true,
+            savedSetting = draftSetting,
+            versionStatus = VersionStatus.RELEASED,
+            description = draftVersion.description,
+            yamlStr = draftVersion.yaml,
+            baseVersion = draftVersion.baseVersion
+        )
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,

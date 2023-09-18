@@ -36,6 +36,8 @@ import io.swagger.annotations.ApiModelProperty
 data class BuildFormProperty(
     @ApiModelProperty("元素ID-标识符", required = true)
     var id: String,
+    @ApiModelProperty("元素名称", required = true)
+    var name: String? = null,
     @ApiModelProperty("是否必须", required = true)
     var required: Boolean,
     @ApiModelProperty("元素类型", required = true)
