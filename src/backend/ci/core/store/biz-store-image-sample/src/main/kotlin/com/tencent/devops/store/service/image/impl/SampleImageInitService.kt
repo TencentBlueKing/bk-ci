@@ -90,7 +90,8 @@ class SampleImageInitService @Autowired constructor(
                 projectCreateInfo = ProjectCreateInfo(
                     projectName = imageInitRequest?.projectCode ?: "Demo",
                     englishName = projectCode,
-                    description = imageInitRequest?.projectDesc ?: "demo project"
+                    description = imageInitRequest?.projectDesc ?: "demo project",
+                    enabled = false
                 )
             )
             if (createDemoProjectResult.isNotOk() || createDemoProjectResult.data != true) {
