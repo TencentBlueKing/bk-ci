@@ -452,9 +452,11 @@ const actions = {
      */
     fetchEventDetail ({ commit }, {
         projectId,
-        eventId
+        eventId,
+        page,
+        pageSize
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?page=${page}&pageSize=${pageSize}`)
     },
 
     /**

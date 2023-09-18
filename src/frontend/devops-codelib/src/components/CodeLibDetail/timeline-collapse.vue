@@ -44,40 +44,50 @@
                             {{ $t('codelib.一键重新触发') }}
                         </a>
                     </div>
-                    <table
-                        :class="{
-                            'trigger-list-table': true,
-                            'is-show-table': activeIndex === index
-                        }"
+                    <div
+                        class="trigger-list-table"
                         v-if="activeIndex === index"
-                        v-bkloading="{ isLoading }">
-                        <tbody>
-                            <tr v-for="detail in eventDetailList" :key="detail.detailId">
-                                <td width="25%">
-                                    <div class="cell">{{ detail.pipelineName }}</div>
-                                </td>
-                                <td width="55%">
-                                    <div class="cell" v-if="detail.status === 'SUCCEED'">
-                                        <StatusIcon :status="detail.status"></StatusIcon>
-                                        {{ detail.reason }}  |
-                                        <span v-html="detail.buildNum"></span>
-                                    </div>
-                                    <div class="cell">
-                                        <div v-for="i in detail.reasonDetailList" :key="i">
+                    >
+                        <table
+                            :class="{
+                                'is-show-table': activeIndex === index
+                            }"
+                            v-bkloading="{ isLoading }">
+                            <tbody>
+                                <tr v-for="detail in eventDetailList" :key="detail.detailId">
+                                    <td width="25%">
+                                        <div class="cell">{{ detail.pipelineName }}</div>
+                                    </td>
+                                    <td width="55%">
+                                        <div class="cell" v-if="detail.status === 'SUCCEED'">
                                             <StatusIcon :status="detail.status"></StatusIcon>
-                                            <span style="color: red;">{{ detail.reason }}</span>  |
-                                            <span>{{ i }}</span>
+                                            {{ detail.reason }}  |
+                                            <span v-html="detail.buildNum"></span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td width="15%">
-                                    <div class="cell">
-                                        <a class="click-trigger" @click="handleReplay(detail.detailId)">{{ $t('codelib.重新触发') }}</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                        <div class="cell">
+                                            <div v-for="i in detail.reasonDetailList" :key="i">
+                                                <StatusIcon :status="detail.status"></StatusIcon>
+                                                <span style="color: red;">{{ detail.reason }}</span>  |
+                                                <span>{{ i }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td width="15%">
+                                        <div class="cell">
+                                            <a class="click-trigger" @click="handleReplay(detail.detailId)">{{ $t('codelib.重新触发') }}</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <bk-pagination
+                            class="trigger-table-pagination"
+                            show-total-count
+                            v-bind="pagination"
+                            @change="handleChangePage"
+                            @limit-change="handleChangeLimit">
+                        </bk-pagination>
+                    </div>
                 </div>
             </div>
         </div>
@@ -106,7 +116,13 @@
             return {
                 isLoading: false,
                 activeIndex: -1,
-                eventDetailList: []
+                eventDetailList: [],
+                eventId: '',
+                pagination: {
+                    current: 1,
+                    limit: 10,
+                    count: 0
+                }
             }
         },
         computed: {
@@ -155,17 +171,35 @@
              * 展示触发事件详情
              */
             handleShowDetail (data, index) {
+                this.pagination.current = 1
                 this.activeIndex === index ? this.activeIndex = -1 : this.activeIndex = index
                 if (this.activeIndex === -1) return
+                this.eventId = data.eventId
+                this.getEventDetail()
+            },
+
+            getEventDetail () {
                 this.isLoading = true
                 this.fetchEventDetail({
                     projectId: this.projectId,
-                    eventId: data.eventId
+                    eventId: this.eventId,
+                    page: this.pagination.current,
+                    pageSize: this.pagination.limit
                 }).then(res => {
                     this.eventDetailList = res.records
+                    this.pagination.count = res.count
                 }).finally(() => {
                     this.isLoading = false
                 })
+            },
+            handleChangeLimit (limit) {
+                this.pagination.limit = limit
+                this.pagination.current = 1
+                this.getEventDetail()
+            },
+            handleChangePage (page) {
+                this.pagination.current = page
+                this.getEventDetail()
             }
         }
     }
@@ -241,6 +275,9 @@
             border: 1px solid #dfe0e5;
             border-radius: 2px;
             transition: opacity 3s linear;
+            table {
+                width: 100%;
+            }
             tr {
                 border-bottom: 1px solid #dfe0e5;
                 height: 42px;
@@ -256,6 +293,10 @@
                     -webkit-box-orient: vertical;
                 }
             }
+        }
+        .trigger-table-pagination {
+            height: 63px;
+            padding: 14px 20px 0;
         }
         .is-show-table {
             animation: fade-in 1s ease-in-out;
