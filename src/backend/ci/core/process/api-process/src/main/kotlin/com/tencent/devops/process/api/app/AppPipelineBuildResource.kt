@@ -78,7 +78,7 @@ interface AppPipelineBuildResource {
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("手动启动流水线")
@@ -99,7 +99,7 @@ interface AppPipelineBuildResource {
         values: Map<String, String>,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
@@ -346,7 +346,7 @@ interface AppPipelineBuildResource {
         @QueryParam("buildMsg")
         buildMsg: String?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("version")
+        @QueryParam("debugVersion")
         debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 }

@@ -195,7 +195,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -223,7 +223,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            debug = debug
+            debugVersion = debugVersion
         )
         return Result(result)
     }
@@ -280,7 +280,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
 
@@ -294,7 +294,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 startType = StartType.MANUAL,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                debugVersion = debugVersion,
                 values = values.filter { it.key != "buildNo" },
                 channelCode = channelCode,
                 buildNo = buildNo

@@ -64,14 +64,14 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         logger.info("OPENAPI_BUILD_V4|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version,
+            debugVersion = debugVersion,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }

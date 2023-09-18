@@ -340,7 +340,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        version: Int?
+        debug: Boolean?
     ): List<BuildParameters> {
 
         pipelinePermissionService.validPipelinePermission(
@@ -354,7 +354,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, "")
             )
         )
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, version)
+        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, debug)
     }
 
     fun retry(

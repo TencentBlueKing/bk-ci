@@ -94,7 +94,7 @@ class UserBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.getBuildParameters(
-                userId, projectId, pipelineId, buildId, debugVersion
+                userId, projectId, pipelineId, buildId, debugVersion != null
             )
         )
     }
