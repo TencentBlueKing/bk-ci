@@ -43,6 +43,7 @@ class ServiceProjectService @Autowired constructor(
     private val projectServiceDao: ServiceDao,
     private val dslContext: DSLContext
 ) {
+    @Suppress("ComplexMethod")
     fun getServiceList(): Result<List<ServiceVO>> {
         val serviceList = mutableListOf<ServiceVO>()
         val serviceRecodes = projectServiceDao.getServiceList(

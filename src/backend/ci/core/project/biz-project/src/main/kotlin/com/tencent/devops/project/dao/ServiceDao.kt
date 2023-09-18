@@ -76,7 +76,8 @@ class ServiceDao {
                 PROJECT_ID_TYPE,
                 CREATED_USER,
                 DELETED,
-                GRAY_IFRAME_URL
+                GRAY_IFRAME_URL,
+                CLUSTER_TYPE
             )
                 .values(
                     serviceVO.id,
@@ -96,7 +97,8 @@ class ServiceDao {
                     serviceVO.projectIdType,
                     userId,
                     false,
-                    serviceVO.grayIframeUrl
+                    serviceVO.grayIframeUrl,
+                    serviceVO.clusterType
                 )
                 .execute()
         }
