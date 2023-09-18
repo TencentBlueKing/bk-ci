@@ -92,7 +92,7 @@ abstract class StoreFileService {
         }
         descriptionText = regexAnalysis(
             input = descriptionText,
-            fileDirPath = fileDirPath,
+            fileDirPath = "$fileDirPath$fileSeparator$language",
             pathList = pathList
         )
         val uploadFileToPathResult = uploadFileToPath(
