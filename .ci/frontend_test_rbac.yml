@@ -1,140 +1,96 @@
 version: "v2.0"
-name: "bk-ci前端部署【rbac-test】"
+name: "bk-ci前端部署【test-rbac】"
 variables:
-  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,stream,metrics,manage,permission"
-  branch: "feature-dev-rbac"
-  path: "rbac"
+  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream,metrics,permission,manage"
   ips: "11.185.145.49"
+  # 9.134.78.69,10.123.135.151,9.66.32.218
+  #
 on:
-    push: [ "feature-dev-rbac" ]
-    
+  push: ["test"]
+
 stages:
-- name: "Build"
-  label:
-  - "Build"
-  jobs:
-    job_1:
-      name: "构建环境-LINUX"
-      runs-on:
-        pool-name: docker
-        container:
-          image: mirrors.tencent.com/ci/tlinux3_ci:1.5.0
-        needs:
-          nodejs: 16.13.0
-      steps:
-      - checkout: "https://git.woa.com/bkdevops/bk-ci.git"
-        name: Checkout
-        with:
-          refName: feature-dev-rbac
-          enableGitCleanIgnore: true
-      - name: "拉取前端占位符"
-        checkout: "https://git.woa.com/bkdevops/devops-config.git"
-        with:
-          pullType: "BRANCH"
-          refName: "integration"
-          localPath: "devops-config"
-      - uses: calculatehash@1.*
-        id: calculate
-        with:
-          file_path: src/frontend/package.json,src/frontend/devops-nav/package.json,src/frontend/devops-pipeline/package.json,src/frontend/devops-atomstore/package.json,src/frontend/devops-codelib/package.json,src/frontend/devops-environment/package.json,src/frontend/devops-quality/package.json,src/frontend/devops-experience/package.json,src/frontend/devops-turbo/package.json,src/frontend/devops-stream/package.json,src/frontend/devops-manage/package.json,src/frontend/devops-permission/package.json
-          calculate_func: md5
-      - uses: cache@1.*
-        id: cache
-        with:
-          cacheKey: "bk_ci_frontend_dev_linux_${{ steps.calculate.outputs.hash_value }}"
-          cachePaths: |
-            src/frontend/package.json
-            src/frontend/devops-nav/package.json
-            src/frontend/devops-pipeline/package.json
-            src/frontend/devops-atomstore/package.json
-            src/frontend/devops-codelib/package.json
-            src/frontend/devops-environment/package.json
-            src/frontend/devops-quality/package.json
-            src/frontend/devops-experience/package.json
-            src/frontend/devops-turbo/package.json
-            src/frontend/devops-stream/package.json
-            src/frontend/devops-manage/package.json
-            src/frontend/devops-permission/package.json
-          restoreKeys: "bk_ci_frontend_dev_linux_"
-      - name: "Bash"
-        run: |
-          node -v
-          echo '------------node'
-          cd src/frontend
-          if [ ${{ steps.cache.outputs.cacheHit }} == 'false' ]
-          then
-            yarn
-          else
-            echo "package.json has not changed"
-          fi
-          yarn
-          ls -l ./node_modules/.bin
-          ls -l ./node_modules
-          chmod -R 777 ./
-          yarn public -e dev -t tencent -s ${{ variables.modules }}
+  - name: "Build"
+    label:
+      - "Build"
+    jobs:
+      job_1:
+        name: "构建环境-LINUX"
+        runs-on:
+          container:
+            image: mirrors.tencent.com/ci/tlinux3_ci:2.5.0
+        steps:
+          - checkout: "http://git.woa.com/bkdevops/bk-ci.git"
+            name: Checkout
+            with:
+              refName: test
+              enableGitCleanIgnore: true
+          - name: "拉取前端占位符"
+            checkout: "http://git.woa.com/bkdevops/devops-config.git"
+            with:
+              pullType: "BRANCH"
+              refName: "integration"
+              localPath: "devops-config"
+          - run: |
 
-          cd ./frontend/ || exit 1
+              cd src/frontend
+              yarn
+              yarn public -e test -l v2 -t tencent
 
-          cp -rf ${{ ci.workspace }}/devops-config/gateway_frontend/* ${{ ci.workspace }}/
-          rm -r ${{ ci.workspace }}/ci || echo "no ci director"
-          mkdir -p ${{ ci.workspace }}/ci/frontend
+              cd ./frontend/ || exit 1
 
-          cp -r ./* ${{ ci.workspace }}/ci/frontend/
-          cp ./console/frontend#console#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no console module"
-          cp ./pipeline/frontend#pipeline#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no pipeline module"
-          cp ./manage/frontend#manage#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no manage module"
-          cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
+              cp -rf ${WORKSPACE}/devops-config/gateway_frontend/* ${WORKSPACE}/
+              rm -r ${WORKSPACE}/ci || echo "no ci director"
+              mkdir -p ${WORKSPACE}/ci/frontend
 
-          cd ${{ ci.workspace }}/scripts/
-          cp -rf ci_env_test.properties ci_env.properties
-          sh ./render_ci -m ci ../support-files/templates/*
+              cp -r ./* ${WORKSPACE}/ci/frontend/
+              cp ./console/frontend#console#index.html ${WORKSPACE}/support-files/templates/ || echo "no console module"
+              cp ./pipeline/frontend#pipeline#index.html ${WORKSPACE}/support-files/templates/ || echo "no pipeline module"
+              cp ./stream/frontend#stream#index.html ${WORKSPACE}/support-files/templates/ || echo "no stream module"
+              cp ./manage/frontend#manage#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no manage module"
+              cp ./permission/frontend#permission#index.html ${{ ci.workspace }}/support-files/templates/ || echo "no permission module"
 
-          cd ${{ ci.workspace }}/ci/frontend/
-          zip -r frontend.zip ./* && cp frontend.zip ${{ ci.workspace }}
-      - name: "Upload"
-        uses: "UploadArtifactory@1.*"
-        with:
-          filePath: "frontend.zip"
-          # repoName: "pipeline"
-- name: "Deploy"
-  label:
-  - "Deploy"
-  jobs:
-    job_2:
-      name: "无编译环境"
-      runs-on: agentless
-      steps:
-      - name: "分发"
-        uses: "jobFileTransferForOA@1.*"
-        with:
-          bizId: "100205"
-          srcType: "PIPELINE"
-          srcPath: "frontend.zip"
-          targetIpList: ${{ variables.ips }}
-          targetAccount: "root"
-          targetPath: "/data/tmp"
-      - name: "发布"
-        uses: "jobExecuteScriptForOA@1.*"
-        with:
-          bizId: "100205"
-          scriptType: "1"
-          scriptContent: |
-            cd /data/tmp
-            rm -rf frontend
-            mkdir -p frontend
-            unzip -o frontend.zip -d frontend
+              cd ${WORKSPACE}/scripts/
+              cp -rf ci_env_test.properties ci_env.properties
+              sh ./render_ci -m ci ../support-files/templates/*
 
-            if [ "${{ variables.path }}" = "default" ]; then
-                f_path=frontend
-            else
-                f_path=frontend-${{ variables.path }}
-            fi
+              cd ${WORKSPACE}/ci/frontend/
+              zip -r frontend.zip ./* && cp frontend.zip ${WORKSPACE}
+          - name: "Upload"
+            uses: "UploadArtifactory@1.*"
+            with:
+              filePath: "frontend.zip"
+  - name: "Deploy"
+    label:
+      - "Deploy"
+    jobs:
+      job_2:
+        name: "无编译环境"
+        runs-on: agentless
+        steps:
+          - name: "分发"
+            uses: "jobFileTransferForOA@1.*"
+            with:
+              bizId: "100205"
+              srcType: "PIPELINE"
+              srcPath: "frontend.zip"
+              targetIpList: ${{ variables.ips }}
+              targetAccount: "root"
+              targetPath: "/data/tmp-rbac"
+          - name: "发布"
+            uses: "jobExecuteScriptForOA@1.*"
+            with:
+              bizId: "100205"
+              scriptType: "1"
+              scriptContent: |
+                cd /data/tmp-rbac
+                rm -rf frontend
+                mkdir -p frontend
+                unzip -o frontend.zip -d frontend
+                mkdir -p /data/bkee/ci/frontend-rbac
+                cp -rf /data/tmp-rbac/frontend/* /data/bkee/ci/frontend-rbac
 
-            mkdir -p /data/bkee/ci/$f_path
-            cp -rf /data/tmp/frontend/* /data/bkee/ci/$f_path
-
-          account: "root"
-          targetIpList: ${{ variables.ips }}
+              account: "root"
+              targetIpList: ${{ variables.ips }}
 
 notices:
-- type: wework-message
+  - type: wework-message

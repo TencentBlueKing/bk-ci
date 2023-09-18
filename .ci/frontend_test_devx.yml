@@ -1,7 +1,7 @@
 version: "v2.0"
-name: "前端部署Test[U]"
+name: "bk-ci前端部署【test-devx】"
 variables:
-  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream"
+  modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream,metrics,permission,manage"
   ips: "11.185.145.49"
   # 9.134.78.69,10.123.135.151,9.66.32.218
   #
@@ -22,7 +22,7 @@ stages:
           - checkout: "http://git.woa.com/bkdevops/bk-ci.git"
             name: Checkout
             with:
-              refName: integration
+              refName: test
               enableGitCleanIgnore: true
           - name: "拉取前端占位符"
             checkout: "http://git.woa.com/bkdevops/devops-config.git"
@@ -51,6 +51,11 @@ stages:
 
               cd ${WORKSPACE}/scripts/
               cp -rf ci_env_test.properties ci_env.properties
+
+              echo "PAAS_LOGIN_URL='login.devx.tencent.com/login/?c_url=%s'" >> ci_env.properties
+              echo "WOA_LOGIN_SERVICE_URL='//login.devx.tencent.com/login/?c_url=%s'" >> ci_env.properties
+              echo "BKCI_FQDN='test.devx.tencet.com'" >> ci_env.properties
+
               sh ./render_ci -m ci ../support-files/templates/*
 
               cd ${WORKSPACE}/ci/frontend/
@@ -75,19 +80,19 @@ stages:
               srcPath: "frontend.zip"
               targetIpList: ${{ variables.ips }}
               targetAccount: "root"
-              targetPath: "/data/tmp"
+              targetPath: "/data/tmp-devx"
           - name: "发布"
             uses: "jobExecuteScriptForOA@1.*"
             with:
               bizId: "100205"
               scriptType: "1"
               scriptContent: |
-                cd /data/tmp
+                cd /data/tmp-devx
                 rm -rf frontend
                 mkdir -p frontend
                 unzip -o frontend.zip -d frontend
-                mkdir -p /data/bkee/ci/frontend
-                cp -rf /data/tmp/frontend/* /data/bkee/ci/frontend
+                mkdir -p /data/bkee/ci/frontend-devx
+                cp -rf /data/tmp-devx/frontend/* /data/bkee/ci/frontend-devx
 
               account: "root"
               targetIpList: ${{ variables.ips }}
