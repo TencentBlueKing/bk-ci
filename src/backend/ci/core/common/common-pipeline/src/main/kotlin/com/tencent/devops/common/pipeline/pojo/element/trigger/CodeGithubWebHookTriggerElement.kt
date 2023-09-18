@@ -59,9 +59,9 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("用于包含的路径", required = false)
-    val includePaths: String?,
+    val includePaths: String? = "",
     @ApiModelProperty("用于排除的路径", required = false)
-    val excludePaths: String?,
+    val excludePaths: String? = "",
     @ApiModelProperty("用户白名单", required = false)
     val includeUsers: String? = null,
     @ApiModelProperty("用于排除的源分支名称", required = false)
