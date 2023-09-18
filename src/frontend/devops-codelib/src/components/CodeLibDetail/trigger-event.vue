@@ -49,7 +49,6 @@
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
-        {{ scmType}}
     </section>
 </template>
 <script>
@@ -132,6 +131,8 @@
         },
         watch: {
             async repoId (id) {
+                await this.getEventTypeList()
+                await this.getTriggerTypeList()
                 await this.resetFilter()
                 this.catchRepoId = id
             },
@@ -141,7 +142,6 @@
                 this.hasLoadEnd = false
                 this.eventList = []
                 this.timelineMap = {}
-                console.log(this.catchRepoId === this.repoId, 'this.catchRepoId === this.repoId')
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
@@ -161,7 +161,6 @@
             this.catchRepoId = this.repoId
             this.getEventTypeList()
             this.getTriggerTypeList()
-            this.getListData()
             const endTime = new Date()
             const startTime = new Date()
             startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)

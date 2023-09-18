@@ -272,14 +272,14 @@
                     typeName,
                     svnType: 'ssh'
                 }
-                if (isGit(typeName) || isGithub(typeName) || isTGit(typeName)) {
+                if (isGit(typeName) || isGithub(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'OAUTH' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
-                // if (isTGit(typeName)) {
-                //     Object.assign(CodelibDialog, { authType: 'HTTPS' })
-                //     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
-                // }
+                if (isTGit(typeName)) {
+                    Object.assign(CodelibDialog, { authType: 'HTTPS' })
+                    if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
+                }
                 if (isGitLab(typeName) || isSvn(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'SSH' })
                 }
