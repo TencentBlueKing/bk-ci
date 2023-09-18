@@ -77,7 +77,7 @@ class TemplatePACService @Autowired constructor(
                 template = model,
                 templateYaml = null,
                 setting = null,
-                highlightMark = null
+                highlightMarkList = null
             )
         }
         val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
@@ -96,24 +96,30 @@ class TemplatePACService @Autowired constructor(
         )
 
         // highlight mark
-        var highlightMark: TransferMark? = null
+        val highlightMarkList = mutableListOf<TransferMark>()
         if (yaml != null && highlightType != null) {
             run outside@{
                 TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
                     when {
                         highlightType == HighlightType.LABEL && key == "label" -> {
-                            highlightMark = value
+                            highlightMarkList.add(value)
                             return@outside
                         }
 
                         highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
-                            highlightMark = value
+                            highlightMarkList.add(value)
                             return@outside
                         }
 
-                        highlightType == HighlightType.LABEL && key == "notices" -> {
-                            highlightMark = value
+                        highlightType == HighlightType.NOTIFY && key == "notices" -> {
+                            highlightMarkList.add(value)
                             return@outside
+                        }
+
+                        highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
+                            highlightMarkList.add(value)
+                            // pipelineModel 可能多个
+                            return@forEach
                         }
                     }
                 }
@@ -124,11 +130,12 @@ class TemplatePACService @Autowired constructor(
             template = model,
             templateYaml = yaml,
             setting = setting,
-            highlightMark = highlightMark
+            highlightMarkList = highlightMarkList
         )
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(TemplatePACService::class.java)
+        private val pipelineModelKey = setOf("stages", "jobs", "steps", "finally")
     }
 }
