@@ -131,37 +131,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
-        return Result(
-            workspaceService.shareWorkspace(
-                workspaceShared.operator,
-                workspaceShared.workspaceName,
-                workspaceShared.sharedUser,
-                needPermission = false
-            )
-        )
-    }
-
-    override fun shareWorkspace4OP(
-        userId: String,
-        shareWorkspace: ShareWorkspace
-    ): Result<Boolean> {
-        return Result(
-            workspaceService.shareWorkspace4OP(
-                userId = userId,
-                shareWorkspace = shareWorkspace
-            )
-        )
-    }
-
-    override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
-        return Result(workspaceService.getShareWorkspace(workspaceName))
-    }
-
-    override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
-        return Result(workspaceService.deleteSharedWorkspace(id))
-    }
-
     override fun getProjectWorkspaceList(
         userId: String,
         projectId: String?,
