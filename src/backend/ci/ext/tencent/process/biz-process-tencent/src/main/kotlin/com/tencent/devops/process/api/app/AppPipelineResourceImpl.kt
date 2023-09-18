@@ -98,7 +98,7 @@ class AppPipelineResourceImpl @Autowired constructor(
         pageSize: Int?,
         channelCode: ChannelCode?,
         materialBranch: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<Page<AppPipelineHistory>> {
         return Result(
             appPipelineService.listPipelineHistory(
@@ -110,7 +110,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS,
                 checkPermission = true,
                 materialBranch = materialBranch,
-                debug = debug
+                debugVersion = debugVersion
             )
         )
     }
@@ -120,11 +120,11 @@ class AppPipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         alias: List<String>?,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
         return Result(pipelineBuildFacadeService.getHistoryConditionBranch(
-            userId, projectId, pipelineId, alias, debug
+            userId, projectId, pipelineId, alias, debugVersion
         ))
     }
 
@@ -141,11 +141,11 @@ class AppPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debug: Boolean?
+        debugVersion: Int?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
         return Result(pipelineBuildFacadeService.getHistoryConditionRepo(
-            userId, projectId, pipelineId, debug
+            userId, projectId, pipelineId, debugVersion
         ))
     }
 
