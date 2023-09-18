@@ -33,8 +33,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         // 根据cgsId获取对应的机型和地域
         val cgsData = workspaceCommon.getCgsData(cgsId) ?: return Result(false)
         // 再根据机型和地域获取硬件资源配置
-        val windowsResourceConfigId = windowsResourceConfigService.getConfig(
-            zoneId = cgsData.zoneId,
+        val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
             machineType = cgsData.machineType
         ) ?: return Result(false)
         // 调用CreateControl.asyncCreateWorkspace发起创建
@@ -44,7 +43,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             cgsId = cgsId,
             autoAssign = false,
             workspaceCreate = ProjectWorkspaceCreate(
-                windowsResourceConfigId = windowsResourceConfigId.id!!.toInt(),
+                windowsType = windowsResourceConfigId.size,
+                windowsZone = cgsData.zoneId.replace(Regex("\\d+"), ""),
                 baseImageId = 0,
                 count = 1
             )

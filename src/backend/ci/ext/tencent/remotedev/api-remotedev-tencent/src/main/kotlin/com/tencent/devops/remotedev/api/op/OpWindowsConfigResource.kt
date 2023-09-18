@@ -29,7 +29,8 @@ package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -56,7 +57,7 @@ interface OpWindowsConfigResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<List<WindowsResourceConfig>>
+    ): Result<List<WindowsResourceTypeConfig>>
 
     @ApiOperation("新增windows硬件配置")
     @POST
@@ -66,7 +67,7 @@ interface OpWindowsConfigResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板信息", required = true)
-        windowsResourceConfig: WindowsResourceConfig
+        windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
     @ApiOperation("更新windows硬件配置")
@@ -80,13 +81,59 @@ interface OpWindowsConfigResource {
         @QueryParam("id")
         id: Long,
         @ApiParam(value = "模板信息", required = true)
-        windowsResourceConfig: WindowsResourceConfig
+        windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
     @ApiOperation("删除windows硬件配置")
     @DELETE
     @Path("/delete")
     fun deleteWindowsResource(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<Boolean>
+
+    @ApiOperation("获取windows区域配置")
+    @GET
+    @Path("/zone/list")
+    fun getWindowsResourceZoneList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceZoneConfig>>
+
+    @ApiOperation("新增windows区域配置")
+    @POST
+    @Path("/zone/add")
+    fun addWindowsZone(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceZoneConfig
+    ): Result<Boolean>
+
+    @ApiOperation("更新windows区域配置")
+    @PUT
+    @Path("/zone/update")
+    fun updateWindowsZone(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "模板信息", required = true)
+        windowsResourceConfig: WindowsResourceZoneConfig
+    ): Result<Boolean>
+
+    @ApiOperation("删除windows区域配置")
+    @DELETE
+    @Path("/zone/delete")
+    fun deleteWindowsZone(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -56,7 +55,7 @@ data class ProjectWorkspace(
     @ApiModelProperty("操作系统类型")
     val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("windows 资源配置")
-    val winConfig: WindowsResourceConfig? = null,
+    val winConfig: WindowsResourceTypeConfig? = null,
     @ApiModelProperty("拥有者")
     val owner: String? = null,
     @ApiModelProperty("查看者")

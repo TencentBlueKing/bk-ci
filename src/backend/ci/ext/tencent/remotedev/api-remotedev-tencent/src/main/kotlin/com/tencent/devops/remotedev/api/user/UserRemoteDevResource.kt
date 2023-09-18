@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.windows.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -48,6 +48,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.server.ChunkedOutput
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -89,6 +90,7 @@ interface UserRemoteDevResource {
         headers: HttpHeaders,
         data: BKGPT
     ): ChunkedOutput<String>
+
     @ApiOperation("watermark")
     @POST
     @Path("/watermark")
@@ -128,5 +130,21 @@ interface UserRemoteDevResource {
     fun getAllWindowsResourceConfig(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<List<WindowsResourceConfig>>
+    ): Result<List<WindowsResourceTypeConfig>>
+
+    @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
+    @GET
+    @Path("/get_all_windows_resource_zone")
+    fun getAllWindowsResourceZone(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceZoneConfig>>
+
+    @ApiOperation("获取所有的WINDOWS 配额")
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun allWindowsQuota(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Map<String, Map<String, Int>>>
 }
