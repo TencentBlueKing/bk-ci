@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
@@ -41,7 +42,7 @@ import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.Concurrency
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.IfType
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
@@ -77,7 +78,7 @@ class ModelTransfer @Autowired constructor(
             projectId = yamlInput.pipelineInfo?.projectId ?: "",
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
             pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
-            desc = yamlInput.pipelineInfo?.pipelineDesc ?: "",
+            desc = yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             concurrencyGroup = yaml.concurrency?.group,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
@@ -156,8 +157,8 @@ class ModelTransfer @Autowired constructor(
         }
 
         return Model(
-            name = yamlInput.yaml.name ?: "",
-            desc = "",
+            name = yamlInput.yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
+            desc = yamlInput.yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             stages = stageList,
             labels = emptyList(),
             instanceFromTemplate = false,
@@ -183,7 +184,8 @@ class ModelTransfer @Autowired constructor(
         return when (modelInput.version) {
             YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
                 version = "v2.0",
-                name = modelInput.model.name,
+                name = modelInput.setting.pipelineName,
+                desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
                 triggerOn = triggerOn.firstOrNull() as PreTriggerOn?,
                 variables = variables,
@@ -197,7 +199,8 @@ class ModelTransfer @Autowired constructor(
 
             YamlVersion.Version.V3_0 -> PreTemplateScriptBuildYamlV3(
                 version = "v3.0",
-                name = modelInput.model.name,
+                name = modelInput.setting.pipelineName,
+                desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
                 triggerOn = triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it },
                 variables = variables,

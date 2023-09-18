@@ -25,23 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.agent
+package com.tencent.devops.process.yaml.v3.models.step
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("人工审核", description = ManualReviewUserTaskElement.classType)
-data class ManualReviewUserTaskElement(
-    @ApiModelProperty("任务名称", required = true)
-    override val name: String = "人工审核",
-    @ApiModelProperty("id", required = false)
-    override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
-    override var status: String? = null,
+@ApiModel("人工审核插件-pre")
+data class PreManualReviewUserTaskElement(
     @ApiModelProperty("审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
     @ApiModelProperty("描述", required = false)
@@ -62,35 +53,4 @@ data class ManualReviewUserTaskElement(
     var notifyGroup: MutableList<String>? = null,
     @ApiModelProperty("审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
     var reminderTime: Int? = null
-) : Element(name, id, status) {
-    companion object {
-        const val classType = "manualReviewUserTask"
-    }
-
-    override fun getTaskAtom() = "manualReviewTaskAtom"
-
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep {
-        val input = mutableMapOf<String, Any>().apply {
-            reviewUsers.ifEmpty { null }?.run { put(::reviewUsers.name, this) }
-            desc?.ifEmpty { null }?.run { put(::desc.name, this) }
-            suggest?.ifEmpty { null }?.run { put(::suggest.name, this) }
-            params.ifEmpty { null }?.run { put(::params.name, this) }
-            namespace?.ifEmpty { null }?.run { put(::namespace.name, this) }
-            notifyType?.ifEmpty { null }?.run { put(::notifyType.name, this) }
-            notifyTitle?.ifEmpty { null }?.run { put(::notifyTitle.name, this) }
-            markdownContent?.run { put(::markdownContent.name, this) }
-            notifyGroup?.ifEmpty { null }?.run { put(::notifyGroup.name, this) }
-            reminderTime?.run { put(::reminderTime.name, this) }
-        }
-        return PreStep(
-            name = name,
-            id = stepId,
-            // 插件上的
-            ifFiled = TransferUtil.parseStepIfFiled(this),
-            uses = "${getAtomCode()}@$version",
-            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
-        )
-    }
-
-    override fun getClassType() = classType
-}
+)

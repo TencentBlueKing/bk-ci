@@ -31,10 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferResponse
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
@@ -103,4 +105,23 @@ interface UserPipelineTransferResource {
         pipelineId: String,
         yaml: String
     ): Result<Element>
+
+    @ApiOperation("yaml定位")
+    @POST
+    @Path("/projects/{projectId}/position")
+    fun position(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("行数 0开始")
+        @QueryParam("line")
+        line: Int,
+        @ApiParam("列数 0开始")
+        @QueryParam("column")
+        column: Int,
+        yaml: String
+    ): Result<PositionResponse>
 }

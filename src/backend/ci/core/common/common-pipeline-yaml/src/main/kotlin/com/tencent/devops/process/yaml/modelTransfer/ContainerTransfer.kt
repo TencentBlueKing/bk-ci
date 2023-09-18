@@ -49,7 +49,7 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v3.models.IfType
+import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.v3.models.Resources
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -57,7 +57,8 @@ import com.tencent.devops.process.yaml.v3.models.job.Mutex
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -147,11 +148,11 @@ class ContainerTransfer @Autowired(required = false) constructor(
             container = null,
             ifField = when (job.jobControlOption?.runCondition) {
                 JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
-                JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
+                JobRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
                     job.jobControlOption?.customVariables
                 )
 
-                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
+                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
                     job.jobControlOption?.customVariables
                 )
 
@@ -190,11 +191,11 @@ class ContainerTransfer @Autowired(required = false) constructor(
             mutex = getMutexYaml(job.mutexGroup),
             ifField = when (job.jobControlOption?.runCondition) {
                 JobRunCondition.CUSTOM_CONDITION_MATCH -> job.jobControlOption?.customCondition
-                JobRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
+                JobRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
                     job.jobControlOption?.customVariables
                 )
 
-                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
+                JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
                     job.jobControlOption?.customVariables
                 )
 

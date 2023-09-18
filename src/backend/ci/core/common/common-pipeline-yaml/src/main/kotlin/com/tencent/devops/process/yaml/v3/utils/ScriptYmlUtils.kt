@@ -85,7 +85,7 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
 import com.tencent.devops.process.yaml.v3.stageCheck.Flow
@@ -387,7 +387,7 @@ object ScriptYmlUtils {
         return jobs
     }
 
-    private fun formatRunsOn(preRunsOn: Any?): RunsOn {
+    fun formatRunsOn(preRunsOn: Any?): RunsOn {
         if (preRunsOn == null) {
             return RunsOn()
         }
@@ -448,11 +448,11 @@ object ScriptYmlUtils {
                 throw YamlFormatException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
-                        params = arrayOf(preStep.id)
+                        params = arrayOf(preStep.id!!)
                     )
                 )
             } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
-                stepIdSet.add(preStep.id)
+                stepIdSet.add(preStep.id!!)
             }
 
             // 检测step env合法性

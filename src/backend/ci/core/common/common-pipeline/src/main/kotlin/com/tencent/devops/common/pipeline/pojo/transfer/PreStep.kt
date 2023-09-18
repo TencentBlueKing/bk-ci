@@ -25,13 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models.step
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v3.models.MetaData
-import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.process.yaml.v3.models.YamlMetaData
 import io.swagger.annotations.ApiModelProperty
 
 interface IPreStep

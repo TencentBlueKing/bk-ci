@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.yaml.modelTransfer
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
@@ -38,9 +40,9 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -50,16 +52,18 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.RunAtomParam
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
-import com.tencent.devops.process.yaml.modelTransfer.pojo.RunAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v3.models.IfType
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -67,7 +71,7 @@ import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -295,6 +299,26 @@ class ElementTransfer @Autowired(required = false) constructor(
                 )
             }
 
+            step.uses?.contains("${ManualReviewUserTaskElement.classType}@") == true -> {
+                val pre = step.with?.let {
+                    JsonUtil.anyTo(it, object : TypeReference<PreManualReviewUserTaskElement>() {})
+                }
+                ManualReviewUserTaskElement(
+                    id = step.taskId,
+                    name = step.name ?: "manualReviewUserTask",
+                    reviewUsers = pre?.reviewUsers ?: mutableListOf(),
+                    desc = pre?.desc,
+                    suggest = pre?.suggest,
+                    params = pre?.params ?: mutableListOf(),
+                    namespace = pre?.namespace,
+                    notifyType = pre?.notifyType,
+                    notifyTitle = pre?.notifyTitle,
+                    markdownContent = pre?.markdownContent,
+                    notifyGroup = pre?.notifyGroup,
+                    reminderTime = pre?.reminderTime
+                )
+            }
+
             step.checkout != null -> {
                 creator.transferCheckoutElement(step)
             }
@@ -383,30 +407,6 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun element2YamlStep(element: Element, projectId: String): PreStep? {
         val uses = "${element.getAtomCode()}@${element.version}"
         return when {
-            element is LinuxScriptElement -> {
-                PreStep(
-                    name = element.name,
-                    id = element.stepId,
-                    // bat插件上的
-                    ifFiled = parseStepIfFiled(element),
-                    uses = uses,
-                    with = bashParams(element),
-                    shell = RunAtomParam.ShellType.BASH.shellName
-                )
-            }
-
-            element is WindowsScriptElement -> {
-                PreStep(
-                    name = element.name,
-                    id = element.stepId,
-                    // bat插件上的
-                    ifFiled = parseStepIfFiled(element),
-                    uses = uses,
-                    with = batchParams(element),
-                    shell = RunAtomParam.ShellType.CMD.shellName
-                )
-            }
-
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 val repositoryType = input[CheckoutAtomParam::repositoryType.name].toString().ifBlank { null }?.let {
@@ -435,9 +435,9 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     // 插件上的
-                    ifFiled = parseStepIfFiled(element),
+                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
-                    with = simplifyParams(uses, input).ifEmpty { null },
+                    with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).ifEmpty { null },
                     checkout = checkout
                 )
             }
@@ -448,10 +448,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     // 插件上的
-                    ifFiled = parseStepIfFiled(element),
+                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
-                    with = simplifyParams(
-                        uses,
+                    with = TransferUtil.simplifyParams(
+                        transferCache.getAtomDefaultValue(uses),
                         input.filterNot {
                             it.key == RunAtomParam::shell.name || it.key == RunAtomParam::script.name
                         }
@@ -461,31 +461,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 )
             }
 
-            element is MarketBuildLessAtomElement -> {
-                val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
-                PreStep(
-                    name = element.name,
-                    id = element.stepId,
-                    // 插件上的
-                    ifFiled = parseStepIfFiled(element),
-                    uses = uses,
-                    with = simplifyParams(uses, input).ifEmpty { null }
-                )
-            }
-
-            element is MarketBuildAtomElement -> {
-                val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
-                PreStep(
-                    name = element.name,
-                    id = element.stepId,
-                    // 插件上的
-                    ifFiled = parseStepIfFiled(element),
-                    uses = uses,
-                    with = simplifyParams(uses, input).ifEmpty { null }
-                )
-            }
-
-            else -> null
+            else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
             this.enable = element.isElementEnable().nullIfDefault(true)
             this.timeoutMinutes = element.additionalOptions?.timeoutVar.nullIfDefault(
@@ -510,69 +486,6 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
     }
 
-    private fun parseStepIfFiled(
-        step: Element
-    ): String? {
-        return when (step.additionalOptions?.runCondition) {
-            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
-            RunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
-                step.additionalOptions?.customVariables
-            )
-
-            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
-                step.additionalOptions?.customVariables
-            )
-
-            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
-                IfType.ALWAYS_UNLESS_CANCELLED.name
-
-            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
-                IfType.ALWAYS.name
-
-            RunCondition.PRE_TASK_FAILED_ONLY ->
-                IfType.FAILURE.name
-
-            else -> null
-        }
-    }
-
-    private fun simplifyParams(uses: String, input: Map<String, Any>): Map<String, Any> {
-        val out = input.toMutableMap()
-        val defaultValue = transferCache.getAtomDefaultValue(uses)
-        defaultValue.forEach {
-            val value = out[it.key]
-            if (value is String && it.value == value) {
-                out.remove(it.key)
-            }
-            // 单独针对list的情况
-            if (value is List<*> && it.value == value.joinToString(separator = ",")) {
-                out.remove(it.key)
-            }
-        }
-        return out
-    }
-
-
-    private fun bashParams(element: LinuxScriptElement): Map<String, Any>? {
-        val res = mutableMapOf<String, Any>(LinuxScriptElement::script.name to element.script)
-        if (element.continueNoneZero == true) {
-            res[LinuxScriptElement::continueNoneZero.name] = true
-        }
-        if (element.enableArchiveFile == true && element.archiveFile != null) {
-            res[LinuxScriptElement::enableArchiveFile.name] = true
-            res[LinuxScriptElement::archiveFile.name] = element.archiveFile!!
-
-        }
-        return res
-    }
-
-    private fun batchParams(element: WindowsScriptElement): Map<String, Any>? {
-        val res = mutableMapOf<String, Any>(WindowsScriptElement::script.name to element.script)
-        if (element.charsetType != null && element.charsetType != CharsetType.DEFAULT) {
-            res[WindowsScriptElement::charsetType.name] = element.charsetType!!.name
-        }
-        return res
-    }
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()

@@ -29,6 +29,8 @@ package com.tencent.devops.common.pipeline.pojo.element.market
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -58,6 +60,18 @@ data class MarketBuildAtomElement(
 
     override fun getAtomCode(): String {
         return atomCode
+    }
+
+    override fun transferYaml(defaultValue: Map<String, String>?): PreStep {
+        val input = data["input"] as Map<String, Any>? ?: emptyMap()
+        return PreStep(
+            name = name,
+            id = stepId,
+            // 插件上的
+            ifFiled = TransferUtil.parseStepIfFiled(this),
+            uses = "${getAtomCode()}@$version",
+            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
+        )
     }
 
     override fun getClassType() = classType

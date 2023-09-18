@@ -36,7 +36,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
 
 /**
  * 部分yaml转换过程与公共的存在区别，template转换时需要保留meta信息字段
