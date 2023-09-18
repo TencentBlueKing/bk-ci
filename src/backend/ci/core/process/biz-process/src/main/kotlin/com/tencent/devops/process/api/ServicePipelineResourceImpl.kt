@@ -96,7 +96,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun create(
         userId: String,
         projectId: String,
@@ -246,6 +245,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineResult)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun get(
         userId: String,
         projectId: String,

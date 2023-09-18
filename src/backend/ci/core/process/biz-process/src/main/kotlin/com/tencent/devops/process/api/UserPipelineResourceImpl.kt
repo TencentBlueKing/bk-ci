@@ -324,6 +324,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
         checkParam(userId, projectId)
         val pipeline = pipelineInfoFacadeService.getPipeline(
@@ -336,6 +337,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipeline)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
         checkParam(userId, projectId)
         return Result(

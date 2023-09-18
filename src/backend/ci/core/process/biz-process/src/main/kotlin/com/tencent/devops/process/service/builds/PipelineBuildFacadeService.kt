@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -567,8 +568,7 @@ class PipelineBuildFacadeService(
             resourceType = ResourceTypeId.PIPELINE,
             instanceIds = "#pipelineId"
         ),
-        content = "execute pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_EXECUTE_CONTENT
     )
     fun buildManualStartup(
         userId: String,

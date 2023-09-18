@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -442,8 +443,7 @@ class PipelineListFacadeService @Autowired constructor(
             resourceType = ResourceTypeId.PIPELINE,
             instanceIds = "#projectId"
         ),
-        content = "list pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_LIST_CONTENT
     )
     fun listViewPipelines(
         userId: String,

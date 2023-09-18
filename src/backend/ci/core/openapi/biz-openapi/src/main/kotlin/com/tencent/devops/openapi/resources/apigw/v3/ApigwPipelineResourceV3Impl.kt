@@ -67,6 +67,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -137,6 +138,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun get(
         appCode: String?,
         apigwType: String?,

@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -249,8 +250,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
-        content = "create pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_CREATE_CONTENT
     )
     fun createPipeline(
         userId: String,
@@ -670,8 +670,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
-        content = "edit pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_EDIT_CONTENT
     )
     fun editPipeline(
         userId: String,
@@ -831,7 +830,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineResult
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_VIEW,
         instance = AuditInstanceRecord(
@@ -839,8 +837,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             instanceNames = "#$?.name",
             instanceIds = "#pipelineId"
         ),
-        content = "get pipeline info [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getPipeline(
         userId: String,
@@ -944,8 +941,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             instanceNames = "#$?.pipelineName",
             instanceIds = "#pipelineId"
         ),
-        content = "delete pipeline [{{" + AuditAttributeNames.INSTANCE_NAME + "}}]" +
-            "({{" + AuditAttributeNames.INSTANCE_ID + "}})"
+        content = ActionAuditContent.PIPELINE_DELETE_CONTENT
     )
     fun deletePipeline(
         userId: String,
