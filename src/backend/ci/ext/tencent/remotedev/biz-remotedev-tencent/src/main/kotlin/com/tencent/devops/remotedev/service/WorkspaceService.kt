@@ -153,6 +153,7 @@ class WorkspaceService @Autowired constructor(
                     needPermission = false
                 )
             }
+
             ShareWorkspace.OpType.DELETE -> shareWorkspace.sharedUser.forEach { user ->
                 deleteSharedWorkspace(
                     workspaceName = shareWorkspace.workspaceName,
@@ -227,13 +228,15 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
-            queryType = QueryType.WEB
+            queryType = QueryType.WEB,
+            ips = null
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             queryType = QueryType.WEB,
-            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
+            ips = null
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -243,6 +246,7 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         workspaceName: String?,
         systemType: WorkspaceSystemType?,
+        ips: List<String>?,
         page: Int?,
         pageSize: Int?
     ): Page<ProjectWorkspace> {
@@ -254,7 +258,8 @@ class WorkspaceService @Autowired constructor(
             projectId = projectId,
             workspaceName = workspaceName,
             systemType = systemType,
-            queryType = QueryType.OP
+            queryType = QueryType.OP,
+            ips = ips
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -262,7 +267,8 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             systemType = systemType,
             queryType = QueryType.OP,
-            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
+            ips = ips
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -348,8 +354,8 @@ class WorkspaceService @Autowired constructor(
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
                 owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
-                )
-            }
+            )
+        }
     }
 
     fun getWorkspaceProject(): List<RemotedevProject> {

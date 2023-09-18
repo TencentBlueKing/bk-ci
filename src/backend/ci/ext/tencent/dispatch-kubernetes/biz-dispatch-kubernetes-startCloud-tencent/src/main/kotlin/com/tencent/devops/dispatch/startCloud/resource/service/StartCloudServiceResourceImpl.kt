@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.startCloud.service.StartCloudInterfaceService
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,8 +50,11 @@ class StartCloudServiceResourceImpl @Autowired constructor(
         return Result(startCloudInterfaceService.syncStartCloudResourceList())
     }
 
-    override fun getCgsData(cgsId: String): Result<EnvironmentResourceData?> {
-        return Result(startCloudInterfaceService.getCgsData(cgsId))
+    override fun getCgsData(data: FetchWinPoolData): Result<List<EnvironmentResourceData>> {
+        if (data.cgsIds.isNullOrEmpty() && data.ips.isNullOrEmpty()) {
+            return Result(listOf())
+        }
+        return Result(startCloudInterfaceService.getCgsData(data.cgsIds, data.ips))
     }
 
     override fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Result<Boolean> {

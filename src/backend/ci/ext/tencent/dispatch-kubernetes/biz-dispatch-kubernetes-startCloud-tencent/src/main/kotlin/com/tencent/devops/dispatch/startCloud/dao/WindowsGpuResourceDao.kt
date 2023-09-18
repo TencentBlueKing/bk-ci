@@ -38,6 +38,9 @@ import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
+import org.jooq.Result
+import org.jooq.SelectConditionStep
+import org.jooq.SelectWhereStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -82,18 +85,26 @@ class WindowsGpuResourceDao {
         }
     }
 
-    fun getCgsResource(
+    fun getCgsResourceList(
         dslContext: DSLContext,
-        cgsId: String?
-    ): TWindowsGpuPoolRecord? {
+        cgsIds: List<String>?,
+        ips: List<String>?
+    ): Result<TWindowsGpuPoolRecord> {
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             val conditions = mutableListOf<Condition>()
-            cgsId?.let {
-                conditions.add(CGS_ID.eq(cgsId))
+            if (!cgsIds.isNullOrEmpty() && cgsIds.size == 1) {
+                conditions.add(CGS_ID.eq(cgsIds.first()))
+            } else if (!cgsIds.isNullOrEmpty()) {
+                conditions.add(CGS_ID.`in`(cgsIds))
             }
+
+            if (!ips.isNullOrEmpty()) {
+                conditions.add(CGS_IP.`in`(ips))
+            }
+
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetchAny()
+                .fetch()
         }
     }
 

@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
@@ -237,30 +238,6 @@ interface OpRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
-
-    @ApiOperation("获取项目下空间列表实例列表")
-    @GET
-    @Path("/project_workspaces/list")
-    fun getProjectWorkspaceList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "projectId", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam(value = "workspaceName", required = false)
-        @QueryParam("workspaceName")
-        workspaceName: String?,
-        @ApiParam(value = "systemType", required = false)
-        @QueryParam("systemType")
-        systemType: WorkspaceSystemType?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "6666")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<ProjectWorkspace>>
 
     @ApiOperation("实时获取START云桌面资源池的机器")
     @GET

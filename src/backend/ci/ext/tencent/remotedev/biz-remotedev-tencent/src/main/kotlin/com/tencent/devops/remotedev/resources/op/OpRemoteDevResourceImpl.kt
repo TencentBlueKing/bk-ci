@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
@@ -128,17 +129,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectWorkspaceList(
-        userId: String,
-        projectId: String?,
-        workspaceName: String?,
-        systemType: WorkspaceSystemType?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, workspaceName, systemType, page, pageSize))
-    }
-
     override fun getStartCloudResourceList(
         userId: String,
         zoneId: String?,
@@ -154,7 +144,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val filteredResources = resourceList.filter {
             (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
                     (machineType.isNullOrEmpty() || it.machineType == machineType) &&
-                (ip.isNullOrEmpty() || it.cgsIp == ip) &&
+                    (ip.isNullOrEmpty() || it.cgsIp == ip) &&
                     (status == null || it.status == status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull

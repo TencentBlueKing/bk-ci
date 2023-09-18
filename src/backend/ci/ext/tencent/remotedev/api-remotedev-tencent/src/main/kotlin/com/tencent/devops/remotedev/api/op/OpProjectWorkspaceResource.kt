@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -61,12 +62,12 @@ interface OpProjectWorkspaceResource {
         @ApiParam(value = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "拥有者", required = true)
-        @QueryParam("owner")
-        owner: String? = null,
         @ApiParam(value = "云桌面ID", required = true)
         @QueryParam("cgsIds")
-        cgsIds: List<String>
+        cgsIds: List<String>,
+        @ApiParam(value = "云桌面IP", required = true)
+        @QueryParam("ips")
+        ips: List<String>
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
@@ -76,20 +77,7 @@ interface OpProjectWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam(value = "workspaceName", required = false)
-        @QueryParam("workspaceName")
-        workspaceName: String?,
-        @ApiParam(value = "systemType", required = false)
-        @QueryParam("systemType")
-        systemType: WorkspaceSystemType?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "6666")
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 }
