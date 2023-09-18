@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -135,7 +136,10 @@ abstract class Element(
     open var errorCode: Int? = null,
     @ApiModelProperty("错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorMsg: String? = null,
-    @ApiModelProperty("插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @ApiModelProperty(
+        "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
     open var atomName: String? = null,
     @ApiModelProperty("所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
@@ -156,6 +160,8 @@ abstract class Element(
     }
 
     open fun cleanUp() {}
+
+    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = TODO(this.getClassType())
 
     open fun isElementEnable(): Boolean {
         if (additionalOptions == null) {

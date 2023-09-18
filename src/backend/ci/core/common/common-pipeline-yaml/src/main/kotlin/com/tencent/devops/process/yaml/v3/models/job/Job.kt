@@ -39,7 +39,7 @@ import io.swagger.annotations.ApiModelProperty
 data class Job(
     // val job: JobDetail,
     val id: String? = "",
-    val name: String?,
+    val name: String? = "",
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
     @JsonProperty("runs-on")
@@ -50,7 +50,7 @@ data class Job(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    val steps: List<Step>?,
+    val steps: List<Step>? = null,
     @ApiModelProperty(name = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,

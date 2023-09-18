@@ -1,4 +1,4 @@
-package com.tencent.devops.process.yaml.modelTransfer.pojo
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 data class RunAtomParam(
     val shell: String? = null,

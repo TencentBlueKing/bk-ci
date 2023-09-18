@@ -45,12 +45,12 @@ import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.Repositories
 import com.tencent.devops.process.yaml.v3.models.ResourcesPools
-import com.tencent.devops.process.yaml.v3.models.TemplateInfo
+import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.format
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parameter.ParametersTemplateNull
 import com.tencent.devops.process.yaml.v3.parameter.PreParametersTemplate
