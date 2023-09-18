@@ -55,7 +55,6 @@ import java.security.KeyManagementException
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 
-
 @Suppress("ALL")
 @Configuration
 @EnableConfigurationProperties(RbacAuthHttpClientProperties::class)
@@ -122,7 +121,7 @@ class RbacAuthHttpClientAutoConfiguration(
 
     private fun buildSSLConnectionSocketFactory(): SSLConnectionSocketFactory? {
         try {
-            val sslContext = SSLContexts.custom() //忽略掉对服务器端证书的校验
+            val sslContext = SSLContexts.custom() // 忽略掉对服务器端证书的校验
                 .loadTrustMaterial(TrustStrategy { _, _ -> true }).build()
             return SSLConnectionSocketFactory(
                 sslContext, arrayOf("TLSv1"),
