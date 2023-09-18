@@ -496,7 +496,7 @@
                 }).catch((e) => {
                     this.$bkMessage({
                         theme: 'error',
-                        message: e || e.message
+                        message: e.message || e
                     })
                 }).finally(() => {
                     this.isSaveLoading = false
