@@ -277,7 +277,7 @@ export default {
         } catch (_) {
             container = null
         }
-        if (container !== null) {
+        if (container) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
             }

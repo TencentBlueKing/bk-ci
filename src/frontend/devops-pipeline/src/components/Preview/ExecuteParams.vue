@@ -33,7 +33,7 @@
             <header class="params-collapse-trigger">
                 {{ $t('template.pipelineVar') }}
                 <span class="collapse-trigger-divider">|</span>
-                <span v-if="isDebug" class="text-link" @click.stop="updateParams">
+                <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
                     {{ $t('resetDefault') }}
                     <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
                 </span>
@@ -94,6 +94,9 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            useLastParams () {
+                return this.isDebug || this.startupInfo?.useLatestParameters
             }
         },
         watch: {
@@ -135,9 +138,10 @@
                 }
             },
             initParams (values) {
-                this.paramsValues = getParamsValuesMap(this.paramList, 'defaultValue', values)
-                this.versionParamValues = getParamsValuesMap(this.versionParamList, 'defaultValue', values)
-                this.buildValues = getParamsValuesMap(this.buildList, 'defaultValue', values)
+                const key = this.useLastParams ? 'value' : 'defaultValue'
+                this.paramsValues = getParamsValuesMap(this.paramList, key, values)
+                this.versionParamValues = getParamsValuesMap(this.versionParamList, key, values)
+                this.buildValues = getParamsValuesMap(this.buildList, key, values)
             },
             updateParams (valueKey = 'defaultValue') {
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)

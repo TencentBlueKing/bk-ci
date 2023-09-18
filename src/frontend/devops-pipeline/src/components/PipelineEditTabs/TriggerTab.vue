@@ -56,9 +56,13 @@
                 required: true
             }
         },
+        data () {
+            return {
+                element: null
+            }
+        },
         computed: {
             ...mapState('atom', [
-                'element',
                 'editingElementPos'
             ]),
             container () {
@@ -66,7 +70,7 @@
             },
             triggerList () {
                 try {
-                    return this.pipeline?.stages[0]?.containers[0]?.elements || []
+                    return this.container?.elements || []
                 } catch (err) {
                     return []
                 }
@@ -104,6 +108,7 @@
                 })
             },
             editTriggerAtom (index) {
+                this.element = this.triggerList[index]
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {

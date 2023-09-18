@@ -1,19 +1,28 @@
 <template>
     <bk-dialog
         v-model="isShow"
+        v-bk-loading="{ isLoading }"
         width="90%"
         height="90%"
         :auto-close="false"
         :show-footer="false"
         header-position="left"
         render-directive="if"
-        :title="$t('预览模板 - 模板名称')"
+        :title="title"
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
         <template v-if="templatePipeline && isShow">
             <mode-switch />
+            <YamlEditor
+                v-if="isCodeMode"
+                style="margin-top: 20px;"
+                :value="templateYaml"
+                readonly
+                :highlight-ranges="highlightMarkList"
+            />
             <bk-tab
+                v-else
                 v-model="activePanel"
                 type="unborder-card"
             >
@@ -24,11 +33,7 @@
                     :name="panel.name"
                     render-directive="if"
                 >
-                    <YamlEditor
-                        v-if="isCodeMode"
-                    />
                     <component
-                        v-else
                         v-bind="panel.props"
                         :is="panel.component"
                     />
@@ -39,7 +44,7 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
     import Pipeline from '@/components/Pipeline'
@@ -62,6 +67,10 @@
         },
         props: {
             isShow: Boolean,
+            previewSettingType: {
+                type: String,
+                default: ''
+            },
             templatePipeline: {
                 type: Object,
                 required: true
@@ -69,11 +78,25 @@
         },
         data () {
             return {
-                activePanel: 'pipelineModel'
+                isLoading: false,
+                activePanel: 'pipelineModel',
+                templateYaml: '',
+                highlightMarkList: []
             }
         },
         computed: {
             ...mapGetters(['isCodeMode']),
+            title () {
+                return this.$t('templatePreivewHeader', [this.templatePipeline?.name ?? '', this.previewSettingType])
+            },
+            highlightType () {
+                const conf = {
+                    useSubscriptionSettings: 'NOTIFY',
+                    useLabelSettings: 'LABEL',
+                    useConcurrencyGroup: 'CONCURRENCY'
+                }
+                return conf[this.previewSettingType] ?? 'PIPELINE_MODEL'
+            },
             panels () {
                 return [
                     {
@@ -107,12 +130,46 @@
                 ]
             }
         },
+        watch: {
+            isShow (val) {
+                if (val) {
+                    this.init()
+                } else {
+                    this.highlightMarkList = []
+                    this.templateYaml = ''
+                    this.activePanel = 'pipelineModel'
+                }
+            }
+        },
+        created () {
+            console.log('templatePipeline', this.templatePipeline)
+        },
         methods: {
+            ...mapActions('pipelines', [
+                'requestTemplatePreview'
+            ]),
+            async init () {
+                try {
+                    this.isLoading = true
+                    const res = await this.requestTemplatePreview({
+                        projectId: this.templatePipeline.projectId,
+                        templateId: this.templatePipeline.templateId,
+                        highlightType: this.highlightType
+                    })
+                    this.templateYaml = res.templateYaml
+                    this.highlightMarkList = res.highlightMarkList ?? []
+                    console.log('res', res)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                } finally {
+                    this.isLoading = false
+                }
+            },
             handleCancel () {
                 this.$emit('update:isShow', false)
-            },
-            handleTabChange () {
-                debugger
             }
         }
     }

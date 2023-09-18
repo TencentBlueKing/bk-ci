@@ -62,6 +62,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_STAGE,
+    SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
@@ -77,6 +78,7 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
@@ -179,7 +181,15 @@ export default {
             })
             dispatch('setPipeline', {
                 ...model,
-                version
+                version,
+                versionName: pipelineRes.data.versionName,
+                baseVersion: pipelineRes.data.baseVersion,
+                baseVersionName: pipelineRes.data.baseVersionName,
+                canDebug: pipelineRes?.data?.canDebug
+            })
+            commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                ...model,
+                stages: model.stages.slice(1)
             })
             commit(PIPELINE_SETTING_MUTATION, setting)
             commit(SET_PIPELINE_YAML, pipelineRes.data.yaml)
@@ -193,7 +203,24 @@ export default {
     fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}`).then(res => {
             console.log(res)
-            return res.data?.modelAndSetting?.model
+            return res.data
+        })
+    },
+    transfertModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
+        return request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}?actionType=${actionType}`, params).then(res => {
+            switch (actionType) {
+                case 'FULL_YAML2MODEL':
+                    commit(SET_PIPELINE, res.data?.modelAndSetting?.model)
+                    commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                        ...res.data?.modelAndSetting?.model,
+                        stages: res.data?.modelAndSetting?.model.stages.slice(1)
+                    })
+                    commit(PIPELINE_SETTING_MUTATION, res.data?.modelAndSetting?.setting)
+                    break
+                case 'FULL_MODEL2YAML':
+                    commit(SET_PIPELINE_YAML, res.data?.newYaml)
+                    break
+            }
         })
     },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
@@ -206,6 +233,7 @@ export default {
     },
     setPipeline: actionCreator(SET_PIPELINE),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
+    updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
@@ -575,7 +603,7 @@ export default {
     // 第一次拉取日志
 
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 jobId,
@@ -588,7 +616,7 @@ export default {
 
     // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
@@ -605,11 +633,11 @@ export default {
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
-        return request.get(`${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
+        return request.get(`/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
             const data = res.data || {}
             return data.url || ''
         })
@@ -658,5 +686,11 @@ export default {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
             return response.data
         })
+    },
+    saveDraftPipeline ({ commit }, { projectId, pipelineId, ...draftPipeline }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/saveDraft`, draftPipeline)
+    },
+    releaseDraftPipeline ({ commit }, { projectId, pipelineId, version }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`)
     }
 }

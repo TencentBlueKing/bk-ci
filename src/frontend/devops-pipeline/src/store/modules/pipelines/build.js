@@ -189,7 +189,6 @@ const actions = {
      */
     requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId }) {
         const { historyPageStatus: { queryStr } } = state
-        debugger
         dispatch('setHistoryPageStatus', {
             isQuerying: !!queryStr
         })

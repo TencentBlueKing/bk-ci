@@ -129,7 +129,6 @@
         },
         watch: {
             value (val) {
-                console.log(212, val, this.versionList)
                 this.activeVersion = this.versionList.find(item => item.version === val)
             }
         },
@@ -177,6 +176,9 @@
                 }).finally(() => {
                     this.isLoading = false
                 })
+            },
+            getDraftVersion () {
+                return this.versionList.find(item => item.isDraft)?.versionName ?? ''
             },
             switchVersion (version) {
                 this.activeVersion = version

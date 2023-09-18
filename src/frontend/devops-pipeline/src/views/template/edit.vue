@@ -151,6 +151,7 @@
             this.leaveConfirm(to, from, next)
         },
         methods: {
+            // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
                 'setPipelineEditing',

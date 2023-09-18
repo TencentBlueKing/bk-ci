@@ -91,7 +91,7 @@
         watch: {
             pipelineId (pipelineId) {
                 this.$router.push({
-                    name: 'pipelinesEdit',
+                    name: 'pipelinesHistory',
                     params: {
                         projectId: this.projectId,
                         pipelineId

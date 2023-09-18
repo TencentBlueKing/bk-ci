@@ -26,7 +26,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import Logo from '@/components/Logo'
     import {
         BuildHistoryTab,
@@ -51,6 +51,7 @@
             execHandler: Function
         },
         computed: {
+            ...mapState('pipelines', ['pipelineInfo']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -78,7 +79,11 @@
                     link: {
                         handler: () => {
                             this.$router.push({
-                                name: 'pipelinesEdit'
+                                name: 'pipelinesEdit',
+                                params: {
+                                    ...this.$route.params,
+                                    version: this.pipelineInfo?.version
+                                }
                             })
                         },
                         icon: 'edit-conf',

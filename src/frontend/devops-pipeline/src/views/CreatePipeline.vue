@@ -49,12 +49,12 @@
                     />
                 </div>
                 <ul class="pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
-                    <li v-for="(item, tIndex) in tempList"
+                    <li v-for="(temp, tIndex) in tempList"
                         :class="{
                             'active': activeTempIndex === tIndex,
-                            'disabled': !item.installed
+                            'disabled': !temp.installed
                         }"
-                        :key="item.name"
+                        :key="temp.name"
                         @click="selectTemp(tIndex)"
                     >
 
@@ -62,31 +62,31 @@
                             <i class="bk-icon icon-check-1"></i>
                         </span>
                         <p class="pipeline-template-logo">
-                            <img :src="item.logoUrl" v-if="item.logoUrl">
-                            <logo size="50" :name="item.icon || 'placeholder'" v-else></logo>
+                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
+                            <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
                         </p>
                         <div class="pipeline-template-detail">
-                            <p class="pipeline-template-title" :title="item.name">
-                                <span>{{ item.name }}</span>
+                            <p class="pipeline-template-title" :title="temp.name">
+                                <span>{{ temp.name }}</span>
                                 <logo
                                     class="is-store-template"
                                     name="is-store"
                                     size="22"
                                 />
                             </p>
-                            <p class="pipeline-template-desc" :title="item.desc">
-                                {{ item.desc || '--' }}
+                            <p class="pipeline-template-desc" :title="temp.desc">
+                                {{ temp.desc || '--' }}
                             </p>
                         </div>
                         <div class="pipeline-template-status">
                             <bk-button
-                                v-if="item.hasPermission"
+                                v-if="temp.hasPermission"
                                 text
                                 size="small"
                                 theme="primary"
-                                @click.stop="handleTemp(item, tIndex)"
+                                @click.stop="handleTemp(temp, tIndex)"
                             >
-                                {{$t(item.btnText)}}
+                                {{$t(temp.btnText)}}
                             </bk-button>
                             <span v-else>
                                 {{$t('newlist.noInstallPerm')}}
@@ -152,7 +152,7 @@
                                             text
                                             theme="primary"
                                             size="small"
-                                            @click.stop=""
+                                            @click.stop="previewSetting(item.value)"
                                             v-else
                                         >
                                             {{$t('pipelinesPreview')}}
@@ -168,6 +168,7 @@
         <pipeline-template-preview
             :is-show.sync="isShowPreview"
             :template-pipeline="activeTemp"
+            :preview-setting-type="previewSettingType"
         />
     </div>
 </template>
@@ -213,7 +214,8 @@
                     labels: [],
                     staticViews: []
                 },
-                isShowPreview: false
+                isShowPreview: false,
+                previewSettingType: ''
             }
         },
         computed: {
@@ -263,16 +265,18 @@
                 return [
                     {
                         label: this.$t('template.notificationSetting'),
-                        value: 'applyNotificationSetting'
+                        value: 'useSubscriptionSettings',
+                        disabled: !this.activeTemp?.notifySettingExist
                     },
                     {
                         label: this.$t('template.parallelSetting'),
-                        value: 'applyParallelSetting',
-                        disabled: true
+                        value: 'useConcurrencyGroup',
+                        disabled: !this.activeTemp?.concurrencySettingExist
                     },
                     {
                         label: this.$t('template.labelSetting'),
-                        value: 'applyLabelSetting'
+                        value: 'useLabelSettings',
+                        disabled: !this.activeTemp?.labelSettingExist
                     }
                 ]
             },
@@ -293,18 +297,17 @@
                 return Object.values(this.pipelineTemplateMap).map(item => ({
                     ...item,
                     installed: true,
+                    hasCloneSettingExist: true,
                     hasPermission: true,
                     btnText: 'pipelinesPreview'
                 }))
             },
             tempList () {
                 if (this.activePanel === 'projected') {
-                    console.log(this.pipelineTemplateMap)
                     return this.projectedTemplateList.filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1)
                 } else {
                     return this.storeTemplate?.map(item => {
                         const temp = this.pipelineTemplateMap?.[item.code]
-                        console.log(item, temp)
                         return {
                             ...item,
                             hasPermission: item.flag,
@@ -327,11 +330,9 @@
                 'requestPipelineTemplate',
                 'requestStoreTemplate'
             ]),
-            ...mapActions('atom', [
-                'setPipeline'
-            ]),
             ...mapActions('pipelines', [
-                'installPipelineTemplate'
+                'installPipelineTemplate',
+                'createPipelineWithTemplate'
             ]),
             goList () {
                 this.$router.push(this.pipelineListRoute)
@@ -340,9 +341,6 @@
                 if (panel === 'store') {
                     this.requestMarkTemplates()
                 }
-            },
-            handleSettingChange () {
-                console.log('dfdasfdas')
             },
             scrollLoadMore (event) {
                 if (this.activePanel === 'store') {
@@ -422,6 +420,12 @@
                 console.log(temp, index)
                 this.isShowPreview = true
                 this.activeTempIndex = index
+                this.previewSettingType = ''
+            },
+            previewSetting (setting) {
+                console.log(setting)
+                this.isShowPreview = true
+                this.previewSettingType = setting
             },
             async createNewPipeline () {
                 try {
@@ -435,37 +439,42 @@
                         return
                     }
 
-                    const { icon, ...pipeline } = this.activeTemp
-                    Object.assign(pipeline, { name: this.newPipelineName })
-
-                    if (this.isPublicTemplate) {
-                        Object.assign(pipeline, this.groupValue)
+                    const params = {
+                        emptyTemplate: false,
+                        projectId: this.$route.params.projectId,
+                        templateId: this.activeTemp.templateId,
+                        templateVersion: this.activeTemp.version,
+                        pipelineName: this.newPipelineName,
+                        ...this.applySettings.reduce((result, item) => {
+                            result[item] = true
+                            return result
+                        }, {}),
+                        instanceType: this.templateType,
+                        ...(this.isPublicTemplate ? this.groupValue : {})
                     }
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
-                        const code = this.activeTemp.code ?? ''
-                        const currentTemplate = this.pipelineTemplateMap[code] || this.activeTemp
-
                         this.$router.push({
                             name: 'createInstance',
                             params: {
-                                templateId: currentTemplate.templateId,
-                                curVersionId: currentTemplate.version,
-                                pipelineName: pipeline.name
+                                templateId: this.activeTemp.templateId,
+                                curVersionId: this.activeTemp.version,
+                                pipelineName: this.newPipelineName
                             }
                         })
                         return
                     }
 
                     this.isDisabled = true
-                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.$route.params.projectId}`, pipeline)
-                    if (id) {
+                    const { pipelineId } = await this.createPipelineWithTemplate(params)
+                    if (pipelineId) {
                         this.$showTips({ message: this.$t('createPipelineSuc'), theme: 'success' })
 
                         this.$router.push({
                             name: 'pipelinesEdit',
                             params: {
-                                pipelineId: id
+                                ...this.$route.params,
+                                pipelineId
                             }
                         })
                     } else {

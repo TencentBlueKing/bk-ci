@@ -144,7 +144,7 @@
                 'getStage'
             ]),
             ...mapState('atom', [
-                'isPropertyPanelVisible',
+                'originPipeline',
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
@@ -277,7 +277,7 @@
             },
             handlePipelineChange (pipeline) {
                 if (!this.editable) return
-                this.setPipeline(pipeline)
+                Object.assign(this.pipeline, pipeline)
                 this.setPipelineEditing(true)
             },
             resetInsertStageState () {

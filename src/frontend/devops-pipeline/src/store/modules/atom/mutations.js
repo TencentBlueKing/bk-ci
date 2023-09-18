@@ -63,6 +63,7 @@ import {
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_STAGE,
+    SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
@@ -123,6 +124,7 @@ export default {
         }
     },
     [SET_SAVE_STATUS]: (state, status) => {
+        console.log('set save status', status, state.saveStatus)
         return Object.assign(state, {
             saveStatus: status
         })
@@ -137,7 +139,15 @@ export default {
         return state
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
-        Vue.set(state, 'pipeline', pipeline)
+        if (!state.pipeline) {
+            Vue.set(state, 'pipeline', pipeline)
+            return state
+        }
+        Object.assign(state.pipeline, pipeline)
+    },
+    [SET_PIPELINE_WITHOUT_TRIGGER]: (state, pipeline = null) => {
+        console.log(pipeline, 'pipeline')
+        Vue.set(state, 'pipelineWithoutTrigger', pipeline)
         return state
     },
     [SET_PIPELINE_YAML]: (state, yaml = '') => {

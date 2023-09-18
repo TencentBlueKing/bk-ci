@@ -52,7 +52,7 @@ export default new Vuex.Store({
         fetchError: null,
 
         cancelTokenMap: {},
-        pipelineMode: localStorage.getItem('pipelineMode') || 'uiMode'
+        pipelineMode: localStorage.getItem(BKUI_LS_PIPELINE_MODE) || 'uiMode'
     },
     // 公共 mutations
     mutations: {

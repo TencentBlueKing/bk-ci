@@ -145,6 +145,7 @@ const mutations = {
         state.pipelineInfo = obj
     },
     updatePipelineInfo (state, { key, value }) {
+        console.log(key, value)
         state.pipelineInfo[key] = value
     },
     /**

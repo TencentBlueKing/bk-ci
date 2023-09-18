@@ -17,9 +17,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-    HttpError
-} from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import { AUTH_URL_PREFIX, PROCESS_API_URL_PREFIX } from '../store/constants'
 
@@ -41,8 +38,7 @@ export default {
         ]),
         ...mapState('atom', [
             'pipeline',
-            'pipelineSetting',
-            'saveStatus'
+            'pipelineSetting'
         ]),
         isTemplatePipeline () {
             return this.pipelineInfo?.instanceFromTemplate ?? false
@@ -59,7 +55,6 @@ export default {
         ]),
         ...mapActions('atom', [
             'setPipelineEditing',
-            'setSaveStatus',
             'setPipeline',
             'updateContainer'
         ]),
@@ -101,62 +96,6 @@ export default {
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
-        },
-        savePipeline () {
-            const { projectId, pipelineId } = this.$route.params
-            const { checkPipelineInvalid, pipeline } = this
-            const { inValid, message } = checkPipelineInvalid(pipeline.stages)
-            if (inValid) {
-                throw new Error(message)
-            }
-            return this.$ajax.put(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, pipeline)
-        },
-        // 补全wechatGroup末尾分号
-        wechatGroupCompletion (setting) {
-            try {
-                let successWechatGroup = setting.successSubscription.wechatGroup
-                let failWechatGroup = setting.failSubscription.wechatGroup
-                if (successWechatGroup && !/\;$/.test(successWechatGroup)) {
-                    successWechatGroup = `${successWechatGroup};`
-                }
-                if (failWechatGroup && !/\;$/.test(failWechatGroup)) {
-                    failWechatGroup = `${failWechatGroup};`
-                }
-                return {
-                    ...setting,
-                    successSubscription: {
-                        ...setting.successSubscription,
-                        wechatGroup: successWechatGroup
-                    },
-                    failSubscription: {
-                        ...setting.failSubscription,
-                        wechatGroup: failWechatGroup
-                    }
-                }
-            } catch (e) {
-                console.warn(e)
-                return setting
-            }
-        },
-        getPipelineSetting () {
-            const { pipelineSetting } = this
-            const { projectId } = this.$route.params
-            return this.wechatGroupCompletion({
-                ...pipelineSetting,
-                projectId
-            })
-        },
-        savePipelineSetting () {
-            const { $route } = this
-            const pipelineSetting = this.getPipelineSetting()
-            const remoteUrl = $route.name === 'templateSetting' ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${this.projectId}/templates/${this.templateId}/settings` : `/${PROCESS_API_URL_PREFIX}/user/setting/save`
-            const reqMethod = $route.name === 'templateSetting' ? 'put' : 'post'
-            return this.$ajax[reqMethod](remoteUrl, pipelineSetting)
-        },
-        saveSetting () {
-            const pipelineSetting = this.getPipelineSetting()
-            const { projectId, pipelineId } = this.$route.params
-            return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`, pipelineSetting)
         },
         async retry (buildId, goDetail = false) {
             let message, theme
@@ -240,81 +179,11 @@ export default {
                 })
             }
         },
-        async savePipelineAndSetting () {
-            const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-            const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-            const { projectId, pipelineId } = this.$route.params
-            if (inValid) {
-                throw new Error(message)
-            }
-            // 清除流水线参数渲染过程中添加的key
-            this.formatParams(pipeline)
-            const finalSetting = this.wechatGroupCompletion({
-                ...pipelineSetting,
-                projectId: projectId
-            })
-            const body = {
-                model: {
-                    ...pipeline,
-                    name: finalSetting.pipelineName,
-                    desc: finalSetting.desc
-                },
-                setting: finalSetting
-            }
-            if (!pipelineId) {
-                return this.importPipelineAndSetting(body)
-            }
-
-            // 请求执行构建
-            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, body)
-        },
         importPipelineAndSetting (body) {
             const { projectId } = this.$route.params
 
             // 请求执行构建
             return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/upload`, body)
-        },
-        async save () {
-            const { pipelineId, projectId } = this.$route.params
-            try {
-                this.setSaveStatus(true)
-                const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
-                const responses = await saveAction()
-
-                if (responses.code === 403) {
-                    throw new HttpError(403, responses.message)
-                }
-                this.setPipelineEditing(false)
-                this.$showTips({
-                    message: this.$t('saveSuc'),
-                    theme: 'success'
-                })
-
-                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.pipelineInfo?.pipelineName) {
-                    this.updatePipelineInfo('pipelineName', this.pipelineSetting.pipelineName)
-                }
-
-                return {
-                    code: 0,
-                    data: responses
-                }
-            } catch (e) {
-                this.handleError(e, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.pipeline.name
-                    }],
-                    projectId
-                }])
-                return {
-                    code: e.code,
-                    message: e.message
-                }
-            } finally {
-                this.setSaveStatus(false)
-            }
         },
 
         async saveAsPipelineTemplate (projectId, pipelineId, templateName, isCopySetting = false) {
@@ -374,19 +243,6 @@ export default {
             } catch (e) {
                 console.error(e)
             }
-        },
-        formatParams (pipeline) {
-            const params = pipeline.stages[0].containers[0].params
-            const paramList = params && params.map(param => {
-                const { paramIdKey, ...temp } = param
-                return temp
-            })
-            this.updateContainer({
-                container: this.pipeline.stages[0].containers[0],
-                newParam: {
-                    params: paramList
-                }
-            })
         }
     }
 }

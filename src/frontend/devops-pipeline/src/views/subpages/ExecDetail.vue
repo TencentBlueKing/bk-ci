@@ -4,7 +4,7 @@
         @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
-        
+
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -58,7 +58,7 @@
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
             ></Summary>
-            
+
             <p class="pipeline-exec-gap">
                 <span
                     @click="collapseSummary"
@@ -213,7 +213,6 @@
                 'isShowCompleteLog',
                 'showPanelType',
                 'fetchingAtomList',
-                'pipeline',
                 'showStageReviewPanel'
             ]),
             ...mapGetters('atom', {

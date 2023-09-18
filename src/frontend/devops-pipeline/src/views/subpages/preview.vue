@@ -55,7 +55,7 @@
                             }
                         }
                 }
-            },
+            }
         },
         mounted () {
             this.init()
@@ -74,7 +74,7 @@
         methods: {
             ...mapActions('atom', [
                 'togglePropertyPanel',
-                'fetchPipelineByVersion',
+                'fetchPipelineByVersion'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -85,14 +85,14 @@
             async init () {
                 try {
                     this.isLoading = true
-                    const [res, pipelineModel] = await Promise.all([
+                    const [res, pipelineRes] = await Promise.all([
                         this.requestStartupInfo({
                             projectId: this.projectId,
                             pipelineId: this.pipelineId
                         }),
                         this.fetchPipelineByVersion(this.$route.params)
                     ])
-                    this.pipelineModel = pipelineModel
+                    this.pipelineModel = pipelineRes?.modelAndSetting?.model
                     this.startupInfo = res
                 } catch (err) {
                     this.handleError(err, [{

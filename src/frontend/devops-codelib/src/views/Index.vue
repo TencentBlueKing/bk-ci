@@ -6,7 +6,8 @@
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button>
-            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+            <bk-input
+                :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
                 right-icon="icon-search"
@@ -17,6 +18,7 @@
             </bk-input>
             <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
         </template>
+        
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <bk-button v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
                 {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}

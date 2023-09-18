@@ -968,6 +968,7 @@
     "draftVersion": "Draft (created from {0}) ",
     "releaseVersion": "{0} released",
     "pipelineVersionSaveAt": "Version {0} save at {1}",
+    "saveDraftSuccess": "{0} Draft save successfully",
     "every": "Remind every",
     "remindTime": "hours"
   },
@@ -1240,5 +1241,7 @@
   "saveDraft": "Save Draft",
   "debug": "Debug",
   "release": "Release",
-  "nonManual": "Non Manual"
+  "nonManual": "Non Manual",
+  "addPlugin": "Add Plugin",
+  "templatePreivewHeader": "Preview - {0}"
 }

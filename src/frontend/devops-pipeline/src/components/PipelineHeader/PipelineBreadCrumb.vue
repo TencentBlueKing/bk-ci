@@ -73,18 +73,21 @@
             async fetchPipelineList (searchName) {
                 try {
                     const { projectId, pipelineId } = this.$route.params
+
                     const [list, pipelineInfo] = await Promise.all([
                         this.searchPipelineList({
                             projectId,
                             searchName
                         }),
-                        this.requestPipelineSummary({
-                            projectId,
-                            pipelineId
-                        })
+                        ...(this.pipelineInfo?.pipelineId !== pipelineId
+                            ? [this.requestPipelineSummary({
+                                projectId,
+                                pipelineId
+                            })]
+                        : [])
                     ])
 
-                    this.setBreadCrumbPipelineList(list, pipelineInfo)
+                    this.setBreadCrumbPipelineList(list, pipelineInfo ?? this.pipelineInfo)
                 } catch (err) {
                     console.log(err)
                     this.$showTips({
@@ -108,7 +111,7 @@
             },
             async doSelectPipeline (pipelineId, cur) {
                 const { $route } = this
-                const summary = await this.requestPipelineSummary({
+                await this.requestPipelineSummary({
                     pipelineId,
                     projectId: $route.params.projectId
                 })

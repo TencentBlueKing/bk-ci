@@ -127,7 +127,7 @@
             </section>
         </bk-resize-layout>
         <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
-        <aside :class="['pipeline-outputs-filter-aside', {
+        <!-- <aside :class="['pipeline-outputs-filter-aside', {
             'pipeline-outputs-filter-aside-show': outputsFilterAsideVisible
         }]">
             <header>
@@ -160,7 +160,7 @@
                     {{$t('history.reset')}}
                 </bk-button>
             </footer>
-        </aside>
+        </aside> -->
     </div>
 </template>
 
@@ -182,8 +182,8 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
-            OutputQrcode,
-            ArtifactsList
+            OutputQrcode
+            // ArtifactsList
         },
         props: {
             currentTab: {
@@ -196,6 +196,7 @@
                 isCopyDialogShow: false,
                 isCopying: false,
                 outputs: [],
+                keyWord: '',
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
@@ -215,6 +216,15 @@
             hasNext () {
                 return this.pagination.count < this.outputs.length
             },
+            reports () {
+                return this.outputs.filter(
+                    (item) =>
+                        item.artifactoryType === 'REPORT' && !this.isThirdReport(item.reportType)
+                )
+            },
+            artifacts () {
+                return this.outputs.filter((item) => this.isArtifact(item.artifactoryType))
+            },
             visibleOutputs () {
                 const thirdReportList
                     = this.thirdPartyReportList.length > 0
@@ -228,7 +238,7 @@
                             }
                         ]
                         : []
-                return [
+                let visibleOutputs = [
                     ...this.outputs.filter((output) => !this.isThirdReport(output.reportType)),
                     ...thirdReportList
                 ]
@@ -324,120 +334,120 @@
                     { key: 'sha1', name: 'SHA1' },
                     { key: 'md5', name: 'MD5' }
                 ]
-            },
-            filterConditionLength () {
-                if (!this.filtering) return 0
-                return Object.keys(this.filterConditionMap).filter(key => {
-                    if (Array.isArray(this.filterConditionMap[key])) {
-                        return this.filterConditionMap[key].length > 0
-                    }
-                    return !!this.filterConditionMap[key]
-                }).length
-            },
-            conditions () {
-                return [
-                    {
-                        id: 'triggerTime',
-                        label: this.$t('details.triggerTime'),
-                        component: 'bk-date-picker',
-                        props: {
-                            type: 'datetimerange',
-                            shortcuts: this.shortcuts,
-                            value: this.filterConditionMap.timeRange
-                        },
-                        listeners: {
-                            change: (range) => {
-                                this.filterConditionMap.timeRange = range
-                            }
-                        }
-                    },
-                    {
-                        id: 'buildNo',
-                        label: this.$t('构建号'),
-                        component: 'bk-input',
-                        props: {
-                            value: this.filterConditionMap.buildNo
-                        },
-                        listeners: {
-                            change: (buildNo) => {
-                                this.filterConditionMap.buildNo = buildNo
-                            }
-                        }
-                    },
-                    {
-                        id: 'filename',
-                        label: this.$t('文件名'),
-                        component: 'bk-input',
-                        props: {
-                            value: this.filterConditionMap.filename
-                        },
-                        listeners: {
-                            change: (filename) => {
-                                this.filterConditionMap.filename = filename
-                            }
-                        }
-                    },
-                    {
-                        id: 'creator',
-                        label: this.$t('触发人'),
-                        component: 'bk-input',
-                        props: {
-                            value: this.filterConditionMap.creator
-                        },
-                        listeners: {
-                            change: (creator) => {
-                                this.filterConditionMap.creator = creator
-                            }
-                        }
-                    },
-                    {
-                        id: 'property',
-                        label: this.$t('元数据'),
-                        component: 'bk-input',
-                        props: {
-                            value: this.filterConditionMap.property
-                        },
-                        listeners: {
-                            change: (property) => {
-                                this.filterConditionMap.property = property
-                            }
-                        }
-                    }
-                ]
-            },
-            shortcuts () {
-                return [
-                    {
-                        text: '今天',
-                        value () {
-                            const end = new Date()
-                            const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-                            return [start, end]
-                        },
-                        onClick: picker => {
-                            console.log(picker)
-                        }
-                    },
-                    {
-                        text: '近7天',
-                        value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                            return [start, end]
-                        }
-                    },
-                    {
-                        text: '近15天',
-                        value () {
-                            const end = new Date()
-                            const start = new Date()
-                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
-                            return [start, end]
-                        }
-                    }
-                ]
             }
+            // filterConditionLength () {
+            //     if (!this.filtering) return 0
+            //     return Object.keys(this.filterConditionMap).filter(key => {
+            //         if (Array.isArray(this.filterConditionMap[key])) {
+            //             return this.filterConditionMap[key].length > 0
+            //         }
+            //         return !!this.filterConditionMap[key]
+            //     }).length
+            // },
+            // conditions () {
+            //     return [
+            //         {
+            //             id: 'triggerTime',
+            //             label: this.$t('details.triggerTime'),
+            //             component: 'bk-date-picker',
+            //             props: {
+            //                 type: 'datetimerange',
+            //                 shortcuts: this.shortcuts,
+            //                 value: this.filterConditionMap.timeRange
+            //             },
+            //             listeners: {
+            //                 change: (range) => {
+            //                     this.filterConditionMap.timeRange = range
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'buildNo',
+            //             label: this.$t('构建号'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.buildNo
+            //             },
+            //             listeners: {
+            //                 change: (buildNo) => {
+            //                     this.filterConditionMap.buildNo = buildNo
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'filename',
+            //             label: this.$t('文件名'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.filename
+            //             },
+            //             listeners: {
+            //                 change: (filename) => {
+            //                     this.filterConditionMap.filename = filename
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'creator',
+            //             label: this.$t('触发人'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.creator
+            //             },
+            //             listeners: {
+            //                 change: (creator) => {
+            //                     this.filterConditionMap.creator = creator
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             id: 'property',
+            //             label: this.$t('元数据'),
+            //             component: 'bk-input',
+            //             props: {
+            //                 value: this.filterConditionMap.property
+            //             },
+            //             listeners: {
+            //                 change: (property) => {
+            //                     this.filterConditionMap.property = property
+            //                 }
+            //             }
+            //         }
+            //     ]
+            // },
+            // shortcuts () {
+            //     return [
+            //         {
+            //             text: '今天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+            //                 return [start, end]
+            //             },
+            //             onClick: picker => {
+            //                 console.log(picker)
+            //             }
+            //         },
+            //         {
+            //             text: '近7天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date()
+            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+            //                 return [start, end]
+            //             }
+            //         },
+            //         {
+            //             text: '近15天',
+            //             value () {
+            //                 const end = new Date()
+            //                 const start = new Date()
+            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
+            //                 return [start, end]
+            //             }
+            //         }
+            //     ]
+            // }
         },
         watch: {
             visibleOutputs (outputs) {
@@ -474,11 +484,11 @@
                             projectId,
                             pipelineId,
                             buildId,
-                            pipelineOutputType: this.currentTab,
-                            ...(Object.keys(this.filterConditionMap).filter(key => !!this.filterConditionMap[key]).reduce((result, key) => {
-                                result[key] = this.filterConditionMap[key]
-                                return result
-                            }, {})),
+                            // pipelineOutputType: this.currentTab,
+                            // ...(Object.keys(this.filterConditionMap).filter(key => !!this.filterConditionMap[key]).reduce((result, key) => {
+                            //     result[key] = this.filterConditionMap[key]
+                            //     return result
+                            // }, {})),
                             ...this.pagination
                         })
                     ])

@@ -597,9 +597,13 @@ export function navConfirm ({ content, title, ...restProps }) {
 
         window.globalVue.$leaveConfirm({ content, title, ...restProps })
 
-        window.globalVue.$once('order::leaveConfirm', resolve)
+        window.globalVue.$once('order::leaveConfirm', () => {
+            resolve(true)
+        })
 
-        window.globalVue.$once('order::leaveCancel', reject)
+        window.globalVue.$once('order::leaveCancel', () => {
+            resolve(false)
+        })
     })
 }
 

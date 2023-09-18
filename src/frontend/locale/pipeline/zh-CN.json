@@ -966,9 +966,10 @@
       "otherChoice": "其他选项"
     },
     "stageOption": "流程控制选项",
-    "draftVersion": "草稿 (从 {0} 创建) ",
+    "draftVersion": "草稿 (基于 {0}) ",
     "releaseVersion": "{0} 已发布",
     "pipelineVersionSaveAt": "版本{0}保存于{1}",
+    "saveDraftSuccess": "{0} 草稿保存成功",
     "every": "每隔",
     "remindTime": "小时提醒一次"
   },
@@ -1243,5 +1244,7 @@
   "saveDraft": "保存草稿",
   "debug": "调试",
   "release": "发布",
-  "nonManual": "非手动"
+  "nonManual": "非手动",
+  "addPlugin": "添加插件",
+  "templatePreivewHeader": "预览模板 - {0}"
 }

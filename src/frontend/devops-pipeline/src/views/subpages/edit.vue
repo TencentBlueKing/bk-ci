@@ -7,13 +7,8 @@
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
+        <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
-            <!-- <section class="choose-type-container">
-                <bk-radio-group v-model="editType">
-                    <bk-radio-button value="CODE">{{$t('code方式')}}</bk-radio-button>
-                    <bk-radio-button value="UI">{{$t('UI方式')}}</bk-radio-button>
-                </bk-radio-group>
-            </section> -->
             <header class="choose-type-switcher">
                 <span
                     v-for="panel in panels"
@@ -47,7 +42,9 @@
     import { navConfirm } from '@/utils/util'
     import { PipelineEditTab, BaseSettingTab, TriggerTab, NotifyTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
+    import YamlPipelineEditor from './YamlPipelineEditor'
+    import emptyTips from '@/components/devops/emptyTips'
 
     export default {
         components: {
@@ -57,14 +54,14 @@
             TriggerTab,
             NotifyTab,
             ShowVariable,
-            MiniMap
+            MiniMap,
+            YamlPipelineEditor
         },
         mixins: [pipelineOperateMixin],
         data () {
             return {
                 isLoading: false,
                 hasNoPermission: false,
-                editType: 'UI',
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
@@ -98,8 +95,14 @@
                 'fetchError'
             ]),
             ...mapState('atom', [
+                'pipeline',
+                'pipelineWithoutTrigger',
+                'pipelineYaml',
                 'editfromImport'
             ]),
+            ...mapGetters({
+                isCodeMode: 'isCodeMode'
+            }),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -122,7 +125,7 @@
                             component: 'PipelineEditTab',
                             bindData: {
                                 isEditing: this.isEditing,
-                                pipeline: this.pipeline,
+                                pipeline: this.pipelineWithoutTrigger,
                                 isLoading: !this.pipeline
                             }
                         },
@@ -143,10 +146,11 @@
                             bindData: {
                                 failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? null,
                                 successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? null,
-                                updateSubscription: (container, name, value) => {
+                                updateSubscription: (name, value) => {
                                     this.setPipelineEditing(true)
+                                    console.log(name, value)
                                     this.updatePipelineSetting({
-                                        container,
+                                        setting: this.pipelineSetting,
                                         param: {
                                             [name]: value
                                         }
@@ -162,6 +166,7 @@
                                 pipelineSetting: this.pipelineSetting,
                                 updatePipelineSetting: (...args) => {
                                     this.setPipelineEditing(true)
+                                    console.log('updatePipelineSetting', ...args)
                                     this.updatePipelineSetting(...args)
                                 }
                             }
@@ -174,22 +179,39 @@
                     this.init()
                 })
             },
-            pipelineVersion (pipelineId, oldId) {
+            pipelineVersion (v) {
                 this.$nextTick(() => {
                     this.init()
                 })
             },
             pipeline (val) {
-                this.isLoading = false
                 this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
-                this.isLoading = false
                 if (error.code === 403) {
                     this.hasNoPermission = true
                     this.removeLeaveListenr()
                 }
+            },
+            isCodeMode (val) {
+                console.log(this.pipelineYaml)
+                const pipeline = Object.assign({}, this.pipeline, {
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+                this.transfertModelToYaml({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
+                    modelAndSetting: {
+                        model: pipeline,
+                        setting: this.pipelineSetting
+                    },
+                    oldYaml: this.pipelineYaml
+                })
             }
         },
         mounted () {
@@ -223,20 +245,22 @@
                 'setPipelineEditing',
                 'setSaveStatus',
                 'setEditFrom',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'transfertModelToYaml'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom',
                 'requestMatchTemplateRuleList'
             ]),
-            init () {
+            async init () {
                 if (!this.isDraftEdit && this.pipelineVersion) {
                     this.isLoading = true
-                    this.requestPipeline({
+                    await this.requestPipeline({
                         ...this.$route.params,
                         version: this.pipelineVersion
                     })
+                    this.isLoading = false
                 }
             },
             switchTab (tab) {

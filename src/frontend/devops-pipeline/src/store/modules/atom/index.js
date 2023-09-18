@@ -26,6 +26,7 @@ export default {
     state: {
         showAtomSelectorPopup: false,
         pipeline: null,
+        pipelineWithoutTrigger: null,
         pipelineYaml: '',
         pipelineSetting: null,
         template: null,

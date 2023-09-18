@@ -4,11 +4,14 @@
             <mode-switch />
             <VersionSideslider
                 v-model="activePipelineVersion"
-                @change="init"
+                ref="versionSideslider"
+                @change="handleVersionChange"
             />
             <template v-if="!isCurrentVersion">
                 <RollbackEntry
                     :version="activePipelineVersion"
+                    :version-name="activePipelineVersionName"
+                    :draft-version-name="draftVersionName"
                 >
                     <i class="devops-icon icon-rollback" />
                     {{$t('rollback')}}
@@ -77,6 +80,7 @@
                 isLoading: false,
                 yaml: '',
                 activePipelineVersion: null,
+                activePipelineVersionName: '',
                 yamlHighlightBlockMap: {},
                 yamlHighlightBlock: []
             }
@@ -86,7 +90,6 @@
                 'pipelineInfo'
             ]),
             ...mapState('atom', [
-                'pipeline',
                 'pipelineYaml'
             ]),
             ...mapGetters({
@@ -99,8 +102,14 @@
             releaseVersion () {
                 return this.pipelineInfo?.version
             },
+            releaseVersionName () {
+                return this.pipelineInfo?.versionName
+            },
             isCurrentVersion () {
                 return this.activePipelineVersion === this.releaseVersion
+            },
+            draftVersionName () {
+                return this.$refs?.versionSideslider?.getDraftVersion()
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
@@ -139,9 +148,13 @@
                 }
             },
             releaseVersion (version) {
-                console.log(123, version, 'pipelineInfo.version')
                 this.activePipelineVersion = version
-                this.init()
+                this.$nextTick(() => {
+                    this.init()
+                })
+            },
+            releaseVersionName (versionName) {
+                this.activePipelineVersionName = versionName
             }
         },
         created () {
@@ -159,7 +172,6 @@
             ]),
             async init () {
                 try {
-                    console.log('11111', this.activePipelineVersion)
                     if (this.activePipelineVersion) {
                         this.isLoading = true
                         await this.requestPipeline({
@@ -179,6 +191,12 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            handleVersionChange (versionId, version) {
+                this.activePipelineVersionName = version.versionName
+                this.$nextTick(() => {
+                    this.init()
+                })
             }
         }
     }

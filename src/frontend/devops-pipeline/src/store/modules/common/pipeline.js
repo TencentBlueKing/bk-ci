@@ -169,10 +169,7 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestInterceptAtom: async ({ commit }, { projectId, pipelineId }) => {
-        const params = {
-            pipelineId: pipelineId
-        }
+    requestInterceptAtom: async ({ commit }, { projectId, ...params }) => {
         try {
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchRuleList`, { params })
 

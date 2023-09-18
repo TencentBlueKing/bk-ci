@@ -118,7 +118,6 @@
                     })
                     this.page = res.page
                     this.hasNext = res.count > res.page * pageSize
-                    console.log(res.records)
                     if (res.records.length > 0) {
                         this.pipelineVersionList.push(...res.records)
                     }
@@ -159,3 +158,7 @@
         }
     }
 </script>
+
+<style lang="scss">
+    @import "@/scss/select-dark-theme.scss";
+</style>

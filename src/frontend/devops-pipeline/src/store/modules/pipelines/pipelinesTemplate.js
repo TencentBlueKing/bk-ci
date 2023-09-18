@@ -117,6 +117,18 @@ const actions = {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/deletetemplate?versionName=${versionName}`).then(response => {
             return response.data
         })
+    },
+    createPipelineWithTemplate (_, { projectId, ...params }) {
+        return ajax.post(`${prefix}/version/projects/${projectId}/createPipelineWithTemplate`, params).then(response => {
+            return response.data
+        })
+    },
+    requestTemplatePreview (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${prefix}/templates/projects/${projectId}/templates/${templateId}/preview`, {
+            params
+        }).then(response => {
+            return response.data
+        })
     }
 }
 

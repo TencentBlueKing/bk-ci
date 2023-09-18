@@ -6,18 +6,18 @@
         <mode-switch />
         <aside class="pipeline-edit-right-aside">
             <bk-button
-                :disabled="saveBtnDisabled"
+                :disabled="saveStatus"
                 :loading="saveStatus"
                 outline
                 theme="primary"
-                @click="save"
+                @click="saveDraft"
             >
                 {{ $t("saveDraft") }}
             </bk-button>
             <bk-button
                 :disabled="!canDebug"
                 :loading="executeStatus"
-                @click="debug"
+                @click="exec(true)"
             >
                 <span class="debug-pipeline-draft-btn">
                     {{ $t("debug") }}
@@ -27,15 +27,17 @@
             </bk-button>
             <bk-button
                 theme="primary"
-                :disabled="btnDisabled || !canManualStartup || isCurPipelineLocked"
+                :disabled="btnDisabled"
                 :loading="executeStatus"
                 :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
-                @click="saveAndExec"
+                @click="exec(false)"
             >
-                {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
+                {{ $t("exec") }}
             </bk-button>
             <!-- <more-actions /> -->
-            <span class="publish-pipeline-btn">
+            <span :class="['publish-pipeline-btn', {
+                'publish-diabled': saveStatus
+            }]" @click="release">
                 <i class="devops-icon icon-check-small" />
                 {{ $t('release') }}
             </span>
@@ -49,7 +51,7 @@
     // import MoreActions from './MoreActions.vue'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import ModeSwitch from '@/components/ModeSwitch'
-    import { HttpError } from '@/utils/util'
+    // import { HttpError } from '@/utils/util'
     export default {
         components: {
             PipelineBreadCrumb,
@@ -57,8 +59,12 @@
             ModeSwitch
         },
         computed: {
-
-            ...mapState('atom', ['pipeline', 'saveStatus', 'pipelineSetting']),
+            ...mapState('atom', [
+                'pipeline',
+                'saveStatus',
+                'pipelineSetting',
+                'pipelineYaml'
+            ]),
             ...mapState('pipelines', ['pipelineInfo', 'executeStatus']),
             ...mapGetters({
                 isCurPipelineLocked: 'pipelines/isCurPipelineLocked',
@@ -66,21 +72,10 @@
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
             btnDisabled () {
-                return this.saveStatus || this.executeStatus
-            },
-            saveBtnDisabled () {
-                return (
-                    this.saveStatus
-                    || this.executeStatus
-                    || !this.pipelineSetting
-                    || Object.keys(this.pipelineSetting).length === 0
-                )
+                return this.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
             },
             canDebug () {
-                return true
-            },
-            isSaveAndRun () {
-                return this.isEditing && !this.saveBtnDisabled
+                return this.pipeline?.canDebug ?? false
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -89,35 +84,28 @@
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             currentVersionName () {
+                if (this.canDebug) {
+                    return this.$t('editPage.draftVersion', [this.pipeline?.baseVersionName ?? '--'])
+                }
                 return this.pipelineInfo?.versionName ?? '--'
             }
         },
         methods: {
             ...mapActions('atom', [
                 'setPipelineEditing',
+                'saveDraftPipeline',
+                'releaseDraftPipeline',
                 'setSaveStatus',
                 'updateContainer'
             ]),
             ...mapMutations('pipelines', [
                 'updatePipelineInfo'
             ]),
-            async saveAndExec () {
-                if (this.isSaveAndRun) {
-                    await this.save()
-                }
-                this.$router.push({
-                    name: 'executePreview',
-                    params: {
-                        ...this.$route.params,
-                        version: this.pipelineInfo?.version
-                    }
-                })
-            },
-            debug () {
+            async exec (debug) {
                 this.$router.push({
                     name: 'executePreview',
                     query: {
-                        debug: ''
+                        ...(debug ? { debug: '' } : {})
                     },
                     params: {
                         ...this.$route.params,
@@ -140,72 +128,64 @@
                     }
                 })
             },
-            wechatGroupCompletion (setting) {
+
+            async saveDraft () {
                 try {
-                    let successWechatGroup = setting.successSubscription.wechatGroup
-                    let failWechatGroup = setting.failSubscription.wechatGroup
-                    if (successWechatGroup && !/\;$/.test(successWechatGroup)) {
-                        successWechatGroup = `${successWechatGroup};`
+                    this.setSaveStatus(true)
+                    const { pipelineSetting, checkPipelineInvalid, pipeline, pipelineYaml } = this
+                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
+                    const { projectId, pipelineId } = this.$route.params
+                    if (inValid) {
+                        throw new Error(message)
                     }
-                    if (failWechatGroup && !/\;$/.test(failWechatGroup)) {
-                        failWechatGroup = `${failWechatGroup};`
-                    }
-                    return {
-                        ...setting,
-                        successSubscription: {
-                            ...setting.successSubscription,
-                            wechatGroup: successWechatGroup
+                    // 清除流水线参数渲染过程中添加的key
+                    this.formatParams(pipeline)
+                    // if (!pipelineId) {
+                    //     return this.importPipelineAndSetting(body)
+                    // }
+
+                    // 请求执行构建
+                    await this.saveDraftPipeline({
+                        projectId,
+                        pipelineId,
+                        baseVersion: pipeline.baseVersion,
+                        modelAndSetting: {
+                            model: {
+                                ...pipeline,
+                                name: pipelineSetting.pipelineName,
+                                desc: pipelineSetting.desc
+                            },
+                            setting: pipelineSetting
                         },
-                        failSubscription: {
-                            ...setting.failSubscription,
-                            wechatGroup: failWechatGroup
-                        }
-                    }
+                        yaml: pipelineYaml
+                    })
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
+                    })
                 } catch (e) {
-                    console.warn(e)
-                    return setting
+                    this.handleError(e, [
+                        {
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.pipeline.pipelineId,
+                                    name: this.pipeline.name
+                                }
+                            ],
+                            projectId: this.$route.params.projectId
+                        }
+                    ])
+                    return {
+                        code: e.code,
+                        message: e.message
+                    }
+                } finally {
+                    this.setSaveStatus(false)
                 }
             },
 
-            async savePipelineAndSetting () {
-                const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-                const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-                const { projectId, pipelineId } = this.$route.params
-                if (inValid) {
-                    throw new Error(message)
-                }
-                // 清除流水线参数渲染过程中添加的key
-                this.formatParams(pipeline)
-                const finalSetting = this.wechatGroupCompletion({
-                    ...pipelineSetting,
-                    projectId: projectId
-                })
-                const body = {
-                    model: {
-                        ...pipeline,
-                        name: finalSetting.pipelineName,
-                        desc: finalSetting.desc
-                    },
-                    setting: finalSetting
-                }
-                if (!pipelineId) {
-                    return this.importPipelineAndSetting(body)
-                }
-
-                // 请求执行构建
-                return this.$ajax.post(
-                    `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`,
-                    body
-                )
-            },
-            getPipelineSetting () {
-                const { pipelineSetting } = this
-                const { projectId } = this.$route.params
-                return this.wechatGroupCompletion({
-                    ...pipelineSetting,
-                    projectId
-                })
-            },
             saveSetting () {
                 const pipelineSetting = this.getPipelineSetting()
                 const { projectId, pipelineId } = this.$route.params
@@ -214,38 +194,25 @@
                     pipelineSetting
                 )
             },
-            async save () {
+            async release () {
                 const { pipelineId, projectId } = this.$route.params
                 try {
                     this.setSaveStatus(true)
-                    const saveAction = this.isTemplatePipeline
-                        ? this.saveSetting
-                        : this.savePipelineAndSetting
-                    const responses = await saveAction()
-
-                    if (responses.code === 403) {
-                        throw new HttpError(403, responses.message)
-                    }
-                    this.setPipelineEditing(false)
+                    console.log(this.pipeline.version, this.pipelineInfo.version)
+                    const responses = await this.releaseDraftPipeline({
+                        projectId,
+                        pipelineId,
+                        version: this.pipelineInfo.version
+                    })
+                    console.log(responses, {
+                        projectId,
+                        pipelineId,
+                        version: this.pipelineInfo.version
+                    })
                     this.$showTips({
                         message: this.$t('saveSuc'),
                         theme: 'success'
                     })
-
-                    if (
-                        this.pipelineSetting
-                        && this.pipelineSetting.pipelineName !== this.pipelineInfo.pipelineName
-                    ) {
-                        this.updatePipelineInfo({
-                            key: 'pipelineName',
-                            value: this.pipelineSetting.pipelineName
-                        })
-                    }
-
-                    return {
-                        code: 0,
-                        data: responses
-                    }
                 } catch (e) {
                     this.handleError(e, [
                         {
@@ -311,6 +278,10 @@
         background: $primaryColor;
         font-size: 14px;
         padding: 0 20px;
+        &.publish-diabled {
+            background: #DCDEE5;
+            cursor: not-allowed;
+        }
         .icon-check-small {
             font-size: 18px;
         }
