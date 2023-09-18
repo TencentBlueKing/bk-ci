@@ -51,9 +51,9 @@ stages:
 
               cd ${WORKSPACE}/scripts/
               cp -rf ci_env_test.properties ci_env.properties
-              sed -i 's/login\.o\.oa\.com/login.devx.tencent.com\/login/g' ci_env.properties
-              sed -i 's/dev\.devops\.woa\.com/dev.devx.tencent.com/g' ci_env.properties
-              sed -i 's/login\.o\.woa\.com/login.devx.tencent.com\/login/g' ci_env.properties
+              echo "PAAS_LOGIN_URL='login.devx.tencent.com/login'" >> ci_env.properties
+              echo "WOA_LOGIN_SERVICE_URL='login.devx.tencent.com/login'" >> ci_env.properties
+              echo "BKCI_FQDN='test.devops.woa.com'" >> ci_env.properties
               sh ./render_ci -m ci ../support-files/templates/*
 
               cd ${WORKSPACE}/ci/frontend/
