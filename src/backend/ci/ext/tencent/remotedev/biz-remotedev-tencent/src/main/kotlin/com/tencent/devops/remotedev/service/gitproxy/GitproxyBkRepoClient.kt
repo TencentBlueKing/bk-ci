@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component
 import java.io.IOException
 
 @Component
-class BkRepoClient @Autowired constructor(
+class GitproxyBkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
@@ -88,7 +88,6 @@ class BkRepoClient @Autowired constructor(
     fun deleteRepo(userId: String, projectId: String, repoName: String) {
         logger.info("deleteRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
         val url = "$bkrepoDevxUrl/repository/api/repo/delete/$projectId/$repoName?forced=false"
-        // TODO: 删除是不是delete
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders().toHeaders())

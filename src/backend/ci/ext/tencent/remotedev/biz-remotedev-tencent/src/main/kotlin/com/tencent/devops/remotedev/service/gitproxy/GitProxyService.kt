@@ -8,14 +8,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class GitProxyService @Autowired constructor(
-    private val bkRepoClient: BkRepoClient
+    private val gitproxyBkRepoClient: GitproxyBkRepoClient
 ) {
     fun createRepo(
         userId: String,
         data: CreateGitProxyData
     ): Boolean {
         val repoName = data.url.removeSuffix(".git").split("/").last()
-        bkRepoClient.createRepo(userId, data.projectId, repoName, data.url)
+        gitproxyBkRepoClient.createRepo(userId, data.projectId, repoName, data.url)
         return true
     }
 
@@ -25,7 +25,7 @@ class GitProxyService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<FetchRepoResp> {
-        val repos = bkRepoClient.fetchRepo(userId, projectId, page, pageSize)
+        val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize)
         val resp = repos.records.map { record ->
             FetchRepoResp(
                 url = record.configuration.proxy.url,
@@ -47,7 +47,7 @@ class GitProxyService @Autowired constructor(
         projectId: String,
         repoName: String
     ): Boolean {
-        bkRepoClient.deleteRepo(userId, projectId, repoName)
+        gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
         return true
     }
 }
