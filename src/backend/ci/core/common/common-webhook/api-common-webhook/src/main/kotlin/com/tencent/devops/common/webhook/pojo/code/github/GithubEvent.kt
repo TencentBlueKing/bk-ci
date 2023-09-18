@@ -309,7 +309,7 @@ data class GithubRepository(
     val watchers: Int, // 0
     @JsonProperty("watchers_count")
     val watchersCount: Int // 0
-):GithubBaseInfo(
+) : GithubBaseInfo(
     id = id,
     url = url,
     htmlUrl = htmlUrl,
