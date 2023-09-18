@@ -47,7 +47,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
