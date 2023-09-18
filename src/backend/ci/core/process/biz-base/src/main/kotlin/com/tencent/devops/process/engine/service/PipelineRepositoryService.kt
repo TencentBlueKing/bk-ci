@@ -234,6 +234,10 @@ class PipelineRepositoryService constructor(
                     return@lit
                 }
             }
+            // 保存时将别名name补全为id
+            triggerContainer.params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
         }
         return if (!create) {
             val pipelineSetting = savedSetting
@@ -1084,12 +1088,14 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
-        return if (version == null) { // 取最新版，直接从旧版本表读
-            pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: pipelineResourceDao.getLatestVersionResource(
+        val resource = if (version == null) { // 取最新版，直接从旧版本表读
+            includeDraft?.let {
+                if (includeDraft) pipelineResourceVersionDao.getDraftVersionResource(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) else null
+            } ?: pipelineResourceDao.getLatestVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
@@ -1103,6 +1109,13 @@ class PipelineRepositoryService constructor(
                 includeDraft = includeDraft
             )
         }
+        // 返回时将别名name补全为id
+        resource?.let {
+            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
+        }
+        return resource
     }
 
     fun rollbackDraftFromVersion(

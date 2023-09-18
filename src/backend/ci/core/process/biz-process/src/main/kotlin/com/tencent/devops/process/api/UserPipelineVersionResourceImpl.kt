@@ -36,12 +36,16 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
@@ -186,17 +190,47 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             AuthPermission.CREATE
         )
-        val templateDetail = templateFacadeService.getTemplate(
-            userId = userId,
-            projectId = projectId,
-            templateId = request.templateId,
-            version = request.templateVersion
-        )
+        val (templateModel, instanceFromTemplate) = if (request.emptyTemplate == true) {
+            val model = Model(
+                name = request.pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = "trigger",
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        id = "T-1-1-1",
+                                        name = "manualTrigger",
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+            Pair(model, true)
+        } else {
+            val template = templateFacadeService.getTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateId = request.templateId,
+                version = request.templateVersion
+            )
+            Pair(template.template, true)
+        }
         return Result(
             pipelineInfoFacadeService.createPipeline(
                 userId = userId,
                 projectId = projectId,
-                model = templateDetail.template.copy(templateId = request.templateId),
+                model = templateModel.copy(
+                    templateId = request.templateId,
+                    instanceFromTemplate = instanceFromTemplate
+                ),
                 channelCode = ChannelCode.BS,
                 checkPermission = false,
                 instanceType = request.instanceType,
