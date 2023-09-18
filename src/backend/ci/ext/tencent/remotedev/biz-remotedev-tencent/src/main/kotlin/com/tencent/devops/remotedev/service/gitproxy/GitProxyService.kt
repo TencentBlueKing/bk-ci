@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
+import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -22,9 +24,22 @@ class GitProxyService @Autowired constructor(
         projectId: String,
         page: Int,
         pageSize: Int
-    ): Map<String, String> {
-        // TODO: 目前不知道返回类型
-        return bkRepoClient.fetchRepo(userId, projectId, page, pageSize)
+    ): Page<FetchRepoResp> {
+        val repos = bkRepoClient.fetchRepo(userId, projectId, page, pageSize)
+        val resp = repos.records.map { record ->
+            FetchRepoResp(
+                url = record.configuration.proxy.url,
+                proxyUrl = record.configuration.url,
+                creator = record.createdBy,
+                creatDate = record.createdDate
+            )
+        }
+        return Page(
+            pageNumber = repos.pageNumber,
+            pageSize = repos.pageSize,
+            totalRecords = repos.totalRecords,
+            records = resp
+        )
     }
 
     fun deleteRepo(

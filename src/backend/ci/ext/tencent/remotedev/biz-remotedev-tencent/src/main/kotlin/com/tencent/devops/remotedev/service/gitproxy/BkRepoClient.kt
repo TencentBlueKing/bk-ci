@@ -5,14 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
+import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
-import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigWebHook
+import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
+import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -46,7 +48,7 @@ class BkRepoClient @Autowired constructor(
             category = "PROXT",
             public = false,
             description = "git-proxy",
-            configuration = CreateRepoDataConfig(
+            configuration = RepoConfig(
                 type = "proxy",
                 proxy = CreateRepoDataConfigProxy(
                     public = false,
@@ -72,8 +74,7 @@ class BkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
-    // TODO: 返回类型
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Map<String, String> {
+    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoInfo> {
         logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
         val url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize?type=GIT&category=PROXY"
         val request = Request.Builder()
@@ -81,7 +82,7 @@ class BkRepoClient @Autowired constructor(
             .headers(getCommonHeaders().toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
+        return doRequest(request).resolveResponse<Response<Page<RepoInfo>>>()!!.data!!
     }
 
     fun deleteRepo(userId: String, projectId: String, repoName: String) {
