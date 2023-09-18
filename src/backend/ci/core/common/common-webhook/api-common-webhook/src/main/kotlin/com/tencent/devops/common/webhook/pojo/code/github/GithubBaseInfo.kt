@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Github 基础信息")
-abstract class GithubBaseInfo(
+open class GithubBaseInfo(
     @ApiModelProperty("ID")
     open val id: Long,
     @ApiModelProperty("链接[API链接]")
