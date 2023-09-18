@@ -289,7 +289,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val allConfig = windowsResourceConfigService.getAllConfig().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
             dslContext,
