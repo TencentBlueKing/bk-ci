@@ -10,7 +10,7 @@ const MyApply = () => import(/* webpackChunkName: "Permission" */ '../views/my-p
 const MyApproval = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-approval.vue');
 const MyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-permission.vue');
 const MyProject = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-project.vue');
-
+const GroupDetail = () => import(/* webpackChunkName: "Permission" */ '../components/itsm-group-detail.vue');
 const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
@@ -52,6 +52,11 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/group/detail',
+      name: 'group/detail',
+      component: GroupDetail,
+    }
   ],
 });
 
