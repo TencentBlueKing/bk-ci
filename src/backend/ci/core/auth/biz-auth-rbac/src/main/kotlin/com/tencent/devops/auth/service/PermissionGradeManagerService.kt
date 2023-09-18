@@ -32,12 +32,6 @@ import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmScheme
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
-import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
@@ -46,15 +40,8 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AUTH_SECRECY
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT_APPLICATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_ORGANIZATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_DESC
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_ID
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_NAME
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REVISE_BKCI_PROJECT_APPLICATION
-import com.tencent.devops.auth.constant.AuthI18nConstants.BK_SUBJECT_SCOPES
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -77,12 +64,10 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
-import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Arrays
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
@@ -175,12 +160,12 @@ class PermissionGradeManagerService @Autowired constructor(
             gradeManagerId
         } else {
             val callbackId = UUIDUtil.generate()
-            val itsmContentDTO = buildItsmContentDTO(
+            val itsmContentDTO = itsmService.buildGradeManagerItsmContentDTO(
                 projectName = projectName,
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
                 organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
+                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
@@ -290,12 +275,12 @@ class PermissionGradeManagerService @Autowired constructor(
             true
         } else {
             val callbackId = UUIDUtil.generate()
-            val itsmContentDTO = buildItsmContentDTO(
+            val itsmContentDTO = itsmService.buildGradeManagerItsmContentDTO(
                 projectName = projectName,
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
                 organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
+                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
@@ -616,48 +601,5 @@ class PermissionGradeManagerService @Autowired constructor(
                 resourceName = projectName
             )
         )
-    }
-
-    @Suppress("LongParameterList")
-    private fun buildItsmContentDTO(
-        projectName: String,
-        projectId: String,
-        desc: String,
-        organization: String,
-        authSecrecy: Int,
-        subjectScopes: List<SubjectScopeInfo>
-    ): ItsmContentDTO {
-        val itsmColumns = listOf(
-            ItsmColumn.builder().key("projectName")
-                .name(I18nUtil.getCodeLanMessage(BK_PROJECT_NAME)).type("text").build(),
-            ItsmColumn.builder().key("projectId").name(I18nUtil.getCodeLanMessage(BK_PROJECT_ID)).type("text").build(),
-            ItsmColumn.builder().key("desc").name(I18nUtil.getCodeLanMessage(BK_PROJECT_DESC)).type("text").build(),
-            ItsmColumn.builder().key("organization")
-                .name(I18nUtil.getCodeLanMessage(BK_ORGANIZATION)).type("text").build(),
-            ItsmColumn.builder().key("authSecrecy")
-                .name(I18nUtil.getCodeLanMessage(BK_AUTH_SECRECY)).type("text").build(),
-            ItsmColumn.builder().key("subjectScopes")
-                .name(I18nUtil.getCodeLanMessage(BK_SUBJECT_SCOPES)).type("text").build()
-        )
-        val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
-        val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
-        val scheme = HashMap<String, ItsmScheme>()
-        scheme["content_table"] = itsmScheme
-        val value = HashMap<String, ItsmStyle>()
-        value["projectName"] = ItsmStyle.builder().value(projectName).build()
-        value["projectId"] = ItsmStyle.builder().value(projectId).build()
-        value["desc"] = ItsmStyle.builder().value(desc).build()
-        value["organization"] = ItsmStyle.builder().value(organization).build()
-        value["authSecrecy"] =
-            ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
-        value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
-        val itsmValue = ItsmValue.builder()
-            .scheme("content_table")
-            .lable(
-                I18nUtil.getCodeLanMessage(BK_CREATE_PROJECT_APPROVAL)
-            )
-            .value(listOf(value))
-            .build()
-        return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
     }
 }
