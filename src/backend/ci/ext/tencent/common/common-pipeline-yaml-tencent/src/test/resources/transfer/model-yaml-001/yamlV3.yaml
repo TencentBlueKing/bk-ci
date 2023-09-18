@@ -129,7 +129,7 @@ variables:
     value: ""
     props:
       type: git_ref
-      repoHashId: jRME
+      repoHashId: 302rW
   构建资源:
     value: tlinux2.2
     props:
@@ -172,14 +172,13 @@ stages:
       steps:
       - name: Batch Script
         if: AAA == 'bbb'  && VVV == 'wwww'
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
         timeout-minutes: 666
-        continue-on-error: true
+        continue-on-error: manual
         retry-times: 4
-        env:
-          param1: ""
-        run: echo 1
         shell: cmd
-        manual-retry: true
     job_nT0:
       name: Windows-私有构建机群
       runs-on:
@@ -192,9 +191,9 @@ stages:
       steps:
       - enable: false
         name: Batch Script
-        env:
-          param1: ""
-        run: echo 1
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
         shell: cmd
     job_W7R:
       name: Windows-云
@@ -202,10 +201,18 @@ stages:
         pool-name: windows-2016
       steps:
       - name: Batch Script
-        env:
-          param1: ""
-        run: echo 1
+        if: param1 != ''
+        uses: windowsScript@1.*
+        with:
+          script: echo 1
+          charsetType: GBK
         shell: cmd
+      - name: RunScript
+        with:
+          charsetType: UTF_8
+        continue-on-error: true
+        run: "echo 1\r\necho 2"
+        shell: pwsh
   check-in:
     reviews:
       flows:
@@ -220,21 +227,30 @@ stages:
           values: []
           description: 描述
       description: 审核说明：
+      send-markdown: true
+      notify-type:
+      - RTX
+      - WEWORK_GROUP
+      notify-groups:
+      - ww2075063897
     timeout-hours: 24
 - name: mac
   label:
   - Build
+  if: param1 == ''
+  fast-kill: true
   jobs:
     job_fQc:
       name: MacOS-公共构建机
       runs-on:
         pool-name: macos-BigSur11.4
         xcode: 13.2.1
+      if: qweqwe == '222'
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
     job_LaA:
       name: MacOS-私有构建机
@@ -247,9 +263,9 @@ stages:
         workspace: 工作空间
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
     job_kLT:
       name: MacOS-私有构建机群
@@ -262,9 +278,9 @@ stages:
         workspace: 工作空间
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
 - name: linux
   label:
@@ -278,14 +294,14 @@ stages:
           image: tlinux3_ci:2.*
           imageType: THIRD
           credentials: royalhuang_up
-        needs:
-          golang: 1.20.4
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
+        timeout-minutes: "${bianliang}"
         shell: bash
+      timeout-minutes: "${bianliang}"
     job_B1j:
       name: Linux-私有构建机
       runs-on:
@@ -297,9 +313,9 @@ stages:
         workspace: 工作空间
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
     job_QxG:
       name: Linux-私有构建机群
@@ -312,9 +328,9 @@ stages:
         workspace: 工作空间
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
       depend-on:
       - job_rTM
@@ -330,9 +346,9 @@ stages:
           imageType: BKSTORE
       steps:
       - name: Bash
-        env:
-          param1: ""
-        run: echo 1
+        uses: linuxScript@1.*
+        with:
+          script: echo 1
         shell: bash
       strategy:
         matrix:
@@ -341,6 +357,26 @@ stages:
           - macos-10.15
         fast-kill: true
         max-parallel: 5
+    job_3DQ:
+      name: 互斥组
+      mutex:
+        label: aasd
+        queue-length: 3
+        timeout-minutes: "${bianliang}"
+        queue-enable: true
+      runs-on:
+        pool-name: docker
+        container:
+          image: tlinux3_ci:2.*
+          imageType: BKSTORE
+      if: 3333 == '6666'
+      steps:
+      - name: Bash
+        uses: linuxScript@1.*
+        with:
+          script: echo 2
+        shell: bash
+      timeout-minutes: 111
 - name: stage-5
   label:
   - Build
@@ -357,8 +393,7 @@ stages:
           optionType: online
           scriptCode: 1
           scriptPath: ""
-        env:
-          param1: ""
+        continue-on-error: true
 finally:
   job_s5r:
     name: Linux-插件测试
@@ -368,11 +403,11 @@ finally:
         image: tlinux3_ci:2.*
         imageType: BKSTORE
     steps:
-    - checkout: self
+    - checkout: https://git.code.oa.com/XXX/XXX.git
       name: Checkout
       with:
-        repositoryType: URL
-        repositoryHashId: 6DOdE
+        repositoryType: ID
+        repositoryHashId: 302rW
         repositoryName: ""
         repositoryUrl: ""
         authType: TICKET
@@ -404,15 +439,16 @@ finally:
         enableGitCleanNested: false
         autoCrlf: "false"
         enableTrace: false
-      env:
-        param1: ""
     - name: Bash
       if: ALWAYS_UNLESS_CANCELLED
-      continue-on-error: true
+      uses: linuxScript@1.*
+      with:
+        script: echo 1
+        continueNoneZero: true
+        enableArchiveFile: true
+        archiveFile: '*.log'
+      continue-on-error: manual
       retry-times: 4
-      env:
-        param1: ""
-      run: echo 1
       shell: bash
       manual-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
@@ -500,8 +536,7 @@ finally:
           - DETEKT
         - toolList:
           - DETEKT
-      env:
-        param1: ""
+    timeout-minutes: "${bianliang}"
 notices:
 - if: SUCCESS
   type:
