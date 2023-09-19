@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -67,6 +69,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -98,6 +102,7 @@ import org.springframework.stereotype.Service
 @Suppress("LongMethod")
 class WorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
@@ -228,12 +233,16 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            workspaceName = null,
+            systemType = null,
             queryType = QueryType.WEB,
             ips = null
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
+            workspaceName = null,
+            systemType = null,
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
             ips = null
@@ -275,7 +284,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun parseWorkspaceList(
-        result: List<WorkspaceRecord>,
+        result: List<WorkspaceRecordInf>,
         pageNotNull: Int,
         pageSizeNotNull: Int,
         count: Long
@@ -302,32 +311,64 @@ class WorkspaceService @Autowired constructor(
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
 
-        return Page(
-            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
-            records = result.map {
-                val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
-                ProjectWorkspace(
-                    workspaceId = it.workspaceId,
-                    workspaceName = it.workspaceName,
-                    projectId = it.projectId,
-                    displayName = it.displayName,
-                    status = it.status,
-                    lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                    sleepingTime = if (it.status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
-                    createUserId = it.createUserId,
-                    hostName = detail?.hostIP,
-                    workspaceMountType = it.workspaceMountType,
-                    workspaceSystemType = it.workspaceSystemType,
-                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    owner = owners[it.workspaceName],
-                    viewers = viewers[it.workspaceName],
-                    gpu = it.gpu,
-                    cpu = it.cpu,
-                    memory = it.memory,
-                    disk = it.memory
-                )
+        val records = mutableListOf<ProjectWorkspace>()
+        result.forEach {
+            when (it) {
+                is WorkspaceRecord -> {
+                    val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
+                    records.add(
+                        ProjectWorkspace(
+                            workspaceId = it.workspaceId,
+                            workspaceName = it.workspaceName,
+                            projectId = it.projectId,
+                            displayName = it.displayName,
+                            status = it.status,
+                            lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
+                            sleepingTime = if (it.status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
+                            createUserId = it.createUserId,
+                            hostName = detail?.hostIP,
+                            workspaceMountType = it.workspaceMountType,
+                            workspaceSystemType = it.workspaceSystemType,
+                            winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                            owner = owners[it.workspaceName],
+                            viewers = viewers[it.workspaceName],
+                            gpu = it.gpu,
+                            cpu = it.cpu,
+                            memory = it.memory,
+                            disk = it.memory
+                        )
+                    )
+                }
+
+                is WorkspaceRecordWithDetail -> {
+                    val detail = objectMapper.readValue<WorkSpaceCacheInfo>(it.workSpaceDetail)
+                    records.add(
+                        ProjectWorkspace(
+                            workspaceId = it.workspaceId,
+                            workspaceName = it.workspaceName,
+                            projectId = it.projectId,
+                            displayName = it.displayName,
+                            status = it.status,
+                            lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
+                            sleepingTime = if (it.status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
+                            createUserId = it.createUserId,
+                            hostName = detail.hostIP,
+                            workspaceMountType = it.workspaceMountType,
+                            workspaceSystemType = it.workspaceSystemType,
+                            winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                            owner = owners[it.workspaceName],
+                            viewers = viewers[it.workspaceName],
+                            gpu = it.gpu,
+                            cpu = it.cpu,
+                            memory = it.memory,
+                            disk = it.memory
+                        )
+                    )
+                }
             }
-        )
+        }
+
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 
     fun getProjectWorkspaceList4WeSec(
