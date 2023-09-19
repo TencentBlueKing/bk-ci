@@ -153,7 +153,8 @@ class CreateControl @Autowired constructor(
             projectInfo = projectInfo,
             createCount = workspaceCreate.count,
             type = workspaceCreate.windowsType,
-            zone = workspaceCreate.windowsZone
+            zone = workspaceCreate.windowsZone,
+            adHoc = cgsId != null
         )
 
         for (i in 0 until workspaceCreate.count) {
@@ -612,9 +613,15 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun projectWinCreateCheck(projectInfo: ProjectVO, createCount: Int, type: String, zone: String) {
+    private fun projectWinCreateCheck(
+        projectInfo: ProjectVO,
+        createCount: Int,
+        type: String,
+        zone: String,
+        adHoc: Boolean = false
+    ) {
         val resourceCount = startCloudResourceCountCheck(type, zone)
-        if (resourceCount < createCount) {
+        if (!adHoc  && resourceCount < createCount) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(resourceCount.toString())
@@ -641,7 +648,8 @@ class CreateControl @Autowired constructor(
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
                     it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {

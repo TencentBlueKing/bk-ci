@@ -15,12 +15,14 @@ import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentLockedVmRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShare
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShareRep
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startCloud.pojo.Page
+import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -30,7 +32,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -109,7 +110,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                         " ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
-                            "型云桌面资源不足(${environmentRsp.code})"
+                                "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw BuildFailureException(
@@ -130,6 +131,52 @@ class WorkspaceStartCloudClient @Autowired constructor(
             )
         }
     }
+
+    fun getLockedVmList(): List<String> {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/list"
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get locked vm list response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        " 获取locked vm接口异常: ${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentLockedVmRsp = jacksonObjectMapper().readValue(responseContent)
+                when (environmentRsp.code) {
+                    OK -> return environmentRsp.data.vmList
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        " 获取locked vm接口返回异常:" +
+                                "${environmentRsp.code}-${environmentRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get locked vm list SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = " 获取locked vm接口超时, url: $url"
+            )
+        }
+    }
+
 
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
         val url = "$apiUrl/openapi/user/create"

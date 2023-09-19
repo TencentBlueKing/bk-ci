@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.startCloud.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
@@ -59,14 +60,16 @@ class WindowsGpuResourceDao {
                     CGS_IP,
                     MACHINE_TYPE,
                     STATUS,
-                    USER_INSTANCE_LIST
+                    USER_INSTANCE_LIST,
+                    LOCKED
                 ).values(
                     it.cgsId,
                     it.zoneId,
                     it.cgsIp,
                     it.machineType,
                     it.status,
-                    JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList)
+                    JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList),
+                    ByteUtils.bool2Byte(it.locked ?: false)
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
