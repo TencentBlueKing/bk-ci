@@ -796,7 +796,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
             )
         }
-        // TODO #8164 增加设置保存
         val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,

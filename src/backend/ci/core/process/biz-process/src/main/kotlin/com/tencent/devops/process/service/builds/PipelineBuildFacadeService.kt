@@ -662,7 +662,9 @@ class PipelineBuildFacadeService(
             }
 
             if (buildNo != null) {
-                pipelineRuntimeService.updateBuildNo(projectId, pipelineId, buildNo)
+                pipelineRuntimeService.updateBuildNo(
+                    projectId, pipelineId, buildNo, debugVersion != null
+                )
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
