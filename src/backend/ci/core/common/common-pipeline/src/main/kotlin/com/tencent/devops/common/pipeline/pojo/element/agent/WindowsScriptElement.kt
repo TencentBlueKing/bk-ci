@@ -31,7 +31,6 @@ import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.common.pipeline.pojo.transfer.RunAtomParam
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -68,7 +67,7 @@ data class WindowsScriptElement(
         return mutableMap
     }
 
-    override fun transferYaml(defaultValue: Map<String, String>?): PreStep =PreStep(
+    override fun transferYaml(defaultValue: Map<String, String>?): PreStep = PreStep(
         name = name,
         id = stepId,
         // bat插件上的

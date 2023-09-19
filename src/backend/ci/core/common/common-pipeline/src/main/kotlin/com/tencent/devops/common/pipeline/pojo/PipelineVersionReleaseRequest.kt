@@ -28,7 +28,6 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineVersionReleaseRequest(

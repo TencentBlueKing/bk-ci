@@ -635,7 +635,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
-        // TODO #8161 增加对debug表和普通表的buildNo buildNum计数
+
         buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -924,7 +924,8 @@ class PipelineRuntimeService @Autowired constructor(
                     dslContext = transactionContext,
                     projectId = context.projectId,
                     pipelineId = context.pipelineId,
-                    buildNumAlias = context.buildNumAlias
+                    buildNumAlias = context.buildNumAlias,
+                    debug = context.debug
                 )
                 context.watcher.stop()
                 // 创建构建记录
@@ -1496,8 +1497,13 @@ class PipelineRuntimeService @Autowired constructor(
         return buildTask
     }
 
-    fun updateBuildNo(projectId: String, pipelineId: String, buildNo: Int) {
-        pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo)
+    fun updateBuildNo(
+        projectId: String,
+        pipelineId: String,
+        buildNo: Int,
+        debug: Boolean
+    ) {
+        pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo, debug)
     }
 
     fun updateExecuteCount(

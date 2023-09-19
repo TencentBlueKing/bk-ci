@@ -194,7 +194,9 @@ class BuildEndControl @Autowired constructor(
         // 更新buildNo
         val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
         if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            setBuildNoWhenBuildSuccess(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId, debug = buildInfo.debug
+            )
         }
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
@@ -246,7 +248,7 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
+    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String, debug: Boolean) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
@@ -255,16 +257,18 @@ class BuildEndControl @Autowired constructor(
             // 使用分布式锁防止并发更新
             PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId)
+                updateBuildNoInfo(projectId, pipelineId, debug)
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, debug: Boolean) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
         if (buildNo != null) {
-            pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
+            pipelineRuntimeService.updateBuildNo(
+                projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1, debug = debug
+            )
             // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
     }
