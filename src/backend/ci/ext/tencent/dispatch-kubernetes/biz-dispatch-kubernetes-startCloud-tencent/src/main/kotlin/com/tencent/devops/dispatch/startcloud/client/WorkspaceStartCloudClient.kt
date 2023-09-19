@@ -133,7 +133,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun getLockedVmList(): List<String> {
-        val url = "$bcsCloudUrl/api/v1/remotedevenv/list"
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/listvm"
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
