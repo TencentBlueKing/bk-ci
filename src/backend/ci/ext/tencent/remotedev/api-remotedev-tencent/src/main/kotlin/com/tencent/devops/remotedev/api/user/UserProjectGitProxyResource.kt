@@ -66,6 +66,6 @@ interface UserProjectGitProxyResource {
         projectId: String,
         @ApiParam("项目名称", required = true)
         @QueryParam("repoName")
-        repoName: String,
+        repoName: String
     ): Result<Boolean>
 }

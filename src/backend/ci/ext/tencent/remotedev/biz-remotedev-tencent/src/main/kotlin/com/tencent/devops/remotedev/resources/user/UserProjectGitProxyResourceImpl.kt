@@ -8,7 +8,6 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
-import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 
 @RestResource
 class UserProjectGitProxyResourceImpl @Autowired constructor(
