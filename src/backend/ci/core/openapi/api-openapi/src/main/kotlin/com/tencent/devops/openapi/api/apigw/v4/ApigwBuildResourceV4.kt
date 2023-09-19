@@ -305,7 +305,7 @@ interface ApigwBuildResourceV4 {
         @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
-        @QueryParam("version")
+        @QueryParam("debugVersion")
         debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
