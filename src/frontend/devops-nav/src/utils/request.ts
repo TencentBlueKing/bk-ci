@@ -1,6 +1,6 @@
 import axios from 'axios'
-import Vue from 'vue'
 import cookie from 'js-cookie'
+import Vue from 'vue'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,
@@ -53,6 +53,12 @@ request.interceptors.response.use(response => {
     } else if (httpStatus === 403) {
         const errorMsg = { httpStatus, code: httpStatus, message }
         return Promise.reject(errorMsg)
+    } else if (httpStatus >= 400) {
+        const err = {
+            message: message ?? `unknow Error httpStatus: ${httpStatus}`,
+            httpStatus
+        }
+        return Promise.reject(err)
     } else if ((typeof code !== 'undefined' && code !== 0) || (typeof status !== 'undefined' && status !== 0)) {
         let msg = message
         if (Object.prototype.toString.call(message) === '[object Object]') {
