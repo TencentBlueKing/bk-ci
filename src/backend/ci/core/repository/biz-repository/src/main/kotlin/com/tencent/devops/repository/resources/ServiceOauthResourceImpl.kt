@@ -68,7 +68,7 @@ class ServiceOauthResourceImpl @Autowired constructor(
                 redirectUrlType = redirectUrlType,
                 redirectUrl = redirectUrl,
                 gitProjectId = gitProjectId,
-                refreshToken = refreshToken,
+                refreshToken = refreshToken
             )
         )
     }

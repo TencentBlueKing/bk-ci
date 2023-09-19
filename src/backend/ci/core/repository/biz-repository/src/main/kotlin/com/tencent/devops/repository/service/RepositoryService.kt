@@ -68,7 +68,6 @@ import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistr
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
@@ -1108,12 +1107,12 @@ class RepositoryService @Autowired constructor(
                 val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
                 val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
                 val targetSubPath = targetRepoUrl.substring(
-                    targetRepoUrl.indexOf(targetRepoUrl)
-                        + targetRepoUrl.length
+                    targetRepoUrl.indexOf(targetRepoUrl) +
+                        targetRepoUrl.length
                 )
                 val sourceSubPath = targetRepoUrl.substring(
-                    targetRepoUrl.indexOf(targetRepoUrl)
-                        + targetRepoUrl.length
+                    targetRepoUrl.indexOf(targetRepoUrl) +
+                        targetRepoUrl.length
                 )
                 sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
             }
