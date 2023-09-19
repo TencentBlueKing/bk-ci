@@ -31,8 +31,8 @@ import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineVersionReleaseRequest(
-    @ApiModelProperty("版本描述", required = true)
-    var description: String,
+    @ApiModelProperty("版本描述", required = false)
+    var description: String?,
     @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
     var targetAction: CodeTargetAction,
     @ApiModelProperty("标签", required = false)
