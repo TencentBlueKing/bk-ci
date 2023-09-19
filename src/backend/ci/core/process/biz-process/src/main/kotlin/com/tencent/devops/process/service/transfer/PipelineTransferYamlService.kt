@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.transfer.PositionBody
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -217,11 +218,12 @@ class PipelineTransferYamlService @Autowired constructor(
         projectId: String,
         line: Int,
         column: Int,
-        yaml: String
+        yaml: PositionBody
     ): PositionResponse {
-        val index = TransferMapper.indexYaml(yaml, line, column)
+        logger.debug("check position |$line|$column|$yaml")
+        val index = TransferMapper.indexYaml(yaml.yaml, line, column)
             ?: return PositionResponse(type = PositionResponse.PositionType.SETTING)
-        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
+        val pYml = YamlUtil.getObjectMapper().readValue(yaml.yaml, object : TypeReference<ITemplateFilter>() {})
         return yamlIndexService.checkYamlIndex(pYml, index)
     }
 

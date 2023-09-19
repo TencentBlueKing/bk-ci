@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineDetail
@@ -91,7 +92,9 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @ApiParam("流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @ApiParam(value = "发布流水线版本请求", required = true)
+        request: PipelineVersionReleaseRequest
     ): Result<DeployPipelineResult>
 
     @ApiOperation("通过指定模板创建流水线")
