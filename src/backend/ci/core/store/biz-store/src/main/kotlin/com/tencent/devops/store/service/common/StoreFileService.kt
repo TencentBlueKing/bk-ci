@@ -27,18 +27,13 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -51,10 +46,9 @@ import org.springframework.stereotype.Service
 abstract class StoreFileService {
 
     companion object {
-        const val BK_CI_ATOM_DIR = "bk-atom"
         const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
         val fileSeparator: String = System.getProperty("file.separator")
-        private val logger = LoggerFactory.getLogger(AtomReleaseTxtAnalysisUtil::class.java)
+        private val logger = LoggerFactory.getLogger(StoreFileService::class.java)
         private const val FILE_DEFAULT_SIZE = 1024
     }
 
@@ -63,7 +57,6 @@ abstract class StoreFileService {
         userId: String,
         description: String,
         client: Client,
-        language: String,
         fileDirPath: String
     ): String {
         val pathList = mutableListOf<String>()
@@ -90,66 +83,19 @@ abstract class StoreFileService {
                 file.delete()
             }
         }
-        descriptionText = regexAnalysis(
+        descriptionText = AtomReleaseTxtAnalysisUtil.regexAnalysis(
             input = descriptionText,
-            fileDirPath = "$fileDirPath$fileSeparator$language",
+            fileDirPath = fileDirPath,
             pathList = pathList
         )
         val uploadFileToPathResult = uploadFileToPath(
             userId = userId,
             pathList = pathList,
             client = client,
-            fileDirPath = "$fileDirPath$fileSeparator$language",
+            fileDirPath = fileDirPath,
             result = result
         )
-        return filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
-    }
-
-    private fun getAtomBasePath(): String {
-        return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
-    }
-
-    fun regexAnalysis(
-        input: String,
-        fileDirPath: String,
-        pathList: MutableList<String>
-    ): String {
-        var descriptionContent = input
-        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-        val matcher: Matcher = pattern.matcher(descriptionContent)
-        while (matcher.find()) {
-            val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
-            logger.info("regexAnalysis file path:$path")
-            if (path.endsWith(".md")) {
-                val file = File("$fileDirPath$fileSeparator$path")
-                if (file.exists()) {
-                    descriptionContent = regexAnalysis(
-                        input = file.readText(),
-                        fileDirPath = fileDirPath,
-                        pathList = pathList
-                    )
-                }
-            } else {
-                pathList.add(path)
-            }
-        }
-        return descriptionContent
-    }
-
-    fun filePathReplace(
-        result: MutableMap<String, String>,
-        descriptionContent: String
-    ): String {
-        var content = descriptionContent
-        // 替换资源路径
-        result.forEach {
-            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
-            val analysisMatcher: Matcher = analysisPattern.matcher(content)
-            content = analysisMatcher.replaceFirst(
-                "![${it.key}](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
-            )
-        }
-        return content
+        return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
     }
 
     abstract fun uploadFileToPath(
@@ -159,24 +105,6 @@ abstract class StoreFileService {
         fileDirPath: String,
         result: MutableMap<String, String>
     ): Map<String, String>
-
-    fun logoUrlAnalysis(logoUrl: String): Result<String> {
-        // 正则解析
-        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-        val matcher: Matcher = pattern.matcher(logoUrl)
-        val relativePath = if (matcher.find()) {
-            matcher.group(2).replace("\"", "")
-        } else null
-        return if (relativePath.isNullOrBlank()) {
-            I18nUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo.logoUrl"),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-        } else {
-            Result(relativePath)
-        }
-    }
 
     abstract fun serviceArchiveAtomFile(
         userId: String,
@@ -188,8 +116,4 @@ abstract class StoreFileService {
         file: File,
         os: String
     ): Result<Boolean?>
-
-    fun buildAtomArchivePath(userId: String, atomDir: String) =
-        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomDir" +
-                "$fileSeparator${UUIDUtil.generate()}"
 }
