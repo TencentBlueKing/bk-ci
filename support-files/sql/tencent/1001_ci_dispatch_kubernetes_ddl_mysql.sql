@@ -47,10 +47,13 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
 (
-    ZONE_ID varchar(32) default ''                not null comment '区域ID，SZ3，NJ1等',
+    CGS_ID  varchar(32)  default ''                not null comment 'CGS ID',
+    ZONE_ID varchar(32) default ''                 not null comment '区域ID，SZ3，NJ1等',
     CGS_IP  varchar(32)  default ''                not null comment 'ip',
-    STATUS int           default 0                 not null comment '0未使用 1使用中 2待销毁',
-    UNIQUE `uni_1` (`ZONE_ID`,`CGS_IP`)
+    MACHINE_TYPE  varchar(32)  default ''          not null comment '机型',
+    STATUS int           default 0                 not null comment '0使用中 1待销毁 2销毁中 10注册中 11未使用',
+    USER_INSTANCE_List text NOT NULL COMMENT '拥有者或共享人详情',
+    UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
 

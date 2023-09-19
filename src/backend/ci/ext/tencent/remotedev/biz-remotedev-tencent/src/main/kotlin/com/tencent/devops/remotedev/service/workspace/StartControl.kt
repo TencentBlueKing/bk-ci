@@ -44,11 +44,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BkTicketService
@@ -57,15 +54,15 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -105,37 +102,36 @@ class StartControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             // 校验状态
-            val status = WorkspaceStatus.values()[workspace.status]
             when {
-                status.checkRunning() -> {
-                    logger.info("${workspace.name} is running.")
+                workspace.status.checkRunning() -> {
+                    logger.info("${workspace.workspaceName} is running.")
                     remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                     val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                         .getWorkspaceInfo(
                             userId, workspaceName,
-                            WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                            workspace.workspaceMountType
                         )
                     bkTicketServie.updateBkTicket(
                         userId,
                         bkTicket,
                         workspaceInfo.data?.environmentHost,
-                        WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        workspace.workspaceMountType
                     )
 
                     return WorkspaceResponse(
                         workspaceName = workspaceName,
                         workspaceHost = workspaceInfo.data?.environmentHost ?: "",
                         status = WorkspaceAction.START,
-                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType
                     )
                 }
 
                 workspaceCommon.notOk2doNextAction(workspace) -> {
-                    logger.info("${workspace.name} is $status, return error.")
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                        params = arrayOf(workspace.name, "status is already $status, can't start now")
+                        params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't start now")
                     )
                 }
 
@@ -143,14 +139,14 @@ class StartControl @Autowired constructor(
                     permissionService.checkUserCreate(userId, true)
                     /*处理异常的情况*/
                     workspaceCommon.checkAndFixExceptionWS(
-                        status,
+                        workspace.status,
                         userId,
                         workspaceName,
-                        WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        workspace.workspaceMountType
                     )
                     workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType)
                     createWorkspaceHistoryForStart(userId, workspaceName)
-                    updateWorkspaceStatus(workspace.name, status, userId)
+                    updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     dispatcher.dispatch(
                         WorkspaceOperateEvent(
@@ -163,10 +159,10 @@ class StartControl @Autowired constructor(
                                     workspaceName
                                 ).toSet()
                             ),
-                            workspaceName = workspace.name,
+                            workspaceName = workspace.workspaceName,
                             settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
-                            mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                            mountType = workspace.workspaceMountType
                         )
                     )
 
@@ -179,16 +175,16 @@ class StartControl @Autowired constructor(
                         type = WebSocketActionType.WORKSPACE_START,
                         status = true,
                         action = WorkspaceAction.STARTING,
-                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-                        ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType
                     )
                     return WorkspaceResponse(
-                        workspaceName = workspace.name,
+                        workspaceName = workspace.workspaceName,
                         workspaceHost = "",
                         status = WorkspaceAction.STARTING,
-                        systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                        workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType
                     )
                 }
             }
@@ -256,8 +252,7 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        val oldStatus = WorkspaceStatus.values()[workspace.status]
-        if (oldStatus.checkRunning()) return
+        if (workspace.status.checkRunning()) return
         if (status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -296,17 +291,17 @@ class StartControl @Autowired constructor(
                     action = WorkspaceAction.START,
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                        oldStatus.name,
+                        workspace.status.name,
                         WorkspaceStatus.RUNNING.name
                     )
                 )
             }
 
-            workspaceCommon.getOrSaveWorkspaceDetail(
+            workspaceCommon.updateWorkspaceDetail(
                 workspaceName,
-                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                workspace.workspaceMountType
             )
-            if (WorkspaceSystemType.valueOf(workspace.systemType).needHeartbeat()) {
+            if (workspace.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(workspaceName)
             }
         } else {
@@ -325,7 +320,7 @@ class StartControl @Autowired constructor(
                 action = WorkspaceAction.START,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    oldStatus.name,
+                    workspace.status.name,
                     WorkspaceStatus.EXCEPTION.name
                 )
             )
@@ -340,9 +335,9 @@ class StartControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_START,
             status = status,
             action = WorkspaceAction.START,
-            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            systemType = workspace.workspaceSystemType,
+            workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType
         )
     }
 }

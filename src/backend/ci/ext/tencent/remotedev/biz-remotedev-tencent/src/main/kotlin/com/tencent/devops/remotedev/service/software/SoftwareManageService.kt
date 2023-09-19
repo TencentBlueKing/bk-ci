@@ -192,7 +192,7 @@ class SoftwareManageService @Autowired constructor(
         workspaceName: String
     ) {
         // 先获取userId安装的软件列表，封装成SoftwareCreate
-        val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId)
+        val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId, projectId)
         logger.info("installSoftwareFromXingyun|userSoftwareInfoList|$userSoftwareInfoList")
         if (userSoftwareInfoList.isNullOrEmpty()) {
             return
@@ -205,8 +205,10 @@ class SoftwareManageService @Autowired constructor(
                     version = it["VERSION"] as String
                 ))
         }
+
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-            "?type=USER&key=$externalKey&workspaceName=$workspaceName"
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
+            "autoAssign=false&projectId=$projectId&userId=$userId"
         val installSoftwareRes = installSoftwareFromXingyun(
             userId = userId,
             ip = ip.substringAfter("."),
@@ -234,12 +236,13 @@ class SoftwareManageService @Autowired constructor(
         creator: String,
         regionId: String,
         ip: String,
-        workspaceName: String
+        workspaceName: String,
+        autoAssign: Boolean? = false
     ) {
-        val params = "-project_id \"$projectId\" -creator \"$creator\" -region_id \"$regionId\" -inner_ip \"$ip\""
+        val params = "-project_id \"$projectId\" -creator \"$workspaceName\" -region_id \"$regionId\" -inner_ip \"$ip\""
         val base64Val = Base64Util.encode(params.toByteArray())
         val systemSoftwareInfoList = softwareManageDao.getSystemSoftwareList(dslContext)
-        logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList")
+        logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList|params|$params")
         if (systemSoftwareInfoList.isEmpty()) {
             return
         }
@@ -253,7 +256,8 @@ class SoftwareManageService @Autowired constructor(
                 ))
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName"
+            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
+            "autoAssign=$autoAssign&projectId=$projectId&userId=$creator"
         val installSoftwareRes = installSoftwareFromXingyun(
             userId = creator,
             ip = ip.substringAfter("."),

@@ -48,7 +48,8 @@ data class Pool(
     val envId: String? = null,
     val os: VMBaseOS? = null,
     val workspace: String? = null,
-    val buildType: BuildType? = BuildType.DEVCLOUD
+    val buildType: BuildType? = BuildType.DEVCLOUD,
+    val persistence: Boolean? = false
 )
 
 enum class BuildType {

@@ -28,17 +28,23 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
-import com.tencent.devops.model.metrics.tables.TAtomOverviewData
-import com.tencent.devops.model.metrics.tables.TErrorTypeDict
-import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
+import com.tencent.devops.metrics.constant.Constants.BK_MAX_CREATE_TIME
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineLabelInfo
+import com.tencent.devops.metrics.pojo.po.SaveProjectAtomRelationDataPO
 import com.tencent.devops.metrics.pojo.qo.QueryProjectInfoQO
+import com.tencent.devops.model.metrics.tables.TAtomOverviewData
+import com.tencent.devops.model.metrics.tables.TErrorTypeDict
+import com.tencent.devops.model.metrics.tables.TProjectAtom
+import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.model.metrics.tables.records.TProjectPipelineLabelInfoRecord
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record3
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ProjectInfoDao {
@@ -80,7 +86,6 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE)
                 .from(this)
                 .where(conditions)
-                .groupBy(ATOM_CODE)
                 .execute().toLong()
         }
     }
@@ -235,6 +240,148 @@ class ProjectInfoDao {
                         .where(conditions)
                         .execute()
                 }
+            }
+        }
+    }
+
+    fun getAtomOverviewDataProjectAtomCount(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomCount(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun projectAtomRelationCountByAtomCode(
+        dslContext: DSLContext,
+        projectId: String,
+        atomCode: String,
+        atomName: String
+    ): Int {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ATOM_CODE.eq(atomCode))
+                .and(ATOM_NAME.eq(atomName))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun queryProjectAtomNewNameInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, LocalDateTime>> {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.select(
+                ATOM_CODE,
+                ATOM_NAME,
+                DSL.max(CREATE_TIME)
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .groupBy(ATOM_CODE)
+                .fetch()
+        }
+    }
+
+    fun queryProjectAtomNewNameInfos(
+        dslContext: DSLContext,
+        projectIds: List<String>,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, String>> {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            val subQuery = dslContext.select(
+                PROJECT_ID,
+                ATOM_CODE,
+                DSL.max(CREATE_TIME).`as`(BK_MAX_CREATE_TIME)
+            ).from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+                .groupBy(PROJECT_ID, ATOM_CODE)
+            return dslContext.select(
+                PROJECT_ID,
+                ATOM_CODE,
+                ATOM_NAME
+            )
+                .from(this)
+                .join(subQuery)
+                .on(PROJECT_ID.eq(subQuery.field(PROJECT_ID.name, String::class.java))
+                    .and(ATOM_CODE.eq(subQuery.field(ATOM_CODE.name, String::class.java)))
+                    .and(CREATE_TIME.eq(subQuery.field(BK_MAX_CREATE_TIME, LocalDateTime::class.java)))
+                )
+                .where(PROJECT_ID.`in`(projectIds))
+                .fetch()
+        }
+    }
+
+    fun saveProjectAtomInfo(
+        dslContext: DSLContext,
+        saveProjectAtomRelationPO: SaveProjectAtomRelationDataPO
+    ) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                ATOM_CODE,
+                ATOM_NAME,
+                CREATOR,
+                MODIFIER
+            ).values(
+                saveProjectAtomRelationPO.id,
+                saveProjectAtomRelationPO.projectId,
+                saveProjectAtomRelationPO.atomCode,
+                saveProjectAtomRelationPO.atomName,
+                saveProjectAtomRelationPO.creator,
+                saveProjectAtomRelationPO.modifier
+            ).onDuplicateKeyUpdate()
+                .set(ATOM_NAME, saveProjectAtomRelationPO.atomName)
+                .execute()
+        }
+    }
+
+    fun batchSaveProjectAtomInfo(
+        dslContext: DSLContext,
+        saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
+    ) {
+        saveProjectAtomRelationPOs.forEach {
+            with(TProjectAtom.T_PROJECT_ATOM) {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PROJECT_ID,
+                    ATOM_CODE,
+                    ATOM_NAME,
+                    CREATOR,
+                    MODIFIER
+                ).values(
+                    it.id,
+                    it.projectId,
+                    it.atomCode,
+                    it.atomName,
+                    it.creator,
+                    it.modifier
+                ).onDuplicateKeyUpdate()
+                    .set(ATOM_NAME, it.atomName)
+                    .execute()
             }
         }
     }

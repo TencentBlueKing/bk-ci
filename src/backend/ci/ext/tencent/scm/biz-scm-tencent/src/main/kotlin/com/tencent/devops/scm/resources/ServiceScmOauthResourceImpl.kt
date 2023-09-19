@@ -35,6 +35,7 @@ import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -285,6 +286,24 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 url = url,
                 type = type,
                 token = token
+            )
+        )
+    }
+
+    override fun getCrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): Result<GitCommitReviewInfo?> {
+        return Result(
+            scmOauthService.getCrReviewInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                crId = crId
             )
         )
     }

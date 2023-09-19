@@ -27,9 +27,17 @@
 
 package com.tencent.devops.dispatch.startCloud.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWorkspaceRecord
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -46,13 +54,19 @@ class WindowsGpuResourceDao {
             with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
                 dslContext.insertInto(
                     this,
+                    CGS_ID,
                     ZONE_ID,
                     CGS_IP,
-                    STATUS
+                    MACHINE_TYPE,
+                    STATUS,
+                    USER_INSTANCE_LIST
                 ).values(
+                    it.cgsId,
                     it.zoneId,
                     it.cgsIp,
-                    it.status
+                    it.machineType,
+                    it.status,
+                    JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList)
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
@@ -65,6 +79,51 @@ class WindowsGpuResourceDao {
     ) {
         return with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             dslContext.delete(this).execute()
+        }
+    }
+
+    fun getCgsResource(
+        dslContext: DSLContext,
+        cgsId: String?
+    ): TWindowsGpuPoolRecord? {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            val conditions = mutableListOf<Condition>()
+            cgsId?.let {
+                conditions.add(CGS_ID.eq(cgsId))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchAny()
+        }
+    }
+
+    fun getCgsWorkspace(
+        dslContext: DSLContext,
+        cgsId: String,
+        status: EnvStatusEnum? = null
+    ): TDispatchWorkspaceRecord? {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            val condition = mutableListOf<Condition>()
+            condition.add(ENVIRONMENT_UID.eq(cgsId))
+            status?.let {
+                condition.add(STATUS.eq(status.ordinal))
+            }
+            return dslContext.selectFrom(this)
+                .where(condition)
+                .fetchAny()
+        }
+    }
+
+    /**
+     * 获取cgs的机型和区域列表
+     */
+    fun getCgsConfig(
+        dslContext: DSLContext
+    ): List<Record2<String, String>> {
+        with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
+            return dslContext.selectDistinct(ZONE_ID, MACHINE_TYPE).from(this)
+                .skipCheck()
+                .fetch()
         }
     }
 }

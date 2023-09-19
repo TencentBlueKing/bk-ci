@@ -19,8 +19,10 @@ data class RemoteDevUpdateEvent(
     var environmentUid: String? = null,
     var environmentHost: String? = null,
     var environmentIp: String? = null,
+    var resourceId: String? = null,
     var errorMsg: String? = null,
     val bkTicket: String? = null,
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
+    val autoAssign: Boolean? = false,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)
