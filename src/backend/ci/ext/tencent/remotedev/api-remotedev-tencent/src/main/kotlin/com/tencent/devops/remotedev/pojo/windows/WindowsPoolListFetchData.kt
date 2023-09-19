@@ -7,7 +7,7 @@ data class WindowsPoolListFetchData(
     val zoneId: String?,
     @ApiParam(value = "machineType", required = false)
     val machineType: String?,
-    @ApiParam(value = "ip", required = false)
+    @ApiParam(value = "ips", required = false)
     val ips: List<String>?,
     @ApiParam(value = "status", required = false)
     val status: Int?,
