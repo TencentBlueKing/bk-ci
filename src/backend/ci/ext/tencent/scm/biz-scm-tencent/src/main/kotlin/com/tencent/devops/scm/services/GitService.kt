@@ -1727,7 +1727,9 @@ class GitService @Autowired constructor(
         isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
+        logger.info(
+            "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath is $filePath"
+        )
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
