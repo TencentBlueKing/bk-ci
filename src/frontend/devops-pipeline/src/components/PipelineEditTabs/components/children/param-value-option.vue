@@ -1,7 +1,5 @@
 <template>
     <section class="bk-form-item">
-        {{param}}
-
         <select-type-param
             v-if="isSelectorParam(param.type)"
             :param="param"

@@ -36,6 +36,7 @@ function paramType (typeConst) {
 export const DEFAULT_PARAM = {
     [STRING]: {
         id: 'string',
+        name: 'string',
         defaultValue: 'value',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -47,6 +48,7 @@ export const DEFAULT_PARAM = {
     },
     [TEXTAREA]: {
         id: 'textarea',
+        name: 'textarea',
         defaultValue: '',
         desc: '',
         type: TEXTAREA,
@@ -56,6 +58,7 @@ export const DEFAULT_PARAM = {
     },
     [BOOLEAN]: {
         id: 'bool',
+        name: 'bool',
         defaultValue: true,
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -66,7 +69,8 @@ export const DEFAULT_PARAM = {
         readOnly: false
     },
     [ENUM]: {
-        id: 'enum',
+        id: 'select',
+        name: 'select',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -79,6 +83,7 @@ export const DEFAULT_PARAM = {
     },
     [MULTIPLE]: {
         id: 'multiple',
+        name: 'multiple',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -91,6 +96,7 @@ export const DEFAULT_PARAM = {
     },
     [SVN_TAG]: {
         id: 'svntag',
+        name: 'svntag',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -105,6 +111,7 @@ export const DEFAULT_PARAM = {
     },
     [GIT_REF]: {
         id: 'gitref',
+        name: 'gitref',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -118,6 +125,7 @@ export const DEFAULT_PARAM = {
     },
     [CODE_LIB]: {
         id: 'codelib',
+        name: 'codelib',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -131,6 +139,7 @@ export const DEFAULT_PARAM = {
     },
     [CONTAINER_TYPE]: {
         id: 'buildResource',
+        name: 'buildResource',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -147,6 +156,7 @@ export const DEFAULT_PARAM = {
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
+        name: 'subPipeline',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -159,6 +169,7 @@ export const DEFAULT_PARAM = {
     },
     [CUSTOM_FILE]: {
         id: 'file',
+        name: 'file',
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',

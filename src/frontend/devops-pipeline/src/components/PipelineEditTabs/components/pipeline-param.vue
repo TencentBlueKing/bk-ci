@@ -2,19 +2,19 @@
     <div class="variable-container">
         <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ xxx }} 引用变量')" closable></bk-alert>
         <div class="add-and-desc">
-            <bk-button @click="handleEdit(-1)">新增变量</bk-button>
+            <bk-button @click="handleEdit(-1)">{{$t('新增变量')}}</bk-button>
             <div class="status-desc">
                 <div class="desc-item">
                     <div class="circle" style="background-color: #2DCB9D;"></div>
-                    <span class="status-desc">入参</span>
+                    <span class="status-desc">{{$t('入参')}}</span>
                 </div>
                 <div class="desc-item">
                     <div class="circle" style="background-color: #FF5656;"></div>
-                    <span class="status-desc">必填</span>
+                    <span class="status-desc">{{$t('必填')}}</span>
                 </div>
                 <div class="desc-item">
                     <div class="circle" style="background-color: #C4C6CC;"></div>
-                    <span class="status-desc">运行时只读</span>
+                    <span class="status-desc">{{$t('运行时只读')}}</span>
                 </div>
             </div>
         </div>
@@ -37,7 +37,7 @@
                     </div>
                     <div v-else class="var-status">
                         <div v-if="param.required" class="circle" style="background-color: #2DCB9D;"></div>
-                        <div v-if="param.necessary" class="circle" style="background-color: #FF5656;"></div>
+                        <div v-if="param.valueNotEmpty" class="circle" style="background-color: #FF5656;"></div>
                         <div v-if="param.readOnly" class="circle" style="background-color: #C4C6CC;"></div>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
             :is-show.sync="showSlider" ext-cls="edit-var-container" @hidden="closeSlider">
             <div class="edit-var-content" slot="content">
                 <pipeline-param-form :edit-item="sliderEditItem" :global-params="globalParams" :edit-index="editIndex"
-                    :update-param="updateEditItem" />
+                    :update-param="updateEditItem" :reset-edit-item="resetEditItem" />
             </div>
             <div class="edit-var-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveVar">
@@ -109,7 +109,8 @@
         },
         methods: {
             handleDelete (index) {
-                this.globalParams = this.globalParams.splice(index, 1)
+                this.globalParams.splice(index, 1)
+                this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleEdit (index) {
                 this.showSlider = true
@@ -121,17 +122,20 @@
                 }
             },
             handleSaveVar () {
-                console.log(this.sliderEditItem, this.editIndex)
                 if (this.editIndex > -1) {
                     this.globalParams[this.editIndex] = this.sliderEditItem
                 } else {
                     this.globalParams.push(this.sliderEditItem)
                 }
+                this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                 this.hideSlider()
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
                 console.log(this.sliderEditItem, 'editing')
+            },
+            resetEditItem (param = {}) {
+                this.sliderEditItem = param
             },
             hideSlider () {
                 this.showSlider = false

@@ -1,6 +1,6 @@
 <template>
     <section>
-        <bk-form form-type="vertical" class="new-ui-form">
+        <bk-form form-type="vertical" class="new-ui-form" :key="param">
             <form-field :required="true" :label="$t('变量名')" :is-error="errors.has(`id`)" :error-msg="errors.first(`id`)">
                 <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" v-validate.initial="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
             </form-field>
@@ -58,6 +58,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { deepCopy } from '@/utils/util'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -70,8 +71,7 @@
     import {
         DEFAULT_PARAM,
         PARAM_LIST,
-        // STRING,
-        ENUM
+        STRING
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -104,6 +104,10 @@
             updateParam: {
                 type: Function,
                 required: true
+            },
+            resetEditItem: {
+                type: Function,
+                required: true
             }
         },
         data () {
@@ -123,10 +127,12 @@
         },
         created () {
             if (this.editIndex === -1) {
-                this.param = deepCopy(DEFAULT_PARAM[ENUM])
+                this.param = deepCopy(DEFAULT_PARAM[STRING])
+                this.resetEditItem(this.param)
             } else {
                 Object.assign(this.param, this.editItem)
             }
+            Vue.set(this.param, 'required', this.param.required || true)
         },
         methods: {
             handleParamTypeChange (key, value) {
@@ -135,14 +141,10 @@
                     id: this.param.id,
                     name: this.param.name
                 }
-                // this.handleChange([
-                //     ...newGlobalParams,
-                //     ...this.versions
-                // ])
+                this.resetEditItem(this.param)
             },
             handleUpdateParam (key, value) {
-                console.log(key, value, 'pipeline-param')
-                this.param[key] = value
+                Object.assign(this.param, { [key]: value })
                 this.updateParam(key, value)
             }
         }
