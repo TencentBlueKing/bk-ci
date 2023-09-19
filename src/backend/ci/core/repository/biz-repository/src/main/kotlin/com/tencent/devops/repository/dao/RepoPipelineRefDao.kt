@@ -113,7 +113,6 @@ class RepoPipelineRefDao {
         }
     }
 
-
     fun listByPipeline(
         dslContext: DSLContext,
         projectId: String,
@@ -194,7 +193,7 @@ class RepoPipelineRefDao {
                     } else {
                         it.and(EVENT_TYPE.eq(eventType))
                     }
-                }.groupBy(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE,TRIGGER_CONDITION_MD5)
+                }.groupBy(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE, TRIGGER_CONDITION_MD5)
                 .limit(limit).offset(offset)
                 .fetch().associate { Pair(it.value1(), it.value2()) }
         }
@@ -208,7 +207,7 @@ class RepoPipelineRefDao {
         eventType: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
-            dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE,TRIGGER_CONDITION_MD5))
+            dslContext.select(DSL.countDistinct(PROJECT_ID, REPOSITORY_ID, EVENT_TYPE, TRIGGER_CONDITION_MD5))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))

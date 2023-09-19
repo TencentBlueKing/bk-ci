@@ -111,7 +111,7 @@ data class CodeTGitWebHookTriggerElement(
                 }
                 CodeEventType.ISSUES -> {
                     mapOf(
-                        "includeIssueAction" to includeIssueAction,
+                        "includeIssueAction" to includeIssueAction
                     )
                 }
                 CodeEventType.NOTE -> {

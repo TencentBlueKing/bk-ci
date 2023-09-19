@@ -113,7 +113,7 @@ class RepoPipelineService @Autowired constructor(
                     triggerCondition = refInfo.triggerCondition,
                     triggerConditionMd5 = refInfo.triggerCondition?.let {
                         DigestUtils.md5Hex(JsonUtil.toJson(it))
-                    },
+                    }
                 )
             )
         }

@@ -1096,7 +1096,6 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-
     fun rename(userId: String, projectId: String, repositoryHashId: String, repoRename: RepoRename) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         // 权限校验

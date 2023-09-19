@@ -341,5 +341,4 @@ interface UserRepositoryResource {
         @ApiParam("代码库重命名")
         repoRename: RepoRename
     ): Result<Boolean>
-
 }

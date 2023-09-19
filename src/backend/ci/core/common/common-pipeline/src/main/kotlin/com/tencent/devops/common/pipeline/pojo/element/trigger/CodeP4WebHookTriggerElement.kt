@@ -62,18 +62,20 @@ data class CodeP4WebHookTriggerElement(
     override fun triggerCondition(): Map<String, Any?> {
         return with(data.input) {
             when (eventType) {
-                CodeEventType.CHANGE_COMMIT,CodeEventType.CHANGE_SUBMIT,CodeEventType.CHANGE_CONTENT  -> {
+                CodeEventType.CHANGE_COMMIT, CodeEventType.CHANGE_SUBMIT, CodeEventType.CHANGE_CONTENT -> {
                     mapOf(
                         "includePaths" to includePaths,
                         "excludePaths" to excludePaths
                     )
                 }
-                CodeEventType.SHELVE_COMMIT,CodeEventType.SHELVE_SUBMIT,CodeEventType.SHELVE_DELETE  -> {
+
+                CodeEventType.SHELVE_COMMIT, CodeEventType.SHELVE_SUBMIT, CodeEventType.SHELVE_DELETE -> {
                     mapOf(
                         "includePaths" to includePaths,
                         "excludePaths" to excludePaths
                     )
                 }
+
                 else ->
                     emptyMap()
             }

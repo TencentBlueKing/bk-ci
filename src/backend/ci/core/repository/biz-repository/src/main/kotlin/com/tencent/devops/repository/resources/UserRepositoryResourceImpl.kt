@@ -357,7 +357,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         if (repositoryHashId.isBlank()) {
             throw ParamBlankException("Invalid repositoryHashId")
         }
-        if (repoRename.name.isBlank()){
+        if (repoRename.name.isBlank()) {
             throw ParamBlankException("Invalid repoName")
         }
         repositoryService.rename(
