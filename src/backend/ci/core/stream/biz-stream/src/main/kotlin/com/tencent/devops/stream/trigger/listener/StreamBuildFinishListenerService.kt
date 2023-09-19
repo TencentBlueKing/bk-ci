@@ -27,18 +27,23 @@
 
 package com.tencent.devops.stream.trigger.listener
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCIInfo
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
@@ -111,10 +116,12 @@ class StreamBuildFinishListenerService @Autowired constructor(
                 setting = setting,
                 event = objectMapper.readValue(requestEvent.event)
             )
+
             StreamObjectKind.SCHEDULE.value -> actionFactory.loadScheduleAction(
                 setting = setting,
                 event = objectMapper.readValue(requestEvent.event)
             )
+
             StreamObjectKind.OPENAPI.value -> {
                 // openApi可以手工触发也可以模拟事件触发,所以event有两种结构
                 try {
@@ -132,6 +139,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
                     )
                 }
             }
+
             else -> actionFactory.load(
                 actionFactory.loadEvent(
                     requestEvent.event,
@@ -157,6 +165,8 @@ class StreamBuildFinishListenerService @Autowired constructor(
             stageId = null
         )
         action.data.context.requestEventId = requestEvent.id
+        action.data.context.extensionAction = requestEvent.extensionAction
+        fixSettingFromYaml(action)
 
         // 推送结束构建消息
         sendCommitCheck.sendCommitCheck(action)
@@ -178,5 +188,20 @@ class StreamBuildFinishListenerService @Autowired constructor(
 
         // 发送通知
         sendNotify.sendNotify(action)
+    }
+
+    private fun fixSettingFromYaml(action: BaseAction) {
+        val realYaml = ScriptYmlUtils.formatYaml(action.data.context.originYaml!!)
+        val preTriggerOn = YamlUtil.getObjectMapper().readValue(
+            realYaml, object : TypeReference<NoReplaceTemplate>() {}
+        ).triggerOn
+        val triggerOn = ScriptYmlUtils.formatTriggerOn(preTriggerOn)
+        if (triggerOn.mr?.reportCommitCheck != null) {
+            action.data.setting.enableCommitCheck = triggerOn.mr?.reportCommitCheck!!
+        }
+
+        if (triggerOn.mr?.blockMr != null) {
+            action.data.setting.enableMrBlock = triggerOn.mr?.blockMr!!
+        }
     }
 }
