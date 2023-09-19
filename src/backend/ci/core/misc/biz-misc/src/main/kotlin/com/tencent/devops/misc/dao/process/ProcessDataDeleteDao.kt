@@ -81,66 +81,66 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineBuildContainer(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildContainer(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildHistory(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildHistory(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildDetail(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildDetail(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildStage(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildStage(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineBuildStage.T_PIPELINE_BUILD_STAGE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildTask(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildTask(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildSummary(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildSummary(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineBuildSummary.T_PIPELINE_BUILD_SUMMARY) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineFavor(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineFavor(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
@@ -153,10 +153,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineInfo(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineInfo(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
@@ -177,58 +177,58 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineLabelPipeline(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineLabelPipeline(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineModelTask(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineModelTask(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelinePauseValue(dslContext: DSLContext, projectId: String) {
+    fun deletePipelinePauseValue(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelinePauseValue.T_PIPELINE_PAUSE_VALUE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineResource(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineResource(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineResource.T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineResourceVersion(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineResourceVersion(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineResourceVersion.T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineSetting(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineSetting(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineSettingVersion(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineSettingVersion(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
@@ -257,18 +257,18 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineWebhookBuildLogDetail(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineWebhookBuildLogDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineWebhookBuildLogDetail.T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
 
-    fun deletePipelineWebhookQueue(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineWebhookQueue(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineWebhookQueue.T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
@@ -289,10 +289,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deleteReport(dslContext: DSLContext, projectId: String) {
+    fun deleteReport(dslContext: DSLContext, projectId: String, pipelineId: String, buildIds: List<String>) {
         with(TReport.T_REPORT) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
@@ -313,18 +313,23 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineBuildTemplateAcrossInfo(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildTemplateAcrossInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildIds: List<String>
+    ) {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineWebhookBuildParameter(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineWebhookBuildParameter(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineWebhookBuildParameter.T_PIPELINE_WEBHOOK_BUILD_PARAMETER) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
@@ -353,34 +358,34 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineBuildRecordContainer(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildRecordContainer(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildRecordModel(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildRecordModel(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildRecordStage(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildRecordStage(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
 
-    fun deletePipelineBuildRecordTask(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineBuildRecordTask(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
                 .execute()
         }
     }
