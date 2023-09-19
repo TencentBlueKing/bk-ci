@@ -1747,9 +1747,9 @@ class GitService @Autowired constructor(
             RedisLock(redisOperation, "downloadGitRepoFile:$repoName:lock:key", 20)
         try {
             redisLock.lock()
-            // 避免限流，增加3秒休眠时间
+            // 避免限流，增加2秒休眠时间
             OkhttpUtils.downloadFile(url.toString(), response)
-            Thread.sleep(3 * 1000)
+            Thread.sleep(2 * 1100)
         } finally {
             redisLock.unlock()
         }
