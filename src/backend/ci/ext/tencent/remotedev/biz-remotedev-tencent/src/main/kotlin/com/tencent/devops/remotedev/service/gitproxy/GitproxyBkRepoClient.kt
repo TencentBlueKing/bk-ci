@@ -13,7 +13,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
-import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigWebHook
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
@@ -46,28 +45,19 @@ class GitproxyBkRepoClient @Autowired constructor(
             projectId = projectId,
             name = repoName,
             type = "GIT",
-            category = "PROXT",
+            category = "PROXY",
             public = false,
             description = "git-proxy",
-            configuration = JsonUtil.toJson(
-                RepoConfig(
-                    type = "proxy",
-                    proxy = CreateRepoDataConfigProxy(
-                        public = false,
-                        name = "CloudDeskTestGroup-Download-proxy",
-                        url = url,
-                        credentialKey = null,
-                        username = null,
-                        password = null
-                    ),
-                    url = null,
-                    settings = emptyMap(),
-                    webHook = CreateRepoDataConfigWebHook(
-                        webHookList = emptyList()
-                    )
-                )
+            configuration = RepoConfig(
+                type = "proxy",
+                proxy = CreateRepoDataConfigProxy(
+                    public = false,
+                    name = "CloudDeskGroup-$repoName-proxy",
+                    url = url
+                ),
+                url = null
             ),
-            storageCredentialsKey = null
+            display = false
         )
         val request = Request.Builder()
             .url("$bkrepoDevxUrl/repository/api/repo/create")

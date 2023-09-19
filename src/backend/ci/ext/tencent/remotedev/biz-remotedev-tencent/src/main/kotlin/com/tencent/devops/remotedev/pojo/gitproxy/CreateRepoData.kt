@@ -7,6 +7,6 @@ data class CreateRepoData(
     val category: String,
     val public: Boolean,
     val description: String,
-    val configuration: String,
-    val storageCredentialsKey: String?
+    val configuration: RepoConfig,
+    val display: Boolean
 )
