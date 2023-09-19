@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.springframework.stereotype.Service
@@ -100,25 +101,24 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val separator = File.separator
         val fileNameList = getFileNames(
             projectCode = projectCode,
-            fileDir = "$fileDir${separator}file$separator$language"
+            fileDir = "$fileDir${separator}file"
         ) ?: return description
-        val fileDirPath = storeFileService.buildAtomArchivePath(
+        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
-        ) + "file$separator$language"
+        )
         fileNameList.forEach {
             downloadFile(
-                "$projectCode$separator$fileDir${separator}file$separator$language$separator$it",
-                File(fileDirPath, it)
+                "$projectCode$separator$fileDir${separator}file$separator$it",
+                File("$fileDirPath${separator}file", it)
             )
         }
 
         return storeFileService.descriptionAnalysis(
-            fileDirPath = fileDirPath,
+            fileDirPath = "$fileDirPath${separator}file",
             userId = userId,
             description = description,
-            client = client,
-            language = language
+            client = client
         )
     }
 }

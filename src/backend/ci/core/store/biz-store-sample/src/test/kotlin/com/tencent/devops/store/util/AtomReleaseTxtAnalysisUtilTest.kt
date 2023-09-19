@@ -40,7 +40,7 @@ class AtomReleaseTxtAnalysisUtilTest {
         val result = mutableMapOf<String, String>()
         AtomReleaseTxtAnalysisUtil.regexAnalysis(
             input = input,
-            atomPath = "",
+            fileDirPath = "",
             pathList = pathList
         )
         pathList.forEach {
