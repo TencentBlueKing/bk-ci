@@ -399,11 +399,6 @@ class ProjectTagService @Autowired constructor(
             otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
         }
 
-        val propertiesMaps = mutableMapOf<String, String>()
-        if (remoteDevFlag) {
-            propertiesMaps["remotedev"] = "true"
-        }
-
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
             projectName = projectName,
@@ -417,7 +412,7 @@ class ProjectTagService @Autowired constructor(
             limit = limit,
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
-            isRemoteDev = remoteDevFlag
+            remoteDevFlag = remoteDevFlag
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -430,7 +425,7 @@ class ProjectTagService @Autowired constructor(
             approvalStatus = approvalStatus,
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
-            isRemoteDev = remoteDevFlag
+            remoteDevFlag = remoteDevFlag
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 

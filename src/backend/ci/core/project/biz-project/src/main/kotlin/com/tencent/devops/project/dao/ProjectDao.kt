@@ -453,7 +453,7 @@ class ProjectDao {
         approvalStatus: Int?,
         routerTag: String?,
         otherRouterTagMaps: Map<String, String>?,
-        isRemoteDev: Boolean?
+        remoteDevFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!projectName.isNullOrBlank()) {
@@ -476,8 +476,8 @@ class ProjectDao {
             }
         }
 
-        if (isRemoteDev != null) {
-            conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").eq(isRemoteDev))
+        if (remoteDevFlag != null && remoteDevFlag) {
+            conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
         }
 
         return conditions
@@ -496,7 +496,7 @@ class ProjectDao {
         limit: Int,
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
-        isRemoteDev: Boolean? = null
+        remoteDevFlag: Boolean? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -509,7 +509,7 @@ class ProjectDao {
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
-                isRemoteDev = isRemoteDev
+                remoteDevFlag = remoteDevFlag
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -645,7 +645,7 @@ class ProjectDao {
         approvalStatus: Int?,
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
-        isRemoteDev: Boolean? = null
+        remoteDevFlag: Boolean? = null
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -658,7 +658,7 @@ class ProjectDao {
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
-                isRemoteDev = isRemoteDev
+                remoteDevFlag = remoteDevFlag
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
