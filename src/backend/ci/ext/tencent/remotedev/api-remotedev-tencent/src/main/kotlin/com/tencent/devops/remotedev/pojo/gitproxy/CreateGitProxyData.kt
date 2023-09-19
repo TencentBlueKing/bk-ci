@@ -1,7 +1,7 @@
 package com.tencent.devops.remotedev.pojo.gitproxy
 
 data class CreateGitProxyData(
-    val gitType: GitType,
+    val gitType: String,
     val projectId: String,
     val url: String
 )

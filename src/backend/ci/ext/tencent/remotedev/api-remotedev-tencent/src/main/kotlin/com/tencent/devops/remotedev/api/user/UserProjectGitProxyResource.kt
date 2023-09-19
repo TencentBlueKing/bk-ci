@@ -54,7 +54,7 @@ interface UserProjectGitProxyResource {
         pageSize: Int
     ): Result<Page<FetchRepoResp>>
 
-    @ApiOperation("获取gitproxy列表")
+    @ApiOperation("删除gitproxy")
     @DELETE
     @Path("/delete")
     fun deleteRepo(
