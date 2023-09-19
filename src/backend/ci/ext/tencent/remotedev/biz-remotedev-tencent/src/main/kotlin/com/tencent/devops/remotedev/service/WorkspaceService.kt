@@ -289,7 +289,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val allConfig = windowsResourceConfigService.getAllConfig().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
             dslContext,
@@ -428,7 +428,7 @@ class WorkspaceService @Autowired constructor(
             records = result.map {
                 var status = it.status
                 run {
-                    if (status.notOk2doNextAction() && Duration.between(
+                    if (status.notOk2doNextAction(it) && Duration.between(
                             it.lastStatusUpdateTime ?: LocalDateTime.now(),
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME

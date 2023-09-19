@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -105,5 +106,18 @@ interface OpWorkspaceResource {
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("变更工作空间状态")
+    @GET
+    @Path("/status_change")
+    fun updateStatus(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @QueryParam("workspaceStatus")
+        workspaceStatus: WorkspaceStatus
     ): Result<Boolean>
 }

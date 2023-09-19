@@ -45,5 +45,10 @@ data class WorkspaceCreate(
     @ApiModelProperty("当前运行客户端的OS")
     val currentOS: String?,
     @ApiModelProperty("windows 配置id")
-    val windowsResourceConfigId: Int?
+    @Deprecated("not use")
+    val windowsResourceConfigId: Int?,
+    @ApiModelProperty("windows 配置")
+    val windowsType: String?,
+    @ApiModelProperty("云桌面 地域")
+    val windowsZone: String?
 )

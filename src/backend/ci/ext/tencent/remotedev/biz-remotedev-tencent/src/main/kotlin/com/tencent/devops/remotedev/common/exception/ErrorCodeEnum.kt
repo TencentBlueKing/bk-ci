@@ -145,6 +145,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132027",
         formatErrorMessage = "The cloud desktop resources under the current project are insufficient, currently {0}"
+    ),
+    NEED_UPDATED(
+        errorType = ErrorType.USER,
+        errorCode = "2132028",
+        formatErrorMessage = "Client needs to be updated"
     );
 
     fun getErrorMessage(): String {
