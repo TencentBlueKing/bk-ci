@@ -253,4 +253,20 @@ class PipelineRepositoryVersionService(
         )
         return count to result
     }
+
+    fun saveDebugBuildInfo(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String
+    ): Boolean {
+        return pipelineResourceVersionDao.updateDebugBuildId(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            debugBuildId = buildId
+        )
+    }
 }
