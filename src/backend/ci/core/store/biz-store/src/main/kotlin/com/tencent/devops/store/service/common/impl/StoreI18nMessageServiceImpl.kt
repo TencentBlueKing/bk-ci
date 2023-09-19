@@ -357,7 +357,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             repositoryHashId = repositoryHashId,
             branch = branch
         ) ?: return content
-        logger.info("getDescriptionI18nContent fileStr:$fileStr")
         return descriptionAnalysis(
             userId = userId,
             projectCode = projectCode,

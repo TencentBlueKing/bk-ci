@@ -35,7 +35,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.service.common.StoreFileService
-import com.tencent.devops.store.utils.StoreUtils
 import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -66,8 +65,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                     logo = true,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ).data
-                logger.info("uploadFileToPath return fileUrl:$fileUrl")
-                fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
+                fileUrl?.let { result[path] = fileUrl }
             } else {
                 logger.warn("Resource file does not exist:${file.path}")
             }
