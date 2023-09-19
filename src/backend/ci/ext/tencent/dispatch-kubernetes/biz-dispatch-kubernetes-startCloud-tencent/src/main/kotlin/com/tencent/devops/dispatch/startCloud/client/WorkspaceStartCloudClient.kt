@@ -177,7 +177,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
-
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
         val url = "$apiUrl/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)

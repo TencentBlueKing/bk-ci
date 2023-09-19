@@ -621,7 +621,7 @@ class CreateControl @Autowired constructor(
         adHoc: Boolean = false
     ) {
         val resourceCount = startCloudResourceCountCheck(type, zone)
-        if (!adHoc  && resourceCount < createCount) {
+        if (!adHoc && resourceCount < createCount) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(resourceCount.toString())

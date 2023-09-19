@@ -106,7 +106,7 @@ class StartCloudInterfaceService @Autowired constructor(
         val resourceList = workspaceClient.getResourceList()
         val lockedVms = workspaceClient.getLockedVmList()
         resourceList.forEach {
-           if (it.cgsId in lockedVms) it.locked = true
+            if (it.cgsId in lockedVms) it.locked = true
         }
         logger.info("syncStartCloudResourceList|resourceList|$resourceList")
         windowsGpuResourceDao.deleteAllResource(dslContext)
