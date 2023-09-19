@@ -59,52 +59,68 @@ class BsDownloadServiceImpl @Autowired constructor(
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if (signIpaInfoResult == null) {
             logger.warn("The signature message (resign id=$resignId) does not exist.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST,
+                defaultMessage = "签名任务不存在。"
+            )
         }
         val signHistoryResult = signHistoryDao.getSignHistory(dslContext, resignId)
         if (signHistoryResult == null) {
             logger.warn("The signature history (resign id={$resignId}) does not exist.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST,
+                defaultMessage = "签名任务不存在。"
+            )
         }
         var artifactoryType: ArtifactoryType? = null
         var path: String? = null
         when (signIpaInfoResult.archiveType.toLowerCase()) {
             "pipeline" -> {
                 artifactoryType = ArtifactoryType.PIPELINE
-                path = "/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName}"
+                path =
+                    "/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName}"
             }
+
             "custom" -> {
                 artifactoryType = ArtifactoryType.CUSTOM_DIR
                 path = "/${signIpaInfoResult.archivePath?.trim('/')}/${signHistoryResult.resultFileName}"
             }
+
             else -> {
                 artifactoryType = ArtifactoryType.PIPELINE
-                path = "/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName}"
+                path =
+                    "/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName}"
             }
         }
         var downlouadUserId = when (downloadType) {
             "service", "build" -> {
                 signIpaInfoResult.userId
             }
+
             "user" -> {
                 userId
             }
+
             else -> {
                 userId
             }
         }
-        val downloadUrl = client.getGateway(ServiceArtifactoryDownLoadResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
-            projectId = signIpaInfoResult.projectId,
-            artifactoryType = artifactoryType,
-            userId = downlouadUserId,
-            path = path,
-            ttl = 7200,
-            directed = true
+        val downloadUrl =
+            client.getGateway(ServiceArtifactoryDownLoadResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
+                projectId = signIpaInfoResult.projectId,
+                artifactoryType = artifactoryType,
+                userId = downlouadUserId,
+                path = path,
+                ttl = 7200,
+                directed = true
 
-        ).data?.url
+            ).data?.url
         if (downloadUrl == null) {
             logger.error("Failed to create download connection (resign id={$resignId})")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CREATE_DOWNLOAD_URL, defaultMessage = "创建下载连接失败。")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_CREATE_DOWNLOAD_URL,
+                defaultMessage = "创建下载连接失败。"
+            )
         }
         return downloadUrl
     }

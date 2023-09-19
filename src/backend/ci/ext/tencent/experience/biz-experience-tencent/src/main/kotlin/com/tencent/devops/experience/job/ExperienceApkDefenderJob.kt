@@ -20,6 +20,7 @@ class ExperienceApkDefenderJob @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client
 ) {
+    @SuppressWarnings("NestedBlockDepth")
     @Scheduled(cron = "0/10 * * * * ?")
     fun checkTask() {
         redisOperation.rightPop(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS)?.let { e ->

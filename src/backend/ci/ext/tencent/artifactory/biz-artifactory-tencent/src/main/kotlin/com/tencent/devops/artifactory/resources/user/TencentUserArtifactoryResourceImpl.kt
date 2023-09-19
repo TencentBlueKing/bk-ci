@@ -159,7 +159,15 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path, fullUrl = false))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByUser(
+                userId,
+                projectId,
+                artifactoryType,
+                path,
+                fullUrl = false
+            )
+        )
     }
 
     override fun ioaUrl(
@@ -169,7 +177,15 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path, fullUrl = false))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByUser(
+                userId,
+                projectId,
+                artifactoryType,
+                path,
+                fullUrl = false
+            )
+        )
     }
 
     override fun shareUrl(
