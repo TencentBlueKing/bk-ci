@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import io.swagger.annotations.ApiModelProperty
 

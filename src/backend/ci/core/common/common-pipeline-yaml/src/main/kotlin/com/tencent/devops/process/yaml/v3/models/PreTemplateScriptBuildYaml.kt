@@ -54,6 +54,7 @@ import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 interface IPreTemplateScriptBuildYaml : YamlVersion {
     val version: String?
     val name: String?
+    val desc: String?
     val label: List<String>?
     val notices: List<Notices>?
     val concurrency: Concurrency?
@@ -74,6 +75,16 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
 /*
 * ITemplateFilter 为模板替换所需材料
 */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "version",
+    defaultImpl = PreTemplateScriptBuildYaml::class
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYamlV3::class, name = YamlVersion.Version.V3),
+    JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
+)
 interface ITemplateFilter : YamlVersion {
     val variables: Map<String, Any>?
     val stages: List<Map<String, Any>>?
@@ -96,6 +107,7 @@ interface ITemplateFilter : YamlVersion {
 data class PreTemplateScriptBuildYaml(
     override val version: String?,
     override val name: String?,
+    override val desc: String?,
     override val label: List<String>? = null,
     @JsonProperty("on")
     val triggerOn: PreTriggerOn?,

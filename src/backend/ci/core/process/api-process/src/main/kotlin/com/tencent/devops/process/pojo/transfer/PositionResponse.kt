@@ -25,13 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.process.pojo.transfer
 
-enum class IfType {
-    SUCCESS,
-    FAILURE,
-    CANCELLED, // 兼容存量的使用，后续文档引导用户使用 CANCELED
-    CANCELED,
-    ALWAYS,
-    ALWAYS_UNLESS_CANCELLED
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("yaml定位")
+data class PositionResponse(
+    @ApiModelProperty("定位类型，非error时应当必有")
+    val type: PositionType? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示当前stage的os类型")
+    var jobBaseOs: VMBaseOS? = null,
+    @ApiModelProperty("当定位到STAGE,JOB,STEP时有效，表示stage下标")
+    var stageIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示stage下标")
+    var jobId: String? = null,
+    @ApiModelProperty("当定位到STEP时有效，表示stage下标")
+    var stepIndex: Int? = null,
+    @ApiModelProperty("转换错误")
+    val error: String? = null
+) {
+    enum class PositionType {
+        SETTING,
+        STAGE,
+        JOB,
+        STEP
+    }
 }

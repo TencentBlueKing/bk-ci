@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 /**
  * 当前Yaml对象的元数据，用来添加一些额外的信息字段

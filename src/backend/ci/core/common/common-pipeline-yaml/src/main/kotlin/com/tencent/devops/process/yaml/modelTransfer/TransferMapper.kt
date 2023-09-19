@@ -16,8 +16,8 @@ import com.github.difflib.algorithm.myers.MeyersDiffWithLinearSpace
 import com.github.difflib.patch.DeltaType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.process.pojo.transfer.TransferMark
-import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
 import java.io.StringWriter
 import java.io.Writer
 import java.util.function.Supplier
@@ -30,6 +30,7 @@ import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.composer.Composer
 import org.yaml.snakeyaml.constructor.SafeConstructor
+import org.yaml.snakeyaml.error.Mark
 import org.yaml.snakeyaml.events.Event
 import org.yaml.snakeyaml.events.NodeEvent
 import org.yaml.snakeyaml.nodes.AnchorNode
@@ -272,6 +273,63 @@ object TransferMapper {
         }
     }
 
+    data class NodeIndex(
+        val key: String?,
+        val index: Int?,
+        val next: NodeIndex?
+    ) {
+        override fun toString(): String {
+            return key ?: "array($index)" + (next?.toString() ?: "")
+        }
+    }
+
+    private fun indexNode(node: Node, marker: TransferMark.Mark): NodeIndex? {
+        var realNode = node
+        if (node.nodeId == NodeId.anchor) {
+            realNode = (node as AnchorNode).realNode
+        }
+        if (realNode is ScalarNode && checkMarker(realNode.startMark, realNode.endMark, marker)) {
+            return NodeIndex(key = realNode.value, index = null, next = null)
+        }
+        when (realNode.nodeId) {
+            NodeId.sequence -> {
+                val seqNode = realNode as SequenceNode
+                val list = seqNode.value
+                list.forEachIndexed { index, node ->
+                    indexNode(node, marker)?.run {
+                        return NodeIndex(key = null, index = index, next = this)
+                    }
+                }
+            }
+
+            NodeId.mapping -> {
+                val mNode = realNode as MappingNode
+                val map = mNode.value
+                for (obj in map) {
+                    val key = obj.keyNode
+                    val value = obj.valueNode
+                    indexNode(key, marker)?.run {
+                        return this
+                    }
+                    indexNode(value, marker)?.run {
+                        val k = if (key.nodeId == NodeId.scalar) key as ScalarNode else null
+                        return NodeIndex(key = k?.value ?: key.toString(), index = null, next = this)
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    private fun checkMarker(start: Mark, end: Mark, marker: TransferMark.Mark): Boolean {
+        if (start.line <= marker.line && start.column <= marker.column &&
+            end.line >= marker.line && end.column >= marker.column
+        ) {
+            return true
+        }
+        return false
+    }
+
     private fun exactlyTheSameNode(l: Node, r: Node): Boolean {
         if (l.nodeId != r.nodeId) return false
 
@@ -361,6 +419,7 @@ object TransferMapper {
     private val yamlObjectMapper = ObjectMapper(
         CustomYAMLFactoryBuilder.enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
             .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+            .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS)
             .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
             .disable(YAMLGenerator.Feature.SPLIT_LINES)
             .disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
@@ -503,5 +562,13 @@ object TransferMapper {
     fun formatYaml(yaml: String): String {
         val res = getYamlFactory().load(yaml) as Any
         return toYaml(res)
+    }
+
+    fun indexYaml(
+        yaml: String,
+        line: Int,
+        column: Int
+    ): NodeIndex? {
+        return indexNode(getYamlFactory().compose(yaml.reader()), TransferMark.Mark(line, column))
     }
 }

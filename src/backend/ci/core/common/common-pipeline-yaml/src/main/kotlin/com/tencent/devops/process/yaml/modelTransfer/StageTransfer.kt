@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
@@ -222,11 +223,11 @@ class StageTransfer @Autowired(required = false) constructor(
             label = maskYamlStageLabel(stage.tag).ifEmpty { null },
             ifField = when (stage.stageControlOption?.runCondition) {
                 StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition
-                StageRunCondition.CUSTOM_VARIABLE_MATCH -> ModelCommon.customVariableMatch(
+                StageRunCondition.CUSTOM_VARIABLE_MATCH -> TransferUtil.customVariableMatch(
                     stage.stageControlOption?.customVariables
                 )
 
-                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> ModelCommon.customVariableMatchNotRun(
+                StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> TransferUtil.customVariableMatchNotRun(
                     stage.stageControlOption?.customVariables
                 )
 

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
-import com.tencent.devops.process.yaml.v3.models.step.IPreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 
 /**
  * model

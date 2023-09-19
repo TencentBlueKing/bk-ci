@@ -30,10 +30,13 @@ package com.tencent.devops.process.service.transfer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
@@ -43,16 +46,17 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
+import com.tencent.devops.process.yaml.modelTransfer.YamlIndexService
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -63,7 +67,8 @@ class PipelineTransferYamlService @Autowired constructor(
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val yamlIndexService: YamlIndexService
 ) {
 
     companion object {
@@ -205,6 +210,19 @@ class PipelineTransferYamlService @Autowired constructor(
             if (key in setting_key) settingIndex.add(value)
         }
         return PreviewResponse(yaml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
+    }
+
+    fun position(
+        userId: String,
+        projectId: String,
+        line: Int,
+        column: Int,
+        yaml: String
+    ): PositionResponse {
+        val index = TransferMapper.indexYaml(yaml, line, column)
+            ?: return PositionResponse(type = PositionResponse.PositionType.SETTING)
+        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
+        return yamlIndexService.checkYamlIndex(pYml, index)
     }
 
     private fun getPipelineResource(
