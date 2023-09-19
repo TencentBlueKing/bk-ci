@@ -294,7 +294,12 @@ class PipelineInfoDao {
         }
     }
 
-    fun countPipelineInfoByProject(dslContext: DSLContext, pipelineName: String?, projectCode: String): Int {
+    fun countPipelineInfoByProject(
+        dslContext: DSLContext,
+        pipelineName: String?,
+        projectCode: String,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): Int {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectCode))
@@ -302,6 +307,7 @@ class PipelineInfoDao {
             if (!pipelineName.isNullOrEmpty()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
+            conditions.add(CHANNEL.eq(channelCode!!.name))
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!

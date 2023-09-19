@@ -47,7 +47,8 @@ class ShortUrlService @Autowired constructor(
     private val hashids = Hashids(HASH_SALT, 8)
 
     fun createShortUrl(url: String, ttl: Int): String {
-        val shortUrlCache = redisOperation.get(url)
+        val cacheKey = "$url:$ttl"
+        val shortUrlCache = redisOperation.get(cacheKey)
         return if (shortUrlCache != null) {
             logger.info("get short url from cache, url: $url, shortUrl: $shortUrlCache")
             shortUrlCache
@@ -56,7 +57,7 @@ class ShortUrlService @Autowired constructor(
             val urlId = shortUrlDao.create(dslContext, url, "devops", expireTime)
             val shortUrl = "${HomeHostUtil.shortUrlServerHost()}/${encodeLongId(urlId)}"
             logger.info("createShortUrl, url: $url, ttl: $ttl, shortUrl: $shortUrl")
-            redisOperation.set(url, shortUrl, TimeUnit.MINUTES.toSeconds(SHORT_URL_CACHE_EXPIRED_MINUTE))
+            redisOperation.set(cacheKey, shortUrl, TimeUnit.MINUTES.toSeconds(SHORT_URL_CACHE_EXPIRED_MINUTE))
             shortUrl
         }
     }

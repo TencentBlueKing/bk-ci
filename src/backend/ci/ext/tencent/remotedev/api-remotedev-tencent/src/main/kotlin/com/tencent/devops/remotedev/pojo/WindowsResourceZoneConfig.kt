@@ -27,17 +27,19 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WorkspaceAction {
-    CREATE, // 0
-    START, // 1
-    SLEEP, // 2
-    DELETE, // 3
-    SHARE, // 4
-    PREPARING,
-    STARTING,
-    SLEEPING,
-    DELETING,
-    COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
-    NEED_RENEWAL,
-    SYSTEM_CHANGES
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("WINDOWS GPU资源配置表")
+data class WindowsResourceZoneConfig(
+    @ApiModelProperty("Id")
+    val id: Long?,
+    @ApiModelProperty("是否可用")
+    val available: Boolean?,
+    @ApiModelProperty("区域，深圳，南京等")
+    val zone: String,
+    @ApiModelProperty("区域简称，SZ,NJ")
+    var zoneShortName: String,
+    @ApiModelProperty("描述")
+    val description: String
+)

@@ -488,10 +488,12 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
+        ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
@@ -501,6 +503,16 @@ class WorkspaceDao {
         }
         projectId?.let {
             conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
+
+        ip?.let {
+            conditions.add(
+                    t1.NAME.`in`(
+                    DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
+                        t3.HOST_IP.endsWith(".$ip")
+                    )
+                    )
+            )
         }
 
         return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)

@@ -5,8 +5,8 @@
 <script>
     import { Base64 } from 'js-base64'
     import { Terminal } from 'xterm'
-    import { FitAddon } from 'xterm-addon-fit'
     import { AttachAddon } from 'xterm-addon-attach'
+    import { FitAddon } from 'xterm-addon-fit'
     import 'xterm/css/xterm.css'
     export default {
         name: 'Console',
@@ -38,7 +38,7 @@
             }
         },
         mounted () {
-            window.onresize = this.triggerTermResize
+            window.addEventListener('resize', this.triggerTermResize)
             this.term = new Terminal()
             this.fitAddon = new FitAddon()
             const terminalContainer = document.getElementById('terminal')
@@ -75,6 +75,7 @@
             }
         },
         beforeDestroy () {
+            window.removeEventListener('resize', this.triggerTermResize)
             this.terminalSocket.close()
             this.term.dispose()
         },
@@ -110,21 +111,15 @@
                 this.fitAddon.fit()
             },
             handleResize (size) {
-                if (this.consoleType === 'PUBLIC_BCS') {
-                    const data = JSON.stringify({ cols: size.cols, rows: size.rows })
-                    this.sendEncodeCmd(data, '4')
-                }
-                // this.$nextTick(() => {
-                //     this.resizeUrl && this.$store.dispatch('common/resizeTerm', {
-                //         resizeUrl: this.resizeUrl,
-                //         params: {
-                //             exec_id: this.execId,
-                //             height: size.rows,
-                //             width: size.cols
-                //         }
-                //     })
-                //     !this.resizeUrl && this.terminalSocket.send(`__resize__:${size.rows},${size.cols}\n`)
-                // })
+                this.$nextTick(() => {
+                    if (this.consoleType === 'PUBLIC_BCS') {
+                        const data = JSON.stringify({ cols: size.cols, rows: size.rows })
+                        this.sendEncodeCmd(data, '4')
+                    }
+                    if (this.consoleType === 'PUBLIC_DEVCLOUD') {
+                        this.terminalSocket.send(`__resize__:${size.rows},${size.cols}`)
+                    }
+                })
             }
         }
     }

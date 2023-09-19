@@ -51,6 +51,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -110,6 +111,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
+    private val profile: Profile,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService
