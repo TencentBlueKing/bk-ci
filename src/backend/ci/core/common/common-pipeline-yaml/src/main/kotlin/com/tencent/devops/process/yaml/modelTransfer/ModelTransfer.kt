@@ -192,7 +192,7 @@ class ModelTransfer @Autowired constructor(
                 extends = null,
                 resources = null,
                 notices = makeNoticesV2(modelInput.setting),
-                finally = finally,
+                finally = finally as LinkedHashMap<String, Any>?,
                 concurrency = concurrency
             )
 
@@ -207,7 +207,7 @@ class ModelTransfer @Autowired constructor(
                 extends = null,
                 resources = null,
                 notices = makeNoticesV3(modelInput.setting),
-                finally = finally,
+                finally = finally as LinkedHashMap<String, Any>?,
                 concurrency = concurrency
             )
         }

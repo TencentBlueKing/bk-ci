@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
@@ -88,11 +89,11 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
 interface ITemplateFilter : YamlVersion {
     val variables: Map<String, Any>?
     val stages: List<Map<String, Any>>?
-    val jobs: Map<String, Any>?
+    val jobs: LinkedHashMap<String, Any>?
     val steps: List<Map<String, Any>>?
     val extends: Extends?
     val resources: Resources?
-    var finally: Map<String, Any>?
+    var finally: LinkedHashMap<String, Any>?
 
     fun initPreScriptBuildYamlI(): PreScriptBuildYamlI
 }
@@ -113,11 +114,11 @@ data class PreTemplateScriptBuildYaml(
     val triggerOn: PreTriggerOn?,
     override val variables: Map<String, Any>?,
     override val stages: List<Map<String, Any>>?,
-    override val jobs: Map<String, Any>? = null,
+    override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override var finally: Map<String, Any>?,
+    override var finally: LinkedHashMap<String, Any>?,
     override val notices: List<GitNotices>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
