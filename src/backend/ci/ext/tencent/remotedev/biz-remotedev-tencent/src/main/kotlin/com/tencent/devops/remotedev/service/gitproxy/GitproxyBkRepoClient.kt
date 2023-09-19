@@ -8,6 +8,7 @@ import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
@@ -48,20 +49,22 @@ class GitproxyBkRepoClient @Autowired constructor(
             category = "PROXT",
             public = false,
             description = "git-proxy",
-            configuration = RepoConfig(
-                type = "proxy",
-                proxy = CreateRepoDataConfigProxy(
-                    public = false,
-                    name = "CloudDeskTestGroup-Download-proxy",
-                    url = url,
-                    credentialKey = null,
-                    username = null,
-                    password = null
-                ),
-                url = null,
-                settings = emptyMap(),
-                webHook = CreateRepoDataConfigWebHook(
-                    webHookList = emptyList()
+            configuration = JsonUtil.toJson(
+                RepoConfig(
+                    type = "proxy",
+                    proxy = CreateRepoDataConfigProxy(
+                        public = false,
+                        name = "CloudDeskTestGroup-Download-proxy",
+                        url = url,
+                        credentialKey = null,
+                        username = null,
+                        password = null
+                    ),
+                    url = null,
+                    settings = emptyMap(),
+                    webHook = CreateRepoDataConfigWebHook(
+                        webHookList = emptyList()
+                    )
                 )
             ),
             storageCredentialsKey = null
