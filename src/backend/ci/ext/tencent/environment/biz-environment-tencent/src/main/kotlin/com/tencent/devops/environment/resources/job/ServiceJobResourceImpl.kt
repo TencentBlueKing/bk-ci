@@ -31,21 +31,22 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
-import com.tencent.devops.environment.pojo.job.AccountJobCloudReq
+import com.tencent.devops.environment.pojo.job.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.ScriptExecuteJobCloudReq
+import com.tencent.devops.environment.pojo.job.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
-import com.tencent.devops.environment.pojo.job.ExecuteTargetJobCloudReq
-import com.tencent.devops.environment.pojo.job.FileDistributeJobCloudReq
-import com.tencent.devops.environment.pojo.job.FileSourceJobCloudReq
-import com.tencent.devops.environment.pojo.job.HostJobCloudReq
+import com.tencent.devops.environment.pojo.job.JobCloudExecuteTarget
+import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
+import com.tencent.devops.environment.pojo.job.JobCloudFileSource
+import com.tencent.devops.environment.pojo.job.JobCloudHost
+import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.TaskTerminateService
@@ -67,31 +68,31 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): Result<ScriptExecuteResult> {
         checkParam(userId, projectId)
-        val scriptExecuteJobCloudReq = ScriptExecuteJobCloudReq(
-            bk_scope_type = "",
-            bk_scope_id = "",
-            script_content = scriptExecuteReq.scriptContent,
-            script_param = scriptExecuteReq.scriptParam,
+        val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
+            bkScopeType = "",
+            bkScopeId = "",
+            scriptContent = scriptExecuteReq.scriptContent,
+            scriptParam = scriptExecuteReq.scriptParam,
             timeout = scriptExecuteReq.timeout,
-            account_alias = scriptExecuteReq.account,
-            is_param_sensitive = scriptExecuteReq.isSensiveParam,
-            script_language = scriptExecuteReq.scriptType,
-            target_server = ExecuteTargetJobCloudReq(
-                dynamic_group_list = scriptExecuteReq.executeTarget.envHashIdList,
-                topo_node_list = scriptExecuteReq.executeTarget.envHashIdList,
-                ip_list = scriptExecuteReq.executeTarget.hostList?.map {
-                    HostJobCloudReq(
-                        bk_host_id = it.bkHostId ?: 0,
-                        bk_cloud_id = it.bkCloudId ?: 0,
+            accountAlias = scriptExecuteReq.account,
+            isParamSensitive = scriptExecuteReq.isSensiveParam,
+            scriptLanguage = scriptExecuteReq.scriptLanguage,
+            targetServer = JobCloudExecuteTarget(
+                dynamicGroupList = scriptExecuteReq.executeTarget.envHashIdList,
+                topoNodeList = scriptExecuteReq.executeTarget.envHashIdList,
+                ipList = scriptExecuteReq.executeTarget.hostList?.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId ?: 0,
+                        bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip ?: ""
                     )
                 }
             ),
-            bk_app_code = "",
-            bk_app_secret = "",
-            bk_username = userId
+            bkAppCode = "",
+            bkAppSecret = "",
+            bkUsername = userId
         )
-        return scriptExecuteService.executeScript(scriptExecuteJobCloudReq)
+        return scriptExecuteService.executeScript(jobCloudScriptExecuteReq)
     }
 
     override fun distributeFile(
@@ -100,48 +101,48 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): Result<FileDistributeResult> {
         checkParam(userId, projectId)
-        val fileDistributeJobCloudReq = FileDistributeJobCloudReq(
-            bk_scope_type = "",
-            bk_scope_id = "",
-            file_source_list = fileDistributeReq.fileSourceList.map { fileSourceList ->
-                FileSourceJobCloudReq(
-                    file_list = fileSourceList.fileList.toList(),
-                    server = ExecuteTargetJobCloudReq(
-                        dynamic_group_list = fileSourceList.sourceFileTarget.envHashIdList,
-                        topo_node_list = fileSourceList.sourceFileTarget.envHashIdList,
-                        ip_list = fileSourceList.sourceFileTarget.hostList?.map {
-                            HostJobCloudReq(
-                                bk_host_id = it.bkHostId ?: 0,
-                                bk_cloud_id = it.bkCloudId ?: 0,
+        val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
+            bkScopeType = "",
+            bkScopeId = "",
+            fileSourceList = fileDistributeReq.fileSourceList.map { fileSourceList ->
+                JobCloudFileSource(
+                    fileList = fileSourceList.fileList.toList(),
+                    server = JobCloudExecuteTarget(
+                        dynamicGroupList = fileSourceList.sourceFileTarget.envHashIdList,
+                        topoNodeList = fileSourceList.sourceFileTarget.envHashIdList,
+                        ipList = fileSourceList.sourceFileTarget.hostList?.map {
+                            JobCloudHost(
+                                bkHostId = it.bkHostId ?: 0,
+                                bkCloudId = it.bkCloudId ?: 0,
                                 ip = it.ip ?: ""
                             )
                         }
                     ),
-                    account = AccountJobCloudReq(
+                    account = JobCloudAccount(
                         id = null,
                         alias = fileDistributeReq.account
                     )
                 )
             },
-            file_target_path = fileDistributeReq.fileTargetPath,
-            target_server = ExecuteTargetJobCloudReq(
-                dynamic_group_list = fileDistributeReq.executeTarget.envHashIdList,
-                topo_node_list = fileDistributeReq.executeTarget.envHashIdList,
-                ip_list = fileDistributeReq.executeTarget.hostList?.map {
-                    HostJobCloudReq(
-                        bk_host_id = it.bkHostId ?: 0,
-                        bk_cloud_id = it.bkCloudId ?: 0,
+            fileTargetPath = fileDistributeReq.fileTargetPath,
+            executeTarget = JobCloudExecuteTarget(
+                dynamicGroupList = fileDistributeReq.executeTarget.envHashIdList,
+                topoNodeList = fileDistributeReq.executeTarget.envHashIdList,
+                ipList = fileDistributeReq.executeTarget.hostList?.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId ?: 0,
+                        bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip ?: ""
                     )
                 }
             ),
-            account_alias = fileDistributeReq.account,
+            accountAlias = fileDistributeReq.account,
             timeout = fileDistributeReq.timeout,
-            bk_app_code = "",
-            bk_app_secret = "",
-            bk_username = userId,
+            bkAppCode = "",
+            bkAppSecret = "",
+            bkUsername = userId
         )
-        return fileDistributeService.distributeFile(fileDistributeJobCloudReq)
+        return fileDistributeService.distributeFile(jobCloudFileDistributeReq)
     }
 
     override fun terminateTask(
@@ -168,7 +169,23 @@ class ServiceJobResourceImpl @Autowired constructor(
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): Result<QueryJobInstanceLogsResult> {
         checkParam(userId, projectId)
-        return Result(queryJobInstanceLogsService.queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq))
+        val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
+            bkScopeType = "",
+            bkScopeId = "",
+            jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
+            stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
+            hostList = queryJobInstanceLogsReq.hostIdList?.map {
+                JobCloudHost(
+                    bkHostId = it,
+                    bkCloudId = null,
+                    ip = null
+                )
+            },
+            bkAppCode = "",
+            bkAppSecret = "",
+            bkUsername = userId
+        )
+        return queryJobInstanceLogsService.queryJobInstanceLogs(jobCloudQueryJobInstanceLogsReq)
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -29,13 +29,13 @@ object NetworkUtil {
             .build()
     }
 
-    fun executeHttpRequest(operateName: String, request: Request): JobCloudResp {
+    fun <T> executeHttpRequest(operateName: String, request: Request): JobCloudResp<T> {
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                logger.info("[${operateName}] responseBody: $responseBody")
+                logger.info("[${operateName}] requestBody: ${request}, responseBody: $responseBody")
 
-                val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp>(responseBody!!)
+                val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
 
                 if (!serializedRespBody.result) {
                     logger.error(
