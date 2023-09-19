@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startCloud.service
+package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -40,12 +40,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateBasicBody
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

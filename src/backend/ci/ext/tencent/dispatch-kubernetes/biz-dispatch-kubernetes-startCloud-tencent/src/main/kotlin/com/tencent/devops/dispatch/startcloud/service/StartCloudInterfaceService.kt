@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startCloud.service
+package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.dao.WindowsGpuResourceDao
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

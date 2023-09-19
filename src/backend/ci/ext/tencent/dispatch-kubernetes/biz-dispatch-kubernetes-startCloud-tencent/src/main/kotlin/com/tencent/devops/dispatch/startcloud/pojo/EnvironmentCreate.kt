@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.startCloud.pojo
+package com.tencent.devops.dispatch.startcloud.pojo
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
