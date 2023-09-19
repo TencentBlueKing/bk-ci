@@ -600,9 +600,8 @@ class CreateControl @Autowired constructor(
             currentOs = workspaceCreate.currentOS
         )
 
-        whiteListService.numberLimit(
-            key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
-            id = userId,
+        whiteListService.windowsNumberLimit(
+            userId = userId,
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
                 userId = userId,
