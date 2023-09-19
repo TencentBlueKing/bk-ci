@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.pojo.transfer.PositionBody
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
 import com.tencent.devops.process.pojo.transfer.TransferBody
 import com.tencent.devops.process.pojo.transfer.TransferResponse
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
@@ -122,6 +122,6 @@ interface UserPipelineTransferResource {
         @ApiParam("列数 0开始")
         @QueryParam("column")
         column: Int,
-        yaml: String
+        yaml: PositionBody
     ): Result<PositionResponse>
 }
