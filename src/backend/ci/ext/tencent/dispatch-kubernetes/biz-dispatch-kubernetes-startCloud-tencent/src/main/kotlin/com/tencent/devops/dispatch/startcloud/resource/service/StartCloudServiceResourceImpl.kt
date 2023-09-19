@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startCloud.resource.service
+package com.tencent.devops.dispatch.startcloud.resource.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.startCloud.service.StartCloudInterfaceService
+import com.tencent.devops.dispatch.startcloud.service.StartCloudInterfaceService
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.springframework.beans.factory.annotation.Autowired
 

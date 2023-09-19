@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.startCloud.common
+package com.tencent.devops.dispatch.startcloud.common
 
 import com.tencent.devops.common.api.pojo.ErrorType
 

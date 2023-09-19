@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startCloud.service
+package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -40,11 +40,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +76,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipeLineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val pipelineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
@@ -92,15 +93,17 @@ class StartCloudRemoteDevService @Autowired constructor(
         val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
-                userId = userId,
-                appName = appName,
-                pipeLineId = pipeLineId,
-                zoneId = resource.zoneId,
-                machineType = resource.machineType,
-                cgsId = event.devFile.cgsId
+                basicBody = EnvironmentCreateBasicBody(
+                    userId = userId,
+                    appName = appName,
+                    pipelineId = pipelineId,
+                    zoneId = resource.zoneId,
+                    machineType = resource.machineType,
+                    cgsId = event.devFile.cgsId
+                )
             )
         )
-        return CreateWorkspaceRes(res.cgsIp, pipeLineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
+        return CreateWorkspaceRes(res.cgsIp, pipelineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
