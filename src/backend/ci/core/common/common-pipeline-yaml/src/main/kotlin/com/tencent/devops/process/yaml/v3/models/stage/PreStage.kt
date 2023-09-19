@@ -49,7 +49,7 @@ data class PreStage(
     @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
-    val jobs: Map<String, PreJob>?,
+    val jobs: LinkedHashMap<String, PreJob>?,
     @ApiModelProperty(name = "check-in")
     @JsonProperty("check-in")
     val checkIn: PreStageCheck?,

@@ -42,7 +42,6 @@ import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.Concurrency
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
@@ -193,7 +192,7 @@ class ModelTransfer @Autowired constructor(
                 extends = null,
                 resources = null,
                 notices = makeNoticesV2(modelInput.setting),
-                finally = finally,
+                finally = finally as LinkedHashMap<String, Any>,
                 concurrency = concurrency
             )
 
@@ -208,7 +207,7 @@ class ModelTransfer @Autowired constructor(
                 extends = null,
                 resources = null,
                 notices = makeNoticesV3(modelInput.setting),
-                finally = finally,
+                finally = finally as LinkedHashMap<String, Any>,
                 concurrency = concurrency
             )
         }

@@ -52,11 +52,11 @@ data class PreTemplateScriptBuildYamlV3(
     var triggerOn: Any?,
     override val variables: Map<String, Any>?,
     override val stages: List<Map<String, Any>>?,
-    override val jobs: Map<String, Any>? = null,
+    override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override var finally: Map<String, Any>?,
+    override var finally: LinkedHashMap<String, Any>?,
     override val notices: List<PacNotices>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {

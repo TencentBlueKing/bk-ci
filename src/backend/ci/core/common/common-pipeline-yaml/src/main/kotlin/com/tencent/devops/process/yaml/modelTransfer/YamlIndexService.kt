@@ -33,9 +33,11 @@ import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+
 
 @Component
 class YamlIndexService @Autowired constructor(
@@ -57,10 +59,18 @@ class YamlIndexService @Autowired constructor(
             }
 
             ITemplateFilter::jobs.name -> {
+                val jobs = preYaml.jobs!!
                 val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.STAGE)
                 val key = next.key ?: throw PacYamlNotValidException(nodeIndex.toString())
-                return checkJob(preYaml.jobs!![key] as Map<String, Any>, next.next).apply {
-                    jobId = key
+                val indexAtomic = AtomicInteger(0)
+                jobs.forEach { (jobId, job) ->
+                    val index = indexAtomic.getAndIncrement()
+                    if (jobId == key) {
+                        return checkJob(job as Map<String, Any>, next.next).apply {
+                            this.jobId = key
+                            this.containerIndex = index
+                        }
+                    }
                 }
             }
 
@@ -77,11 +87,18 @@ class YamlIndexService @Autowired constructor(
 
     fun checkStage(stage: Map<String, Any>, nodeIndex: TransferMapper.NodeIndex?): PositionResponse {
         if (nodeIndex?.key == PreStage::jobs.name) {
-            val jobs = stage[PreStage::jobs.name] as Map<String, Any>
+            val jobs = stage[PreStage::jobs.name] as LinkedHashMap<String, Any>
             val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.STAGE)
             val key = next.key ?: throw PacYamlNotValidException(nodeIndex.toString())
-            return checkJob(jobs[key] as Map<String, Any>, next.next).apply {
-                jobId = key
+            val indexAtomic = AtomicInteger(0)
+            jobs.forEach { (jobId, job) ->
+                val index = indexAtomic.getAndIncrement()
+                if (jobId == key) {
+                    return checkJob(job as Map<String, Any>, next.next).apply {
+                        this.jobId = key
+                        this.containerIndex = index
+                    }
+                }
             }
         }
         return PositionResponse(type = PositionResponse.PositionType.STAGE)
