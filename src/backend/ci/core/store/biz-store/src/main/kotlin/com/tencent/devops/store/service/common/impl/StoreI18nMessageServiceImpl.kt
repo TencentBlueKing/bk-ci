@@ -353,7 +353,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
-            fileName = "file/$language/$path",
+            fileName = "file/$path",
             repositoryHashId = repositoryHashId,
             branch = branch
         ) ?: return content
