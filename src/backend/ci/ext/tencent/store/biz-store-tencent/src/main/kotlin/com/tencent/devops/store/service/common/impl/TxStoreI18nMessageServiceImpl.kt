@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -155,14 +156,14 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     ): String {
         if (repositoryHashId.isNullOrBlank()) return description
         var result = description
-        val fileDirPath = storeFileService.buildAtomArchivePath(
+        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
-        ) + "/file"
+        )
         val file = File(fileDirPath, "file.zip")
         try {
             downloadFile(
-                filePath = "file/$language",
+                filePath = "file",
                 file = file,
                 repositoryHashId = repositoryHashId,
                 branch = branch
@@ -173,8 +174,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     userId = userId,
                     description = description,
                     client = client,
-                    language = language,
-                    fileDirPath = fileDirPath
+                    fileDirPath = "$fileDirPath${File.separator}file"
                 )
             }
         } catch (ignored: Throwable) {
