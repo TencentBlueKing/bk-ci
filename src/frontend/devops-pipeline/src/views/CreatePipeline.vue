@@ -440,7 +440,7 @@
                     }
 
                     const params = {
-                        emptyTemplate: false,
+                        emptyTemplate: !this.activeTempIndex, // 0 为空模板
                         projectId: this.$route.params.projectId,
                         templateId: this.activeTemp.templateId,
                         templateVersion: this.activeTemp.version,

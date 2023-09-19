@@ -101,10 +101,12 @@
                     </div>
                 </div>
             </div>
-            <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
-                <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
-                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
-            </section>
+            <slot name="footer">
+                <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
+                    <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
+                    <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
+                </section>
+            </slot>
         </div>
     </section>
 </template>

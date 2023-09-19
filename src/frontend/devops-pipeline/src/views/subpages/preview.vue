@@ -26,7 +26,7 @@
                 'getExecuteParams',
                 'getSkipedAtomIds'
             ]),
-            ...mapState('pipelines', ['executeStep']),
+            ...mapState('pipelines', ['executeStep', 'pipelineInfo']),
             isDebugPipeline () {
                 return Object.prototype.hasOwnProperty.call(this.$route.query, 'debug')
             },
@@ -88,7 +88,8 @@
                     const [res, pipelineRes] = await Promise.all([
                         this.requestStartupInfo({
                             projectId: this.projectId,
-                            pipelineId: this.pipelineId
+                            pipelineId: this.pipelineId,
+                            version: this.pipelineInfo?.version
                         }),
                         this.fetchPipelineByVersion(this.$route.params)
                     ])
@@ -119,6 +120,7 @@
                     const res = await this.requestExecPipeline({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
+                        version: this.pipelineInfo?.version,
                         params: {
                             ...skipAtoms,
                             ...params

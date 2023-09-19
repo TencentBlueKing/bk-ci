@@ -1,5 +1,11 @@
 <template>
-    <bk-sideslider class="bkci-property-panel" :width="640" :quick-close="true" :is-show.sync="visible">
+    <bk-sideslider
+        class="bkci-property-panel"
+        :width="640"
+        :quick-close="true"
+        :before-close="beforeClose"
+        :is-show.sync="visible"
+    >
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
                 <input v-if="nameEditing" :maxlength="30" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" v-validate.initial="'required|max:30'" @@keyup.enter="toggleEditName" @input="handleEditName" :placeholder="$t('nameInputTips')" :value="element.name" />
@@ -8,7 +14,11 @@
             </div>
             <reference-variable :global-envs="globalEnvs" :stages="stages" :container="container" />
         </header>
-        <atom-content v-bind="$props" slot="content"></atom-content>
+        <atom-content v-bind="$props" slot="content">
+            <template slot="footer">
+                <slot name="footer"></slot>
+            </template>
+        </atom-content>
     </bk-sideslider>
 </template>
 
@@ -16,6 +26,7 @@
     import { mapActions, mapState, mapGetters } from 'vuex'
     import ReferenceVariable from './ReferenceVariable'
     import AtomContent from './AtomContent.vue'
+    import { navConfirm } from '@/utils/util'
 
     export default {
         name: 'atom-property-panel',
@@ -94,6 +105,13 @@
                 'updateAtom',
                 'togglePropertyPanel'
             ]),
+            async beforeClose () {
+                const res = await navConfirm({
+                    title: this.$t('确认离开当前页面吗？'),
+                    content: this.$t('离开将会丢失未保存的信息，建议保存后离开')
+                })
+                return res
+            },
 
             toggleEditName (show) {
                 this.nameEditing = show

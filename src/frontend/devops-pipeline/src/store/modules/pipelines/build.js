@@ -115,8 +115,10 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`).then(response => {
+    requestStartupInfo ({ commit, state, dispatch }, { projectId, pipelineId, ...params }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/manualStartupInfo`, {
+            params
+        }).then(response => {
             return response.data
         })
     },
@@ -131,10 +133,10 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, params }) {
-        let url = `${prefix}${projectId}/${pipelineId}`
+    requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
+        let url = `${prefix}${projectId}/${pipelineId}?version=${version}`
         if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
-            url += `?buildNo=${params.buildNo.buildNo}`
+            url += `&buildNo=${params.buildNo.buildNo}`
             delete params.buildNo
         }
         return ajax.post(url, {

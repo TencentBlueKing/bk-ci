@@ -690,7 +690,17 @@ export default {
     saveDraftPipeline ({ commit }, { projectId, pipelineId, ...draftPipeline }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/saveDraft`, draftPipeline)
     },
-    releaseDraftPipeline ({ commit }, { projectId, pipelineId, version }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`)
+    releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)
+    },
+    yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/position`, {
+            yaml: body
+        }, {
+            params
+        })
+    },
+    previewAtomYAML ({ commit }, { projectId, pipelineId, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/task2yaml`, params)
     }
 }

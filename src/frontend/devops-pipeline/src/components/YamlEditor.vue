@@ -94,6 +94,7 @@
                 language: 'yaml',
                 theme: 'ciYamlTheme',
                 automaticLayout: true,
+                formatonPaste: true,
                 minimap: {
                     enabled: false
                 },
