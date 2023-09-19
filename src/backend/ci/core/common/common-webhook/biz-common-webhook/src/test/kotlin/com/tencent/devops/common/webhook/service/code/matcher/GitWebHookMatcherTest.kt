@@ -183,7 +183,7 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
         Assertions.assertEquals(null, matcher.getHookTargetUrl())
         Assertions.assertEquals(null, matcher.getMergeRequestId())
         Assertions.assertEquals(
-            "Merge branch 'mr_test' into 'master' (merge request !6)\n\nmr 6",
+            "v1.0.1",
             matcher.getMessage()
         )
     }
@@ -232,7 +232,7 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
             matcher.getHookTargetUrl()
         )
         Assertions.assertEquals(290966L, matcher.getMergeRequestId())
-        Assertions.assertEquals("mr 19", matcher.getMessage())
+        Assertions.assertEquals("mr_test", matcher.getMessage())
     }
 
     @Test

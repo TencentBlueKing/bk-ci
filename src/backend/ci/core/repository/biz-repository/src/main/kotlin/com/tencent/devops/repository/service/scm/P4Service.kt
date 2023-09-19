@@ -37,6 +37,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.code.p4.api.P4Api
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.stereotype.Service
@@ -144,5 +145,33 @@ class P4Service(
             username = username,
             password = password
         ).getServerInfo()
+    }
+
+    override fun getChangelist(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return P4Api(
+            p4port = repository.url,
+            username = username,
+            password = password
+        ).getChangelist(change)
+    }
+
+    override fun getShelvedChangeList(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return P4Api(
+            p4port = repository.url,
+            username = username,
+            password = password
+        ).getShelvedChangeList(change)
     }
 }
