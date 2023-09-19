@@ -33,6 +33,24 @@ BEGIN
         ADD CONSTRAINT TASK_EXECUTE_COUNT UNIQUE (`PROJECT_ID`,`BUILD_ID`,`TASK_ID`,`EXECUTE_COUNT`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_SUMMARY'
+                    AND COLUMN_NAME = 'DEBUG_BUILD_NUM') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_SUMMARY`
+        ADD COLUMN `DEBUG_BUILD_NUM` int(11) DEFAULT '0' COMMENT '调试构建次数';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_SUMMARY'
+                    AND COLUMN_NAME = 'DEBUG_BUILD_NO') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_SUMMARY`
+        ADD COLUMN `DEBUG_BUILD_NO` int(11) DEFAULT '0' COMMENT '调试构建次数';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
