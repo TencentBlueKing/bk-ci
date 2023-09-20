@@ -287,7 +287,6 @@ class WorkspaceDao {
         }
     }
 
-
     /**
      * 获取项目下工作空间列表
      */
@@ -326,7 +325,6 @@ class WorkspaceDao {
             }
         }
     }
-
 
     private fun genFetchProjectWorkspaceCond(
         dslContext: DSLContext,
@@ -864,7 +862,6 @@ class WorkspaceDao {
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
                 workSpaceDetail = record["DETAIL"] as String
             )
-
         }
     }
 

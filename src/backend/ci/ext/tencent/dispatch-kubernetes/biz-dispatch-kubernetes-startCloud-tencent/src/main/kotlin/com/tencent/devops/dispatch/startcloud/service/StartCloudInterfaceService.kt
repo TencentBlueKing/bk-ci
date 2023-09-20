@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.startcloud.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao

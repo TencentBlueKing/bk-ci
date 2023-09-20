@@ -40,8 +40,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
-import org.jooq.SelectConditionStep
-import org.jooq.SelectWhereStep
 import org.springframework.stereotype.Repository
 
 @Repository
