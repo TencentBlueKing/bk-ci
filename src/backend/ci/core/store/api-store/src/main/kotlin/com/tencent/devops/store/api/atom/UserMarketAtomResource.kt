@@ -28,7 +28,6 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
