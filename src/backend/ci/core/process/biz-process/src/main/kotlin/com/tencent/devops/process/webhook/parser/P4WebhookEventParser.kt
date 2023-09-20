@@ -26,19 +26,31 @@
  *
  */
 
-package com.tencent.devops.common.webhook.pojo
+package com.tencent.devops.process.webhook.parser
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import org.slf4j.LoggerFactory
 
-@ApiModel
-class WebhookRequestReplay(
-    @ApiModelProperty("用户ID")
-    val userId: String,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("webhook请求ID")
-    val hookRequestId: Long,
-    @ApiModelProperty("重试流水线ID")
-    val pipelineId: String? = null
-)
+/**
+ * p4 webhook事件解析
+ */
+class P4WebhookEventParser(
+    private val objectMapper: ObjectMapper
+) : IWebhookEventParser {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(P4WebhookEventParser::class.java)
+    }
+
+    override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        return try {
+            objectMapper.readValue(request.body, P4Event::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the p4 web hook event", e)
+            return null
+        }
+    }
+}

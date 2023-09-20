@@ -14,4 +14,9 @@ class OpScmWebhookResourceImpl(
         pipelineWebhookService.updateWebhookSecret(ScmType.valueOf(scmType))
         return Result(true)
     }
+
+    override fun updateWebhookEventInfo(): Result<Boolean> {
+        pipelineWebhookService.updateWebhookEventInfo()
+        return Result(true)
+    }
 }

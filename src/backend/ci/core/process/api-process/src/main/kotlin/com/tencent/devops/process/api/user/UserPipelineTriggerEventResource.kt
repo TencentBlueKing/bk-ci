@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
@@ -62,7 +63,14 @@ interface UserPipelineTriggerEventResource {
     @ApiOperation("获取事件类型")
     @GET
     @Path("listEventType")
-    fun listEventType(): Result<List<IdValue>>
+    fun listEventType(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("代码库类型,为空则返回所有事件类型", required = false)
+        @QueryParam("scmType")
+        scmType: ScmType?
+    ): Result<List<IdValue>>
 
     @ApiOperation("获取流水线触发事件列表")
     @GET
@@ -122,10 +130,10 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("事件ID", required = true)
+        @ApiParam("事件ID", required = false)
         @QueryParam("eventId")
         eventId: Long?,
         @ApiParam("开始时间", required = false)
@@ -163,7 +171,7 @@ interface UserPipelineTriggerEventResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>>
 
     @ApiOperation("重新触发")

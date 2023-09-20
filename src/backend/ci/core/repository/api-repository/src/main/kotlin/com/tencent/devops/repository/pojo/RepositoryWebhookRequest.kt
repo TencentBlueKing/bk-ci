@@ -21,7 +21,7 @@ data class RepositoryWebhookRequest(
     @ApiModelProperty("请求头")
     val requestHeader: Map<String, String>? = null,
     @ApiModelProperty("请求参数")
-    val requestParam:Map<String, String>? = null,
+    val requestParam: Map<String, String>? = null,
     @ApiModelProperty("请求体")
     val requestBody: String,
     @ApiModelProperty("事件时间")

@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -40,6 +41,7 @@ import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParam
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
@@ -51,11 +53,12 @@ import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -196,7 +199,8 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             logger.warn("[$pipelineId]| Fail to get the model")
             return false
         }
-
+        // 触发事件保存流水线名称
+        builder.pipelineName(pipelineInfo.pipelineName)
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
@@ -268,10 +272,18 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             matcher = matcher,
                             repo = repo
                         )
+                        val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
+                            userId = userId,
+                            buildId = buildId,
+                            pipelineId = pipelineId,
+                            projectId = projectId,
+                            channelCode = ChannelCode.BS
+                        ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)
                             .eventSource(eventSource = repo.repoHashId!!)
                             .reason(PipelineTriggerReason.TRIGGER_SUCCESS.name)
+                            .buildNum(buildDetail?.buildNum.toString())
                     }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
@@ -283,7 +295,14 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 )
                 if (!matchResult.reason.isNullOrBlank()) {
                     builder.eventSource(eventSource = repo.repoHashId!!)
-                        .reasonDetail("${element.name}-${matchResult.reason}")
+                        .reasonDetail(JsonUtil.toJson(
+                            PipelineTriggerReasonDetail(
+                                elementId = element.id,
+                                elementName = element.name,
+                                elementAtomCode = element.getAtomCode(),
+                                reasonMsg = matchResult.reason!!
+                            )
+                        ))
                 }
             }
         }

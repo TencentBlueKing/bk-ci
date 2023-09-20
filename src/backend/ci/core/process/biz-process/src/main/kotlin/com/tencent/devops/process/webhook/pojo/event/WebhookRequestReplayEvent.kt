@@ -26,30 +26,18 @@
  *
  */
 
-package com.tencent.devops.process.webhook.atom
+package com.tencent.devops.process.webhook.pojo.event
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 
-@Service
-class CodeTGitWebhookTriggerTaskAtom @Autowired constructor(
-    private val objectMapper: ObjectMapper,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
-    private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val webhookTriggerTaskAtomService: WebhookTriggerTaskAtomService
-) : CodeGitWebhookTriggerTaskAtom(
-    objectMapper = objectMapper,
-    scmWebhookMatcherBuilder = scmWebhookMatcherBuilder,
-    pipelineWebhookService = pipelineWebhookService,
-    pipelineBuildWebhookService = pipelineBuildWebhookService,
-    webhookTriggerTaskAtomService = webhookTriggerTaskAtomService
-) {
-
-    override fun getScmType() = ScmType.CODE_TGIT
-}
+@Event(exchange = MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, routeKey = MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
+data class WebhookRequestReplayEvent(
+    val userId: String,
+    val projectId: String,
+    val hookRequestId: Long,
+    val scmType: ScmType,
+    val pipelineId: String? = null
+) : ITraceEvent()

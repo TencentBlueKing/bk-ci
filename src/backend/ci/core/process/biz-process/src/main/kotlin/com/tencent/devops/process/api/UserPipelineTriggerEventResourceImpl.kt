@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
@@ -38,7 +39,7 @@ import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.service.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 
 @RestResource
 class UserPipelineTriggerEventResourceImpl(
@@ -49,13 +50,17 @@ class UserPipelineTriggerEventResourceImpl(
         return Result(PipelineTriggerType.toMap())
     }
 
-    override fun listEventType(): Result<List<IdValue>> {
-        val eventTypes = CodeEventType.values().map {
+    override fun listEventType(
+        userId: String,
+        scmType: ScmType?
+    ): Result<List<IdValue>> {
+        val eventTypes = CodeEventType.getEventsByScmType(scmType).map {
             IdValue(
                 id = it.name,
                 value = I18nUtil.getCodeLanMessage(
                     messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.name}",
-                    defaultMessage = it.name
+                    defaultMessage = it.name,
+                    language = I18nUtil.getLanguage(userId)
                 )
             )
         }
@@ -115,7 +120,8 @@ class UserPipelineTriggerEventResourceImpl(
                 startTime = startTime,
                 endTime = endTime,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                userId = userId
             )
         )
     }
@@ -134,14 +140,16 @@ class UserPipelineTriggerEventResourceImpl(
                 eventId = eventId,
                 pipelineId = pipelineId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                userId = userId
             )
         )
     }
 
     override fun replay(
         userId: String,
-        projectId: String, detailId: Long
+        projectId: String,
+        detailId: Long
     ): Result<Boolean> {
         return Result(
             pipelineTriggerEventService.replay(

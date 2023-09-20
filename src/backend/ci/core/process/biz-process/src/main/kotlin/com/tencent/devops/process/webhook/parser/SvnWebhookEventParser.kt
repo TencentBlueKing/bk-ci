@@ -26,32 +26,31 @@
  *
  */
 
-package com.tencent.devops.process.pojo.trigger
+package com.tencent.devops.process.webhook.parser
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import org.slf4j.LoggerFactory
 
-@ApiModel("流水线触发事件")
-data class PipelineTriggerEvent(
-    @ApiModelProperty("项目ID")
-    var projectId: String? = null,
-    @ApiModelProperty("事件ID")
-    var eventId: Long? = null,
-    @ApiModelProperty("触发类型")
-    val triggerType: String,
-    @ApiModelProperty("事件源", required = false)
-    var eventSource: String? = null,
-    @ApiModelProperty("事件类型")
-    val eventType: String,
-    @ApiModelProperty("触发人")
-    val triggerUser: String,
-    @ApiModelProperty("事件描述")
-    val eventDesc: String,
-    @ApiModelProperty("webhook事件请求ID")
-    val hookRequestId: Long?,
-    @ApiModelProperty("事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
-    val requestParams: Map<String, String>? = null,
-    @ApiModelProperty("触发事件")
-    val eventTime: LocalDateTime
-)
+/**
+ * svn webhook事件解析
+ */
+class SvnWebhookEventParser(
+    private val objectMapper: ObjectMapper
+) : IWebhookEventParser {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SvnWebhookEventParser::class.java)
+    }
+
+    override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        return try {
+            objectMapper.readValue(request.body, SvnCommitEvent::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the svn web hook commit event", e)
+            return null
+        }
+    }
+}

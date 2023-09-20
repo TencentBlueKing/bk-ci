@@ -26,22 +26,19 @@
  *
  */
 
-package com.tencent.devops.common.webhook.atom
+package com.tencent.devops.process.pojo.trigger
 
-import com.tencent.devops.common.webhook.pojo.WebhookRequestReplay
-import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 触发器原子业务逻辑接口定义
- */
-interface IWebhookAtomTask {
-    /**
-     * webhook事件执行
-     */
-    fun request(request: WebhookRequest)
-
-    /**
-     * webhook事件重放
-     */
-    fun replay(request: WebhookRequestReplay)
-}
+@ApiModel("流水线触发原因详情")
+data class PipelineTriggerReasonDetail(
+    @ApiModelProperty("触发插件ID")
+    val elementId: String?,
+    @ApiModelProperty("触发插件Code")
+    val elementAtomCode: String,
+    @ApiModelProperty("触发插件名称")
+    val elementName: String,
+    @ApiModelProperty("触发原因，JSON字符串，便于国际化")
+    val reasonMsg: String
+)

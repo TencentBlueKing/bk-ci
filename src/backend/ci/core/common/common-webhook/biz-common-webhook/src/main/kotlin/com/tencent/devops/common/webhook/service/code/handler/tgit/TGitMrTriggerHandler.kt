@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -47,6 +48,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
@@ -158,6 +160,21 @@ class TGitMrTriggerHandler(
         return event.object_attributes.id
     }
 
+    override fun getEventDesc(event: GitMergeRequestEvent): String {
+        return I18Variable(
+            code = getI18Code(event),
+            params = listOf(
+                "${event.object_attributes.url}",
+                event.object_attributes.iid.toString(),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GitMergeRequestEvent): String {
+        return event.object_attributes.target_project_id.toString()
+    }
+
     override fun getEnv(event: GitMergeRequestEvent): Map<String, Any> {
         return mapOf(
             GIT_MR_NUMBER to event.object_attributes.iid,
@@ -192,17 +209,29 @@ class TGitMrTriggerHandler(
                 triggerOnUser = getUsername(event),
                 includedUsers = convert(includeUsers),
                 excludedUsers = convert(excludeUsers),
-                includedFailedReason = "on.mr.users trigger user($userId) not match",
-                excludedFailedReason = "on.mr.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val targetBranch = getBranchName(event)
             val targetBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = targetBranch,
                 includedBranches = convert(branchName),
                 excludedBranches = convert(excludeBranchName),
-                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
-                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
             )
             val sourceBranch = getBranch(event.object_attributes.source_branch)
             val sourceBranchFilter = BranchFilter(
@@ -210,8 +239,14 @@ class TGitMrTriggerHandler(
                 triggerOnBranchName = sourceBranch,
                 includedBranches = convert(includeSourceBranchName),
                 excludedBranches = convert(excludeSourceBranchName),
-                includedFailedReason = "on.mr.source-branches source branch($sourceBranch) not match",
-                excludedFailedReason = "on.mr.source-branches-ignore source branch($sourceBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(sourceBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    params = listOf(sourceBranch)
+                ).toJsonStr()
             )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
@@ -247,8 +282,14 @@ class TGitMrTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = convert(includePaths),
                             excludedPaths = convert(excludePaths),
-                            includedFailedReason = "on.mr.paths change path($includePaths) not match",
-                            excludedFailedReason = "on.mr.paths-ignore change path($excludePaths) match"
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
@@ -409,5 +450,38 @@ class TGitMrTriggerHandler(
             reviewInfo = reviewInfo,
             mrRequestId = mrRequestId
         )
+    }
+
+    private fun getI18Code(event: GitMergeRequestEvent) = with(getAction(event)) {
+        when {
+            this == GitMergeRequestEvent.ACTION_CLOSED -> {
+                WebhookI18nConstants.TGIT_MR_CLOSED_EVENT_DESC
+            }
+
+            this == GitMergeRequestEvent.ACTION_CREATED -> {
+                WebhookI18nConstants.TGIT_MR_CREATED_EVENT_DESC
+            }
+            // MR源分支提交更新
+            (this == GitMergeRequestEvent.ACTION_UPDATED &&
+                event.object_attributes.extension_action == "push-update") -> {
+                WebhookI18nConstants.TGIT_MR_PUSH_UPDATED_EVENT_DESC
+            }
+            // MR更新
+            this == GitMergeRequestEvent.ACTION_UPDATED -> {
+                WebhookI18nConstants.TGIT_MR_UPDATED_EVENT_DESC
+            }
+
+            this == GitMergeRequestEvent.ACTION_REOPENED -> {
+                WebhookI18nConstants.TGIT_MR_REOPENED_EVENT_DESC
+            }
+
+            this == GitMergeRequestEvent.ACTION_MERGED -> {
+                WebhookI18nConstants.TGIT_MR_MERGED_EVENT_DESC
+            }
+
+            else -> {
+                ""
+            }
+        }
     }
 }

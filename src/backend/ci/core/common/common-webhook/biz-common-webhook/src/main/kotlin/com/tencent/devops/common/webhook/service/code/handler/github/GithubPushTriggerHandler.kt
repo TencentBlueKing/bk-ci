@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -103,6 +105,26 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         return event.headCommit?.message ?: ""
     }
 
+    override fun getEventDesc(event: GithubPushEvent): String {
+        val linkUrl = if (event.headCommit != null) {
+            "https://github.com/${event.repository.fullName}/commit/${event.headCommit?.id}"
+        } else {
+            "https://github.com/${event.repository.fullName}/commit/${getBranchName(event)}"
+        }
+        return I18Variable(
+            code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
+            params = listOf(
+                getBranchName(event),
+                linkUrl,
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubPushEvent): String {
+        return event.repository.id.toString()
+    }
+
     override fun preMatch(event: GithubPushEvent): WebhookMatchResult {
         if (event.commits.isEmpty()) {
             logger.info("Github web hook no commit")
@@ -125,17 +147,29 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
                 triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers),
-                includedFailedReason = "on.push.users trigger user($userId) not match",
-                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val triggerOnBranchName = getBranchName(event)
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = triggerOnBranchName,
                 includedBranches = WebhookUtils.convert(branchName),
                 excludedBranches = WebhookUtils.convert(excludeBranchName),
-                includedFailedReason = "on.push.branches branch($triggerOnBranchName) not match",
-                excludedFailedReason = "on.push.branches-ignore branch($triggerOnBranchName) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
             )
             return listOf(userFilter, branchFilter)
         }

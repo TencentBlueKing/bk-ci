@@ -28,9 +28,11 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
 import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
@@ -78,7 +80,7 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventSource,
                 triggerEvent.eventType,
                 triggerEvent.triggerUser,
-                triggerEvent.eventDesc,
+                JsonUtil.toJson(triggerEvent.eventDesc),
                 triggerEvent.hookRequestId,
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
                 triggerEvent.eventTime
@@ -320,7 +322,7 @@ class PipelineTriggerEventDao {
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.select(DSL.countDistinct(t1.PROJECT_ID, t1.EVENT_ID, t1.EVENT_SOURCE))
+        return dslContext.select(DSL.countDistinct(t1.PROJECT_ID, t1.EVENT_ID))
             .from(t1)
             .leftJoin(t2)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
@@ -407,7 +409,7 @@ class PipelineTriggerEventDao {
                 triggerType = triggerType,
                 triggerUser = triggerUser,
                 eventType = eventType,
-                eventDesc = eventDesc,
+                eventDesc = JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(),
                 hookRequestId = hookRequestId,
                 requestParams = requestParams?.let {
                     JsonUtil.to(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -128,6 +130,22 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.title
     }
 
+    override fun getEventDesc(event: GithubPullRequestEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            params = listOf(
+                event.pullRequest.htmlUrl,
+                event.pullRequest.number.toString(),
+                getUsername(event),
+                event.action
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubPullRequestEvent): String {
+        return event.repository.id.toString()
+    }
+
     override fun getEnv(event: GithubPullRequestEvent): Map<String, Any> {
         return mapOf(GITHUB_PR_NUMBER to event.number)
     }
@@ -162,17 +180,29 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers),
-                includedFailedReason = "on.push.users trigger user($userId) not match",
-                excludedFailedReason = "on.push.users-ignore trigger user($userId) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(getUsername(event))
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(getUsername(event))
+                ).toJsonStr()
             )
             val targetBranch = getBranchName(event)
             val targetBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
-                triggerOnBranchName = getBranchName(event),
+                triggerOnBranchName = targetBranch,
                 includedBranches = WebhookUtils.convert(branchName),
                 excludedBranches = WebhookUtils.convert(excludeBranchName),
-                includedFailedReason = "on.mr.target-branches target branch($targetBranch) not match",
-                excludedFailedReason = "on.mr.target-branches-ignore target branch($targetBranch) match"
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
             )
             return listOf(userFilter, targetBranchFilter)
         }

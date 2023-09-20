@@ -40,7 +40,7 @@ data class RepoTriggerEventVo(
     @ApiModelProperty("代码库ID", required = false)
     val repoHashId: String,
     @ApiModelProperty("事件描述")
-    val eventDesc: String,
+    var eventDesc: String,
     @ApiModelProperty("触发时间")
     val eventTime: Long,
     @ApiModelProperty("总流水线数")

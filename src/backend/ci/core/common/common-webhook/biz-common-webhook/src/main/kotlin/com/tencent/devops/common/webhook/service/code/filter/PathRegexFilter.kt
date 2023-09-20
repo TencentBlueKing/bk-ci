@@ -35,9 +35,9 @@ class PathRegexFilter(
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>,
     // 包含过滤失败原因
-    private val includedFailedReason: String,
+    private val includedFailedReason: String = "",
     // 排除过滤失败原因
-    private val excludedFailedReason: String,
+    private val excludedFailedReason: String = "",
     private val caseSensitive: Boolean
 ) : BasePathFilter(
     pipelineId = pipelineId,

@@ -27,14 +27,12 @@
 
 package com.tencent.devops.process.webhook.listener
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.WebhookRequestService
+import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
@@ -51,7 +49,7 @@ import org.springframework.stereotype.Component
 @Component
 class WebhookEventListener constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineTriggerRequestService: PipelineTriggerRequestService
+    private val webhookRequestService: WebhookRequestService
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
@@ -71,20 +69,20 @@ class WebhookEventListener constructor(
                     val request = WebhookRequest(
                         body = event.requestContent
                     )
-                    pipelineTriggerRequestService.handleRequest(
-                        taskAtom = CodeSVNWebHookTriggerElement.taskAtom,
+                    webhookRequestService.handleRequest(
+                        scmType = ScmType.CODE_SVN,
                         request = request
                     )
                 }
                 CommitEventType.GIT -> {
                     val request = WebhookRequest(
                         headers = mapOf(
-                            "X-Event" to event.event!!,
+                            "X-Event" to event.event!!
                         ),
                         body = event.requestContent
                     )
-                    pipelineTriggerRequestService.handleRequest(
-                        taskAtom = CodeGitWebHookTriggerElement.taskAtom,
+                    webhookRequestService.handleRequest(
+                        scmType = ScmType.CODE_GIT,
                         request = request
                     )
                 }
@@ -92,20 +90,20 @@ class WebhookEventListener constructor(
                     val request = WebhookRequest(
                         body = event.requestContent
                     )
-                    pipelineTriggerRequestService.handleRequest(
-                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
+                    webhookRequestService.handleRequest(
+                        scmType = ScmType.CODE_GITLAB,
                         request = request
                     )
                 }
                 CommitEventType.TGIT -> {
                     val request = WebhookRequest(
                         headers = mapOf(
-                            "X-Event" to event.event!!,
+                            "X-Event" to event.event!!
                         ),
                         body = event.requestContent
                     )
-                    pipelineTriggerRequestService.handleRequest(
-                        taskAtom = CodeTGitWebHookTriggerElement.taskAtom,
+                    webhookRequestService.handleRequest(
+                        scmType = ScmType.CODE_TGIT,
                         request = request
                     )
                 }
@@ -113,8 +111,8 @@ class WebhookEventListener constructor(
                     val request = WebhookRequest(
                         body = event.requestContent
                     )
-                    pipelineTriggerRequestService.handleRequest(
-                        taskAtom = CodeGitlabWebHookTriggerElement.taskAtom,
+                    webhookRequestService.handleRequest(
+                        scmType = ScmType.CODE_P4,
                         request = request
                     )
                 }
@@ -205,8 +203,8 @@ class WebhookEventListener constructor(
                     body = thisGithubWebhook.body
                 )
             }
-            pipelineTriggerRequestService.handleRequest(
-                taskAtom = CodeGithubWebHookTriggerElement.taskAtom,
+            webhookRequestService.handleRequest(
+                scmType = ScmType.GITHUB,
                 request = request
             )
 
@@ -227,6 +225,10 @@ class WebhookEventListener constructor(
             }
             MDC.remove(TraceTag.BIZID)
         }
+    }
+
+    fun handleReplayRequest(replayEvent: WebhookRequestReplayEvent) {
+        webhookRequestService.replay(replayEvent = replayEvent)
     }
 
     companion object {

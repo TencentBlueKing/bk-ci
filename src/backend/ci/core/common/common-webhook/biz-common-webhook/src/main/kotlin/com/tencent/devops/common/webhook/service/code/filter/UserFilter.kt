@@ -35,9 +35,9 @@ class UserFilter(
     private val includedUsers: List<String>,
     private val excludedUsers: List<String>,
     // 包含过滤失败原因
-    private val includedFailedReason: String,
+    private val includedFailedReason: String = "",
     // 排除过滤失败原因
-    private val excludedFailedReason: String
+    private val excludedFailedReason: String = ""
 ) : WebhookFilter {
 
     companion object {

@@ -25,4 +25,9 @@ interface OpScmWebhookResource {
         @QueryParam("scmType")
         scmType: String
     ): Result<Boolean>
+
+    @ApiOperation("更新webhook 事件信息")
+    @PUT
+    @Path("/updateWebhookEventInfo")
+    fun updateWebhookEventInfo(): Result<Boolean>
 }
