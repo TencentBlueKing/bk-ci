@@ -236,7 +236,7 @@ class PipelineWebhookDao {
         repositoryType: String?,
         offset: Int,
         limit: Int
-    ):Result<TPipelineWebhookRecord>{
+    ): Result<TPipelineWebhookRecord> {
         return with(T_PIPELINE_WEBHOOK) {
             val conditions = mutableListOf(
                 DELETE.eq(false)
@@ -253,7 +253,7 @@ class PipelineWebhookDao {
 
     fun updateWebhookEventInfo(
         dslContext: DSLContext,
-        repoHashId:String?,
+        repoHashId: String?,
         eventType: String,
         externalId: String,
         pipelineId: String,

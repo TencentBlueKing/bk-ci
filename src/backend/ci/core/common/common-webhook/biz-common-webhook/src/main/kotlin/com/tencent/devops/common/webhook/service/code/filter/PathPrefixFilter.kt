@@ -35,7 +35,7 @@ class PathPrefixFilter(
     // 包含过滤失败原因
     private val includedFailedReason: String = "",
     // 排除过滤失败原因
-    private val excludedFailedReason: String = "",
+    private val excludedFailedReason: String = ""
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,

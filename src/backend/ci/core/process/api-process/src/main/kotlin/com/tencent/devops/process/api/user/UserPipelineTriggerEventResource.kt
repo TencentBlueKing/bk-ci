@@ -171,7 +171,7 @@ interface UserPipelineTriggerEventResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>>
 
     @ApiOperation("重新触发")

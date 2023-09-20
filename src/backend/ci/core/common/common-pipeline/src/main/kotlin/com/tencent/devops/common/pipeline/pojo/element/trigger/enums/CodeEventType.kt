@@ -118,7 +118,7 @@ enum class CodeEventType {
             LOCK_COMMIT
         )
 
-        fun getEventsByScmType(scmType: ScmType?):List<CodeEventType> = when(scmType){
+        fun getEventsByScmType(scmType: ScmType?): List<CodeEventType> = when (scmType) {
             ScmType.CODE_GIT -> CODE_GIT_EVENTS
             ScmType.CODE_TGIT -> CODE_TGIT_EVENTS
             ScmType.GITHUB -> CODE_GITHUB_EVENTS

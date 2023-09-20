@@ -59,7 +59,7 @@ data class GitReviewEvent(
     @JsonProperty("created_at")
     val createdAt: String,
     @JsonProperty("updated_at")
-    val updatedAt: String,
+    val updatedAt: String
 ) : GitEvent() {
     companion object {
         const val classType = "review"

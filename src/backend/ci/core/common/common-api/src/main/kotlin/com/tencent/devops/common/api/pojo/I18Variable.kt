@@ -40,6 +40,6 @@ data class I18Variable(
     val params: List<String>,
     @ApiModelProperty("默认信息")
     val defaultMessage: String? = null
-){
-    fun toJsonStr() = JsonUtil.toJson(this,false)
+) {
+    fun toJsonStr() = JsonUtil.toJson(this, false)
 }

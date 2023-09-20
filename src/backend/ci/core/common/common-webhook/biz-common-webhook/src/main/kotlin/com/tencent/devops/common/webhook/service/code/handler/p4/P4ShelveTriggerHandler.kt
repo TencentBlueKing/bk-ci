@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
@@ -49,7 +46,6 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")

@@ -148,7 +148,8 @@ class UserPipelineTriggerEventResourceImpl(
 
     override fun replay(
         userId: String,
-        projectId: String, detailId: Long
+        projectId: String,
+        detailId: Long
     ): Result<Boolean> {
         return Result(
             pipelineTriggerEventService.replay(

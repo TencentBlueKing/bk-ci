@@ -40,4 +40,4 @@ data class WebhookRequestReplayEvent(
     val hookRequestId: Long,
     val scmType: ScmType,
     val pipelineId: String? = null
-): ITraceEvent()
+) : ITraceEvent()

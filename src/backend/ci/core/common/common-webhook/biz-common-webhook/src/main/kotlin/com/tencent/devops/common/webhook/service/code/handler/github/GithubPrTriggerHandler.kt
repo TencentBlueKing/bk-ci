@@ -89,7 +89,6 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")

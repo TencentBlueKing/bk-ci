@@ -678,7 +678,7 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    private fun updateWebhookEventInfoTask(){
+    private fun updateWebhookEventInfoTask() {
         var offset = 0
         val limit = 1000
         do {
@@ -690,7 +690,7 @@ class PipelineWebhookService @Autowired constructor(
             )
             val repoSize = webhookList.size
             webhookList.forEach {
-                with(it){
+                with(it) {
                     val repositoryInfo = scmProxyService.getRepo(
                         it.projectId,
                         RepositoryConfig(
@@ -709,7 +709,7 @@ class PipelineWebhookService @Autowired constructor(
                         param.id to param.defaultValue.toString()
                     }
                     val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
-                    elements.forEach elements@ { element ->
+                    elements.forEach elements@{ element ->
                         run {
                             val webhookElementParams = getElementRepositoryConfig(element, variable = params)
                                 ?: return@elements

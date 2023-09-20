@@ -252,7 +252,7 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ERROR_TRIGGER_DETAIL_NOT_FOUND,
             params = arrayOf(detailId.toString())
         )
-        val pipelineId = triggerDetail.pipelineId  ?: throw ErrorCodeException(
+        val pipelineId = triggerDetail.pipelineId ?: throw ErrorCodeException(
             errorCode = ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY,
             params = arrayOf(detailId.toString())
         )

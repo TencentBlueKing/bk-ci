@@ -77,7 +77,7 @@ class WebhookEventListener constructor(
                 CommitEventType.GIT -> {
                     val request = WebhookRequest(
                         headers = mapOf(
-                            "X-Event" to event.event!!,
+                            "X-Event" to event.event!!
                         ),
                         body = event.requestContent
                     )

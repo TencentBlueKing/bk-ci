@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.pojo.code.svn
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitCommitRepository
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
