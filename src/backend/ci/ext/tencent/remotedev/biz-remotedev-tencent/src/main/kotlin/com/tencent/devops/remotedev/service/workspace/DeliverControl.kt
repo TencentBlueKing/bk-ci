@@ -336,6 +336,9 @@ class DeliverControl @Autowired constructor(
                     logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
                 }
             }
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DELIVERING_FAILED.errorCode
+            )
         }
     }
 

@@ -512,10 +512,9 @@ class WorkspaceCommon @Autowired constructor(
         val unShareInfo = sharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            sharedUsers = sharedUsers,
-            assignType = assignType
+            sharedUsers = sharedUsers
         )
-        if (mountType == WorkspaceMountType.START) {
+        if (mountType == WorkspaceMountType.START && checkUserNeedUnShare(unShareInfo, assignType)) {
             unShareInfo.groupBy { it.resourceId }.forEach { (resourceId, info) ->
                 val receivers = info.map { it.sharedUser }
                 logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
@@ -535,5 +534,14 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+    }
+
+    private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
+        var res = false
+        ws.forEach {
+            if (it.type != assignType) return false
+            else res = true
+        }
+        return res
     }
 }
