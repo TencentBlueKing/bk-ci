@@ -1110,6 +1110,12 @@ class RepositoryService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        if (hasAliasName(projectId, repositoryHashId, repoRename.name)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repoRename.name)
+            )
+        }
         repositoryDao.rename(
             dslContext = dslContext,
             projectId = projectId,
