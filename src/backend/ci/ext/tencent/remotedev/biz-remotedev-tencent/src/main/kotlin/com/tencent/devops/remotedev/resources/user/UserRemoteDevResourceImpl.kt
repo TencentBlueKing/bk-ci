@@ -128,7 +128,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         workspaceCommon.syncStartCloudResourceList().forEach {
             val key = it.zoneId.replace(Regex("\\d+"), "")
             val map = res.getOrPut(key) { mutableMapOf() }
-            if (it.status == 11) {
+            if (it.status == 11 && it.locked != true) {
                 map[it.machineType] = (map[it.machineType] ?: 0) + 1
             }
         }
