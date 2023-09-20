@@ -86,7 +86,9 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = "$projectCode/$fileDir" + i18nDir?.let { "/$i18nDir" }
+        var filePath = "$projectCode/$fileDir"
+        i18nDir?.let { filePath = "$filePath/$i18nDir" }
+        logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
@@ -108,7 +110,10 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileNameList = getFileNames(
             projectCode = projectCode,
             fileDir = "$fileDir${separator}file"
-        ) ?: return description
+        )
+        if (fileNameList.isNullOrEmpty()) {
+            return description
+        }
         logger.info("descriptionAnalysis get fileNameList:$fileNameList")
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
