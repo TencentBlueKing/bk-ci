@@ -370,7 +370,14 @@ class WorkspaceDao {
                 .where(conditions)
         } else {
             conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-            conditions.add(JooqUtils.jsonExtract(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL, "\$.hostIP").`in`(ips))
+            conditions.add(
+                JooqUtils.jsonExtract(
+                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+                    t2 = "\$.hostIP",
+                    lower = false,
+                    removeDoubleQuotes = true
+                ).`in`(ips)
+            )
             val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
             fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
             dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
