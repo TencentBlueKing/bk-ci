@@ -58,11 +58,10 @@ class OpImageResourceImpl @Autowired constructor(
 ) : OpImageResource {
 
     override fun addImage(
-        accessToken: String,
         userId: String,
         imageCreateRequest: ImageCreateRequest
     ): Result<String> {
-        return opImageService.addImage(accessToken, userId, imageCreateRequest)
+        return opImageService.addImage(userId, imageCreateRequest)
     }
 
     override fun passTest(userId: String, imageId: String): Result<Boolean> {
