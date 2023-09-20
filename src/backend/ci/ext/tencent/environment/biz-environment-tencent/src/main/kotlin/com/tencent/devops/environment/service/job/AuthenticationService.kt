@@ -29,22 +29,29 @@ class AuthenticationService {
         val url: String = when (operationName) {
             "executeScript" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script/"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_execute_script/"
+                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script"
+                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_execute_script"
                 }
             }
 
             "distributeFile" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_transfer_file/"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_transfer_file/"
+                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_transfer_file"
+                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_transfer_file"
+                }
+            }
+
+            "queryJobInstanceStatus" -> {
+                when (operationEnv) {
+                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/get_job_instance_status"
+                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/get_job_instance_status"
                 }
             }
 
             "queryJobInstanceLogs" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/batch_get_job_instance_ip_log/"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/batch_get_job_instance_ip_log/"
+                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/batch_get_job_instance_ip_log"
+                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/batch_get_job_instance_ip_log"
                 }
             }
 

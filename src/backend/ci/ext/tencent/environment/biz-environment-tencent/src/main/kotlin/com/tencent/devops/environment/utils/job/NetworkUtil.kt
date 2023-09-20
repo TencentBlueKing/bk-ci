@@ -29,6 +29,14 @@ object NetworkUtil {
             .build()
     }
 
+    fun createGetRequest(url: String, bkAuthorization: String): Request {
+        return Request.Builder()
+            .url(url)
+            .addHeader("X-Bkapi-Authorization", bkAuthorization)
+            .get()
+            .build()
+    }
+
     fun <T> executeHttpRequest(operateName: String, request: Request): JobCloudResp<T> {
         OkhttpUtils.doHttp(request).use { response ->
             try {

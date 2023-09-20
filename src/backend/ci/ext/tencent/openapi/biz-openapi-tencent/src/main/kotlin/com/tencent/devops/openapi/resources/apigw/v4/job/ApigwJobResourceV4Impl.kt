@@ -56,9 +56,10 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        jobInstanceId: Long
+        jobInstanceId: Long,
+        returnIpResult: Boolean
     ): Result<QueryJobInstanceStatusResult> {
-        return client.get(ServiceJobResource::class).queryJobInstanceStatus(userId, projectId, jobInstanceId)
+        return client.get(ServiceJobResource::class).queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
     }
 
     override fun queryJobInstanceLogs(

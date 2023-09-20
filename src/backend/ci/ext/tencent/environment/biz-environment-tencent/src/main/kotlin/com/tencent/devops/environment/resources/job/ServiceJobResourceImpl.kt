@@ -157,10 +157,11 @@ class ServiceJobResourceImpl @Autowired constructor(
     override fun queryJobInstanceStatus(
         userId: String,
         projectId: String,
-        jobInstanceId: Long
+        jobInstanceId: Long,
+        returnIpResult: Boolean
     ): Result<QueryJobInstanceStatusResult> {
         checkParam(userId, projectId)
-        return Result(queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId))
+        return queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
     }
 
     override fun queryJobInstanceLogs(
