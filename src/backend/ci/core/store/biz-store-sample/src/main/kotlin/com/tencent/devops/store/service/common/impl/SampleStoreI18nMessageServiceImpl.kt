@@ -36,10 +36,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SampleStoreI18nMessageServiceImpl::class.java)
+    }
 
     override fun getFileStr(
         projectCode: String,
@@ -67,6 +72,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                 "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        logger.info("downloadFile filePath:$filePath|save path:${file.path}")
         val response = OkhttpUtils.doPost(url, "")
         if (response.isSuccessful) {
             OkhttpUtils.downloadFile(response, file)
@@ -103,6 +109,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             projectCode = projectCode,
             fileDir = "$fileDir${separator}file"
         ) ?: return description
+        logger.info("descriptionAnalysis get fileNameList:$fileNameList")
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
