@@ -108,12 +108,11 @@ class ExtServiceProjectService @Autowired constructor(
     }
 
     fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
-        logger.info("getInstalledProjects params:[$accessToken|$userId|$storeCode|$storeType]")
+        logger.info("getInstalledProjects params:[$userId|$storeCode|$storeType]")
         val watch = StopWatch()
         // 获取用户有权限的项目列表
         watch.start("get accessible projects")
