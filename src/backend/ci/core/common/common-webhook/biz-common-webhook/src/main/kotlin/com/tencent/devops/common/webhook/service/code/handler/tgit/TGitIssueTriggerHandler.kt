@@ -116,7 +116,11 @@ class TGitIssueTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "issueAction",
                 triggerOn = event.objectAttributes.action ?: "",
-                included = WebhookUtils.convert(includeIssueAction)
+                included = WebhookUtils.convert(includeIssueAction),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.ISSUES_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             return listOf(urlFilter, eventTypeFilter, actionFilter)
         }
