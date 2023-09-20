@@ -164,20 +164,28 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             // 普通发布类型会重新生成一条插件版本记录
             UUIDUtil.generate()
         }
-        val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .updateAtomPkgInfo(
-                userId = userId,
-                atomId = finalAtomId,
-                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequests, taskDataMap)
+        if (!archiveAtomRequest.reUploadFlag) {
+            val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
+                .updateAtomPkgInfo(
+                    userId = userId,
+                    atomId = finalAtomId,
+                    projectCode = projectCode,
+                    atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(
+                        atomCode = atomCode,
+                        version = version,
+                        atomEnvRequests = atomEnvRequests,
+                        taskDataMap = taskDataMap
+                    )
+                )
+            if (updateAtomInfoResult.isNotOk()) {
+                return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
+            }
+            redisOperation.set(
+                key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
+                value = finalAtomId,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(1)
             )
-        if (updateAtomInfoResult.isNotOk()) {
-            return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
         }
-        redisOperation.set(
-            key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
-            value = finalAtomId,
-            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
-        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             packageFileInfos.forEach { packageFileInfo ->
@@ -229,7 +237,8 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomCode = atomCode,
             version = version,
             releaseType = null,
-            os = null
+            os = null,
+            reUploadFlag = true
         )
         val atomId = reArchiveAtomRequest.atomId
         val archiveAtomResult = archiveAtom(
@@ -248,7 +257,14 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             .updateAtomPkgInfo(
                 userId = userId,
                 atomId = atomId,
-                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequests, taskDataMap)
+                projectCode = reArchiveAtomRequest.projectCode,
+                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(
+                    atomCode = atomCode,
+                    version = version,
+                    atomEnvRequests = atomEnvRequests,
+                    taskDataMap = taskDataMap,
+                    reUploadFlag = true
+                )
             )
         if (updateAtomInfoResult.isNotOk()) {
             return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)

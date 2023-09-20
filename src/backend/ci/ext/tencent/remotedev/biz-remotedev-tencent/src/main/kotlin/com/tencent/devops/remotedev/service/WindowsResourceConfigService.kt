@@ -27,9 +27,10 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.service.utils.ByteUtils
-import com.tencent.devops.remotedev.dao.WindowsResourceConfigDao
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,76 +39,85 @@ import org.springframework.stereotype.Service
 @Service
 class WindowsResourceConfigService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val windowsResourceConfigDao: WindowsResourceConfigDao
+    private val windowsResourceTypeDao: WindowsResourceTypeDao,
+    private val windowsResourceZoneDao: WindowsResourceZoneDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsResourceConfigService::class.java)
     }
 
-    fun insertConfig(
-        config: WindowsResourceConfig
-    ) {
-        logger.info("insert new windows resource config $config")
-        windowsResourceConfigDao.save(dslContext, config)
+    fun getAllZone(): List<WindowsResourceZoneConfig> {
+        logger.info("get all windows resource zone")
+        return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
 
-    fun getAllConfig(): List<WindowsResourceConfig> {
-        logger.info("get all windows resource config")
-        return windowsResourceConfigDao.fetchAll(dslContext, true).map {
-            WindowsResourceConfig(
-                it.id,
-                ByteUtils.byte2Bool(it.availabled),
-                it.zone,
-                it.shortName,
-                it.size,
-                it.gpu,
-                it.cpu,
-                it.memory,
-                it.disk,
-                it.description
-            )
-        }
+    fun getAllType(): List<WindowsResourceTypeConfig> {
+        logger.info("get all windows resource type")
+        return windowsResourceTypeDao.fetchAll(dslContext, true)
     }
 
-    fun getConfig(id: Long): WindowsResourceConfig? {
-        logger.info("get windows resource config $id")
-        return windowsResourceConfigDao.fetchAny(dslContext, id)?.let {
-            WindowsResourceConfig(
-                it.id,
-                ByteUtils.byte2Bool(it.availabled),
-                it.zone,
-                it.shortName,
-                it.size,
-                it.gpu,
-                it.cpu,
-                it.memory,
-                it.disk,
-                it.description
-            )
-        }
+    fun getTypeConfig(
+        machineType: String
+    ): WindowsResourceTypeConfig? {
+        logger.info("get windows resource config type $machineType")
+        return windowsResourceTypeDao.fetchAny(dslContext, machineType)
+    }
+
+    fun getZoneConfig(
+        zone: String
+    ): WindowsResourceZoneConfig? {
+        logger.info("get windows resource config zone $zone")
+        return windowsResourceZoneDao.fetchAny(dslContext, zone)
     }
 
     // 新增windows硬件资源配置
-    fun addWindowsResource(windowsResourceConfig: WindowsResourceConfig): Boolean {
+    fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {
         logger.info("WorkspaceTemplateService|addWindowsResource|windowsResourceConfig|$windowsResourceConfig")
         // 模板信息写入DB
-        windowsResourceConfigDao.save(dslContext, windowsResourceConfig)
+        windowsResourceTypeDao.save(dslContext, windowsResourceConfig)
+        return true
+    }
+
+    // 新增windows硬件资源配置
+    fun addWindowsResourceZone(windowsResourceConfig: WindowsResourceZoneConfig): Boolean {
+        logger.info("WorkspaceTemplateService|addWindowsResourceZone|windowsResourceConfig|$windowsResourceConfig")
+        // 模板信息写入DB
+        windowsResourceZoneDao.save(dslContext, windowsResourceConfig)
         return true
     }
 
     // 更新windows硬件资源配置
     fun updateWindowsResource(
         id: Long,
-        windowsResourceConfig: WindowsResourceConfig
+        windowsResourceConfig: WindowsResourceTypeConfig
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWorkspaceTemplate|" +
-                "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
-        windowsResourceConfigDao.updateWindowsResourceConfig(
+        windowsResourceTypeDao.updateWindowsResourceConfig(
+            id = id,
+            config = windowsResourceConfig,
+            dslContext = dslContext
+        )
+        return true
+    }
+
+    // 更新windows硬件资源配置
+    fun updateWindowsResourceZone(
+        id: Long,
+        windowsResourceConfig: WindowsResourceZoneConfig
+    ): Boolean {
+        logger.info(
+            "WorkspaceTemplateService|updateWindowsResourceZone|" +
+                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
+        )
+
+        // 更新模板信息
+        windowsResourceZoneDao.updateWindowsResourceZoneConfig(
             id = id,
             config = windowsResourceConfig,
             dslContext = dslContext
@@ -120,7 +130,20 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info("WindowsResourceConfigService|deleteWindowsResource|id|$id")
         // 删除模板信息
-        windowsResourceConfigDao.deleteWindowsResource(
+        windowsResourceTypeDao.deleteWindowsResource(
+            id = id,
+            dslContext = dslContext
+        )
+
+        return true
+    }
+
+    fun deleteWindowsResourceZone(
+        id: Long
+    ): Boolean {
+        logger.info("WindowsResourceConfigService|deleteWindowsResourceZone|id|$id")
+        // 删除模板信息
+        windowsResourceZoneDao.deleteWindowsResource(
             id = id,
             dslContext = dslContext
         )

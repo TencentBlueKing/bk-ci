@@ -241,7 +241,7 @@ interface BuildListener {
             startTime = System.currentTimeMillis()
             DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
 
-            // 校验流水线是否还在运行中
+            // 校验流水线是否在运行中，且处在构建机未启动状态
             if (!dispatchService.checkRunning(event)) {
                 return
             }

@@ -96,6 +96,10 @@ object MQ {
     const val EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT = "e.engine.pipeline.build.review.fanout"
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT = "e.engine.pipeline.build.quality.check.fanout"
 
+    // 审核提醒队列（延迟队列）
+    const val ROUTE_PIPELINE_BUILD_REVIEW_REMINDER = "r.engine.pipeline.build.review.reminder.notify"
+    const val QUEUE_PIPELINE_BUILD_REVIEW_REMINDER = "q.engine.pipeline.build.review.reminder.notify"
+
     // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
 
@@ -297,4 +301,7 @@ object MQ {
     // 权限资源关联用户组修改事件
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
+
+    // 数据库分片
+    const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 }

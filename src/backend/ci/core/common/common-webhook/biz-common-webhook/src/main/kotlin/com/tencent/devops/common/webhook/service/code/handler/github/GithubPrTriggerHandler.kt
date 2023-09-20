@@ -125,7 +125,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     }
 
     override fun getMessage(event: GithubPullRequestEvent): String? {
-        return ""
+        return event.pullRequest.title
     }
 
     override fun getEnv(event: GithubPullRequestEvent): Map<String, Any> {

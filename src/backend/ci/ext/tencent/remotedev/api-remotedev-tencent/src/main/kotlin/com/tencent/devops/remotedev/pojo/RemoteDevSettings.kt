@@ -38,6 +38,8 @@ data class RemoteDevSettings(
     val basicSetting: Map<String, String> = emptyMap(),
     @ApiModelProperty("是否连接工蜂")
     val gitAttached: Boolean = false,
+    @ApiModelProperty("是否连接合作版工蜂")
+    val tGitAttached: Boolean = false,
     @ApiModelProperty("是否连接TAPD")
     val tapdAttached: Boolean = false,
     @ApiModelProperty("是否连接GitHub")

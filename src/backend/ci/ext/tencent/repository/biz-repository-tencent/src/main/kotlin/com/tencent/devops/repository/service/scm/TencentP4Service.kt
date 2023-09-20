@@ -11,6 +11,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.api.ServiceP4Resource
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.context.annotation.Primary
@@ -65,7 +66,7 @@ class TencentP4Service(
         return client.getScm(ServiceP4Resource::class).getFileContent(
             p4Port = p4Port,
             username = username,
-            password = URLEncoder.encode(password, "UTF-8"),
+            password = password,
             filePath = filePath,
             reversion = reversion
         ).data!!
@@ -128,6 +129,36 @@ class TencentP4Service(
             p4Port = repository.url,
             username = username,
             password = URLEncoder.encode(password, "UTF-8")
+        ).data!!
+    }
+
+    override fun getChangelist(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return client.getScm(ServiceP4Resource::class).getChangelist(
+            p4Port = repository.url,
+            username = username,
+            password = URLEncoder.encode(password, "UTF-8"),
+            change = change
+        ).data!!
+    }
+
+    override fun getShelvedChangeList(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return client.getScm(ServiceP4Resource::class).getShelvedChangeList(
+            p4Port = repository.url,
+            username = username,
+            password = URLEncoder.encode(password, "UTF-8"),
+            change = change
         ).data!!
     }
 }

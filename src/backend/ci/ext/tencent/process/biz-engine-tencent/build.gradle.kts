@@ -30,10 +30,9 @@ dependencies {
     api(project(":core:common:common-wechatwork"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:common:common-job"))
-    api(project(":ext:tencent:common:common-gcloud"))
     api(project(":core:process:biz-engine"))
     api(project(":ext:tencent:process:biz-base-tencent"))
     api(project(":ext:tencent:experience:api-experience-tencent")) // 版本体验依赖

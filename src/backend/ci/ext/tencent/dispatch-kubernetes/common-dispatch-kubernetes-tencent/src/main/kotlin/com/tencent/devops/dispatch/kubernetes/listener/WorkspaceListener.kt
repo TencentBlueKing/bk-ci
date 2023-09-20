@@ -55,7 +55,8 @@ class WorkspaceListener @Autowired constructor(
             mountType = event.mountType ?: event.devFile.checkWorkspaceMountType(),
             type = UpdateEventType.CREATE,
             bkTicket = event.bkTicket,
-            status = false
+            status = false,
+            autoAssign = event.devFile.autoAssign
         )
         try {
             logger.info("Start to handle workspace create ($event)")
@@ -67,6 +68,7 @@ class WorkspaceListener @Autowired constructor(
             backEvent.environmentUid = workspaceResponse.environmentUid
             backEvent.environmentHost = workspaceResponse.environmentHost
             backEvent.environmentIp = workspaceResponse.environmentIp
+            backEvent.resourceId = workspaceResponse.resourceId
             backEvent.status = true
         } catch (e: BuildFailureException) {
             backEvent.errorMsg = e.formatErrorMessage + e.message

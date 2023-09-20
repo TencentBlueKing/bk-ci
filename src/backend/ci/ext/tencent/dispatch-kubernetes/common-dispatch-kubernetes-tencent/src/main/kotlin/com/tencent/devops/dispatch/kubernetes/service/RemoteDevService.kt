@@ -72,6 +72,7 @@ class RemoteDevService @Autowired constructor(
             event = event,
             environmentUid = result.enviromentUid,
             regionId = result.regionId,
+            taskId = result.taskId,
             status = EnvStatusEnum.running,
             dslContext = dslContext
         )
@@ -114,7 +115,8 @@ class RemoteDevService @Autowired constructor(
             return WorkspaceResponse(
                 environmentUid = result.enviromentUid,
                 environmentHost = workspaceInfo.environmentHost,
-                environmentIp = workspaceInfo.environmentIP
+                environmentIp = workspaceInfo.environmentIP,
+                resourceId = result.resourceId
             )
         } else {
             dslContext.transaction { t ->

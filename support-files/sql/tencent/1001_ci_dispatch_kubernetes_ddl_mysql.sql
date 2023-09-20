@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE
     PROJECT_ID      varchar(64)   default ''                not null comment '项目ID',
     WORKSPACE_NAME  varchar(128)  default ''                not null comment '工作空间名称，唯一性',
     ENVIRONMENT_UID varchar(128)  default ''                not null comment 'DevCloud环境ID',
+    TASK_ID         varchar(128)  default ''                not null comment '任务ID',
 	REGION_ID 		int(11) 	  default 0 				not null comment '云区域ID' ,
     GIT_URL         varchar(1024) default ''                not null comment '工蜂项目地址',
     BRANCH          varchar(1024) default ''                not null comment '工蜂项目分支',
@@ -46,10 +47,14 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
 (
-    ZONE_ID varchar(32) default ''                not null comment '区域ID，SZ3，NJ1等',
+    CGS_ID  varchar(32)  default ''                not null comment 'CGS ID',
+    ZONE_ID varchar(32)  default ''                not null comment '区域ID，SZ3，NJ1等',
     CGS_IP  varchar(32)  default ''                not null comment 'ip',
-    STATUS int           default 0                 not null comment '0未使用 1使用中 2待销毁',
-    UNIQUE `uni_1` (`ZONE_ID`,`CGS_IP`)
+    MACHINE_TYPE  varchar(32)  default ''          not null comment '机型',
+    STATUS  int          default 0                 not null comment '0使用中 1待销毁 2销毁中 10注册中 11未使用',
+    LOCKED  boolean      default false             not null comment '该资源是否锁定',
+    USER_INSTANCE_List text NOT NULL COMMENT '拥有者或共享人详情',
+    UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
 

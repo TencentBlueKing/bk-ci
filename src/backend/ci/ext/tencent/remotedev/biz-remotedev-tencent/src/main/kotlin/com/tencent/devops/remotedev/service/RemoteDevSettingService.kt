@@ -27,9 +27,12 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -40,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GithubTransferService
+import com.tencent.devops.remotedev.service.transfer.GitTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -56,9 +60,11 @@ class RemoteDevSettingService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevFileDao: RemoteDevFileDao,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val gitTransferService: GitTransferService,
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
-    private val redisCacheService: RedisCacheService
+    private val redisCacheService: RedisCacheService,
+    private val whiteListService: WhiteListService
 ) {
 
     companion object {
@@ -83,7 +89,8 @@ class RemoteDevSettingService @Autowired constructor(
 
         return setting.copy(
             envsForFile = remoteDevFileDao.fetchFile(dslContext, userId),
-            gitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
+            gitAttached = kotlin.runCatching { gitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
+            tGitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
             githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
         )
     }
@@ -141,6 +148,23 @@ class RemoteDevSettingService @Autowired constructor(
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
+        // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
+        data.clientWhiteList?.let { isEnabled ->
+            if (isEnabled) {
+                whiteListService.addWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+            } else {
+                whiteListService.removeWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+            }
+        }
+
+        data.startWhiteList?.let { isEnabled ->
+            if (isEnabled) {
+                whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+            } else {
+                whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+            }
+        }
+
         computeWinUsageTime(data.userId)
     }
 
@@ -154,15 +178,31 @@ class RemoteDevSettingService @Autowired constructor(
             ?: redisCacheService.get(RedisKeys.REDIS_DEFAULT_AVAILABLE_TIME)?.toInt() ?: 24
     }
 
-    fun getAllUserSetting4Op(queryUser: String?): List<RemoteDevUserSettings> {
+    fun getAllUserSetting4Op(queryUser: String?, page: Int?, pageSize: Int?): Page<RemoteDevUserSettings> {
         logger.info("Start to getAllUserSetting4Op")
-        val settings = remoteDevSettingDao.fetchAllUserSettings(dslContext, queryUser)
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val count = remoteDevSettingDao.countAllUserSettings(
+            dslContext = dslContext,
+            queryUser = queryUser
+        )
+        val settings = remoteDevSettingDao.fetchAllUserSettings(
+            dslContext = dslContext,
+            queryUser = queryUser,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        )
             .mapNotNull {
                 JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.apply {
                     userId = it.userId
+                    remainExperienceDuration = it.winUsageRemainingTime
+                    clientWhiteList = whiteListService.checkInWhiteList(it.userId)
+                    startWhiteList = whiteListService.checkInGPUWhiteList(it.userId)
                 }
             }
         logger.info("getAllUserSetting4Op|result|$settings")
-        return settings
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = settings
+        )
     }
 }

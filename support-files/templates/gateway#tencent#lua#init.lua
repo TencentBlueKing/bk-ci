@@ -103,7 +103,7 @@ config = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
         useForceHeader = __BK_CI_KUBERNETES_USE_FORCE_HEADER__,
-        tags = {"rbac", "gray", "prod-v3", "stream-gray", "stream"},
+        tags = {"rbac", "gray", "prod-v3", "stream-gray", "stream", "rbac-gray", "prod", "devx"},
         codeccTags = {},
         codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
         api = {
@@ -113,7 +113,10 @@ config = {
         }
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
-    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__"
+    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
+    devx = {
+        loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
+    }
 }
 
 require("init_common")

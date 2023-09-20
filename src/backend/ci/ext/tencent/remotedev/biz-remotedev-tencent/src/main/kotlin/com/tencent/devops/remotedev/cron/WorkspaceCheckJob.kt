@@ -47,6 +47,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
+        private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
     }
 
     /**
@@ -57,10 +58,21 @@ class WorkspaceCheckJob @Autowired constructor(
         logger.info("=========>> Stop inactive workspace <<=========")
         // 无心跳工作空间休眠
         checkInactiveWorkspace()
-        // 计算用户win-gpu可用时长
+        // 计算用户 win-gpu 可用时长
         computeAllUserWinUsageTime()
-        // win-gpu无可用时长休眠
+        // win-gpu 无可用时长休眠
         checkUnavailableWorkspace()
+        // win-gpu 提醒
+        notifyWinBeforeSleep()
+    }
+
+    private fun notifyWinBeforeSleep() {
+        val redisLock = RedisLock(redisOperation, notifyWinBeforeSleep, 60L)
+        val lockSuccess = redisLock.tryLock()
+        if (lockSuccess) {
+            kotlin.runCatching { workspaceService.notifyWinBeforeSleep() }
+                .onFailure { logger.warn("computeAllUserWinUsageTime fail", it) }
+        }
     }
 
     private fun computeAllUserWinUsageTime() {
@@ -213,7 +225,7 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("sync START resource list get lock.")
-                workspaceService.syncStartCloudResourceList()
+                workspaceCommon.syncStartCloudResourceList()
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)

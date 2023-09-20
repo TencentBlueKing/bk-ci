@@ -33,7 +33,6 @@ package pipeline
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -150,7 +149,7 @@ func runCommandPipeline(pipeline *CommandPipeline, lines []string) (err error) {
 	logs.Info("scriptContent:", scriptContent)
 
 	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.sh", systemutil.GetWorkDir(), pipeline.SeqId, pipeline.Type)
-	err = ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
+	err = os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
 		return errors.Wrap(err, "write pipeline script file failed")
@@ -180,7 +179,7 @@ func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error 
 	logs.Info("scriptContent:", scriptContent)
 
 	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.bat", systemutil.GetWorkDir(), pipeline.SeqId, pipeline.Type)
-	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
+	err := os.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
 		return errors.Wrap(err, "write pipeline script file failed")

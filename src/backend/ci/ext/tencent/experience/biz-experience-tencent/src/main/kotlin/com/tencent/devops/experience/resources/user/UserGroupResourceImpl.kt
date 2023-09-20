@@ -64,7 +64,8 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
             projectId = projectId,
             offset = offset,
             limit = pageSizeNotNull,
-            returnPublic = returnPublic ?: false
+            returnPublic = returnPublic ?: false,
+            isRestrictListPermission = true
         )
         return Result(
             Page(

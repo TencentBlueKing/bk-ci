@@ -33,5 +33,23 @@ enum class WorkspaceSystemType {
 
     fun needHeartbeat() = this == LINUX
 
-    fun needReminderUser() = this == WINDOWS_GPU
+    fun checkWindows() = this == WINDOWS_GPU
+
+    fun needUpdateBkTicket() = this == LINUX
+
+    fun needSafeInitialization() = this == WINDOWS_GPU
+
+    fun afterCreateStatus(ownerType: WorkspaceOwnerType) = when {
+        this == LINUX -> WorkspaceStatus.RUNNING
+        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PERSONAL -> WorkspaceStatus.PREPARING
+        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> WorkspaceStatus.DELIVERING
+        else -> WorkspaceStatus.RUNNING
+    }
+
+    fun afterCreateNeedWs(ownerType: WorkspaceOwnerType) = when {
+        this == LINUX -> true
+        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PERSONAL -> false
+        this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> true
+        else -> true
+    }
 }

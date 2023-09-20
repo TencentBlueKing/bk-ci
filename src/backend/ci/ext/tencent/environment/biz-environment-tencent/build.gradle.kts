@@ -35,4 +35,5 @@ dependencies {
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
 }

@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -45,6 +43,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
+import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.factory.AtomBusHandleFactory
 import com.tencent.devops.store.pojo.atom.AtomEnv
@@ -85,6 +84,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val storeProjectRelDao: StoreProjectRelDao,
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
+    private val classifyDao: ClassifyDao,
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
@@ -257,46 +257,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         convertOsFlag: Boolean?
     ): Result<AtomEnv?> {
         logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus,$osName,$osArch,$convertOsFlag")
-        // 判断插件查看的权限
-        val atomResult = atomService.getPipelineAtom(
-            projectCode = projectCode,
-            atomCode = atomCode,
-            version = version,
-            atomStatus = atomStatus,
-            queryOfflineFlag = atomStatus == null
-        )
-        if (atomResult.isNotOk()) {
-            return Result(atomResult.status, atomResult.message ?: "")
-        }
-        val atom = atomResult.data ?: return Result(data = null)
-        val atomId = atom.id
-        val props = if (atom.props != null) JsonUtil.toJson(atom.props!!, formatted = false) else null
-        val classType = atom.classType
-        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion ||
-            (classType != MarketBuildAtomElement.classType && classType != MarketBuildLessAtomElement.classType)
-        ) {
-            // 如果是历史老插件则直接返回环境信息
-            return Result(
-                AtomEnv(
-                    atomId = atomId,
-                    atomCode = atom.atomCode,
-                    atomName = atom.name,
-                    atomStatus = atom.atomStatus,
-                    creator = atom.creator,
-                    version = atom.version,
-                    publicFlag = atom.defaultFlag ?: false,
-                    summary = atom.summary,
-                    docsLink = atom.docsLink,
-                    props = props,
-                    buildLessRunFlag = atom.buildLessRunFlag,
-                    createTime = atom.createTime,
-                    updateTime = atom.updateTime,
-                    classifyCode = atom.classifyCode,
-                    classifyName = atom.classifyName,
-                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
-                )
-            )
-        }
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
@@ -310,7 +270,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             projectCode = projectCode
         )
-        val atomDefaultFlag = atom.defaultFlag == true
+        val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -318,97 +278,102 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = version,
             atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("[project($projectCode)-plugin($atomCode)]")
         )
-        return Result(
-            if (atomBaseInfoRecord == null) {
-                null
-            } else {
-                val tAtom = TAtom.T_ATOM
-                val atomEnvInfoRecord = getAtomEnvInfoRecord(
-                    atomId = atomBaseInfoRecord[tAtom.ID],
-                    osName = osName,
-                    osArch = osArch,
-                    convertOsFlag = convertOsFlag
-                )
-                val status = atomBaseInfoRecord[tAtom.ATOM_STATUS] as Byte
-                val createTime = atomBaseInfoRecord[tAtom.CREATE_TIME] as LocalDateTime
-                val updateTime = atomBaseInfoRecord[tAtom.UPDATE_TIME] as LocalDateTime
-                val postEntryParam = atomEnvInfoRecord?.postEntryParam
-                val postCondition = atomEnvInfoRecord?.postCondition
-                var postFlag = true
-                val atomPostInfo = if (!postEntryParam.isNullOrBlank() && !postCondition.isNullOrBlank()) {
-                    AtomPostInfo(
-                        atomCode = atomCode,
-                        version = version,
-                        postEntryParam = postEntryParam,
-                        postCondition = postCondition
-                    )
-                } else {
-                    postFlag = false
-                    null
-                }
-                val atomPostMap = mapOf(
-                    ATOM_POST_FLAG to postFlag,
-                    ATOM_POST_ENTRY_PARAM to postEntryParam,
-                    ATOM_POST_CONDITION to postCondition
-                )
-                if (status in normalStatusList) {
-                    val normalProjectPostKey = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
-                    if (redisOperation.hget(normalProjectPostKey, version) == null) {
-                        redisOperation.hset(
-                            key = normalProjectPostKey,
-                            hashKey = version,
-                            values = JsonUtil.toJson(atomPostMap)
-                        )
-                    }
-                }
-                val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                    dslContext = dslContext,
-                    storeCode = atomCode,
-                    storeType = StoreTypeEnum.ATOM.type.toByte()
-                )
-                logger.info("$atomCode initProjectCode is :$initProjectCode")
-                val jobType = atomBaseInfoRecord[tAtom.JOB_TYPE]
-                AtomEnv(
-                    atomId = atomBaseInfoRecord[tAtom.ID],
-                    atomCode = atomBaseInfoRecord[tAtom.ATOM_CODE],
-                    atomName = atomBaseInfoRecord[tAtom.NAME],
-                    atomStatus = AtomStatusEnum.getAtomStatus(status.toInt()),
-                    creator = atomBaseInfoRecord[tAtom.CREATOR],
-                    version = atomBaseInfoRecord[tAtom.VERSION],
-                    publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
-                    summary = atomBaseInfoRecord[tAtom.SUMMARY],
-                    docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
-                    props = props?.let {
-                        storeI18nMessageService.parseJsonStrI18nInfo(
-                            jsonStr = it,
-                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
-                                storeType = StoreTypeEnum.ATOM,
-                                storeCode = atomCode,
-                                version = atomBaseInfoRecord[tAtom.VERSION]
-                            )
-                        )
-                    },
-                    buildLessRunFlag = atomBaseInfoRecord[tAtom.BUILD_LESS_RUN_FLAG],
-                    createTime = createTime.timestampmilli(),
-                    updateTime = updateTime.timestampmilli(),
-                    projectCode = initProjectCode,
-                    pkgPath = atomEnvInfoRecord?.pkgPath,
-                    language = atomEnvInfoRecord?.language,
-                    minVersion = atomEnvInfoRecord?.minVersion,
-                    target = atomEnvInfoRecord?.target,
-                    shaContent = atomEnvInfoRecord?.shaContent,
-                    preCmd = atomEnvInfoRecord?.preCmd,
-                    jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
-                    atomPostInfo = atomPostInfo,
-                    classifyCode = atom.classifyCode,
-                    classifyName = atom.classifyName,
-                    runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
-                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
-                    authFlag = atom.visibilityLevel != VisibilityLevelEnum.LOGIN_PUBLIC.name
+        val tAtom = TAtom.T_ATOM
+        val htmlTemplateVersion = atomBaseInfoRecord[tAtom.HTML_TEMPLATE_VERSION]
+        val atomEnvInfoRecord = if (htmlTemplateVersion != FrontendTypeEnum.HISTORY.typeVersion) {
+            getAtomEnvInfoRecord(
+                atomId = atomBaseInfoRecord[tAtom.ID],
+                osName = osName,
+                osArch = osArch,
+                convertOsFlag = convertOsFlag
+            )
+        } else {
+            null
+        }
+        val status = atomBaseInfoRecord[tAtom.ATOM_STATUS] as Byte
+        val createTime = atomBaseInfoRecord[tAtom.CREATE_TIME] as LocalDateTime
+        val updateTime = atomBaseInfoRecord[tAtom.UPDATE_TIME] as LocalDateTime
+        val postEntryParam = atomEnvInfoRecord?.postEntryParam
+        val postCondition = atomEnvInfoRecord?.postCondition
+        var postFlag = true
+        val atomPostInfo = if (!postEntryParam.isNullOrBlank() && !postCondition.isNullOrBlank()) {
+            AtomPostInfo(
+                atomCode = atomCode,
+                version = version,
+                postEntryParam = postEntryParam,
+                postCondition = postCondition
+            )
+        } else {
+            postFlag = false
+            null
+        }
+        val atomPostMap = mapOf(
+            ATOM_POST_FLAG to postFlag,
+            ATOM_POST_ENTRY_PARAM to postEntryParam,
+            ATOM_POST_CONDITION to postCondition
+        )
+        if (status in normalStatusList) {
+            val normalProjectPostKey = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
+            if (redisOperation.hget(normalProjectPostKey, version) == null) {
+                redisOperation.hset(
+                    key = normalProjectPostKey,
+                    hashKey = version,
+                    values = JsonUtil.toJson(atomPostMap)
                 )
             }
+        }
+        val initProjectCode = marketAtomCommonService.getInitProjectCode(
+            atomCode = atomCode,
+            classType = atomBaseInfoRecord[tAtom.CLASS_TYPE],
+            htmlTemplateVersion = atomBaseInfoRecord[tAtom.HTML_TEMPLATE_VERSION]
         )
+        logger.info("$atomCode initProjectCode is :$initProjectCode")
+        val jobType = atomBaseInfoRecord[tAtom.JOB_TYPE]
+        val classifyId = atomBaseInfoRecord[tAtom.CLASSIFY_ID]
+        val classifyRecord = classifyDao.getClassify(dslContext, classifyId)
+        val atomEnv = AtomEnv(
+            atomId = atomBaseInfoRecord[tAtom.ID],
+            atomCode = atomBaseInfoRecord[tAtom.ATOM_CODE],
+            atomName = atomBaseInfoRecord[tAtom.NAME],
+            atomStatus = AtomStatusEnum.getAtomStatus(status.toInt()),
+            creator = atomBaseInfoRecord[tAtom.CREATOR],
+            version = atomBaseInfoRecord[tAtom.VERSION],
+            publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
+            summary = atomBaseInfoRecord[tAtom.SUMMARY],
+            docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
+            props = atomBaseInfoRecord[tAtom.PROPS]?.let {
+                storeI18nMessageService.parseJsonStrI18nInfo(
+                    jsonStr = it,
+                    keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                        storeType = StoreTypeEnum.ATOM,
+                        storeCode = atomCode,
+                        version = atomBaseInfoRecord[tAtom.VERSION]
+                    )
+                )
+            },
+            buildLessRunFlag = atomBaseInfoRecord[tAtom.BUILD_LESS_RUN_FLAG],
+            createTime = createTime.timestampmilli(),
+            updateTime = updateTime.timestampmilli(),
+            projectCode = initProjectCode,
+            pkgPath = atomEnvInfoRecord?.pkgPath,
+            language = atomEnvInfoRecord?.language,
+            minVersion = atomEnvInfoRecord?.minVersion,
+            target = atomEnvInfoRecord?.target,
+            shaContent = atomEnvInfoRecord?.shaContent,
+            preCmd = atomEnvInfoRecord?.preCmd,
+            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            atomPostInfo = atomPostInfo,
+            classifyCode = classifyRecord?.classifyCode,
+            classifyName = classifyRecord?.classifyName,
+            runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
+            finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
+            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level
+        )
+        return Result(atomEnv)
     }
 
     private fun getAtomEnvInfoRecord(
@@ -455,7 +420,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
-            if (version.contains("*")) {
+            if (VersionUtils.isLatestVersion(version)) {
                 atomStatusList = normalStatusList.toMutableList()
                 val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
                 if (releaseCount > 0) {

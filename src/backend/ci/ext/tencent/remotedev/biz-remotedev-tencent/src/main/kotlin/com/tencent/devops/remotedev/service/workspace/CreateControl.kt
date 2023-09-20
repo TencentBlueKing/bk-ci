@@ -35,7 +35,10 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -44,20 +47,21 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.event.RemoteDevReminderEvent
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -86,21 +90,124 @@ class CreateControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevSettingService: RemoteDevSettingService,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val bkTicketServie: BkTicketService,
     private val whiteListService: WhiteListService,
     private val commonConfig: RemoteDevCommonConfig,
     private val workspaceCommon: WorkspaceCommon,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val deliverControl: DeliverControl
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
         private const val BLANK_TEMPLATE_ID = 1
+    }
+
+    fun asyncCreateWorkspace(
+        pmUserId: String,
+        projectId: String,
+        cgsId: String?,
+        autoAssign: Boolean?,
+        workspaceCreate: ProjectWorkspaceCreate
+    ) {
+        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
+        val mountType = WorkspaceMountType.START
+        val systemType = WorkspaceSystemType.WINDOWS_GPU
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(workspaceCreate.windowsType)
+            )
+
+        if (windowsConfig.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsType)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone)
+            )
+        }
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = PROJECT_NOT_EXIST
+        )
+
+        // 检查配额
+        projectWinCreateCheck(
+            projectInfo = projectInfo,
+            createCount = workspaceCreate.count,
+            type = workspaceCreate.windowsType,
+            zone = workspaceCreate.windowsZone,
+            adHoc = cgsId != null
+        )
+
+        for (i in 0 until workspaceCreate.count) {
+            logger.info("createWorkspace|mountType|$mountType")
+            val workspaceName = generateWorkspaceName(projectId)
+            val ws = Workspace(
+                workspaceId = null,
+                workspaceName = workspaceName,
+                projectId = projectId,
+                createUserId = pmUserId,
+                hostName = "",
+                workspaceMountType = mountType,
+                workspaceSystemType = systemType,
+                ownerType = WorkspaceOwnerType.PROJECT,
+                gpu = windowsConfig.gpu,
+                cpu = windowsConfig.cpu,
+                memory = windowsConfig.memory,
+                disk = windowsConfig.workspaceDisk(),
+                winConfigId = windowsConfig.id?.toInt()
+            )
+
+            workspaceDao.createWorkspace(
+                workspace = ws,
+                workspaceStatus = WorkspaceStatus.PREPARING,
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                groupName = null,
+                dslContext = dslContext
+            )
+
+            val bizId = MDC.get(TraceTag.BIZID)
+            // 发送给k8s
+            dispatcher.dispatch(
+                WorkspaceCreateEvent(
+                    userId = pmUserId,
+                    traceId = bizId,
+                    workspaceName = ws.workspaceName,
+                    devFilePath = ws.devFilePath,
+                    devFile = Devfile(
+                        zoneId = windowsZone.zoneShortName,
+                        machineType = windowsConfig.size,
+                        cgsId = cgsId,
+                        autoAssign = autoAssign
+                    ),
+                    settingEnvs = emptyMap(),
+                    projectId = projectId,
+                    mountType = mountType,
+                    ownerType = ws.ownerType
+                )
+            )
+            Thread.sleep(100)
+        }
     }
 
     // 处理创建工作空间逻辑
@@ -113,7 +220,13 @@ class CreateControl @Autowired constructor(
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         permissionService.checkUserCreate(userId)
 
-        val workspace = if (workspaceCreate.windowsResourceConfigId != null) {
+        if (workspaceCreate.windowsResourceConfigId != null) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.NEED_UPDATED.errorCode
+            )
+        }
+
+        val workspace = if (workspaceCreate.windowsType != null) {
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
@@ -126,7 +239,8 @@ class CreateControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = true,
             action = WorkspaceAction.PREPARING,
-            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType
+            systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType
         )
 
         return WorkspaceResponse(
@@ -163,12 +277,12 @@ class CreateControl @Autowired constructor(
             )
         if (event.status) {
             val pathWithNamespace = kotlin.runCatching {
-                GitUtils.getDomainAndRepoName(ws.url).second
+                GitUtils.getDomainAndRepoName(ws.repositoryUrl!!).second
             }.getOrNull()
             val opActions = kotlin.runCatching {
                 arrayOf(
                     WorkspaceAction.CREATE to getOpHistoryCreate(
-                        WorkspaceSystemType.valueOf(ws.systemType),
+                        ws.workspaceSystemType,
                         pathWithNamespace ?: "",
                         ws.branch ?: ""
                     ),
@@ -180,7 +294,7 @@ class CreateControl @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.RUNNING,
+                    status = ws.workspaceSystemType.afterCreateStatus(ws.ownerType),
                     hostName = event.environmentHost
                 )
                 remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
@@ -202,25 +316,33 @@ class CreateControl @Autowired constructor(
             }
 
             workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
-            val systemType = WorkspaceSystemType.valueOf(ws.systemType)
-            if (systemType.needHeartbeat()) {
+
+            if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
             }
 
-            if (systemType.needReminderUser()) {
-                val duration = remoteDevSettingService.userWinTimeLeft(event.userId)
-                val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toInt() ?: 60
-                dispatcher.dispatch(
-                    RemoteDevReminderEvent(
-                        userId = event.userId,
-                        workspaceName = event.workspaceName,
-                        delayMills = (duration - limit * 60).coerceAtLeast(60) * 1000
-                    )
+            if (ws.workspaceSystemType.needUpdateBkTicket()) {
+                kotlin.runCatching {
+                    bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
+                }
+            }
+
+            if (ws.workspaceSystemType.needSafeInitialization()) {
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
+            }
+
+            if (ws.workspaceSystemType.checkWindows()) {
+                workspaceWindowsDao.updateWindowsResourceId(
+                    dslContext,
+                    event.workspaceName,
+                    event.resourceId,
+                    event.environmentIp
                 )
             }
 
-            kotlin.runCatching {
-                bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost, event.mountType)
+            if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
+                // 直接return 不做websocket
+                return
             }
 
             // websocket 通知成功
@@ -239,8 +361,9 @@ class CreateControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_CREATE,
             status = event.status,
             action = WorkspaceAction.START,
-            systemType = WorkspaceSystemType.valueOf(ws.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(ws.workspaceMountType)
+            systemType = ws.workspaceSystemType,
+            workspaceMountType = ws.workspaceMountType,
+            ownerType = ws.ownerType
         )
     }
 
@@ -274,7 +397,7 @@ class CreateControl @Autowired constructor(
                 if (it is ErrorCodeException) throw it
                 else throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
-                    params = arrayOf("获取 devfile 异常 ${it.message}")
+                    params = arrayOf("获取 devfile 异常。")
                 )
             }
         } else {
@@ -288,7 +411,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -320,7 +443,7 @@ class CreateControl @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -343,11 +466,12 @@ class CreateControl @Autowired constructor(
                 workspaceFolder = devfile.workspaceFolder ?: "",
                 hostName = "",
                 workspaceMountType = mountType,
-                workspaceSystemType = devfile.checkWorkspaceSystemType()
+                workspaceSystemType = devfile.checkWorkspaceSystemType(),
+                ownerType = WorkspaceOwnerType.PERSONAL
             )
         }
 
-        doPreparing(userId, workspace)
+        doPreparing(workspace)
 
         // 替换部分devfile内容，兼容使用老remoting的情况
         if (!isImageInDefaultList(
@@ -355,11 +479,6 @@ class CreateControl @Autowired constructor(
                 redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet()
             )
         ) {
-//            devfile.runsOn?.container?.image = if (mountType == WorkspaceMountType.BCS) {
-//                "${commonConfig.bcsWorkspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }else{
-//                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
-//            }
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
@@ -394,21 +513,40 @@ class CreateControl @Autowired constructor(
     ): Workspace {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId!!)
-            ?: throw throw ErrorCodeException(
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType!!)
+            ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType.toString())
             )
 
         if (windowsConfig.available == false) {
-            throw throw ErrorCodeException(
+            throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType.toString())
+            )
+        }
+
+        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone!!)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone!!)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone!!)
             )
         }
 
         windowsGpuCheck(workspaceCreate, userId)
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType.name)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
+        val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType!!, workspaceCreate.windowsZone!!)
+        if (resourceCount < 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(resourceCount.toString())
+            )
+        }
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -420,13 +558,15 @@ class CreateControl @Autowired constructor(
             hostName = "",
             workspaceMountType = mountType,
             workspaceSystemType = systemType,
+            ownerType = WorkspaceOwnerType.PERSONAL,
             gpu = windowsConfig.gpu,
             cpu = windowsConfig.cpu,
             memory = windowsConfig.memory,
-            disk = windowsConfig.disk
+            disk = windowsConfig.workspaceDisk(),
+            winConfigId = windowsConfig.id?.toInt()
         )
 
-        doPreparing(userId, workspace)
+        doPreparing(workspace)
 
         val bizId = MDC.get(TraceTag.BIZID)
         // 发送给k8s
@@ -440,7 +580,7 @@ class CreateControl @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = Devfile(
                     version = "",
-                    zoneId = windowsConfig.zoneShortName,
+                    zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 ),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
@@ -460,9 +600,8 @@ class CreateControl @Autowired constructor(
             currentOs = workspaceCreate.currentOS
         )
 
-        whiteListService.numberLimit(
-            key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
-            id = userId,
+        whiteListService.windowsNumberLimit(
+            userId = userId,
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
                 userId = userId,
@@ -473,17 +612,59 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun doPreparing(userId: String, workspace: Workspace) {
+    private fun projectWinCreateCheck(
+        projectInfo: ProjectVO,
+        createCount: Int,
+        type: String,
+        zone: String,
+        adHoc: Boolean = false
+    ) {
+        val resourceCount = startCloudResourceCountCheck(type, zone)
+        if (!adHoc && resourceCount < createCount) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(resourceCount.toString())
+            )
+        }
+        val projectLimit = projectInfo.properties?.cloudDesktopNum
+            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
+            ?: 20
+        val count = workspaceDao.countUserWorkspace(
+            dslContext = dslContext,
+            projectId = projectInfo.englishName,
+            ownerType = WorkspaceOwnerType.PROJECT,
+            unionShared = false
+        )
+        if (count + createCount > projectLimit) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(projectLimit.toString())
+            )
+        }
+    }
+
+    private fun startCloudResourceCountCheck(type: String, zone: String) =
+        workspaceCommon.syncStartCloudResourceList().count {
+            it.status == 11 &&
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
+        }
+
+    private fun doPreparing(workspace: Workspace) {
         val userInfo = kotlin.runCatching {
-            client.get(ServiceTxUserResource::class).get(userId)
-        }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
+            client.get(ServiceTxUserResource::class).get(workspace.createUserId)
+        }.onFailure { logger.warn("get user ${workspace.createUserId} info error|${it.message}") }
+            .getOrElse { null }?.data
 
         workspaceDao.createWorkspace(
-            userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
-            dslContext = dslContext,
-            userInfo = userInfo
+            bgName = userInfo?.bgName,
+            deptName = userInfo?.deptName,
+            centerName = userInfo?.centerName,
+            groupName = userInfo?.groupName,
+            dslContext = dslContext
         )
     }
 
@@ -494,7 +675,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

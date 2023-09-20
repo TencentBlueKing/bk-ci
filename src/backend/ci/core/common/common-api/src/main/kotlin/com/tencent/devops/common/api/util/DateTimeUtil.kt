@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.util
 
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -126,6 +127,10 @@ object DateTimeUtil {
 
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
+    }
+
+    fun convertTimestampToLocalDateTime(timestamp: Long): LocalDateTime {
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
     }
 
     fun convertLocalDateTimeToDate(localDateTime: LocalDateTime): Date {

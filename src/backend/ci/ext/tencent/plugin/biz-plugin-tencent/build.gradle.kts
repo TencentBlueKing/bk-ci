@@ -26,14 +26,12 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
+    api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:plugin:api-plugin-tencent"))
     api(project(":ext:tencent:ticket:api-ticket-tencent"))
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:external:api-external"))
     api(project(":core:quality:api-quality"))
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))

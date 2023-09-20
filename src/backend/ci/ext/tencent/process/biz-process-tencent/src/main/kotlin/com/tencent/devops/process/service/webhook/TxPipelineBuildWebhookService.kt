@@ -32,9 +32,11 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.service.perm.PermFixService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
 
     @Autowired

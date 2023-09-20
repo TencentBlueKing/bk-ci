@@ -71,4 +71,9 @@ interface OPRepositoryResource {
     @POST
     @Path("/updateGitProjectId")
     fun updateGitProjectId()
+
+    @ApiOperation("更新github项目ID")
+    @POST
+    @Path("/updateGithubProjectId")
+    fun updateGithubProjectId()
 }

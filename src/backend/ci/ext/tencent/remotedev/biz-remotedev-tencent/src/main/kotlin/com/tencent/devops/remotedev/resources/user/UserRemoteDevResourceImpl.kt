@@ -33,18 +33,19 @@ import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
-import com.tencent.devops.remotedev.service.StartCloudService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.Executors
+import javax.ws.rs.core.HttpHeaders
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
@@ -53,8 +54,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val bkgptService: BKGPTService,
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
-    private val startCloudService: StartCloudService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val workspaceCommon: WorkspaceCommon
 ) : UserRemoteDevResource {
 
     companion object {
@@ -78,10 +79,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         data: BKGPT
     ): ChunkedOutput<String> {
         /* http/2 streaming
-        *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
-        *  所以不能使用 StreamingOutput
-        *  而改用 ChunkedOutput
-        * */
+         *  由于jersey 设置了缓冲区ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER
+         *  所以不能使用 StreamingOutput
+         *  而改用 ChunkedOutput
+         * */
         val output: ChunkedOutput<String> = ChunkedOutput<String>(String::class.java, SEPARATOR)
         executor.execute {
             try {
@@ -107,16 +108,30 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.preCiAgent(agentId, workspaceName))
     }
 
-    override fun afterStartCloudInit(userId: String, workspaceName: String?, agentId: String): Result<Boolean> {
-        return Result(startCloudService.afterStartCloudInit(userId, workspaceName, agentId))
-    }
-
     override fun getUser(userId: String): Result<String> {
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceConfig>> {
+    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
         logger.info("getAllWindowsResourceConfig|$userId")
-        return Result(windowsResourceConfigService.getAllConfig())
+        return Result(windowsResourceConfigService.getAllType())
+    }
+
+    override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
+        logger.info("getAllWindowsResourceZone|$userId")
+        return Result(windowsResourceConfigService.getAllZone())
+    }
+
+    override fun allWindowsQuota(userId: String): Result<Map<String, Map<String, Int>>> {
+        val res = mutableMapOf<String, MutableMap<String, Int>>()
+        logger.info("allWindowsQuota|$userId")
+        workspaceCommon.syncStartCloudResourceList().forEach {
+            val key = it.zoneId.replace(Regex("\\d+"), "")
+            val map = res.getOrPut(key) { mutableMapOf() }
+            if (it.status == 11 && it.locked != true) {
+                map[it.machineType] = (map[it.machineType] ?: 0) + 1
+            }
+        }
+        return Result(res)
     }
 }
