@@ -227,7 +227,7 @@ class SoftwareManageDao {
         statusList.forEach { (t, u) ->
             with(TUserInstalledRecords.T_USER_INSTALLED_RECORDS) {
                 dslContext.update(this)
-                    .set(STATUS, SoftwareInstallStatus.valueOf(u).ordinal)
+                    .set(STATUS, SoftwareInstallStatus.valueOf(u ?: "FAILED").ordinal)
                     .where(TASK_ID.eq(taskId))
                     .and(SOFTWARE_NAME.eq(t))
                     .execute()
