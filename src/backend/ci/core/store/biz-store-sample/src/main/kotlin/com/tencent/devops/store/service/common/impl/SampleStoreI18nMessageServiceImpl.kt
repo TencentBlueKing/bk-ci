@@ -80,12 +80,12 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
+        val filePath = "$projectCode/$fileDir" + i18nDir?.let { "/$i18nDir" }
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,
-            filePath = filePath
+            filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
         ).data
     }
 
