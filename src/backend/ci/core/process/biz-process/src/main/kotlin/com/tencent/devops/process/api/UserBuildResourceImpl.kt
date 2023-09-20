@@ -67,7 +67,7 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -75,7 +75,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                debugVersion = debugVersion,
                 channelCode = ChannelCode.BS
             )
         )

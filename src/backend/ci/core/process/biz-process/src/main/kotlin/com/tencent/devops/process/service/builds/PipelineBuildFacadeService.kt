@@ -189,7 +189,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        version: Int? = null
+        debugVersion: Int? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -208,18 +208,18 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-
+        // TODO #8161 普通构建需要判断是否已有发布版本
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        val model = if (version != null) {
+        val model = if (debugVersion != null) {
             val resource = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                version = debugVersion,
                 includeDraft = true
             )
             if (resource == null || resource.status == VersionStatus.COMMITTING) {
@@ -604,7 +604,7 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-
+        // TODO #8161 普通构建需要判断是否已有发布版本
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
