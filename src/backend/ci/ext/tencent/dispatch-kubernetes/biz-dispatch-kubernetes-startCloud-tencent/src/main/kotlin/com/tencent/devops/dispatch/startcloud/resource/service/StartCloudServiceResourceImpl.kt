@@ -33,7 +33,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.dispatch.startCloud.service.StartCloudInterfaceService
+import com.tencent.devops.dispatch.startcloud.service.StartCloudInterfaceService
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.springframework.beans.factory.annotation.Autowired
 
