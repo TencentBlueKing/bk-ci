@@ -27,8 +27,14 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -39,7 +45,10 @@ import org.springframework.stereotype.Service
 class ProjectUserService @Autowired constructor(
     val dslContext: DSLContext,
     val userDao: UserDao,
-    val projectUserDao: ProjectUserDao
+    val projectUserDao: ProjectUserDao,
+    val authProjectApi: AuthProjectApi,
+    val projectDao: ProjectDao,
+    val projectServiceCode: BSProjectServiceCodec
 ) {
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
@@ -80,6 +89,37 @@ class ProjectUserService @Autowired constructor(
                 name = it.name
             )
         }
+    }
+
+    fun getRemoteDevAdmin(projectIds: Set<String>): Map<String, Set<String>?> {
+        // 获取项目的云研发管理员
+        val projects = projectDao.listByCodes(dslContext, projectIds, enabled = true)
+        val res = mutableMapOf<String, MutableSet<String>?>()
+        projects.forEach { project ->
+            val projectProperties = project.properties?.let {
+                JsonUtil.toOrNull(project.properties.toString(), ProjectProperties::class.java)
+            } ?: return@forEach
+
+            if (projectProperties.remotedev != true) {
+                return@forEach
+            }
+
+            res[project.englishName] = projectProperties.remotedevManager?.split(";")?.toMutableSet()
+        }
+
+        // 获取项目的权限管理员
+        res.forEach { (projectId, members) ->
+            val auths = try {
+                authProjectApi.getProjectUsers(projectServiceCode, projectId, BkAuthGroup.MANAGER)
+            } catch (e: Exception) {
+                logger.warn("getRemoteDevAdmin request getProjectUsers error", e)
+                null
+            } ?: return@forEach
+
+            members?.addAll(auths)
+        }
+
+        return res
     }
 
     companion object {

@@ -153,6 +153,7 @@ class WorkspaceService @Autowired constructor(
                     needPermission = false
                 )
             }
+
             ShareWorkspace.OpType.DELETE -> shareWorkspace.sharedUser.forEach { user ->
                 deleteSharedWorkspace(
                     workspaceName = shareWorkspace.workspaceName,
@@ -333,7 +334,7 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
-            projectId = projectId,
+            projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
             assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
@@ -348,8 +349,8 @@ class WorkspaceService @Autowired constructor(
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
                 owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
-                )
-            }
+            )
+        }
     }
 
     fun getWorkspaceProject(): List<RemotedevProject> {

@@ -487,7 +487,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
+        projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
@@ -501,24 +501,33 @@ class WorkspaceDao {
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
-        projectId?.let {
-            conditions.add(t1.PROJECT_ID.eq(projectId))
+
+        if (!projectIds.isNullOrEmpty()) {
+            if (projectIds.size == 1) {
+                conditions.add(t1.PROJECT_ID.eq(projectIds.first()))
+            } else {
+                conditions.add(t1.PROJECT_ID.`in`(projectIds))
+            }
         }
 
         ip?.let {
             conditions.add(
-                    t1.NAME.`in`(
+                t1.NAME.`in`(
                     DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
                         t3.HOST_IP.endsWith(".$ip")
                     )
-                    )
+                )
             )
         }
 
         return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
             .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
-            .let { if (assignType != null) { it.and(t2.ASSIGN_TYPE.eq(assignType.name)) } else it }
+            .let {
+                if (assignType != null) {
+                    it.and(t2.ASSIGN_TYPE.eq(assignType.name))
+                } else it
+            }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
