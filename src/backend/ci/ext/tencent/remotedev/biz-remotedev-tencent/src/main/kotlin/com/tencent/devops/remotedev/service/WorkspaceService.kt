@@ -226,7 +226,12 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun getProjectWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<ProjectWorkspace> {
+    fun getProjectWorkspaceList(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<ProjectWorkspace> {
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
@@ -324,7 +329,11 @@ class WorkspaceService @Autowired constructor(
                             displayName = it.displayName,
                             status = it.status,
                             lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                            sleepingTime = if (it.status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
+                            sleepingTime = if (it.status.checkSleeping()) {
+                                it.lastStatusUpdateTime?.timestamp()
+                            } else {
+                                null
+                            },
                             createUserId = it.createUserId,
                             hostName = detail?.hostIP,
                             workspaceMountType = it.workspaceMountType,
@@ -350,7 +359,11 @@ class WorkspaceService @Autowired constructor(
                             displayName = it.displayName,
                             status = it.status,
                             lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                            sleepingTime = if (it.status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
+                            sleepingTime = if (it.status.checkSleeping()) {
+                                it.lastStatusUpdateTime?.timestamp()
+                            } else {
+                                null
+                            },
                             createUserId = it.createUserId,
                             hostName = detail.hostIP,
                             workspaceMountType = it.workspaceMountType,
