@@ -1,35 +1,33 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("ScriptExecuteService")
-class ScriptExecuteService {
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
+class ScriptExecuteService @Autowired constructor(
+    private val authenticationService: AuthenticationService
+) {
     fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): Result<ScriptExecuteResult> {
-        val bkAppCode = appCode
-        val bkAppSecret = appSecret
-        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${jobCloudScriptExecuteReq.bkUsername}\"}"
-//        val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script/" // 正式 TODO：改为配置项
-        val scriptExecuteUrl = "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_execute_script/" // 预发布 TODO：改为配置项
-        jobCloudScriptExecuteReq.bkAppCode = appCode
-        jobCloudScriptExecuteReq.bkAppSecret = appSecret
-//        scriptExecuteJobCloudReq.bk_scope_type = bkScopeType!! // TODO：改为配置项
-//        scriptExecuteJobCloudReq.bk_scope_id = bkScopeId!! // TODO：改为配置项
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
+            authenticationService.appAuthentication(
+                operationName = "executeScript",
+                operationEnv = "stag",
+                bkUsername = jobCloudScriptExecuteReq.bkUsername
+            )
+        jobCloudScriptExecuteReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
+        jobCloudScriptExecuteReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
+        jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
+        jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val request = NetworkUtil.createPostRequest(
-            url = scriptExecuteUrl,
-            bkAuthorization = bkAuthorization,
+            url = jobCloudAuthenticationReq.url,
+            bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
             jobCloudReq = jobCloudScriptExecuteReq::class.java
         )
         val jobCloudResp: JobCloudResp<ScriptExecuteResult> = NetworkUtil.executeHttpRequest("executeScript", request)

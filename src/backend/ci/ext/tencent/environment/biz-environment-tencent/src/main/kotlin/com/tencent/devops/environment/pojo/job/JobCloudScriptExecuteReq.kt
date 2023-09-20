@@ -5,12 +5,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @Suppress("ALL")
 data class JobCloudScriptExecuteReq(
-    @ApiModelProperty(value = "资源范围类型", notes="biz - 业务，biz_set - 业务集", required = true)
+    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
     @JsonProperty("bk_scope_type")
-    val bkScopeType: String,
-    @ApiModelProperty(value = "资源范围ID", notes="与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
+    var bkScopeType: String,
+    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
     @JsonProperty("bk_scope_id")
-    val bkScopeId: String,
+    var bkScopeId: String,
     @ApiModelProperty(value = "脚本内容Base64", required = true)
     @JsonProperty("script_content")
     val scriptContent: String,

@@ -3,32 +3,32 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.utils.job.NetworkUtil
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("FileDistributeService")
-class FileDistributeService {
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
+class FileDistributeService @Autowired constructor(
+    private val authenticationService: AuthenticationService
+) {
     fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): Result<FileDistributeResult> {
-        val bkAppCode = appCode
-        val bkAppSecret = appSecret
-        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${jobCloudFileDistributeReq.bkUsername}\"}"
-        val fileDistributeUrl = "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_transfer_file/" // 预发布 TODO：改为配置项
-        jobCloudFileDistributeReq.bkAppCode = appCode!!
-        jobCloudFileDistributeReq.bkAppSecret = appSecret!!
-//        fileDistributeJobCloudReq.bk_scope_type = bkScopeType!! // TODO：改为配置项
-//        fileDistributeJobCloudReq.bk_scope_id = bkScopeId!! // TODO：改为配置项
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
+            authenticationService.appAuthentication(
+                operationName = "distributeFile",
+                operationEnv = "stag",
+                bkUsername = jobCloudFileDistributeReq.bkUsername
+            )
+        jobCloudFileDistributeReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
+        jobCloudFileDistributeReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
+        jobCloudFileDistributeReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
+        jobCloudFileDistributeReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val request = NetworkUtil.createPostRequest(
-            url = fileDistributeUrl,
-            bkAuthorization = bkAuthorization,
+            url = jobCloudAuthenticationReq.url,
+            bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
             jobCloudReq = jobCloudFileDistributeReq::class.java
         )
         val jobCloudResp: JobCloudResp<FileDistributeResult> = NetworkUtil.executeHttpRequest("distributeFile", request)

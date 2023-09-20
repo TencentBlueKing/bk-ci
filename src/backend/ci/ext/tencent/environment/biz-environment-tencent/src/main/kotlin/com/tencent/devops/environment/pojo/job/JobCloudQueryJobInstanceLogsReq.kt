@@ -7,10 +7,10 @@ import io.swagger.annotations.ApiModelProperty
 class JobCloudQueryJobInstanceLogsReq(
     @ApiModelProperty(value = "资源范围类型", notes="biz - 业务，biz_set - 业务集", required = true)
     @JsonProperty("bk_scope_type")
-    val bkScopeType: String,
+    var bkScopeType: String,
     @ApiModelProperty(value = "资源范围ID", notes="与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
     @JsonProperty("bk_scope_id")
-    val bkScopeId: String,
+    var bkScopeId: String,
     @ApiModelProperty(value = "作业实例ID", required = true)
     @JsonProperty("job_instance_id")
     val jobInstanceId: Long,
