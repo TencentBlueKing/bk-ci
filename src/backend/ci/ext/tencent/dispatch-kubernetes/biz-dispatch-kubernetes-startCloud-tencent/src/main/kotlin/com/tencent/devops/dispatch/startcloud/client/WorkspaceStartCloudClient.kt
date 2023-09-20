@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.startCloud.client
+package com.tencent.devops.dispatch.startcloud.client
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -9,20 +9,22 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startCloud.pojo.CgsQueryReq
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentOperate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentOperateRsp
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShareRep
-import com.tencent.devops.dispatch.startCloud.pojo.Page
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateRsp
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDefaltRsp
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentLockedVmRsp
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperateRsp
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentResourceDataRsp
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShareRep
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.pojo.Page
+import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -33,7 +35,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -63,18 +64,19 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
 
+    @Value("\${bcsCloud.token}")
+    val bcsCloudToken: String = ""
+
+    @Value("\${bcsCloud.apiUrl}")
+    val bcsCloudUrl: String = ""
+
     fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
-        val url = "$apiUrl/openapi/computer/create"
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
         val body = JsonUtil.toJson(environment, false)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(
-                makeHeaders(
-                    body
-                )
-                    .toHeaders()
-            )
+            .headers(makeBcsHeaders().toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
@@ -110,7 +112,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        " ${environment.zoneId}地区${environment.machineType}型云桌面资源不足(${environmentRsp.code})"
+                        " ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
+                                "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw BuildFailureException(
@@ -128,6 +131,51 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getLockedVmList(): List<String> {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/listvm"
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get locked vm list response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        " 获取locked vm接口异常: ${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentLockedVmRsp = jacksonObjectMapper().readValue(responseContent)
+                when (environmentRsp.code) {
+                    OK -> return environmentRsp.data.vmList
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        " 获取locked vm接口返回异常:" +
+                                "${environmentRsp.code}-${environmentRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get locked vm list SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = " 获取locked vm接口超时, url: $url"
             )
         }
     }
@@ -499,6 +547,12 @@ class WorkspaceStartCloudClient @Autowired constructor(
         headerBuilder["x-start-timestamp"] = timestampMillis
         headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
 
+        return headerBuilder
+    }
+
+    fun makeBcsHeaders(): Map<String, String> {
+        val headerBuilder = mutableMapOf<String, String>()
+        headerBuilder["BK-Devops-Token"] = bcsCloudToken
         return headerBuilder
     }
 }

@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.startCloud.pojo
+package com.tencent.devops.dispatch.startcloud.pojo
 
 data class EnvironmentOperate(
     val uid: String

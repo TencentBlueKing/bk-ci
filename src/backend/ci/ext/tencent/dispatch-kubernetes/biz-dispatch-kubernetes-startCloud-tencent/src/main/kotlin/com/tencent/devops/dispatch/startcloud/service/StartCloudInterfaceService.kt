@@ -25,18 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startCloud.service
+package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startCloud.dao.WindowsGpuResourceDao
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.dao.WindowsGpuResourceDao
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -103,6 +104,10 @@ class StartCloudInterfaceService @Autowired constructor(
     // 同步更新云桌面资源池列表
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
         val resourceList = workspaceClient.getResourceList()
+        val lockedVms = workspaceClient.getLockedVmList()
+        resourceList.forEach {
+            if (it.cgsId in lockedVms) it.locked = true
+        }
         logger.info("syncStartCloudResourceList|resourceList|$resourceList")
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
@@ -122,7 +127,8 @@ class StartCloudInterfaceService @Autowired constructor(
                 zoneId = it.zoneId,
                 machineType = it.machineType,
                 status = it.status,
-                userInstanceList = null
+                userInstanceList = null,
+                locked = ByteUtils.byte2Bool(it.locked)
             )
         }
     }

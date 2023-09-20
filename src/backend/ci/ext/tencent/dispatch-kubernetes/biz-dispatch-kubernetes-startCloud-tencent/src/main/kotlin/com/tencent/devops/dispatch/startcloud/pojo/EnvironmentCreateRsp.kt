@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.startCloud.pojo
+package com.tencent.devops.dispatch.startcloud.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
@@ -13,6 +13,8 @@ data class EnvironmentCreateRsp(
         val cgsIp: String,
         val cloudZoneId: String,
         val existed: Boolean,
-        val resourceId: String
+        val resourceId: String,
+        val envId: String? = "",
+        val curLaunchId: String
     )
 }
