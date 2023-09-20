@@ -325,7 +325,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      * 更改store组件成员的调试项目
      */
     override fun changeMemberTestProjectCode(
-        accessToken: String,
         userId: String,
         storeMember: String,
         projectCode: String,
@@ -354,7 +353,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         try {
             // 判断用户是否项目的成员
             validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = storeMember
             ).data

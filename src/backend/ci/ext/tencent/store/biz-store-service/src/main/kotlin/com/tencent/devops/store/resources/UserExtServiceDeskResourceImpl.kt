@@ -67,7 +67,11 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
         return extServiceBaseService.getExtensionServiceInfo(userId, serviceId)
     }
 
-    override fun offlineService(userId: String, serviceCode: String, serviceOffline: ServiceOfflineDTO): Result<Boolean> {
+    override fun offlineService(
+        userId: String,
+        serviceCode: String,
+        serviceOffline: ServiceOfflineDTO
+    ): Result<Boolean> {
         return extServiceBaseService.offlineService(
             userId = userId,
             serviceCode = serviceCode,
@@ -76,7 +80,6 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
     }
 
     override fun listDeskExtService(
-        accessToken: String,
         userId: String,
         serviceName: String?,
         page: Int?,

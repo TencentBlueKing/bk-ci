@@ -109,9 +109,6 @@ interface UserExtServiceDeskResource {
     @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
     @Path("/list")
     fun listDeskExtService(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
