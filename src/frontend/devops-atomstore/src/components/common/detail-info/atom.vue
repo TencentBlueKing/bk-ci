@@ -444,7 +444,6 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 display: inline-block;
-                width: calc(100% - 90px);
             }
         }
         .title-with-img {
@@ -504,7 +503,7 @@
             }
         }
         .detail-info.detail-label {
-            width: 800px;
+            width: 998px;
             padding-left: 70px;
             display: inline-block;
             position: relative;
