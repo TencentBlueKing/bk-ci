@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
@@ -70,6 +71,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     @Autowired
     lateinit var storeFileService: StoreFileService
+
+    @Autowired
+    lateinit var atomDao: AtomDao
 
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
@@ -235,7 +239,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 ) ?: return@forEach
                 val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
                 if (!description.isNullOrBlank()) {
-                    fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = getDescriptionI18nContent(
+                    val descriptionStr = getDescriptionI18nContent(
                         userId = userId,
                         projectCode = projectCode,
                         fileDir = fileDir,
@@ -243,6 +247,18 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                         content = description,
                         language = language
                     )
+                    fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
+                    if (language == commonConfig.devopsDefaultLocaleLanguage) {
+                        val atomCode = fileDir.substringBefore("/")
+                        val version = fileDir.substringAfter("/")
+                        atomDao.updateAtomDescriptionByCode(
+                            dslContext = dslContext,
+                            userId = userId,
+                            atomCode = atomCode,
+                            description = descriptionStr,
+                            version = version
+                        )
+                    }
                 }
                 val i18nMessages = generateI18nMessages(
                     fieldLocaleInfos = fieldLocaleInfos,
