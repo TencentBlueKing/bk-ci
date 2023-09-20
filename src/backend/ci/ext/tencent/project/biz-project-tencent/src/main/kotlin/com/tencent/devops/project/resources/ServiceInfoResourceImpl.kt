@@ -39,6 +39,6 @@ class ServiceInfoResourceImpl @Autowired constructor(
     private val serviceProjectService: ServiceProjectService
 ) : ServiceInfoResource {
     override fun getServiceList(userId: String): Result<List<ServiceVO>?> {
-        return serviceProjectService.getServiceList()
+        return serviceProjectService.getServiceList(userId = userId)
     }
 }
