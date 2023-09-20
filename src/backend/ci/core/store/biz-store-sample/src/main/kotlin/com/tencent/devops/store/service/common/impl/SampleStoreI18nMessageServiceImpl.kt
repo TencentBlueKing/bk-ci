@@ -112,6 +112,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             fileDir = "$fileDir${separator}file"
         )
         if (fileNameList.isNullOrEmpty()) {
+            logger.info("descriptionAnalysis get fileNameList fail")
             return description
         }
         logger.info("descriptionAnalysis get fileNameList:$fileNameList")
