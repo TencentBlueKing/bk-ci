@@ -117,9 +117,6 @@ interface UserStoreMemberResource {
     @PUT
     @Path("/test/project/change")
     fun changeMemberTestProjectCode(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

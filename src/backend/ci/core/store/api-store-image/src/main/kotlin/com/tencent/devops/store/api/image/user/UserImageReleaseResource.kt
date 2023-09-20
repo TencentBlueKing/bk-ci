@@ -60,9 +60,6 @@ interface UserImageReleaseResource {
     @POST
     @Path("/image/imageCodes/{imageCode}/store/rel")
     fun addMarketImage(
-        @ApiParam("PAAS_CC Token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
