@@ -244,6 +244,7 @@ class TGitReviewTriggerHandler(
         GitReviewEvent.ACTION_APPROVING -> WebhookI18nConstants.TGIT_REVIEW_APPROVING_EVENT_DESC
         GitReviewEvent.ACTION_CHANGE_DENIED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
         GitReviewEvent.ACTION_CHANGE_REQUIRED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
+        GitReviewEvent.ACTION_EMPTY -> WebhookI18nConstants.TGIT_REVIEW_CREATED_EVENT_DESC
         else -> ""
     }
 }
