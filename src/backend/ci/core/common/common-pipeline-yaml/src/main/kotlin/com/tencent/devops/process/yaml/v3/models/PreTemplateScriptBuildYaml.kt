@@ -36,7 +36,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.Job
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage

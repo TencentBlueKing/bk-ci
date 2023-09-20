@@ -51,4 +51,15 @@ class PipelineSettingVersionService @Autowired constructor(
             version = version
         ) ?: PipelineSettingVersion(projectId = projectId, pipelineId = pipelineId, version = version)
     }
+
+    fun getLatestSettingVersion(
+        projectId: String,
+        pipelineId: String
+    ): PipelineSettingVersion? {
+        return pipelineSettingVersionDao.getLatestSettingVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
 }

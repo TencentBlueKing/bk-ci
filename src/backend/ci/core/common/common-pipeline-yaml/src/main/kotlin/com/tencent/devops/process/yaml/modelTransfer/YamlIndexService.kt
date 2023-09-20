@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-
 @Component
 class YamlIndexService @Autowired constructor(
     val dispatchTransfer: DispatchTransfer

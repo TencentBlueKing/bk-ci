@@ -501,8 +501,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-
-        val newModel = try {
+        val newResource = try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -527,7 +526,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
-            model = newModel.model,
+            model = newResource.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
             versionStatus = if (isDefaultBranch) {
@@ -535,6 +534,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             } else {
                 VersionStatus.BRANCH
             }
+        )
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = result.pipelineId,
+            setting = newResource.setting,
+            checkPermission = false
         )
         if (!isDefaultBranch) {
             pipelineBranchVersionService.saveBranchVersion(
@@ -556,7 +562,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newModel = try {
+        val newResource = try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -578,13 +584,22 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
         }
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = newResource.setting,
+            checkPermission = false,
+            dispatchPipelineUpdateEvent = false
+        )
         val result = editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            model = newModel.model,
+            model = newResource.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
+            savedSetting = savedSetting,
             versionStatus = if (isDefaultBranch) {
                 VersionStatus.RELEASED
             } else {
@@ -845,7 +860,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             create = false,
             updateLastModifyUser = true,
-            savedSetting = draftSetting,
+            savedSetting = savedSetting,
             versionStatus = VersionStatus.RELEASED,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
