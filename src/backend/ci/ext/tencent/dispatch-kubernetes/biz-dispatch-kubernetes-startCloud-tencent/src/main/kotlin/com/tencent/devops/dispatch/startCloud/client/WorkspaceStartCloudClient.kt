@@ -15,6 +15,8 @@ import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentOperate
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentOperateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentResourceDataRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUnShare
@@ -25,6 +27,7 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -341,6 +344,65 @@ class WorkspaceStartCloudClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId environment get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun operateWorkspace(
+        userId: String,
+        action: EnvironmentAction,
+        workspaceName: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentOperateRsp.EnvironmentOperateRspData {
+        val url = "$apiUrl/api/v1/remotedevenv/${action.action}"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        logger.info("$userId ${action.action} workspace url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId ${action.action} workspace response: $responseContent")
+                val environmentOpRsp: EnvironmentOperateRsp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == environmentOpRsp.code) {
+                    // 记录操作历史
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        environmentUid = environmentOperate.uid,
+                        operator = userId,
+                        action = EnvironmentAction.START
+                    )
+
+                    return environmentOpRsp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentOpRsp.code}-${environmentOpRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,

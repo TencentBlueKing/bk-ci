@@ -30,6 +30,8 @@ package com.tencent.devops.remotedev.pojo
 enum class WebSocketActionType {
     WORKSPACE_CREATE, // 创建workspace
     WORKSPACE_START, // 启动workspace
+    WORKSPACE_STOP, // 停止workspace
+    WORKSPACE_RESTART, // 重启workspace
     WORKSPACE_SLEEP, // 休眠workspace
     WORKSPACE_DELETE, // 销毁workspace
     WORKSPACE_NEED_RENEWAL, // 需要续期workspace

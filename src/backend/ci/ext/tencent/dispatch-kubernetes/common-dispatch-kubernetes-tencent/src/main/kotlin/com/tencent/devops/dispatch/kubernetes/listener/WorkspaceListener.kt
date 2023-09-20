@@ -109,6 +109,9 @@ class WorkspaceListener @Autowired constructor(
                 UpdateEventType.DELETE -> {
                     remoteDevService.deleteWorkspace(event)
                 }
+                UpdateEventType.RESTART -> {
+                    remoteDevService.restartWorkspace(event)
+                }
                 else -> {
                 }
             }

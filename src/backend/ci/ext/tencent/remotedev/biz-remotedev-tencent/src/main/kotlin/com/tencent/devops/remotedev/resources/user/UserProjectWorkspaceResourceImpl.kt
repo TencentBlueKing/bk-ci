@@ -36,6 +36,9 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
@@ -48,7 +51,10 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val createControl: CreateControl,
     private val deliverControl: DeliverControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val startWorkspaceHandler: StartWorkspaceHandler,
+    private val stopWorkspaceHandler: StopWorkspaceHandler,
+    private val restartWorkspaceHandler: RestartWorkspaceHandler
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -109,5 +115,20 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
                 return Result(false)
             }
         )
+    }
+
+    override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        startWorkspaceHandler.startWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
+        return Result(true)
+    }
+
+    override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+        return Result(true)
     }
 }

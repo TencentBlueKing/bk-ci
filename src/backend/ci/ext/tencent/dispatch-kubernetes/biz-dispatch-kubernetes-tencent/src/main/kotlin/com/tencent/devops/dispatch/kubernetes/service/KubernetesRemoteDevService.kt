@@ -72,6 +72,10 @@ class KubernetesRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
         TODO("Not yet implemented")
     }

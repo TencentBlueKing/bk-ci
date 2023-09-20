@@ -57,6 +57,11 @@ interface RemoteDevInterface {
     fun stopWorkspace(userId: String, workspaceName: String): String
 
     /**
+     * 重启远程工作空间
+     */
+    fun restartWorkspace(userId: String, workspaceName: String): String
+
+    /**
      * 删除远程工作空间
      */
     fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String

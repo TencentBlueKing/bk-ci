@@ -132,4 +132,49 @@ interface UserProjectWorkspaceResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @ApiOperation("开启工作空间")
+    @POST
+    @Path("/workspace/{workspaceName}/start")
+    fun startWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("休眠工作空间")
+    @POST
+    @Path("/workspace/{workspaceName}/stop")
+    fun stopWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("休眠工作空间")
+    @POST
+    @Path("/workspace/{workspaceName}/restart")
+    fun restartWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

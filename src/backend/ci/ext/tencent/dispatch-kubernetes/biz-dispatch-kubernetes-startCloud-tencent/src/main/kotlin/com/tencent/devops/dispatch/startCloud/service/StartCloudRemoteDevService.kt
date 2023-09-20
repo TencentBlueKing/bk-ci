@@ -30,20 +30,26 @@ package com.tencent.devops.dispatch.startCloud.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -55,7 +61,8 @@ import org.springframework.stereotype.Service
 class StartCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceClient: WorkspaceStartCloudClient
+    private val workspaceClient: WorkspaceStartCloudClient,
+    private val workspaceRedisUtils: WorkspaceRedisUtils
 ) : RemoteDevInterface {
 
     @Value("\${startCloud.appName}")
@@ -104,11 +111,42 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
-        return EMPTY
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.START,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
+            )
+        )
+
+        return resp.taskUid
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
-        return EMPTY
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.STOP,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
+            )
+        )
+
+        return resp.taskUid
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.RESTART,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
+            )
+        )
+
+        return resp.taskUid
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
@@ -137,7 +175,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        return true
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
@@ -161,9 +201,43 @@ class StartCloudRemoteDevService @Autowired constructor(
             regionId = workspaceInfo.regionId
         )
     }
+
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
-        return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+        logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
+        // 将task放入缓存，等待回调
+        workspaceRedisUtils.refreshTaskStatus(
+            userId = userId,
+            taskUid = taskId,
+            taskStatus = TaskStatus(taskId)
+        )
+        // 轮训十分钟
+        val startTime = System.currentTimeMillis()
+        loop@ while (true) {
+            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+                logger.error("Wait task: $taskId finish timeout(10min)")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
+                )
+            }
+            Thread.sleep(1 * 1000)
+            val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
+            if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                return if (taskStatus.status == TaskStatusEnum.successed) {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+                } else {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
+                }
+            }
+        }
     }
+
+    private fun getEnvironmentUid(workspaceName: String): String {
+        val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+        return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""
