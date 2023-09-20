@@ -383,6 +383,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
+                    versionStatus = versionStatus,
                     templateId = templateId,
                     description = null,
                     yamlStr = yaml,
