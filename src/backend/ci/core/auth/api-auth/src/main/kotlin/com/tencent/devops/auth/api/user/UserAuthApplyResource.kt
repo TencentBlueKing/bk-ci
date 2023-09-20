@@ -32,7 +32,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("listResourceTypes")
     @ApiOperation("资源类型列表")
-    @BkInterfaceI18n(keyPrefixNames = ["{data[*].resourceType}"])
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].resourceType}"], responseDataCacheFlag = true)
     fun listResourceTypes(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -42,7 +42,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("listActions")
     @ApiOperation("展示动作列表")
-    @BkInterfaceI18n(keyPrefixNames = ["{data[*].action}"])
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].action}"], responseDataCacheFlag = true)
     fun listActions(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -80,7 +80,7 @@ interface UserAuthApplyResource {
     @GET
     @Path("{groupId}/getGroupPermissionDetail")
     @ApiOperation("查询用户组权限详情")
-    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}"])
+    @BkInterfaceI18n(keyPrefixNames = ["{data[*].actionId}"], responseDataCacheFlag = true)
     fun getGroupPermissionDetail(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
