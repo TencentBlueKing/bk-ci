@@ -412,7 +412,6 @@ class OpImageDataTransferService @Autowired constructor(
                         "$imageName,$imageCode,${it.image},${it.repo},$imageTag)"
             )
             val imageId = opImageService.addImage(
-                accessToken = "",
                 userId = creator!!,
                 imageCreateRequest = ImageCreateRequest(
                     projectCode = projectCode,
