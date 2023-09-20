@@ -142,10 +142,10 @@
                 const comMap = {
                     Git: 'Git',
                     TGit: 'TGit',
-                    Github: 'Github',
+                    GitHub: 'Github',
                     SVN: 'SVN',
                     P4: 'P4',
-                    Gitlab: 'Gitlab'
+                    GitLab: 'Gitlab'
                 }
 
                 return comMap[this.codelibConfig.label]

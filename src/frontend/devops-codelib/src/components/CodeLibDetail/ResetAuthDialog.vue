@@ -65,25 +65,32 @@
                 <bk-radio-group
                     v-model="newRepoInfo.authType"
                 >
-                    <bk-radio
-                        class="mr20"
-                        value="OAUTH"
-                    >
-                        OAUTH
-                    </bk-radio>
-                    <bk-radio
-                        v-if="!isTGit"
-                        class="mr20"
-                        value="SSH"
-                    >
-                        SSH
-                    </bk-radio>
-                    <bk-radio
-                        v-if="!isTGit"
-                        value="HTTP"
-                    >
-                        {{ $t('codelib.用户名密码+个人token') }}
-                    </bk-radio>
+                    <template v-if="isGit">
+                        <bk-radio
+                            class="mr20"
+                            value="OAUTH"
+                        >
+                            OAUTH
+                        </bk-radio>
+                        <bk-radio
+                            class="mr20"
+                            value="SSH"
+                        >
+                            SSH
+                        </bk-radio>
+                        <bk-radio
+                            value="HTTP"
+                        >
+                            {{ $t('codelib.用户名密码+个人token') }}
+                        </bk-radio>
+                    </template>
+                    <template v-else>
+                        <bk-radio
+                            value="HTTPS"
+                        >
+                            {{ $t('codelib.用户名密码+个人token') }}
+                        </bk-radio>
+                    </template>
                 </bk-radio-group>
 
                 <div class="codelib-oauth" v-if="isOAUTH">
