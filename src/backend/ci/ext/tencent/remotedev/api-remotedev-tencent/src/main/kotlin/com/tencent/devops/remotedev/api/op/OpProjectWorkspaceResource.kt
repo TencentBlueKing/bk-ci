@@ -61,10 +61,8 @@ interface OpProjectWorkspaceResource {
         @QueryParam("projectId")
         projectId: String,
         @ApiParam(value = "云桌面ID", required = true)
-        @QueryParam("cgsIds")
         cgsIds: List<String>,
         @ApiParam(value = "云桌面IP", required = true)
-        @QueryParam("ips")
         ips: List<String>
     ): Result<Boolean>
 
