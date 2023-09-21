@@ -28,19 +28,15 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.FetchRemoteDevData
-import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.service.tof.TOFService
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
