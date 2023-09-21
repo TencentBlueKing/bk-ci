@@ -101,6 +101,7 @@ class OPProjectResourceImpl @Autowired constructor(
         grayFlag: Boolean,
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
         return projectTagService.getProjectListByFlag(
@@ -115,7 +116,8 @@ class OPProjectResourceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag
+            repoGrayFlag = repoGrayFlag,
+            remoteDevFlag = remoteDevFlag
         )
     }
 

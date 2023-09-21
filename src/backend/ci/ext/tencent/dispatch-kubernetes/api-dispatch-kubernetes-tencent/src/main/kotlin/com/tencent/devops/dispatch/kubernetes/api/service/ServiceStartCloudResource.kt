@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -57,19 +58,19 @@ interface ServiceStartCloudResource {
         @QueryParam("user")
         user: String
     ): Result<Boolean>
+
     @ApiOperation("同步更新START云桌面的资源池")
     @GET
     @Path("/startCloud/resourece/list")
     fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
 
     @ApiOperation("根据cgsId获取资源信息")
-    @GET
+    @POST
     @Path("/startCloud/cgs")
     fun getCgsData(
-        @ApiParam("cgsId", required = true)
-        @QueryParam("cgsId")
-        cgsId: String
-    ): Result<EnvironmentResourceData?>
+        @ApiParam("查询数据")
+        data: FetchWinPoolData
+    ): Result<List<EnvironmentResourceData>>
 
     @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
     @GET
