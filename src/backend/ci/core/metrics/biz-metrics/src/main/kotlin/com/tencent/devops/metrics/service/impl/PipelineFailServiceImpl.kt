@@ -35,9 +35,6 @@ import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.DATE_FORMATTER
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.dao.PipelineFailDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.`do`.PipelineBuildInfoDO
@@ -52,11 +49,16 @@ import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineFailTrendInfoVO
 import com.tencent.devops.metrics.service.PipelineFailManageService
 import com.tencent.devops.metrics.utils.MetricsUtils
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.DATE_FORMATTER
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 @Service
 class PipelineFailServiceImpl @Autowired constructor(
@@ -159,6 +161,8 @@ class PipelineFailServiceImpl @Autowired constructor(
         queryPipelineFailDTO: QueryPipelineFailDTO
     ): Page<PipelineFailDetailInfoDO> {
         // 查询符合查询条件的记录数
+        val stopWatch = StopWatch()
+        stopWatch.start("queryPipelineFailDetailCount")
         val queryPipelineFailDetailCount =
             pipelineFailDao.queryPipelineFailDetailCount(
             dslContext = dslContext,
@@ -173,6 +177,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                 errorTypes = queryPipelineFailDTO.errorTypes
             )
         )
+        stopWatch.stop()
         // 查询记录过多，提醒用户缩小查询范围
         if (queryPipelineFailDetailCount > metricsConfig.queryCountMax) {
             throw ErrorCodeException(
@@ -180,6 +185,7 @@ class PipelineFailServiceImpl @Autowired constructor(
                 params = arrayOf("${metricsConfig.queryCountMax}")
             )
         }
+        stopWatch.start("queryPipelineFailDetailInfo")
         val result = pipelineFailDao.queryPipelineFailDetailInfo(
             dslContext = dslContext,
             queryPipelineFailQo = QueryPipelineFailQO(
@@ -195,6 +201,8 @@ class PipelineFailServiceImpl @Autowired constructor(
                     pageSize = queryPipelineFailDTO.pageSize
             )
         )
+        stopWatch.stop()
+        stopWatch.start("edit detailInfos")
         val detailInfos = if (result.isNotEmpty()) {
             result.map {
                 val channelCode = it.channelCode
@@ -224,12 +232,16 @@ class PipelineFailServiceImpl @Autowired constructor(
                 )
             }
         } else emptyList()
-
+        stopWatch.stop()
         return Page(
             page = queryPipelineFailDTO.page,
             pageSize = queryPipelineFailDTO.pageSize,
             count = queryPipelineFailDetailCount,
             records = detailInfos
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineFailServiceImpl::class.java)
     }
 }

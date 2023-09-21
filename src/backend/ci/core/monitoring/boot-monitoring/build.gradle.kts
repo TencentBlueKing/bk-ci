@@ -26,5 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:monitoring:biz-monitoring-sample"))
+    api(project(":core:monitoring:biz-monitoring"))
 }

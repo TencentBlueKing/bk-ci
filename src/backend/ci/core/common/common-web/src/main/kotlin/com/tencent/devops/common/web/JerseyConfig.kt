@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import java.lang.reflect.Modifier
 import javax.ws.rs.ApplicationPath
+import javax.ws.rs.Path
 
 @ApplicationPath("/api")
 open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {
@@ -71,7 +72,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         }
         logger.info("JerseyConfig-ExceptionMapper-register-end")
         logger.info("JerseyConfig-RestResource-find-start")
-        val restResources = applicationContext.getBeansWithAnnotation(RestResource::class.java)
+        val restResources = applicationContext.getBeansWithAnnotation(Path::class.java)
         logger.info("JerseyConfig-RestResource-register-start")
         restResources.values.forEach {
             logger.info("RestResource: $it")

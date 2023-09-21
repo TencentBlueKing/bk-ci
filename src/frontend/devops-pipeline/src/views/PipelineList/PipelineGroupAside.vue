@@ -1,5 +1,10 @@
 <template>
-    <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
+    <aside
+        :class="{
+            'pipeline-group-aside': true,
+            'expended': isOpen
+        }"
+    >
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
                 <div :class="{
@@ -84,8 +89,9 @@
                 </template>
             </article>
         </div>
-        <footer :class="['recycle-pipeline-group-footer', {
-            active: $route.params.viewId === DELETED_VIEW_ID
+        <footer v-show="isOpen" :class="['recycle-pipeline-group-footer', {
+            active: $route.params.viewId === DELETED_VIEW_ID,
+            'expended': isOpen
         }]" @click="goRecycleBin">
             <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
             <span>{{$t('restore.recycleBin')}}</span>
@@ -130,16 +136,24 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-
+        <div class="toggle-button" @click="handleToggle">
+            <i :class="{
+                'devops-icon': true,
+                'icon-angle-right': true,
+                'toggle-arrow': true,
+                'open': isOpen
+            }" />
+        </div>
     </aside>
-
 </template>
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID
+        UNCLASSIFIED_PIPELINE_VIEW_ID,
+        CACHE_PIPELINE_GROUP_NAV_STATUS,
+        PIPELINE_ASIDE_PANEL_TOGGLE
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
@@ -151,17 +165,21 @@
             ExtMenu
         },
         data () {
+            let isOpen = localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE)
+            if (!isOpen) {
+                isOpen = true
+            } else {
+                isOpen = JSON.parse(isOpen)
+            }
             return {
+                isOpen,
                 DELETED_VIEW_ID,
                 isLoading: false,
                 isPatchOperate: false,
                 editingGroupId: null,
                 renaming: false,
                 newViewName: '',
-                showClassify: {
-                    personalViewList: true,
-                    projectViewList: true
-                },
+                showClassify: {},
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 isValidGroupName: false,
@@ -250,6 +268,11 @@
             }
         },
         created () {
+            this.showClassify = JSON.parse(localStorage.getItem(CACHE_PIPELINE_GROUP_NAV_STATUS)) || {
+                personalViewList: true,
+                projectViewList: true
+            }
+
             this.refreshPipelineGroup()
         },
         methods: {
@@ -330,6 +353,7 @@
             },
             toggle (id) {
                 this.showClassify[id] = !this.showClassify[id]
+                localStorage.setItem(CACHE_PIPELINE_GROUP_NAV_STATUS, JSON.stringify(this.showClassify))
             },
             resetEditing () {
                 this.editingGroupId = ''
@@ -479,6 +503,10 @@
                         theme
                     })
                 }
+            },
+            handleToggle () {
+                this.isOpen = !this.isOpen
+                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(this.isOpen))
             }
         }
     }
@@ -490,12 +518,17 @@
     @import '@/scss/conf';
 
     .pipeline-group-aside {
+        position: relative;
         display: flex;
         flex-direction: column;
-        width: 280px;
+        width: 0px;
         background: white;
         padding: 0;
         border-right: 1px solid #DCDEE5;
+        transition: width 0.2s linear;
+        &.expended {
+            width: 280px;
+        }
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
@@ -559,6 +592,10 @@
             padding: 0 0 0 32px;
             cursor: pointer;
             font-size: 14px;
+            width: 0;
+            &.expended {
+                width: 100%;
+            }
             &:hover,
             &.active {
                 color: $primaryColor;
@@ -638,6 +675,33 @@
                 }
             }
 
+        }
+        .toggle-button {
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            display: flex;
+            width: 14px;
+            height: 64px;
+            font-size: 14px;
+            color: #fff;
+            cursor: pointer;
+            background: #dcdee5;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            transform: translateY(-50%);
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                background: #c4c6cc;
+            }
+
+            .toggle-arrow {
+                &.open {
+                    transform: rotateZ(-180deg);
+                }
+            }
         }
     }
 

@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":core:plugin:biz-plugin"))
-    api(project(":core:plugin:codecc-plugin:biz-codecc"))
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))

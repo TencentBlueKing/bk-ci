@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `T_SERVICE` (
   `gray_iframe_url` varchar(255) DEFAULT NULL COMMENT '灰度iframe Url地址',
   `new_window` bit(1) DEFAULT b'0' COMMENT '是否打开新标签页',
   `new_windowUrl` varchar(200) DEFAULT '' COMMENT '新标签页地址',
+  `cluster_type` VARCHAR(32) NOT NULL DEFAULT '' comment '集群类型',
   PRIMARY KEY (`id`),
   UNIQUE KEY `service_name` (`name`),
   UNIQUE KEY `IDX_UNIQUE_ENGLISH_NAME` (`english_name`)
@@ -285,6 +286,7 @@ CREATE TABLE IF NOT EXISTS `T_DATA_SOURCE` (
   `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
   `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
   `DS_URL` varchar(1024) NULL COMMENT '数据源URL地址',
+  `TAG` varchar(128) DEFAULT NULL COMMENT '数据源标签',
   `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
   `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   PRIMARY KEY (`ID`),

@@ -169,7 +169,7 @@ object BuildTimeCostUtils {
         taskRecords: List<BuildRecordTask>
     ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
         val containerTimeLine = BuildRecordTimeLine()
-        val startTime = startTime ?: return Pair(null, containerTimeLine)
+        val startTime = startTime ?: taskRecords.first().startTime ?: return Pair(null, containerTimeLine)
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L

@@ -95,13 +95,12 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun listMyAtoms(
-        accessToken: String,
         userId: String,
         atomName: String?,
         page: Int,
         pageSize: Int
     ): Result<MyAtomResp?> {
-        return marketAtomService.getMyAtoms(accessToken, userId, atomName, page, pageSize)
+        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize)
     }
 
     override fun getAtomById(userId: String, atomId: String): Result<AtomVersion?> {
@@ -121,16 +120,15 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize)
     }
 
-    override fun installAtom(accessToken: String, userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(accessToken, userId, ChannelCode.BS, installAtomReq)
+    override fun installAtom(userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
+        return marketAtomService.installAtom(userId, ChannelCode.BS, installAtomReq)
     }
 
     override fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         atomCode: String
     ): Result<List<InstalledProjRespItem?>> {
-        return storeProjectService.getInstalledProjects(accessToken, userId, atomCode, StoreTypeEnum.ATOM)
+        return storeProjectService.getInstalledProjects(userId, atomCode, StoreTypeEnum.ATOM)
     }
 
     override fun listLanguage(): Result<List<AtomDevLanguage?>> {

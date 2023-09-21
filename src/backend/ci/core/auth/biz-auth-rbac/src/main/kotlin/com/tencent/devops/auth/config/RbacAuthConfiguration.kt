@@ -64,10 +64,12 @@ import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.migrate.MigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.service.migrate.MigrateIamApiService
+import com.tencent.devops.auth.service.migrate.MigratePermissionHandoverService
 import com.tencent.devops.auth.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.service.migrate.MigrateResultService
@@ -258,7 +260,8 @@ class RbacAuthConfiguration {
         config: CommonConfig,
         client: Client,
         authResourceCodeConverter: AuthResourceCodeConverter,
-        permissionService: PermissionService
+        permissionService: PermissionService,
+        itsmService: ItsmService
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -269,7 +272,8 @@ class RbacAuthConfiguration {
         config = config,
         client = client,
         authResourceCodeConverter = authResourceCodeConverter,
-        permissionService = permissionService
+        permissionService = permissionService,
+        itsmService = itsmService
     )
 
     @Bean
@@ -360,7 +364,8 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        groupService: PermissionResourceGroupService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -374,7 +379,8 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        groupService = groupService
     )
 
     @Bean
@@ -389,6 +395,7 @@ class RbacAuthConfiguration {
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
+        groupService: PermissionResourceGroupService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService
@@ -403,6 +410,7 @@ class RbacAuthConfiguration {
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
+        groupService = groupService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
         permissionGroupPoliciesService = permissionGroupPoliciesService
@@ -419,6 +427,7 @@ class RbacAuthConfiguration {
         permissionResourceService: PermissionResourceService,
         authResourceService: AuthResourceService,
         migrateCreatorFixService: MigrateCreatorFixService,
+        migratePermissionHandoverService: MigratePermissionHandoverService,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao
     ) = RbacPermissionMigrateService(
@@ -430,10 +439,26 @@ class RbacAuthConfiguration {
         permissionResourceService = permissionResourceService,
         authResourceService = authResourceService,
         migrateCreatorFixService = migrateCreatorFixService,
+        migratePermissionHandoverService = migratePermissionHandoverService,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao
     )
 
     @Bean
     fun migrateCreatorFixService() = MigrateCreatorFixServiceImpl()
+
+    @Bean
+    fun migratePermissionHandoverService(
+        v2ManagerService: V2ManagerService,
+        groupService: PermissionResourceGroupService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceService: AuthResourceService,
+        dslContext: DSLContext
+    ) = MigratePermissionHandoverService(
+        v2ManagerService = v2ManagerService,
+        groupService = groupService,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceService = authResourceService,
+        dslContext = dslContext
+    )
 }

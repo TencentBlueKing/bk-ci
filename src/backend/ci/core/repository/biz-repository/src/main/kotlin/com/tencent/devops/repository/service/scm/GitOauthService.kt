@@ -40,7 +40,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
-import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
@@ -263,15 +262,13 @@ class GitOauthService @Autowired constructor(
 
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
-            with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
-                GitToken(
-                    accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.accessToken),
-                    refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.refreshToken),
-                    tokenType = it.tokenType,
-                    expiresIn = it.expiresIn,
-                    createTime = it.createTime.timestampmilli()
-                )
-            }
+            GitToken(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.accessToken),
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.refreshToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                createTime = it.createTime.timestampmilli()
+            )
         }
     }
 

@@ -110,7 +110,9 @@ class PermissionSubsetManagerService @Autowired constructor(
         return iamV2ManagerService.createSubsetManager(
             gradeManagerId,
             createSubsetManagerDTO
-        )
+        ).also {
+            logger.info("create iam subset manager success|$name|$projectCode|$userId|$gradeManagerId|$it")
+        }
     }
 
     @SuppressWarnings("LongParameterList")

@@ -605,3 +605,54 @@
     body: "project【${projectName}】Registered【${events}】Event callback interface【${callbackUrl}】It is now disabled due to multiple failed calls\pipeline url：${pipelineListUrl}"
   creator: "system"
   modifior: "system"
+- index: 39
+  id: "bbd6cc0244424ebd945168ac28f18184"
+  templateCode: "MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"
+  templateName: "Manual review plug-in review reminder template code"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "65957d6cf0ad48638965a0706648a806"
+    sender: "DevOps"
+    title: "[Pipeline Review Reminder] You have 1 pipeline waiting for review, please deal with it in time"
+    body: |
+      Title: ${title}
+      Review description: ${body}
+
+      If there is no need to remind, please modify the configuration of the manual review plug-in
+
+      PC-side review: ${reviewUrl} Mobile-side review: ${reviewAppUrl}
+  creator: "system"
+  modifior: "system"
+- index: 40
+  id: "ea98239a51a74f8db0a012a809bc2016"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
+  templateName: "Reminder of failure to migrate project data in PROCESS database"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2001"
+    sender: "DevOps"
+    title: "Failed to migrate the data of the project [${projectId}] in the PROCESS database"
+    body: "Failed to migrate the data of the project [${projectId}] in the PROCESS database，failure reason: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 41
+  id: "ea98239a51a74f8db0a012a809bc2017"
+  templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
+  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2002"
+    sender: "DevOps"
+    title: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
+    body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
+  creator: "system"
+  modifior: "system"

@@ -37,6 +37,6 @@ class SamplePermissionResourceValidateService : PermissionResourceValidateServic
         projectCode: String,
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Map<String, Boolean> {
-        return emptyMap()
+        return permissionBatchValidateDTO.actionList.associateWith { true }
     }
 }

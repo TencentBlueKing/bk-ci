@@ -364,7 +364,10 @@ class OpAtomServiceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        publisher: String?,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
     ): Result<Boolean> {
         // 解压插件包到临时目录
         val fileName = disposition.fileName
@@ -401,7 +404,25 @@ class OpAtomServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW) {
+        val versionInfo = releaseInfo.versionInfo
+        if (!publisher.isNullOrBlank()) {
+            // 如果接口query参数的发布者不为空，发布者以接口query参数的发布者为准
+            versionInfo.publisher = publisher
+        }
+        releaseType?.let {
+            // 如果接口query参数的发布类型不为空，发布类型以接口query参数的发布类型为准
+            versionInfo.releaseType = releaseType
+        }
+        if (!version.isNullOrBlank()) {
+            // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
+            versionInfo.version = version
+        }
+        if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = INIT_VERSION
+            ) == null
+        ) {
             // 新增插件
             val addMarketAtomResult = atomReleaseService.addMarketAtom(
                 userId,
@@ -479,9 +500,9 @@ class OpAtomServiceImpl @Autowired constructor(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
                     atomCode = atomCode,
-                    version = releaseInfo.versionInfo.version,
+                    version = versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
-                    releaseType = releaseInfo.versionInfo.releaseType.name,
+                    releaseType = versionInfo.releaseType.name,
                     file = file,
                     os = JsonUtil.toJson(releaseInfo.os)
                 )
@@ -518,10 +539,10 @@ class OpAtomServiceImpl @Autowired constructor(
                 os = releaseInfo.os,
                 summary = releaseInfo.summary,
                 description = releaseInfo.description,
-                version = releaseInfo.versionInfo.version,
-                releaseType = releaseInfo.versionInfo.releaseType,
-                versionContent = releaseInfo.versionInfo.versionContent,
-                publisher = releaseInfo.versionInfo.publisher,
+                version = versionInfo.version,
+                releaseType = versionInfo.releaseType,
+                versionContent = versionInfo.versionContent,
+                publisher = versionInfo.publisher,
                 labelIdList = labelIds,
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,

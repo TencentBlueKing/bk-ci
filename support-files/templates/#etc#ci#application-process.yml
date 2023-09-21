@@ -82,6 +82,9 @@ scm:
     tGit:
       hookSecret: 
       enableHookSecret: false
+  svn:
+    enabled: true # enable auto pull svn repo commit webhook
+    interval: 60  # auto pull interval seconds
 
 sharding:
   databaseShardingStrategy:
@@ -93,3 +96,7 @@ stream:
 
 sm4:
   sm4Key: "__BK_CI_SM4_KEY__"
+api:
+  project:
+    permission:
+      switch: true

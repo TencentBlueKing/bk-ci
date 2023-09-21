@@ -67,6 +67,7 @@ object Constants {
     const val BK_TOTAL_COST_TIME_SUM = "totalCostTimeSum"
     const val BK_FAIL_COST_TIME_SUM = "failCostTimeSum"
     const val BK_FAIL_COMPLIANCE_COUNT = "failComplianceCount"
+    const val BK_MAX_CREATE_TIME = "MAX_CREATE_TIME"
 
     const val ERROR_TYPE_NAME_PREFIX = "METRICS_ERROR_TYPE_"
 
