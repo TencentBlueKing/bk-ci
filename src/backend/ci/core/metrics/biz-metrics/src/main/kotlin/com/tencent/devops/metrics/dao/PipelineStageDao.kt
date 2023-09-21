@@ -34,15 +34,16 @@ import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
+import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
-import com.tencent.devops.metrics.pojo.qo.QueryPipelineStageTrendInfoQO
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
@@ -78,13 +79,8 @@ class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
         queryInfo: QueryPipelineStageTrendInfoQO
     ): List<String> {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val conditions = getConditions(queryInfo, tProjectPipelineLabelInfo)
+            val conditions = getConditions(dslContext, queryInfo)
             val step = dslContext.select(PIPELINE_ID).from(this)
-            if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
-                step.join(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            }
             return step.where(conditions)
                 .groupBy(PIPELINE_ID)
                 .orderBy(AVG_COST_TIME.desc())
@@ -102,18 +98,13 @@ class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
     ): Result<Record3<String, LocalDateTime, Long>> {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
             val pipelineInfos = getStageTrendPipelineInfo(dslContext, queryInfo)
-            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
-            val conditions = getConditions(queryInfo, tProjectPipelineLabelInfo)
+            val conditions = getConditions(dslContext, queryInfo)
             conditions.add(PIPELINE_ID.`in`(pipelineInfos))
             val step = dslContext.select(
                     PIPELINE_NAME.`as`(BK_PIPELINE_NAME),
                     STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
                     AVG_COST_TIME.`as`(BK_AVG_COST_TIME)
                     ).from(this)
-            if (!queryInfo.pipelineLabelIds.isNullOrEmpty()) {
-                step.join(tProjectPipelineLabelInfo)
-                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
-            }
             return step.where(conditions)
                 .groupBy(PIPELINE_ID, STATISTICS_TIME)
                 .fetch()
@@ -133,8 +124,8 @@ class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
     }
 
     private fun TPipelineStageOverviewData.getConditions(
-        queryCondition: QueryPipelineStageTrendInfoQO,
-        tProjectPipelineLabelInfo: TProjectPipelineLabelInfo
+        dslContext: DSLContext,
+        queryCondition: QueryPipelineStageTrendInfoQO
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         val pipelineIds = queryCondition.pipelineIds
@@ -142,15 +133,27 @@ class PipelineStageDao constructor(private val metricsConfig: MetricsConfig) {
         if (!pipelineIds.isNullOrEmpty()) {
             conditions.add(this.PIPELINE_ID.`in`(pipelineIds))
         }
-        if (!queryCondition.pipelineLabelIds.isNullOrEmpty()) {
-            conditions.add(tProjectPipelineLabelInfo.LABEL_ID.`in`(queryCondition.pipelineLabelIds))
-        }
         val startDateTime = DateTimeUtil.stringToLocalDate(queryCondition.startTime)!!.atStartOfDay()
         val endDateTime = DateTimeUtil.stringToLocalDate(queryCondition.endTime)!!.atStartOfDay()
         if (startDateTime.isEqual(endDateTime)) {
             conditions.add(this.STATISTICS_TIME.eq(startDateTime))
         } else {
             conditions.add(this.STATISTICS_TIME.between(startDateTime, endDateTime))
+        }
+        if (!queryCondition.pipelineLabelIds.isNullOrEmpty()) {
+            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            conditions.add(
+                DSL.exists(
+                    dslContext.select(tProjectPipelineLabelInfo.PIPELINE_ID).from(tProjectPipelineLabelInfo)
+                        .where(tProjectPipelineLabelInfo.PROJECT_ID.eq(this.PROJECT_ID))
+                        .and(tProjectPipelineLabelInfo.PIPELINE_ID.eq(this.PIPELINE_ID))
+                        .and(
+                            tProjectPipelineLabelInfo.LABEL_ID.`in`(
+                                queryCondition.pipelineLabelIds
+                            )
+                        )
+                )
+            )
         }
         conditions.add(this.STAGE_TAG_NAME.eq(queryCondition.stageTag))
         return conditions

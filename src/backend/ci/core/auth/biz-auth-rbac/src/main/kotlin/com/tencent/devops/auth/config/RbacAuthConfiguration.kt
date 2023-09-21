@@ -276,7 +276,8 @@ class RbacAuthConfiguration {
         config: CommonConfig,
         client: Client,
         authResourceCodeConverter: AuthResourceCodeConverter,
-        permissionService: PermissionService
+        permissionService: PermissionService,
+        itsmService: ItsmService
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -287,7 +288,8 @@ class RbacAuthConfiguration {
         config = config,
         client = client,
         authResourceCodeConverter = authResourceCodeConverter,
-        permissionService = permissionService
+        permissionService = permissionService,
+        itsmService = itsmService
     )
 
     @Bean

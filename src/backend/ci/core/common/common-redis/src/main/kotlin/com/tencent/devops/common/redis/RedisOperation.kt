@@ -184,8 +184,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), *values)
     }
 
-    fun sremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
-        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), values)
+    fun sremove(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), *values)
     }
 
     fun sscan(
