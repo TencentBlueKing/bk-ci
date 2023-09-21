@@ -489,7 +489,7 @@ fun <T> YamlTemplate<T>.getStage(
             null
         } else {
             val jobs = YamlObjects.transValue<Map<String, Any>>(fromPath, TemplateType.JOB.text, stage["jobs"])
-            val map = mutableMapOf<String, PreJob>()
+            val map = LinkedHashMap<String, PreJob>()
             jobs.forEach { (key, value) ->
                 // 检查根文件处jobId重复
                 val newJob = this.replaceJobTemplate(mapOf(key to value), filePath, deepTree)

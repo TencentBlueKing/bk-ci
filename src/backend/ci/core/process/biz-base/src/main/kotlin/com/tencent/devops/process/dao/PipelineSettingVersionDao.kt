@@ -170,6 +170,20 @@ class PipelineSettingVersionDao {
         }
     }
 
+    fun getLatestSettingVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineSettingVersion? {
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
+                .orderBy(VERSION.desc()).limit(1)
+                .fetchOne(mapper)
+        }
+    }
+
     fun getSettingByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: List<String>

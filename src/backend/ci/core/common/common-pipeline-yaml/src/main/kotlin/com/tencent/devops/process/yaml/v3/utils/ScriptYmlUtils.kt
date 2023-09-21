@@ -329,7 +329,7 @@ object ScriptYmlUtils {
         }
     }
 
-    fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData? = null): List<Job> {
+    fun preJobs2Jobs(preJobs: LinkedHashMap<String, PreJob>?, transferData: YamlTransferData? = null): List<Job> {
         if (preJobs == null) {
             return emptyList()
         }

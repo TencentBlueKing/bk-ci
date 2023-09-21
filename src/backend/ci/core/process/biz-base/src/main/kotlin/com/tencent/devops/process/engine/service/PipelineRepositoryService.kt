@@ -1200,7 +1200,7 @@ class PipelineRepositoryService constructor(
                 triggerVersion = resultVersion!!.triggerVersion,
                 settingVersion = resultVersion!!.settingVersion,
                 versionStatus = VersionStatus.COMMITTING,
-                description = null
+                description = resultVersion!!.description
             )
         }
         return resultVersion!!

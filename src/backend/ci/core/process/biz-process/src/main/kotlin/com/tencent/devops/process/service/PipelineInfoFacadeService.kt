@@ -383,6 +383,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     create = true,
                     useSubscriptionSettings = useSubscriptionSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
+                    versionStatus = versionStatus,
                     templateId = templateId,
                     description = null,
                     yamlStr = yaml,
@@ -501,8 +502,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-
-        val newModel = try {
+        val newResource = try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -527,7 +527,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
-            model = newModel.model,
+            model = newResource.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
             versionStatus = if (isDefaultBranch) {
@@ -535,6 +535,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             } else {
                 VersionStatus.BRANCH
             }
+        )
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = result.pipelineId,
+            setting = newResource.setting,
+            checkPermission = false
         )
         if (!isDefaultBranch) {
             pipelineBranchVersionService.saveBranchVersion(
@@ -556,7 +563,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newModel = try {
+        val newResource = try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -578,13 +585,22 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
         }
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = newResource.setting,
+            checkPermission = false,
+            dispatchPipelineUpdateEvent = false
+        )
         val result = editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            model = newModel.model,
+            model = newResource.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
+            savedSetting = savedSetting,
             versionStatus = if (isDefaultBranch) {
                 VersionStatus.RELEASED
             } else {
@@ -796,7 +812,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
             )
         }
-        // TODO #8164 增加设置保存
         val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -815,6 +830,15 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = draftSetting.copy(
+                labels = request.labels
+            )
+        )
+        // TODO #8164 增加同步PAC仓库
         if (draftVersion?.status != VersionStatus.COMMITTING) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_IS_NOT_DRAFT
         )
@@ -830,16 +854,16 @@ class PipelineInfoFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
         )
         pipelineRepositoryService.deployPipeline(
-            model = draftVersion.model,
+            model = draftVersion.model.copy(staticViews = request.staticViews),
             projectId = projectId,
             signPipelineId = pipelineId,
             userId = draftVersion.creator,
             channelCode = ChannelCode.BS,
             create = false,
             updateLastModifyUser = true,
-            savedSetting = draftSetting,
+            savedSetting = savedSetting,
             versionStatus = VersionStatus.RELEASED,
-            description = draftVersion.description,
+            description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
             baseVersion = draftVersion.baseVersion
         )

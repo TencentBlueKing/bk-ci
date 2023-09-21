@@ -51,12 +51,12 @@ data class PreScriptBuildYamlV3(
     var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
-    override var jobs: Map<String, PreJob>? = null,
+    override var jobs: LinkedHashMap<String, PreJob>? = null,
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
     var notices: List<PacNotices>?,
-    override var finally: Map<String, PreJob>? = null,
+    override var finally: LinkedHashMap<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {
     override fun yamlVersion() = YamlVersion.Version.V3_0

@@ -39,9 +39,11 @@ data class PositionResponse(
     var jobBaseOs: VMBaseOS? = null,
     @ApiModelProperty("当定位到STAGE,JOB,STEP时有效，表示stage下标")
     var stageIndex: Int? = null,
-    @ApiModelProperty("当定位到JOB,STEP时有效，表示stage下标")
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示container下标")
+    var containerIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示job的id")
     var jobId: String? = null,
-    @ApiModelProperty("当定位到STEP时有效，表示stage下标")
+    @ApiModelProperty("当定位到STEP时有效，表示step下标")
     var stepIndex: Int? = null,
     @ApiModelProperty("转换错误")
     val error: String? = null

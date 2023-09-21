@@ -208,8 +208,7 @@ class StageTransfer @Autowired(required = false) constructor(
         stage: Stage,
         projectId: String
     ): PreStage {
-        val jobs = stage.containers.associate { job ->
-
+        val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
             val steps = elementTransfer.model2YamlSteps(job, projectId)
 
             (job.jobId ?: "job_${job.id}") to when (job.getClassType()) {

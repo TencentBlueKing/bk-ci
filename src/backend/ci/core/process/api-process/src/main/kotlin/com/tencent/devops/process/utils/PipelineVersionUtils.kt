@@ -28,7 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import org.json.JSONObject
 
 object PipelineVersionUtils {
@@ -74,8 +74,8 @@ object PipelineVersionUtils {
      */
     fun getSettingVersion(
         currVersion: Int,
-        originSetting: PipelineSetting,
-        newSetting: PipelineSetting
+        originSetting: PipelineSettingVersion,
+        newSetting: PipelineSettingVersion
     ): Int {
         val originJson = JSONObject(originSetting)
         val currentJson = JSONObject(newSetting)
