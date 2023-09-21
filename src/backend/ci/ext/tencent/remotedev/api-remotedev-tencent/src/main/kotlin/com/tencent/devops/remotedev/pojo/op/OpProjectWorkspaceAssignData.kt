@@ -6,7 +6,7 @@ data class OpProjectWorkspaceAssignData(
     @ApiParam(value = "项目ID", required = true)
     val projectId: String,
     @ApiParam(value = "云桌面ID", required = true)
-    val cgsIds: List<String>,
+    val cgsIds: List<String>?,
     @ApiParam(value = "云桌面IP", required = true)
-    val ips: List<String>
+    val ips: List<String>?
 )
