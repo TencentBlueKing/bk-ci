@@ -544,4 +544,10 @@ class WorkspaceCommon @Autowired constructor(
         }
         return res
     }
+
+    fun genWorkspaceCCInfo(
+        projectId: String
+    ): Map<String, Any> {
+        return mapOf("devx_meta" to mapOf("projectId" to projectId))
+    }
 }

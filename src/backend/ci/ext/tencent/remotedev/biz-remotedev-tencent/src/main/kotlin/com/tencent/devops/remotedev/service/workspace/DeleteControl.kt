@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -84,7 +85,8 @@ class DeleteControl @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -309,9 +311,10 @@ class DeleteControl @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         if (workspace.status.checkDeleted()) return
+
+        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
         if (status) {
             // 删除环境管理第三方构建机记录
-            val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
                     .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
@@ -373,6 +376,14 @@ class DeleteControl @Autowired constructor(
                 computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
             )
         }
+
+        // 删除时给 cmdb 去掉字段方便监控检索
+        val hostIdSub = nodeIp?.split(".")
+        if (!hostIdSub.isNullOrEmpty()) {
+            val hostId = hostIdSub.subList(1, hostIdSub.size).joinToString { "." }
+            bkccService.updateHost(setOf(hostId), workspaceCommon.genWorkspaceCCInfo(projectId))
+        }
+
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,

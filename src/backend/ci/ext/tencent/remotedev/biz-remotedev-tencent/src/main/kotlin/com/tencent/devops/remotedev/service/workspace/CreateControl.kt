@@ -60,6 +60,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -99,7 +100,8 @@ class CreateControl @Autowired constructor(
     private val commonConfig: RemoteDevCommonConfig,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -338,6 +340,13 @@ class CreateControl @Autowired constructor(
                     event.resourceId,
                     event.environmentIp
                 )
+            }
+
+            // 创建成功时给 cmdb 添加字段方便监控检索
+            val hostIdSub = event.environmentIp?.split(".")
+            if (!hostIdSub.isNullOrEmpty()) {
+                val hostId = hostIdSub.subList(1, hostIdSub.size).joinToString { "." }
+                bkccService.updateHost(setOf(hostId), workspaceCommon.genWorkspaceCCInfo(ws.projectId))
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
