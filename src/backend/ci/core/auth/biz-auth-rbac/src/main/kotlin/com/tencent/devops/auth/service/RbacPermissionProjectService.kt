@@ -41,6 +41,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -114,11 +115,10 @@ class RbacPermissionProjectService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         groupInfoList.forEach {
             // 3、获取组成员
-            val v2PageInfoDTO = V2PageInfoDTO().apply {
-                pageSize = 1000
-                page = 1
-            }
-            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, v2PageInfoDTO).results
+            val pageInfoDTO = V2PageInfoDTO()
+            pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+            pageInfoDTO.pageSize = PageUtil.MAX_PAGE_SIZE * 10
+            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
             logger.info(
                 "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
                     "| groupMemberInfoList: $groupMemberInfoList"
