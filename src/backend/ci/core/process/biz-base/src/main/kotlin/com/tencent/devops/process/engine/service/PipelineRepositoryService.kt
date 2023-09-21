@@ -895,6 +895,12 @@ class PipelineRepositoryService constructor(
                 )
                 watcher.start("updatePipelineResource")
                 if (versionStatus == VersionStatus.RELEASED) {
+                    pipelineResourceDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        beforeVersion = version
+                    )
                     pipelineResourceDao.create(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -906,12 +912,6 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = pipelineVersion,
                         triggerVersion = triggerVersion,
                         settingVersion = settingVersion
-                    )
-                    pipelineResourceDao.deleteEarlyVersion(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        beforeVersion = version
                     )
                 }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
@@ -1107,6 +1107,24 @@ class PipelineRepositoryService constructor(
                 includeDraft = includeDraft
             )
         }
+        // 返回时将别名name补全为id
+        resource?.let {
+            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
+        }
+        return resource
+    }
+
+    fun getDraftVersionResource(
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        val resource = pipelineResourceVersionDao.getDraftVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         // 返回时将别名name补全为id
         resource?.let {
             (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->

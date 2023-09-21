@@ -43,14 +43,14 @@ data class PipelineDetail(
     val canManualStartup: Boolean,
     @ApiModelProperty("是否从模板实例化")
     val instanceFromTemplate: Boolean,
-    @ApiModelProperty("最新的发布版本")
+    @ApiModelProperty("草稿或最新的发布版本")
     val version: Int,
-    @ApiModelProperty("最新的发布版本名称")
+    @ApiModelProperty("草稿或最新的发布版本名称")
     val versionName: String?,
-    @ApiModelProperty("该版本的源版本号", required = true)
-    val baseVersion: Int?,
-    @ApiModelProperty("该版本的版本号名", required = true)
-    val baseVersionName: String?,
+    @ApiModelProperty("草稿或最新的发布版本")
+    val releaseVersion: Int?,
+    @ApiModelProperty("草稿或最新的发布版本名称")
+    val releaseVersionName: String?,
     @ApiModelProperty("是否有编辑权限")
     val hasPermission: Boolean,
     @ApiModelProperty("流水线描述")

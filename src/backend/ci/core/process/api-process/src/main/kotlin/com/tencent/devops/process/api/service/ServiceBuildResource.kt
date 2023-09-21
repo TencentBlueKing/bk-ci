@@ -172,7 +172,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int? = null,
+        version: Int? = null,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -220,7 +220,10 @@ interface ServiceBuildResource {
         channelCode: ChannelCode,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        version: Int? = null,
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")
@@ -808,7 +811,7 @@ interface ServiceBuildResource {
         startType: StartType,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int? = null
+        version: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("取消并发起新构建")

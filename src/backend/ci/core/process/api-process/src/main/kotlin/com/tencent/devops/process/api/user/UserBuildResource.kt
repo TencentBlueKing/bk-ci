@@ -84,7 +84,7 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int?
+        version: Int?
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("获取流水线构建参数")
@@ -133,7 +133,7 @@ interface UserBuildResource {
         triggerReviewers: List<String>? = null,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        debugVersion: Int? = null
+        version: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")
@@ -529,7 +529,7 @@ interface UserBuildResource {
         @QueryParam("alias")
         alias: List<String>?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("version")
+        @QueryParam("debugVersion")
         debugVersion: Int? = null
     ): Result<List<String>>
 
