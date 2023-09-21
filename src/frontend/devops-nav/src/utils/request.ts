@@ -55,7 +55,7 @@ request.interceptors.response.use(response => {
         return Promise.reject(errorMsg)
     } else if (httpStatus >= 400) {
         const err = {
-            message: message ?? `unknow Error httpStatus: ${httpStatus}`,
+            message: message || `unknow Error httpStatus: ${httpStatus}`,
             httpStatus
         }
         return Promise.reject(err)
