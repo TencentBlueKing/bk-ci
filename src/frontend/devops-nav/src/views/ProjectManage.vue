@@ -327,7 +327,7 @@
                 if (/v3/.test(routerTag)) {
                     return 'v3'
                 }
-                if (/rbac/.test(routerTag)) {
+                if (/rbac|devx/.test(routerTag)) {
                     return 'rbac'
                 }
                 return 'v0'
