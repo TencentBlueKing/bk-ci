@@ -1,18 +1,18 @@
 <template>
     <div class="selector-type-param">
         <div class="option-type">
-            <div class="type-select" :class="{ 'is-active': selectType === 'options' }" @click="selectType = 'options'">预定义选项</div>
-            <div class="type-select" :class="{ 'is-active': selectType === 'remote' }" @click="selectType = 'remote'">从接口获取选项</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">预定义选项</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">从接口获取选项</div>
         </div>
         <div class="option-items">
-            <section v-if="selectType === 'options'">
-                <key-options :options="param.options" :handle-change-options="handleUpdate" />
+            <section v-if="payloadValue.type !== 'remote'">
+                <key-options :options="param.options" :handle-change-options="updateOptions" />
             </section>
             <section v-else>
                 <bk-form form-type="vertical" class="new-ui-form" :label-width="300">
                     <template v-for="obj in remoteTypeOptions">
                         <form-field :key="obj.key" :desc="obj.tips" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                            <component :is="'vuex-input'" :disabled="disabled" :name="key" v-validate.initial="Object.assign({}, { required: !!obj.required })" :handle-change="handleRemoteParamChange" :value="remoteTypeValue[obj.key]" v-bind="obj" :placeholder="obj.placeholder"></component>
+                            <component :is="'vuex-input'" :disabled="disabled" :name="obj.key" v-validate.initial="Object.assign({}, { required: !!obj.required })" :handle-change="handleRemoteParamChange" :value="payloadValue[obj.key]" v-bind="obj" :placeholder="obj.placeholder"></component>
                         </form-field>
                     </template>
                 </bk-form>
@@ -42,12 +42,20 @@
             },
             handleUpdateOptions: {
                 type: Function,
-                required: true
+                default: () => {}
+            },
+            handleUpdatePayload: {
+                type: Function,
+                default: () => {}
+            },
+            resetDefaultVal: {
+                type: Function,
+                default: () => {}
             }
         },
         data () {
             return {
-                remoteTypeValue: {},
+                payloadValue: {},
                 remoteTypeOptions: [
                     {
                         key: 'url',
@@ -56,41 +64,46 @@
                         tips: ''
                     },
                     {
-                        key: 'resPath',
+                        key: 'dataPath',
                         label: '数据对象名称',
                         placeholder: '缺省时默认为data，示例：data.detail.list',
                         tips: ''
                     },
                     {
-                        key: 'id',
+                        key: 'paramId',
                         label: '选项ID字段名',
                         placeholder: '选中时将此ID值传递给插件',
                         tips: ''
                     },
                     {
-                        key: 'name',
+                        key: 'paramName',
                         label: '选项NAME字段名',
                         placeholder: '用户在页面上看到的选项名称',
                         tips: ''
                     }
-                ],
-                selectType: 'options'
+                ]
             }
         },
-        computed: {
-
-        },
         created () {
-            this.selectType = this.param?.payload?.type || 'options'
-            this.remoteTypeValue = Object.assign({}, this.param?.payload || {})
+            this.payloadValue = Object.assign({}, { type: 'options' }, this.param?.payload || {})
         },
         methods: {
-            handleRemoteParamChange (name, value) {
-                Object.assign({}, this.remoteTypeValue, { name: value })
-                console.log(this.remoteTypeValue, 'remoteTypeVal')
+            handleParamTypeChange (name, value) {
+                // 类型重置， 清空defaultvalue
+                if (value !== this.payloadValue.type) {
+                    this.resetDefaultVal()
+                }
+                this.handleRemoteParamChange(name, value)
             },
-            handleUpdate (name, value) {
+            handleRemoteParamChange (name, value) {
+                Object.assign(this.payloadValue, { [name]: value })
+                this.updatePayload('payload', this.payloadValue)
+            },
+            updateOptions (name, value) {
                 this.handleUpdateOptions(name, value)
+            },
+            updatePayload (name, value) {
+                this.handleUpdatePayload(name, value)
             }
         }
     }

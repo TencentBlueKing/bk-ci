@@ -8,10 +8,9 @@
                 <slot name="pipeline-bar"></slot>
             </div>
         </header>
-        <div v-if="pipeline" class="scroll-container">
+        <div v-if="pipeline && pipeline.stages && pipeline.stages.length" class="scroll-container">
             <div class="scroll-wraper">
                 <bk-pipeline
-                    v-if="pipeline"
                     :pipeline="pipeline"
                     :user-name="userName"
                     :editable="pipelineEditable"
@@ -26,6 +25,10 @@
                 >
                 </bk-pipeline>
             </div>
+        </div>
+        <div v-else class="empty-pipeline-stage" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
+            <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
+            <span>{{$t('点击添加第一个流水线Stage')}}</span>
         </div>
 
         <bk-dialog v-model="isStageShow"
@@ -381,6 +384,23 @@
             min-width: calc( 100% - 30px);
             border-top: 2px dashed #c3cdd7;
        }
+    }
+    .empty-pipeline-stage {
+        width: 280px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background: #EFF5FF;
+        border: 1px solid #D4E8FF;
+        border-radius: 2px;
+        font-size: 12px;
+        color: #3A84FF;
+        i {
+            font-size: 14px;
+            margin-right: 8px;
+        }
     }
 
     .stage-type-list {

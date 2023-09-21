@@ -166,6 +166,7 @@
             ...mapState('atom', [
                 'pipeline',
                 'saveStatus',
+                'pipelineWithoutTrigger',
                 'pipelineSetting',
                 'pipelineYaml'
             ]),
@@ -248,7 +249,13 @@
             async saveDraft () {
                 try {
                     this.setSaveStatus(true)
-                    const { pipelineSetting, checkPipelineInvalid, pipeline, pipelineYaml } = this
+                    const pipeline = Object.assign({}, this.pipeline, {
+                        stages: [
+                            this.pipeline.stages[0],
+                            ...this.pipelineWithoutTrigger.stages
+                        ]
+                    })
+                    const { pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
                     const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
                     const { projectId, pipelineId } = this.$route.params
                     if (inValid) {
