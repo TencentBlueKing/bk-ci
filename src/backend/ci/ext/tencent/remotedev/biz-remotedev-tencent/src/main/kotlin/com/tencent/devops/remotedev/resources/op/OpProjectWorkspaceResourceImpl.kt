@@ -8,6 +8,7 @@ import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -23,11 +24,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 ) : OpProjectWorkspaceResource {
     override fun assignWorkspace(
         userId: String,
-        projectId: String,
-        cgsIds: List<String>,
-        ips: List<String>
+        data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
-        val cgsData = workspaceCommon.getCgsData(cgsIds, ips) ?: return Result(false)
+        val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         cgsData.forEach { cgs ->
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
@@ -38,7 +37,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             // 调用CreateControl.asyncCreateWorkspace发起创建
             createControl.asyncCreateWorkspace(
                 pmUserId = userId,
-                projectId = projectId,
+                projectId = data.projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = false,
                 workspaceCreate = ProjectWorkspaceCreate(

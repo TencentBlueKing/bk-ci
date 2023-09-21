@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -41,7 +42,6 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
@@ -57,15 +57,8 @@ interface OpProjectWorkspaceResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam(value = "云桌面ID", required = true)
-        @QueryParam("cgsIds")
-        cgsIds: List<String>,
-        @ApiParam(value = "云桌面IP", required = true)
-        @QueryParam("ips")
-        ips: List<String>
+        @ApiParam(value = "分配数据")
+        data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
