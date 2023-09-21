@@ -64,14 +64,12 @@ class TxStoreFileServiceImpl : StoreFileService() {
                     serviceUrlPrefix = serviceUrlPrefix,
                     file = file
                 ).data
-                logger.info("uploadFileToPath return fileUrl:$fileUrl")
                 fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
             } else {
                 logger.warn("Resource file does not exist:${file.path}")
             }
             file.delete()
         }
-        logger.info("uploadFileToPath result:$result")
         return result
     }
 
@@ -96,10 +94,8 @@ class TxStoreFileServiceImpl : StoreFileService() {
         val index = file.path.indexOf(BK_CI_ATOM_DIR)
         val serviceUrl = "$serviceUrlPrefix/service/bkrepo/statics/file/upload" +
                 "?userId=$userId&destPath=${file.path.substring(index)}"
-        logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
-            logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 val message = I18nUtil.getCodeLanMessage(messageCode = CommonMessageCode.SYSTEM_ERROR)
                 Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
