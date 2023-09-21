@@ -33,7 +33,6 @@
             >
                 <template slot-scope="props">
                     <Icon
-                        v-if="isListFlod"
                         class="codelib-type-icon"
                         :name="codelibIconMap[props.row.type]"
                         size="16"
@@ -60,11 +59,6 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <Icon
-                        class="codelib-type-icon"
-                        :name="codelibIconMap[props.row.type]"
-                        size="16"
-                    />
                     {{ props.row.url }}
                     <!-- <a
                         @click="handleToCodelib(props.row.url)"
@@ -337,7 +331,7 @@
                 },
                 {
                     id: 'authType',
-                    label: this.$t('codelib.authIdentity')
+                    label: this.$t('codelib.auth')
                 },
                 {
                     id: 'recentlyEditedBy',

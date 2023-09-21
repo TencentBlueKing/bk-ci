@@ -44,7 +44,7 @@
         >
             <bk-input
                 v-model.trim="codelib.aliasName"
-                :maxlength="200"
+                :maxlength="60"
                 :placeholder="$t('codelib.aliasNameEnter')"
             >
             </bk-input>

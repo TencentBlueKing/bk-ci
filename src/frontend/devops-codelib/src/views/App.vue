@@ -30,6 +30,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
+        min-width: 1480px;
         &-header {
             display: flex;
             width: 100%;

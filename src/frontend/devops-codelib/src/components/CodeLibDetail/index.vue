@@ -8,7 +8,7 @@
                 v-if="!isEditing"
                 class="codelib-name"
             >
-                <span class="name mr5">{{ repoInfo.aliasName }}</span>
+                <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
                 <span @click="handleEditName">
                     <Icon
                         name="edit-line"
@@ -26,6 +26,7 @@
             </div>
             <div
                 v-else
+                v-bk-clickoutside="handleSave"
                 class="edit-input"
             >
                 <bk-input
@@ -55,16 +56,15 @@
                     :name="codelibIconMap[curRepo.type]"
                     size="16"
                 />
-                <a
+                <!-- <a
                     v-if="repoInfo.url && repoInfo.url.startsWith('http')"
                     class="codelib-address"
                     v-bk-overflow-tips
                     @click="handleToRepo(repoInfo.url)"
                 >
                     {{ repoInfo.url }}
-                </a>
+                </a> -->
                 <p
-                    v-else
                     class="codelib-address"
                 >
                     {{ repoInfo.url }}
@@ -228,6 +228,10 @@
              * 保存代码库别名
              */
             handleSave () {
+                if (this.repoInfo.aliasName === this.oldAliasName) {
+                    this.isEditing = false
+                    return
+                }
                 this.renameAliasName({
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId,
@@ -242,6 +246,10 @@
                     })
                     this.$emit('updateList')
                 }).catch(e => {
+                    this.$bkMessage({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
                     this.repoInfo.aliasName = this.oldAliasName
                     console.error(e)
                 }).finally(() => {
@@ -367,14 +375,18 @@
             font-size: 16px;
             color: #313238;
             margin-right: 30px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
             &:hover {
                 .edit-icon,
                 .delete-icon {
                     display: inline;
                 }
+            }
+            span {
+                display: inline-block;
+                max-width: 500px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
         .edit-input {
