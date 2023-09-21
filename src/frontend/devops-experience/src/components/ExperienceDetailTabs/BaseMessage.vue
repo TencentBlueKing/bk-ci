@@ -17,6 +17,7 @@
                 <label class="item-label">安装包：</label>
                 <ArtifactDownloadButton
                     :experience-id="experienceHashId"
+                    :name="curReleaseDetail.installation_package"
                     :disable="!curReleaseDetail.canExperience || !curReleaseDetail.expired || !curReleaseDetail.online"
                 >
                     {{ curReleaseDetail.installation_package }}

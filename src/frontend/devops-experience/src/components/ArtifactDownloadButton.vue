@@ -45,6 +45,10 @@
                 type: String,
                 default: ''
             },
+            name: {
+                type: String,
+                required: true
+            },
             experienceId: {
                 type: String,
                 required: true
