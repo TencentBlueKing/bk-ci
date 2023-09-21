@@ -404,7 +404,12 @@ class RepoPipelineRefService @Autowired constructor(
     }
 
     private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig? {
-        val repositoryType = RepositoryType.parseType(input["repositoryType"] as String?)
+        val taskRepoType = input["repositoryType"] as String?
+        // URL指定代码库，无需关联代码库
+        if (taskRepoType == "URL") {
+            return null
+        }
+        val repositoryType = RepositoryType.parseType(taskRepoType)
         val repositoryId = when (repositoryType) {
             RepositoryType.ID -> EnvUtils.parseEnv(input["repositoryHashId"] as String?, variables)
             RepositoryType.NAME -> EnvUtils.parseEnv(input["repositoryName"] as String?, variables)
