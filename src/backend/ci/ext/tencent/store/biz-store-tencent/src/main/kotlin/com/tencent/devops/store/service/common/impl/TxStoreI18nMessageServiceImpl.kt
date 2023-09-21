@@ -159,7 +159,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
-        )
+        ) + "/file"
         val file = File(fileDirPath, "file.zip")
         try {
             downloadFile(
@@ -169,12 +169,12 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 branch = branch
             )
             if (file.exists()) {
-                ZipUtil.unZipFile(file, file.parentFile.path, false)
+                ZipUtil.unZipFile(file, fileDirPath, false)
                 result = storeFileService.descriptionAnalysis(
                     userId = userId,
                     description = description,
                     client = client,
-                    fileDirPath = "$fileDirPath${File.separator}file"
+                    fileDirPath = fileDirPath
                 )
             }
         } catch (ignored: Throwable) {
