@@ -5,7 +5,7 @@ data class TaskStatus(
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val status: TaskStatusEnum? = null,
-    val statuscode: Int? = null,
+    val vmCreateResp: VmCreateResp? = null,
     val logs: List<String> = emptyList()
 )
 
@@ -16,3 +16,12 @@ enum class TaskStatusEnum {
     failed,
     abort
 }
+
+data class VmCreateResp(
+    val cgsIp: String,
+    val cloudZoneId: String,
+    val existed: Boolean,
+    val resourceId: String,
+    val envId: String? = "",
+    val curLaunchId: String
+)

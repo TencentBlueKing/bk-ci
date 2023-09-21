@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
@@ -37,6 +38,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.VmCreateResp
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
@@ -71,18 +73,20 @@ class RemoteDevService @Autowired constructor(
             userId = userId,
             event = event,
             environmentUid = result.enviromentUid,
-            regionId = result.regionId,
+            regionId = 0,
             taskId = result.taskId,
             status = EnvStatusEnum.running,
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(mountType)
+        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .waitTaskFinish(userId, result.taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
+            val vmCreateResp = JsonUtil.to(taskMessage ?: "", VmCreateResp::class.java)
 
+            // 检验workspace状态
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
 
@@ -107,16 +111,16 @@ class RemoteDevService @Autowired constructor(
                     dslContext = context,
                     workspaceName = event.workspaceName,
                     environmentUid = result.enviromentUid,
-                    operator = "admin",
+                    operator = userId,
                     action = EnvironmentAction.CREATE
                 )
             }
 
             return WorkspaceResponse(
-                environmentUid = result.enviromentUid,
+                environmentUid = vmCreateResp.envId ?: "",
                 environmentHost = workspaceInfo.environmentHost,
                 environmentIp = workspaceInfo.environmentIP,
-                resourceId = result.resourceId
+                resourceId = vmCreateResp.resourceId
             )
         } else {
             dslContext.transaction { t ->
@@ -133,7 +137,7 @@ class RemoteDevService @Autowired constructor(
                     environmentUid = result.enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE,
-                    actionMsg = failedMsg ?: ""
+                    actionMsg = taskMessage ?: ""
                 )
             }
 
@@ -141,7 +145,7 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                "errorMessage:$failedMsg"
+                "errorMessage:$taskMessage"
             )
         }
     }

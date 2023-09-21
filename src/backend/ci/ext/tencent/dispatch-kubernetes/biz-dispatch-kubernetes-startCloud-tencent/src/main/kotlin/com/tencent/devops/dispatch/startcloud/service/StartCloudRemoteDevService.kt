@@ -83,7 +83,9 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipelineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+
+        // 生产创建start资源的订单号
+        val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
@@ -103,14 +105,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                 basicBody = EnvironmentCreateBasicBody(
                     userId = userId,
                     appName = appName,
-                    pipelineId = pipelineId,
+                    pipelineId = orderId,
                     zoneId = resource.zoneId,
                     machineType = resource.machineType,
                     cgsId = event.devFile.cgsId
                 )
             )
         )
-        return CreateWorkspaceRes(res.cgsIp, pipelineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
+        return CreateWorkspaceRes(res.cgsIp, orderId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -193,8 +195,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             )
         return WorkspaceInfo(
             status = EnvStatusEnum.running,
-            hostIP = workspaceInfo.environmentUid,
-            environmentIP = workspaceInfo.environmentUid,
+            hostIP = "",
+            environmentIP = "",
             clusterId = "",
             namespace = "",
             environmentHost = "",
@@ -213,22 +215,27 @@ class StartCloudRemoteDevService @Autowired constructor(
             taskUid = taskId,
             taskStatus = TaskStatus(taskId)
         )
-        // 轮训十分钟
+
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
-            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+            if (System.currentTimeMillis() - startTime > START_CREATE_TIMEOUT) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
                     I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
                 )
             }
-            Thread.sleep(1 * 1000)
+
+            Thread.sleep(START_CREATE_LOOP_INTERVAL)
+
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
-                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+                    DispatchBuildTaskStatus(
+                            DispatchBuildTaskStatusEnum.SUCCEEDED,
+                            JsonUtil.toJson(taskStatus.vmCreateResp ?: "")
+                    )
                 } else {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
                 }
@@ -238,11 +245,13 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     private fun getEnvironmentUid(workspaceName: String): String {
         val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
-        return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
+        return workspaceRecord?.environmentUid ?: throw RuntimeException("No start environment with $workspaceName")
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""
+        private const val START_CREATE_TIMEOUT = 20 * 60 * 1000  // start生成资源最长轮训时间
+        private const val START_CREATE_LOOP_INTERVAL = 1000L
     }
 }
