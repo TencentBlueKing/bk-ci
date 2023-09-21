@@ -895,6 +895,12 @@ class PipelineRepositoryService constructor(
                 )
                 watcher.start("updatePipelineResource")
                 if (versionStatus == VersionStatus.RELEASED) {
+                    pipelineResourceDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        beforeVersion = version
+                    )
                     pipelineResourceDao.create(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -906,12 +912,6 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = pipelineVersion,
                         triggerVersion = triggerVersion,
                         settingVersion = settingVersion
-                    )
-                    pipelineResourceDao.deleteEarlyVersion(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        beforeVersion = version
                     )
                 }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
