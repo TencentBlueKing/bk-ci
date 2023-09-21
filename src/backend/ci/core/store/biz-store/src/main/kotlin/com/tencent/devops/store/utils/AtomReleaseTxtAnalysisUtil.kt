@@ -71,6 +71,9 @@ object AtomReleaseTxtAnalysisUtil {
         return descriptionContent
     }
 
+    /**
+     * 替换资源路径
+     */
     fun filePathReplace(
         result: MutableMap<String, String>,
         descriptionContent: String

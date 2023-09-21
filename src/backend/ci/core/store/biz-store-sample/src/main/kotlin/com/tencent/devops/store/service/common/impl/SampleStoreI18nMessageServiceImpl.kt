@@ -36,10 +36,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SampleStoreI18nMessageServiceImpl::class.java)
+    }
 
     override fun getFileStr(
         projectCode: String,
@@ -67,6 +72,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                 "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        logger.info("downloadFile filePath:$filePath")
         val response = OkhttpUtils.doPost(url, "")
         if (response.isSuccessful) {
             OkhttpUtils.downloadFile(response, file)
@@ -80,12 +86,14 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir", Charsets.UTF_8.name())
+        var filePath = "$projectCode/$fileDir"
+        i18nDir?.let { filePath = "$filePath/$i18nDir" }
+        logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,
-            filePath = filePath
+            filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
         ).data
     }
 
@@ -102,7 +110,11 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileNameList = getFileNames(
             projectCode = projectCode,
             fileDir = "$fileDir${separator}file"
-        ) ?: return description
+        )
+        if (fileNameList.isNullOrEmpty()) {
+            logger.info("descriptionAnalysis get fileNameList fail")
+            return description
+        }
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir

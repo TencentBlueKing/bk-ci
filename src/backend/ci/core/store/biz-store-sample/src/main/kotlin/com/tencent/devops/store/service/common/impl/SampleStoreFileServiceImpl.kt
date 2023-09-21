@@ -71,7 +71,6 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             }
             file.delete()
         }
-        logger.info("uploadFileToPath result:$result")
         return result
     }
 

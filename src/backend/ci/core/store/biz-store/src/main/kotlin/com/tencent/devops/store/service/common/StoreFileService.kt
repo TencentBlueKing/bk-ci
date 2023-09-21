@@ -83,11 +83,13 @@ abstract class StoreFileService {
                 file.delete()
             }
         }
+        // 解析获取文件引用路径
         descriptionText = AtomReleaseTxtAnalysisUtil.regexAnalysis(
             input = descriptionText,
             fileDirPath = fileDirPath,
             pathList = pathList
         )
+        // 上传文件获取远程静态文件url
         val uploadFileToPathResult = uploadFileToPath(
             userId = userId,
             pathList = pathList,
