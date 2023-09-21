@@ -63,7 +63,7 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: 123
+- repoName: "123"
   type: p4
   push:
     paths:
@@ -98,28 +98,28 @@ variables:
     props:
       type: boolean
   单选框:
-    value: 1
+    value: "1"
     props:
       type: selector
       options:
-      - id: 1
-        label: 1
-      - id: 2
-        label: 2
-      - id: 3
-        label: 3
+      - id: "1"
+        label: "1"
+      - id: "2"
+        label: "2"
+      - id: "3"
+        label: "3"
       description: 描述描述描述描述
   复选框:
     value: "1,2"
     props:
       type: checkbox
       options:
-      - id: 1
-        label: 1
-      - id: 2
-        label: 2
-      - id: 3
-        label: 3
+      - id: "1"
+        label: "1"
+      - id: "2"
+        label: "2"
+      - id: "3"
+        label: "3"
   代码库:
     value: lockiechen/obb-demo
     props:
@@ -142,7 +142,7 @@ variables:
     value: ""
     props:
       type: artifactory
-      description: 666
+      description: "666"
       glob: '*'
       properties:
         key1asd: asdasd
@@ -152,7 +152,7 @@ variables:
     props:
       type: sub_pipeline
   文件:
-    value: 123
+    value: "123"
     props:
       type: custom_file
 stages:
@@ -175,10 +175,9 @@ stages:
         uses: windowsScript@1.*
         with:
           script: echo 1
-        timeout-minutes: 666
+        timeout-minutes: "666"
         continue-on-error: manual
         retry-times: 4
-        shell: cmd
     job_nT0:
       name: Windows-私有构建机群
       runs-on:
@@ -194,7 +193,6 @@ stages:
         uses: windowsScript@1.*
         with:
           script: echo 1
-        shell: cmd
     job_W7R:
       name: Windows-云
       runs-on:
@@ -206,7 +204,6 @@ stages:
         with:
           script: echo 1
           charsetType: GBK
-        shell: cmd
       - name: RunScript
         with:
           charsetType: UTF_8
@@ -252,7 +249,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
     job_LaA:
       name: MacOS-私有构建机
       runs-on:
@@ -267,7 +263,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
     job_kLT:
       name: MacOS-私有构建机群
       runs-on:
@@ -282,7 +277,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
 - name: linux
   label:
   - Build
@@ -301,7 +295,6 @@ echo 2"
         with:
           script: echo 1
         timeout-minutes: "${bianliang}"
-        shell: bash
       timeout-minutes: "${bianliang}"
     job_B1j:
       name: Linux-私有构建机
@@ -317,7 +310,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
     job_QxG:
       name: Linux-私有构建机群
       runs-on:
@@ -332,7 +324,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
       depend-on:
       - job_rTM
     job__JE:
@@ -350,7 +341,6 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 1
-        shell: bash
       strategy:
         matrix:
           os:
@@ -376,8 +366,7 @@ echo 2"
         uses: linuxScript@1.*
         with:
           script: echo 2
-        shell: bash
-      timeout-minutes: 111
+      timeout-minutes: "111"
       depend-on:
       - job_QxG
       depend-on-type: NAME
@@ -393,11 +382,75 @@ echo 2"
       - name: Python脚本执行
         uses: pythonscriptrun@8.*
         with:
-          pythonVersion: 0
+          pythonVersion: "0"
           optionType: online
-          scriptCode: 1
+          scriptCode: "1"
           scriptPath: ""
         continue-on-error: true
+      - name: 人工审核
+        uses: manualReviewUserTask@1.*
+        with:
+          reviewUsers:
+          - yongyiduan
+          desc: 审核说明：
+          params:
+          - key: 人工审核插件变量
+            value: value22
+            valueType: STRING
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 文本框
+            value: qwqwe
+            valueType: TEXTAREA
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 布尔值
+            value: true
+            valueType: BOOLEAN
+            required: true
+            desc: 描述
+            chineseName: 中文名称
+          - key: 单选框
+            value: w
+            valueType: ENUM
+            required: true
+            desc: 描述
+            options:
+            - key: w
+              value: w
+            - key: "2"
+              value: "2"
+            - key: "34"
+              value: "34"
+            - key: "22"
+              value: "22"
+            chineseName: 中文名称
+          - key: 复选框
+            value: "qwe,前往"
+            valueType: MULTIPLE
+            required: true
+            desc: 描述
+            options:
+            - key: qwe
+              value: qwe
+            - key: 前往
+              value: 前往
+            - key: qq
+              value: qq
+            chineseName: 中文名称
+          namespace: wqeqweqwe666
+          notifyType:
+          - RTX
+          - EMAIL
+          - MOA
+          - WEWORK_GROUP
+          notifyTitle: 通知标题：
+          markdownContent: true
+          notifyGroup:
+          - qweqweqwe
+          reminderTime: 66
 finally:
   job_s5r:
     name: Linux-插件测试
@@ -453,7 +506,6 @@ finally:
         archiveFile: '*.log'
       continue-on-error: manual
       retry-times: 4
-      shell: bash
       manual-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
@@ -489,20 +541,20 @@ finally:
         C_CPP_RULE: []
         checkerSetEnvType: prod
         multiPipelineMark: ""
-        rtxReceiverType: 1
+        rtxReceiverType: "1"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 2
-        botRemindSeverity: 7
+        botRemindRange: "2"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 1
+        emailReceiverType: "1"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         diffBranch: ""
         byFile: false
         mrCommentEnable: true
