@@ -42,10 +42,11 @@ import java.time.LocalDateTime
 @Suppress("ComplexMethod", "LongMethod")
 class ServiceDao {
 
-    fun getServiceList(dslContext: DSLContext): Result<TServiceRecord> {
+    fun getServiceList(dslContext: DSLContext, clusterType: String? = null): Result<TServiceRecord> {
         with(TService.T_SERVICE) {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
+                .let { if (clusterType == null) it else it.and(CLUSTER_TYPE.eq(clusterType)) }
                 .skipCheck()
                 .fetch()
         }
@@ -77,7 +78,8 @@ class ServiceDao {
                 PROJECT_ID_TYPE,
                 CREATED_USER,
                 DELETED,
-                GRAY_IFRAME_URL
+                GRAY_IFRAME_URL,
+                CLUSTER_TYPE
             )
                 .values(
                     serviceVO.id,
@@ -97,7 +99,8 @@ class ServiceDao {
                     serviceVO.projectIdType,
                     userId,
                     false,
-                    serviceVO.grayIframeUrl
+                    serviceVO.grayIframeUrl,
+                    serviceVO.clusterType
                 )
                 .execute()
         }
@@ -127,7 +130,8 @@ class ServiceDao {
                 DELETED,
                 LOGO_URL,
                 WEB_SOCKET,
-                GRAY_IFRAME_URL
+                GRAY_IFRAME_URL,
+                CLUSTER_TYPE
             ).values(
                 serviceCreateInfo.name,
                 serviceCreateInfo.englishName,
@@ -149,7 +153,8 @@ class ServiceDao {
                 false,
                 serviceCreateInfo.logoUrl,
                 serviceCreateInfo.webSocket,
-                serviceCreateInfo.grayIframeUrl
+                serviceCreateInfo.grayIframeUrl,
+                serviceCreateInfo.clusterType
             ).returning().fetchOne()
         }
     }
@@ -234,7 +239,7 @@ class ServiceDao {
             if (serviceUpdateInfo.deleted != null) {
                 execute.set(DELETED, serviceUpdateInfo.deleted)
             }
-
+            execute.set(CLUSTER_TYPE, serviceUpdateInfo.clusterType)
             return execute.set(UPDATED_USER, userId)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(whereCondition)
