@@ -5,7 +5,6 @@ import com.tencent.bk.audit.constants.AccessTypeEnum
 import com.tencent.bk.audit.constants.UserIdentifyTypeEnum
 import com.tencent.bk.audit.exception.AuditException
 import com.tencent.bk.audit.model.AuditHttpRequest
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
@@ -19,7 +18,6 @@ class BkAuditRequestProvider : AuditRequestProvider {
         private const val HEADER_USER_IDENTIFY_TYPE = "X-User-Identify-Type"
         private const val HEADER_ACCESS_TYPE = "USER-AGENT"
         private const val HEADER_REQUEST_ID = "X-DEVOPS-RID"
-        private const val HEADER_BK_APP_CODE = AUTH_HEADER_DEVOPS_APP_CODE
         private val logger = LoggerFactory.getLogger(BkAuditRequestProvider::class.java)
     }
 
@@ -67,11 +65,6 @@ class BkAuditRequestProvider : AuditRequestProvider {
     override fun getRequestId(): String? {
         val httpServletRequest = getHttpServletRequest()
         return httpServletRequest.getHeader(HEADER_REQUEST_ID)
-    }
-
-    override fun getBkAppCode(): String? {
-        val httpServletRequest = getHttpServletRequest()
-        return httpServletRequest.getHeader(HEADER_BK_APP_CODE)
     }
 
     override fun getClientIp(): String? {
