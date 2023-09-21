@@ -76,6 +76,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -118,6 +119,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
     private val pipelineBranchVersionService: PipelineBranchVersionService,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val pipelineRecentUseService: PipelineRecentUseService
@@ -853,7 +855,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (!latestDebugPassed) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
         )
-        pipelineRepositoryService.deployPipeline(
+        val result = pipelineRepositoryService.deployPipeline(
             model = draftVersion.model.copy(staticViews = request.staticViews),
             projectId = projectId,
             signPipelineId = pipelineId,
@@ -867,11 +869,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             yamlStr = draftVersion.yaml,
             baseVersion = draftVersion.baseVersion
         )
+        // #8164 发布后的流水将调试信息清空为0，重新计数
+        pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
-            version = draftVersion.version,
-            versionName = draftVersion.versionName
+            version = result.version,
+            versionName = result.versionName
         )
     }
 

@@ -383,7 +383,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 oldYaml = baseVersion?.yaml ?: ""
             )
         )
-        // TODO #8161 模板的草稿如何处理
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
