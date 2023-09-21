@@ -29,10 +29,10 @@ package com.tencent.devops.process.yaml.v3.models.job
 
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v3.models.MetaData
-import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.process.yaml.v3.models.YamlMetaData
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
+import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlMetaData
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import io.swagger.annotations.ApiModelProperty
 
 interface IPreJob

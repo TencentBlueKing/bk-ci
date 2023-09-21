@@ -100,18 +100,30 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String, buildNo: Int) {
-
+    fun updateBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildNo: Int,
+        debug: Boolean
+    ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
             dslContext.update(this)
-                .set(BUILD_NO, buildNo)
+                .set(noColumn, buildNo)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 
-    fun getBuildNo(dslContext: DSLContext, projectId: String, pipelineId: String): Int? {
+    fun getBuildNo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        debug: Boolean
+    ): Int? {
         return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NO)
+            val noColumn = if (debug) DEBUG_BUILD_NO else BUILD_NO
+            dslContext.select(noColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)
@@ -122,25 +134,24 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        debug: Boolean,
         buildNum: Int = 0,
         buildNumAlias: String? = null
     ): Int {
-
         with(T_PIPELINE_BUILD_SUMMARY) {
+            val numColumn = if (debug) DEBUG_BUILD_NUM else BUILD_NUM
             if (buildNum == 0) {
                 dslContext.update(this)
-                    .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(numColumn, numColumn + 1)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             } else {
                 dslContext.update(this)
-                    .set(BUILD_NUM, buildNum)
+                    .set(numColumn, buildNum)
                     .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
             }
-        }
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.select(BUILD_NUM)
+            return dslContext.select(numColumn)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!

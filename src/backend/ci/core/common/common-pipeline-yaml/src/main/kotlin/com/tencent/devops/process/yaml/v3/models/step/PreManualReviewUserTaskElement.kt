@@ -27,46 +27,30 @@
 
 package com.tencent.devops.process.yaml.v3.models.step
 
-import com.fasterxml.jackson.annotation.JsonFilter
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v3.models.MetaData
-import com.tencent.devops.process.yaml.v3.models.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.process.yaml.v3.models.YamlMetaData
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-interface IPreStep
-
-/**
- * 为了方便产生中间变量的过度类和Step一模一样
- */
-@JsonFilter(YAME_META_DATA_JSON_FILTER)
-data class PreStep(
-    var enable: Boolean? = null,
-    val checkout: String? = null,
-    val name: String?,
-    val id: String?,
-    @ApiModelProperty(name = "if")
-    @JsonProperty("if")
-    val ifFiled: String?,
-    @ApiModelProperty(name = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    val uses: String?,
-    val with: Map<String, Any?>?,
-    @ApiModelProperty(name = "timeout-minutes")
-    @JsonProperty("timeout-minutes")
-    var timeoutMinutes: String? = null,
-    @ApiModelProperty(name = "continue-on-error")
-    @JsonProperty("continue-on-error")
-    var continueOnError: Any? = null,
-    @ApiModelProperty(name = "retry-times")
-    @JsonProperty("retry-times")
-    var retryTimes: Int? = null,
-    var env: Map<String, Any?>? = emptyMap(),
-    val run: String? = null,
-    val shell: String? = null,
-    @ApiModelProperty(name = "manual-retry")
-    @JsonProperty("manual-retry")
-    var manualRetry: Boolean? = null,
-    override val yamlMetaData: MetaData? = null
-) : YamlMetaData, IPreStep
+@ApiModel("人工审核插件-pre")
+data class PreManualReviewUserTaskElement(
+    @ApiModelProperty("审核人", required = true)
+    var reviewUsers: MutableList<String> = mutableListOf(),
+    @ApiModelProperty("描述", required = false)
+    var desc: String? = "",
+    @ApiModelProperty("审核意见", required = false)
+    var suggest: String? = "",
+    @ApiModelProperty("参数列表", required = false)
+    var params: MutableList<ManualReviewParam> = mutableListOf(),
+    @ApiModelProperty("输出变量名空间", required = false)
+    var namespace: String? = "",
+    @ApiModelProperty("发送的通知类型", required = false)
+    var notifyType: MutableList<String>? = null,
+    @ApiModelProperty("发送通知的标题", required = false)
+    var notifyTitle: String? = null,
+    @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
+    var markdownContent: Boolean? = false,
+    @ApiModelProperty("企业微信群id", required = false)
+    var notifyGroup: MutableList<String>? = null,
+    @ApiModelProperty("审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
+    var reminderTime: Int? = null
+)

@@ -46,16 +46,17 @@ import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 data class PreTemplateScriptBuildYamlV3(
     override val version: String?,
     override val name: String?,
+    override val desc: String?,
     override val label: List<String>? = null,
     @JsonProperty("on")
     var triggerOn: Any?,
     override val variables: Map<String, Any>?,
     override val stages: List<Map<String, Any>>?,
-    override val jobs: Map<String, Any>? = null,
+    override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: List<Map<String, Any>>? = null,
     override val extends: Extends?,
     override val resources: Resources?,
-    override var finally: Map<String, Any>?,
+    override var finally: LinkedHashMap<String, Any>?,
     override val notices: List<PacNotices>?,
     override val concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {

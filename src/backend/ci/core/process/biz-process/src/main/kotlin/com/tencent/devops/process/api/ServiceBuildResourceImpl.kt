@@ -130,7 +130,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?,
+        debugVersion: Int?,
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
@@ -140,7 +140,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                debugVersion = debugVersion,
                 channelCode = channelCode,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )

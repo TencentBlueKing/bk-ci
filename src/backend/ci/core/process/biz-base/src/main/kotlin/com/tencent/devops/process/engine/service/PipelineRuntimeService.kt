@@ -176,7 +176,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineRuleService: PipelineRuleService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val repositoryVersionService: PipelineRepositoryVersionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -331,9 +332,8 @@ class PipelineRuntimeService @Autowired constructor(
             updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
-        val buildStatus = BuildStatus.values()
         list.forEach {
-            result.add(genBuildHistory(it, buildStatus, currentTimestamp))
+            result.add(genBuildHistory(it, currentTimestamp))
         }
         return result
     }
@@ -400,9 +400,8 @@ class PipelineRuntimeService @Autowired constructor(
             debugVersion = debugVersion
         )
         val result = mutableListOf<BuildHistory>()
-        val buildStatus = BuildStatus.values()
         list.forEach {
-            result.add(genBuildHistory(it, buildStatus, currentTimestamp))
+            result.add(genBuildHistory(it, currentTimestamp))
         }
         return result
     }
@@ -452,7 +451,6 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun genBuildHistory(
         buildInfo: BuildInfo,
-        buildStatus: Array<BuildStatus>,
         currentTimestamp: Long
     ): BuildHistory {
         return with(buildInfo) {
@@ -502,7 +500,7 @@ class PipelineRuntimeService @Autowired constructor(
     ): BuildHistory? {
         val record = pipelineBuildDao.getBuildInfoByBuildNum(dslContext, projectId, pipelineId, buildNum, statusSet)
         return if (record != null) {
-            genBuildHistory(record, BuildStatus.values(), System.currentTimeMillis())
+            genBuildHistory(record, System.currentTimeMillis())
         } else {
             null
         }
@@ -528,9 +526,8 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildHistoryById(projectId: String, buildId: String): BuildHistory? {
         val record = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return null
-        val values = BuildStatus.values()
         val currentTimestamp = System.currentTimeMillis()
-        return genBuildHistory(record, values, currentTimestamp)
+        return genBuildHistory(record, currentTimestamp)
     }
 
     fun getStartUser(projectId: String, buildId: String): String? {
@@ -554,7 +551,6 @@ class PipelineRuntimeService @Autowired constructor(
         if (records.isEmpty()) {
             return result
         }
-        val values = BuildStatus.values()
         val currentTimestamp = System.currentTimeMillis()
         val historyBuildIds = mutableListOf<String>()
         records.forEach {
@@ -563,7 +559,7 @@ class PipelineRuntimeService @Autowired constructor(
                 return@forEach
             }
             historyBuildIds.add(buildId)
-            result.add(genBuildHistory(it, values, currentTimestamp))
+            result.add(genBuildHistory(it, currentTimestamp))
         }
         return result
     }
@@ -639,7 +635,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
-        // TODO #8161 增加对debug表和普通表的buildNo buildNum计数
+
         buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -928,7 +924,8 @@ class PipelineRuntimeService @Autowired constructor(
                     dslContext = transactionContext,
                     projectId = context.projectId,
                     pipelineId = context.pipelineId,
-                    buildNumAlias = context.buildNumAlias
+                    buildNumAlias = context.buildNumAlias,
+                    debug = context.debug
                 )
                 context.watcher.stop()
                 // 创建构建记录
@@ -972,6 +969,13 @@ class PipelineRuntimeService @Autowired constructor(
                 stageBuildRecords = stageBuildRecords,
                 containerBuildRecords = containerBuildRecords,
                 taskBuildRecords = taskBuildRecords
+            )
+            repositoryVersionService.saveDebugBuildInfo(
+                transactionContext = transactionContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                version = context.resourceVersion,
+                buildId = context.buildId
             )
             context.watcher.stop()
         }
@@ -1493,8 +1497,13 @@ class PipelineRuntimeService @Autowired constructor(
         return buildTask
     }
 
-    fun updateBuildNo(projectId: String, pipelineId: String, buildNo: Int) {
-        pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo)
+    fun updateBuildNo(
+        projectId: String,
+        pipelineId: String,
+        buildNo: Int,
+        debug: Boolean
+    ) {
+        pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo, debug)
     }
 
     fun updateExecuteCount(

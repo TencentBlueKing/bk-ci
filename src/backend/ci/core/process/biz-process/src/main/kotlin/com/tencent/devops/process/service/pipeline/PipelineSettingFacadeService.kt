@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
 import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -118,11 +119,20 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        val settingVersion = pipelineRepositoryService.getSetting(
+        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.let { origin ->
-            PipelineVersionUtils.getSettingVersion(origin.version, origin, setting)
+        )?.let { latest ->
+            PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    successSubscriptionList = setting.successSubscriptionList,
+                    failSubscriptionList = setting.failSubscriptionList
+                )
+            )
         } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(

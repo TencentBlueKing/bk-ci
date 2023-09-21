@@ -34,7 +34,7 @@ import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 
 /**
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
@@ -46,11 +46,11 @@ interface PreScriptBuildYamlI : YamlVersion {
     var label: List<String>?
     var variables: Map<String, Variable>?
     var stages: List<PreStage>?
-    var jobs: Map<String, PreJob>?
+    var jobs: LinkedHashMap<String, PreJob>?
     var steps: List<PreStep>?
     var extends: Extends?
     var resources: Resources?
-    var finally: Map<String, PreJob>?
+    var finally: LinkedHashMap<String, PreJob>?
     val concurrency: Concurrency?
 }
 
@@ -69,12 +69,12 @@ data class PreScriptBuildYaml(
     var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
     override var stages: List<PreStage>? = null,
-    override var jobs: Map<String, PreJob>? = null,
+    override var jobs: LinkedHashMap<String, PreJob>? = null,
     override var steps: List<PreStep>? = null,
     override var extends: Extends? = null,
     override var resources: Resources?,
     var notices: List<GitNotices>?,
-    override var finally: Map<String, PreJob>? = null,
+    override var finally: LinkedHashMap<String, PreJob>? = null,
     override val concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {
     override fun yamlVersion() = YamlVersion.Version.V2_0

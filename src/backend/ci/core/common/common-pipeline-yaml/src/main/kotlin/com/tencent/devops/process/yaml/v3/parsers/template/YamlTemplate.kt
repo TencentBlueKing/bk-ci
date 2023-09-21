@@ -45,12 +45,12 @@ import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.Repositories
 import com.tencent.devops.process.yaml.v3.models.ResourcesPools
-import com.tencent.devops.process.yaml.v3.models.TemplateInfo
+import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.format
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.process.yaml.v3.models.step.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parameter.ParametersTemplateNull
 import com.tencent.devops.process.yaml.v3.parameter.PreParametersTemplate
@@ -314,7 +314,7 @@ class YamlTemplate<T>(
         preYamlObject: PreScriptBuildYamlI,
         deepTree: TemplateDeepTreeNode
     ) {
-        val jobMap = mutableMapOf<String, PreJob>()
+        val jobMap = LinkedHashMap<String, PreJob>()
         jobs.forEach { (key, value) ->
             // 检查根文件处job_id重复
             val newJob = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
@@ -344,7 +344,7 @@ class YamlTemplate<T>(
         deepTree: TemplateDeepTreeNode
     ) {
         // finally: 与jobs: 的结构相同
-        val finallyMap = mutableMapOf<String, PreJob>()
+        val finallyMap = LinkedHashMap<String, PreJob>()
         finally.forEach { (key, value) ->
             // 检查根文件处job_id重复
             val newFinally = replaceJobTemplate(mapOf(key to value), filePath, deepTree)

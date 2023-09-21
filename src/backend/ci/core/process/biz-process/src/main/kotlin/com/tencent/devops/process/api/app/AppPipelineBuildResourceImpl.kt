@@ -258,7 +258,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        debugVersion: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
 
@@ -269,7 +269,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
+                debugVersion = debugVersion,
                 channelCode = channelCode
             )
         )

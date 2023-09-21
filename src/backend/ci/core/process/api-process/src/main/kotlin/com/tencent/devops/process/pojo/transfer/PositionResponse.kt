@@ -25,34 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.utils
+package com.tencent.devops.process.pojo.transfer
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object YamlCommonUtils {
-    private val objectMapper = ObjectMapper(
-        YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE).disable(YAMLGenerator.Feature.SPLIT_LINES)
-    ).apply {
-        // 去掉替换模板中间过程中生成的中间变量
-        registerKotlinModule().setFilterProvider(
-            SimpleFilterProvider().addFilter(
-                YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
-            )
-        )
-    }
-
-    fun getObjectMapper() = objectMapper
-
-    fun toYamlNotNull(bean: Any): String {
-        val objectMapper = getObjectMapper()
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        return objectMapper.writeValueAsString(bean)!!
+@ApiModel("yaml定位")
+data class PositionResponse(
+    @ApiModelProperty("定位类型，非error时应当必有")
+    val type: PositionType? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示当前stage的os类型")
+    var jobBaseOs: VMBaseOS? = null,
+    @ApiModelProperty("当定位到STAGE,JOB,STEP时有效，表示stage下标")
+    var stageIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示container下标")
+    var containerIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示job的id")
+    var jobId: String? = null,
+    @ApiModelProperty("当定位到STEP时有效，表示step下标")
+    var stepIndex: Int? = null,
+    @ApiModelProperty("转换错误")
+    val error: String? = null
+) {
+    enum class PositionType {
+        SETTING,
+        STAGE,
+        JOB,
+        STEP
     }
 }

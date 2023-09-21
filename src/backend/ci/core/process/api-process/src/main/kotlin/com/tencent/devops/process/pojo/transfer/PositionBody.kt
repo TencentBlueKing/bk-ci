@@ -25,34 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.utils
+package com.tencent.devops.process.pojo.transfer
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object YamlCommonUtils {
-    private val objectMapper = ObjectMapper(
-        YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE).disable(YAMLGenerator.Feature.SPLIT_LINES)
-    ).apply {
-        // 去掉替换模板中间过程中生成的中间变量
-        registerKotlinModule().setFilterProvider(
-            SimpleFilterProvider().addFilter(
-                YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
-            )
-        )
-    }
-
-    fun getObjectMapper() = objectMapper
-
-    fun toYamlNotNull(bean: Any): String {
-        val objectMapper = getObjectMapper()
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        return objectMapper.writeValueAsString(bean)!!
-    }
-}
+@ApiModel("定位入口")
+data class PositionBody(
+    @ApiModelProperty("当前yaml内容")
+    val yaml: String = ""
+)

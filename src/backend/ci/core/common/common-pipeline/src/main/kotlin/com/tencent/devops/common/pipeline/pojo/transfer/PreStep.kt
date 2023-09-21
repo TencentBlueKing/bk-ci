@@ -25,13 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.pojo.transfer
 
-enum class IfType {
-    SUCCESS,
-    FAILURE,
-    CANCELLED, // 兼容存量的使用，后续文档引导用户使用 CANCELED
-    CANCELED,
-    ALWAYS,
-    ALWAYS_UNLESS_CANCELLED
-}
+import com.fasterxml.jackson.annotation.JsonFilter
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
+
+interface IPreStep
+
+/**
+ * 为了方便产生中间变量的过度类和Step一模一样
+ */
+@JsonFilter(YAME_META_DATA_JSON_FILTER)
+data class PreStep(
+    var enable: Boolean? = null,
+    val checkout: String? = null,
+    val name: String?,
+    val id: String?,
+    @ApiModelProperty(name = "if")
+    @JsonProperty("if")
+    val ifFiled: String?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
+    val uses: String?,
+    val with: Map<String, Any?>?,
+    @ApiModelProperty(name = "timeout-minutes")
+    @JsonProperty("timeout-minutes")
+    var timeoutMinutes: String? = null,
+    @ApiModelProperty(name = "continue-on-error")
+    @JsonProperty("continue-on-error")
+    var continueOnError: Any? = null,
+    @ApiModelProperty(name = "retry-times")
+    @JsonProperty("retry-times")
+    var retryTimes: Int? = null,
+    var env: Map<String, Any?>? = emptyMap(),
+    val run: String? = null,
+    val shell: String? = null,
+    @ApiModelProperty(name = "manual-retry")
+    @JsonProperty("manual-retry")
+    var manualRetry: Boolean? = null,
+    override val yamlMetaData: MetaData? = null
+) : YamlMetaData, IPreStep

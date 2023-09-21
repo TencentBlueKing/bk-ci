@@ -346,7 +346,7 @@ interface AppPipelineBuildResource {
         @QueryParam("buildMsg")
         buildMsg: String?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 }

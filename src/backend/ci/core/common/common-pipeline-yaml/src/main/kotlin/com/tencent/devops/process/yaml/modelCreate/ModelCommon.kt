@@ -102,14 +102,6 @@ object ModelCommon {
         return parseReceivers
     }
 
-    fun customVariableMatch(input: List<NameAndValue>?): String? {
-        val ifString = input?.joinToString(separator = " && ") {
-            "${it.key} == '${it.value}' "
-        }
-        return if (input?.isEmpty() == true) null
-        else ifString
-    }
-
     fun revertCustomVariableMatch(input: String): List<NameAndValue>? {
         if (input.indexOf("==") == -1) return null
         val res = mutableListOf<NameAndValue>()
@@ -122,14 +114,6 @@ object ModelCommon {
             }
         }.onFailure { return null }
         return res
-    }
-
-    fun customVariableMatchNotRun(input: List<NameAndValue>?): String? {
-        val ifString = input?.joinToString(separator = " || ") {
-            "${it.key} != '${it.value}' "
-        }
-        return if (input?.isEmpty() == true) null
-        else ifString
     }
 
     fun revertCustomVariableNotMatch(input: String): List<NameAndValue>? {
