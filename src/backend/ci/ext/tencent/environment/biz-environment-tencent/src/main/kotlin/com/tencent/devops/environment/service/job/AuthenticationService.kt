@@ -7,62 +7,87 @@ import org.springframework.stereotype.Service
 @Service("AuthenticationService")
 class AuthenticationService {
     @Value("\${auth.appCode:}")
-    private val appCode = ""
+    private val bkAppCode = ""
 
     @Value("\${auth.appSecret:}")
-    private val appSecret = ""
+    private val bkAppSecret = ""
+
+    @Value("\${job.bkScopeType:#{null}}")
+    val bkScopeType: String? = null
+
+    @Value("\${job.bkScopeId:#{null}}")
+    val bkScopeId: String? = null
+
+    @Value("\${job.executeScriptProdUrl:#{null}}")
+    val executeScriptProdUrl: String? = null
+
+    @Value("\${job.executeScriptStagUrl:#{null}}")
+    val executeScriptStagUrl: String? = null
+
+    @Value("\${job.distributeFileProdUrl:#{null}}")
+    val distributeFileProdUrl: String? = null
+
+    @Value("\${job.distributeFileStagUrl:#{null}}")
+    val distributeFileStagUrl: String? = null
+
+    @Value("\${job.queryJobInstanceStatusProdUrl:#{null}}")
+    val queryJobInstanceStatusProdUrl: String? = null
+
+    @Value("\${job.queryJobInstanceStatusStagUrl:#{null}}")
+    val queryJobInstanceStatusStagUrl: String? = null
+
+    @Value("\${job.queryJobInstanceLogsProdUrl:#{null}}")
+    val queryJobInstanceLogsProdUrl: String? = null
+
+    @Value("\${job.queryJobInstanceLogsStagUrl:#{null}}")
+    val queryJobInstanceLogsStagUrl: String? = null
 
     fun appAuthentication(
         operationName: String,
         operationEnv: String,
         bkUsername: String
     ): JobCloudAuthenticationReq {
-        val bkAppCode = appCode
-        val bkAppSecret = appSecret
-        val bkScopeType = "" // TODO：改为配置项
-        val bkScopeId = "" // TODO：改为配置项
-
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${bkUsername}\"}"
 
-        val url: String = when (operationName) {
+        val url: String? = when (operationName) {
             "executeScript" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_execute_script"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_execute_script"
+                    "prod" -> executeScriptProdUrl
+                    else -> executeScriptStagUrl
                 }
             }
 
             "distributeFile" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/fast_transfer_file"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/fast_transfer_file"
+                    "prod" -> distributeFileProdUrl
+                    else -> distributeFileStagUrl
                 }
             }
 
             "queryJobInstanceStatus" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/get_job_instance_status"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/get_job_instance_status"
+                    "prod" -> queryJobInstanceStatusProdUrl
+                    else -> queryJobInstanceStatusStagUrl
                 }
             }
 
             "queryJobInstanceLogs" -> {
                 when (operationEnv) {
-                    "prod" -> "https://jobv3-cloud.apigw.o.woa.com/prod/api/v3/batch_get_job_instance_ip_log"
-                    else -> "https://jobv3-cloud.apigw.o.woa.com/stag/api/v3/batch_get_job_instance_ip_log"
+                    "prod" -> queryJobInstanceLogsProdUrl
+                    else -> queryJobInstanceLogsStagUrl
                 }
             }
 
             else -> ""
         }
         return JobCloudAuthenticationReq(
-            url = url,
+            url = url ?: "",
             bkAuthorization = bkAuthorization,
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
-            bkScopeType = bkScopeType,
-            bkScopeId = bkScopeId
+            bkScopeType = bkScopeType ?: "",
+            bkScopeId = bkScopeId ?: ""
         )
     }
 }

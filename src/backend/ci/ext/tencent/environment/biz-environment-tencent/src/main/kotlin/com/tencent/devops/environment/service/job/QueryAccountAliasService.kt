@@ -11,7 +11,7 @@ class QueryAccountAliasService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
     fun queryAccountAlias(jobCloudAccountAliasQueryReq: JobCloudQueryAccountAliasReq): String {
-        // get Result<QueryAccountAliasResult> from 上云job接口
+        // TODO：get Result<QueryAccountAliasResult> from 上云job接口
         return jobCloudAccountAliasQueryReq.account
     }
 }
