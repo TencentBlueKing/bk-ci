@@ -40,7 +40,7 @@ object WebhookI18nConstants {
     const val TGIT_MR_CLOSED_EVENT_DESC = "bkTgitMrClosedEventDesc"
     const val TGIT_MR_REOPENED_EVENT_DESC = "bkTgitMrReopenedEventDesc"
     const val TGIT_MR_PUSH_UPDATED_EVENT_DESC = "bkTgitMrPushUpdatedEventDesc"
-    const val TGIT_MR_MERGED_EVENT_DESC = "bkTgitMrCreateEventDesc"
+    const val TGIT_MR_MERGED_EVENT_DESC = "bkTgitMrMergedEventDesc"
     const val TGIT_NOTE_EVENT_DESC = "bkTgitNoteEventDesc"
     const val TGIT_REVIEW_APPROVED_EVENT_DESC = "bkTgitReviewApprovedEventDesc"
     const val TGIT_REVIEW_APPROVING_EVENT_DESC = "bkTgitReviewApprovingEventDesc"
