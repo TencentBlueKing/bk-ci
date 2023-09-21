@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -35,14 +36,18 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceDetailRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QueryType
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -50,12 +55,11 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record2
+import org.jooq.RecordMapper
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import org.jooq.RecordMapper
 
 @Repository
 class WorkspaceDao {
@@ -211,27 +215,19 @@ class WorkspaceDao {
     fun countProjectWorkspace(
         dslContext: DSLContext,
         projectId: String?,
-        status: Set<WorkspaceStatus>? = null,
-        systemType: WorkspaceSystemType? = null
+        workspaceName: String?,
+        systemType: WorkspaceSystemType?,
+        queryType: QueryType? = QueryType.WEB,
+        ips: List<String>?
     ): Long {
-        val conditions = mutableListOf<Condition>()
-        with(TWorkspace.T_WORKSPACE) {
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.like("%$projectId%"))
-            }
-            return dslContext.selectCount().from(this)
-                .where(conditions)
-                .let {
-                    if (status.isNullOrEmpty()) {
-                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                    } else {
-                        it.and(STATUS.`in`(status.map { s -> s.ordinal }))
-                    }
-                }
-                .let { if (systemType != null) it.and(SYSTEM_TYPE.eq(systemType.name)) else it }
-                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
-                .fetch(0, Long::class.java).sum()
-        }
+        return dslContext.fetchCount(genFetchProjectWorkspaceCond(
+            dslContext = dslContext,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            systemType = systemType,
+            queryType = queryType,
+            ips = ips
+        )).toLong()
     }
 
     private fun TWorkspace.unionSelect(
@@ -298,22 +294,92 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         projectId: String?,
-        systemType: WorkspaceSystemType? = null
-    ): List<WorkspaceRecord>? {
-        val conditions = mutableListOf<Condition>()
-
+        workspaceName: String?,
+        systemType: WorkspaceSystemType?,
+        queryType: QueryType? = QueryType.WEB,
+        ips: List<String>?
+    ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.like("%$projectId%"))
+            return if (ips.isNullOrEmpty()) {
+                (genFetchProjectWorkspaceCond(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    workspaceName = workspaceName,
+                    systemType = systemType,
+                    queryType = queryType,
+                    ips = ips
+                ) as SelectConditionStep<TWorkspaceRecord>).orderBy(CREATE_TIME.desc(), ID.desc())
+                    .limit(limit.limit).offset(limit.offset)
+                    .fetch(workspaceMapper)
+            } else {
+                genFetchProjectWorkspaceCond(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    workspaceName = workspaceName,
+                    systemType = systemType,
+                    queryType = queryType,
+                    ips = ips
+                ).orderBy(CREATE_TIME.desc(), ID.desc())
+                    .limit(limit.limit).offset(limit.offset)
+                    .fetch(workspaceWithDetailMapper)
             }
-            return dslContext.selectFrom(this)
+        }
+    }
+
+    private fun genFetchProjectWorkspaceCond(
+        dslContext: DSLContext,
+        projectId: String?,
+        workspaceName: String?,
+        systemType: WorkspaceSystemType?,
+        queryType: QueryType? = QueryType.WEB,
+        ips: List<String>?
+    ): SelectConditionStep<*> {
+        val conditions = mutableListOf<Condition>()
+        with(TWorkspace.T_WORKSPACE) {
+            projectId?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(PROJECT_ID.like("%$it%"))
+                } else {
+                    conditions.add(PROJECT_ID.eq(it))
+                }
+            }
+
+            workspaceName?.let {
+                if (queryType == QueryType.OP) {
+                    conditions.add(NAME.like("%$it%"))
+                } else {
+                    conditions.add(NAME.eq(it))
+                }
+            }
+
+            conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+
+            if (systemType != null) {
+                conditions.add(SYSTEM_TYPE.eq(systemType.name))
+            }
+
+            if (queryType == QueryType.WEB) {
+                conditions.add(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            }
+        }
+        // 没有 ip 就不需要连表查询
+        return if (ips.isNullOrEmpty()) {
+            dslContext.selectFrom(TWorkspace.T_WORKSPACE)
                 .where(conditions)
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                .let { i -> if (systemType != null) i.and(SYSTEM_TYPE.eq(systemType.name)) else i }
-                .and(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
-                .orderBy(CREATE_TIME.desc(), ID.desc())
-                .limit(limit.limit).offset(limit.offset)
-                .fetch(workspaceMapper)
+        } else {
+            conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+            conditions.add(
+                JooqUtils.jsonExtract(
+                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+                    t2 = "\$.hostIP",
+                    lower = false,
+                    removeDoubleQuotes = true
+                ).`in`(ips)
+            )
+            val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
+            fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
+            dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+                .where(conditions)
         }
     }
 
@@ -407,7 +473,11 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectDistinct(PROJECT_ID).from(this)
                 .where(PROJECT_ID.ne(""))
-                .let { i -> if (mountType != null) { i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name)) } else i }
+                .let { i ->
+                    if (mountType != null) {
+                        i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+                    } else i
+                }
                 .fetch()
         }
     }
@@ -450,16 +520,54 @@ class WorkspaceDao {
             .fetch()
     }
 
-    fun fetchSharedWorkspaceById(
-        id: Long,
-        dslContext: DSLContext
-    ): TWorkspaceSharedRecord? {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this)
-                .where(ID.eq(id))
-                .limit(1)
-                .fetchAny()
+    fun fetchWorkspaceWithOwner(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null,
+        ip: String? = null,
+        assignType: WorkspaceShared.AssignType? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
+        val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
+        val conditions = mutableListOf<Condition>()
+        status?.let {
+            conditions.add(t1.STATUS.eq(it.ordinal))
         }
+        mountType?.let {
+            conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        projectId?.let {
+            conditions.add(t1.PROJECT_ID.eq(projectId))
+        }
+
+        ip?.let {
+            conditions.add(
+                t1.NAME.`in`(
+                    DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
+                        t3.HOST_IP.endsWith(".$ip")
+                    )
+                )
+            )
+        }
+
+        return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
+            .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
+            .let {
+                if (assignType != null) {
+                    it.and(t2.ASSIGN_TYPE.eq(assignType.name))
+                } else it
+            }
+            .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+            .unionAll(
+                dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
+                    .from(t1)
+                    .where(conditions)
+                    .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+            )
+            .fetch()
     }
 
     private fun mixCondition(
@@ -712,7 +820,53 @@ class WorkspaceDao {
         }
     }
 
+    class TWorkspaceRecordWithDetailJooqMapper : RecordMapper<Record, WorkspaceRecordWithDetail> {
+        override fun map(record: Record?): WorkspaceRecordWithDetail? {
+
+            if (record == null) {
+                return null
+            }
+            return WorkspaceRecordWithDetail(
+                workspaceId = record["ID"] as Long,
+                projectId = record["PROJECT_ID"] as String,
+                workspaceName = record["NAME"] as String,
+                displayName = record["DISPLAY_NAME"] as String,
+                templateId = record["TEMPLATE_ID"] as Int?,
+                repositoryUrl = record["URL"] as String?,
+                branch = record["BRANCH"] as String?,
+                yaml = record["YAML"] as String?,
+                devFilePath = record["YAML_PATH"] as String?,
+                dockerFile = record["DOCKERFILE"] as String,
+                imagePath = record["IMAGE_PATH"] as String,
+                workPath = record["WORK_PATH"] as String?,
+                workspaceFolder = record["WORKSPACE_FOLDER"] as String?,
+                hostName = record["HOST_NAME"] as String,
+                gpu = record["GPU"] as Int,
+                cpu = record["CPU"] as Int,
+                memory = record["MEMORY"] as Int,
+                usageTime = record["USAGE_TIME"] as Int,
+                sleepingTime = record["SLEEPING_TIME"] as Int,
+                disk = record["DISK"] as Int,
+                createUserId = record["CREATOR"] as String,
+                creatorBgName = record["CREATOR_BG_NAME"] as String,
+                creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
+                creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
+                creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
+                status = WorkspaceStatus.values()[record["STATUS"] as Int],
+                createTime = record["CREATE_TIME"] as LocalDateTime,
+                updateTime = record["UPDATE_TIME"] as LocalDateTime,
+                lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
+                preciAgentId = record["PRECI_AGENT_ID"] as String?,
+                workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
+                workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
+                ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
+                workSpaceDetail = record["DETAIL"] as String
+            )
+        }
+    }
+
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
+        val workspaceWithDetailMapper = TWorkspaceRecordWithDetailJooqMapper()
     }
 }

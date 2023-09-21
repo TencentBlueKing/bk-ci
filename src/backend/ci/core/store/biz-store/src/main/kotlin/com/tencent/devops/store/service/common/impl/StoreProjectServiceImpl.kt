@@ -78,7 +78,6 @@ class StoreProjectServiceImpl @Autowired constructor(
      * 根据商城组件标识获取已安装的项目列表
      */
     override fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum

@@ -1,9 +1,0 @@
-spring:
-  cloud:
-    consul:
-      config:
-        enabled: true
-        format: yaml
-        prefix: config
-        profile-separator: ':'
-        data-key: data

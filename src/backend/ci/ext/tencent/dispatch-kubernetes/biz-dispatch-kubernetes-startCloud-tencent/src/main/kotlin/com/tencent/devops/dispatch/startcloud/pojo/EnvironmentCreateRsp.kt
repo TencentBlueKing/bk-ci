@@ -1,0 +1,20 @@
+package com.tencent.devops.dispatch.startcloud.pojo
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class EnvironmentCreateRsp(
+    val code: Int,
+    val data: EnvironmentCreateRspData?,
+    val message: String
+) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class EnvironmentCreateRspData(
+        val cgsIp: String,
+        val cloudZoneId: String,
+        val existed: Boolean,
+        val resourceId: String,
+        val envId: String? = "",
+        val curLaunchId: String
+    )
+}

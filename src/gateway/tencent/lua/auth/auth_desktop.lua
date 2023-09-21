@@ -15,56 +15,16 @@ if bk_token == nil then
 end
 if bk_token == nil then
     bk_token = urlUtil:parseUrl(ngx.var.request_uri)["x-devops-bk-token"]
-  end
+end
 if bk_token == nil then
     ngx.log(ngx.STDERR, "failed to read user request bk_token ", err)
     ngx.exit(401)
     return
 end
 
--- 创建HTTP客户端实例
-local httpc = http.new()
-
--- 发送HTTP GET请求
-local res, err = httpc:request_uri("http://login.bkdevops.woa.com/login/accounts/is_login/?bk_token=" .. bk_token,
-                                   {method = "GET"})
-
---- 判断是否出错了
-if not res then
-    ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
-    ngx.exit(401)
-    return
+local ticket = oauthUtil:verify_tai_token(bk_token)
+if ticket ~= nil then
+    ngx.header["x-devops-uid"] = ticket.username
+    ngx.header["x-devops-bk-token"] = bk_token
+    ngx.exit(200)
 end
---- 判断返回的状态码是否是200
-if res.status ~= 200 then
-    ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
-    ngx.exit(401)
-    return
-end
-
---- 获取所有回复
-local responseBody = res.body
---- 设置HTTP保持连接
-httpc:set_keepalive(60000, 5)
-
---- 转换JSON的返回数据为TABLE
-local result = json.decode(responseBody)
---- 判断JSON转换是否成功
-if result == nil then
-    ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
-    ngx.exit(500)
-    return
-end
-
---- 判断返回码:Q!
-if result.code ~= "00" then
-    ngx.log(ngx.STDERR, "invalid get_ticket: ", result.message)
-    ngx.exit(401)
-    return
-end
-
---- 设置用户信息
-local ticket = result.data
-ngx.header["x-devops-uid"] = ticket.username
-ngx.header["x-devops-bk-token"] = bk_token
-ngx.exit(200)

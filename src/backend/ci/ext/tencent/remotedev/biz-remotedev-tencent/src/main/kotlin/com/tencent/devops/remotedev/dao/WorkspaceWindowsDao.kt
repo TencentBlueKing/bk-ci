@@ -48,11 +48,13 @@ class WorkspaceWindowsDao {
     fun updateWindowsResourceId(
         dslContext: DSLContext,
         workspaceName: String,
-        resourceId: String? = ""
+        resourceId: String? = "",
+        hostIp: String? = ""
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
                 .set(RESOURCE_ID, resourceId ?: "")
+                .set(HOST_IP, hostIp ?: "")
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }

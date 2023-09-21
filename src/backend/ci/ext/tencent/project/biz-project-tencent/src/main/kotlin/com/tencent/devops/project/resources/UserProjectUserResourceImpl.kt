@@ -27,8 +27,11 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
@@ -38,6 +41,8 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.tof.TOFService
+import okhttp3.Request
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
@@ -52,8 +57,15 @@ class UserProjectUserResourceImpl @Autowired constructor(
     @Value("\${avatar.url:#{null}}")
     private val avatarUrl: String? = null
 
+    @Value("\${devx.loginFqdn:#{null}}")
+    private val devxLoginFqdn: String? = null
+
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
-        val name = bkToken?.let { tofService.getStaffInfo(userId, it).chineseName } ?: userId
+        val name = if (UserUtil.isTaiUser(userId)) {
+            getTaiUser(bkToken)
+        } else {
+            bkToken?.let { tofService.getStaffInfo(userId, it).chineseName } ?: userId
+        }
         return Result(
             ProjectUser(
                 chineseName = name,
@@ -84,5 +96,26 @@ class UserProjectUserResourceImpl @Autowired constructor(
                 permission = AuthPermission.MANAGE
             )
         )
+    }
+
+    /**
+     * 获取太湖账号信息
+     */
+    private fun getTaiUser(bkToken: String?): String {
+        val url = "$devxLoginFqdn/login/accounts/get_user/?bk_token=$bkToken"
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use {
+            val resp = it.body!!.string()
+            if (!it.isSuccessful) {
+                logger.error("get tai user error , resp: $resp")
+                throw RemoteServiceException("Get tai user fail")
+            }
+            logger.info("Get tai user resp : $resp")
+            return resp
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserProjectUserResourceImpl::class.java)
     }
 }

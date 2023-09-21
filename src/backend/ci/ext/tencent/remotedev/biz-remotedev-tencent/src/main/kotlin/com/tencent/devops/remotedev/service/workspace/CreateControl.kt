@@ -115,18 +115,30 @@ class CreateControl @Autowired constructor(
         autoAssign: Boolean?,
         workspaceCreate: ProjectWorkspaceCreate
     ) {
+        logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId)
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType)
             )
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType)
+            )
+        }
+        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone)
             )
         }
         val projectInfo = kotlin.runCatching {
@@ -137,7 +149,13 @@ class CreateControl @Autowired constructor(
         )
 
         // 检查配额
-        projectWinCreateCheck(projectInfo, workspaceCreate.count)
+        projectWinCreateCheck(
+            projectInfo = projectInfo,
+            createCount = workspaceCreate.count,
+            type = workspaceCreate.windowsType,
+            zone = workspaceCreate.windowsZone,
+            adHoc = cgsId != null
+        )
 
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
@@ -154,8 +172,8 @@ class CreateControl @Autowired constructor(
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
-                disk = windowsConfig.disk,
-                winConfigId = workspaceCreate.windowsResourceConfigId
+                disk = windowsConfig.workspaceDisk(),
+                winConfigId = windowsConfig.id?.toInt()
             )
 
             workspaceDao.createWorkspace(
@@ -177,7 +195,7 @@ class CreateControl @Autowired constructor(
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
                     devFile = Devfile(
-                        zoneId = windowsConfig.zoneShortName,
+                        zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
                         cgsId = cgsId,
                         autoAssign = autoAssign
@@ -188,6 +206,7 @@ class CreateControl @Autowired constructor(
                     ownerType = ws.ownerType
                 )
             )
+            Thread.sleep(100)
         }
     }
 
@@ -201,7 +220,13 @@ class CreateControl @Autowired constructor(
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         permissionService.checkUserCreate(userId)
 
-        val workspace = if (workspaceCreate.windowsResourceConfigId != null) {
+        if (workspaceCreate.windowsResourceConfigId != null) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.NEED_UPDATED.errorCode
+            )
+        }
+
+        val workspace = if (workspaceCreate.windowsType != null) {
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
@@ -307,7 +332,12 @@ class CreateControl @Autowired constructor(
             }
 
             if (ws.workspaceSystemType.checkWindows()) {
-                workspaceWindowsDao.updateWindowsResourceId(dslContext, event.workspaceName, event.resourceId)
+                workspaceWindowsDao.updateWindowsResourceId(
+                    dslContext,
+                    event.workspaceName,
+                    event.resourceId,
+                    event.environmentIp
+                )
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
@@ -381,7 +411,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -413,7 +443,7 @@ class CreateControl @Autowired constructor(
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -483,21 +513,40 @@ class CreateControl @Autowired constructor(
     ): Workspace {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val windowsConfig = windowsResourceConfigService.getConfig(workspaceCreate.windowsResourceConfigId!!)
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType!!)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType.toString())
             )
 
         if (windowsConfig.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsResourceConfigId.toString())
+                params = arrayOf(workspaceCreate.windowsType.toString())
+            )
+        }
+
+        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone!!)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone!!)
+            )
+        if (windowsZone.available == false) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
+                params = arrayOf(workspaceCreate.windowsZone!!)
             )
         }
 
         windowsGpuCheck(workspaceCreate, userId)
-        workspaceCommon.checkWorkspaceAvailability(userId, mountType)
+        workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
+        val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType!!, workspaceCreate.windowsZone!!)
+        if (resourceCount < 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(resourceCount.toString())
+            )
+        }
 
         logger.info("createWorkspace|mountType|$mountType")
         val workspaceName = generateWorkspaceName(userId)
@@ -513,8 +562,8 @@ class CreateControl @Autowired constructor(
             gpu = windowsConfig.gpu,
             cpu = windowsConfig.cpu,
             memory = windowsConfig.memory,
-            disk = windowsConfig.disk,
-            winConfigId = workspaceCreate.windowsResourceConfigId
+            disk = windowsConfig.workspaceDisk(),
+            winConfigId = windowsConfig.id?.toInt()
         )
 
         doPreparing(workspace)
@@ -531,7 +580,7 @@ class CreateControl @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = Devfile(
                     version = "",
-                    zoneId = windowsConfig.zoneShortName,
+                    zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 ),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
@@ -551,9 +600,8 @@ class CreateControl @Autowired constructor(
             currentOs = workspaceCreate.currentOS
         )
 
-        whiteListService.numberLimit(
-            key = RedisKeys.REDIS_WHITE_LIST_GPU_KEY,
-            id = userId,
+        whiteListService.windowsNumberLimit(
+            userId = userId,
             value = workspaceDao.countUserWorkspace(
                 dslContext = dslContext,
                 userId = userId,
@@ -564,9 +612,15 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun projectWinCreateCheck(projectInfo: ProjectVO, createCount: Int) {
-        val resourceCount = workspaceCommon.syncStartCloudResourceList().count { it.status == 11 }
-        if (resourceCount < createCount) {
+    private fun projectWinCreateCheck(
+        projectInfo: ProjectVO,
+        createCount: Int,
+        type: String,
+        zone: String,
+        adHoc: Boolean = false
+    ) {
+        val resourceCount = startCloudResourceCountCheck(type, zone)
+        if (!adHoc && resourceCount < createCount) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(resourceCount.toString())
@@ -588,6 +642,14 @@ class CreateControl @Autowired constructor(
             )
         }
     }
+
+    private fun startCloudResourceCountCheck(type: String, zone: String) =
+        workspaceCommon.syncStartCloudResourceList().count {
+            it.status == 11 &&
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
+        }
 
     private fun doPreparing(workspace: Workspace) {
         val userInfo = kotlin.runCatching {
@@ -613,7 +675,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

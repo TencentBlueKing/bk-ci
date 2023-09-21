@@ -51,6 +51,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -110,6 +111,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
+    private val profile: Profile,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService
@@ -143,6 +145,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
+
+    @Value("\${tag.devx:#{null}}")
+    private var devxTag: String = ""
 
     override fun getByEnglishName(
         userId: String,
@@ -264,8 +269,9 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun isShowUserManageIcon(routerTag: String?): Boolean =
-        routerTag?.contains(rbacTag) ?: false
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return routerTag?.contains(rbacTag) == true || routerTag?.contains(devxTag) == true
+    }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
@@ -402,15 +408,21 @@ class TxProjectServiceImpl @Autowired constructor(
         val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, I18nUtil.getCodeLanMessage(
+        val responseContent = request(
+            request, I18nUtil.getCodeLanMessage(
             messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-            language = I18nUtil.getLanguage(userId)))
+            language = I18nUtil.getLanguage(userId)
+        )
+        )
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-                language = I18nUtil.getLanguage(userId)))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         if (result.data == null) {
             return emptyList()

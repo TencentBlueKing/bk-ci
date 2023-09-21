@@ -66,7 +66,7 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
     ): ThirdPartyAgentPipeline? {
         logger.info("Trying to get the agent pipelines of agent $agentId and project $projectId")
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId) ?: return null
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id) ?: return null
         authAgent(agentRecord, secretKey)
         val pipelineRecord = thirdPartyAgentPipelineDao.getPipeline(dslContext, id, PipelineStatus.PENDING)
             ?: return null
@@ -81,7 +81,7 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
     ): Boolean {
         logger.info("Update the status response $statusResponse of agent $agentId and project $projectId")
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
         if (agentRecord == null) {
             logger.warn("The agent $id of project $projectId is not exist")
             return false

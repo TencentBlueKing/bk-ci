@@ -32,8 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("团队工作空间信息-创建")
 data class ProjectWorkspaceCreate(
-    @ApiModelProperty("windows 配置id")
-    val windowsResourceConfigId: Int,
+    @ApiModelProperty("云桌面 配置")
+    val windowsType: String,
+    @ApiModelProperty("云桌面 地域")
+    val windowsZone: String,
     @ApiModelProperty("基础镜像Id")
     val baseImageId: Int,
     @ApiModelProperty("创建实例的数量")
