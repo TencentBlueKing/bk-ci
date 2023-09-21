@@ -247,17 +247,20 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                         content = description,
                         language = language
                     )
-                    fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
-                    if (language == commonConfig.devopsDefaultLocaleLanguage) {
-                        val atomCode = fileDir.substringBefore("/")
-                        val version = fileDir.substringAfter("/")
-                        atomDao.updateAtomDescriptionByCode(
-                            dslContext = dslContext,
-                            userId = userId,
-                            atomCode = atomCode,
-                            description = descriptionStr,
-                            version = version
-                        )
+                    if (description != descriptionStr) {
+                        fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
+                        if (language == commonConfig.devopsDefaultLocaleLanguage) {
+                            // 默认环境不替换国际化信息，因此需要把解析的描述信息更新到T_AOM
+                            val atomCode = fileDir.substringBefore("/")
+                            val version = fileDir.substringAfter("/")
+                            atomDao.updateAtomDescriptionByCode(
+                                dslContext = dslContext,
+                                userId = userId,
+                                atomCode = atomCode,
+                                description = descriptionStr,
+                                version = version
+                            )
+                        }
                     }
                 }
                 val i18nMessages = generateI18nMessages(
@@ -366,6 +369,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         } else {
             return content
         }
+        // 存在文件路径引用，解析路径
         val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,

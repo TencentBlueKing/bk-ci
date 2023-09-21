@@ -72,7 +72,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
                 "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
-        logger.info("downloadFile filePath:$filePath|save path:${file.path}")
+        logger.info("downloadFile filePath:$filePath")
         val response = OkhttpUtils.doPost(url, "")
         if (response.isSuccessful) {
             OkhttpUtils.downloadFile(response, file)
@@ -115,7 +115,6 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             logger.info("descriptionAnalysis get fileNameList fail")
             return description
         }
-        logger.info("descriptionAnalysis get fileNameList:$fileNameList")
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = fileDir
