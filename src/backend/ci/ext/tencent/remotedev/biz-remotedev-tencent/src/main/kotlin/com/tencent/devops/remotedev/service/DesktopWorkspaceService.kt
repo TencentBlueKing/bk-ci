@@ -31,6 +31,12 @@ class DesktopWorkspaceService @Autowired constructor(
         ).data ?: return emptyMap()
 
         val res = mutableMapOf<String, FetchOwnerAndAdminItem>()
+        projectAndAdmins.forEach { (projectId, admins) ->
+            res[projectId] = FetchOwnerAndAdminItem(
+                admin = admins,
+                owner = setOf()
+            )
+        }
 
         workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
@@ -44,16 +50,7 @@ class DesktopWorkspaceService @Autowired constructor(
 
             val projectId = it["PROJECT_ID"] as String
 
-            val admins = projectAndAdmins[projectId] ?: return@forEach
-
-            if (res[projectId] == null) {
-                res[projectId] = FetchOwnerAndAdminItem(
-                    admin = admins,
-                    owner = setOf(owner)
-                )
-            } else {
-                res[projectId]?.owner?.toMutableSet()?.add(owner)
-            }
+            res[projectId]?.owner?.toMutableSet()?.add(owner)
         }
 
         return res

@@ -37,7 +37,6 @@ import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.service.tof.TOFService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -62,9 +61,5 @@ class ServiceTxUserResourceImpl @Autowired constructor(
 
     override fun getRemoteDevAdmin(data: FetchRemoteDevData): Result<Map<String, Set<String>?>> {
         return Result(projectUserService.getRemoteDevAdmin(data.projectIds))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceTxUserResourceImpl::class.java)
     }
 }
