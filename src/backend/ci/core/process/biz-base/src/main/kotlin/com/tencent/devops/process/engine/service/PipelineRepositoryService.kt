@@ -1053,33 +1053,31 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false
     ): Model? {
-        var modelString: String?
-        if (version == null) { // 取最新版，直接从旧版本表读
-            modelString = pipelineResourceDao.getVersionModelString(
+        return if (version == null) { // 取最新版，直接从旧版本表读
+            val latestVersion = pipelineResourceDao.getLatestVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                version = null
-            ) ?: return null
+                pipelineId = pipelineId
+            ) ?: pipelineResourceVersionDao.getDraftVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            latestVersion?.model
         } else {
-            modelString = pipelineResourceVersionDao.getVersionModelString(
+            val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 includeDraft = includeDraft
+            ) ?: pipelineResourceDao.getLatestVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
-            if (modelString.isNullOrBlank()) {
-                // 兼容处理：取不到再从旧的版本表取
-                modelString = pipelineResourceDao.getVersionModelString(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = version
-                ) ?: return null
-            }
+            targetVersion?.model
         }
-        return str2model(modelString, pipelineId)
     }
 
     fun getPipelineResourceVersion(
