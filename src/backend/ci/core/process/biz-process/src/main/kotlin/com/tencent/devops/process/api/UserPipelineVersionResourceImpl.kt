@@ -230,6 +230,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 model = templateModel.copy(
+                    name = request.pipelineName,
                     templateId = request.templateId,
                     instanceFromTemplate = instanceFromTemplate
                 ),
