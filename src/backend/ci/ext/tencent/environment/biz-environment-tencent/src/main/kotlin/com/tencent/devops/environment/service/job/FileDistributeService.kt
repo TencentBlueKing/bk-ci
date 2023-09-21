@@ -5,6 +5,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
+import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -26,12 +27,15 @@ class FileDistributeService @Autowired constructor(
         jobCloudFileDistributeReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudFileDistributeReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
-        val request = NetworkUtil.createPostRequest(
-            url = jobCloudAuthenticationReq.url,
-            bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-            jobCloudReq = jobCloudFileDistributeReq::class.java
-        )
-        val jobCloudResp: JobCloudResp<FileDistributeResult> = NetworkUtil.executeHttpRequest("distributeFile", request)
+        val jobCloudResp: JobCloudResp<FileDistributeResult> =
+            NetworkUtil.executeHttpRequest(
+                httpType = "post",
+                operateName = "distributeFile",
+                url = jobCloudAuthenticationReq.url,
+                bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
+                jobCloudReq = jobCloudFileDistributeReq.javaClass
+            )
+
         val fileDistributeResult = FileDistributeResult(
             jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0,
             jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",

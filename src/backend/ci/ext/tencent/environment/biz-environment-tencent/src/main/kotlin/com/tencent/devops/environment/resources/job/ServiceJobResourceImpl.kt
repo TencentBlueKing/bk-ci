@@ -79,7 +79,7 @@ class ServiceJobResourceImpl @Autowired constructor(
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
                 dynamicGroupList = scriptExecuteReq.executeTarget.envHashIdList,
-                topoNodeList = scriptExecuteReq.executeTarget.envHashIdList,
+                topoNodeList = scriptExecuteReq.executeTarget.nodeHashIdList,
                 ipList = scriptExecuteReq.executeTarget.hostList?.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId ?: 0,
@@ -109,7 +109,7 @@ class ServiceJobResourceImpl @Autowired constructor(
                     fileList = fileSourceList.fileList.toList(),
                     server = JobCloudExecuteTarget(
                         dynamicGroupList = fileSourceList.sourceFileTarget.envHashIdList,
-                        topoNodeList = fileSourceList.sourceFileTarget.envHashIdList,
+                        topoNodeList = fileSourceList.sourceFileTarget.nodeHashIdList,
                         ipList = fileSourceList.sourceFileTarget.hostList?.map {
                             JobCloudHost(
                                 bkHostId = it.bkHostId ?: 0,
@@ -127,7 +127,7 @@ class ServiceJobResourceImpl @Autowired constructor(
             fileTargetPath = fileDistributeReq.fileTargetPath,
             executeTarget = JobCloudExecuteTarget(
                 dynamicGroupList = fileDistributeReq.executeTarget.envHashIdList,
-                topoNodeList = fileDistributeReq.executeTarget.envHashIdList,
+                topoNodeList = fileDistributeReq.executeTarget.nodeHashIdList,
                 ipList = fileDistributeReq.executeTarget.hostList?.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId ?: 0,

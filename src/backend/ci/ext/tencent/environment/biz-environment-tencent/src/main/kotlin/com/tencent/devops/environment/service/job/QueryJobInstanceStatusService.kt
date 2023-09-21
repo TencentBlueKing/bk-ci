@@ -6,6 +6,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobInstance
 import com.tencent.devops.environment.pojo.job.JobStepInstance
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.StepHostResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
@@ -30,18 +31,21 @@ class QueryJobInstanceStatusService @Autowired constructor(
                 bkUsername = userId
             )
 
-        val request = NetworkUtil.createGetRequest(
-            url = jobCloudAuthenticationReq.url + String.format(
-                QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX,
-                jobCloudAuthenticationReq.bkScopeType,
-                jobCloudAuthenticationReq.bkScopeId,
-                jobInstanceId,
-                returnIpResult
-            ),
-            bkAuthorization = jobCloudAuthenticationReq.bkAuthorization
-        )
         val jobCloudResp: JobCloudResp<QueryJobInstanceStatusResult> =
-            NetworkUtil.executeHttpRequest("queryJobInstanceStatus", request)
+            NetworkUtil.executeHttpRequest(
+                httpType = "get",
+                operateName = "queryJobInstanceStatus",
+                url = jobCloudAuthenticationReq.url + String.format(
+                    QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX,
+                    jobCloudAuthenticationReq.bkScopeType,
+                    jobCloudAuthenticationReq.bkScopeId,
+                    jobInstanceId,
+                    returnIpResult
+                ),
+                bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
+                jobCloudReq = Void::class.java
+            )
+
         val queryJobInstanceStatusResult = QueryJobInstanceStatusResult(
             finished = jobCloudResp.data?.finished ?: false,
             jobInstance = jobCloudResp.data?.jobInstance ?: JobInstance(
@@ -91,7 +95,6 @@ class QueryJobInstanceStatusService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
         private const val QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX =
             "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s"
     }

@@ -6,6 +6,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -29,13 +30,14 @@ class QueryJobInstanceLogsService @Autowired constructor(
         jobCloudQueryJobInstanceLogsReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudQueryJobInstanceLogsReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
-        val request = NetworkUtil.createPostRequest(
-            url = jobCloudAuthenticationReq.url,
-            bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-            jobCloudReq = jobCloudQueryJobInstanceLogsReq::class.java
-        )
         val jobCloudResp: JobCloudResp<QueryJobInstanceLogsResult> =
-            NetworkUtil.executeHttpRequest("queryJobInstanceLogs", request)
+            NetworkUtil.executeHttpRequest(
+                httpType = "post",
+                operateName = "queryJobInstanceLogs",
+                url = jobCloudAuthenticationReq.url,
+                bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
+                jobCloudReq = jobCloudQueryJobInstanceLogsReq.javaClass
+            )
 
         val queryJobInstanceLogsResult: QueryJobInstanceLogsResult
         when (jobCloudResp.data?.logType) {
