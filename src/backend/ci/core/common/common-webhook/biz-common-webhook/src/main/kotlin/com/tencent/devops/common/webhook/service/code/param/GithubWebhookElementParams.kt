@@ -30,7 +30,6 @@ package com.tencent.devops.common.webhook.service.code.param
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.joinToString
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import org.springframework.stereotype.Service
@@ -76,5 +75,13 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             params.includeIssueAction = joinToString(includeIssueAction)
         }
         return params
+    }
+
+    fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
+            ""
+        } else {
+            list.joinToString(",")
+        }
     }
 }

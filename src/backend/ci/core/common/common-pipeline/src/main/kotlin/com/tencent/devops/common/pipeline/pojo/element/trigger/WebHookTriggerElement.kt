@@ -34,11 +34,3 @@ abstract class WebHookTriggerElement(
     override var id: String? = null,
     override var status: String? = null
 ) : Element(name, id, status)
-
-fun WebHookTriggerElement.joinToString(list: List<String>?): String {
-    return if (list.isNullOrEmpty()) {
-        ""
-    } else {
-        list.joinToString(",")
-    }
-}
