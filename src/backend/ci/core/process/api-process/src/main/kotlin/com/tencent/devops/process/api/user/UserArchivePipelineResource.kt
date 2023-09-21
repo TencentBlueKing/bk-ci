@@ -76,7 +76,7 @@ interface UserArchivePipelineResource {
         @PathParam(value = "projectId")
         projectId: String,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<List<Map<String, String>>>
 

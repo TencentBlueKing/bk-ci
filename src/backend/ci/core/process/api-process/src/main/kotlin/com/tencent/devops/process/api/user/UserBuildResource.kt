@@ -83,7 +83,7 @@ interface UserBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int?
     ): Result<BuildManualStartupInfo>
 
@@ -105,7 +105,7 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<List<BuildParameters>>
 
@@ -132,7 +132,7 @@ interface UserBuildResource {
         @QueryParam("triggerReviewers")
         triggerReviewers: List<String>? = null,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildId>
 
@@ -287,7 +287,7 @@ interface UserBuildResource {
         @PathParam("buildNo")
         buildNo: Int,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<ModelDetail>
 
@@ -309,7 +309,7 @@ interface UserBuildResource {
         @PathParam("buildNum")
         buildNum: Int,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<ModelRecord>
 
@@ -353,7 +353,7 @@ interface UserBuildResource {
         @QueryParam("checkPermission")
         checkPermission: Boolean?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
@@ -435,7 +435,7 @@ interface UserBuildResource {
         @QueryParam("buildMsg")
         buildMsg: String?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
@@ -507,7 +507,7 @@ interface UserBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<List<String>>
 
@@ -529,7 +529,7 @@ interface UserBuildResource {
         @QueryParam("alias")
         alias: List<String>?,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<List<String>>
 

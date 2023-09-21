@@ -171,7 +171,7 @@ interface ServiceBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
@@ -484,7 +484,7 @@ interface ServiceBuildResource {
         @QueryParam("startUser")
         startUser: List<String>? = null,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
@@ -633,7 +633,7 @@ interface ServiceBuildResource {
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
         @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null,
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
@@ -807,7 +807,7 @@ interface ServiceBuildResource {
         @QueryParam("startType")
         startType: StartType,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
-        @QueryParam("debugVersion")
+        @QueryParam("version")
         debugVersion: Int? = null
     ): Result<BuildId>
 
