@@ -6,10 +6,8 @@ import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
-import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("QueryJobInstanceLogsService")

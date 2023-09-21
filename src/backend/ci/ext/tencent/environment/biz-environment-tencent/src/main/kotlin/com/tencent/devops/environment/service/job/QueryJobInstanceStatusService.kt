@@ -6,11 +6,9 @@ import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobInstance
 import com.tencent.devops.environment.pojo.job.JobStepInstance
-import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.StepHostResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
