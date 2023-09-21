@@ -246,7 +246,7 @@ class TGitApiService @Autowired constructor(
                 ref = ref,
                 tokenType = cred.toTokenType()
             ).data
-        }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
+        }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
 
