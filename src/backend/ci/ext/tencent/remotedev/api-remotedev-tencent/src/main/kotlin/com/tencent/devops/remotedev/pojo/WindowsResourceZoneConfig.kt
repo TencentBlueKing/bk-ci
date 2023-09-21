@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("WINDOWS GPU资源配置表")
+@ApiModel("WINDOWS 地域表")
 data class WindowsResourceZoneConfig(
     @ApiModelProperty("Id")
     val id: Long?,
