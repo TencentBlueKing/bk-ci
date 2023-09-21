@@ -27,6 +27,9 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -34,7 +37,10 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -68,17 +74,17 @@ import com.tencent.devops.ticket.pojo.CertWithPermission
 import com.tencent.devops.ticket.pojo.enums.CertAndroidType
 import com.tencent.devops.ticket.pojo.enums.CertType
 import com.tencent.devops.ticket.util.MobileProvisionUtil
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.nio.charset.Charset
-import java.time.LocalDateTime
-import java.util.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.time.LocalDateTime
+import java.util.Base64
 
 @Suppress("ALL")
 @Service
@@ -95,6 +101,18 @@ class CertServiceImpl @Autowired constructor(
     private val certMaxSize = 64 * 1024
     private val certIdMaxSize = 32
 
+    @AuditEntry(
+        actionId = ActionId.CERT_CREATE
+    )
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadIos(
         userId: String,
         projectId: String,
@@ -222,6 +240,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateIos(
         userId: String,
         projectId: String,
@@ -346,6 +374,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadEnterprise(
         userId: String,
         projectId: String,
@@ -457,6 +495,16 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateEnterprise(
         userId: String,
         projectId: String,
@@ -559,6 +607,16 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadAndroid(
         userId: String,
         projectId: String,
@@ -689,6 +747,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateAndroid(
         userId: String,
         projectId: String,
@@ -822,6 +890,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_CREATE_CONTENT
+    )
     override fun uploadTls(
         userId: String,
         projectId: String,
@@ -962,6 +1040,16 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_EDIT_CONTENT
+    )
     override fun updateTls(
         userId: String,
         projectId: String,
@@ -1108,6 +1196,16 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_DELETE)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_DELETE_CONTENT
+    )
     override fun delete(userId: String, projectId: String, certId: String) {
         val delete = AuthPermission.DELETE
         certPermissionService.validatePermission(
@@ -1232,6 +1330,16 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo {
         certPermissionService.validatePermission(
             userId = userId,
@@ -1253,6 +1361,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertEnterpriseInfo(
@@ -1262,6 +1380,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo {
         certPermissionService.validatePermission(
             userId = userId,
@@ -1284,6 +1412,16 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun getTls(projectId: String, certId: String): CertTlsInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)

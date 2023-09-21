@@ -31,7 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.constants.AuditAttributeNames
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -180,6 +180,13 @@ class PipelineListFacadeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getBatchPipelinesWithModel(
         userId: String,
         projectId: String,
@@ -211,6 +218,11 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineIds = pipelineIds,
             userId = userId
         )
+
+        ActionAuditContext.current().apply {
+            instanceIdList = buildPipelineRecords.map { it.pipelineId }
+            instanceNameList = buildPipelineRecords.map { it.pipelineName }
+        }
 
         return buildPipelines(
             pipelineInfoRecords = buildPipelineRecords,
@@ -1722,6 +1734,13 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineInfos
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getPipelineDetail(
         userId: String,
         projectId: String,
@@ -1779,6 +1798,11 @@ class PipelineListFacadeService @Autowired constructor(
         val hasCollect = if (favorInfos != null) {
             favorInfos.size > 0
         } else false
+        // 审计
+        ActionAuditContext.current()
+            .setInstanceId(pipelineInfo.pipelineId)
+            .setInstanceName(pipelineInfo.pipelineName)
+
         return PipelineDetailInfo(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,

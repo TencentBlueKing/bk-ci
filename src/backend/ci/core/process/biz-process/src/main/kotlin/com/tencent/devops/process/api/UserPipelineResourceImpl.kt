@@ -200,7 +200,10 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
+    @AuditEntry(
+        actionId = ActionId.PIPELINE_CREATE,
+        subActionIds = [ActionId.PIPELINE_EDIT]
+    )
     override fun copy(
         userId: String,
         projectId: String,
@@ -290,6 +293,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun saveSetting(
         userId: String,
         projectId: String,
@@ -312,6 +316,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
         checkParam(userId, projectId)
         pipelineInfoFacadeService.renamePipeline(
@@ -426,6 +431,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     override fun deleteVersion(
         userId: String,
         projectId: String,
@@ -458,6 +464,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.getCount(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         val restorePipeline = pipelineInfoFacadeService.restorePipeline(
@@ -600,11 +607,15 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         return pipelineInfoFacadeService.exportPipeline(userId, projectId, pipelineId)
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
+    @AuditEntry(
+        actionId = ActionId.PIPELINE_CREATE,
+        subActionIds = [ActionId.PIPELINE_EDIT]
+    )
     override fun uploadPipeline(
         userId: String,
         pipelineInfo: PipelineModelAndSetting,

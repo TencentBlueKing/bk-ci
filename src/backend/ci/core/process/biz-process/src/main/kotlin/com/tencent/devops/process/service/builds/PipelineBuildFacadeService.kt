@@ -560,16 +560,6 @@ class PipelineBuildFacadeService(
         }
     }
 
-
-    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
-    @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_EXECUTE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
-            instanceIds = "#pipelineId"
-        ),
-        content = ActionAuditContent.PIPELINE_EXECUTE_CONTENT
-    )
     fun buildManualStartup(
         userId: String,
         startType: StartType,
@@ -613,11 +603,6 @@ class PipelineBuildFacadeService(
             )
         val startEpoch = System.currentTimeMillis()
         try {
-            /**
-             * 设置审计上下文实例名称
-             */
-            ActionAuditContext.current().setInstanceName(readyToBuildPipelineInfo.pipelineName)
-
             val model = getModel(projectId, pipelineId)
 
             /**

@@ -130,6 +130,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*pipelineId*/, ChannelCode>()
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#pipelineId"
+        ),
+        content = ActionAuditContent.PIPELINE_EDIT_EXPORT_PIPELINE_CONTENT
+    )
     fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EDIT
@@ -158,12 +166,15 @@ class PipelineInfoFacadeService @Autowired constructor(
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
-
         // 适配兼容老数据
         model.stages.forEach {
             it.transformCompatibility()
         }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
+
+        // 审计
+        ActionAuditContext.current().setInstanceName(model.name)
+
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
@@ -494,6 +505,14 @@ class PipelineInfoFacadeService @Autowired constructor(
     /**
      * 还原已经删除的流水线
      */
+    @ActionAuditRecord(
+        actionId = ActionId.PROJECT_MANAGE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PROJECT,
+            instanceIds = "#pipelineId"
+        ),
+        content = ActionAuditContent.PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT
+    )
     fun restorePipeline(
         userId: String,
         projectId: String,
@@ -531,6 +550,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
+            ActionAuditContext.current().setInstanceName(model.name)
             return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
             watcher.stop()

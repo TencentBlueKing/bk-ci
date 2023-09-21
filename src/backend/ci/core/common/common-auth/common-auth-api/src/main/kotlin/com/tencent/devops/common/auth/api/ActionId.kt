@@ -1,6 +1,9 @@
 package com.tencent.devops.common.auth.api
 
 object ActionId {
+    // 项目
+    const val PROJECT_MANAGE = "project_manage"
+
     // 流水线
     const val PIPELINE_CREATE = "pipeline_create"
     const val PIPELINE_VIEW = "pipeline_view"

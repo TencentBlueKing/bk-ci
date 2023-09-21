@@ -158,7 +158,6 @@ class UserStreamGitResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun gitCodeCreateFile(
         userId: String,
         projectId: String,
