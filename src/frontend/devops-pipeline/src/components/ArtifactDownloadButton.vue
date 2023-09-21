@@ -156,6 +156,7 @@
         grid-gap: 6px;
         font-weight: bold;
         margin-bottom: 12px;
+        word-break: break-all;
         > .devops-icon {
             color: $primaryColor;
         }
