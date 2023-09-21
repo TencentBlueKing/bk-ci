@@ -36,7 +36,7 @@ class GitProxyService @Autowired constructor(
                 url = record.configuration.proxy.url,
                 proxyUrl = record.configuration.url,
                 creator = record.createdBy,
-                creatDate = record.createdDate,
+                createdDate = record.createdDate,
                 repoName = record.name
             )
         }
