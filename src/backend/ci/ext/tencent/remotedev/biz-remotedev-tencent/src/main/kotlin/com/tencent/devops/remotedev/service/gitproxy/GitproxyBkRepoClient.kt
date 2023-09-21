@@ -38,7 +38,13 @@ class GitproxyBkRepoClient @Autowired constructor(
     @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:#{null}}")
     val bkrepoDevxHeaderUserAuth: String? = null
 
-    fun createRepo(userId: String, projectId: String, repoName: String, url: String) {
+    fun createRepo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        url: String,
+        desc: String
+    ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId")
         val requestData = CreateRepoData(
             projectId = projectId,
@@ -46,7 +52,7 @@ class GitproxyBkRepoClient @Autowired constructor(
             type = "GIT",
             category = "PROXY",
             public = false,
-            description = "git-proxy",
+            description = desc,
             configuration = RepoConfig(
                 type = "proxy",
                 proxy = CreateRepoDataConfigProxy(
@@ -69,7 +75,7 @@ class GitproxyBkRepoClient @Autowired constructor(
     fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoInfo> {
         logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
         val url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
-            "?type=GIT&category=PROXY&display=false"
+                "?type=GIT&category=PROXY&display=false"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders().toHeaders())

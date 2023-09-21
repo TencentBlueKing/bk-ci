@@ -14,8 +14,13 @@ class GitProxyService @Autowired constructor(
         userId: String,
         data: CreateGitProxyData
     ): Boolean {
-        val repoName = data.url.removeSuffix(".git").split("/").last()
-        gitproxyBkRepoClient.createRepo(userId, data.projectId, repoName, data.url)
+        gitproxyBkRepoClient.createRepo(
+            userId = userId,
+            projectId = data.projectId,
+            repoName = data.repoName,
+            url = data.url,
+            desc = data.desc
+        )
         return true
     }
 
@@ -31,7 +36,8 @@ class GitProxyService @Autowired constructor(
                 url = record.configuration.proxy.url,
                 proxyUrl = record.configuration.url,
                 creator = record.createdBy,
-                creatDate = record.createdDate
+                creatDate = record.createdDate,
+                repoName = record.name
             )
         }
         return Page(
