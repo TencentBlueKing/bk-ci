@@ -8,10 +8,9 @@ import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
-import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
@@ -128,34 +127,18 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectWorkspaceList(
-        userId: String,
-        projectId: String?,
-        workspaceName: String?,
-        systemType: WorkspaceSystemType?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, workspaceName, systemType, page, pageSize))
-    }
-
     override fun getStartCloudResourceList(
         userId: String,
-        zoneId: String?,
-        machineType: String?,
-        ip: String?,
-        status: Int?,
-        page: Int?,
-        pageSize: Int?
+        data: WindowsPoolListFetchData
     ): Result<Page<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
+        val pageNotNull = data.page ?: 1
+        val pageSizeNotNull = data.pageSize ?: 6666
         val filteredResources = resourceList.filter {
-            (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
-                    (machineType.isNullOrEmpty() || it.machineType == machineType) &&
-                    (ip.isNullOrEmpty() || it.cgsIp == ip) &&
-                    (status == null || it.status == status)
+            (data.zoneId.isNullOrEmpty() || it.zoneId == data.zoneId) &&
+                    (data.machineType.isNullOrEmpty() || it.machineType == data.machineType) &&
+                    (data.ips.isNullOrEmpty() || data.ips?.contains(it.cgsIp) == true) &&
+                    (data.status == null || it.status == data.status)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
