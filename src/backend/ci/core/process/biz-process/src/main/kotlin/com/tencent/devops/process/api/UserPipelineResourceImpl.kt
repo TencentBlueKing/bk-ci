@@ -411,6 +411,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     override fun batchDelete(userId: String, batchDeletePipeline: BatchDeletePipeline): Result<Map<String, Boolean>> {
         val pipelineIds = batchDeletePipeline.pipelineIds
         if (pipelineIds.isEmpty()) {
