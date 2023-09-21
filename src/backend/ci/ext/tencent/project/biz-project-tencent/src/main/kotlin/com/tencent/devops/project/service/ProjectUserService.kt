@@ -94,7 +94,7 @@ class ProjectUserService @Autowired constructor(
     fun getRemoteDevAdmin(projectIds: Set<String>): Map<String, Set<String>?> {
         // 获取项目的云研发管理员
         val projects = projectDao.listByCodes(dslContext, projectIds, enabled = true)
-        val res = mutableMapOf<String, MutableSet<String>?>()
+        val res = mutableMapOf<String, MutableSet<String>>()
         projects.forEach { project ->
             val projectProperties = project.properties?.let {
                 JsonUtil.toOrNull(project.properties.toString(), ProjectProperties::class.java)
@@ -105,6 +105,7 @@ class ProjectUserService @Autowired constructor(
             }
 
             res[project.englishName] = projectProperties.remotedevManager?.split(";")?.toMutableSet()
+                ?: mutableSetOf()
         }
 
         // 获取项目的权限管理员
@@ -116,7 +117,7 @@ class ProjectUserService @Autowired constructor(
                 null
             } ?: return@forEach
 
-            members?.addAll(auths)
+            members.addAll(auths)
         }
 
         return res
