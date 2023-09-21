@@ -417,7 +417,7 @@ class ProjectTagService @Autowired constructor(
             limit = limit,
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
-            propertiesMaps = propertiesMaps
+            remoteDevFlag = remoteDevFlag
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -429,7 +429,8 @@ class ProjectTagService @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 
