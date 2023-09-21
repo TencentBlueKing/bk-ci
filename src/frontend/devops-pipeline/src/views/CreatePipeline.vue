@@ -78,7 +78,7 @@
                                 {{ temp.desc || '--' }}
                             </p>
                         </div>
-                        <div class="pipeline-template-status">
+                        <div v-if="tIndex > 0" class="pipeline-template-status">
                             <bk-button
                                 v-if="temp.hasPermission"
                                 text

@@ -189,12 +189,15 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId }) {
-        const { historyPageStatus: { queryStr } } = state
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
+        let { historyPageStatus: { queryStr } } = state
         dispatch('setHistoryPageStatus', {
             isQuerying: !!queryStr
         })
-
+        if (version) {
+            queryStr += `&version=${version}`
+        }
+        console.log(queryStr)
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryStr}`).then(response => {
             return response.data
         })

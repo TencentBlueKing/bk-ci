@@ -49,6 +49,10 @@
             highlightRanges: {
                 type: Array,
                 default: () => []
+            },
+            yamlUri: {
+                type: String,
+                default: '.ci.yml'
             }
         },
         data () {
@@ -88,10 +92,29 @@
                 /* webpackChunkName: "monaco-editor" */
                 'monaco-editor'
             )
+            this.monacoYaml = await import(
+                /* webpackMode: "lazy" */
+                /* webpackPrefetch: true */
+                /* webpackPreload: true */
+                /* webpackChunkName: "monaco-editor" */
+                'monaco-yaml'
+            )
+            // { configureMonacoYaml }
+            console.log(this.monacoYaml.configureMonacoYaml)
+            this.monacoYaml.configureMonacoYaml(this.monaco, {
+                enableSchemaRequest: true,
+                schemas: [
+
+                    {
+                        fileMatch: [this.yamlUri],
+                        uri: 'https://dev-static.devops.woa.com/schema.json'
+                    }
+                ]
+            })
+
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
             this.editor = this.monaco.editor.create(this.$el, {
-                value: this.value,
-                language: 'yaml',
+                model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
                 theme: 'ciYamlTheme',
                 automaticLayout: true,
                 formatonPaste: true,
@@ -112,9 +135,13 @@
             })
         },
         beforeDestroy () {
+            this.editor?.getModel()?.dispose?.()
             this.editor?.dispose?.()
         },
         methods: {
+            format () {
+                this.editor?.getAction('editor.action.formatDocument').run()
+            },
             highlightBlocks (blocks) {
                 if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {
                     const ranges = blocks.map(({ startMark, endMark }) => ({

@@ -199,7 +199,7 @@
                 const pipeline = Object.assign({}, this.pipeline, {
                     stages: [
                         this.pipeline.stages[0],
-                        ...this.pipelineWithoutTrigger.stages
+                        ...(this.pipelineWithoutTrigger?.stages ?? [])
                     ]
                 })
                 this.transfertModelToYaml({

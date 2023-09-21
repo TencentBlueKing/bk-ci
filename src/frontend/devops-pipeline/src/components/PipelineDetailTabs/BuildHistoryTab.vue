@@ -1,7 +1,7 @@
 <template>
     <div class="build-history-tab-content">
         <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
-        <build-history-table v-else :show-log="showLog" />
+        <build-history-table v-else :show-log="showLog" :is-debug="isDebug" />
     </div>
 </template>
 
@@ -21,7 +21,9 @@
         },
 
         mixins: [pipelineConstMixin],
-
+        props: {
+            isDebug: Boolean
+        },
         data () {
             return {
                 hasNoPermission: false,
@@ -75,6 +77,9 @@
                         handler: () => {
                             !this.executeStatus && this.$router.push({
                                 name: 'executePreview',
+                                query: {
+                                    ...(this.isDebug ? { debug: '' } : {})
+                                },
                                 params: {
                                     ...this.$route.params,
                                     version: this.pipelineInfo?.version

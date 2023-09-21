@@ -427,7 +427,8 @@
         props: {
             showLog: {
                 type: Function
-            }
+            },
+            isDebug: Boolean
         },
         data () {
             return {
@@ -620,10 +621,15 @@
                         projectId,
                         pipelineId
                     } = this
-
+                    console.log(this.isDebug)
                     const res = await this.requestPipelinesHistory({
                         projectId,
-                        pipelineId
+                        pipelineId,
+                        ...(this.isDebug
+                            ? {
+                                version: this.$route.params.version
+                            }
+                            : {})
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -915,6 +921,9 @@
             buildNow () {
                 this.$router.push({
                     name: 'executePreview',
+                    query: {
+                        ...(this.isDebug ? { debug: '' } : {})
+                    },
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.version

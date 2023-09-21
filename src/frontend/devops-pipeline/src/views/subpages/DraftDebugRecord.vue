@@ -1,5 +1,5 @@
 <template>
-    <BuildHistoryTab />
+    <BuildHistoryTab is-debug />
 </template>
 
 <script>

@@ -45,6 +45,7 @@
                             {{ $t('预览YAML') }}
                         </bk-button>
                         <bk-button
+                            @click="cancelAdd"
                         >
                             {{ $t('cancel') }}
                         </bk-button>
@@ -141,7 +142,8 @@
                         range: this.$refs.editor.editor.getSelection(),
                         text: this.atomYaml
                     }])
-                    this.$refs.editor.editor.getAction('editor.action.format').run()
+                    this.$refs.editor.format()
+                    this.toggleAtomSelectorPopup(false)
                     this.atomYaml = ''
                     this.showAtomYaml = false
                 }
@@ -156,7 +158,7 @@
                         pipelineId: this.$route.params.pipelineId,
                         ...this.element
                     })
-                    this.toggleAtomSelectorPopup()
+                    this.toggleAtomSelectorPopup(true)
                     this.atomYaml = res.data
                 } catch (error) {
 
@@ -184,8 +186,11 @@
                     atomIndex: res.stepIndex ?? lastElemntIndex,
                     container
                 })
-
-                this.toggleAtomSelectorPopup()
+            },
+            cancelAdd () {
+                this.togglePropertyPanel({
+                    isShow: false
+                })
             }
         }
     }

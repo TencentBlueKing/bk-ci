@@ -246,7 +246,7 @@ const routes = [
                         }
                     },
                     {
-                        path: 'draftDebug',
+                        path: 'draftDebug/:version',
                         name: 'draftDebugRecord',
                         meta: {
                             icon: 'pipeline',

@@ -275,6 +275,7 @@
                         },
                         yaml: pipelineYaml
                     })
+                    this.setPipelineEditing(false)
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
@@ -354,7 +355,10 @@
             },
             goDraftDebugRecord () {
                 this.$router.push({
-                    name: 'draftDebugRecord'
+                    name: 'draftDebugRecord',
+                    params: {
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

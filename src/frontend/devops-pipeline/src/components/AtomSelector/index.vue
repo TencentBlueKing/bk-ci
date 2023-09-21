@@ -10,6 +10,7 @@
                     <YamlEditor
                         class="preview-atom-yaml"
                         :value="atomYaml"
+                        yaml-uri=".task.yml"
                         readonly
                     />
                 </div>
