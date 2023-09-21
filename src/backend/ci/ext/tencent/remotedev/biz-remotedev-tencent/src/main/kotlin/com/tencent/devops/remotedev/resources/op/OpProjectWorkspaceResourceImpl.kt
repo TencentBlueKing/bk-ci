@@ -7,7 +7,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -23,43 +24,46 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 ) : OpProjectWorkspaceResource {
     override fun assignWorkspace(
         userId: String,
-        projectId: String,
-        owner: String?,
-        cgsId: String
+        data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
-
-        // 先校验该cgsId是否已被申领分配并运行中
-        if (!workspaceCommon.checkCgsRunning(cgsId, EnvStatusEnum.running)) return Result(false)
-        // 根据cgsId获取对应的机型和地域
-        val cgsData = workspaceCommon.getCgsData(cgsId) ?: return Result(false)
-        // 再根据机型和地域获取硬件资源配置
-        val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
-            machineType = cgsData.machineType
-        ) ?: return Result(false)
-        // 调用CreateControl.asyncCreateWorkspace发起创建
-        createControl.asyncCreateWorkspace(
-            pmUserId = userId,
-            projectId = projectId,
-            cgsId = cgsId,
-            autoAssign = false,
-            workspaceCreate = ProjectWorkspaceCreate(
-                windowsType = windowsResourceConfigId.size,
-                windowsZone = cgsData.zoneId.replace(Regex("\\d+"), ""),
-                baseImageId = 0,
-                count = 1
+        val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
+        cgsData.forEach { cgs ->
+            // 先校验该cgsId是否已被申领分配并运行中
+            if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
+            // 再根据机型和地域获取硬件资源配置
+            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
+                machineType = cgs.machineType
+            ) ?: return Result(false)
+            // 调用CreateControl.asyncCreateWorkspace发起创建
+            createControl.asyncCreateWorkspace(
+                pmUserId = userId,
+                projectId = data.projectId,
+                cgsId = cgs.cgsId,
+                autoAssign = false,
+                workspaceCreate = ProjectWorkspaceCreate(
+                    windowsType = windowsResourceConfigId.size,
+                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
+                    baseImageId = 0,
+                    count = 1
+                )
             )
-        )
+        }
         return Result(true)
     }
 
     override fun getProjectWorkspaceList(
         userId: String,
-        projectId: String?,
-        workspaceName: String?,
-        systemType: WorkspaceSystemType?,
-        page: Int?,
-        pageSize: Int?
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, workspaceName, systemType, page, pageSize))
+        return Result(
+            workspaceService.getProjectWorkspaceList4Op(
+                projectId = data.projectId,
+                workspaceName = data.workspaceName,
+                systemType = data.systemType,
+                ips = data.ips,
+                page = data.page,
+                pageSize = data.pageSize
+            )
+        )
     }
 }
