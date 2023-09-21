@@ -96,15 +96,15 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
                 logger.info("createWorkspace rsp: $environmentRsp")
                 when {
-                    OK == environmentRsp.code && environmentRsp.data != null && !environmentRsp.data.existed
+                    OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data
 
-                    OK == environmentRsp.code && environmentRsp.data != null && environmentRsp.data.existed
+                    OK == environmentRsp.code && environmentRsp.data != null
                     -> throw BuildFailureException(
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorType,
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorCode,
                         ErrorCodeEnum.CLOUD_DESKTOP_EXIST.formatErrorMessage,
-                        environmentRsp.data.cgsIp
+                        environmentRsp.data.taskUid
                     )
 
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
