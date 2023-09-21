@@ -43,7 +43,7 @@ data class PipelineDetailInfo(
     @ApiModelProperty("是否关联模板")
     val instanceFromTemplate: Boolean,
     @ApiModelProperty("流水线版本")
-    val pipelineVersion: String,
+    val pipelineVersion: Int,
     @ApiModelProperty("发布时间-时间戳")
     val deploymentTime: Long,
     @ApiModelProperty("是否有编辑权限")

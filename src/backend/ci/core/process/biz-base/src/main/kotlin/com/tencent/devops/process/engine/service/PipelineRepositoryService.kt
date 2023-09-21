@@ -1116,6 +1116,24 @@ class PipelineRepositoryService constructor(
         return resource
     }
 
+    fun getDraftVersionResource(
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        val resource = pipelineResourceVersionDao.getDraftVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        // 返回时将别名name补全为id
+        resource?.let {
+            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
+        }
+        return resource
+    }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,

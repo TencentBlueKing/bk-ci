@@ -102,11 +102,17 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
                 params = arrayOf(pipelineId)
             )
-        val latestResource = pipelineRepositoryService.getPipelineResourceVersion(
+        val draftVersion = pipelineRepositoryService.getDraftVersionResource(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = detailInfo.pipelineVersion,
             includeDraft = true
-        ) ?: throw ErrorCodeException(
+        )
+        if (draftVersion == null && releaseVersion == null) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
@@ -114,16 +120,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = latestResource.settingVersion ?: latestResource.version,
+            version = releaseVersion?.settingVersion ?: releaseVersion?.version ?: 0,
             detailInfo = detailInfo
         )
-        val baseResource = latestResource.baseVersion?.let {
-            repositoryVersionService.getPipelineVersionSimple(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = it
-            )
-        }
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
             PipelineDetail(
@@ -138,10 +137,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 createTime = detailInfo.createTime,
                 updateTime = detailInfo.updateTime,
                 viewNames = detailInfo.viewNames,
-                version = latestResource.version,
-                versionName = latestResource.versionName,
-                baseVersion = latestResource.baseVersion,
-                baseVersionName = baseResource?.versionName,
+                version = draftVersion?.version ?: releaseVersion!!.version,
+                versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
+                releaseVersion = releaseVersion?.version,
+                releaseVersionName = releaseVersion?.versionName,
                 runLockType = setting.runLockType
             )
         )

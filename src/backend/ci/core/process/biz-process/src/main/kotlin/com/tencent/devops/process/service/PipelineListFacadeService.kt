@@ -1762,7 +1762,7 @@ class PipelineListFacadeService @Autowired constructor(
             instanceFromTemplate = instanceFromTemplate,
             hasCollect = hasCollect,
             canManualStartup = pipelineInfo.canManualStartup,
-            pipelineVersion = pipelineInfo.version.toString(),
+            pipelineVersion = pipelineInfo.version,
             deploymentTime = pipelineInfo.updateTime,
             hasPermission = hasEditPermission,
             templateId = templateId,
