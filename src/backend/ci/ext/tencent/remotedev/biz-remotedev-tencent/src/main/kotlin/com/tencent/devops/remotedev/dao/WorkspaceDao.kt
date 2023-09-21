@@ -220,14 +220,14 @@ class WorkspaceDao {
         queryType: QueryType? = QueryType.WEB,
         ips: List<String>?
     ): Long {
-        return genFetchProjectWorkspaceCond(
+        return dslContext.fetchCount(genFetchProjectWorkspaceCond(
             dslContext = dslContext,
             projectId = projectId,
             workspaceName = workspaceName,
             systemType = systemType,
             queryType = queryType,
             ips = ips
-        ).fetch(0, Long::class.java).sum()
+        )).toLong()
     }
 
     private fun TWorkspace.unionSelect(
