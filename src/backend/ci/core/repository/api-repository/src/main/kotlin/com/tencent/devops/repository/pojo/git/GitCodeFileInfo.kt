@@ -68,7 +68,7 @@ data class GitCodeFileInfo(
     val commitId: String,
     @JsonProperty("content")
     @ApiModelProperty(name = "content")
-    val content: String,
+    val content: String?,
     @JsonProperty("encoding")
     @ApiModelProperty(name = "encoding")
     val encoding: String
