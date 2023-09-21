@@ -621,7 +621,7 @@ class PipelineBuildFacadeService(
                     version = debugVersion,
                     includeDraft = true
                 )
-                if (resource == null || resource.status == VersionStatus.COMMITTING) {
+                if (resource == null || resource.status != VersionStatus.COMMITTING) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
