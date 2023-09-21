@@ -48,6 +48,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
@@ -70,6 +71,9 @@ class MigrateResultService constructor(
         private val logger = LoggerFactory.getLogger(MigrateResultService::class.java)
         private val executorService = Executors.newFixedThreadPool(50)
     }
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
 
     fun compare(projectCode: String): Boolean {
         logger.info("start to compare policy|$projectCode")
@@ -219,13 +223,23 @@ class MigrateResultService constructor(
             return
         }
         // 用户存在,校验用户是否有资源权限
-        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode) ?: prodTag
         val hasPermission = bkTag.invokeByTag(projectConsulTag) {
+            // create类的action,resourceType的值是project,调用v0权限接口应转换成原来的值
+            actions.filter { it.contains("create") }.forEach {
+                client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                    userId = userId,
+                    token = tokenService.getSystemToken(null)!!,
+                    action = it.substringAfterLast("_"),
+                    projectCode = projectCode,
+                    resourceCode = it.substringBefore("_"),
+                )
+            }
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
             client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
-                action = actions.map { it.substringAfterLast("_") },
+                action = actions.filterNot { it.contains("create") }.map { it.substringAfterLast("_") },
                 projectCode = projectCode,
                 resourceCode = resourceCode,
                 resourceType = resourceType
