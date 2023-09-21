@@ -107,8 +107,8 @@ class PipelineBuildSummaryDao {
     ) {
         with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.update(this)
-                .set(BUILD_NO, 0)
-                .set(BUILD_NUM, 0)
+                .set(DEBUG_BUILD_NO, 0)
+                .set(DEBUG_BUILD_NUM, 0)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
