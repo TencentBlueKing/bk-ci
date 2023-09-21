@@ -258,7 +258,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        version: Int?
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
 
@@ -269,7 +269,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                debugVersion = debugVersion,
+                version = version,
                 channelCode = channelCode
             )
         )
@@ -280,7 +280,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        debugVersion: Int?
+        version: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
 
@@ -294,7 +294,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 startType = StartType.MANUAL,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = debugVersion,
+                version = version,
                 values = values.filter { it.key != "buildNo" },
                 channelCode = channelCode,
                 buildNo = buildNo

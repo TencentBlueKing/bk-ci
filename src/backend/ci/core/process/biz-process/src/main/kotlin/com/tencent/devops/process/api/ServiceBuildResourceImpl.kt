@@ -130,7 +130,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?,
+        version: Int?,
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo> {
         checkUserId(userId)
@@ -140,7 +140,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                debugVersion = debugVersion,
+                version = version,
                 channelCode = channelCode,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
@@ -171,7 +171,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         values: Map<String, String>,
         channelCode: ChannelCode,
-        buildNo: Int?
+        buildNo: Int?,
+        version: Int?,
     ): Result<BuildId> {
         return manualStartupNew(
             userId = userId,
@@ -179,6 +180,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
+            version = version,
             channelCode = channelCode,
             buildNo = buildNo
         )
@@ -733,7 +735,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?,
         startType: StartType,
-        debugVersion: Int?
+        version: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -746,7 +748,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 values = values,
                 channelCode = channelCode,
                 buildNo = buildNo,
-                version = debugVersion,
+                version = version,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true
             )
