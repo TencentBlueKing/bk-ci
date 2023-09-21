@@ -89,10 +89,19 @@ class RepoPipelineService @Autowired constructor(
         val repoBuffer = mutableMapOf<String, Repository>()
         pipelineRefInfos.forEach { refInfo ->
             val repository = repoBuffer[refInfo.repositoryConfig.getRepositoryId()] ?: run {
-                val repo = repositoryService.serviceGet(
-                    projectId = projectId,
-                    repositoryConfig = refInfo.repositoryConfig
-                )
+                // 保存流水线关联信息时，若其中一条记录对应的代码库被删除，不影响其余代码库信息保存
+                val repo = try {
+                    repositoryService.serviceGet(
+                        projectId = projectId,
+                        repositoryConfig = refInfo.repositoryConfig
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn(
+                        "fail to get repository|projectId[$projectId]|" +
+                            "repoConfig[${refInfo.repositoryConfig}]", ignored
+                    )
+                    return@forEach
+                }
                 repoBuffer[refInfo.repositoryConfig.getRepositoryId()] = repo
                 repo
             }
