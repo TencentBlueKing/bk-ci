@@ -6,5 +6,5 @@ data class FetchOwnerAndAdminData(
 
 data class FetchOwnerAndAdminItem(
     val admin: Set<String>?,
-    val owner: Set<String>?
+    val owner: MutableSet<String>?
 )

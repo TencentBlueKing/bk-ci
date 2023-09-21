@@ -34,7 +34,7 @@ class DesktopWorkspaceService @Autowired constructor(
         projectAndAdmins.forEach { (projectId, admins) ->
             res[projectId] = FetchOwnerAndAdminItem(
                 admin = admins,
-                owner = setOf()
+                owner = mutableSetOf()
             )
         }
 
@@ -50,7 +50,7 @@ class DesktopWorkspaceService @Autowired constructor(
 
             val projectId = it["PROJECT_ID"] as String
 
-            res[projectId]?.owner?.toMutableSet()?.add(owner)
+            res[projectId]?.owner?.add(owner)
         }
 
         return res
