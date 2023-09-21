@@ -43,6 +43,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
@@ -50,7 +51,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -189,7 +189,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        debugVersion: Int? = null
+        version: Int? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -215,23 +215,7 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        val model = if (debugVersion != null) {
-            val resource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = debugVersion,
-                includeDraft = true
-            )
-            if (resource == null || resource.status != VersionStatus.COMMITTING) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
-                )
-            }
-            resource.model
-        } else {
-            getModel(projectId, pipelineId)
-        }
+        val (model, _) = getModelAndBuildLevel(projectId, pipelineId, version)
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
@@ -582,7 +566,7 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        debugVersion: Int? = null
+        version: Int? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -614,23 +598,7 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            val (model, debug) = if (debugVersion != null) {
-                val resource = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = debugVersion,
-                    includeDraft = true
-                )
-                if (resource == null || resource.status != VersionStatus.COMMITTING) {
-                    throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
-                    )
-                }
-                Pair(resource.model, true)
-            } else {
-                Pair(getModel(projectId, pipelineId), false)
-            }
+            val (model, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
 
             /**
              * 验证流水线参数构建启动参数
@@ -663,7 +631,7 @@ class PipelineBuildFacadeService(
 
             if (buildNo != null) {
                 pipelineRuntimeService.updateBuildNo(
-                    projectId, pipelineId, buildNo, debugVersion != null
+                    projectId, pipelineId, buildNo, version != null
                 )
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
@@ -687,6 +655,31 @@ class PipelineBuildFacadeService(
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
         }
+    }
+
+    private fun getModelAndBuildLevel(projectId: String, pipelineId: String, version: Int?): Pair<Model, Boolean> {
+        if (version == null) {
+            return Pair(getModel(projectId, pipelineId), false)
+        }
+
+        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (releaseVersion != null && releaseVersion.version == version) {
+            return Pair(releaseVersion.model, false)
+        }
+        val draftResource = pipelineRepositoryService.getDraftVersionResource(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (draftResource != null && draftResource.version == version) {
+            return Pair(draftResource.model, true)
+        }
+        throw ErrorCodeException(
+            statusCode = Response.Status.BAD_REQUEST.statusCode,
+            errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
+        )
     }
 
     /**

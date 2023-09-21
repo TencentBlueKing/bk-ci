@@ -746,7 +746,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 values = values,
                 channelCode = channelCode,
                 buildNo = buildNo,
-                debugVersion = debugVersion,
+                version = debugVersion,
                 checkPermission = ChannelCode.isNeedAuth(channelCode),
                 frequencyLimit = true
             )

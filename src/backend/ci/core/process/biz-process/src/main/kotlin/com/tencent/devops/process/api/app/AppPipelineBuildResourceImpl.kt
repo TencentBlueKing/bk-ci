@@ -294,7 +294,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 startType = StartType.MANUAL,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                debugVersion = debugVersion,
+                version = debugVersion,
                 values = values.filter { it.key != "buildNo" },
                 channelCode = channelCode,
                 buildNo = buildNo
