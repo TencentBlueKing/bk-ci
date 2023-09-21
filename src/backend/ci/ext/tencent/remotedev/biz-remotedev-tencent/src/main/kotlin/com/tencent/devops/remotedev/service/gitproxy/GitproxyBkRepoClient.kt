@@ -32,9 +32,6 @@ class GitproxyBkRepoClient @Autowired constructor(
     @Value("\${bkrepo.bkrepoDevxUrl:#{null}}")
     val bkrepoDevxUrl: String? = null
 
-    @Value("\${bkrepo.bkrepoDevxHeaderUserId:#{null}}")
-    val bkrepoDevxHeaderUserId: String? = null
-
     @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:#{null}}")
     val bkrepoDevxHeaderUserAuth: String? = null
 
@@ -66,7 +63,7 @@ class GitproxyBkRepoClient @Autowired constructor(
         )
         val request = Request.Builder()
             .url("$bkrepoDevxUrl/repository/api/repo/create")
-            .headers(getCommonHeaders().toHeaders())
+            .headers(getCommonHeaders(userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -78,7 +75,7 @@ class GitproxyBkRepoClient @Autowired constructor(
                 "?type=GIT&category=PROXY&display=false"
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders().toHeaders())
+            .headers(getCommonHeaders(userId).toHeaders())
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Page<RepoInfo>>>()!!.data!!
@@ -89,16 +86,16 @@ class GitproxyBkRepoClient @Autowired constructor(
         val url = "$bkrepoDevxUrl/repository/api/repo/delete/$projectId/$repoName?forced=false"
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders().toHeaders())
+            .headers(getCommonHeaders(userId).toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
-    private fun getCommonHeaders(): MutableMap<String, String> {
+    private fun getCommonHeaders(userId: String): MutableMap<String, String> {
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = bkrepoDevxHeaderUserAuth ?: ""
-        headers["X-BKREPO-UID"] = bkrepoDevxHeaderUserId ?: ""
+        headers["X-BKREPO-UID"] = userId
         return headers
     }
 
