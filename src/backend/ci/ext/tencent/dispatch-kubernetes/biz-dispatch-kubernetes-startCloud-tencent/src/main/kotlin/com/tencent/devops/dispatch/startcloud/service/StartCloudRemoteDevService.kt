@@ -209,13 +209,6 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
-        // 将task放入缓存，等待回调
-        workspaceRedisUtils.refreshTaskStatus(
-            userId = userId,
-            taskUid = taskId,
-            taskStatus = TaskStatus(taskId)
-        )
-
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > START_CREATE_TIMEOUT) {
