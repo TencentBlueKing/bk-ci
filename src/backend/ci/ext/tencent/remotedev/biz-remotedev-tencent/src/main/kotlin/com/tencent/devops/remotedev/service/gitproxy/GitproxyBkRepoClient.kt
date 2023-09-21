@@ -43,7 +43,7 @@ class GitproxyBkRepoClient @Autowired constructor(
         projectId: String,
         repoName: String,
         url: String,
-        desc: String
+        desc: String?
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId")
         val requestData = CreateRepoData(
@@ -52,7 +52,7 @@ class GitproxyBkRepoClient @Autowired constructor(
             type = "GIT",
             category = "PROXY",
             public = false,
-            description = desc,
+            description = desc ?: "",
             configuration = RepoConfig(
                 type = "proxy",
                 proxy = CreateRepoDataConfigProxy(
