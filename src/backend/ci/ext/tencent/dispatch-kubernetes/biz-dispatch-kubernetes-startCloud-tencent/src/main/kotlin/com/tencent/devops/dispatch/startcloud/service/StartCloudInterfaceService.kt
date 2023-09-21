@@ -115,12 +115,16 @@ class StartCloudInterfaceService @Autowired constructor(
     }
 
     // 获取cgs信息
-    fun getCgsData(cgsId: String): EnvironmentResourceData? {
-        logger.info("getCgsData|cgsId|$cgsId")
-        return windowsGpuResourceDao.getCgsResource(
+    fun getCgsData(
+        cgsIds: List<String>?,
+        ips: List<String>?
+    ): List<EnvironmentResourceData> {
+        logger.info("getCgsData|$cgsIds|$ips")
+        return windowsGpuResourceDao.getCgsResourceList(
             dslContext = dslContext,
-            cgsId = cgsId
-        )?.let {
+            cgsIds = cgsIds,
+            ips = ips
+        ).map {
             EnvironmentResourceData(
                 cgsId = it.cgsId,
                 cgsIp = it.cgsIp,
