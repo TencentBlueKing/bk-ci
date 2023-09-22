@@ -118,17 +118,17 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        startWorkspaceHandler.startWorkspace(userId, workspaceName)
+        startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
     override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        stopWorkspaceHandler.stopWorkspace(userId, workspaceName)
+        stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+        restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 }

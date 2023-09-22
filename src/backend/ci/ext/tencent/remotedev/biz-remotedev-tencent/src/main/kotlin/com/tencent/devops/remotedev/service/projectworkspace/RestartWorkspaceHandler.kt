@@ -81,9 +81,9 @@ class RestartWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
+    fun restartWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
-        permissionService.checkUserManager(userId, workspaceName)
+        permissionService.checkUserManager(userId, projectId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

@@ -101,9 +101,11 @@ class RemoteDevService @Autowired constructor(
 
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                dispatchWorkspaceDao.updateWorkspaceStatus(
+                dispatchWorkspaceDao.updateWorkspace(
                     workspaceName = event.workspaceName,
                     status = EnvStatusEnum.running,
+                    envId = vmCreateResp.envId ?: "",
+                    regionId = vmCreateResp.cloudZoneId.toInt(),
                     dslContext = context
                 )
 
