@@ -89,13 +89,13 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         transferCache = transferCache,
         dispatchTransfer = dispatchTransfer
     )
-    private val yamlIndexService: YamlIndexService = YamlIndexService(dispatchTransfer)
+    private val elementTransfer: ElementTransfer = ElementTransfer(
+        client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer
+    )
+
+    private val yamlIndexService: YamlIndexService = YamlIndexService(dispatchTransfer, elementTransfer)
     private val variableTransfer: VariableTransfer = VariableTransfer()
 
-    private val elementTransfer: ElementTransfer = ElementTransfer(
-        client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer,
-        yamlIndexService = yamlIndexService
-    )
     private val stageTransfer: StageTransfer = StageTransfer(
         client = client,
         objectMapper = objectMapper,
@@ -316,9 +316,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     )
     fun markerYaml(value: String) {
         val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
-        val index = TransferMapper.indexYaml(yaml, 198, 30)!!
+        val index = TransferMapper.indexYaml(yaml, 365, 18)!!
         val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
-        val res = yamlIndexService.checkYamlIndex(pYml, index)
+        val res = yamlIndexService.checkYamlIndex("testUser", pYml, index)
         println(res)
     }
 
@@ -330,9 +330,26 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     )
     fun yamlElementInsert(value: String) {
         val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
-        val res = elementTransfer.modelTaskInsert(
-            "test", "p-test", 365, 25, ElementInsertBody(
-                yaml, MarketBuildAtomElement("yamlElementInsert test")
+        val res = yamlIndexService.modelTaskInsert(
+            "testuesr", "test", "p-test", 365, 25, ElementInsertBody(
+                yaml, MarketBuildAtomElement("yamlElementInsert test"), ElementInsertBody.ElementInsertType.INSERT
+            )
+        )
+        println(res.mark)
+        Assertions.assertEquals(yaml, res.yaml)
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "yaml-model-001-v3"
+        ]
+    )
+    fun yamlElementUpdate(value: String) {
+        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
+        val res = yamlIndexService.modelTaskInsert(
+            "testuesr", "test", "p-test", 365, 25, ElementInsertBody(
+                yaml, MarketBuildAtomElement("yamlElementInsert test"), ElementInsertBody.ElementInsertType.UPDATE
             )
         )
         println(res.mark)
