@@ -24,28 +24,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("数据源")
-data class DataSource(
-    @ApiModelProperty("集群名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 64)
-    val clusterName: String,
-    @ApiModelProperty("模块标识", required = true)
-    val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 128)
-    val dataSourceName: String,
-    @ApiModelProperty("容量是否满标识", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
-    val fullFlag: Boolean = false,
-    @ApiModelProperty("数据源URL", required = false)
-    val dsUrl: String? = null,
-    @ApiModelProperty("数据标签", required = false)
-    val dataTag: String? = null
-)
+package com.tencent.devops.misc.service.project
+
+import com.tencent.devops.misc.dao.project.ProjectDataMigrateHistoryDao
+import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
+import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectDataMigrateHistoryService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectDataMigrateHistoryDao: ProjectDataMigrateHistoryDao
+) {
+
+    fun add(userId: String, projectDataMigrateHistory: ProjectDataMigrateHistory): Boolean {
+        projectDataMigrateHistoryDao.add(dslContext, userId, projectDataMigrateHistory)
+        return true
+    }
+
+    fun count(queryParam: ProjectDataMigrateHistoryQueryParam): Int {
+        return projectDataMigrateHistoryDao.count(dslContext, queryParam)
+    }
+}

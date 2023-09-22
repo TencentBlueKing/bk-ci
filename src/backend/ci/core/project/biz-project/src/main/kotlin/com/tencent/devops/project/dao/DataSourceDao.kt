@@ -51,6 +51,7 @@ class DataSourceDao {
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
                 DS_URL,
+                TAG,
                 CREATOR,
                 MODIFIER
             )
@@ -61,10 +62,14 @@ class DataSourceDao {
                     dataSource.dataSourceName,
                     dataSource.fullFlag,
                     dataSource.dsUrl,
+                    dataSource.dataTag,
                     userId,
                     userId
                 ).onDuplicateKeyUpdate()
                 .set(FULL_FLAG, dataSource.fullFlag)
+                .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -128,6 +133,7 @@ class DataSourceDao {
                 .set(DATA_SOURCE_NAME, dataSource.dataSourceName)
                 .set(FULL_FLAG, dataSource.fullFlag)
                 .set(DS_URL, dataSource.dsUrl)
+                .set(TAG, dataSource.dataTag)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

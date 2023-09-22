@@ -48,4 +48,5 @@ package com.tencent.devops.misc.pojo.constant
 object MiscMessageCode {
     const val ERROR_MIGRATING_PROJECT_NUM_TOO_MANY = "2135001" // 同时迁移的项目数量已超过{0}个，请稍后再试
     const val ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL = "2135002" // 更新微服务[{0}]服务器分片规则本地缓存失败
+    const val ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY = "2135003" // 项目[{0}]的数据已经迁移完成，无需再迁移
 }

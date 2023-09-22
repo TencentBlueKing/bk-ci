@@ -24,28 +24,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
+
+package com.tencent.devops.misc.pojo.project
+
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("数据源")
-data class DataSource(
-    @ApiModelProperty("集群名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 64)
-    val clusterName: String,
+@ApiModel("查询项目数据迁移历史记录参数")
+data class ProjectDataMigrateHistoryQueryParam(
+    @ApiModelProperty("项目Id", required = true)
+    val projectId: String,
     @ApiModelProperty("模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 128)
-    val dataSourceName: String,
-    @ApiModelProperty("容量是否满标识", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
-    val fullFlag: Boolean = false,
-    @ApiModelProperty("数据源URL", required = false)
-    val dsUrl: String? = null,
-    @ApiModelProperty("数据标签", required = false)
-    val dataTag: String? = null
+    @ApiModelProperty("迁移数据源标签", required = false)
+    val targetDataTag: String? = null,
+    @ApiModelProperty("迁移集群名称", required = false)
+    val targetClusterName: String? = null,
+    @ApiModelProperty("迁移数据源名称", required = false)
+    val targetDataSourceName: String? = null
 )
