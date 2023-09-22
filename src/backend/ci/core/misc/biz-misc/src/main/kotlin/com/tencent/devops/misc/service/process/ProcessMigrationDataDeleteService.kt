@@ -59,28 +59,32 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
      * 删除process数据库数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
+     * @param targetClusterName 迁移集群
+     * @param targetDataSourceName 迁移数据源名称
      */
     fun deleteProcessData(
         dslContext: DSLContext,
         projectId: String,
-        moduleCode: SystemModuleEnum,
-        dataTag: String?
+        targetClusterName: String,
+        targetDataSourceName: String
     ) {
         val projectMigrationLock = ProjectMigrationLock(redisOperation, projectId)
         try {
             projectMigrationLock.lock()
+            val moduleCode = SystemModuleEnum.PROCESS
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
                 moduleCode = moduleCode,
-                targetDataTag = dataTag
+                targetClusterName = targetClusterName,
+                targetDataSourceName = targetDataSourceName
             )
             // 项目已经迁移成功则不再删除db中数据
-            if (projectDataMigrateHistoryService.count(queryParam) < 1) {
+            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
                 deleteProcessRelData(
                     dslContext = dslContext,
                     projectId = projectId,
-                    moduleCode = moduleCode,
-                    dataTag = dataTag,
+                    targetClusterName = targetClusterName,
+                    targetDataSourceName = targetDataSourceName,
                     projectMigrationLock = projectMigrationLock
                 )
             } else {
@@ -97,8 +101,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
     private fun deleteProcessRelData(
         dslContext: DSLContext,
         projectId: String,
-        moduleCode: SystemModuleEnum,
-        dataTag: String?,
+        targetClusterName: String,
+        targetDataSourceName: String,
         projectMigrationLock: ProjectMigrationLock
     ) {
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
@@ -122,8 +126,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         deleteProjectDirectlyRelData(
             dslContext = dslContext,
             projectId = projectId,
-            moduleCode = moduleCode,
-            dataTag = dataTag,
+            targetClusterName = targetClusterName,
+            targetDataSourceName = targetDataSourceName,
             projectMigrationLock = projectMigrationLock
         )
     }
@@ -200,13 +204,16 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
      * 删除项目直接相关的数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
+     * @param targetClusterName 迁移集群
+     * @param targetDataSourceName 迁移数据源名称
+     * @param projectMigrationLock 项目迁移锁
      * @return 字段列表
      */
     fun deleteProjectDirectlyRelData(
         dslContext: DSLContext,
         projectId: String,
-        moduleCode: SystemModuleEnum,
-        dataTag: String?,
+        targetClusterName: String,
+        targetDataSourceName: String,
         projectMigrationLock: ProjectMigrationLock? = null
     ) {
         if (projectMigrationLock != null) {
@@ -215,11 +222,12 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 lock.lock()
                 val queryParam = ProjectDataMigrateHistoryQueryParam(
                     projectId = projectId,
-                    moduleCode = moduleCode,
-                    targetDataTag = dataTag
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    targetClusterName = targetClusterName,
+                    targetDataSourceName = targetDataSourceName
                 )
                 // 项目已经迁移成功则不再删除db中数据
-                if (projectDataMigrateHistoryService.count(queryParam) < 1) {
+                if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
                     deleteProjectRelData(dslContext, projectId)
                 } else {
                     throw ErrorCodeException(

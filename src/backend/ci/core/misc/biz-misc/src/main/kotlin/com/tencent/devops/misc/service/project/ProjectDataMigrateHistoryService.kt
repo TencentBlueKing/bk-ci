@@ -40,12 +40,23 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
     private val projectDataMigrateHistoryDao: ProjectDataMigrateHistoryDao
 ) {
 
+    /**
+     * 新增迁移成功记录
+     * @param userId 用户ID
+     * @param projectDataMigrateHistory 项目数据迁移成功记录
+     * @return 布尔值
+     */
     fun add(userId: String, projectDataMigrateHistory: ProjectDataMigrateHistory): Boolean {
         projectDataMigrateHistoryDao.add(dslContext, userId, projectDataMigrateHistory)
         return true
     }
 
-    fun count(queryParam: ProjectDataMigrateHistoryQueryParam): Int {
-        return projectDataMigrateHistoryDao.count(dslContext, queryParam)
+    /**
+     * 判断项目的数据是否最近一次一次是否成功迁移至迁移库
+     * @param queryParam 查询参数
+     * @return 布尔值
+     */
+    fun isProjectDataMigrated(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
+        return projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(dslContext, queryParam) != null
     }
 }

@@ -27,10 +27,10 @@
 
 package com.tencent.devops.misc.dao.project
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.model.project.tables.TProjectDataMigrateHistory
+import com.tencent.devops.model.project.tables.records.TProjectDataMigrateHistoryRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -73,24 +73,21 @@ class ProjectDataMigrateHistoryDao {
         }
     }
 
-    fun count(dslContext: DSLContext, queryParam: ProjectDataMigrateHistoryQueryParam): Int {
+    fun getLatestProjectDataMigrateHistory(
+        dslContext: DSLContext,
+        queryParam: ProjectDataMigrateHistoryQueryParam
+    ): TProjectDataMigrateHistoryRecord? {
         with(TProjectDataMigrateHistory.T_PROJECT_DATA_MIGRATE_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(queryParam.projectId))
             conditions.add(MODULE_CODE.eq(queryParam.moduleCode.name))
-            val targetDataTag = queryParam.targetDataTag
-            if (!targetDataTag.isNullOrBlank()) {
-                conditions.add(TARGET_DATA_TAG.eq(targetDataTag))
-            }
-            val targetClusterName = queryParam.targetClusterName
-            if (!targetClusterName.isNullOrBlank()) {
-                conditions.add(TARGET_CLUSTER_NAME.eq(targetClusterName))
-            }
-            val targetDataSourceName = queryParam.targetDataSourceName
-            if (!targetDataSourceName.isNullOrBlank()) {
-                conditions.add(TARGET_DATA_SOURCE_NAME.eq(targetDataSourceName))
-            }
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
+            conditions.add(TARGET_CLUSTER_NAME.eq(queryParam.targetClusterName))
+            conditions.add(TARGET_DATA_SOURCE_NAME.eq(queryParam.targetDataSourceName))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
         }
     }
 }

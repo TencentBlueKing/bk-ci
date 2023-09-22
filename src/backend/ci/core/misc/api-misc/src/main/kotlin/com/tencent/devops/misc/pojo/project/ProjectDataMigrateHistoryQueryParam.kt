@@ -37,10 +37,8 @@ data class ProjectDataMigrateHistoryQueryParam(
     val projectId: String,
     @ApiModelProperty("模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("迁移数据源标签", required = false)
-    val targetDataTag: String? = null,
-    @ApiModelProperty("迁移集群名称", required = false)
-    val targetClusterName: String? = null,
-    @ApiModelProperty("迁移数据源名称", required = false)
-    val targetDataSourceName: String? = null
+    @ApiModelProperty("迁移集群名称", required = true)
+    val targetClusterName: String,
+    @ApiModelProperty("迁移数据源名称", required = true)
+    val targetDataSourceName: String
 )

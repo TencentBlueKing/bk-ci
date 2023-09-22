@@ -180,12 +180,24 @@ class ProcessDataMigrateService @Autowired constructor(
         projectExecuteCount: Int,
         migrateProjectExecuteCountKey: String
     ) {
+        val clusterName = CommonUtils.getDbClusterName()
+        val migratingShardingRoutingRuleKey = ShardingUtil.getMigratingShardingRoutingRuleKey(
+            clusterName = clusterName,
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = projectId
+        )
+        val migratingShardingRoutingRule = redisOperation.get(migratingShardingRoutingRuleKey)
+        val shardingRoutingRule = routingRuleMap[migratingShardingRoutingRule]
+        if (shardingRoutingRule.isNullOrBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
         processMigrationDataDeleteService.deleteProcessData(
             dslContext = migratingShardingDslContext,
             projectId = projectId,
-            moduleCode = SystemModuleEnum.PROCESS,
-            dataTag = dataTag
+            targetClusterName = clusterName,
+            targetDataSourceName = shardingRoutingRule
         )
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
@@ -245,8 +257,8 @@ class ProcessDataMigrateService @Autowired constructor(
             processMigrationDataDeleteService.deleteProjectDirectlyRelData(
                 dslContext = migratingShardingDslContext,
                 projectId = projectId,
-                moduleCode = SystemModuleEnum.PROCESS,
-                dataTag = dataTag
+                targetClusterName = clusterName,
+                targetDataSourceName = shardingRoutingRule
             )
             return
         }
@@ -264,7 +276,9 @@ class ProcessDataMigrateService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 sourceDataSourceName = sourceDataSourceName,
-                routingRuleMap = routingRuleMap,
+                migratingShardingRoutingRuleKey = migratingShardingRoutingRuleKey,
+                migratingShardingRoutingRule = migratingShardingRoutingRule,
+                shardingRoutingRule = shardingRoutingRule,
                 pipelineNum = pipelineNum,
                 dataTag = dataTag
             )
@@ -279,7 +293,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 historyShardingRoutingRule = historyShardingRoutingRule,
-                dataTag = dataTag,
+                shardingRoutingRule = shardingRoutingRule,
                 errorMsg = errorMsg
             )
         } finally {
@@ -295,7 +309,7 @@ class ProcessDataMigrateService @Autowired constructor(
         projectId: String,
         userId: String,
         historyShardingRoutingRule: ShardingRoutingRule?,
-        dataTag: String?,
+        shardingRoutingRule: String?,
         errorMsg: String? = null
     ) {
         // 判断项目执行的次数是否是最新发起的，只有最新发起的才需要执行数据回滚逻辑
@@ -309,14 +323,17 @@ class ProcessDataMigrateService @Autowired constructor(
             )
             return
         }
+        val clusterName = CommonUtils.getDbClusterName()
         try {
             // 删除迁移库的数据
-            processMigrationDataDeleteService.deleteProcessData(
-                dslContext = migratingShardingDslContext,
-                projectId = projectId,
-                moduleCode = SystemModuleEnum.PROCESS,
-                dataTag = dataTag
-            )
+            shardingRoutingRule?.let {
+                processMigrationDataDeleteService.deleteProcessData(
+                    dslContext = migratingShardingDslContext,
+                    projectId = projectId,
+                    targetClusterName = clusterName,
+                    targetDataSourceName = shardingRoutingRule
+                )
+            }
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
                 ?: ShardingRoutingRule(
@@ -434,18 +451,13 @@ class ProcessDataMigrateService @Autowired constructor(
         userId: String,
         projectId: String,
         sourceDataSourceName: String,
-        routingRuleMap: Map<String, String>,
+        migratingShardingRoutingRuleKey: String,
+        migratingShardingRoutingRule: String?,
+        shardingRoutingRule: String,
         pipelineNum: Int,
         dataTag: String?
     ) {
-        val migratingShardingRoutingRuleKey = ShardingUtil.getMigratingShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
-            moduleCode = SystemModuleEnum.PROCESS.name,
-            ruleType = ShardingRuleTypeEnum.DB.name,
-            routingName = projectId
-        )
-        val migratingShardingRoutingRule = redisOperation.get(migratingShardingRoutingRuleKey)
-        val shardingRoutingRule = routingRuleMap[migratingShardingRoutingRule]
+        val clusterName = CommonUtils.getDbClusterName()
         val projectMigrationLock = ProjectMigrationLock(redisOperation, projectId)
         try {
             projectMigrationLock.lock()
@@ -455,8 +467,8 @@ class ProcessDataMigrateService @Autowired constructor(
                 processMigrationDataDeleteService.deleteProcessData(
                     dslContext = context,
                     projectId = projectId,
-                    moduleCode = SystemModuleEnum.PROCESS,
-                    dataTag = dataTag
+                    targetClusterName = clusterName,
+                    targetDataSourceName = shardingRoutingRule
                 )
                 // 更新项目的路由规则
                 updateShardingRoutingRule(
@@ -467,7 +479,6 @@ class ProcessDataMigrateService @Autowired constructor(
                     shardingRoutingRule = shardingRoutingRule
                 )
             }
-            val clusterName = CommonUtils.getDbClusterName()
             // 保存项目迁移成功记录
             projectDataMigrateHistoryService.add(
                 userId = userId,
