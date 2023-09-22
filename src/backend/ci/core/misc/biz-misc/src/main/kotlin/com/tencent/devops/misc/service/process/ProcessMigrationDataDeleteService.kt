@@ -216,7 +216,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         targetDataSourceName: String,
         projectMigrationLock: ProjectMigrationLock? = null
     ) {
-        if (projectMigrationLock != null) {
+        if (projectMigrationLock == null) {
             val lock = ProjectMigrationLock(redisOperation, projectId)
             try {
                 lock.lock()
