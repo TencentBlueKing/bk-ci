@@ -14,5 +14,7 @@ data class WindowsPoolListFetchData(
     @ApiParam("第几页", required = false, defaultValue = "1")
     val page: Int?,
     @ApiParam("每页多少条", required = false, defaultValue = "6666")
-    val pageSize: Int?
+    val pageSize: Int?,
+    @ApiParam("是否过滤锁住的机器")
+    val lockedFlag: Boolean?
 )
