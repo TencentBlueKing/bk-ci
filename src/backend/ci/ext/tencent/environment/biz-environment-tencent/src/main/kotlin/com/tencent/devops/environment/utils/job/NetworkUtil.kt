@@ -88,7 +88,7 @@ object NetworkUtil {
 
                 if (!serializedRespBody.result) {
                     logger.error(
-                        "[${operateName}] Execute failed! Req ID: ${serializedRespBody.jobRequestId}, " +
+                        "[$operateName] Execute failed! Req ID: ${serializedRespBody.jobRequestId}, " +
                             "Error code: ${serializedRespBody.code}, " +
                             "Error msg: ${serializedRespBody.message}"
                     )

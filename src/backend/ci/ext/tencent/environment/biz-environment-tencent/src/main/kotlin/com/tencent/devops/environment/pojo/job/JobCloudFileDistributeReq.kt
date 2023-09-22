@@ -36,4 +36,3 @@ data class JobCloudFileDistributeReq(
     @JsonProperty("bk_username")
     override var bkUsername: String
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)
-
