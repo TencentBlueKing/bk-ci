@@ -25,23 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.common.pipeline.pojo.transfer
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("yaml中插入插件入口")
-data class ElementInsertBody(
-    @ApiModelProperty("当前yaml内容")
-    val yaml: String = "",
-    @ApiModelProperty("需要插入的插件")
-    val data: Element,
-    @ApiModelProperty("操作类型,INSERT为插入,UPDATE为更新")
-    val type: ElementInsertType
-) {
-    enum class ElementInsertType{
-        INSERT,
-        UPDATE
-    }
-}
+@ApiModel("流水线 yaml 带定位信息")
+data class PreviewResponse(
+    @ApiModelProperty("yaml内容")
+    val yaml: String,
+    @ApiModelProperty("流水线编排")
+    val pipeline: List<TransferMark>? = listOf(),
+    @ApiModelProperty("触发器配置")
+    val trigger: List<TransferMark>? = listOf(),
+    @ApiModelProperty("通知配置")
+    val notice: List<TransferMark>? = listOf(),
+    @ApiModelProperty("基础设置")
+    val setting: List<TransferMark>? = listOf()
+)

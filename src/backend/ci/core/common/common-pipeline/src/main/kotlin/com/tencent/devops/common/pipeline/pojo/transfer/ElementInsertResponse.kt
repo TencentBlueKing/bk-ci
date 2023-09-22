@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.common.pipeline.pojo.transfer
 
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线互转-Response")
-data class TransferResponse(
-    @ApiModelProperty("modelAndSetting")
-    val modelAndSetting: PipelineModelAndSetting? = null,
-    @ApiModelProperty("当前yaml内容")
-    val newYaml: String? = null,
-    @ApiModelProperty("定位")
-    val mark: TransferMark? = null
+@ApiModel("yaml中插入插件返回")
+data class ElementInsertResponse(
+    @ApiModelProperty("yaml内容")
+    val yaml: String = "",
+    @ApiModelProperty("插入的插件定位坐标")
+    val mark: TransferMark?
 )

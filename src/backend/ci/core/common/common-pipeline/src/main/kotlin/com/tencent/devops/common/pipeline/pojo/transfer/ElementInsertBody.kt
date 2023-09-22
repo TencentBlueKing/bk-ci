@@ -25,17 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.common.pipeline.pojo.transfer
 
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线互转操作类型")
-enum class TransferActionType {
-    @ApiModelProperty("完整转换：model -> yaml")
-    FULL_MODEL2YAML,
-    @ApiModelProperty("完整转换：yaml -> model")
-    FULL_YAML2MODEL,
-    @ApiModelProperty("yaml 中插入的插件")
-    YAML_INSERT_TASK;
+@ApiModel("yaml中插入插件入口")
+data class ElementInsertBody(
+    @ApiModelProperty("当前yaml内容")
+    val yaml: String = "",
+    @ApiModelProperty("需要插入的插件")
+    val data: Element,
+    @ApiModelProperty("操作类型,INSERT为插入,UPDATE为更新")
+    val type: ElementInsertType
+) {
+    enum class ElementInsertType{
+        INSERT,
+        UPDATE
+    }
 }

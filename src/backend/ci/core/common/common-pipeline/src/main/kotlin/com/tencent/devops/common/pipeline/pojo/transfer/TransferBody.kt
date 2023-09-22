@@ -25,21 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.common.pipeline.pojo.transfer
 
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线 yaml 带定位信息")
-data class PreviewResponse(
-    @ApiModelProperty("yaml内容")
-    val yaml: String,
-    @ApiModelProperty("流水线编排")
-    val pipeline: List<TransferMark>? = listOf(),
-    @ApiModelProperty("触发器配置")
-    val trigger: List<TransferMark>? = listOf(),
-    @ApiModelProperty("通知配置")
-    val notice: List<TransferMark>? = listOf(),
-    @ApiModelProperty("基础设置")
-    val setting: List<TransferMark>? = listOf()
+@ApiModel("互转入口")
+data class TransferBody(
+    @ApiModelProperty("当前modelAndSetting,model转yaml时需带上")
+    val modelAndSetting: PipelineModelAndSetting? = null,
+    @ApiModelProperty("当前yaml内容，model转yaml以及yaml转model都需要带上,如果首次互转没有就传空")
+    val oldYaml: String = ""
 )

@@ -36,13 +36,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTransferResource
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.transfer.ElementInsertBody
-import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
-import com.tencent.devops.process.pojo.transfer.PositionBody
-import com.tencent.devops.process.pojo.transfer.PositionResponse
-import com.tencent.devops.process.pojo.transfer.TransferActionType
-import com.tencent.devops.process.pojo.transfer.TransferBody
-import com.tencent.devops.process.pojo.transfer.TransferResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.PositionBody
+import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import org.springframework.beans.factory.annotation.Autowired
 

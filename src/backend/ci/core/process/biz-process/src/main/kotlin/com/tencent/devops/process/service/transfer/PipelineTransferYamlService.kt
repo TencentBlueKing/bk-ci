@@ -36,14 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.transfer.ElementInsertBody
-import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
-import com.tencent.devops.process.pojo.transfer.PositionResponse
-import com.tencent.devops.process.pojo.transfer.PreviewResponse
-import com.tencent.devops.process.pojo.transfer.TransferActionType
-import com.tencent.devops.process.pojo.transfer.TransferBody
-import com.tencent.devops.process.pojo.transfer.TransferMark
-import com.tencent.devops.process.pojo.transfer.TransferResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
@@ -179,15 +179,13 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int?
+        resource: PipelineResourceVersion
     ): PreviewResponse {
-        val resource = getPipelineResource(projectId, pipelineId, version)
-            ?: return PreviewResponse("")
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = resource.settingVersion ?: version ?: 1
+            version = resource.settingVersion ?: 1
         )
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
