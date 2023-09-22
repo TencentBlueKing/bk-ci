@@ -837,7 +837,8 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        version = if (draftVersion == null) {
+                        version = if (draftVersion == null || baseVersion == null) {
+                            // 没有已有草稿或者旧接口保存时，直接增加正式版本
                             val latestVersion = pipelineResourceVersionDao.getVersionResource(
                                 dslContext = transactionContext,
                                 projectId = projectId,
