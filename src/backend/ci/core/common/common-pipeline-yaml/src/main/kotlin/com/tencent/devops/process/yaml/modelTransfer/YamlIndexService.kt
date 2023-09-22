@@ -27,6 +27,13 @@
 
 package com.tencent.devops.process.yaml.modelTransfer
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
+import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
@@ -40,14 +47,34 @@ import org.springframework.stereotype.Component
 
 @Component
 class YamlIndexService @Autowired constructor(
-    val dispatchTransfer: DispatchTransfer
+    val dispatchTransfer: DispatchTransfer,
+    val elementTransfer: ElementTransfer
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(YamlIndexService::class.java)
     }
 
+    fun modelTaskInsert(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        line: Int,
+        column: Int,
+        data: ElementInsertBody
+    ): ElementInsertResponse {
+        val pYml = YamlUtil.getObjectMapper().readValue(data.yaml, object : TypeReference<ITemplateFilter>() {})
+        val position = position(
+            userId = userId,line = line, column = column, yaml = data.yaml, preYaml = pYml
+        )
+        val yml = elementTransfer.element2YamlStep(data.data, projectId) ?: throw ErrorCodeException(errorCode = "")
+        val index = TransferMapper.indexYaml(position = position, pYml = pYml, yml = yml, type = data.type)
+        val outYaml = TransferMapper.toYaml(pYml)
+        return ElementInsertResponse(yaml = outYaml, mark = TransferMapper.markYaml(index, outYaml))
+    }
+
     fun position(
+        userId: String,
         line: Int,
         column: Int,
         yaml: String,
@@ -55,15 +82,19 @@ class YamlIndexService @Autowired constructor(
     ): PositionResponse {
         val index = TransferMapper.indexYaml(yaml, line, column)
             ?: return PositionResponse(type = PositionResponse.PositionType.SETTING)
-        return checkYamlIndex(preYaml, index)
+        return checkYamlIndex(userId, preYaml, index)
     }
 
-    fun checkYamlIndex(preYaml: ITemplateFilter, nodeIndex: TransferMapper.NodeIndex): PositionResponse {
+    fun checkYamlIndex(
+        userId: String,
+        preYaml: ITemplateFilter,
+        nodeIndex: TransferMapper.NodeIndex
+    ): PositionResponse {
         when (nodeIndex.key) {
             ITemplateFilter::stages.name -> {
                 val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.STAGE)
                 val index = next.index ?: throw PacYamlNotValidException(nodeIndex.toString())
-                return checkStage(preYaml.stages!![index], next.next).apply {
+                return checkStage(userId, preYaml.stages!![index], next.next).apply {
                     stageIndex = index
                 }
             }
@@ -76,7 +107,7 @@ class YamlIndexService @Autowired constructor(
                 jobs.forEach { (jobId, job) ->
                     val index = indexAtomic.getAndIncrement()
                     if (jobId == key) {
-                        return checkJob(job as Map<String, Any>, next.next).apply {
+                        return checkJob(userId, job as Map<String, Any>, next.next).apply {
                             this.jobId = key
                             this.containerIndex = index
                         }
@@ -87,7 +118,7 @@ class YamlIndexService @Autowired constructor(
             ITemplateFilter::steps.name -> {
                 val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.JOB)
                 val index = next.index ?: throw PacYamlNotValidException(nodeIndex.toString())
-                return checkStep(preYaml.steps!![index], next.next).apply {
+                return checkStep(userId, preYaml.steps!![index], next.next).apply {
                     stepIndex = index
                 }
             }
@@ -95,7 +126,11 @@ class YamlIndexService @Autowired constructor(
         return PositionResponse(type = PositionResponse.PositionType.SETTING)
     }
 
-    fun checkStage(stage: Map<String, Any>, nodeIndex: TransferMapper.NodeIndex?): PositionResponse {
+    fun checkStage(
+        userId: String,
+        stage: Map<String, Any>,
+        nodeIndex: TransferMapper.NodeIndex?
+    ): PositionResponse {
         if (nodeIndex?.key == PreStage::jobs.name) {
             val jobs = stage[PreStage::jobs.name] as LinkedHashMap<String, Any>
             val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.STAGE)
@@ -104,7 +139,7 @@ class YamlIndexService @Autowired constructor(
             jobs.forEach { (jobId, job) ->
                 val index = indexAtomic.getAndIncrement()
                 if (jobId == key) {
-                    return checkJob(job as Map<String, Any>, next.next).apply {
+                    return checkJob(userId, job as Map<String, Any>, next.next).apply {
                         this.jobId = key
                         this.containerIndex = index
                     }
@@ -114,14 +149,18 @@ class YamlIndexService @Autowired constructor(
         return PositionResponse(type = PositionResponse.PositionType.STAGE)
     }
 
-    fun checkJob(job: Map<String, Any>, nodeIndex: TransferMapper.NodeIndex?): PositionResponse {
+    fun checkJob(
+        userId: String,
+        job: Map<String, Any>,
+        nodeIndex: TransferMapper.NodeIndex?
+    ): PositionResponse {
         val runsOn = ScriptYmlUtils.formatRunsOn(job["runs-on"])
         val (_, os) = dispatchTransfer.makeDispatchType(Job(runsOn = runsOn), null)
         if (nodeIndex?.key == PreJob::steps.name) {
             val steps = job[PreJob::steps.name] as List<Any>
             val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.JOB)
             val index = next.index ?: throw PacYamlNotValidException(nodeIndex.toString())
-            return checkStep(steps[index] as Map<String, Any>, next.next).apply {
+            return checkStep(userId, steps[index] as Map<String, Any>, next.next).apply {
                 stepIndex = index
                 jobBaseOs = os
             }
@@ -129,7 +168,15 @@ class YamlIndexService @Autowired constructor(
         return PositionResponse(type = PositionResponse.PositionType.JOB, jobBaseOs = os)
     }
 
-    fun checkStep(job: Map<String, Any>, nodeIndex: TransferMapper.NodeIndex?): PositionResponse {
-        return PositionResponse(type = PositionResponse.PositionType.STEP)
+    fun checkStep(
+        userId: String,
+        job: Map<String, Any>,
+        nodeIndex: TransferMapper.NodeIndex?
+    ): PositionResponse {
+        val preStep = JsonUtil.anyTo(job, object : TypeReference<PreStep>() {})
+        return PositionResponse(
+            type = PositionResponse.PositionType.STEP,
+            element = elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(preStep), null)
+        )
     }
 }

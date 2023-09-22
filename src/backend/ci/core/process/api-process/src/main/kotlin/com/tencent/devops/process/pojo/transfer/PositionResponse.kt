@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.transfer
 
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,6 +46,8 @@ data class PositionResponse(
     var jobId: String? = null,
     @ApiModelProperty("当定位到STEP时有效，表示step下标")
     var stepIndex: Int? = null,
+    @ApiModelProperty("当定位到STEP时有效，拿到对应的element元素")
+    var element: Element? = null,
     @ApiModelProperty("转换错误")
     val error: String? = null
 ) {

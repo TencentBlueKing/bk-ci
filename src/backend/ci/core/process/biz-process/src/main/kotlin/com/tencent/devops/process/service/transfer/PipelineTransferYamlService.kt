@@ -224,7 +224,7 @@ class PipelineTransferYamlService @Autowired constructor(
         logger.debug("check position |$line|$column|$yaml")
         val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
         return yamlIndexService.position(
-            line = line, column = column, yaml = yaml, preYaml = pYml
+            userId = userId, line = line, column = column, yaml = yaml, preYaml = pYml
         )
     }
 
@@ -237,7 +237,8 @@ class PipelineTransferYamlService @Autowired constructor(
         data: ElementInsertBody
     ): ElementInsertResponse {
         logger.debug("check position |$projectId|$line|$column|$data")
-        return elementTransfer.modelTaskInsert(
+        return yamlIndexService.modelTaskInsert(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             line = line,
