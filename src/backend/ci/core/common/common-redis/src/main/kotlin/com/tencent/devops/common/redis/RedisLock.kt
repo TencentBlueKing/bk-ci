@@ -48,24 +48,26 @@ open class RedisLock(
     fun isLocked() = isLocalLocked() || redisOperation.hasKey(lockKey)
 
     /**
-     * 尝试获取锁 立即返回
-     *
-     * @return 是否成功获得锁
+     * 获取锁,直到成功才会返回
      */
     fun lock() {
         while (true) {
             lockLocal()
-            if (set(lockKey, lockValue, expiredTimeInSeconds)) {
+            if (tryLockRemote()) {
                 break
             } else {
                 unlockLocal()
             }
+            Thread.sleep(sleepTime)
         }
     }
 
+    /**
+     * 尝试获取锁, 成功会返回true
+     */
     fun tryLock(): Boolean {
         return if (tryLockLocal()) {
-            if (set(lockKey, lockValue, expiredTimeInSeconds)) {
+            if (tryLockRemote()) {
                 true
             } else {
                 unlockLocal()
@@ -86,18 +88,23 @@ open class RedisLock(
      * 这两个改动可以防止持有过期锁的客户端误删现有锁的情况出现。
      */
     fun unlock() {
-        val finalKey = decorateKey(lockKey)
-        val unlock =
-            redisOperation.execute(DefaultRedisScript(unLockLua, Long::class.java), listOf(finalKey), lockValue)
-        if (unlock > 0) {
+        if (unLockRemote()) {
             unlockLocal()
         } else {
             logger.warn("Lock is timeout and another one is locked now")
         }
     }
 
-    private fun set(key: String, value: String, seconds: Long): Boolean {
-        return redisOperation.setNxEx(decorateKey(key), value, seconds)
+    private fun tryLockRemote(): Boolean {
+        return redisOperation.setNxEx(decorateKey(lockKey), lockValue, expiredTimeInSeconds)
+    }
+
+    private fun unLockRemote(): Boolean {
+        return redisOperation.execute(
+            DefaultRedisScript(unLockLua, Long::class.java),
+            listOf(decorateKey(lockKey)),
+            lockValue
+        ) > 0
     }
 
     open fun decorateKey(key: String): String {
