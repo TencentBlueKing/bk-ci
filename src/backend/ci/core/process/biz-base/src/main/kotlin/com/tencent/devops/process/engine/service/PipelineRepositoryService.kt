@@ -846,7 +846,7 @@ class PipelineRepositoryService constructor(
                                 pipelineId = pipelineId,
                                 version = null
                             )
-                            realBaseVersion = realBaseVersion ?: latestVersion.version
+                            realBaseVersion = realBaseVersion ?: latestVersion?.version ?: 0
                             (latestVersion?.version ?: 0) + 1
                         } else {
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
