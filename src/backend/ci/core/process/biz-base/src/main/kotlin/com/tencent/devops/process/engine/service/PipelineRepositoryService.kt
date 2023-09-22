@@ -793,6 +793,7 @@ class PipelineRepositoryService constructor(
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$versionStatus")
         var versionName: String? = null
+        var realBaseVersion = baseVersion
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -838,13 +839,14 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         version = if (draftVersion == null || baseVersion == null) {
-                            // 没有已有草稿或者旧接口保存时，直接增加正式版本
+                            // 没有已有草稿或者旧接口保存时，直接增加正式版本，基准为上一个发布版本
                             val latestVersion = pipelineResourceVersionDao.getVersionResource(
                                 dslContext = transactionContext,
                                 projectId = projectId,
                                 pipelineId = pipelineId,
                                 version = null
                             )
+                            realBaseVersion = realBaseVersion ?: latestVersion.version
                             (latestVersion?.version ?: 0) + 1
                         } else {
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
@@ -930,7 +932,7 @@ class PipelineRepositoryService constructor(
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
                     description = description,
-                    baseVersion = baseVersion ?: (version - 1)
+                    baseVersion = realBaseVersion ?: (version - 1)
                 )
                 // 此前先增后删是为了保证没有产生历史版本的数据能记录最后一个编排
                 // 针对新增version表做的数据迁移，双写后已经不需要
