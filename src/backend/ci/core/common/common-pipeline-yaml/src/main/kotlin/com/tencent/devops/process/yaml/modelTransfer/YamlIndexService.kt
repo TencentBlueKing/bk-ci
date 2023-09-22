@@ -47,6 +47,17 @@ class YamlIndexService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(YamlIndexService::class.java)
     }
 
+    fun position(
+        line: Int,
+        column: Int,
+        yaml: String,
+        preYaml: ITemplateFilter
+    ): PositionResponse {
+        val index = TransferMapper.indexYaml(yaml, line, column)
+            ?: return PositionResponse(type = PositionResponse.PositionType.SETTING)
+        return checkYamlIndex(preYaml, index)
+    }
+
     fun checkYamlIndex(preYaml: ITemplateFilter, nodeIndex: TransferMapper.NodeIndex): PositionResponse {
         when (nodeIndex.key) {
             ITemplateFilter::stages.name -> {

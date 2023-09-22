@@ -36,7 +36,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.transfer.PositionBody
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
+import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -218,14 +219,33 @@ class PipelineTransferYamlService @Autowired constructor(
         projectId: String,
         line: Int,
         column: Int,
-        yaml: PositionBody
+        yaml: String
     ): PositionResponse {
         logger.debug("check position |$line|$column|$yaml")
-        val index = TransferMapper.indexYaml(yaml.yaml, line, column)
-            ?: return PositionResponse(type = PositionResponse.PositionType.SETTING)
-        val pYml = YamlUtil.getObjectMapper().readValue(yaml.yaml, object : TypeReference<ITemplateFilter>() {})
-        return yamlIndexService.checkYamlIndex(pYml, index)
+        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
+        return yamlIndexService.position(
+            line = line, column = column, yaml = yaml, preYaml = pYml
+        )
     }
+
+    fun modelTaskInsert(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        line: Int,
+        column: Int,
+        data: ElementInsertBody
+    ): ElementInsertResponse {
+        logger.debug("check position |$projectId|$line|$column|$data")
+        return elementTransfer.modelTaskInsert(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            line = line,
+            column = column,
+            data = data
+        )
+    }
+
 
     private fun getPipelineResource(
         projectId: String,
