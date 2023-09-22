@@ -210,7 +210,7 @@ class MigrateResultService constructor(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
             params = arrayOf(projectCode),
-            defaultMessage = "Failed to compare policy:resource not migrate" +
+            defaultMessage = "Failed to compare policy:resource not migrate|" +
                     "$userId|$projectCode|$resourceType|$resourceCode"
         )
 
@@ -224,33 +224,37 @@ class MigrateResultService constructor(
         }
         // 用户存在,校验用户是否有资源权限
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode) ?: prodTag
+        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId")
         val hasPermission = bkTag.invokeByTag(projectConsulTag) {
             // create类的action,resourceType的值是project,调用v0权限接口应转换成原来的值
-            actions.filter { it.contains("create") }.forEach {
+            val createPermission = actions.filter { it.contains("create") }.all {
                 client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermission(
                     userId = userId,
                     token = tokenService.getSystemToken(null)!!,
                     action = it.substringAfterLast("_"),
                     projectCode = projectCode,
                     resourceCode = it.substringBefore("_")
-                )
+                ).data!!
             }
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
-            client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
-                userId = userId,
-                token = tokenService.getSystemToken(null)!!,
-                action = actions.filterNot { it.contains("create") }.map { it.substringAfterLast("_") },
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceType = resourceType
-            )
-        }.data!!
-        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId|$hasPermission")
+            val notCreatePermission =
+                client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
+                    userId = userId,
+                    token = tokenService.getSystemToken(null)!!,
+                    action = actions.filterNot {
+                        it.contains("create")
+                    }.map { it.substringAfterLast("_") },
+                    projectCode = projectCode,
+                    resourceCode = resourceCode,
+                    resourceType = resourceType
+                ).data!!
+            createPermission && notCreatePermission
+        }
         if (hasPermission) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
                 params = arrayOf(projectCode),
-                defaultMessage = "Failed to compare policy:permission not migrate" +
+                defaultMessage = "Failed to compare policy:permission not migrate|" +
                         "$userId|$projectCode|$resourceType|$resourceCode|$actions"
             )
         }
