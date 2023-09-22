@@ -50,7 +50,7 @@ class AuthenticationService {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${bkUsername}\"}"
 
-        var url:String?
+        var url: String?
         when (operationName) {
             "executeScript" -> {
                 if ("prod" == operationEnv) {
