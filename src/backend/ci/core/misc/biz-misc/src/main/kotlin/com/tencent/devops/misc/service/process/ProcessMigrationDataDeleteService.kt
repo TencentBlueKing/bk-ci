@@ -82,8 +82,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     targetClusterName = targetClusterName,
-                    targetDataSourceName = targetDataSourceName,
-                    projectMigrationLock = projectMigrationLock
+                    targetDataSourceName = targetDataSourceName
                 )
             } else {
                 throw ErrorCodeException(
@@ -100,8 +99,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         targetClusterName: String,
-        targetDataSourceName: String,
-        projectMigrationLock: ProjectMigrationLock? = null
+        targetDataSourceName: String
     ) {
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
         do {
@@ -125,8 +123,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             targetClusterName = targetClusterName,
-            targetDataSourceName = targetDataSourceName,
-            projectMigrationLock = projectMigrationLock
+            targetDataSourceName = targetDataSourceName
         )
     }
 
