@@ -16,8 +16,13 @@ import com.github.difflib.algorithm.myers.MeyersDiffWithLinearSpace
 import com.github.difflib.patch.DeltaType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferMark
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import java.io.StringWriter
 import java.io.Writer
 import java.util.function.Supplier
@@ -274,9 +279,9 @@ object TransferMapper {
     }
 
     data class NodeIndex(
-        val key: String?,
-        val index: Int?,
-        val next: NodeIndex?
+        val key: String? = null,
+        val index: Int? = null,
+        val next: NodeIndex? = null
     ) {
         override fun toString(): String {
             return key ?: "array($index)" + (next?.toString() ?: "")
@@ -315,6 +320,64 @@ object TransferMapper {
                         val k = if (key.nodeId == NodeId.scalar) key as ScalarNode else null
                         return NodeIndex(key = k?.value ?: key.toString(), index = null, next = this)
                     }
+                }
+            }
+        }
+        return null
+    }
+
+    private fun markNode(node: Node, nodeIndex: NodeIndex): TransferMark? {
+        var realNode = node
+        if (node.nodeId == NodeId.anchor) {
+            realNode = (node as AnchorNode).realNode
+        }
+        if (nodeIndex.key != null && nodeIndex.next == null && realNode is ScalarNode && nodeIndex.key == realNode.value) {
+            return TransferMark(
+                startMark = TransferMark.Mark(
+                    realNode.startMark.line, realNode.startMark.column
+                ),
+                endMark = TransferMark.Mark(
+                    realNode.endMark.line, realNode.endMark.column
+                )
+            )
+        }
+        when (realNode.nodeId) {
+            NodeId.sequence -> {
+                val seqNode = realNode as SequenceNode
+                val list = seqNode.value
+                list.forEachIndexed { index, node ->
+                    if (nodeIndex.index == null) return null
+                    if (index != nodeIndex.index) return@forEachIndexed
+                    if (nodeIndex.next == null) return TransferMark(
+                        startMark = TransferMark.Mark(
+                            node.startMark.line, node.startMark.column
+                        ),
+                        endMark = TransferMark.Mark(
+                            node.endMark.line, node.endMark.column
+                        )
+                    )
+                    return markNode(node, nodeIndex.next)
+                }
+            }
+
+            NodeId.mapping -> {
+                val mNode = realNode as MappingNode
+                val map = mNode.value
+                for (obj in map) {
+                    val key = obj.keyNode
+                    val value = obj.valueNode
+                    if (nodeIndex.key == null) return null
+                    val k = if (key.nodeId == NodeId.scalar) key as ScalarNode else null
+                    if (k?.value != nodeIndex.key) continue
+                    if (nodeIndex.next == null) return TransferMark(
+                        startMark = TransferMark.Mark(
+                            value.startMark.line, value.startMark.column
+                        ),
+                        endMark = TransferMark.Mark(
+                            value.endMark.line, value.endMark.column
+                        )
+                    )
+                    return markNode(value, nodeIndex.next)
                 }
             }
         }
@@ -570,5 +633,209 @@ object TransferMapper {
         column: Int
     ): NodeIndex? {
         return indexNode(getYamlFactory().compose(yaml.reader()), TransferMark.Mark(line, column))
+    }
+
+    fun markYaml(
+        index: NodeIndex,
+        yaml: String
+    ): TransferMark? {
+        return markNode(getYamlFactory().compose(yaml.reader()), index)
+    }
+
+    fun indexYaml(
+        position: PositionResponse,
+        pYml: ITemplateFilter,
+        yml: PreStep
+    ): NodeIndex {
+        return when (position.type) {
+            PositionResponse.PositionType.STEP -> addInYamlSteps(position, pYml, yml)
+            PositionResponse.PositionType.JOB, PositionResponse.PositionType.STAGE -> addInYamlJob(position, pYml, yml)
+            else -> addInYamlLastStage(pYml, yml)
+        }
+    }
+
+
+    /*
+    * 光标在一个已有的 step 配置区域，则在该 step 之后 添加一个新的 step
+    */
+    private fun addInYamlSteps(
+        positionResponse: PositionResponse,
+        preYaml: ITemplateFilter,
+        preStep: PreStep
+    ): NodeIndex {
+        if (positionResponse.stageIndex != null) {
+            return NodeIndex(
+                key = ITemplateFilter::stages.name,
+                next = indexInStage(
+                    positionResponse,
+                    preYaml.stages!!
+                ) { steps ->
+                    steps.add(positionResponse.stepIndex!! + 1, preStep)
+                    NodeIndex(
+                        index = positionResponse.stepIndex!! + 1
+                    )
+                }
+            )
+        }
+
+        if (positionResponse.jobId != null) {
+            return NodeIndex(
+                key = ITemplateFilter::jobs.name,
+                next = indexInJob(
+                    positionResponse,
+                    preYaml.jobs!!
+                ) { steps ->
+                    steps.add(positionResponse.stepIndex!! + 1, preStep)
+                    NodeIndex(
+                        index = positionResponse.stepIndex!! + 1
+                    )
+                }
+            )
+        }
+
+        if (positionResponse.stepIndex != null) {
+            return NodeIndex(
+                key = PreJob::steps.name,
+                next = indexInStep(
+                    preYaml.steps!! as ArrayList<Any>
+                ) { steps ->
+                    steps.add(positionResponse.stepIndex!! + 1, preStep)
+                    NodeIndex(
+                        index = positionResponse.stepIndex!! + 1
+                    )
+                }
+            )
+        }
+        return NodeIndex()
+    }
+
+    /*
+    * 光标在 job 配置区域，则在 job下的 steps 末尾添加一个新的 step
+    */
+    private fun addInYamlJob(
+        positionResponse: PositionResponse,
+        preYaml: ITemplateFilter,
+        preStep: PreStep
+    ): NodeIndex {
+        if (positionResponse.stageIndex != null) {
+            return NodeIndex(
+                key = ITemplateFilter::stages.name,
+                next = indexInStage(
+                    positionResponse,
+                    preYaml.stages!!,
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+
+        if (positionResponse.jobId != null) {
+            return NodeIndex(
+                key = ITemplateFilter::jobs.name,
+                next = indexInJob(
+                    positionResponse,
+                    preYaml.jobs!!
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+        return NodeIndex()
+    }
+
+    /*
+    * 光标在 stage 配置/流水线配置区域，则在最后一个 stage 的最后一个 job 末尾添加一个新的 step
+    */
+    private fun addInYamlLastStage(
+        preYaml: ITemplateFilter,
+        preStep: PreStep
+    ): NodeIndex {
+        if (preYaml.stages != null) {
+            return NodeIndex(
+                key = ITemplateFilter::stages.name,
+                next = indexInStage(
+                    positionResponse = PositionResponse(),
+                    stages = preYaml.stages!!,
+                    last = true
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+
+        if (preYaml.jobs != null) {
+            val job = preYaml.jobs!!.values.last() as LinkedHashMap<String, Any>
+            val steps = job[PreJob::steps.name] as ArrayList<Any>
+            steps.add(preStep)
+            return NodeIndex(
+                key = ITemplateFilter::jobs.name,
+                next = indexInJob(
+                    positionResponse = PositionResponse(),
+                    jobs = preYaml.jobs!!,
+                    last = true
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+
+        if (preYaml.steps != null) {
+            preYaml.steps!!.add(JsonUtil.toMap(preStep))
+            return NodeIndex(
+                index = preYaml.steps!!.size - 1
+            )
+        }
+        return NodeIndex()
+    }
+
+    private fun indexInStage(
+        positionResponse: PositionResponse,
+        stages: ArrayList<Map<String, Any>>,
+        last: Boolean = false,
+        action: (steps: ArrayList<Any>) -> NodeIndex
+    ): NodeIndex {
+        val index = if (last) stages.lastIndex else positionResponse.stageIndex!!
+        val jobs = stages[index][PreStage::jobs.name] as LinkedHashMap<String, Any>
+        return NodeIndex(
+            index = index,
+            next = NodeIndex(
+                key = PreStage::jobs.name,
+                next = indexInJob(positionResponse, jobs, last, action)
+            )
+        )
+    }
+
+    private fun indexInJob(
+        positionResponse: PositionResponse,
+        jobs: LinkedHashMap<String, Any>,
+        last: Boolean = false,
+        action: (steps: ArrayList<Any>) -> NodeIndex
+    ): NodeIndex {
+        val key = if (last) jobs.entries.last().key else positionResponse.jobId
+        val job = jobs[key] as LinkedHashMap<String, Any>
+        val steps = job[PreJob::steps.name] as ArrayList<Any>
+        return NodeIndex(
+            key = key,
+            next = NodeIndex(key = PreJob::steps.name, next = indexInStep(steps, action))
+        )
+    }
+
+    private fun indexInStep(
+        steps: ArrayList<Any>,
+        action: (steps: ArrayList<Any>) -> NodeIndex
+    ): NodeIndex {
+        return action(steps)
     }
 }

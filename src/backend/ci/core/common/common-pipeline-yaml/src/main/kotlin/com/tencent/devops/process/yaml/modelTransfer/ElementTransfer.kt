@@ -30,7 +30,9 @@ package com.tencent.devops.process.yaml.modelTransfer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
@@ -56,6 +58,8 @@ import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.RunAtomParam
 import com.tencent.devops.common.pipeline.utils.TransferUtil
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
+import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
@@ -64,6 +68,8 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -83,7 +89,8 @@ class ElementTransfer @Autowired(required = false) constructor(
     @Autowired(required = false)
     val creator: TransferCreator,
     val transferCache: TransferCacheService,
-    val triggerTransfer: TriggerTransfer
+    val triggerTransfer: TriggerTransfer,
+    val yamlIndexService: YamlIndexService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ElementTransfer::class.java)
@@ -484,6 +491,23 @@ class ElementTransfer @Autowired(required = false) constructor(
                 null
             }
         }
+    }
+
+    fun modelTaskInsert(
+        projectId: String,
+        pipelineId: String,
+        line: Int,
+        column: Int,
+        data: ElementInsertBody
+    ): ElementInsertResponse {
+        val pYml = YamlUtil.getObjectMapper().readValue(data.yaml, object : TypeReference<ITemplateFilter>() {})
+        val position = yamlIndexService.position(
+            line = line, column = column, yaml = data.yaml, preYaml = pYml
+        )
+        val yml = element2YamlStep(data.data, projectId) ?: throw ErrorCodeException(errorCode = "")
+        val index = TransferMapper.indexYaml(position, pYml, yml)
+        val outYaml = TransferMapper.toYaml(pYml)
+        return ElementInsertResponse(yaml = outYaml, mark = TransferMapper.markYaml(index, outYaml))
     }
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {

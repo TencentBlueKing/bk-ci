@@ -36,6 +36,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTransferResource
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
+import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.process.pojo.transfer.PositionBody
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferActionType
@@ -136,6 +138,17 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         column: Int,
         yaml: PositionBody
     ): Result<PositionResponse> {
-        return Result(transferService.position(userId, projectId, line, column, yaml))
+        return Result(transferService.position(userId, projectId, line, column, yaml.yaml))
+    }
+
+    override fun modelTaskInsert(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        line: Int,
+        column: Int,
+        data: ElementInsertBody
+    ): Result<ElementInsertResponse> {
+        return Result(transferService.modelTaskInsert(userId, projectId, pipelineId, line, column, data))
     }
 }
