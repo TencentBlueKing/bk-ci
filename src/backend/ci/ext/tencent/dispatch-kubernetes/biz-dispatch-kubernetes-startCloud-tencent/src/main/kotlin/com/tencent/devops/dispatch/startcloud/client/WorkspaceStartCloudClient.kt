@@ -407,12 +407,12 @@ class WorkspaceStartCloudClient @Autowired constructor(
         workspaceName: String,
         environmentOperate: EnvironmentOperate
     ): EnvironmentOperateRsp.EnvironmentOperateRspData {
-        val url = "$apiUrl/api/v1/remotedevenv/${action.action}"
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
         val body = JsonUtil.toJson(environmentOperate, false)
         logger.info("$userId ${action.action} workspace url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(makeHeaders(body).toHeaders())
+            .headers(makeBcsHeaders().toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
