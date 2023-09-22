@@ -114,7 +114,7 @@ interface ServiceJobResource {
         jobInstanceId: Long,
         @ApiParam(value = "是否返回每个ip上的任务详情，默认false", required = true)
         @QueryParam("returnIpResult")
-        returnIpResult: Boolean = false
+        returnIpResult: Boolean? = false
     ): Result<QueryJobInstanceStatusResult>
 
     @ApiOperation("批量查询日志的Job接口")
