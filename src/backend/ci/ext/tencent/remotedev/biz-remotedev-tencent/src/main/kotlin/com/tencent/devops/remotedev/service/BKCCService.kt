@@ -72,7 +72,6 @@ class BKCCService @Autowired constructor(
     }
 }
 
-
 data class UpdateHostReqBody(
     @JsonProperty("bk_app_code")
     val bkAppCode: String,
