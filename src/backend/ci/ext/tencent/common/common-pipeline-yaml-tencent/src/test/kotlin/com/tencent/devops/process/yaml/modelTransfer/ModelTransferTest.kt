@@ -36,12 +36,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.CommonPipelineAutoConfiguration
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
@@ -57,6 +59,8 @@ import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplatePar
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import io.mockk.every
 import io.mockk.mockk
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,8 +70,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.util.ReflectionTestUtils
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class, CommonPipelineAutoConfiguration::class])
@@ -87,10 +89,12 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         transferCache = transferCache,
         dispatchTransfer = dispatchTransfer
     )
+    private val yamlIndexService: YamlIndexService = YamlIndexService(dispatchTransfer)
     private val variableTransfer: VariableTransfer = VariableTransfer()
 
     private val elementTransfer: ElementTransfer = ElementTransfer(
-        client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer
+        client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer,
+        yamlIndexService = yamlIndexService
     )
     private val stageTransfer: StageTransfer = StageTransfer(
         client = client,
@@ -107,7 +111,6 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         transferCache = transferCache
     )
 
-    private val yamlIndexService: YamlIndexService = YamlIndexService(dispatchTransfer)
 
     private val pipelineInfo = PipelineInfo(
         projectId = "",
@@ -304,6 +307,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         watcher.stop()
         println(watcher.toString())
     }
+
     @ParameterizedTest
     @ValueSource(
         strings = [
@@ -312,10 +316,27 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     )
     fun markerYaml(value: String) {
         val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
-        val index = TransferMapper.indexYaml(yaml, 198,30)!!
+        val index = TransferMapper.indexYaml(yaml, 198, 30)!!
         val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
         val res = yamlIndexService.checkYamlIndex(pYml, index)
         println(res)
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "yaml-model-001-v3"
+        ]
+    )
+    fun yamlElementInsert(value: String) {
+        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
+        val res = elementTransfer.modelTaskInsert(
+            "test", "p-test", 365, 25, ElementInsertBody(
+                yaml, MarketBuildAtomElement("yamlElementInsert test")
+            )
+        )
+        println(res.mark)
+        Assertions.assertEquals(yaml, res.yaml)
     }
 
     @Test
