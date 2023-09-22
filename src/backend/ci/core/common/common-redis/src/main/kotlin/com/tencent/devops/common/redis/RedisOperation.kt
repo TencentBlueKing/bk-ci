@@ -35,7 +35,6 @@ import org.springframework.data.redis.core.script.RedisScript
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-
 @Suppress("TooManyFunctions", "UNUSED")
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, private val redisName: String? = null) {
 
@@ -249,7 +248,7 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
     }
 
     fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?): T {
-        return redisTemplate.execute<T>(script, keys, *args)
+        return redisTemplate.execute(script, keys, *args)
     }
 
     fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
