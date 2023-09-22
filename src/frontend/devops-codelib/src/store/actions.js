@@ -328,21 +328,21 @@ const actions = {
         commit(SET_TEMPLATE_CODELIB, codeLib)
     },
 
-    async changeMrBlock ({ commit }, {
+    changeMrBlock ({ commit }, {
         projectId,
         repositoryHashId,
         enableMrBlock
     }) {
-        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/updateRepoSetting`, {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/updateRepoSetting`, {
             enableMrBlock
         })
     },
 
-    async checkPacProject ({ commit }, {
+    checkPacProject ({ commit }, {
         repoUrl,
         repositoryType
     }) {
-        return await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
     },
 
     /**
@@ -380,21 +380,21 @@ const actions = {
     /**
      * 重命名-代码库别名
      */
-    async renameAliasName ({ commit }, {
+    renameAliasName ({ commit }, {
         projectId,
         repositoryHashId,
         params
     }) {
-        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/rename`, params)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/rename`, params)
     },
     /**
      * 关闭PAC校验- 仓库是否存在.ci文件夹
      */
-    async checkHasCiFolder ({ commit }, {
+    checkHasCiFolder ({ commit }, {
         projectId,
         repositoryHashId
     }) {
-        return await vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
     },
 
     /**
