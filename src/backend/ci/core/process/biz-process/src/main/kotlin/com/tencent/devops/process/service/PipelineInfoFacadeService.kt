@@ -504,28 +504,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newResource = try {
-            val result = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml)
-            )
-            if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                )
-            }
-            result.modelAndSetting!!
-        } catch (ignore: Throwable) {
-            if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-            )
-        }
+        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
@@ -565,28 +544,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newResource = try {
-            val result = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml)
-            )
-            if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                )
-            }
-            result.modelAndSetting!!
-        } catch (ignore: Throwable) {
-            if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-            )
-        }
+        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -619,6 +577,31 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
         return result
+    }
+
+    private fun transferModelAndSetting(userId: String, projectId: String, yml: String, isDefaultBranch: Boolean, branchName: String): PipelineModelAndSetting {
+        return try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            result.modelAndSetting!!
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
     }
 
     /**
