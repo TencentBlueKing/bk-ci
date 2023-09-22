@@ -45,7 +45,7 @@ open class RedisLock(
     /**
      * 锁是否已经被占用
      */
-    fun isLocked() = isLocalLocked() || redisOperation.hasKey(lockKey)
+    fun isLocked() = isLocalLocked() && redisOperation.hasKey(lockKey)
 
     /**
      * 获取锁,直到成功才会返回
