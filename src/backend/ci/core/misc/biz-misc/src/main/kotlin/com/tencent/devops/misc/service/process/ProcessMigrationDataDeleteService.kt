@@ -29,7 +29,6 @@ package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.lock.ProjectMigrationLock
@@ -46,8 +45,7 @@ import org.springframework.stereotype.Service
 class ProcessMigrationDataDeleteService @Autowired constructor(
     private val processDao: ProcessDao,
     private val processDataDeleteDao: ProcessDataDeleteDao,
-    private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService,
-    private val redisOperation: RedisOperation
+    private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService
 ) {
 
     companion object {
@@ -66,11 +64,11 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         targetClusterName: String,
-        targetDataSourceName: String
+        targetDataSourceName: String,
+        projectMigrationLock: ProjectMigrationLock? = null
     ) {
-        val projectMigrationLock = ProjectMigrationLock(redisOperation, projectId)
         try {
-            projectMigrationLock.lock()
+            projectMigrationLock?.lock()
             val moduleCode = SystemModuleEnum.PROCESS
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
@@ -94,7 +92,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 )
             }
         } finally {
-            projectMigrationLock.unlock()
+            projectMigrationLock?.unlock()
         }
     }
 
@@ -103,7 +101,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         projectId: String,
         targetClusterName: String,
         targetDataSourceName: String,
-        projectMigrationLock: ProjectMigrationLock
+        projectMigrationLock: ProjectMigrationLock? = null
     ) {
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
         do {
@@ -216,30 +214,25 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         targetDataSourceName: String,
         projectMigrationLock: ProjectMigrationLock? = null
     ) {
-        if (projectMigrationLock == null) {
-            val lock = ProjectMigrationLock(redisOperation, projectId)
-            try {
-                lock.lock()
-                val queryParam = ProjectDataMigrateHistoryQueryParam(
-                    projectId = projectId,
-                    moduleCode = SystemModuleEnum.PROCESS,
-                    targetClusterName = targetClusterName,
-                    targetDataSourceName = targetDataSourceName
+        try {
+            projectMigrationLock?.lock()
+            val queryParam = ProjectDataMigrateHistoryQueryParam(
+                projectId = projectId,
+                moduleCode = SystemModuleEnum.PROCESS,
+                targetClusterName = targetClusterName,
+                targetDataSourceName = targetDataSourceName
+            )
+            // 项目已经迁移成功则不再删除db中数据
+            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
+                deleteProjectRelData(dslContext, projectId)
+            } else {
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
+                    params = arrayOf(projectId)
                 )
-                // 项目已经迁移成功则不再删除db中数据
-                if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
-                    deleteProjectRelData(dslContext, projectId)
-                } else {
-                    throw ErrorCodeException(
-                        errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
-                        params = arrayOf(projectId)
-                    )
-                }
-            } finally {
-                lock.unlock()
             }
-        } else {
-            deleteProjectRelData(dslContext, projectId)
+        } finally {
+            projectMigrationLock?.unlock()
         }
     }
 

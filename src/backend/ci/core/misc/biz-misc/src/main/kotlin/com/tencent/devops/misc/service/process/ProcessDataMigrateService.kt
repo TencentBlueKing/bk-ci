@@ -111,6 +111,9 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.processDbMicroServices:#{\"process,engine,misc,lambda\"}}")
     private val migrationProcessDbMicroServices = "process,engine,misc,lambda"
 
+    @Value("\${sharding.migration.sourceDbDataDeleteFlag:#{false}}")
+    private val migrationSourceDbDataDeleteFlag: Boolean = false
+
     @PostConstruct
     fun init() {
         // 启动的时候重置redis中存储的同时迁移的项目数量，防止因为服务异常停了造成程序执行出错
@@ -192,12 +195,14 @@ class ProcessDataMigrateService @Autowired constructor(
         if (shardingRoutingRule.isNullOrBlank()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         }
+        val projectMigrationLock = ProjectMigrationLock(redisOperation, projectId)
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
         processMigrationDataDeleteService.deleteProcessData(
             dslContext = migratingShardingDslContext,
             projectId = projectId,
             targetClusterName = clusterName,
-            targetDataSourceName = shardingRoutingRule
+            targetDataSourceName = shardingRoutingRule,
+            projectMigrationLock = projectMigrationLock
         )
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
@@ -258,7 +263,8 @@ class ProcessDataMigrateService @Autowired constructor(
                 dslContext = migratingShardingDslContext,
                 projectId = projectId,
                 targetClusterName = clusterName,
-                targetDataSourceName = shardingRoutingRule
+                targetDataSourceName = shardingRoutingRule,
+                projectMigrationLock = projectMigrationLock
             )
             return
         }
@@ -271,6 +277,7 @@ class ProcessDataMigrateService @Autowired constructor(
         try {
             // 等待所有任务执行完成
             doneSignal.await(migrationTimeout, TimeUnit.HOURS)
+            logger.info("migrateProjectData all pipeline tasks have been completed|params:[$userId|$projectId]")
             // 执行迁移完成后的逻辑
             doAfterMigrationBus(
                 userId = userId,
@@ -280,6 +287,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 migratingShardingRoutingRule = migratingShardingRoutingRule,
                 shardingRoutingRule = shardingRoutingRule,
                 pipelineNum = pipelineNum,
+                projectMigrationLock = projectMigrationLock,
                 dataTag = dataTag
             )
         } catch (ignored: Throwable) {
@@ -294,6 +302,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 userId = userId,
                 historyShardingRoutingRule = historyShardingRoutingRule,
                 shardingRoutingRule = shardingRoutingRule,
+                projectMigrationLock = projectMigrationLock,
                 errorMsg = errorMsg
             )
         } finally {
@@ -308,6 +317,7 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateProjectExecuteCountKey: String,
         projectId: String,
         userId: String,
+        projectMigrationLock: ProjectMigrationLock,
         historyShardingRoutingRule: ShardingRoutingRule?,
         shardingRoutingRule: String?,
         errorMsg: String? = null
@@ -331,7 +341,8 @@ class ProcessDataMigrateService @Autowired constructor(
                     dslContext = migratingShardingDslContext,
                     projectId = projectId,
                     targetClusterName = clusterName,
-                    targetDataSourceName = shardingRoutingRule
+                    targetDataSourceName = shardingRoutingRule,
+                    projectMigrationLock = projectMigrationLock
                 )
             }
             // 把项目路由规则还原
@@ -455,21 +466,24 @@ class ProcessDataMigrateService @Autowired constructor(
         migratingShardingRoutingRule: String?,
         shardingRoutingRule: String,
         pipelineNum: Int,
+        projectMigrationLock: ProjectMigrationLock,
         dataTag: String?
     ) {
         val clusterName = CommonUtils.getDbClusterName()
-        val projectMigrationLock = ProjectMigrationLock(redisOperation, projectId)
         try {
             projectMigrationLock.lock()
+            logger.info("migrateProjectData doAfterMigrationBus get lock|params:[$userId|$projectId]")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                // 删除原库的数据
-                processMigrationDataDeleteService.deleteProcessData(
-                    dslContext = context,
-                    projectId = projectId,
-                    targetClusterName = clusterName,
-                    targetDataSourceName = shardingRoutingRule
-                )
+                if (migrationSourceDbDataDeleteFlag) {
+                    // 开关打开则删除原库的数据
+                    processMigrationDataDeleteService.deleteProcessData(
+                        dslContext = context,
+                        projectId = projectId,
+                        targetClusterName = clusterName,
+                        targetDataSourceName = shardingRoutingRule
+                    )
+                }
                 // 更新项目的路由规则
                 updateShardingRoutingRule(
                     projectId = projectId,
@@ -489,7 +503,7 @@ class ProcessDataMigrateService @Autowired constructor(
                     sourceClusterName = clusterName,
                     sourceDataSourceName = sourceDataSourceName,
                     targetClusterName = clusterName,
-                    targetDataSourceName = shardingRoutingRule ?: "",
+                    targetDataSourceName = shardingRoutingRule,
                     targetDataTag = dataTag
                 )
             )
@@ -623,7 +637,7 @@ class ProcessDataMigrateService @Autowired constructor(
         )?.map { it.dataSourceName }?.filter { it != sourceDataSourceName }
         if (dataSourceNames.isNullOrEmpty()) {
             logger.warn("[$clusterName]$moduleCode has no dataSource available")
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PROJECT_NO_VALID_DB_ASSIGN)
         }
         val maxSizeIndex = dataSourceNames.size - 1
         val randomIndex = (0..maxSizeIndex).random()
