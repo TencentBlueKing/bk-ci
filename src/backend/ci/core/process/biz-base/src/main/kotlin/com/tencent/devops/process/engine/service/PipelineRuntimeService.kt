@@ -970,7 +970,7 @@ class PipelineRuntimeService @Autowired constructor(
                 containerBuildRecords = containerBuildRecords,
                 taskBuildRecords = taskBuildRecords
             )
-            repositoryVersionService.saveDebugBuildInfo(
+            if (context.debug) repositoryVersionService.saveDebugBuildInfo(
                 transactionContext = transactionContext,
                 projectId = context.projectId,
                 pipelineId = context.pipelineId,

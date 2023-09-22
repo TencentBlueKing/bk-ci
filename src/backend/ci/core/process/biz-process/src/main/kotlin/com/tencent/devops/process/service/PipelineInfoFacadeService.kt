@@ -840,7 +840,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
         // TODO #8164 增加同步PAC仓库
         if (draftVersion?.status != VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_IS_NOT_DRAFT
+            errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
         )
         val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
             val debugBuild = pipelineRuntimeService.getBuildInfo(

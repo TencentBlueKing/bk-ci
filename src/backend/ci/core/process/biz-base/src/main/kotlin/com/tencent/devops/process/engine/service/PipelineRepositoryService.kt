@@ -895,6 +895,12 @@ class PipelineRepositoryService constructor(
                 )
                 watcher.start("updatePipelineResource")
                 if (versionStatus == VersionStatus.RELEASED) {
+                    pipelineResourceDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        beforeVersion = version
+                    )
                     pipelineResourceDao.create(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -906,12 +912,6 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = pipelineVersion,
                         triggerVersion = triggerVersion,
                         settingVersion = settingVersion
-                    )
-                    pipelineResourceDao.deleteEarlyVersion(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        beforeVersion = version
                     )
                 }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
@@ -1053,33 +1053,31 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false
     ): Model? {
-        var modelString: String?
-        if (version == null) { // 取最新版，直接从旧版本表读
-            modelString = pipelineResourceDao.getVersionModelString(
+        return if (version == null) { // 取最新版，直接从旧版本表读
+            val latestVersion = pipelineResourceDao.getLatestVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                version = null
-            ) ?: return null
+                pipelineId = pipelineId
+            ) ?: pipelineResourceVersionDao.getDraftVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            latestVersion?.model
         } else {
-            modelString = pipelineResourceVersionDao.getVersionModelString(
+            val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 includeDraft = includeDraft
+            ) ?: pipelineResourceDao.getLatestVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
-            if (modelString.isNullOrBlank()) {
-                // 兼容处理：取不到再从旧的版本表取
-                modelString = pipelineResourceDao.getVersionModelString(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = version
-                ) ?: return null
-            }
+            targetVersion?.model
         }
-        return str2model(modelString, pipelineId)
     }
 
     fun getPipelineResourceVersion(
@@ -1109,6 +1107,24 @@ class PipelineRepositoryService constructor(
                 includeDraft = includeDraft
             )
         }
+        // 返回时将别名name补全为id
+        resource?.let {
+            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
+        }
+        return resource
+    }
+
+    fun getDraftVersionResource(
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        val resource = pipelineResourceVersionDao.getDraftVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         // 返回时将别名name补全为id
         resource?.let {
             (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
