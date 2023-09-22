@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 @Suppress("ALL")
-class JobCloudAccount (
+class JobCloudAccount(
     @ApiModelProperty(value = "执行帐号ID")
     @JsonProperty("id")
     val id: Long?,

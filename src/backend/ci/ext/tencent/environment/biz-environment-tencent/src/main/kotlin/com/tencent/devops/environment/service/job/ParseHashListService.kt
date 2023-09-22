@@ -26,7 +26,7 @@ class ParseHashListService() {
             return emptyList()
         }
     }
-    
+
     private fun discardBlankHashId(hashIdList: List<String>): MutableSet<String> {
         val trimBlankHashIdList = mutableSetOf<String>()
         for (hashId in hashIdList) {
@@ -36,6 +36,7 @@ class ParseHashListService() {
         }
         return trimBlankHashIdList
     }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ParseHashListService::class.java)
     }
