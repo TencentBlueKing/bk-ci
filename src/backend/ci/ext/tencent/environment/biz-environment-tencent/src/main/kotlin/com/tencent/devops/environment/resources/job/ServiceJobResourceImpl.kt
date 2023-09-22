@@ -197,7 +197,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         jobInstanceId: Long,
-        returnIpResult: Boolean
+        returnIpResult: Boolean?
     ): Result<QueryJobInstanceStatusResult> {
         checkParam(userId, projectId)
         return queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)

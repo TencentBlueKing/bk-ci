@@ -20,7 +20,7 @@ class QueryJobInstanceStatusService @Autowired constructor(
         userId: String,
         projectId: String,
         jobInstanceId: Long,
-        returnIpResult: Boolean
+        returnIpResult: Boolean?
     ): Result<QueryJobInstanceStatusResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
