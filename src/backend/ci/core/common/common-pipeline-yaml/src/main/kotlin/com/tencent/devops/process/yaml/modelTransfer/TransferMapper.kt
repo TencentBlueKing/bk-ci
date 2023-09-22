@@ -18,6 +18,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.process.pojo.transfer.ElementInsertBody
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferMark
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
@@ -645,15 +646,15 @@ object TransferMapper {
     fun indexYaml(
         position: PositionResponse,
         pYml: ITemplateFilter,
-        yml: PreStep
+        yml: PreStep,
+        type: ElementInsertBody.ElementInsertType
     ): NodeIndex {
         return when (position.type) {
-            PositionResponse.PositionType.STEP -> addInYamlSteps(position, pYml, yml)
+            PositionResponse.PositionType.STEP -> addInYamlSteps(position, pYml, yml, type)
             PositionResponse.PositionType.JOB, PositionResponse.PositionType.STAGE -> addInYamlJob(position, pYml, yml)
             else -> addInYamlLastStage(pYml, yml)
         }
     }
-
 
     /*
     * 光标在一个已有的 step 配置区域，则在该 step 之后 添加一个新的 step
@@ -661,7 +662,8 @@ object TransferMapper {
     private fun addInYamlSteps(
         positionResponse: PositionResponse,
         preYaml: ITemplateFilter,
-        preStep: PreStep
+        preStep: PreStep,
+        type: ElementInsertBody.ElementInsertType = ElementInsertBody.ElementInsertType.INSERT
     ): NodeIndex {
         if (positionResponse.stageIndex != null) {
             return NodeIndex(
@@ -670,10 +672,7 @@ object TransferMapper {
                     positionResponse,
                     preYaml.stages!!
                 ) { steps ->
-                    steps.add(positionResponse.stepIndex!! + 1, preStep)
-                    NodeIndex(
-                        index = positionResponse.stepIndex!! + 1
-                    )
+                    nodeIndexInStep(type, steps, positionResponse, preStep)
                 }
             )
         }
@@ -685,10 +684,7 @@ object TransferMapper {
                     positionResponse,
                     preYaml.jobs!!
                 ) { steps ->
-                    steps.add(positionResponse.stepIndex!! + 1, preStep)
-                    NodeIndex(
-                        index = positionResponse.stepIndex!! + 1
-                    )
+                    nodeIndexInStep(type, steps, positionResponse, preStep)
                 }
             )
         }
@@ -699,14 +695,32 @@ object TransferMapper {
                 next = indexInStep(
                     preYaml.steps!! as ArrayList<Any>
                 ) { steps ->
-                    steps.add(positionResponse.stepIndex!! + 1, preStep)
-                    NodeIndex(
-                        index = positionResponse.stepIndex!! + 1
-                    )
+                    nodeIndexInStep(type, steps, positionResponse, preStep)
                 }
             )
         }
         return NodeIndex()
+    }
+
+    private fun nodeIndexInStep(
+        type: ElementInsertBody.ElementInsertType,
+        steps: ArrayList<Any>,
+        positionResponse: PositionResponse,
+        preStep: PreStep
+    ) = when (type) {
+        ElementInsertBody.ElementInsertType.INSERT -> {
+            steps.add(positionResponse.stepIndex!! + 1, preStep)
+            NodeIndex(
+                index = positionResponse.stepIndex!! + 1
+            )
+        }
+
+        else -> {
+            steps[positionResponse.stepIndex!!] = preStep
+            NodeIndex(
+                index = positionResponse.stepIndex!!
+            )
+        }
     }
 
     /*

@@ -37,4 +37,11 @@ data class ElementInsertBody(
     val yaml: String = "",
     @ApiModelProperty("需要插入的插件")
     val data: Element,
-)
+    @ApiModelProperty("操作类型,INSERT为插入,UPDATE为更新")
+    val type: ElementInsertType
+) {
+    enum class ElementInsertType{
+        INSERT,
+        UPDATE
+    }
+}
