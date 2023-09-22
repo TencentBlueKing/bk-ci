@@ -50,36 +50,41 @@ class AuthenticationService {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${bkUsername}\"}"
 
-        val url: String? = when (operationName) {
+        var url:String?
+        when (operationName) {
             "executeScript" -> {
-                when (operationEnv) {
-                    "prod" -> executeScriptProdUrl
-                    else -> executeScriptStagUrl
+                if ("prod" == operationEnv) {
+                    url = executeScriptProdUrl
+                } else {
+                    url = executeScriptStagUrl
                 }
             }
 
             "distributeFile" -> {
-                when (operationEnv) {
-                    "prod" -> distributeFileProdUrl
-                    else -> distributeFileStagUrl
+                if ("prod" == operationEnv) {
+                    url = distributeFileProdUrl
+                } else {
+                    url = distributeFileStagUrl
                 }
             }
 
             "queryJobInstanceStatus" -> {
-                when (operationEnv) {
-                    "prod" -> queryJobInstanceStatusProdUrl
-                    else -> queryJobInstanceStatusStagUrl
+                if ("prod" == operationEnv) {
+                    url = queryJobInstanceStatusProdUrl
+                } else {
+                    url = queryJobInstanceStatusStagUrl
                 }
             }
 
             "queryJobInstanceLogs" -> {
-                when (operationEnv) {
-                    "prod" -> queryJobInstanceLogsProdUrl
-                    else -> queryJobInstanceLogsStagUrl
+                if ("prod" == operationEnv) {
+                    url = queryJobInstanceLogsProdUrl
+                } else {
+                    url = queryJobInstanceLogsStagUrl
                 }
             }
 
-            else -> ""
+            else -> url = ""
         }
         return JobCloudAuthenticationReq(
             url = url ?: "",

@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service("ParseHashListService")
-class ParseHashListService() {
+class ParseHashListService {
     fun getDynamicGroupList(envHashIdList: List<String>?): List<String> {
         if (!envHashIdList.isNullOrEmpty()) {
             val trimDynamicGroupList = discardBlankHashId(hashIdList = envHashIdList)
