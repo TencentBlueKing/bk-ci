@@ -19,6 +19,7 @@
             :outer-border="false"
             :row-class-name="rowClassName"
             :pagination="pagination"
+            @header-dragend="handelHeaderDragend"
             @row-click="handleRowSelect"
             @sort-change="handleSortChange"
             @page-change="handlePageChange"
@@ -27,6 +28,7 @@
             <bk-table-column
                 v-if="allColumnMap.aliasName"
                 :label="$t('codelib.aliasName')"
+                :width="tableWidthMap.aliasName"
                 sortable
                 prop="aliasName"
                 show-overflow-tooltip
@@ -54,6 +56,7 @@
             <bk-table-column
                 v-if="allColumnMap.url"
                 :label="$t('codelib.address')"
+                :width="tableWidthMap.url"
                 sortable
                 prop="url"
                 show-overflow-tooltip
@@ -70,6 +73,8 @@
             <bk-table-column
                 v-if="allColumnMap.authType"
                 :label="$t('codelib.auth')"
+                :width="tableWidthMap.authType"
+                prop="authType"
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
@@ -91,16 +96,16 @@
             <bk-table-column
                 v-if="allColumnMap.recentlyEditedBy"
                 :label="$t('codelib.recentlyEditedBy')"
+                :width="tableWidthMap.updatedUser"
                 prop="updatedUser"
                 show-overflow-tooltip
-                width="200"
             >
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.lastModifiedTime"
                 :label="$t('codelib.lastModifiedTime')"
+                :width="tableWidthMap.updatedTime"
                 prop="updatedTime"
-                width="250"
             >
                 <template slot-scope="props">
                     {{ prettyDateTimeFormat(Number(props.row.updatedTime + '000')) }}
@@ -108,9 +113,11 @@
             </bk-table-column>
             <bk-table-column
                 v-if="!isListFlod"
+                fixed="right"
                 :label="$t('codelib.operation')"
+                prop="operation"
+                :width="tableWidthMap.operation"
                 show-overflow-tooltip
-                width="100"
             >
                 <template slot-scope="props">
                     <bk-button
@@ -151,6 +158,7 @@
     import {
         TABLE_COLUMN_CACHE,
         CODE_REPOSITORY_CACHE,
+        CACHE_CODELIB_TABLE_WIDTH_MAP,
         listColumnsCache
     } from '../../config/'
     import {
@@ -246,7 +254,8 @@
                     pageSize: 20,
                     repositoryHashId: ''
                 },
-                pipelinesList: []
+                pipelinesList: [],
+                tableWidthMap: {}
             }
         },
 
@@ -315,6 +324,15 @@
             this.$once('hook:beforeDestroy', () => {
                 window.removeEventListener('resize', this.calcTableHeight)
             })
+
+            this.tableWidthMap = JSON.parse(localStorage.getItem(CACHE_CODELIB_TABLE_WIDTH_MAP)) || {
+                aliasName: 400,
+                url: 400,
+                authType: 400,
+                updatedUser: 250,
+                updatedTime: 250,
+                operation: 100
+            }
         },
 
         created () {
@@ -528,6 +546,12 @@
                 this.$refs.list.clearSort()
                 this.$emit('update:aliasName', '')
                 this.$emit('handleSortChange', { sortBy: '', sortType: '' })
+            },
+
+            handelHeaderDragend (newWidth, oldWidth, column) {
+                this.tableWidthMap[column.property] = newWidth
+                console.log(column.property)
+                localStorage.setItem(CACHE_CODELIB_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             }
         }
     }

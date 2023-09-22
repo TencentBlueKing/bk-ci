@@ -21,6 +21,7 @@ export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
 
 export const TABLE_COLUMN_CACHE = 'codelib_list_columns'
 export const CODE_REPOSITORY_CACHE = 'codelib_repository_payload'
+export const CACHE_CODELIB_TABLE_WIDTH_MAP = 'cache_codelib_table_width_map'
 
 /**
  * @desc 列表列显示缓存
