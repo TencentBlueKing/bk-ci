@@ -448,15 +448,6 @@ class PipelineListFacadeService @Autowired constructor(
      * 其中 PIPELINE_VIEW_FAVORITE_PIPELINES，PIPELINE_VIEW_MY_PIPELINES，PIPELINE_VIEW_ALL_PIPELINES
      * 分别对应 我的收藏，我的流水线，全部流水线
      */
-    @AuditEntry(actionId = ActionId.PIPELINE_LIST)
-    @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_LIST,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
-            instanceIds = "#projectId"
-        ),
-        content = ActionAuditContent.PIPELINE_LIST_CONTENT
-    )
     fun listViewPipelines(
         userId: String,
         projectId: String,
