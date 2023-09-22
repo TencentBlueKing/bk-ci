@@ -208,7 +208,6 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        // TODO #8161 普通构建需要判断是否已有发布版本
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -588,7 +587,6 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        // TODO #8161 普通构建需要判断是否已有发布版本
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,

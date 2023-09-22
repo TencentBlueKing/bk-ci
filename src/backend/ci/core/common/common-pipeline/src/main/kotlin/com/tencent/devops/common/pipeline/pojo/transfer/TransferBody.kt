@@ -25,27 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-data class PipelineModelWithYaml(
-    @ApiModelProperty("版本号（流水线唯一递增）", required = true)
-    val version: Int,
-    @ApiModelProperty("版本名称", required = true)
-    val versionName: String?,
-    @ApiModelProperty("该版本的源版本号", required = true)
-    val baseVersion: Int?,
-    @ApiModelProperty("该版本的版本号名", required = true)
-    val baseVersionName: String?,
-    @ApiModelProperty("流水线模型", required = true)
-    val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（含高亮）", required = false)
-    val yamlPreview: PreviewResponse?,
-    @ApiModelProperty("是否处在可以调试状态", required = false)
-    val canDebug: Boolean?,
-    @ApiModelProperty("版本变更说明", required = false)
-    val description: String?
+@ApiModel("互转入口")
+data class TransferBody(
+    @ApiModelProperty("当前modelAndSetting,model转yaml时需带上")
+    val modelAndSetting: PipelineModelAndSetting? = null,
+    @ApiModelProperty("当前yaml内容，model转yaml以及yaml转model都需要带上,如果首次互转没有就传空")
+    val oldYaml: String = ""
 )

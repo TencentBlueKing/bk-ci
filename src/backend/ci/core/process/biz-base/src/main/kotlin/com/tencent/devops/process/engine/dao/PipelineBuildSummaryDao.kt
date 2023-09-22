@@ -100,6 +100,19 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    fun resetDebugInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.update(this)
+                .set(DEBUG_BUILD_NO, 0)
+                .set(DEBUG_BUILD_NUM, 0)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
+        }
+    }
+
     fun updateBuildNo(
         dslContext: DSLContext,
         projectId: String,

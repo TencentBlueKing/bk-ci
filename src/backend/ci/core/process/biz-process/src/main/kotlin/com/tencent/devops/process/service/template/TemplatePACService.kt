@@ -11,9 +11,9 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.transfer.TransferActionType
-import com.tencent.devops.process.pojo.transfer.TransferBody
-import com.tencent.devops.process.pojo.transfer.TransferMark
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper

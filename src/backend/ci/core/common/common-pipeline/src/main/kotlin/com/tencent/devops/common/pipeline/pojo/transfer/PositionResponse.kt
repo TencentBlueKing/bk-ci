@@ -25,27 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.pojo.transfer
 
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-data class PipelineModelWithYaml(
-    @ApiModelProperty("版本号（流水线唯一递增）", required = true)
-    val version: Int,
-    @ApiModelProperty("版本名称", required = true)
-    val versionName: String?,
-    @ApiModelProperty("该版本的源版本号", required = true)
-    val baseVersion: Int?,
-    @ApiModelProperty("该版本的版本号名", required = true)
-    val baseVersionName: String?,
-    @ApiModelProperty("流水线模型", required = true)
-    val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（含高亮）", required = false)
-    val yamlPreview: PreviewResponse?,
-    @ApiModelProperty("是否处在可以调试状态", required = false)
-    val canDebug: Boolean?,
-    @ApiModelProperty("版本变更说明", required = false)
-    val description: String?
-)
+@ApiModel("yaml定位")
+data class PositionResponse(
+    @ApiModelProperty("定位类型，非error时应当必有")
+    val type: PositionType? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示当前stage的os类型")
+    var jobBaseOs: VMBaseOS? = null,
+    @ApiModelProperty("当定位到STAGE,JOB,STEP时有效，表示stage下标")
+    var stageIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示container下标")
+    var containerIndex: Int? = null,
+    @ApiModelProperty("当定位到JOB,STEP时有效，表示job的id")
+    var jobId: String? = null,
+    @ApiModelProperty("当定位到STEP时有效，表示step下标")
+    var stepIndex: Int? = null,
+    @ApiModelProperty("当定位到STEP时有效，拿到对应的element元素")
+    var element: Element? = null,
+    @ApiModelProperty("转换错误")
+    val error: String? = null
+) {
+    enum class PositionType {
+        SETTING,
+        STAGE,
+        JOB,
+        STEP
+    }
+}

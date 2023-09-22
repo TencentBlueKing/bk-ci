@@ -25,13 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.transfer
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("定位入口")
-data class PositionBody(
-    @ApiModelProperty("当前yaml内容")
-    val yaml: String = ""
+@ApiModel("yaml中插入插件返回")
+data class ElementInsertResponse(
+    @ApiModelProperty("yaml内容")
+    val yaml: String = "",
+    @ApiModelProperty("插入的插件定位坐标")
+    val mark: TransferMark?
 )
