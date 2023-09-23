@@ -78,21 +78,27 @@ class EventActionFactory @Autowired constructor(
         actionContext: PacTriggerContext,
         actionSetting: PacRepoSetting
     ): BaseAction? {
-        val event = try {
+        return try {
             when (metaData.streamObjectKind) {
-                StreamObjectKind.ENABLE -> objectMapper.readValue<PacEnableEvent>(eventStr)
-                else -> objectMapper.readValue<GitEvent>(eventStr)
+                StreamObjectKind.ENABLE -> loadEnableEvent(
+                    setting = actionSetting, event = objectMapper.readValue<PacEnableEvent>(eventStr)
+                )
+
+                else -> loadByData(
+                    event = objectMapper.readValue<GitEvent>(eventStr),
+                    actionCommonData = actionCommonData,
+                    actionContext = actionContext,
+                    actionSetting = actionSetting
+                )
             }
         } catch (ignore: Exception) {
             logger.warn("EventActionFactory|loadByData|Fail to parse eventStr", ignore)
-            return null
+            null
         }
-        return loadByData(event, metaData, actionCommonData, actionContext, actionSetting)
     }
 
     fun loadByData(
         event: CodeWebhookEvent,
-        metaData: ActionMetaData,
         actionCommonData: EventCommonData,
         actionContext: PacTriggerContext,
         actionSetting: PacRepoSetting
