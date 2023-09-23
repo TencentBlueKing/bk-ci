@@ -175,7 +175,7 @@ class PacYamlResourceService @Autowired constructor(
                 )
             }
         } catch (ignore: Exception) {
-            logger.error("Failed to create yaml pipeline|$projectId|$yamlFile")
+            logger.error("Failed to create yaml pipeline|$projectId|$yamlFile", ignore)
         }
     }
 
@@ -208,7 +208,7 @@ class PacYamlResourceService @Autowired constructor(
                 versionName = deployPipelineResult.versionName!!
             )
         } catch (ignore: Exception) {
-            logger.error("Failed to update yaml pipeline|$projectId|$yamlFile")
+            logger.error("Failed to update yaml pipeline|$projectId|$yamlFile", ignore)
         }
     }
 }
