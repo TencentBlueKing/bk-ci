@@ -26,8 +26,22 @@
  *
  */
 
-package com.tencent.devops.process.trigger.pojo
+package com.tencent.devops.process.trigger.mq.pacTrigger
 
-data class YamlFileInfo(
-    val blobId: String
-)
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
+import com.tencent.devops.process.trigger.actions.data.EventCommonData
+import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
+import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
+
+@Event(MQ.EXCHANGE_PAC_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
+data class PacTriggerEvent(
+    val projectId: String,
+    val eventStr: String,
+    val metaData: ActionMetaData,
+    val actionCommonData: EventCommonData,
+    val actionContext: PacTriggerContext,
+    val actionSetting: PacRepoSetting
+) : ITraceEvent()

@@ -1,6 +1,7 @@
 package com.tencent.devops.process.trigger.actions
 
 import com.tencent.devops.process.trigger.actions.data.ActionData
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
 import com.tencent.devops.process.trigger.git.service.PacGitApiService
 import com.tencent.devops.process.trigger.pojo.YamlContent
@@ -11,6 +12,9 @@ import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
  * 所有action的父类，只提供抽象方法
  */
 interface BaseAction {
+    // action元数据
+    val metaData: ActionMetaData
+
     // 当前事件源相关的数据
     var data: ActionData
 

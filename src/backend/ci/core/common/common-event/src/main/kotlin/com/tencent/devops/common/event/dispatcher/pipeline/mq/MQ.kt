@@ -301,4 +301,9 @@ object MQ {
     // 权限资源关联用户组修改事件
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
+
+    // pac每条流水线触发事件
+    const val EXCHANGE_PAC_TRIGGER_PIPELINE_EVENT = "e.pac.trigger.pipeline.event"
+    const val ROUTE_PAC_TRIGGER_PIPELINE_EVENT = "r.pac.trigger.pipeline.event"
+    const val QUEUE_PAC_TRIGGER_PIPELINE_EVENT = "q.pac.trigger.pipeline.event"
 }

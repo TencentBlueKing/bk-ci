@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.trigger.actions.data.context
 
+import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
+import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 
@@ -35,11 +37,15 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
  * 注：上下文对象涉及消息传递时，需要确保不是确定对象
  *
  * @param hookRequestId webhook触发的requestId,对应代码库T_REPOSITORY_WEBHOOK_REQUEST的requestId
+ * @param pipeline 触发流水线
+ * @param yamlFile yaml文件信息
  * @param eventId 触发事件ID,对应T_PIPELINE_TRIGGER_EVENT的eventId
  */
 data class PacTriggerContext(
     var hookRequestId: Long? = null,
     var eventId: Long? = null,
+    var pipeline: PacTriggerPipeline? = null,
+    var yamlFile: YamlPathListEntry? = null,
     // 默认分支
     var defaultBranch: String? = null,
     // 缓存

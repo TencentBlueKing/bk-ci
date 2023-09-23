@@ -28,14 +28,17 @@
 
 package com.tencent.devops.process.trigger
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
+import com.tencent.devops.process.trigger.mq.pacTrigger.PacTriggerEvent
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
@@ -49,9 +52,10 @@ import org.springframework.stereotype.Service
 class PacYamlTriggerService @Autowired constructor(
     private val client: Client,
     private val eventActionFactory: EventActionFactory,
-    private val pacYamlResourceService: PacYamlResourceService,
     private val dslContext: DSLContext,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -103,9 +107,26 @@ class PacYamlTriggerService @Autowired constructor(
                 userId = userId
             )
         }
-        pacYamlResourceService.syncYamlPipeline(
-            projectId = projectId,
-            action = action
-        )
+        yamlPathList.forEach {
+            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: PacTriggerPipeline(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = it.yamlPath,
+                pipelineId = "",
+                userId = userId
+            )
+            action.data.context.pipeline = triggerPipeline
+            action.data.context.yamlFile = it
+            traceEventDispatcher.dispatch(
+                PacTriggerEvent(
+                    projectId = projectId,
+                    eventStr = objectMapper.writeValueAsString(event),
+                    metaData = action.metaData,
+                    actionCommonData = action.data.eventCommon,
+                    actionContext = action.data.context,
+                    actionSetting = action.data.setting
+                )
+            )
+        }
     }
 }

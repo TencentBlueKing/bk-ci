@@ -27,14 +27,19 @@
 
 package com.tencent.devops.process.trigger.actions
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.trigger.actions.data.ActionData
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
+import com.tencent.devops.process.trigger.actions.data.EventCommonData
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
 import com.tencent.devops.process.trigger.actions.pacActions.PacEnableAction
@@ -45,13 +50,15 @@ import com.tencent.devops.process.trigger.actions.tgit.TGitPushActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitReviewActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitTagPushActionGit
 import com.tencent.devops.process.trigger.git.service.TGitApiService
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class EventActionFactory @Autowired constructor(
-    private val tGitApiService: TGitApiService
+    private val tGitApiService: TGitApiService,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -62,6 +69,39 @@ class EventActionFactory @Autowired constructor(
         val action = loadEvent(event) ?: return null
 
         return action.init()
+    }
+
+    fun loadByData(
+        eventStr: String,
+        metaData: ActionMetaData,
+        actionCommonData: EventCommonData,
+        actionContext: PacTriggerContext,
+        actionSetting: PacRepoSetting
+    ): BaseAction? {
+        val event = try {
+            when (metaData.streamObjectKind) {
+                StreamObjectKind.ENABLE -> objectMapper.readValue<PacEnableEvent>(eventStr)
+                else -> objectMapper.readValue<GitEvent>(eventStr)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("EventActionFactory|loadByData|Fail to parse eventStr", ignore)
+            return null
+        }
+        return loadByData(event, metaData, actionCommonData, actionContext, actionSetting)
+    }
+
+    fun loadByData(
+        event: CodeWebhookEvent,
+        metaData: ActionMetaData,
+        actionCommonData: EventCommonData,
+        actionContext: PacTriggerContext,
+        actionSetting: PacRepoSetting
+    ): BaseAction? {
+        val action = load(event) ?: return null
+        action.data.eventCommon = actionCommonData
+        action.data.context = actionContext
+        action.data.setting = actionSetting
+        return action
     }
 
     @Suppress("ComplexMethod")
@@ -97,6 +137,9 @@ class EventActionFactory @Autowired constructor(
                     apiService = tGitApiService
                 )
                 tGitNoteAction
+            }
+            is PacEnableEvent -> {
+                PacEnableAction()
             }
             else -> {
                 return null

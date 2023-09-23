@@ -32,12 +32,14 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.trigger.actions.BaseAction
 import com.tencent.devops.process.trigger.actions.GitActionCommon
 import com.tencent.devops.process.trigger.actions.GitBaseAction
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
 import com.tencent.devops.process.trigger.actions.data.EventCommonData
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.service.TGitApiService
 import com.tencent.devops.process.trigger.pojo.CheckType
 import com.tencent.devops.process.trigger.pojo.YamlContent
 import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -48,6 +50,8 @@ class TGitTagPushActionGit(
     companion object {
         val logger = LoggerFactory.getLogger(TGitTagPushActionGit::class.java)!!
     }
+
+    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.TAG_PUSH)
 
     override fun event() = data.event as GitTagPushEvent
 

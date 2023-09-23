@@ -33,11 +33,11 @@ import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.trigger.actions.BaseAction
-import com.tencent.devops.process.trigger.pojo.CheckType
 import com.tencent.devops.process.trigger.pojo.PacTriggerLock
 import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,48 +50,101 @@ class PacYamlResourceService @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(PacYamlResourceService::class.java)
+    }
+
     fun syncYamlPipeline(
         projectId: String,
         action: BaseAction
     ) {
-        action.getYamlPathList().filter { it.checkType == CheckType.NEED_CHECK }.forEach { entry ->
-            PacTriggerLock(
-                redisOperation = redisOperation,
-                projectId = projectId,
-                repoHashId = action.data.setting.repoHashId,
-                filePath = entry.yamlPath
-            ).use {
-                it.lock()
-                val pipelineYamlRefer = pipelineYamlInfoDao.get(
-                    dslContext = dslContext,
+        val triggerPipeline = action.data.context.pipeline!!
+        val filePath = triggerPipeline.filePath
+        val yamlFile = action.data.context.yamlFile!!
+        logger.info("syncYamlPipeline|$projectId|pipeline:${triggerPipeline}|yamlFile:${yamlFile}")
+        PacTriggerLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            repoHashId = action.data.setting.repoHashId,
+            filePath = filePath
+        ).use {
+            it.lock()
+            if (triggerPipeline.pipelineId.isBlank()) {
+                createPipelineIfAbsent(
                     projectId = projectId,
-                    repoHashId = action.data.setting.repoHashId,
-                    filePath = entry.yamlPath,
+                    action = action,
+                    yamlFile = yamlFile
                 )
-                if (pipelineYamlRefer == null) {
-                    createYamlPipeline(
-                        projectId = projectId,
-                        action = action,
-                        entry = entry
-                    )
-                } else {
-                    updateYamlPipeline(
-                        projectId = projectId,
-                        pipelineId = pipelineYamlRefer.pipelineId,
-                        action = action,
-                        entry = entry
-                    )
-                }
+            } else {
+                updatePipelineIfAbsent(
+                    projectId = projectId,
+                    pipelineId = triggerPipeline.pipelineId,
+                    action = action,
+                    yamlFile = yamlFile
+                )
             }
+        }
+    }
+
+    /**
+     * 创建yaml流水线,如果流水线不存在则创建，创建则更新版本
+     */
+    fun createPipelineIfAbsent(
+        projectId: String,
+        action: BaseAction,
+        yamlFile: YamlPathListEntry
+    ) {
+        // 再次确认yaml文件是否已经创建出流水线
+        pipelineYamlInfoDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = action.data.setting.repoHashId,
+            filePath = yamlFile.yamlPath,
+        )?.let {
+            updatePipelineIfAbsent(
+                projectId = projectId,
+                pipelineId = it.pipelineId,
+                action = action,
+                yamlFile = yamlFile
+            )
+        } ?: run {
+            createYamlPipeline(
+                projectId = projectId,
+                action = action,
+                yamlFile = yamlFile
+            )
+        }
+    }
+
+    fun updatePipelineIfAbsent(
+        projectId: String,
+        pipelineId: String,
+        action: BaseAction,
+        yamlFile: YamlPathListEntry
+    ) {
+        pipelineYamlVersionDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = action.data.setting.repoHashId,
+            filePath = yamlFile.yamlPath,
+            blobId = yamlFile.blobId!!
+        ) ?: run {
+            updateYamlPipeline(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                action = action,
+                yamlFile = yamlFile
+            )
         }
     }
 
     fun createYamlPipeline(
         projectId: String,
         action: BaseAction,
-        entry: YamlPathListEntry
+        yamlFile: YamlPathListEntry
     ) {
-        val yamlContent = action.getYamlContent(entry.yamlPath)
+        logger.info("create yaml pipeline|$projectId|${action.format()}|${yamlFile}")
+        val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
@@ -106,19 +159,18 @@ class PacYamlResourceService @Autowired constructor(
                 dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = action.data.setting.repoHashId,
-                filePath = entry.yamlPath,
+                filePath = yamlFile.yamlPath,
                 pipelineId = deployPipelineResult.pipelineId
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = action.data.setting.repoHashId,
-                filePath = entry.yamlPath,
-                blobId = entry.blobId!!,
+                filePath = yamlFile.yamlPath,
+                blobId = yamlFile.blobId!!,
                 pipelineId = deployPipelineResult.pipelineId,
                 version = deployPipelineResult.version,
-                // TODO 需要改成具体的版本名称
-                versionName = "p.1.1"
+                versionName = deployPipelineResult.versionName!!
             )
         }
     }
@@ -127,9 +179,10 @@ class PacYamlResourceService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
-        entry: YamlPathListEntry
+        yamlFile: YamlPathListEntry
     ) {
-        val yamlContent = action.getYamlContent(entry.yamlPath)
+        logger.info("update yaml pipeline|$projectId|${action.format()}|${yamlFile}")
+        val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
@@ -143,12 +196,11 @@ class PacYamlResourceService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
-            filePath = entry.yamlPath,
-            blobId = entry.blobId!!,
+            filePath = yamlFile.yamlPath,
+            blobId = yamlFile.blobId!!,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
-            // TODO 需要改成具体的版本名称
-            versionName = "p.1.1"
+            versionName = deployPipelineResult.versionName!!
         )
     }
 }

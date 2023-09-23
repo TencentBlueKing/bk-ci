@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.trigger.actions.BaseAction
 import com.tencent.devops.process.trigger.actions.GitActionCommon
 import com.tencent.devops.process.trigger.actions.data.ActionData
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
 import com.tencent.devops.process.trigger.actions.data.EventCommonData
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
 import com.tencent.devops.process.trigger.common.Constansts.ciFileDirectoryName
@@ -42,8 +43,11 @@ import com.tencent.devops.process.trigger.git.service.PacGitApiService
 import com.tencent.devops.process.trigger.pojo.CheckType
 import com.tencent.devops.process.trigger.pojo.YamlContent
 import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
 class PacEnableAction : BaseAction {
+    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.ENABLE)
+
     override lateinit var data: ActionData
     fun event() = data.event as PacEnableEvent
 
