@@ -394,7 +394,6 @@ class WorkspaceDao {
         fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
         return dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
             .where(conditions)
-
     }
 
     /**
