@@ -157,7 +157,7 @@ class StartCloudRemoteDevService @Autowired constructor(
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val resp = workspaceClient.operateWorkspace(
             userId = userId,
-            action = EnvironmentAction.STOP,
+            action = EnvironmentAction.DELETE_VM,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName)

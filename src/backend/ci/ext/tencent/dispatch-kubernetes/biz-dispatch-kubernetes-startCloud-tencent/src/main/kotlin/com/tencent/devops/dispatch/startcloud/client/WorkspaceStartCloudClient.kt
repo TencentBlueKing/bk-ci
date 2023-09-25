@@ -439,7 +439,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         action = EnvironmentAction.START
                     )
 
-                    return environmentOpRsp.data
+                    return environmentOpRsp.data!!
                 } else {
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
