@@ -372,14 +372,14 @@ class WorkspaceDao {
 
         conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
 
-        val ipsCond = JooqUtils.jsonExtract(
+        var ipsCond = JooqUtils.jsonExtract(
             t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
             t2 = "\$.hostIP",
             lower = false,
             removeDoubleQuotes = true
-        ).like("%${ips.first()}%")
+        ).like("%${ips.first()}%") as Condition
         ips.drop(1).forEach { ip ->
-            ipsCond.or(
+            ipsCond = ipsCond.or(
                 JooqUtils.jsonExtract(
                     t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
                     t2 = "\$.hostIP",
