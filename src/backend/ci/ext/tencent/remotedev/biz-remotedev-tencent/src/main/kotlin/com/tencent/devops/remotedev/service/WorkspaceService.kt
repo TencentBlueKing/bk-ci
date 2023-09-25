@@ -522,7 +522,8 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get his all workspace ")
         val workspaces = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
-            userId = userId
+            userId = userId,
+            deleted = true
         ) ?: emptyList()
         val status = workspaces.map { it.status }
         val now = LocalDateTime.now()

@@ -261,7 +261,8 @@ class WorkspaceDao {
         limit: SQLLimit? = null,
         userId: String? = null,
         projectId: String? = null,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
+        deleted: Boolean = false
     ): List<WorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
@@ -272,7 +273,7 @@ class WorkspaceDao {
                         WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
                     }.and(OWNER_TYPE.eq(ownerType.name))
                 }
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
@@ -282,7 +283,7 @@ class WorkspaceDao {
                                 )
                             )
                         )
-                    ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    ).let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .let {
                     if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
