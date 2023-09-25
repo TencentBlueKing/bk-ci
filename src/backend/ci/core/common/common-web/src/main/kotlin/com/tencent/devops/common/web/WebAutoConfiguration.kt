@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.health.MemoryHealthIndicator
 import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import com.tencent.devops.common.web.runner.BkServiceInstanceApplicationRunner
@@ -138,6 +139,11 @@ class WebAutoConfiguration {
             })
         }
         return factory
+    }
+
+    @Bean
+    fun memoryHealthIndicator(): MemoryHealthIndicator {
+        return MemoryHealthIndicator()
     }
 
     private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
