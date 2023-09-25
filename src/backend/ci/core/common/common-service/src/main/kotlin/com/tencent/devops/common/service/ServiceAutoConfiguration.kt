@@ -30,6 +30,7 @@ package com.tencent.devops.common.service
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.filter.RequestChannelFilter
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.health.MemoryHealthIndicator
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -76,4 +77,9 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun bkTimedAspect(meterRegistry: MeterRegistry) = BkTimedAspect(meterRegistry)
+
+    @Bean
+    fun memoryHealthIndicator(): MemoryHealthIndicator {
+        return MemoryHealthIndicator()
+    }
 }

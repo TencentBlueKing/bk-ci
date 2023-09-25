@@ -1,4 +1,4 @@
-package com.tencent.devops.common.web.health
+package com.tencent.devops.common.service.health
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.actuate.health.Health
