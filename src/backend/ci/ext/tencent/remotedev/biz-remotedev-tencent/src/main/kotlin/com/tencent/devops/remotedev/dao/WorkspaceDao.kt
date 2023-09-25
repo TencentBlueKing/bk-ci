@@ -220,14 +220,16 @@ class WorkspaceDao {
         queryType: QueryType? = QueryType.WEB,
         ips: List<String>?
     ): Long {
-        return dslContext.fetchCount(genFetchProjectWorkspaceCond(
-            dslContext = dslContext,
-            projectId = projectId,
-            workspaceName = workspaceName,
-            systemType = systemType,
-            queryType = queryType,
-            ips = ips
-        )).toLong()
+        return dslContext.fetchCount(
+            genFetchProjectWorkspaceCond(
+                dslContext = dslContext,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                systemType = systemType,
+                queryType = queryType,
+                ips = ips
+            )
+        ).toLong()
     }
 
     private fun TWorkspace.unionSelect(
@@ -256,7 +258,7 @@ class WorkspaceDao {
      */
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
-        limit: SQLLimit,
+        limit: SQLLimit? = null,
         userId: String? = null,
         projectId: String? = null,
         ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
@@ -282,7 +284,9 @@ class WorkspaceDao {
                         )
                     ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
-                .limit(limit.limit).offset(limit.offset)
+                .let {
+                    if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
+                }
                 .fetch(workspaceMapper)
         }
     }
