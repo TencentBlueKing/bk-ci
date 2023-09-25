@@ -36,6 +36,7 @@ enum class EnvironmentAction(val action: String) {
     RECREATE("recreate"),
     SCALE("scale"),
     DELETE("delete"),
+    DELETE_VM("deletevm"),
     RESTART("restart");
 
     @JsonValue

@@ -219,18 +219,18 @@ class BcsRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-            val environmentUid = getEnvironmentUid(event.workspaceName)
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+            val environmentUid = getEnvironmentUid(workspaceName)
             val resp = workspaceBcsClient.operatorWorkspace(
                 userId = userId,
                 environmentUid = environmentUid,
-                workspaceName = event.workspaceName,
+                workspaceName = workspaceName,
                 environmentAction = EnvironmentAction.DELETE
             )
 
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
+                workspaceName = workspaceName,
                 status = EnvStatusEnum.deleted,
                 dslContext = dslContext
             )

@@ -154,25 +154,17 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-        workspaceClient.deleteWorkspace(
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+        val resp = workspaceClient.operateWorkspace(
             userId = userId,
-            workspaceName = event.workspaceName,
-            EnvironmentDelete(
-                userId = event.userId,
-                appName = appName,
-                pipeLineId = dispatchWorkspaceDao.getWorkspaceInfo(event.workspaceName, dslContext)?.taskId
+            action = EnvironmentAction.STOP,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
             )
         )
 
-        // 更新db状态
-        dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = event.workspaceName,
-            status = EnvStatusEnum.deleted,
-            dslContext = dslContext
-        )
-
-        return EMPTY
+        return resp.taskUid
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

@@ -64,7 +64,7 @@ interface RemoteDevInterface {
     /**
      * 删除远程工作空间
      */
-    fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String
+    fun deleteWorkspace(userId: String, workspaceName: String): String
 
     /**
      * 获取工作空间web端链接

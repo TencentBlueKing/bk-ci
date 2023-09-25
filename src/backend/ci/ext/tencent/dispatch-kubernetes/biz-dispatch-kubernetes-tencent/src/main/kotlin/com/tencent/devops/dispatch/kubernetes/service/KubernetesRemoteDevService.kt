@@ -76,7 +76,7 @@ class KubernetesRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
 

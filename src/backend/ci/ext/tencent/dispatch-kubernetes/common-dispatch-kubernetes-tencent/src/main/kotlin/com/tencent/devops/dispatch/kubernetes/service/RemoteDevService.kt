@@ -245,7 +245,7 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .deleteWorkspace(event.userId, event)
+            .deleteWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
