@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -109,9 +108,6 @@ interface UserExtServiceDeskResource {
     @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
     @Path("/list")
     fun listDeskExtService(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
