@@ -27,8 +27,14 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
+import com.tencent.devops.misc.lock.ProjectMigrationLock
+import com.tencent.devops.misc.pojo.constant.MiscMessageCode
+import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
+import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -36,13 +42,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProcessDataDeleteService @Autowired constructor(
+class ProcessMigrationDataDeleteService @Autowired constructor(
     private val processDao: ProcessDao,
-    private val processDataDeleteDao: ProcessDataDeleteDao
+    private val processDataDeleteDao: ProcessDataDeleteDao,
+    private val projectDataMigrateHistoryService: ProjectDataMigrateHistoryService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProcessDataDeleteService::class.java)
+        private val logger = LoggerFactory.getLogger(ProcessMigrationDataDeleteService::class.java)
         private const val DEFAULT_PAGE_SIZE = 20
     }
 
@@ -50,10 +57,49 @@ class ProcessDataDeleteService @Autowired constructor(
      * 删除process数据库数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
+     * @param targetClusterName 迁移集群
+     * @param targetDataSourceName 迁移数据源名称
      */
     fun deleteProcessData(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        targetClusterName: String,
+        targetDataSourceName: String,
+        projectMigrationLock: ProjectMigrationLock? = null
+    ) {
+        try {
+            projectMigrationLock?.lock()
+            val moduleCode = SystemModuleEnum.PROCESS
+            val queryParam = ProjectDataMigrateHistoryQueryParam(
+                projectId = projectId,
+                moduleCode = moduleCode,
+                targetClusterName = targetClusterName,
+                targetDataSourceName = targetDataSourceName
+            )
+            // 项目已经迁移成功则不再删除db中数据
+            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
+                deleteProcessRelData(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    targetClusterName = targetClusterName,
+                    targetDataSourceName = targetDataSourceName
+                )
+            } else {
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
+                    params = arrayOf(projectId)
+                )
+            }
+        } finally {
+            projectMigrationLock?.unlock()
+        }
+    }
+
+    private fun deleteProcessRelData(
+        dslContext: DSLContext,
+        projectId: String,
+        targetClusterName: String,
+        targetDataSourceName: String
     ) {
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
         do {
@@ -73,7 +119,12 @@ class ProcessDataDeleteService @Autowired constructor(
             }
             deleteProjectPipelineRelData(dslContext, projectId, pipelineIds)
         } while (pipelineIds?.size == DEFAULT_PAGE_SIZE)
-        deleteProjectDirectlyRelData(dslContext, projectId)
+        deleteProjectDirectlyRelData(
+            dslContext = dslContext,
+            projectId = projectId,
+            targetClusterName = targetClusterName,
+            targetDataSourceName = targetDataSourceName
+        )
     }
 
     /**
@@ -141,16 +192,48 @@ class ProcessDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
         }
-        logger.info("project[$projectId] deleteProjectPipelineRelData success!")
+        logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }
 
     /**
      * 删除项目直接相关的数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
+     * @param targetClusterName 迁移集群
+     * @param targetDataSourceName 迁移数据源名称
+     * @param projectMigrationLock 项目迁移锁
      * @return 字段列表
      */
-    fun deleteProjectDirectlyRelData(dslContext: DSLContext, projectId: String) {
+    fun deleteProjectDirectlyRelData(
+        dslContext: DSLContext,
+        projectId: String,
+        targetClusterName: String,
+        targetDataSourceName: String,
+        projectMigrationLock: ProjectMigrationLock? = null
+    ) {
+        try {
+            projectMigrationLock?.lock()
+            val queryParam = ProjectDataMigrateHistoryQueryParam(
+                projectId = projectId,
+                moduleCode = SystemModuleEnum.PROCESS,
+                targetClusterName = targetClusterName,
+                targetDataSourceName = targetDataSourceName
+            )
+            // 项目已经迁移成功则不再删除db中数据
+            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
+                deleteProjectRelData(dslContext, projectId)
+            } else {
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
+                    params = arrayOf(projectId)
+                )
+            }
+        } finally {
+            projectMigrationLock?.unlock()
+        }
+    }
+
+    private fun deleteProjectRelData(dslContext: DSLContext, projectId: String) {
         processDataDeleteDao.deleteAuditResource(dslContext, projectId)
         processDataDeleteDao.deletePipelineGroup(dslContext, projectId)
         processDataDeleteDao.deletePipelineJobMutexGroup(dslContext, projectId)

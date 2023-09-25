@@ -653,6 +653,6 @@
     id: "390987c50179422388dd742924fc2002"
     sender: "DevOps"
     title: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
-    body: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
+    body: "迁移PROCESS数据库中项目【${projectId}】的数据成功，迁移成功的流水线一共【${pipelineNum}】条。"
   creator: "system"
   modifior: "system"
