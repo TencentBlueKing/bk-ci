@@ -36,6 +36,7 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:project:api-project"))
     api(project(":core:misc:api-misc"))
+    api(project(":core:process:api-process"))
     api(project(":core:common:common-websocket"))
     api("org.json:json")
 }

@@ -50,7 +50,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
@@ -596,11 +596,19 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 language = I18nUtil.getLanguage(userId)
             )
         }
-
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         dslContext.transaction { t ->
             val context = DSL.using(t)
-
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, false)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(
+                userId = userId,
+                projectId = initProjectCode,
+                templateId = templateCode,
+                storeFlag = false
+            )
             storeCommonService.deleteStoreInfo(context, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
             templateCategoryRelDao.deleteByTemplateCode(context, templateCode)
             templateLabelRelDao.deleteByTemplateCode(context, templateCode)
@@ -652,7 +660,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         categoryRecords?.forEach {
             categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
         }
-        val addMarketTemplateRequest = AddMarketTemplateRequest(
+        val addMarketTemplateRequest = MarketTemplateRequest(
             projectCodeList = projectCodeList,
             templateCode = templateCode,
             templateName = template.templateName,
@@ -661,18 +669,36 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             publisher = template.publisher
         )
-        val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
-            .addMarketTemplate(userId = userId, addMarketTemplateRequest = addMarketTemplateRequest)
-        logger.info("addMarketTemplateResult is $addMarketTemplateResult")
-        if (addMarketTemplateResult.isNotOk()) {
-            // 抛出错误提示
-            return Result(addMarketTemplateResult.status, addMarketTemplateResult.message ?: "")
+        val addMarketTemplateResultKeys = mutableSetOf<String>()
+        val projectTemplateMap = mutableMapOf<String, String>()
+        projectCodeList.forEach { projectCode ->
+            val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
+                .addMarketTemplate(
+                    userId = userId,
+                    projectId = projectCode,
+                    addMarketTemplateRequest = addMarketTemplateRequest
+                )
+            logger.info("addMarketTemplateResult is $addMarketTemplateResult")
+            if (addMarketTemplateResult.isNotOk()) {
+                // 抛出错误提示
+                return Result(addMarketTemplateResult.status, addMarketTemplateResult.message ?: "")
+            }
+            addMarketTemplateResult.data?.keys?.let {
+                addMarketTemplateResultKeys.addAll(it)
+            }
+            addMarketTemplateResult.data?.let {
+                projectTemplateMap.putAll(it)
+            }
         }
 
-        val addMarketTemplateResultKeys = addMarketTemplateResult.data?.keys ?: emptySet()
         projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
-        copyQualityRule(userId, templateCode, addMarketTemplateResultKeys, addMarketTemplateResult.data ?: mapOf())
+        copyQualityRule(
+            userId = userId,
+            templateCode = templateCode,
+            projectCodeList = addMarketTemplateResultKeys,
+            projectTemplateMap = projectTemplateMap
+        )
         val installStoreComponentResult = storeProjectService.installStoreComponent(
             userId = userId,
             projectCodeList = ArrayList(addMarketTemplateResultKeys),

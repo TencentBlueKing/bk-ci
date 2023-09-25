@@ -24,9 +24,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "NestedBlockDepth", "ForbiddenComment")
 abstract class AbsPermissionProjectService @Autowired constructor(
@@ -47,7 +47,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         .build<String, String>()
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        val allGroupAndUser = getProjectGroupAndUserList(projectCode)
+        val allGroupAndUser = getProjectGroupAndUserList(projectCode = projectCode)
+
         return if (group == null) {
             val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }

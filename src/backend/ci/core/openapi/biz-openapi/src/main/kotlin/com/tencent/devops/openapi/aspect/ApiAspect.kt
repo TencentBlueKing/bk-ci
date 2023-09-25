@@ -130,7 +130,11 @@ class ApiAspect(
         }
 
         if (projectId != null) {
-
+            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
+            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+            if (!projectConsulTag.isNullOrEmpty()) {
+                bkTag.setGatewayTag(projectConsulTag)
+            }
             permissionService.validProjectPermission(
                 appCode = appCode,
                 apigwType = apigwType,
@@ -148,11 +152,6 @@ class ApiAspect(
                 throw PermissionForbiddenException(
                     message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
                 )
-            }
-            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
-            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
-            if (!projectConsulTag.isNullOrEmpty()) {
-                bkTag.setGatewayTag(projectConsulTag)
             }
         }
     }

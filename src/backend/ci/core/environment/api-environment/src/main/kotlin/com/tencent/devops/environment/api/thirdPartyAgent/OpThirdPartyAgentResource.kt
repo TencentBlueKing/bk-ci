@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api.thirdPartyAgent
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentShared
 import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
@@ -140,5 +141,19 @@ interface OpThirdPartyAgentResource {
         @ApiParam("zoneName", required = true)
         @PathParam("zoneName")
         zoneName: String
+    ): Result<Boolean>
+
+    @ApiOperation("新增 agent 分享给项目")
+    @POST
+    @Path("/shared")
+    fun addAgentShared(
+        shares: AgentShared
+    ): Result<Boolean>
+
+    @ApiOperation("删除 agent 分享给项目")
+    @DELETE
+    @Path("/shared")
+    fun deleteAgentShared(
+        shares: AgentShared
     ): Result<Boolean>
 }

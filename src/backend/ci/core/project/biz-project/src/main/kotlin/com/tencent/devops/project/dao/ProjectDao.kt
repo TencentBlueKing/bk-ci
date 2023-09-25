@@ -452,7 +452,8 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         routerTag: String?,
-        otherRouterTagMaps: Map<String, String>?
+        otherRouterTagMaps: Map<String, String>?,
+        remoteDevFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!projectName.isNullOrBlank()) {
@@ -474,6 +475,11 @@ class ProjectDao {
                 conditions.add(JooqUtils.jsonExtract(OTHER_ROUTER_TAGS, "\$.$jk").eq(jv))
             }
         }
+
+        if (remoteDevFlag != null && remoteDevFlag) {
+            conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
+        }
+
         return conditions
     }
 
@@ -489,7 +495,8 @@ class ProjectDao {
         offset: Int,
         limit: Int,
         routerTag: String? = null,
-        otherRouterTagMaps: Map<String, String>? = null
+        otherRouterTagMaps: Map<String, String>? = null,
+        remoteDevFlag: Boolean? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -501,7 +508,8 @@ class ProjectDao {
                 approver = approver,
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
-                otherRouterTagMaps = otherRouterTagMaps
+                otherRouterTagMaps = otherRouterTagMaps,
+                remoteDevFlag = remoteDevFlag
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -636,7 +644,8 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         routerTag: String? = null,
-        otherRouterTagMaps: Map<String, String>? = null
+        otherRouterTagMaps: Map<String, String>? = null,
+        remoteDevFlag: Boolean? = null
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -648,7 +657,8 @@ class ProjectDao {
                 approver = approver,
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
-                otherRouterTagMaps = otherRouterTagMaps
+                otherRouterTagMaps = otherRouterTagMaps,
+                remoteDevFlag = remoteDevFlag
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
