@@ -391,7 +391,6 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project $projectId workspace list")
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
-            status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
             projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
