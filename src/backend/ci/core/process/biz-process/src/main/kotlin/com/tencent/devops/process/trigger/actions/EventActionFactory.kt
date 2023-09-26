@@ -158,8 +158,8 @@ class EventActionFactory @Autowired constructor(
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
+        pacEnableAction.data = ActionData(event, actionContext)
         pacEnableAction.data.eventCommon = actionCommonData
-        pacEnableAction.data.context = actionContext
         pacEnableAction.data.setting = actionSetting
         return pacEnableAction
     }
