@@ -26,13 +26,11 @@
  */
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode

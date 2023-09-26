@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers
 
-import com.tencent.bk.audit.annotations.AuditEntry
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock

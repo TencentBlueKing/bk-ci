@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.api.template
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum

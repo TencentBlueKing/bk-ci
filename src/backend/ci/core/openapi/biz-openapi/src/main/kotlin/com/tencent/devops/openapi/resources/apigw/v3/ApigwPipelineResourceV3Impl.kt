@@ -26,10 +26,8 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v3
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
@@ -230,7 +228,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).rename(userId, projectId, pipelineId, name)
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     override fun restore(
         appCode: String?,
         apigwType: String?,

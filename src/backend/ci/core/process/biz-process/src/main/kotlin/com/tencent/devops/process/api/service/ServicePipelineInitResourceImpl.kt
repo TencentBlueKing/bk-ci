@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
 import com.tencent.devops.common.web.RestResource

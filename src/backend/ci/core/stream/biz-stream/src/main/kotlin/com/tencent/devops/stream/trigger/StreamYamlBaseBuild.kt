@@ -27,10 +27,8 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
