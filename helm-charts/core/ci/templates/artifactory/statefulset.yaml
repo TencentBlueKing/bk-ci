@@ -132,7 +132,7 @@ spec:
           {{ end }}
           livenessProbe:
             httpGet:
-              path: /management/health/livenessState
+              path: /management/health/liveness
               port: http
             initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
             periodSeconds: 15
@@ -141,7 +141,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /management/health/readinessState
+              path: /management/health/readiness
               port: http
             initialDelaySeconds: {{ .Values.artifactory.jvm.initSecs }}
             periodSeconds: 15
