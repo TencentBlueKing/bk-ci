@@ -9,6 +9,8 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
+import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
+import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -20,7 +22,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
     private val workspaceService: WorkspaceService,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val desktopWorkspaceService: DesktopWorkspaceService
 ) : OpProjectWorkspaceResource {
     override fun assignWorkspace(
         userId: String,
@@ -65,5 +68,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 pageSize = data.pageSize
             )
         )
+    }
+
+    override fun updateCCHost(userId: String, data: OpUpdateCCHostData): Result<Boolean> {
+        return Result(desktopWorkspaceService.updateCCHost(data))
     }
 }
