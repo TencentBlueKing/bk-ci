@@ -23,5 +23,4 @@ class MemoryHealthIndicator : AbstractHealthIndicator() {
         private val logger = LoggerFactory.getLogger(MemoryHealthIndicator::class.java)
         private const val THRESHOLD = 100 * 1024 * 1024 // 100MB
     }
-
 }
