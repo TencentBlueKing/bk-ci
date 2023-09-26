@@ -879,7 +879,7 @@ class WorkspaceDao {
     }
 
     fun fetchWinWorkspaceIp(
-        dslContext: DSLContext,
+        dslContext: DSLContext
     ): List<Pair<String, String?>> {
         return dslContext.select(
             TWorkspace.T_WORKSPACE.PROJECT_ID,
