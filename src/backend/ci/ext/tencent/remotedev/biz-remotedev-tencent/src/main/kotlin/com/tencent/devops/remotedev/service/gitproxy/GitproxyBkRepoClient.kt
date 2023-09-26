@@ -157,6 +157,6 @@ class GitproxyBkRepoClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
         private val JSON_MEDIA_TYPE = MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()
-        private val BKREPO_ROOT_USERID = "admin"
+        private const val BKREPO_ROOT_USERID = "admin"
     }
 }
