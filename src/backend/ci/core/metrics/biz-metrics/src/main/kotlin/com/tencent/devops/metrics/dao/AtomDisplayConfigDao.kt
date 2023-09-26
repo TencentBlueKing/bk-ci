@@ -27,10 +27,10 @@
 
 package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
-import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.po.AtomDisplayConfigPO
+import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
+import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository

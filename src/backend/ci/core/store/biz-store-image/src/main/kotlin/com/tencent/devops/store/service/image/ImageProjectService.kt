@@ -115,13 +115,11 @@ class ImageProjectService @Autowired constructor(
      * 校验权限
      */
     private fun checkPermission(
-        accessToken: String,
         userId: String,
         projectCode: String
     ) {
         val result =
             client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -134,7 +132,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取可用镜像列表（公共+已安装）
      */
     fun getJobImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum?,
@@ -144,7 +141,7 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?
     ): Page<JobImageItem>? {
         // 校验用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         val totalSize: Long
         val jobImageItemList = mutableListOf<JobImageItem>()
         if (agentType != null) {
@@ -400,7 +397,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -455,7 +452,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取商店镜像列表
      */
     fun getJobMarketImagesByProjectCode(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -465,7 +461,6 @@ class ImageProjectService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
         return searchJobMarketImages(
-            accessToken = accessToken,
             userId = userId,
             projectCode = projectCode,
             agentType = agentType,
@@ -481,7 +476,6 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun searchJobMarketImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -499,7 +493,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)

@@ -29,6 +29,8 @@ package com.tencent.devops.common.service.filter
 
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -38,6 +40,7 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 class RequestChannelFilter : Filter {
     override fun destroy() = Unit
 
