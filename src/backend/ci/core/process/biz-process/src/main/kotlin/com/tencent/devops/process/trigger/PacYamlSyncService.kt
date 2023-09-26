@@ -26,53 +26,67 @@
  *
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.process.trigger
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.service.RepositoryPacService
+import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceRepositoryPacResourceImpl @Autowired constructor(
-    private val repositoryPacService: RepositoryPacService
-) : ServiceRepositoryPacResource {
+@Service
+class PacYamlSyncService @Autowired constructor(
+    private val client: Client
+) {
 
-    override fun initPacSyncDetail(
+    fun initPacSyncDetail(
         projectId: String,
-        repositoryHashId: String,
-        ciDirId: String?,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
-    ): Result<Boolean> {
-        repositoryPacService.initPacSyncDetail(
+        repoHashId: String,
+        ciDirId: String,
+        yamlPathList: List<YamlPathListEntry>
+    ) {
+        val syncFileInfoList =
+            yamlPathList.map { RepoPacSyncFileInfo(filePath = it.yamlPath, syncStatus = RepoPacSyncStatusEnum.SYNC) }
+        client.get(ServiceRepositoryPacResource::class).initPacSyncDetail(
             projectId = projectId,
-            repositoryHashId = repositoryHashId,
+            repositoryHashId = repoHashId,
             ciDirId = ciDirId,
             syncFileInfoList = syncFileInfoList
         )
-        return Result(true)
     }
 
-    override fun updatePacSyncStatus(
-        projectId: String,
-        repositoryHashId: String,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
-    ): Result<Boolean> {
-        repositoryPacService.updatePacSyncStatus(
+    /**
+     * 同步成功
+     */
+    fun syncSuccess(projectId: String, repoHashId: String, ciDirId: String, filePath: String) {
+        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath)
+        client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
             projectId = projectId,
-            repositoryHashId = repositoryHashId,
+            repositoryHashId = repoHashId,
             ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
-        return Result(true)
     }
 
-    override fun getPacRepository(externalId: String, scmType: ScmType): Result<Repository?> {
-        return Result(repositoryPacService.getPacRepository(externalId = externalId, scmType = scmType))
+    /**
+     * 同步失败
+     */
+    fun syncFailed(
+        projectId: String,
+        repoHashId: String,
+        ciDirId: String,
+        filePath: String,
+        reason: String,
+        reasonDetail: String
+    ) {
+        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath, reason = reason, reasonDetail = reasonDetail)
+        client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
+            projectId = projectId,
+            repositoryHashId = repoHashId,
+            ciDirId = ciDirId,
+            syncFileInfo = syncFileInfo
+        )
     }
 }

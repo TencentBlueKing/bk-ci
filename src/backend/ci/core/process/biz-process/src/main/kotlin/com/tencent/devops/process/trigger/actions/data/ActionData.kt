@@ -48,4 +48,6 @@ data class ActionData(
 
     // 方便日志打印
     fun format() = "${event::class.qualifiedName}|$eventCommon|$setting"
+
+    fun getUserId() = eventCommon.userId
 }

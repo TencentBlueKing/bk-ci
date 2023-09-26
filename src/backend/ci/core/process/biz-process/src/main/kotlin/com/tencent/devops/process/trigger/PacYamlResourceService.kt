@@ -161,7 +161,8 @@ class PacYamlResourceService @Autowired constructor(
                     projectId = projectId,
                     repoHashId = action.data.setting.repoHashId,
                     filePath = yamlFile.yamlPath,
-                    pipelineId = deployPipelineResult.pipelineId
+                    pipelineId = deployPipelineResult.pipelineId,
+                    userId = action.data.getUserId()
                 )
                 pipelineYamlVersionDao.save(
                     dslContext = transactionContext,

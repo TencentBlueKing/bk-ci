@@ -28,12 +28,15 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -80,4 +83,16 @@ interface ServiceRepositoryPacResource {
         @ApiParam("文件同步详情", required = true)
         syncFileInfo: RepoPacSyncFileInfo
     ): Result<Boolean>
+
+    @ApiOperation("根据第三方代码库平台ID获取代码库")
+    @GET
+    @Path("/")
+    fun getPacRepository(
+        @ApiParam("第三方仓库ID", required = true)
+        @QueryParam("externalId")
+        externalId: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    ): Result<Repository?>
 }

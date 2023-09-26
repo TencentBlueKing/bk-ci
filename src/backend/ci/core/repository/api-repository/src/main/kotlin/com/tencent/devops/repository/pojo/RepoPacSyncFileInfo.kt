@@ -37,7 +37,7 @@ data class RepoPacSyncFileInfo(
     @ApiModelProperty("文件路径", required = true)
     val filePath: String,
     @ApiModelProperty("同步状态", required = true)
-    val syncStatus: RepoPacSyncStatusEnum,
+    val syncStatus: RepoPacSyncStatusEnum = RepoPacSyncStatusEnum.SYNC,
     @ApiModelProperty("原因", required = false)
     var reason: String? = null,
     @ApiModelProperty("原因详情", required = false)

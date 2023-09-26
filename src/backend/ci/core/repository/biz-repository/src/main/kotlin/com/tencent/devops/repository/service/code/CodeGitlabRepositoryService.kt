@@ -261,6 +261,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
         repository: TRepositoryRecord
     ) = false
 
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
     /**
      * 获取凭证信息
      */

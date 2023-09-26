@@ -30,8 +30,11 @@ package com.tencent.devops.process.trigger.mq.pacTrigger
 
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
+import com.tencent.devops.process.trigger.PacYamlBuildService
 import com.tencent.devops.process.trigger.PacYamlResourceService
+import com.tencent.devops.process.trigger.PacYamlSyncService
 import com.tencent.devops.process.trigger.actions.EventActionFactory
+import com.tencent.devops.process.trigger.exception.PacTriggerExceptionHandler
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -39,34 +42,80 @@ import org.springframework.stereotype.Service
 class PacTriggerListener @Autowired constructor(
     traceEventDispatcher: TraceEventDispatcher,
     private val actionFactory: EventActionFactory,
-    private val pacYamlResourceService: PacYamlResourceService
-) : BaseTraceListener<PacTriggerEvent>(
+    private val pacYamlResourceService: PacYamlResourceService,
+    private val pacYamlSyncService: PacYamlSyncService,
+    private val pacYamlBuildService: PacYamlBuildService,
+    private val exceptionHandler: PacTriggerExceptionHandler
+) : BaseTraceListener<BasePacYamlEvent>(
     traceEventDispatcher = traceEventDispatcher
 ) {
-    override fun run(event: PacTriggerEvent) {
-        val action = try {
-            val action = with(event) {
-                actionFactory.loadByData(
-                    eventStr = event.eventStr,
-                    metaData = metaData,
-                    actionCommonData = actionCommonData,
-                    actionContext = actionContext,
-                    actionSetting = actionSetting
-                )
+    override fun run(event: BasePacYamlEvent) {
+        when (event) {
+            is PacYamlEnableEvent -> {
+                enablePac(projectId = event.projectId, event = event)
             }
+
+            is PacYamlTriggerEvent -> {
+                trigger(projectId = event.projectId, event = event)
+            }
+
+            else -> {
+                logger.warn("PacTriggerListener|not support pac yaml event|$event")
+            }
+        }
+    }
+
+    private fun enablePac(projectId: String, event: PacYamlEnableEvent) {
+        val action = try {
+            val action = actionFactory.loadEnableEvent(
+                eventStr = event.eventStr,
+                actionCommonData = event.actionCommonData,
+                actionContext = event.actionContext,
+                actionSetting = event.actionSetting
+            )
             if (action == null) {
                 logger.warn("PacTriggerListener|run|$event")
                 return
             }
             action
         } catch (e: Throwable) {
-            logger.warn("PacTriggerListener|load|action|error", e)
+            logger.warn("enable pac|load|action|error", e)
             return
         }
-        logger.info(
-            "PacTriggerListener|${action.data.context.eventId} " +
-                    "|run|action|${action.format()}"
-        )
-        pacYamlResourceService.syncYamlPipeline(projectId = event.projectId, action = action)
+        exceptionHandler.handle(action = action) {
+            pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
+            val ciDirId = action.data.context.ciDirId!!
+            val repoHashId = action.data.setting.repoHashId
+            val filePath = action.data.context.yamlFile!!.yamlPath
+            pacYamlSyncService.syncSuccess(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                ciDirId = ciDirId,
+                filePath = filePath
+            )
+        }
+    }
+
+    private fun trigger(projectId: String, event: PacYamlTriggerEvent) {
+        val action = try {
+            val action = actionFactory.loadByData(
+                eventStr = event.eventStr,
+                actionCommonData = event.actionCommonData,
+                actionContext = event.actionContext,
+                actionSetting = event.actionSetting
+            )
+            if (action == null) {
+                logger.warn("PacTriggerListener|run|$event")
+                return
+            }
+            action
+        } catch (e: Throwable) {
+            logger.warn("enable pac|load|action|error", e)
+            return
+        }
+        exceptionHandler.handle(action = action) {
+            pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
+            pacYamlBuildService.start(projectId = projectId, action = action)
+        }
     }
 }

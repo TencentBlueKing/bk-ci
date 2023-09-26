@@ -68,4 +68,6 @@ interface CodeRepositoryService<T> {
     fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord)
 
     fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean
+
+    fun getPacRepository(externalId: String): TRepositoryRecord?
 }

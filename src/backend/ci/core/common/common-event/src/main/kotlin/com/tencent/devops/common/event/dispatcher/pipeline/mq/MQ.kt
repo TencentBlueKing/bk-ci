@@ -303,7 +303,14 @@ object MQ {
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
     // pac每条流水线触发事件
-    const val EXCHANGE_PAC_TRIGGER_PIPELINE_EVENT = "e.pac.trigger.pipeline.event"
+    const val EXCHANGE_PAC_PIPELINE_LISTENER = "e.pac.pipeline.listener"
+    // pac开启流水线事件
+    const val ROUTE_PAC_ENABLE_PIPELINE_EVENT = "r.pac.enable.pipeline.event"
+    const val QUEUE_PAC_ENABLE_PIPELINE_EVENT = "q.pac.enable.pipeline.event"
+    // pac触发事件
     const val ROUTE_PAC_TRIGGER_PIPELINE_EVENT = "r.pac.trigger.pipeline.event"
     const val QUEUE_PAC_TRIGGER_PIPELINE_EVENT = "q.pac.trigger.pipeline.event"
+    // pac关闭流水线事件
+    const val ROUTE_PAC_DISABLE_PIPELINE_EVENT = "r.pac.disable.pipeline.event"
+    const val QUEUE_PAC_DISABLE_PIPELINE_EVENT = "q.pac.disable.pipeline.event"
 }

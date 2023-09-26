@@ -66,4 +66,22 @@ interface ServicePipelinePacResource {
         @QueryParam("scmType")
         scmType: ScmType
     )
+
+    @ApiOperation("关闭PAC")
+    @POST
+    @Path("/{projectId}/{repoHashId}/disable")
+    fun disable(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @ApiParam("代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    )
 }

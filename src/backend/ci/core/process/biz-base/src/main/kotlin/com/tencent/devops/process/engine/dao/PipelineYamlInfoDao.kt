@@ -46,7 +46,8 @@ class PipelineYamlInfoDao {
         projectId: String,
         repoHashId: String,
         filePath: String,
-        pipelineId: String
+        pipelineId: String,
+        userId: String
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
@@ -56,6 +57,8 @@ class PipelineYamlInfoDao {
                 REPO_HASH_ID,
                 FILE_PATH,
                 PIPELINE_ID,
+                CREATOR,
+                MODIFIER,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -63,9 +66,12 @@ class PipelineYamlInfoDao {
                 repoHashId,
                 filePath,
                 pipelineId,
+                userId,
+                userId,
                 now,
                 now
-            ).execute()
+            ).onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
@@ -106,7 +112,8 @@ class PipelineYamlInfoDao {
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                creator = creator
             )
         }
     }

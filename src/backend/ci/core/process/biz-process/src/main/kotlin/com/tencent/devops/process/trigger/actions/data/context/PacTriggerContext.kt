@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
  * @param hookRequestId webhook触发的requestId,对应代码库T_REPOSITORY_WEBHOOK_REQUEST的requestId
  * @param pipeline 触发流水线
  * @param yamlFile yaml文件信息
+ * @param ciDirId ci目录ID
  * @param eventId 触发事件ID,对应T_PIPELINE_TRIGGER_EVENT的eventId
  */
 data class PacTriggerContext(
@@ -46,6 +47,7 @@ data class PacTriggerContext(
     var eventId: Long? = null,
     var pipeline: PacTriggerPipeline? = null,
     var yamlFile: YamlPathListEntry? = null,
+    var ciDirId: String? = null,
     // 默认分支
     var defaultBranch: String? = null,
     // 缓存

@@ -40,6 +40,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepoPacSyncDetailDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import org.jooq.DSLContext
@@ -243,5 +244,11 @@ class RepositoryPacService @Autowired constructor(
             repositoryId = repositoryId,
             ciDirId = commitId
         )
+    }
+
+    fun getPacRepository(externalId: String, scmType: ScmType): Repository? {
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType.name)
+        val record = codeRepositoryService.getPacRepository(externalId = externalId) ?: return null
+        return codeRepositoryService.compose(record)
     }
 }

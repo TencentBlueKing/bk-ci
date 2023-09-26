@@ -38,7 +38,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.trigger.actions.data.ActionData
-import com.tencent.devops.process.trigger.actions.data.ActionMetaData
 import com.tencent.devops.process.trigger.actions.data.EventCommonData
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
@@ -50,7 +49,6 @@ import com.tencent.devops.process.trigger.actions.tgit.TGitPushActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitReviewActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitTagPushActionGit
 import com.tencent.devops.process.trigger.git.service.TGitApiService
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -73,19 +71,12 @@ class EventActionFactory @Autowired constructor(
 
     fun loadByData(
         eventStr: String,
-        metaData: ActionMetaData,
         actionCommonData: EventCommonData,
         actionContext: PacTriggerContext,
         actionSetting: PacRepoSetting
     ): BaseAction? {
         return try {
-            val action = when (metaData.streamObjectKind) {
-                StreamObjectKind.ENABLE -> loadEnableEvent(
-                    setting = actionSetting, event = objectMapper.readValue<PacEnableEvent>(eventStr)
-                )
-
-                else -> loadEvent(event = objectMapper.readValue<GitEvent>(eventStr))
-            } ?: return null
+            val action = loadEvent(event = objectMapper.readValue<GitEvent>(eventStr)) ?: return null
             action.data.eventCommon = actionCommonData
             action.data.context = actionContext
             action.data.setting = actionSetting
@@ -130,9 +121,6 @@ class EventActionFactory @Autowired constructor(
                 )
                 tGitNoteAction
             }
-            is PacEnableEvent -> {
-                PacEnableAction()
-            }
             else -> {
                 return null
             }
@@ -154,6 +142,25 @@ class EventActionFactory @Autowired constructor(
         }
         pacEnableAction.data.setting = setting
         pacEnableAction.init()
+        return pacEnableAction
+    }
+
+    fun loadEnableEvent(
+        eventStr: String,
+        actionCommonData: EventCommonData,
+        actionContext: PacTriggerContext,
+        actionSetting: PacRepoSetting
+    ): BaseAction? {
+        val event = objectMapper.readValue<PacEnableEvent>(eventStr)
+        val pacEnableAction = PacEnableAction()
+
+        pacEnableAction.api = when (event.scmType) {
+            ScmType.CODE_GIT -> tGitApiService
+            else -> TODO("对接其他代码库平台时需要补充")
+        }
+        pacEnableAction.data.eventCommon = actionCommonData
+        pacEnableAction.data.context = actionContext
+        pacEnableAction.data.setting = actionSetting
         return pacEnableAction
     }
 }

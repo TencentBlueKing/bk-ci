@@ -33,33 +33,34 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.trigger.mq.pacTrigger.PacTriggerEvent
+import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlEnableEvent
+import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlTriggerEvent
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PacYamlTriggerService @Autowired constructor(
+class PacYamlFacadeService @Autowired constructor(
     private val client: Client,
     private val eventActionFactory: EventActionFactory,
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val traceEventDispatcher: TraceEventDispatcher,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val pacYamlSyncService: PacYamlSyncService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PacYamlTriggerService::class.java)
+        private val logger = LoggerFactory.getLogger(PacYamlFacadeService::class.java)
     }
 
     fun enablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
@@ -80,16 +81,11 @@ class PacYamlTriggerService @Autowired constructor(
 
         val ciDirId = action.getCiDirId()
         val yamlPathList = action.getYamlPathList()
-        client.get(ServiceRepositoryPacResource::class).initPacSyncDetail(
+        pacYamlSyncService.initPacSyncDetail(
             projectId = projectId,
-            repositoryHashId = repoHashId,
-            ciDirId = ciDirId,
-            syncFileInfoList = yamlPathList.map {
-                RepoPacSyncFileInfo(
-                    filePath = it.yamlPath,
-                    syncStatus = RepoPacSyncStatusEnum.SYNC
-                )
-            }
+            repoHashId = repoHashId,
+            ciDirId = ciDirId!!,
+            yamlPathList = yamlPathList
         )
         // 如果没有Yaml文件则不初始化
         if (yamlPathList.isEmpty()) {
@@ -117,8 +113,9 @@ class PacYamlTriggerService @Autowired constructor(
             )
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
+            action.data.context.ciDirId = ciDirId
             traceEventDispatcher.dispatch(
-                PacTriggerEvent(
+                PacYamlEnableEvent(
                     projectId = projectId,
                     eventStr = objectMapper.writeValueAsString(event),
                     metaData = action.metaData,
@@ -128,5 +125,65 @@ class PacYamlTriggerService @Autowired constructor(
                 )
             )
         }
+    }
+
+    fun trigger(eventObject: CodeWebhookEvent, scmType: ScmType) {
+        val action = eventActionFactory.load(eventObject)
+        if (action == null) {
+            logger.warn("pac trigger|request event not support|$eventObject")
+            return
+        }
+        val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
+            externalId = action.data.eventCommon.gitProjectId, scmType = scmType
+        ).data ?: return
+        val setting = PacRepoSetting(repository = repository)
+        action.data.setting = setting
+        action.initCacheData()
+
+        val projectId = repository.projectId!!
+        val repoHashId = repository.repoHashId!!
+        val yamlPathList = action.getYamlPathList()
+        // 如果没有Yaml文件则不初始化
+        if (yamlPathList.isEmpty()) {
+            logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
+            return
+        }
+        val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
+            dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
+        ).associate {
+            it.filePath to PacTriggerPipeline(
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                filePath = it.filePath,
+                pipelineId = it.pipelineId,
+                userId = it.creator
+            )
+        }
+        yamlPathList.forEach {
+            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: PacTriggerPipeline(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = it.yamlPath,
+                pipelineId = "",
+                userId = action.data.getUserId()
+            )
+            action.data.context.pipeline = triggerPipeline
+            action.data.context.yamlFile = it
+            traceEventDispatcher.dispatch(
+                PacYamlTriggerEvent(
+                    projectId = projectId,
+                    eventStr = objectMapper.writeValueAsString(eventObject),
+                    metaData = action.metaData,
+                    actionCommonData = action.data.eventCommon,
+                    actionContext = action.data.context,
+                    actionSetting = action.data.setting,
+                    scmType = scmType
+                )
+            )
+        }
+    }
+
+    fun disablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+        logger.info("disable pac|$userId|$projectId|$repoHashId|$scmType")
     }
 }

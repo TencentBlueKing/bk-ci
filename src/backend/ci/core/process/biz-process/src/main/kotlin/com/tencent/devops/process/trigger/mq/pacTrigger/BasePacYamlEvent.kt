@@ -26,21 +26,19 @@
  *
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.trigger.mq.pacTrigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.process.trigger.actions.data.ActionMetaData
+import com.tencent.devops.process.trigger.actions.data.EventCommonData
+import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
+import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
 
-@ApiModel("流水线yml关联")
-data class PipelineYamlInfo(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("代码库ID")
-    val repoHashId: String,
-    @ApiModelProperty("ci文件路径")
-    val filePath: String,
-    @ApiModelProperty("流水线ID")
-    val pipelineId: String,
-    @ApiModelProperty("流水线创建者")
-    val creator: String
-)
+open class BasePacYamlEvent(
+    open val projectId: String,
+    open val eventStr: String,
+    open val metaData: ActionMetaData,
+    open val actionCommonData: EventCommonData,
+    open val actionContext: PacTriggerContext,
+    open val actionSetting: PacRepoSetting
+) : ITraceEvent()

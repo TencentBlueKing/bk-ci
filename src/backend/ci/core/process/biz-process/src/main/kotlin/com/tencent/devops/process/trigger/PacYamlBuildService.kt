@@ -26,21 +26,36 @@
  *
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.trigger.actions.BaseAction
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ApiModel("流水线yml关联")
-data class PipelineYamlInfo(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("代码库ID")
-    val repoHashId: String,
-    @ApiModelProperty("ci文件路径")
-    val filePath: String,
-    @ApiModelProperty("流水线ID")
-    val pipelineId: String,
-    @ApiModelProperty("流水线创建者")
-    val creator: String
-)
+@Service
+class PacYamlBuildService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PacYamlBuildService::class.java)
+    }
+
+    fun start(projectId: String, action: BaseAction) {
+        val yamlFile = action.data.context.yamlFile!!
+        val repoHashId = action.data.setting.repoHashId
+        val pipelineYamlVersion = pipelineYamlVersionDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = yamlFile.yamlPath,
+            blobId = yamlFile.blobId!!
+        ) ?: run {
+            logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
+            return
+        }
+    }
+}

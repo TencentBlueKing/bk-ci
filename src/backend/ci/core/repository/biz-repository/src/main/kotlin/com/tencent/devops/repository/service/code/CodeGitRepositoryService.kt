@@ -88,7 +88,7 @@ class CodeGitRepositoryService @Autowired constructor(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
         if (repository.enablePac == true) {
-            getPacRepository(gitProjectId)?.let {
+            getPacRepository(externalId = gitProjectId.toString())?.let {
                 throw ErrorCodeException(
                     errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
                     params = arrayOf(it.projectId, it.aliasName)
@@ -276,7 +276,7 @@ class CodeGitRepositoryService @Autowired constructor(
             params = arrayOf(userId)
         )
         val gitProjectId = getGitProjectInfo(repoUrl, token).id
-        return getPacRepository(gitProjectId = gitProjectId)?.projectId
+        return getPacRepository(externalId = gitProjectId.toString())?.projectId
     }
 
     override fun pacCheckEnabled(
@@ -292,7 +292,7 @@ class CodeGitRepositoryService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
-        getPacRepository(gitProjectInfo.id)?.let {
+        getPacRepository(externalId = gitProjectInfo.id.toString())?.let {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
                 params = arrayOf(it.projectId, it.aliasName)
@@ -351,11 +351,11 @@ class CodeGitRepositoryService @Autowired constructor(
         }
     }
 
-    private fun getPacRepository(gitProjectId: Long): TRepositoryRecord? {
+    override fun getPacRepository(externalId: String): TRepositoryRecord? {
         // 判断是否已有仓库开启pac
         val repositoryIds = repositoryCodeGitDao.listByGitProjectId(
             dslContext = dslContext,
-            gitProjectId = gitProjectId
+            gitProjectId = externalId.toLong()
         ).map { it.repositoryId }
         return repositoryDao.getPacRepositoryByIds(dslContext = dslContext, repositoryIds = repositoryIds)
     }

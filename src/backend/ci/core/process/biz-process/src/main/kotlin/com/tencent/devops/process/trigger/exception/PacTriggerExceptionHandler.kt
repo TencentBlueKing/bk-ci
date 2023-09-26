@@ -26,22 +26,40 @@
  *
  */
 
-package com.tencent.devops.process.trigger.mq.pacTrigger
+package com.tencent.devops.process.trigger.exception
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-import com.tencent.devops.process.trigger.actions.data.ActionMetaData
-import com.tencent.devops.process.trigger.actions.data.EventCommonData
-import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
-import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
+import com.tencent.devops.process.trigger.PacYamlSyncService
+import com.tencent.devops.process.trigger.actions.BaseAction
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@Event(MQ.EXCHANGE_PAC_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
-data class PacTriggerEvent(
-    val projectId: String,
-    val eventStr: String,
-    val metaData: ActionMetaData,
-    val actionCommonData: EventCommonData,
-    val actionContext: PacTriggerContext,
-    val actionSetting: PacRepoSetting
-) : ITraceEvent()
+/**
+ * pac触发统一异常处理
+ */
+@Service
+class PacTriggerExceptionHandler(
+    private val pacYamlSyncService: PacYamlSyncService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PacTriggerExceptionHandler::class.java)
+    }
+
+    fun <T> handle(
+        action: BaseAction,
+        f: () -> T?
+    ): T? {
+        try {
+            return f()
+        } catch (e: Throwable) {
+            return try {
+                logger.error("PacTriggerExceptionHandler|action|${action.format()}", e)
+                null
+            } catch (e: Throwable) {
+                // 防止Hanlder处理过程中报错，兜底
+                logger.error("BKSystemErrorMonitor|PacTriggerExceptionHandler|action|${action.format()}", e)
+                null
+            }
+        }
+    }
+}

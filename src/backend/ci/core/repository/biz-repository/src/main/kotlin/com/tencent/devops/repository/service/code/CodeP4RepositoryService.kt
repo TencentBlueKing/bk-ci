@@ -209,6 +209,8 @@ class CodeP4RepositoryService @Autowired constructor(
         repository: TRepositoryRecord
     ) = false
 
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeP4RepositoryService::class.java)
     }

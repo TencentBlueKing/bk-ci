@@ -260,6 +260,8 @@ class CodeSvnRepositoryService @Autowired constructor(
         repository: TRepositoryRecord
     ) = false
 
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
     }

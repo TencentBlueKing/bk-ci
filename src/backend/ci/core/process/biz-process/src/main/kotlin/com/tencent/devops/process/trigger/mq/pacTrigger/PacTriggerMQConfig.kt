@@ -53,20 +53,20 @@ class PacTriggerMQConfig {
      */
     @Bean
     fun pacTriggerExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PAC_TRIGGER_PIPELINE_EVENT, true, false)
+        val directExchange = DirectExchange(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
 
     @Bean
-    fun pacTriggerQueue() = Queue(MQ.QUEUE_PAC_TRIGGER_PIPELINE_EVENT)
+    fun pacTriggerQueue() = Queue(MQ.QUEUE_PAC_ENABLE_PIPELINE_EVENT)
 
     @Bean
     fun pacTriggerQueueBind(
         @Autowired pacTriggerQueue: Queue,
         @Autowired pacTriggerExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacTriggerQueue).to(pacTriggerExchange).with(MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
+        return BindingBuilder.bind(pacTriggerQueue).to(pacTriggerExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
     }
 
     @Bean

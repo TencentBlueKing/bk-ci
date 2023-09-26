@@ -189,4 +189,6 @@ class CodeGithubRepositoryService @Autowired constructor(
         userId: String,
         repository: TRepositoryRecord
     ) = false
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 }
