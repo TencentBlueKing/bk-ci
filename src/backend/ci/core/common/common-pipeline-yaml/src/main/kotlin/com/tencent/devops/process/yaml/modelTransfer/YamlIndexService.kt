@@ -65,7 +65,7 @@ class YamlIndexService @Autowired constructor(
     ): ElementInsertResponse {
         val pYml = YamlUtil.getObjectMapper().readValue(data.yaml, object : TypeReference<ITemplateFilter>() {})
         val position = position(
-            userId = userId,line = line, column = column, yaml = data.yaml, preYaml = pYml
+            userId = userId, line = line, column = column, yaml = data.yaml, preYaml = pYml
         )
         val yml = elementTransfer.element2YamlStep(data.data, projectId) ?: throw ErrorCodeException(errorCode = "")
         val index = TransferMapper.indexYaml(position = position, pYml = pYml, yml = yml, type = data.type)

@@ -174,7 +174,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         // 刷新流水线组
-        pipelineViewGroupService.updateGroupAfterPipelineUpdate(setting.projectId, setting.pipelineId, userId)
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+            projectId = setting.projectId,
+            pipelineId = setting.pipelineId,
+            pipelineName = setting.pipelineName,
+            creator = userId,
+            userId = userId
+        )
 
         if (dispatchPipelineUpdateEvent) {
             pipelineEventDispatcher.dispatch(

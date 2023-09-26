@@ -40,7 +40,7 @@ data class ElementInsertBody(
     @ApiModelProperty("操作类型,INSERT为插入,UPDATE为更新")
     val type: ElementInsertType
 ) {
-    enum class ElementInsertType{
+    enum class ElementInsertType {
         INSERT,
         UPDATE
     }

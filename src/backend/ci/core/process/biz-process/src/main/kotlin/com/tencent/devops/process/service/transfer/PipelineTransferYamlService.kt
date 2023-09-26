@@ -245,7 +245,6 @@ class PipelineTransferYamlService @Autowired constructor(
         )
     }
 
-
     private fun getPipelineResource(
         projectId: String,
         pipelineId: String,
