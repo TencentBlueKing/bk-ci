@@ -159,8 +159,10 @@ class StopWorkspaceHandler @Autowired constructor(
     }
 
     fun stopWorkspaceCallback(event: RemoteDevUpdateEvent) {
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, event.workspaceName)
-            ?: throw ErrorCodeException(
+        val workspace = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = event.workspaceName
+        ) ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(event.workspaceName)
             )
