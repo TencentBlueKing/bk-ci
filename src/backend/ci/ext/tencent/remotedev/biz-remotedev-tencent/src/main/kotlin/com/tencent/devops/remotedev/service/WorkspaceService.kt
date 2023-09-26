@@ -679,6 +679,7 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspaceWindowsDao.fetchAnyWorkspaceSharedInfo(dslContext, workspaceName)?.resourceId
         }
+
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
