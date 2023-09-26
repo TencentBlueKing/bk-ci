@@ -20,6 +20,7 @@ import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.ManagerRoleGroupInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
+import com.tencent.devops.auth.pojo.ResourceGroupInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
@@ -284,15 +285,11 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             // 构造itsm表格中对应组的详细内容
             val groupContent = applyJoinGroupInfo.groupIds.map { it.toString() }.associateWith {
-                val resourceGroupInfo = authResourceGroupDao.get(
-                    dslContext = dslContext,
+                val resourceGroupInfo = getResourceGroupInfo(
                     projectCode = projectCode,
-                    relationId = it
-                ) ?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                    defaultMessage = "group($it) not exist"
+                    projectName = projectInfo.projectName,
+                    groupId = it
                 )
-                val relatedResourceType = resourceGroupInfo.resourceType
                 itsmService.buildGroupApplyItsmValue(
                     ApplyJoinGroupFormDataInfo(
                         projectName = projectInfo.projectName,
@@ -302,7 +299,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         validityPeriod = generateValidityPeriod(applyJoinGroupInfo.expiredAt.toLong()),
                         resourceRedirectUri = generateResourceRedirectUri(
                             projectCode = resourceGroupInfo.projectCode,
-                            resourceType = relatedResourceType,
+                            resourceType = resourceGroupInfo.resourceType,
                             resourceCode = resourceGroupInfo.resourceCode
                         ),
                         groupPermissionDetailRedirectUri = String.format(
@@ -332,10 +329,57 @@ class RbacPermissionApplyService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
                 params = arrayOf(applyJoinGroupInfo.groupIds.toString()),
-                defaultMessage = "Failed to apply to join group(${applyJoinGroupInfo.groupIds})"
+                defaultMessage = "Failed to apply to join group(${e.message}})"
             )
         }
         return true
+    }
+
+    private fun getResourceGroupInfo(
+        projectCode: String,
+        projectName: String,
+        groupId: String
+    ): ResourceGroupInfo {
+        val dbResourceGroupInfo = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            relationId = groupId
+        )
+        return if (dbResourceGroupInfo != null) {
+            ResourceGroupInfo(
+                groupId = groupId,
+                groupName = dbResourceGroupInfo.groupName,
+                projectCode = projectCode,
+                resourceType = dbResourceGroupInfo.resourceType,
+                resourceName = dbResourceGroupInfo.resourceName,
+                resourceCode = dbResourceGroupInfo.resourceCode
+            )
+        } else {
+            // 若是在权限中心界面创建的组，不会同步到蓝盾库，需要再次调iam查询‘
+            logger.info("get resource group info from iam:$projectCode|$projectName|$groupId")
+            val gradeManagerId = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            ).relationId
+            val iamGroupInfo = getGradeManagerRoleGroup(
+                searchGroupInfo = SearchGroupInfo(
+                    groupId = groupId.toInt(),
+                    page = 1,
+                    pageSize = 10
+                ),
+                bkIamPath = null,
+                relationId = gradeManagerId
+            ).results.first()
+            ResourceGroupInfo(
+                groupId = groupId,
+                groupName = iamGroupInfo.name,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceName = projectName,
+                resourceCode = projectCode
+            )
+        }
     }
 
     private fun generateValidityPeriod(expiredAt: Long): String {
