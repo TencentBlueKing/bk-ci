@@ -101,10 +101,10 @@ open class RedisLock(
 
     private fun unLockRemote(): Boolean {
         return redisOperation.execute(
-            DefaultRedisScript(unLockLua, Boolean::class.java),
+            DefaultRedisScript(unLockLua, Long::class.java),
             listOf(decorateKey(lockKey)),
             lockValue
-        )
+        ) > 0
     }
 
     open fun decorateKey(key: String): String {
