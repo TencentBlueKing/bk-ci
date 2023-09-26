@@ -391,7 +391,6 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project $projectId workspace list")
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
-            status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
             projectId = projectId,
             ip = ip,
@@ -407,7 +406,8 @@ class WorkspaceService @Autowired constructor(
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
+                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String,
+                status = WorkspaceStatus.values()[it["STATUS"] as Int]
             )
         }
     }
