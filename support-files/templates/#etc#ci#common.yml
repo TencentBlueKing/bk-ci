@@ -353,6 +353,7 @@ sharding:
     timeout: 2 # 迁移项目超时时间，单位：小时
     maxProjectCount: 5 # 同时迁移项目最大数量
     processDbMicroServices: "process,engine,misc,lambda" #使用process数据库的微服务
+    sourceDbDataDeleteFlag: false # 迁移成功后是否删除原库数据
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__

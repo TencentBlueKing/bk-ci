@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -450,10 +451,13 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
-    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+    fun getCgsData(
+        cgsIds: List<String>?,
+        ips: List<String>?
+    ): List<EnvironmentResourceData>? {
         return kotlin.runCatching {
             client.get(ServiceStartCloudResource::class)
-                .getCgsData(cgsId).data
+                .getCgsData(FetchWinPoolData(cgsIds = cgsIds, ips = ips)).data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull()
