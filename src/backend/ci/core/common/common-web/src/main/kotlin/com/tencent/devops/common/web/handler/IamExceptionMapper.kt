@@ -25,37 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.service
+package com.tencent.devops.common.web.handler
 
 import com.tencent.bk.sdk.iam.exception.IamException
-import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@RestResource
-class ServiceDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
+@BkExceptionMapper
+class IamExceptionMapper : ExceptionMapper<IamException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(IamExceptionMapper::class.java)!!
     }
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
-    }
-
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(userId, name))
-    }
-
-    override fun getUserInfoTest(name: String): Result<UserAndDeptInfoVo?> {
-        throw IamException(
-            -1,
-            "Unsupported field "
-        )
+    override fun toResponse(exception: IamException): Response {
+        logger.warn("Failed with iam request exception", exception)
+        val status = Response.Status.BAD_REQUEST
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "Failed with iam request exception"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
     }
 }

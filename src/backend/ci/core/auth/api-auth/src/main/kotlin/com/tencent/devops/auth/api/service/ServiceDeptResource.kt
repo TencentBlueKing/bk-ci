@@ -84,9 +84,6 @@ interface ServiceDeptResource {
     @Path("/getUserInfoTest")
     @ApiOperation("获取单个用户信息")
     fun getUserInfoTest(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("用户ID", required = true)
-        userId: String,
         @QueryParam("name")
         @ApiParam("用户名称", required = true)
         name: String
