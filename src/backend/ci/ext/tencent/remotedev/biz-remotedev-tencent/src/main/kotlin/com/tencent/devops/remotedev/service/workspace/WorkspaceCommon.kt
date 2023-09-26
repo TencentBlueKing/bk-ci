@@ -64,6 +64,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -158,31 +159,54 @@ class WorkspaceCommon @Autowired constructor(
             key.default
         } ?: key.default
 
-    fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
+    fun getOrSaveWorkspaceDetail(
+        workspaceName: String,
+        mountType: WorkspaceMountType,
+        event: RemoteDevUpdateEvent? = null
+    ): WorkSpaceCacheInfo {
         return getWorkspaceDetail(workspaceName) ?: run {
-            return updateWorkspaceDetail(workspaceName, mountType)
+            return updateWorkspaceDetail(workspaceName, mountType, event)
         }
     }
 
-    fun updateWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
-        val userSet = workspaceDao.fetchWorkspaceUser(
-            dslContext,
-            workspaceName
-        ).toSet()
-        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-        val workspaceInfo =
-            client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
-        val cache = WorkSpaceCacheInfo(
-            sshKey,
-            workspaceInfo.environmentHost,
-            workspaceInfo.hostIP,
-            workspaceInfo.environmentIP,
-            workspaceInfo.environmentIP,
-            workspaceInfo.namespace,
-            workspaceInfo.curLaunchId,
-            workspaceInfo.regionId
-        )
+    fun updateWorkspaceDetail(
+        workspaceName: String,
+        mountType: WorkspaceMountType,
+        event: RemoteDevUpdateEvent? = null
+    ): WorkSpaceCacheInfo {
+        val cache = if (mountType == WorkspaceMountType.START && event != null) {
+            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
+            WorkSpaceCacheInfo(
+                sshKey = "",
+                environmentHost = event.environmentHost ?: "",
+                hostIP = event.environmentIp ?: "",
+                environmentIP = event.environmentIp ?: "",
+                clusterId = "",
+                namespace = workspaceInfo.namespace,
+                curLaunchId = workspaceInfo.curLaunchId,
+                regionId = workspaceInfo.regionId
+            )
+        } else {
+            val userSet = workspaceDao.fetchWorkspaceUser(
+                dslContext,
+                workspaceName
+            ).toSet()
+            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
+            WorkSpaceCacheInfo(
+                sshKey = sshKey,
+                environmentHost = workspaceInfo.environmentHost,
+                hostIP = workspaceInfo.hostIP,
+                environmentIP = workspaceInfo.environmentIP,
+                clusterId = workspaceInfo.environmentIP,
+                namespace = workspaceInfo.namespace,
+                curLaunchId = workspaceInfo.curLaunchId,
+                regionId = workspaceInfo.regionId
+            )
+        }
 
         workspaceDao.saveOrUpdateWorkspaceDetail(
             dslContext = dslContext,

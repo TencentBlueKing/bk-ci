@@ -315,7 +315,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
+            workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType, event)
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -327,10 +327,6 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            if (ws.workspaceSystemType.needSafeInitialization()) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
-            }
-
             if (ws.workspaceSystemType.checkWindows()) {
                 workspaceWindowsDao.updateWindowsResourceId(
                     dslContext,
@@ -338,6 +334,10 @@ class CreateControl @Autowired constructor(
                     event.resourceId,
                     event.environmentIp
                 )
+            }
+
+            if (ws.workspaceSystemType.needSafeInitialization()) {
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {

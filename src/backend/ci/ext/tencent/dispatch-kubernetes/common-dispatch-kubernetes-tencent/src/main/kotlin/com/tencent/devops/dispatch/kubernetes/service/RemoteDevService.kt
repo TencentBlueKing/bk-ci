@@ -120,8 +120,8 @@ class RemoteDevService @Autowired constructor(
 
             return WorkspaceResponse(
                 environmentUid = vmCreateResp.envId ?: "",
-                environmentHost = workspaceInfo.environmentHost,
-                environmentIp = workspaceInfo.environmentIP,
+                environmentHost = vmCreateResp.cgsIp,
+                environmentIp = vmCreateResp.cgsIp,
                 resourceId = vmCreateResp.resourceId
             )
         } else {
