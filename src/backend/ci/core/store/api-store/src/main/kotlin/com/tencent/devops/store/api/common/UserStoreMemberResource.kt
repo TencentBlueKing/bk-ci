@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreMemberItem
@@ -117,9 +116,6 @@ interface UserStoreMemberResource {
     @PUT
     @Path("/test/project/change")
     fun changeMemberTestProjectCode(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -216,7 +216,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,
@@ -237,7 +236,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val validateFlag: Boolean?
             try {
                 validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                    accessToken = accessToken,
                     projectCode = projectCode,
                     userId = userId
                 ).data

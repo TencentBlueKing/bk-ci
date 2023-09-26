@@ -60,12 +60,12 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import java.net.URLEncoder
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -290,18 +290,32 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 )
             }
             is CodeTGitRepository -> {
-                val credInfo = getCredential(projectId, repo)
-                return client.get(ServiceScmResource::class).listBranches(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = ScmType.CODE_TGIT,
-                    privateKey = null,
-                    passPhrase = null,
-                    token = credInfo.privateKey,
-                    region = null,
-                    userName = credInfo.username,
-                    search = search
-                )
+                return if (repo.authType == RepoAuthType.OAUTH) {
+                    client.get(ServiceScmOauthResource::class).listBranches(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = getTGitAccessToken(repo.userName),
+                        region = null,
+                        userName = repo.userName,
+                        search = search
+                    )
+                } else {
+                    val credInfo = getCredential(projectId, repo)
+                    client.get(ServiceScmResource::class).listBranches(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        privateKey = null,
+                        passPhrase = null,
+                        token = credInfo.privateKey,
+                        region = null,
+                        userName = credInfo.username,
+                        search = search
+                    )
+                }
             }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
@@ -363,15 +377,26 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 )
             }
             is CodeTGitRepository -> {
-                val credInfo = getCredential(projectId, repo)
-                return client.get(ServiceScmResource::class).listTags(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = ScmType.CODE_TGIT,
-                    token = credInfo.privateKey,
-                    userName = credInfo.username,
-                    search = search
-                )
+                return if (repo.authType == RepoAuthType.OAUTH) {
+                    client.get(ServiceScmOauthResource::class).listTags(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        token = getTGitAccessToken(repo.userName),
+                        userName = repo.userName,
+                        search = search
+                    )
+                } else {
+                    val credInfo = getCredential(projectId, repo)
+                    client.get(ServiceScmResource::class).listTags(
+                        projectName = repo.projectName,
+                        url = repo.url,
+                        type = ScmType.CODE_TGIT,
+                        token = credInfo.privateKey,
+                        userName = credInfo.username,
+                        search = search
+                    )
+                }
             }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
@@ -463,18 +488,33 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
             ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = ProcessMessageCode.TGIT_INVALID)
-        val token = getCredential(projectId, repo).privateKey
-        client.get(ServiceScmResource::class).addWebHook(
-            projectName = repo.projectName,
-            url = repo.url,
-            type = ScmType.CODE_TGIT,
-            privateKey = null,
-            passPhrase = null,
-            token = token,
-            region = null,
-            userName = repo.userName,
-            event = convertEvent(codeEventType)
-        )
+
+        if (repo.authType == RepoAuthType.OAUTH) {
+            client.get(ServiceScmOauthResource::class).addWebHook(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_TGIT,
+                privateKey = null,
+                passPhrase = null,
+                token = getTGitAccessToken(repo.userName),
+                region = null,
+                userName = repo.userName,
+                event = convertEvent(codeEventType)
+            )
+        } else {
+            val credInfo = getCredential(projectId, repo)
+            client.get(ServiceScmResource::class).addWebHook(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_TGIT,
+                privateKey = null,
+                passPhrase = null,
+                token = credInfo.privateKey,
+                region = null,
+                userName = credInfo.username,
+                event = convertEvent(codeEventType)
+            )
+        }
         return repo.projectName
     }
 
@@ -666,6 +706,12 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val gitOauthData = client.get(ServiceOauthResource::class).gitGet(userName).data
             ?: throw NotFoundException("cannot found oauth access token for user($userName)")
         return gitOauthData.accessToken to null
+    }
+
+    private fun getTGitAccessToken(userName: String): String {
+        val gitOauthData = client.get(ServiceOauthResource::class).tGitGet(userName).data
+            ?: throw NotFoundException("cannot found oauth access token for user($userName)")
+        return gitOauthData.accessToken
     }
 
     private fun getGithubAccessToken(userName: String): String {

@@ -40,7 +40,6 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
@@ -51,14 +50,14 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
-import java.net.URLDecoder
-import java.net.URLEncoder
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 @Service
 @Suppress("ALL")
@@ -260,15 +259,13 @@ class GitOauthService @Autowired constructor(
 
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
-            with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
-                GitToken(
-                    accessToken = AESUtil.decrypt(aesKey!!, it.accessToken),
-                    refreshToken = AESUtil.decrypt(aesKey!!, it.refreshToken),
-                    tokenType = it.tokenType,
-                    expiresIn = it.expiresIn,
-                    createTime = it.createTime.timestampmilli()
-                )
-            }
+            GitToken(
+                accessToken = AESUtil.decrypt(aesKey!!, it.accessToken),
+                refreshToken = AESUtil.decrypt(aesKey!!, it.refreshToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                createTime = it.createTime.timestampmilli()
+            )
         }
     }
 

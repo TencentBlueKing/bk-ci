@@ -57,12 +57,11 @@ class UserImageReleaseResourceImpl @Autowired constructor(
     }
 
     override fun addMarketImage(
-        accessToken: String,
         userId: String,
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest
     ): Result<String> {
-        return imageReleaseService.addMarketImage(accessToken, userId, imageCode, marketImageRelRequest)
+        return imageReleaseService.addMarketImage(userId, imageCode, marketImageRelRequest)
     }
 
     override fun updateMarketImage(

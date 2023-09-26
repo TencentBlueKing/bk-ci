@@ -89,16 +89,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -206,7 +206,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL)
+                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -242,7 +242,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 shardingRoutingRuleAssignService.assignShardingRoutingRule(
                     channelCode = projectChannel,
                     routingName = projectInfo.englishName,
-                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS),
+                    dataTag = projectInfo.properties?.dataTag
                 )
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
@@ -433,7 +434,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     subjectScopes = subjectScopes,
                     approvalStatus = newApprovalStatus
                 )
-                modifyProjectAuthResource(resourceUpdateInfo)
+                // 修改到项目可授权范围，项目名称，项目性质需要同步修改权限中心资源
+                if (needModifyAuthResource(
+                        originalProjectName = projectInfo.projectName,
+                        modifiedProjectName = projectUpdateInfo.projectName,
+                        finalNeedApproval = finalNeedApproval
+                    )) {
+                    modifyProjectAuthResource(resourceUpdateInfo)
+                }
                 if (finalNeedApproval) {
                     updateApprovalInfo(
                         userId = userId,
@@ -487,13 +495,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
                         defaultMessage = "update project failed: $e "
-                    )
+                    ) + ": ${e.message}"
                 )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
         return success
+    }
+
+    private fun needModifyAuthResource(
+        originalProjectName: String,
+        modifiedProjectName: String,
+        finalNeedApproval: Boolean
+    ): Boolean {
+        return originalProjectName != modifiedProjectName || finalNeedApproval
     }
 
     private fun getUpdateApprovalStatus(
@@ -919,7 +935,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST)
+            ?: throw ErrorCodeException(errorCode = PROJECT_NOT_EXIST)
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
@@ -1031,7 +1047,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun cancelCreateProject(userId: String, projectId: String): Boolean {
         logger.info("$userId cancel create project($projectId)")
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            errorCode = PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project - $projectId is not exist!"
         )

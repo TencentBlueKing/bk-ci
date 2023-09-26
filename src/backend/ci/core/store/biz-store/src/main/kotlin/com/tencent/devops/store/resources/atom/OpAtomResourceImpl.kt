@@ -137,7 +137,10 @@ class OpAtomResourceImpl @Autowired constructor(
             userId = userId,
             atomCode = atomCode,
             inputStream = inputStream,
-            disposition = disposition
+            disposition = disposition,
+            publisher = publisher,
+            releaseType = releaseType,
+            version = version
         )
     }
 

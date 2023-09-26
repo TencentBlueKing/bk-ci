@@ -54,7 +54,6 @@ interface AtomService {
      * 获取插件列表
      */
     fun getPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,

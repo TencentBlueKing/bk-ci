@@ -12,6 +12,29 @@
                     :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
             </form-field>
         </template>
+        <accordion v-if="reminderTimeCom" show-checkbox>
+            <header class="var-header" slot="header">
+                <span>{{ reminderTimeCom.label }}</span>
+                <i class="devops-icon icon-angle-down" style="display: block" />
+            </header>
+            <div slot="content">
+                <form-field class="review-remind" :label="reminderTimeCom.label" :desc="reminderTimeCom.desc" :is-error="errors.has('reminderTime')" :error-msg="errors.first('reminderTime')">
+                    <div>
+                        {{ $t('editPage.every') }}
+                        <vuex-input
+                            v-model="element.reminderTime"
+                            class="remind-number-input"
+                            v-validate.initial="{ reminderTimeRule: true }"
+                            name="reminderTime"
+                            :placeholder="' '"
+                            :disabled="disabled"
+                            :handle-change="handleUpdateElement"
+                        />
+                        {{ $t('editPage.remindTime') }}
+                    </div>
+                </form-field>
+            </div>
+        </accordion>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.atomOutput') }}</span>
@@ -61,6 +84,9 @@
         computed: {
             namespace () {
                 return this.element.namespace
+            },
+            reminderTimeCom () {
+                return this.atomPropsModel.reminderTime
             }
         },
         watch: {
@@ -90,3 +116,12 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .remind-number-input {
+        width: 60px;
+        .input-number-option {
+            display: none;
+        }
+    }
+</style>
