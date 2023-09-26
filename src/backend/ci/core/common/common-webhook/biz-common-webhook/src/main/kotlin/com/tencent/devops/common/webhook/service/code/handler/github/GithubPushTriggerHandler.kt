@@ -53,6 +53,7 @@ import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
@@ -111,11 +112,18 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         } else {
             "https://github.com/${event.repository.fullName}/commit/${getBranchName(event)}"
         }
+        val revision = getRevision(event)
+        val commitId = if (revision.isNotBlank()) {
+            revision.substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH)
+        } else {
+            revision
+        }
         return I18Variable(
             code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
                 linkUrl,
+                commitId,
                 getUsername(event)
             )
         ).toJsonStr()

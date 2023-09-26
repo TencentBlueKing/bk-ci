@@ -48,6 +48,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_USERN
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
@@ -100,10 +101,15 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getEventDesc(event: GitTagPushEvent): String {
+        val createFrom = if (event.create_from.isNullOrBlank()) {
+            event.checkout_sha?.substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH)
+        } else {
+            event.create_from
+        }
         return I18Variable(
             code = WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC,
             params = listOf(
-                "${event.create_from}",
+                "$createFrom",
                 "${event.repository.homepage}/-/tags/${getBranchName(event)}",
                 getBranchName(event),
                 getUsername(event)

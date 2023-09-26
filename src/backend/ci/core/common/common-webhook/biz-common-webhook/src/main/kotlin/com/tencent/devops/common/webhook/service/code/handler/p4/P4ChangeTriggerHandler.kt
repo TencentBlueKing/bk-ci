@@ -86,7 +86,7 @@ class P4ChangeTriggerHandler(
             code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                event.eventType,
+                getFormatEventType(event),
                 getUsername(event)
             )
         ).toJsonStr()
@@ -182,5 +182,12 @@ class P4ChangeTriggerHandler(
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
         return startParams
+    }
+
+    private fun getFormatEventType(event: P4ChangeEvent) = when (event.eventType) {
+        CodeEventType.CHANGE_COMMIT.name -> P4ChangeEvent.CHANGE_COMMIT
+        CodeEventType.CHANGE_SUBMIT.name -> P4ChangeEvent.CHANGE_SUBMIT
+        CodeEventType.CHANGE_CONTENT.name -> P4ChangeEvent.CHANGE_CONTENT
+        else -> event.eventType
     }
 }

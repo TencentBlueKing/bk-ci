@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeEvent
 import com.tencent.devops.common.webhook.pojo.code.p4.P4ShelveEvent
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
@@ -87,7 +88,7 @@ class P4ShelveTriggerHandler(
             code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                event.eventType,
+                getFormatEventType(event),
                 getUsername(event)
             )
         ).toJsonStr()
@@ -179,5 +180,12 @@ class P4ShelveTriggerHandler(
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
         return startParams
+    }
+
+    private fun getFormatEventType(event: P4ShelveEvent) = when (event.eventType) {
+        CodeEventType.SHELVE_COMMIT.name -> P4ShelveEvent.SHELVE_COMMIT
+        CodeEventType.SHELVE_SUBMIT.name -> P4ShelveEvent.SHELVE_SUBMIT
+        CodeEventType.SHELVE_DELETE.name -> P4ShelveEvent.SHELVE_DELETE
+        else -> event.eventType
     }
 }
