@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.Permission
@@ -423,6 +425,7 @@ interface UserPipelineResource {
     @POST
     // @Path("/projects/{projectId}/pipelineStatus")
     @Path("/{projectId}/pipelineStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -574,6 +577,7 @@ interface UserPipelineResource {
     @ApiOperation("校验matrix yaml格式")
     @POST
     @Path("/{projectId}/{pipelineId}/matrix/check")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun checkYaml(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

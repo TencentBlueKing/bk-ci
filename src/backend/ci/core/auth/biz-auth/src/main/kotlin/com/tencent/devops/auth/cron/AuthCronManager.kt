@@ -266,7 +266,7 @@ class AuthCronManager @Autowired constructor(
                             )
                         }
                         page++
-                    } while (resourceGroupConfigResult.size == PageUtil.DEFAULT_PAGE)
+                    } while (resourceGroupConfigResult.size == PageUtil.DEFAULT_PAGE_SIZE)
                     logger.info("init auth resource group config I18n end")
                 } finally {
                     redisLock.unlock()

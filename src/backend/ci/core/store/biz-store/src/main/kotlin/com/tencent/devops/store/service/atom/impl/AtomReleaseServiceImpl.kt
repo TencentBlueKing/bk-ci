@@ -395,9 +395,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         // 校验前端传的版本号是否正确
         val osList = convertUpdateRequest.os
+        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         val validateAtomVersionResult =
             marketAtomCommonService.validateAtomVersion(
-                atomRecord = atomRecord,
+                atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) newestAtomRecord else atomRecord,
                 releaseType = releaseType,
                 osList = osList,
                 version = version
@@ -488,14 +489,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
                 AtomStatusEnum.COMMITTING
             } else AtomStatusEnum.TESTING
-        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap, formatted = false)
-            if (releaseType == ReleaseTypeEnum.NEW ||
-                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+            if (releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
-                atomId = atomRecord.id
+                atomId = newestAtomRecord.id
                 updateMarketAtom(
                     context = context,
                     userId = userId,

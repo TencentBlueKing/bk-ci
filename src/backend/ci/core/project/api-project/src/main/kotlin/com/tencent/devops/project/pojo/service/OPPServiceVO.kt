@@ -77,6 +77,7 @@ data class OPPServiceVO(
     @ApiModelProperty("修改人修改时间")
     val updatedUser: String,
     @ApiModelProperty("修改时间")
-    val updatedTime: String
-
+    val updatedTime: String,
+    @ApiModelProperty("集群类型")
+    val clusterType: String = ""
 )

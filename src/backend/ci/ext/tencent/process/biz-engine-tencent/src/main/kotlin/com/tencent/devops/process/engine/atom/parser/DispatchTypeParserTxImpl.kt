@@ -102,8 +102,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
                         val pool = Pool(
-                            dispatchType.value.removePrefix("/"), null, null,
-                            false, dispatchType.performanceConfigId
+                            container = dispatchType.value.removePrefix("/"),
+                            credential = null,
+                            macOS = null,
+                            third = false,
+                            performanceConfigId = dispatchType.performanceConfigId,
+                            persistence = dispatchType.persistence
                         )
                         dispatchType.image = JsonUtil.toJson(pool)
                     }
@@ -130,11 +134,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 if (dispatchType is PublicDevCloudDispathcType) {
                     if (dispatchType.image != null) {
                         val pool = Pool(
-                            "devcloud/" + dispatchType.image!!.removePrefix("/"),
-                            null,
-                            null,
-                            false,
-                            dispatchType.performanceConfigId
+                            container = "devcloud/" + dispatchType.image!!.removePrefix("/"),
+                            credential = null,
+                            macOS = null,
+                            third = false,
+                            performanceConfigId = dispatchType.performanceConfigId,
+                            persistence = dispatchType.persistence
                         )
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
@@ -251,7 +256,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             credential = credential,
             macOS = null,
             third = true,
-            performanceConfigId = dispatchType.performanceConfigId
+            performanceConfigId = dispatchType.performanceConfigId,
+            persistence = dispatchType.persistence
         )
         dispatchType.image = JsonUtil.toJson(pool)
     }

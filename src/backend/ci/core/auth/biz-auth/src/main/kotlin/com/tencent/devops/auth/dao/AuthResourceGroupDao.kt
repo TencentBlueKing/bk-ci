@@ -122,6 +122,18 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectCode: String,
+        relationId: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(relationId))
+                .fetchOne()
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         projectCode: String,

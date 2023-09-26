@@ -44,7 +44,6 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
     val extServiceProjectService: ExtServiceProjectService
 ) : UserExtServiceProjectResource {
     override fun installImage(
-        accessToken: String,
         userId: String,
         installExtServiceReq: InstallExtServiceReq
     ): Result<Boolean> {
@@ -57,20 +56,17 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         serviceCode: String
     ): Result<List<InstalledProjRespItem>> {
         return extServiceProjectService.getInstalledProjects(
             userId = userId,
-            accessToken = accessToken,
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE
         )
     }
 
     override fun getServiceByInstalledProject(
-        accessToken: String,
         userId: String,
         projectCode: String
     ): Result<List<ExtServiceRespItem>> {
@@ -78,7 +74,6 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun unInstallService(
-        accessToken: String,
         userId: String,
         serviceCode: String,
         projectCode: String,

@@ -84,7 +84,6 @@ interface MarketAtomService {
      * 根据用户和插件名称获取插件信息
      */
     fun getMyAtoms(
-        accessToken: String,
         userId: String,
         atomName: String?,
         page: Int,
@@ -110,7 +109,6 @@ interface MarketAtomService {
      * 安装插件到项目
      */
     fun installAtom(
-        accessToken: String,
         userId: String,
         channelCode: ChannelCode,
         installAtomReq: InstallAtomReq

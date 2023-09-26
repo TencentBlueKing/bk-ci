@@ -46,4 +46,8 @@ class OpProjectInfoResourceImpl @Autowired constructor(
     override fun syncAtomErrorCodeRel(userId: String): Result<Boolean> {
         return Result(errorCodeInfoManageService.syncAtomErrorCodeRel(userId))
     }
+
+    override fun syncProjectAtomData(userId: String): Boolean {
+        return projectInfoManageService.syncProjectAtomData(userId)
+    }
 }

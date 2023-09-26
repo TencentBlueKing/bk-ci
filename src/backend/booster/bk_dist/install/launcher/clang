@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# get current file dir
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-
-$DIR/launcher clang "${@}"
