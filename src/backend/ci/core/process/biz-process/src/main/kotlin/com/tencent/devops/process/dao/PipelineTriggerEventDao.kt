@@ -243,6 +243,7 @@ class PipelineTriggerEventDao {
         projectId: String,
         eventSource: String? = null,
         eventId: Long? = null,
+        pipelineName: String? = null,
         eventType: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
@@ -260,6 +261,7 @@ class PipelineTriggerEventDao {
             projectId = projectId,
             eventSource = eventSource,
             eventId = eventId,
+            pipelineName = pipelineName,
             eventType = eventType,
             triggerUser = triggerUser,
             triggerType = triggerType,
@@ -300,6 +302,7 @@ class PipelineTriggerEventDao {
         projectId: String,
         eventSource: String? = null,
         eventId: Long? = null,
+        pipelineName: String? = null,
         eventType: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
@@ -315,6 +318,7 @@ class PipelineTriggerEventDao {
             projectId = projectId,
             eventSource = eventSource,
             eventId = eventId,
+            pipelineName = pipelineName,
             eventType = eventType,
             triggerUser = triggerUser,
             triggerType = triggerType,
@@ -362,6 +366,7 @@ class PipelineTriggerEventDao {
         t1: TPipelineTriggerEvent,
         t2: TPipelineTriggerDetail,
         projectId: String,
+        pipelineName: String? = null,
         eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
@@ -396,6 +401,9 @@ class PipelineTriggerEventDao {
         }
         if (endTime != null && endTime > 0) {
             conditions.add(t1.EVENT_TIME.le(Timestamp(endTime).toLocalDateTime()))
+        }
+        if (!pipelineName.isNullOrBlank()) {
+            conditions.add(t2.PIPELINE_NAME.like("%$pipelineName%"))
         }
         return conditions
     }
