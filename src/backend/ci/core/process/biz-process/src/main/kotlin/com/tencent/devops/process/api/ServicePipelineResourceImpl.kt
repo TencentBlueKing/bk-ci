@@ -232,7 +232,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (!buildNumRule.isNullOrBlank()) {
             pipelineRuleService.validateRuleStr(buildNumRule, PipelineRuleBusCodeEnum.BUILD_NUM.name)
         }
-        val pipelineResult = pipelineInfoFacadeService. saveAll(
+        val pipelineResult = pipelineInfoFacadeService.saveAll(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
