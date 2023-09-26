@@ -303,14 +303,16 @@ class WorkspaceDao {
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             return if (ips.isNullOrEmpty()) {
-                (genFetchProjectWorkspaceCond(
+                (
+                    genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     projectId = projectId,
                     workspaceName = workspaceName,
                     systemType = systemType,
                     queryType = queryType,
                     ips = ips
-                ) as SelectConditionStep<TWorkspaceRecord>).orderBy(CREATE_TIME.desc(), ID.desc())
+                ) as SelectConditionStep<TWorkspaceRecord>
+                ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(workspaceMapper)
             } else {
@@ -489,7 +491,9 @@ class WorkspaceDao {
                 .let { i ->
                     if (mountType != null) {
                         i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
-                    } else i
+                    } else {
+                        i
+                    }
                 }
                 .fetch()
         }
@@ -572,11 +576,15 @@ class WorkspaceDao {
             .let {
                 if (assignType != null) {
                     it.and(t2.ASSIGN_TYPE.eq(assignType.name))
-                } else it
+                } else {
+                    it
+                }
             }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
-                dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
+                dslContext.select(
+                    t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
+                )
                     .from(t1)
                     .where(conditions)
                     .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
