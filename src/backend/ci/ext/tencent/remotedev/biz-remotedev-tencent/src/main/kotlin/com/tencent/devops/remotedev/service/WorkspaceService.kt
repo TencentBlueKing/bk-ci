@@ -679,7 +679,13 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspaceWindowsDao.fetchAnyWorkspaceSharedInfo(dslContext, workspaceName)?.resourceId
         }
-
+        val owner = if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ).firstOrNull()?.sharedUser
+        } else workspace.createUserId
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
@@ -687,6 +693,7 @@ class WorkspaceService @Autowired constructor(
             projectId = workspace.projectId,
             name = workspace.workspaceName,
             creator = workspace.createUserId,
+            owner = owner,
             resourceId = resourceId
         )
     }
