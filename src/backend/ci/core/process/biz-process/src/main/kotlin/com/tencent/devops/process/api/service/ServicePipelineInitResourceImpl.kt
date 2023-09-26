@@ -45,7 +45,6 @@ class ServicePipelineInitResourceImpl @Autowired constructor(
     private val checkImageInitPipelineService: CheckImageInitPipelineService
 ) : ServicePipelineInitResource {
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun initAtomMarketPipeline(
         userId: String,
         projectCode: String,
@@ -58,7 +57,6 @@ class ServicePipelineInitResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun initCheckImagePipeline(
         userId: String,
         projectCode: String,

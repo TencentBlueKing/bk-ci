@@ -112,10 +112,6 @@ class StreamYamlBaseBuild @Autowired constructor(
 
     private val buildRunningDesc = "Running."
 
-    @AuditEntry(
-        actionId = ActionId.PIPELINE_CREATE,
-        subActionIds = [ActionId.PIPELINE_EDIT]
-    )
     fun savePipeline(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,

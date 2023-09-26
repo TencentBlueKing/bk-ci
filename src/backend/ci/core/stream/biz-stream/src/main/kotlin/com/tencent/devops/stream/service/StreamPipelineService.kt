@@ -291,10 +291,6 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
-    @AuditEntry(
-        actionId = ActionId.PIPELINE_CREATE,
-        subActionIds = [ActionId.PIPELINE_EDIT]
-    )
     fun savePipeline(
         pipeline: StreamTriggerPipeline,
         userId: String,

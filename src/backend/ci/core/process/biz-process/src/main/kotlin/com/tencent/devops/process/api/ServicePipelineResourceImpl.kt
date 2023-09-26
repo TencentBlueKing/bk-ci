@@ -119,6 +119,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -151,6 +152,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(
+        actionId = ActionId.PIPELINE_CREATE,
+        subActionIds = [ActionId.PIPELINE_EDIT]
+    )
     override fun copy(
         userId: String,
         projectId: String,
@@ -181,6 +186,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pid)
     }
 
+    @AuditEntry(
+        actionId = ActionId.PIPELINE_CREATE,
+        subActionIds = [ActionId.PIPELINE_EDIT]
+    )
     override fun uploadPipeline(
         userId: String,
         projectId: String,
@@ -210,6 +219,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineId)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun updatePipeline(
         userId: String,
         projectId: String,
@@ -222,7 +232,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (!buildNumRule.isNullOrBlank()) {
             pipelineRuleService.validateRuleStr(buildNumRule, PipelineRuleBusCodeEnum.BUILD_NUM.name)
         }
-        val pipelineResult = pipelineInfoFacadeService.saveAll(
+        val pipelineResult = pipelineInfoFacadeService. saveAll(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -264,6 +274,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getWithPermission(
         userId: String,
         projectId: String,
@@ -302,6 +313,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBatch(
         userId: String,
         projectId: String,
@@ -320,6 +332,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun saveSetting(
         userId: String,
         projectId: String,
@@ -360,6 +373,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     override fun delete(
         userId: String,
         projectId: String,
@@ -442,6 +456,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
         checkParams(userId, projectId)
         pipelineInfoFacadeService.renamePipeline(
@@ -454,6 +469,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParams(userId, projectId)
         val restorePipeline = pipelineInfoFacadeService.restorePipeline(

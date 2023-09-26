@@ -45,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val client: Client) :
     ApigwTemplateInstanceResourceV4 {
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,

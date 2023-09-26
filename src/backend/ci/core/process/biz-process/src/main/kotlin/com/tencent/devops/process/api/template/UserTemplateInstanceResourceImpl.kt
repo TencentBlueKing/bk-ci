@@ -48,7 +48,6 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
 ) :
     UserTemplateInstanceResource {
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun createTemplateInstances(
         userId: String,
         projectId: String,

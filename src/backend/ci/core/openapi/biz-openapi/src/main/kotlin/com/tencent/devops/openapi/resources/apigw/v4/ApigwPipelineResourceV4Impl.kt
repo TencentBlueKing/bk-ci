@@ -69,7 +69,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -104,7 +103,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun updatePipeline(
         appCode: String?,
         apigwType: String?,
@@ -123,10 +121,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(
-        actionId = ActionId.PIPELINE_CREATE,
-        subActionIds = [ActionId.PIPELINE_EDIT]
-    )
     override fun uploadPipeline(
         appCode: String?,
         apigwType: String?,
@@ -143,7 +137,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun get(
         appCode: String?,
         apigwType: String?,
@@ -178,7 +171,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBatch(
         appCode: String?,
         apigwType: String?,
@@ -195,7 +187,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     override fun delete(
         appCode: String?,
         apigwType: String?,
@@ -212,10 +203,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(
-        actionId = ActionId.PIPELINE_CREATE,
-        subActionIds = [ActionId.PIPELINE_EDIT]
-    )
     override fun copy(
         userId: String,
         projectId: String,
@@ -250,7 +237,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun rename(
         appCode: String?,
         apigwType: String?,
@@ -263,7 +249,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).rename(userId, projectId, pipelineId, name)
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     override fun restore(
         appCode: String?,
         apigwType: String?,
@@ -275,7 +260,6 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun saveSetting(
         appCode: String?,
         apigwType: String?,

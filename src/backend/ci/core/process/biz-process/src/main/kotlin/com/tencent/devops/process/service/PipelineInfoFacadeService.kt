@@ -256,6 +256,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_CREATE,
         instance = AuditInstanceRecord(

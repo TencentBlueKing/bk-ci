@@ -93,7 +93,6 @@ class PipelineDelete @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
     fun delete(
         action: BaseAction,
         gitProjectId: String,

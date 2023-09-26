@@ -73,7 +73,6 @@ class StoreIndexPipelineServiceImpl @Autowired constructor(
      * @param storeIndexPipelineInitRequest 初始化研发商店指标流水线请求报文
      * @return 布尔值
      */
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun initStoreIndexPipeline(
         userId: String,
         storeIndexPipelineInitRequest: StoreIndexPipelineInitRequest

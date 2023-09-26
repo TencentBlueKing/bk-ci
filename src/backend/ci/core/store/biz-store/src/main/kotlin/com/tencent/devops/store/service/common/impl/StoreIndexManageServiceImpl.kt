@@ -79,7 +79,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     private val client: Client
 ) : StoreIndexManageService {
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
         val indexCode = storeIndexCreateRequest.indexCode
         // 验证指标代码是否已存在
