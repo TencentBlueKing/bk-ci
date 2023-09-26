@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.resources.service
 
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
@@ -49,5 +50,12 @@ class ServiceDeptResourceImpl @Autowired constructor(
 
     override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
         return Result(deptService.getUserInfo(userId, name))
+    }
+
+    override fun getUserInfoTest(userId: String, name: String): Result<UserAndDeptInfoVo?> {
+        throw IamException(
+            -1,
+            "Unsupported field "
+        )
     }
 }
