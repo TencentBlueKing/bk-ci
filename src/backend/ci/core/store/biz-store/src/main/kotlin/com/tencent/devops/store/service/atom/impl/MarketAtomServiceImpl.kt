@@ -336,6 +336,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     userDeptList = userDeptList)
                 val classifyId = it[tAtom.CLASSIFY_ID] as String
                 var logoUrl = it[tAtom.LOGO_URL]
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                }
                 logoUrl = if (logoUrl?.contains("?") == true) {
                     logoUrl.plus("&logo=true")
                 } else {
@@ -355,9 +358,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                         category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                        logoUrl = logoUrl?.let {
-                            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                        },
+                        logoUrl = logoUrl,
                         publisher = it[tAtom.PUBLISHER] as String,
                         os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
                             osStr,
