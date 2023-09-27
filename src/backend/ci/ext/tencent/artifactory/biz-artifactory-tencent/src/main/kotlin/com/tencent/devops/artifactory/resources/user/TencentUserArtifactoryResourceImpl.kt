@@ -65,16 +65,6 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun list(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<List<FileInfo>> {
-        checkParameters(userId, projectId, path)
-        return Result(bkRepoService.list(userId, projectId, artifactoryType, path))
-    }
-
     override fun getOwnFileList(
         userId: String,
         projectId: String,

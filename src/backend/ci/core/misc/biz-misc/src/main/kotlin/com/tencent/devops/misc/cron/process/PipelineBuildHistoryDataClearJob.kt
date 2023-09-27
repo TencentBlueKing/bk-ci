@@ -235,9 +235,11 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignored)
             } finally {
                 // 释放redis集合中的线程编号
-                redisOperation.sremove(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
-                    values = threadNo.toString(),
-                    isDistinguishCluster = true)
+                redisOperation.sremove(
+                    PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
+                    threadNo.toString(),
+                    isDistinguishCluster = true
+                )
             }
             return@Callable true
         })

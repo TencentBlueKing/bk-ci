@@ -29,11 +29,13 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -59,7 +61,8 @@ class PermissionService @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val redisCache: RedisCacheService
+    private val redisCache: RedisCacheService,
+    private val checkTokenService: ClientTokenService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
@@ -75,10 +78,10 @@ class PermissionService @Autowired constructor(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL.name) {
-                        return listOf(ws.creator)
+                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                        return listOf(ws.createUserId)
                     } else {
-                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.name)
+                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
                             .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
                     }
                 }
@@ -125,7 +128,13 @@ class PermissionService @Autowired constructor(
             .getOrElse { null }?.data ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
-        if (projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
+        val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+                token = checkTokenService.getSystemToken(null)!!,
+                userId = userId,
+                projectCode = projectId
+            ).data ?: false
+
+        if (!checkProjectManager && projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")

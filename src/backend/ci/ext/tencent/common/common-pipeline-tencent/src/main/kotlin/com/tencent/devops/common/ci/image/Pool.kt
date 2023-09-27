@@ -50,6 +50,7 @@ data class Pool(
     val os: VMBaseOS? = null,
     val workspace: String? = null,
     val buildType: BuildType? = BuildType.DEVCLOUD,
+    val persistence: Boolean? = false,
     val image: PoolImage? = null
 )
 

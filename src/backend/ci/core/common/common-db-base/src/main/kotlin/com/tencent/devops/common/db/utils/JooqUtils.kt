@@ -76,16 +76,35 @@ object JooqUtils {
         )
     }
 
-    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+    /**
+     * 去掉双引号方便对比多数操作如 in，不然无法对比成功
+     */
+    fun jsonExtract(
+        t1: Field<String>,
+        t2: String,
+        lower: Boolean = false,
+        removeDoubleQuotes: Boolean = false
+    ): Field<String> {
+        var sql = "JSON_EXTRACT({0}, {1})"
+        if (removeDoubleQuotes) {
+            sql = "JSON_UNQUOTE($sql)"
+        }
+        if (lower) {
+            sql = "LOWER($sql)"
+        }
+        return DSL.field(sql, String::class.java, t1, t2)
+    }
+
+    inline fun <reified T> jsonExtractAny(t1: Field<String>, t2: String, lower: Boolean = false): Field<T> {
         return if (lower) {
             DSL.field(
                 "LOWER(JSON_EXTRACT({0}, {1}))",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         } else {
             DSL.field(
                 "JSON_EXTRACT({0}, {1})",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         }
     }

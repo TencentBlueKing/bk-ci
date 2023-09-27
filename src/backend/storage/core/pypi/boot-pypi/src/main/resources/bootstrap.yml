@@ -1,4 +1,0 @@
-spring.application.name: pypi
-server.port: 25805
-pypi:
-  domain: ${cluster.self.url}/pypi

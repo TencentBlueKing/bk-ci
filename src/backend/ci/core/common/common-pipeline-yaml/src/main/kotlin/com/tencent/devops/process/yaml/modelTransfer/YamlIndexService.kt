@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.process.pojo.transfer.ElementInsertBody
-import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
-import com.tencent.devops.process.pojo.transfer.PositionResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
@@ -65,7 +65,7 @@ class YamlIndexService @Autowired constructor(
     ): ElementInsertResponse {
         val pYml = YamlUtil.getObjectMapper().readValue(data.yaml, object : TypeReference<ITemplateFilter>() {})
         val position = position(
-            userId = userId,line = line, column = column, yaml = data.yaml, preYaml = pYml
+            userId = userId, line = line, column = column, yaml = data.yaml, preYaml = pYml
         )
         val yml = elementTransfer.element2YamlStep(data.data, projectId) ?: throw ErrorCodeException(errorCode = "")
         val index = TransferMapper.indexYaml(position = position, pYml = pYml, yml = yml, type = data.type)

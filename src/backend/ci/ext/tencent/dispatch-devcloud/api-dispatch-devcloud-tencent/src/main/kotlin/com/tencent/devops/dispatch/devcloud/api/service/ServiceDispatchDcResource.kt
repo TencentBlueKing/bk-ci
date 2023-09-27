@@ -5,8 +5,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
-import com.tencent.devops.dispatch.devcloud.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -77,5 +78,16 @@ interface ServiceDispatchDcResource {
         @ApiParam("容器名称", required = false)
         @QueryParam("containerName")
         containerName: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("/container/destroy")
+    @ApiOperation("销毁devcloud容器")
+    fun destroyContainer(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("请求报文", required = true)
+        destroyContainerReq: DestroyContainerReq
     ): Result<Boolean>
 }

@@ -3,17 +3,22 @@ package com.tencent.devops.dispatch.devcloud.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.devcloud.api.service.ServiceDispatchDcResource
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
-import com.tencent.devops.dispatch.devcloud.pojo.Result
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
-import com.tencent.devops.dispatch.devcloud.service.DispatchDevcloudService
+import com.tencent.devops.dispatch.devcloud.service.DcPerformanceConfigService
+import com.tencent.devops.dispatch.devcloud.service.DevcloudDebugService
+import com.tencent.devops.dispatch.devcloud.service.PersistenceBuildService
 
 @RestResource
 class ServiceDispatchDcResourceImpl constructor(
-    private val dispatchDevcloudService: DispatchDevcloudService
+    private val devcloudDebugService: DevcloudDebugService,
+    private val dcPerformanceConfigService: DcPerformanceConfigService,
+    private val persistenceBuildService: PersistenceBuildService
 ) : ServiceDispatchDcResource {
 
     override fun getDcPerformanceConfigList(userId: String, projectId: String): Result<UserPerformanceOptionsVO> {
-        return Result(dispatchDevcloudService.getDcPerformanceConfigList(userId, projectId))
+        return Result(dcPerformanceConfigService.getDcPerformanceConfigList(userId, projectId))
     }
 
     override fun startDebug(
@@ -23,7 +28,7 @@ class ServiceDispatchDcResourceImpl constructor(
         vmSeqId: String,
         buildId: String?
     ): Result<DevCloudDebugResponse> {
-        return Result(dispatchDevcloudService.startDebug(userId, projectId, pipelineId, buildId, vmSeqId))
+        return Result(devcloudDebugService.startDebug(userId, projectId, pipelineId, buildId, vmSeqId))
     }
 
     override fun stopDebug(
@@ -32,6 +37,10 @@ class ServiceDispatchDcResourceImpl constructor(
         vmSeqId: String,
         containerName: String
     ): Result<Boolean> {
-        return Result(dispatchDevcloudService.stopDebug(userId, pipelineId, containerName, vmSeqId))
+        return Result(devcloudDebugService.stopDebug(userId, pipelineId, containerName, vmSeqId))
+    }
+
+    override fun destroyContainer(userId: String, destroyContainerReq: DestroyContainerReq): Result<Boolean> {
+        return persistenceBuildService.destroyPersistenceContainer(userId, destroyContainerReq)
     }
 }

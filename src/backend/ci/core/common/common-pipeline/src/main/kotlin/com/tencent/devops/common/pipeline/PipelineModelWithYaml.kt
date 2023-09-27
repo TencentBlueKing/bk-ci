@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineModelWithYaml(
@@ -41,8 +42,8 @@ data class PipelineModelWithYaml(
     val baseVersionName: String?,
     @ApiModelProperty("流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
-    val yaml: String?,
+    @ApiModelProperty("流水线YAML编排（含高亮）", required = false)
+    val yamlPreview: PreviewResponse?,
     @ApiModelProperty("是否处在可以调试状态", required = false)
     val canDebug: Boolean?,
     @ApiModelProperty("版本变更说明", required = false)

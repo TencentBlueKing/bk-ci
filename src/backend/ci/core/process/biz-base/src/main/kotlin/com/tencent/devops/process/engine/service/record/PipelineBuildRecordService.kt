@@ -221,9 +221,12 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         watcher.start("fixModel")
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNo = triggerContainer.buildNo
-        if (buildNo != null) {
-            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
+        triggerContainer.buildNo?.let {
+            it.buildNo = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNo
+            } else {
+                buildSummaryRecord?.buildNo
+            } ?: it.buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
@@ -334,7 +337,11 @@ class PipelineBuildRecordService @Autowired constructor(
             cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
-            latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            latestBuildNum = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNum
+            } else {
+                buildSummaryRecord?.buildNum
+            } ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime, // 只为兼容接口，该字段不准确
             errorInfoList = buildRecordModel?.errorInfoList,

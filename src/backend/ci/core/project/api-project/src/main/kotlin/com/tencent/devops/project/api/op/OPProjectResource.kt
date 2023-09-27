@@ -129,6 +129,9 @@ interface OPProjectResource {
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean = false,
+        @ApiParam(value = "是否是云研发项目 true：是 false：否", required = true)
+        @QueryParam(value = "is_remotedev")
+        remoteDevFlag: Boolean = false,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 

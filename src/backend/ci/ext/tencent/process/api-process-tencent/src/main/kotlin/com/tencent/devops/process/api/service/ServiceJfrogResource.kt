@@ -28,6 +28,8 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -49,6 +51,7 @@ interface ServiceJfrogResource {
     @POST
     // @Path("/projects/{projectId}/getPipelineNames")
     @Path("/{projectId}/getPipelineNames")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -60,6 +63,7 @@ interface ServiceJfrogResource {
     @ApiOperation("根据构建id对，获取build num")
     @POST
     @Path("/getBuildNoByBuildIds")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildNoByBuildIdsNew(
         @ApiParam("构建ID集合", required = true)
         buildIds: Set<String>,

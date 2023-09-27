@@ -434,7 +434,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     subjectScopes = subjectScopes,
                     approvalStatus = newApprovalStatus
                 )
-                modifyProjectAuthResource(resourceUpdateInfo)
+                // 修改到项目可授权范围，项目名称，项目性质需要同步修改权限中心资源
+                if (needModifyAuthResource(
+                        originalProjectName = projectInfo.projectName,
+                        modifiedProjectName = projectUpdateInfo.projectName,
+                        finalNeedApproval = finalNeedApproval
+                    )) {
+                    modifyProjectAuthResource(resourceUpdateInfo)
+                }
                 if (finalNeedApproval) {
                     updateApprovalInfo(
                         userId = userId,
@@ -488,13 +495,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
                         defaultMessage = "update project failed: $e "
-                    )
+                    ) + ": ${e.message}"
                 )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
         return success
+    }
+
+    private fun needModifyAuthResource(
+        originalProjectName: String,
+        modifiedProjectName: String,
+        finalNeedApproval: Boolean
+    ): Boolean {
+        return originalProjectName != modifiedProjectName || finalNeedApproval
     }
 
     private fun getUpdateApprovalStatus(

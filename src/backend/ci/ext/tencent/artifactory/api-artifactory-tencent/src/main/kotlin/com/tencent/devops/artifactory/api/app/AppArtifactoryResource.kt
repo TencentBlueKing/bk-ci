@@ -61,23 +61,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 interface AppArtifactoryResource {
-    @ApiOperation("获取目录列表")
-    @Path("/{projectId}/{artifactoryType}/list")
-    @GET
-    fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<List<FileInfo>>
 
     @ApiOperation("获取我的文件列表")
     @Path("/{projectId}/ownFileList")

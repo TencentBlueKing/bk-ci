@@ -62,9 +62,9 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryVersionServic
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
-import com.tencent.devops.process.pojo.transfer.PreviewResponse
-import com.tencent.devops.process.pojo.transfer.TransferActionType
-import com.tencent.devops.process.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -287,13 +287,6 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             setting = setting,
             model = resource.model
         )
-        val yaml = resource.yaml ?: transferService.transfer(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            actionType = TransferActionType.FULL_MODEL2YAML,
-            data = TransferBody(modelAndSetting)
-        ).newYaml
         val baseResource = resource.baseVersion?.let {
             repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
@@ -304,7 +297,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(
             PipelineModelWithYaml(
                 modelAndSetting = modelAndSetting,
-                yaml = yaml,
+                yamlPreview = transferService.buildPreview(
+                    userId, projectId, pipelineId, resource
+                ),
                 description = resource.description,
                 canDebug = resource.status == VersionStatus.COMMITTING,
                 version = resource.version,
@@ -338,8 +333,17 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
         return Result(
-            transferService.buildPreview(userId, projectId, pipelineId, version)
+            transferService.buildPreview(userId, projectId, pipelineId, resource)
         )
     }
 
