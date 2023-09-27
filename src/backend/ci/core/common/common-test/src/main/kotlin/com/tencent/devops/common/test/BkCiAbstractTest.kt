@@ -101,10 +101,10 @@ open class BkCiAbstractTest {
             }
             every { redisOperation.execute(any<RedisScript<*>>(), any(), any()) } answers {
                 val scriptObject = args[0]!!
-                if (scriptObject is DefaultRedisScript<*> && scriptObject.resultType == Boolean::class.java) {
-                    return@answers true
+                if (scriptObject is DefaultRedisScript<*> && scriptObject.resultType == Long::class.java) {
+                    return@answers 1
                 } else {
-                    throw Exception("redisOperation.execute must mock by self")
+                    throw RuntimeException("redisOperation.execute must mock by self")
                 }
             }
         }

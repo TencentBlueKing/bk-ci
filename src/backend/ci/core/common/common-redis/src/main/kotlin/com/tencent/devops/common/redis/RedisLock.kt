@@ -31,14 +31,14 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.script.DefaultRedisScript
 import java.util.UUID
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 open class RedisLock(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
     private val expiredTimeInSeconds: Long,
-    private val sleepTime: Long = 100L // 临时抽sleepTime出来，供特殊场景设置减少等待时间，后续用RedissionRedLock取代这个类
+    private val sleepTime: Long = 100L
 ) : AutoCloseable {
     private val lockValue = UUID.randomUUID().toString()
 
@@ -95,6 +95,15 @@ open class RedisLock(
         }
     }
 
+    fun <T> lockAround(action: () -> T): T {
+        try {
+            this.lock()
+            return action()
+        } finally {
+            this.unlock()
+        }
+    }
+
     private fun tryLockRemote(): Boolean {
         return redisOperation.setNxEx(decorateKey(lockKey), lockValue, expiredTimeInSeconds)
     }
@@ -111,28 +120,34 @@ open class RedisLock(
         return redisOperation.getKeyByRedisName(key)
     }
 
-    fun <T> lockAround(action: () -> T): T {
-        try {
-            this.lock()
-            return action()
-        } finally {
-            this.unlock()
+    private fun isLocalLocked() = getLocalLock(false).get() != EMPTY
+
+    private fun lockLocal() {
+        while (true) {
+            if (tryLockLocal()) {
+                break
+            } else {
+                Thread.yield()
+            }
         }
     }
 
-    private fun isLocalLocked() = getLocalLock().availablePermits() == 0
-
-    private fun lockLocal() {
-        getLocalLock().acquire()
-    }
-
-    private fun tryLockLocal() = getLocalLock().tryAcquire()
+    private fun tryLockLocal() = getLocalLock().compareAndSet(EMPTY, lockValue)
 
     private fun unlockLocal() {
-        getLocalLock().release()
+        getLocalLock().compareAndSet(lockValue, EMPTY)
     }
 
-    private fun getLocalLock() = localLock.get(lockKey)!!
+    private fun getLocalLock(synchronized: Boolean = true): AtomicReference<String> {
+        val lock = localLock.get(lockKey)!!
+        if (synchronized) {
+            synchronized(lock) {
+                return lock
+            }
+        } else {
+            return lock
+        }
+    }
 
     override fun close() {
         unlock()
@@ -141,8 +156,9 @@ open class RedisLock(
     companion object {
         private val localLock = Caffeine.newBuilder()
             .expireAfterAccess(1, TimeUnit.MINUTES)
-            .maximumSize(10000)
-            .build<String/*lockKey*/, Semaphore/*信号量作为本地锁*/> { Semaphore(1) }
+            .maximumSize(100000)
+            .build<String/*lockKey*/, AtomicReference<String>/*lockValue*/> { AtomicReference<String>(EMPTY) }
+        private const val EMPTY = ""
         private val unLockLua = """
             if redis.call("get", KEYS[1]) == ARGV[1] then
                 return redis.call("del", KEYS[1])
