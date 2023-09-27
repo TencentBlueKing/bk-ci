@@ -120,34 +120,35 @@ open class RedisLock(
         return redisOperation.getKeyByRedisName(key)
     }
 
-    private fun isLocalLocked() = getLocalLock(false).get() != EMPTY
+    private fun isLocalLocked() = getLocalLock().get() != EMPTY
 
     private fun lockLocal() {
-        while (true) {
-            if (tryLockLocal()) {
-                break
-            } else {
-                Thread.yield()
+        synchronized(getLocalLock()) {
+            while (true) {
+                if (tryLockLocal()) {
+                    break
+                } else {
+                    Thread.yield()
+                }
             }
         }
     }
 
-    private fun tryLockLocal() = getLocalLock().compareAndSet(EMPTY, lockValue)
+    private fun tryLockLocal(): Boolean {
+        val lock = getLocalLock()
+        synchronized(lock) {
+            return lock.compareAndSet(EMPTY, lockValue)
+        }
+    }
 
     private fun unlockLocal() {
-        getLocalLock().compareAndSet(lockValue, EMPTY)
-    }
-
-    private fun getLocalLock(synchronized: Boolean = true): AtomicReference<String> {
-        val lock = localLock.get(lockKey)!!
-        if (synchronized) {
-            synchronized(lock) {
-                return lock
-            }
-        } else {
-            return lock
+        val lock = getLocalLock()
+        synchronized(lock) {
+            lock.compareAndSet(lockValue, EMPTY)
         }
     }
+
+    private fun getLocalLock(): AtomicReference<String> = localLock.get(lockKey)!!
 
     override fun close() {
         unlock()
