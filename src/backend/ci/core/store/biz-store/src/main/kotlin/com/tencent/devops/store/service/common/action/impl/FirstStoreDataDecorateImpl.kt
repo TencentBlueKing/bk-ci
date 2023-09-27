@@ -25,38 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action
+package com.tencent.devops.store.service.common.action.impl
 
-import javax.annotation.PostConstruct
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-/**
- * 装饰插件信息
- */
-interface AtomDecorate<S : Any> {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstStoreDataDecorateImpl : AbstractStoreDecorateImpl<Map<String, Any>>() {
 
-    @PostConstruct
-    fun init() {
-        AtomDecorateFactory.register(kind = type(), atomDecorate = this)
+    override fun type() = StoreDecorateFactory.Kind.DATA
+
+    override fun doBus(str: String): Map<String, Any> {
+        return JsonUtil.toOrNull(str, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
-
-    fun type(): AtomDecorateFactory.Kind
-
-    fun setNext(next: AtomDecorate<S>)
-
-    fun getNext(): AtomDecorate<S>?
-
-    /**
-     * 主入口
-     */
-    fun decorate(json: String): S = decorateSpecial(deserialize(json))
-
-    /**
-     * 子类必须实现的反序列化
-     */
-    fun deserialize(json: String): S
-
-    /**
-     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
-     */
-    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }

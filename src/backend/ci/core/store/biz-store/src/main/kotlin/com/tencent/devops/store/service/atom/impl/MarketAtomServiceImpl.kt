@@ -130,6 +130,7 @@ import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import java.time.LocalDateTime
@@ -354,7 +355,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                         category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                        logoUrl = logoUrl,
+                        logoUrl = logoUrl?.let {
+                            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                        },
                         publisher = it[tAtom.PUBLISHER] as String,
                         os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
                             osStr,
@@ -607,6 +610,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (releaseAtomNum > 0) {
                 releaseFlag = true
             }
+            val logoUrl = it[tAtom.LOGO_URL]
             myAtoms.add(
                 MyAtomRespItem(
                     atomId = it[tAtom.ID] as String,
@@ -614,7 +618,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     atomCode = atomCode,
                     language = it[tAtomEnvInfo.LANGUAGE],
                     category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                    logoUrl = it[tAtom.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     version = it[tAtom.VERSION] as String,
                     atomStatus = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
                     projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
@@ -778,12 +784,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val version = record[tAtom.VERSION]
             val osStr = record[tAtom.OS]
             val defaultAtomEnvRecord = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
+            val logoUrl = record[tAtom.LOGO_URL]
+            val description = record[tAtom.DESCRIPTION]
             Result(
                 AtomVersion(
                     atomId = atomId,
                     atomCode = atomCode,
                     name = record[tAtom.NAME] as String,
-                    logoUrl = record[tAtom.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     classifyCode = classifyCode,
                     classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
@@ -796,7 +806,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         List::class.java
                     ) as List<String> else null,
                     summary = record[tAtom.SUMMARY],
-                    description = record[tAtom.DESCRIPTION],
+                    description = description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                    },
                     version = version,
                     atomStatus = atomStatus,
                     releaseType = releaseType?.name,

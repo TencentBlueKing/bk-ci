@@ -35,6 +35,7 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.dao.atom.AtomPropDao
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.service.atom.AtomPropService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -84,10 +85,13 @@ class AtomPropServiceImpl @Autowired constructor(
                 val tAtom = TAtom.T_ATOM
                 atomPropRecords.forEach { atomPropRecord ->
                     val atomCode = atomPropRecord[tAtom.ATOM_CODE]
+                    val logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL])
                     val atomProp = AtomProp(
                         atomCode = atomCode,
                         os = JsonUtil.to(atomPropRecord[tAtom.OS], object : TypeReference<List<String>>() {}),
-                        logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL]),
+                        logoUrl = logoUrl?.let {
+                            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                        },
                         buildLessRunFlag = atomPropRecord[tAtom.BUILD_LESS_RUN_FLAG]
                     )
                     atomPropMap!![atomCode] = atomProp
