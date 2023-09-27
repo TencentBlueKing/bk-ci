@@ -35,18 +35,21 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlEnableEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlTriggerEvent
+import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PacYamlFacadeService @Autowired constructor(
@@ -56,7 +59,9 @@ class PacYamlFacadeService @Autowired constructor(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val objectMapper: ObjectMapper,
-    private val pacYamlSyncService: PacYamlSyncService
+    private val pacYamlSyncService: PacYamlSyncService,
+    private val webhookEventFactory: WebhookEventFactory,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     companion object {
@@ -127,7 +132,12 @@ class PacYamlFacadeService @Autowired constructor(
         }
     }
 
-    fun trigger(eventObject: CodeWebhookEvent, scmType: ScmType) {
+    fun trigger(
+        eventObject: CodeWebhookEvent,
+        scmType: ScmType,
+        hookRequestId: Long,
+        eventTime: LocalDateTime
+    ) {
         val action = eventActionFactory.load(eventObject)
         if (action == null) {
             logger.warn("pac trigger|request event not support|$eventObject")
@@ -148,6 +158,20 @@ class PacYamlFacadeService @Autowired constructor(
             logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
             return
         }
+        val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
+        val eventId = pipelineTriggerEventService.getEventId()
+        val triggerEvent = PipelineTriggerEvent(
+            projectId = projectId,
+            eventId = eventId,
+            triggerType = scmType.name,
+            eventSource = repoHashId,
+            eventType = matcher.getEventType().name,
+            triggerUser = matcher.getUsername(),
+            eventDesc = matcher.getEventDesc(),
+            hookRequestId = hookRequestId,
+            eventTime = eventTime
+        )
+        pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
         ).associate {
@@ -169,6 +193,7 @@ class PacYamlFacadeService @Autowired constructor(
             )
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
+            action.data.context.eventId = eventId
             traceEventDispatcher.dispatch(
                 PacYamlTriggerEvent(
                     projectId = projectId,

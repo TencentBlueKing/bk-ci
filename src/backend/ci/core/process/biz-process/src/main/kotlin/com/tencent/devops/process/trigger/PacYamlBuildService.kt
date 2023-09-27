@@ -28,8 +28,12 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.trigger.actions.BaseAction
+import com.tencent.devops.process.webhook.WebhookEventFactory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,13 +42,20 @@ import org.springframework.stereotype.Service
 @Service
 class PacYamlBuildService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val webhookEventFactory: WebhookEventFactory,
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PacYamlBuildService::class.java)
     }
 
-    fun start(projectId: String, action: BaseAction) {
+    fun start(
+        projectId: String,
+        action: BaseAction,
+        scmType: ScmType
+    ) {
         val yamlFile = action.data.context.yamlFile!!
         val repoHashId = action.data.setting.repoHashId
         val pipelineYamlVersion = pipelineYamlVersionDao.get(
@@ -57,5 +68,18 @@ class PacYamlBuildService @Autowired constructor(
             logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
             return
         }
+        val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
+        val builder = PipelineTriggerDetailBuilder()
+            .projectId(projectId)
+            .pipelineId(pipelineYamlVersion.pipelineId)
+            .eventId(action.data.context.eventId!!)
+            .eventSource(repoHashId)
+        pipelineBuildWebhookService.webhookTriggerPipelineBuild(
+            projectId = projectId,
+            pipelineId = pipelineYamlVersion.pipelineId,
+            matcher = matcher,
+            builder = builder
+        )
+        pipelineTriggerEventService.saveTriggerEventDetail(triggerDetail = builder.build())
     }
 }

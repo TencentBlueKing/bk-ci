@@ -115,7 +115,7 @@ class PacTriggerListener @Autowired constructor(
         }
         exceptionHandler.handle(action = action) {
             pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
-            pacYamlBuildService.start(projectId = projectId, action = action)
+            pacYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
         }
     }
 }

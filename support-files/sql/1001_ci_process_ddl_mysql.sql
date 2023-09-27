@@ -1215,4 +1215,39 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
     INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线触发事件明细表';
 
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
+(
+    `PROJECT_ID`     varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `REPO_HASH_ID`   varchar(64) NOT NULL COMMENT '代码库HASH ID',
+    `FILE_PATH`      varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
+    `PIPELINE_ID`    varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
+    `CREATOR`        varchar(64) NOT NULL COMMENT '创建人',
+    `MODIFIER`        varchar(64) NOT NULL COMMENT '修改人',
+    `CREATE_TIME`    timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '修改时间',
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`),
+    UNIQUE UQE_PIPELINE(`PROJECT_ID`, `PIPELINE_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml信息表';
+
+
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
+(
+    `PROJECT_ID`    varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `REPO_HASH_ID`  varchar(64)  NOT NULL COMMENT '代码库HASH ID',
+    `FILE_PATH`     varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
+    `BLOB_ID`       varchar(64)  NOT NULL DEFAULT '' COMMENT '文件blob_id',
+    `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
+    `STATUS`        VARCHAR(10)  NOT NULL COMMENT 'ci文件同步状态',
+    `VERSION`       int(11) COMMENT '流水线版本',
+    `VERSION_NAME`  varchar(64)           DEFAULT '' COMMENT '流水线版本名',
+    `REASON`        varchar(100)          DEFAULT NULL COMMENT '失败原因',
+    `REASON_DETAIL` text                  DEFAULT NULL COMMENT '原因详情',
+    `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
+    `MODIFIER`      varchar(64)  NOT NULL COMMENT '修改人',
+    `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '修改时间',
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml版本';
+
 SET FOREIGN_KEY_CHECKS = 1;

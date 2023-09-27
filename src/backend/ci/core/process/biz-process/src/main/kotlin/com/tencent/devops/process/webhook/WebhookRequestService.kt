@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.trigger.PacYamlFacadeService
 import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
@@ -48,7 +49,8 @@ import java.time.LocalDateTime
 class WebhookRequestService(
     private val client: Client,
     private val webhookEventFactory: WebhookEventFactory,
-    private val webhookTriggerService: WebhookTriggerService
+    private val webhookTriggerService: WebhookTriggerService,
+    private val pacYamlFacadeService: PacYamlFacadeService
 ) {
 
     companion object {
@@ -84,6 +86,12 @@ class WebhookRequestService(
         webhookTriggerService.trigger(
             scmType = scmType,
             matcher = matcher,
+            hookRequestId = hookRequestId,
+            eventTime = eventTime
+        )
+        pacYamlFacadeService.trigger(
+            eventObject = event,
+            scmType = scmType,
             hookRequestId = hookRequestId,
             eventTime = eventTime
         )
