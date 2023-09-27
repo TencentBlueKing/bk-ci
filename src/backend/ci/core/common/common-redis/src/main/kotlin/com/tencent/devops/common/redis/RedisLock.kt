@@ -51,14 +51,19 @@ open class RedisLock(
      * 获取锁,直到成功才会返回
      */
     fun lock() {
-        while (true) {
-            lockLocal()
-            if (tryLockRemote()) {
-                break
-            } else {
-                unlockLocal()
+        try {
+            while (true) {
+                lockLocal()
+                if (tryLockRemote()) {
+                    break
+                } else {
+                    unlockLocal()
+                }
+                Thread.sleep(sleepTime)
             }
-            Thread.sleep(sleepTime)
+        } catch (e: Exception) {
+            logger.error("lock error", e)
+            unlockLocal()
         }
     }
 
@@ -66,14 +71,19 @@ open class RedisLock(
      * 尝试获取锁, 成功会返回true
      */
     fun tryLock(): Boolean {
-        return if (tryLockLocal()) {
-            if (tryLockRemote()) {
-                true
+        return try {
+            if (tryLockLocal()) {
+                if (tryLockRemote()) {
+                    true
+                } else {
+                    unlockLocal()
+                    false
+                }
             } else {
-                unlockLocal()
                 false
             }
-        } else {
+        } catch (e: Exception) {
+            logger.error("try lock error", e)
             false
         }
     }
@@ -88,10 +98,16 @@ open class RedisLock(
      * 这两个改动可以防止持有过期锁的客户端误删现有锁的情况出现。
      */
     fun unlock() {
-        if (unLockRemote()) {
+        try {
+            if (!unLockRemote()) {
+                logger.warn("remote lock has changed , key: $lockKey , value: $lockValue")
+            }
+            if (!unlockLocal()) {
+                logger.warn("local lock has changed , key: $lockKey , value: $lockValue")
+            }
+        } catch (e: Exception) {
+            logger.error("unlock error", e)
             unlockLocal()
-        } else {
-            logger.warn("Lock is timeout and another one is locked now")
         }
     }
 
@@ -141,10 +157,10 @@ open class RedisLock(
         }
     }
 
-    private fun unlockLocal() {
+    private fun unlockLocal(): Boolean {
         val lock = getLocalLock()
         synchronized(lock) {
-            lock.compareAndSet(lockValue, EMPTY)
+            return lock.compareAndSet(lockValue, EMPTY)
         }
     }
 
