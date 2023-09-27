@@ -154,7 +154,7 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?,
         eventId: Long?,
-        pipelineName:String?,
+        pipelineName: String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
