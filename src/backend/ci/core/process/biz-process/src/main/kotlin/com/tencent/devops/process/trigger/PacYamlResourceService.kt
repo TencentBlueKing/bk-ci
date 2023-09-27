@@ -171,7 +171,8 @@ class PacYamlResourceService @Autowired constructor(
                 blobId = yamlFile.blobId!!,
                 pipelineId = deployPipelineResult.pipelineId,
                 version = deployPipelineResult.version,
-                versionName = deployPipelineResult.versionName!!
+                versionName = deployPipelineResult.versionName!!,
+                userId = action.data.getUserId()
             )
         }
     }
@@ -201,7 +202,8 @@ class PacYamlResourceService @Autowired constructor(
             blobId = yamlFile.blobId!!,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
-            versionName = deployPipelineResult.versionName!!
+            versionName = deployPipelineResult.versionName!!,
+            userId = action.data.getUserId()
         )
     }
 }

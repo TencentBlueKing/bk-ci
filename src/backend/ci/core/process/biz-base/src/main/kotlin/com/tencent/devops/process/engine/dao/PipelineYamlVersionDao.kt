@@ -49,7 +49,8 @@ class PipelineYamlVersionDao {
         blobId: String,
         pipelineId: String,
         version: Int,
-        versionName: String
+        versionName: String,
+        userId: String
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
@@ -62,6 +63,8 @@ class PipelineYamlVersionDao {
                 PIPELINE_ID,
                 VERSION,
                 VERSION_NAME,
+                CREATOR,
+                MODIFIER,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -72,6 +75,8 @@ class PipelineYamlVersionDao {
                 pipelineId,
                 version,
                 versionName,
+                userId,
+                userId,
                 now,
                 now
             ).execute()
