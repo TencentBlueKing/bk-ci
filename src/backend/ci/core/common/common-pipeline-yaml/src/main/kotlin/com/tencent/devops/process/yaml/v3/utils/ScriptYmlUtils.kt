@@ -107,7 +107,7 @@ object ScriptYmlUtils {
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    private const val jobNamespace = "job-"
+    private const val jobNamespace = "job_"
     private const val stepNamespace = "step-"
 
     // 用户编写的触发器语法和实际对象不一致

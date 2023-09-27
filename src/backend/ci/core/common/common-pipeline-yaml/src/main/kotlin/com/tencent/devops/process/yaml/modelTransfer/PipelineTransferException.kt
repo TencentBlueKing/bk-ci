@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.yaml.modelTransfer
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+
 class PipelineTransferException(
-    errorMessage: String
-) : Exception(errorMessage)
+    errorCode: String,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, params = params)

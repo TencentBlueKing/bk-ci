@@ -754,11 +754,7 @@ object TransferMapper {
     ): NodeIndex {
         if (type != ElementInsertBody.ElementInsertType.INSERT) {
             throw PipelineTransferException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = TransferMessageCode.ElementUpdateWrongPath,
-                    language = I18nUtil.getDefaultLocaleLanguage(),
-                    defaultMessage = TransferMessageCode.ElementUpdateWrongPath
-                )
+                TransferMessageCode.ElementUpdateWrongPath
             )
         }
         if (positionResponse.stageIndex == -1) {
@@ -821,11 +817,7 @@ object TransferMapper {
     ): NodeIndex {
         if (type != ElementInsertBody.ElementInsertType.INSERT) {
             throw PipelineTransferException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = TransferMessageCode.ElementUpdateWrongPath,
-                    language = I18nUtil.getDefaultLocaleLanguage(),
-                    defaultMessage = TransferMessageCode.ElementUpdateWrongPath
-                )
+                TransferMessageCode.ElementUpdateWrongPath
             )
         }
         if (preYaml.finally != null) {

@@ -36,10 +36,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -95,14 +95,17 @@ data class PreTemplateScriptBuildYamlV3(
     }
 
     override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
-        val runsOn = makeRunsOn() ?: return listOf(
+        checkInitialized()
+        val runsOn = preYaml.triggerOn ?: return listOf(
             TriggerType.parse(default) to ScriptYmlUtils.formatTriggerOn(null)
         )
 
         val res = mutableListOf<Pair<TriggerType, TriggerOn>>()
+        var baseOk = false
         runsOn.forEach {
-            if (it.repoName == null && it.repoHashId == null && it.type == null) {
+            if (!baseOk && it.repoName == null && it.repoHashId == null && it.type == null) {
                 res.add(TriggerType.BASE to ScriptYmlUtils.formatTriggerOn(it))
+                baseOk = true
                 return@forEach
             }
             res.add((TriggerType.parse(it.type) ?: TriggerType.parse(default)) to ScriptYmlUtils.formatTriggerOn(it))
@@ -134,7 +137,7 @@ data class PreTemplateScriptBuildYamlV3(
         // 简写方式
         if (triggerOn is Map<*, *>) {
             val new = JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {})
-            return listOf(new)
+            return listOf(PreTriggerOnV3(manual = new.manual, schedules = new.schedules, remote = new.remote), new)
         }
         if (triggerOn is List<*>) {
             return JsonUtil.anyTo(triggerOn, object : TypeReference<List<PreTriggerOnV3>>() {})
