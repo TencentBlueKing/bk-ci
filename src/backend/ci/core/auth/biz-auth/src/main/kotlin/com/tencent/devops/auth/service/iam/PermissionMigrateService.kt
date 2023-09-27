@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 /**
  * 权限中心迁移服务
@@ -73,4 +74,9 @@ interface PermissionMigrateService {
      * 授予项目下自定义用户组RBAC新增的权限
      */
     fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
+
+    /**
+     * 权限交接
+     */
+    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
 }

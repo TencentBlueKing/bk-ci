@@ -101,7 +101,7 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
-        return marketAtomService.installAtom("", userId, channelCode ?: ChannelCode.BS, installAtomReq)
+        return marketAtomService.installAtom(userId, channelCode ?: ChannelCode.BS, installAtomReq)
     }
 
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {

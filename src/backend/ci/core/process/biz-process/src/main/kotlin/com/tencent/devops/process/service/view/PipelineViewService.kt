@@ -522,7 +522,10 @@ class PipelineViewService @Autowired constructor(
 
     fun matchView(
         pipelineView: TPipelineViewRecord,
-        pipelineInfo: TPipelineInfoRecord
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String,
     ): Boolean {
         val filters = getFilters(
             filterByName = pipelineView.filterByPipeineName,
@@ -531,14 +534,14 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
-                filter.userIds.contains(pipelineInfo.creator)
+                filter.userIds.contains(creator)
             } else if (filter is PipelineViewFilterByLabel) {
                 pipelineGroupService.getViewLabelToPipelinesMap(
-                    pipelineInfo.projectId,
+                    projectId,
                     filter.labelIds
-                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
+                ).values.asSequence().flatten().contains(pipelineId)
             } else {
                 continue
             }

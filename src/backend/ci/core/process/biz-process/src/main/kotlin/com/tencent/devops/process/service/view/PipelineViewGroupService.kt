@@ -272,7 +272,12 @@ class PipelineViewGroupService @Autowired constructor(
                 val dynamicProjectViews =
                     pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
                 val matchViewIds = dynamicProjectViews.asSequence()
-                    .filter { pipelineViewService.matchView(it, pipelineInfo) }
+                    .filter {
+                        pipelineViewService.matchView(
+                            pipelineView = it, projectId = pipelineInfo.projectId, creator = pipelineInfo.creator,
+                            pipelineId = pipelineInfo.pipelineId, pipelineName = pipelineInfo.pipelineName
+                        )
+                    }
                     .map { it.id }
                     .toSet()
                 matchViewIds.forEach {
@@ -288,23 +293,32 @@ class PipelineViewGroupService @Autowired constructor(
         }
     }
 
-    fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
+    fun updateGroupAfterPipelineUpdate(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String,
+        userId: String
+    ) {
         PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
-            val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
             // 所有的动态项目组
-            val dynamicProjectViews = pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
+            val dynamicProjectViews = pipelineViewDao.list(dslContext, projectId, PipelineViewType.DYNAMIC)
             val dynamicProjectViewIds = dynamicProjectViews.asSequence()
                 .map { it.id }
                 .toSet()
             // 命中的动态项目组
             val matchViewIds = dynamicProjectViews.asSequence()
-                .filter { pipelineViewService.matchView(it, pipelineInfo) }
-                .map { it.id }
+                .filter {
+                    pipelineViewService.matchView(
+                        pipelineView = it, projectId = it.projectId, creator = creator,
+                        pipelineId = pipelineId, pipelineName = pipelineName
+                    )
+                }.map { it.id }
                 .toSet()
             // 已有的动态项目组
             val baseViewGroups =
-                pipelineViewGroupDao.listByPipelineId(dslContext, pipelineInfo.projectId, pipelineInfo.pipelineId)
+                pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
                     .filter { dynamicProjectViewIds.contains(it.viewId) }
                     .toSet()
             val baseViewIds = baseViewGroups.map { it.viewId }.toSet()
@@ -365,7 +379,13 @@ class PipelineViewGroupService @Autowired constructor(
         }
         return PipelineViewGroupLock(redisOperation, projectId).lockAround {
             val pipelineIds = allPipelineInfos(projectId, false)
-                .filter { pipelineViewService.matchView(view, it) }
+                .filter {
+                    pipelineViewService.matchView(
+                        pipelineView = view, projectId = it.projectId,
+                        pipelineId = it.pipelineId, pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                }
                 .map { it.pipelineId }
             pipelineIds.forEach {
                 pipelineViewGroupDao.create(
@@ -435,7 +455,13 @@ class PipelineViewGroupService @Autowired constructor(
                 .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
                 .writeValueAsString(pipelineView.filters)
             allPipelineInfoMap.values
-                .filter { it.delete == false && pipelineViewService.matchView(previewCondition, it) }
+                .filter {
+                    it.delete == false && pipelineViewService.matchView(
+                        pipelineView = previewCondition, projectId = it.projectId,
+                        pipelineId = it.pipelineId, pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                }
                 .map { it.pipelineId }
         } else {
             pipelineView.pipelineIds?.filter { allPipelineInfoMap.containsKey(it) } ?: emptyList()

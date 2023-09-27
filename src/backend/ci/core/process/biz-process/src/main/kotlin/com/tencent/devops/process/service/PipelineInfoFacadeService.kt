@@ -79,8 +79,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.transfer.TransferActionType
-import com.tencent.devops.process.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
@@ -504,28 +504,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newResource = try {
-            val result = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml)
-            )
-            if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                )
-            }
-            result.modelAndSetting!!
-        } catch (ignore: Throwable) {
-            if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-            )
-        }
+        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
@@ -565,28 +544,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
-        val newResource = try {
-            val result = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml)
-            )
-            if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-                )
-            }
-            result.modelAndSetting!!
-        } catch (ignore: Throwable) {
-            if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
-            )
-        }
+        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -619,6 +577,31 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
         return result
+    }
+
+    private fun transferModelAndSetting(userId: String, projectId: String, yml: String, isDefaultBranch: Boolean, branchName: String): PipelineModelAndSetting {
+        return try {
+            val result = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(oldYaml = yml)
+            )
+            if (result.modelAndSetting == null) {
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+                )
+            }
+            result.modelAndSetting!!
+        } catch (ignore: Throwable) {
+            if (ignore is ErrorCodeException) throw ignore
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
+            )
+        }
     }
 
     /**
