@@ -82,7 +82,7 @@ interface ServiceAtomResource {
     @ApiOperation("根据插件代码和版本号集合批量获取插件信息")
     @POST
     @Path("/list/atomInfos")
-    fun getTemplateAtomInfos(
+    fun getAtomInfos(
         @ApiParam("插件代码版本集合", required = true)
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomStatusInfo>>

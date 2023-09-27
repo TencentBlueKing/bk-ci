@@ -80,7 +80,6 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
-import com.tencent.devops.store.pojo.atom.AtomStatusInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -124,13 +123,13 @@ import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import java.time.LocalDateTime
-import java.util.Locale
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.Locale
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -1045,14 +1044,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             userId = userId,
             msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
         )
-        val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode)
-        val atomStatusInfo = AtomStatusInfo(
+        // 处理插件缓存
+        marketAtomCommonService.handleAtomCache(
+            atomId = atomId,
             atomCode = atomCode,
-            name = record.name,
             version = record.version,
-            atomStatus = status
+            releaseFlag = false
         )
-        redisOperation.hset(atomStatusInfoKey, record.version, JsonUtil.toJson(atomStatusInfo))
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1209,15 +1207,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
-        val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode)
         val tAtomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)!!
-        val atomStatusInfo = AtomStatusInfo(
+        // 处理插件缓存
+        marketAtomCommonService.handleAtomCache(
+            atomId = atomId,
             atomCode = atomCode,
-            name = tAtomRecord.name,
             version = tAtomRecord.version,
-            atomStatus = atomStatus
+            releaseFlag = false
         )
-        redisOperation.hset(atomStatusInfoKey, tAtomRecord.version, JsonUtil.toJson(atomStatusInfo))
         return Result(true)
     }
 
@@ -1343,15 +1340,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             )
             val tAtomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode)
+            // 处理插件缓存
             if (null != tAtomRecord) {
-                val atomStatusInfo = AtomStatusInfo(
+                marketAtomCommonService.handleAtomCache(
+                    atomId = atomId,
                     atomCode = atomCode,
-                    name = tAtomRecord.name,
                     version = tAtomRecord.version,
-                    atomStatus = tAtomRecord.atomStatus
+                    releaseFlag = false
                 )
-                redisOperation.hset(atomStatusInfoKey, tAtomRecord.version, JsonUtil.toJson(atomStatusInfo))
             }
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {

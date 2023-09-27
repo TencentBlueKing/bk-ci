@@ -57,10 +57,10 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
     }
 
-    override fun getTemplateAtomInfos(
+    override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomStatusInfo>> {
-        return atomService.getTemplateAtomInfos(codeVersions = codeVersions)
+        return atomService.getAtomInfos(codeVersions = codeVersions)
     }
 
     override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {

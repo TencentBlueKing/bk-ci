@@ -133,7 +133,7 @@ interface AtomService {
      * 根据插件代码和版本号集合批量获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getTemplateAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomStatusInfo>>
+    fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomStatusInfo>>
 
     /**
      * 添加插件信息

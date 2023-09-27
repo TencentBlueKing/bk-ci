@@ -551,7 +551,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据插件代码和版本号集合批量获取插件信息
      */
-    override fun getTemplateAtomInfos(
+    override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomStatusInfo>> {
         val atomStatusInfos = mutableListOf<AtomStatusInfo>()
