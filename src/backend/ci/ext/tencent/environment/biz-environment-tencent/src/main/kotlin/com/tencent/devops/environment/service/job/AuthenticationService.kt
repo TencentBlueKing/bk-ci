@@ -48,7 +48,7 @@ class AuthenticationService {
         bkUsername: String
     ): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"userId\": \"${bkUsername}\"}"
+            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
         var url: String?
         when (operationName) {
