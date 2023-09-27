@@ -653,6 +653,6 @@
     id: "390987c50179422388dd742924fc2002"
     sender: "DevOps"
     title: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
-    body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
+    body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database,there are a total of [${pipelineNum}] simulations that have been successfully migrated."
   creator: "system"
   modifior: "system"

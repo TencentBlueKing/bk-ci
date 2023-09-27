@@ -220,14 +220,16 @@ class WorkspaceDao {
         queryType: QueryType? = QueryType.WEB,
         ips: List<String>?
     ): Long {
-        return dslContext.fetchCount(genFetchProjectWorkspaceCond(
-            dslContext = dslContext,
-            projectId = projectId,
-            workspaceName = workspaceName,
-            systemType = systemType,
-            queryType = queryType,
-            ips = ips
-        )).toLong()
+        return dslContext.fetchCount(
+            genFetchProjectWorkspaceCond(
+                dslContext = dslContext,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                systemType = systemType,
+                queryType = queryType,
+                ips = ips
+            )
+        ).toLong()
     }
 
     private fun TWorkspace.unionSelect(
@@ -362,25 +364,36 @@ class WorkspaceDao {
                 conditions.add(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             }
         }
+
         // 没有 ip 就不需要连表查询
-        return if (ips.isNullOrEmpty()) {
-            dslContext.selectFrom(TWorkspace.T_WORKSPACE)
-                .where(conditions)
-        } else {
-            conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-            conditions.add(
+        if (ips.isNullOrEmpty()) {
+            return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
+        }
+
+        conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+
+        var ipsCond = JooqUtils.jsonExtract(
+            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+            t2 = "\$.hostIP",
+            lower = false,
+            removeDoubleQuotes = true
+        ).like("%${ips.first()}%") as Condition
+        ips.drop(1).forEach { ip ->
+            ipsCond = ipsCond.or(
                 JooqUtils.jsonExtract(
                     t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
                     t2 = "\$.hostIP",
                     lower = false,
                     removeDoubleQuotes = true
-                ).`in`(ips)
+                ).like("%$ip%")
             )
-            val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
-            fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
-            dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
-                .where(conditions)
         }
+        conditions.add(ipsCond)
+
+        val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
+        fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
+        return dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+            .where(conditions)
     }
 
     /**

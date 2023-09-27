@@ -138,7 +138,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             (data.zoneId.isNullOrEmpty() || it.zoneId == data.zoneId) &&
                     (data.machineType.isNullOrEmpty() || it.machineType == data.machineType) &&
                     (data.ips.isNullOrEmpty() || data.ips?.contains(it.cgsIp) == true) &&
-                    (data.status == null || it.status == data.status)
+                    (data.status == null || it.status == data.status) &&
+                    (data.lockedFlag == null || it.locked == data.lockedFlag)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
