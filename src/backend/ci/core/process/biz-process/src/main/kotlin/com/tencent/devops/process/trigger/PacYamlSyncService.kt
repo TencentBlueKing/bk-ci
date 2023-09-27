@@ -61,7 +61,7 @@ class PacYamlSyncService @Autowired constructor(
      * 同步成功
      */
     fun syncSuccess(projectId: String, repoHashId: String, ciDirId: String, filePath: String) {
-        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath)
+        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath, syncStatus = RepoPacSyncStatusEnum.SUCCEED)
         client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
             projectId = projectId,
             repositoryHashId = repoHashId,
@@ -81,7 +81,12 @@ class PacYamlSyncService @Autowired constructor(
         reason: String,
         reasonDetail: String
     ) {
-        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath, reason = reason, reasonDetail = reasonDetail)
+        val syncFileInfo = RepoPacSyncFileInfo(
+            filePath = filePath,
+            syncStatus = RepoPacSyncStatusEnum.FAILED,
+            reason = reason,
+            reasonDetail = reasonDetail
+        )
         client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
             projectId = projectId,
             repositoryHashId = repoHashId,

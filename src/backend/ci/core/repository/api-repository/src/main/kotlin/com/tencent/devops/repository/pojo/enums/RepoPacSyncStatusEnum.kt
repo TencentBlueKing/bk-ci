@@ -33,5 +33,7 @@ enum class RepoPacSyncStatusEnum {
     SYNC,
 
     // 同步成功
-    SUCCEED;
+    SUCCEED,
+    // 同步失败
+    FAILED;
 }
