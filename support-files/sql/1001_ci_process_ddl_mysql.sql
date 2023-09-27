@@ -638,6 +638,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK` (
   `PROJECT_NAME` VARCHAR(128) DEFAULT NULL COMMENT '项目名称',
   `TASK_ID` VARCHAR(34) DEFAULT NULL COMMENT '任务id',
   `DELETE` BIT(1) DEFAULT 0 COMMENT '是否删除',
+  `EVENT_TYPE` varchar(32) DEFAULT NULL COMMENT '事件类型',
+  `EXTERNAL_ID` varchar(32) DEFAULT NULL COMMENT 'webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNI_INX_TPW_PROJECT_PIPELINE_TASK` (`PROJECT_ID`, `PIPELINE_ID`,`TASK_ID`),
   KEY `IDX_PROJECT_NAME_REPOSITORY_TYPE` (`PROJECT_NAME`, `REPOSITORY_TYPE`)
@@ -1169,5 +1171,48 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_RECORD_TASK` (
     `TIMESTAMPS` text COMMENT '运行中产生的时间戳集合',
     PRIMARY KEY (`BUILD_ID`,`TASK_ID`,`EXECUTE_COUNT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线构建任务表';
+
+
+-- ----------------------------
+-- Table structure for T_PIPELINE_TRIGGER_EVENT
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_EVENT`
+(
+    `PROJECT_ID`      varchar(64)  NOT NULL COMMENT '项目ID',
+    `EVENT_ID`        bigint(20)   NOT NULL COMMENT '事件ID',
+    `TRIGGER_TYPE`    varchar(64)  NOT NULL COMMENT '触发类型',
+    `EVENT_SOURCE`    varchar(255) NOT NULL COMMENT '触发源',
+    `EVENT_TYPE`      varchar(64)  NOT NULL COMMENT '事件类型',
+    `TRIGGER_USER`    varchar(100) NOT NULL COMMENT '触发用户',
+    `EVENT_DESC`      text         NOT NULL COMMENT '事件描述',
+    `HOOK_REQUEST_ID` bigint(20)   NULL COMMENT 'WEBHOOK请求ID',
+    `REQUEST_PARAMS`  text                  DEFAULT NULL COMMENT '请求参数',
+    `EVENT_TIME`      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件时间',
+    PRIMARY KEY (`EVENT_ID`, `EVENT_TIME`),
+    INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线触发事件表';
+
+-- ----------------------------
+-- Table structure for T_PIPELINE_TRIGGER_DETAIL
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
+(
+    `DETAIL_ID`      bigint(20)  NOT NULL COMMENT '事件明细ID',
+    `PROJECT_ID`     varchar(64) NOT NULL COMMENT '项目ID',
+    `EVENT_ID`       bigint(20)  NOT NULL COMMENT '事件ID',
+    `STATUS`         varchar(100)         DEFAULT NULL COMMENT '状态(success or failure)',
+    `PIPELINE_ID`    varchar(100)         DEFAULT NULL COMMENT '流水线ID',
+    `PIPELINE_NAME`  varchar(100)         DEFAULT NULL COMMENT '流水线名称',
+    `VERSION`        int                  DEFAULT NULL COMMENT '流水线版本号',
+    `BUILD_ID`       varchar(100)         DEFAULT NULL COMMENT '构建ID',
+    `BUILD_NUM`      varchar(100)         DEFAULT NULL COMMENT '构建编号',
+    `REASON`         varchar(100)         DEFAULT NULL COMMENT '失败原因',
+    `REASON_DETAIL`  text                 DEFAULT NULL COMMENT '原因详情',
+    `CREATE_TIME`    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`DETAIL_ID`, `CREATE_TIME`),
+    INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线触发事件明细表';
 
 SET FOREIGN_KEY_CHECKS = 1;

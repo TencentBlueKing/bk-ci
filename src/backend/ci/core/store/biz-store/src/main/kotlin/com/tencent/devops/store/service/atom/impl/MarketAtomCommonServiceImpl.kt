@@ -523,7 +523,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             AtomStatusEnum.AUDIT_REJECT.status.toByte(),
             AtomStatusEnum.RELEASED.status.toByte(),
             AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+            AtomStatusEnum.INIT.status.toByte()
         )
         // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
         return atomFinalStatusList.contains(newestAtomRecord.atomStatus)

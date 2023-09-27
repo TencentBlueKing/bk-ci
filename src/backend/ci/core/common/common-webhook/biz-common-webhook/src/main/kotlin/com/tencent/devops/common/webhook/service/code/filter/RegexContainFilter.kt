@@ -39,7 +39,8 @@ class RegexContainFilter(
     // 过滤器名字
     private val filterName: String,
     private val triggerOn: String,
-    private val included: List<String>
+    private val included: List<String>,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -48,6 +49,16 @@ class RegexContainFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
+        return buildFilterFailedReason(
+            action = {
+                filterAction()
+            },
+            response = response
+        )
+    }
+
+    @SuppressWarnings("ReturnCount")
+    private fun filterAction(): Boolean {
         if (included.isEmpty()) {
             return true
         }
@@ -61,5 +72,13 @@ class RegexContainFilter(
             }
         }
         return false
+    }
+
+    private fun buildFilterFailedReason(action: () -> Boolean, response: WebhookFilterResponse): Boolean {
+        val filterResult = action.invoke()
+        if (!filterResult && failedReason.isNotBlank()) {
+            response.failedReason = failedReason
+        }
+        return filterResult
     }
 }

@@ -27,8 +27,12 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
@@ -38,6 +42,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
 
 @CodeWebhookHandler
 class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
@@ -71,6 +76,29 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
 
     override fun getMessage(event: GithubCreateEvent): String? {
         return event.ref
+    }
+
+    override fun getEventDesc(event: GithubCreateEvent): String {
+        var i18Code = WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC
+        val linkUrl = if (event.ref_type == "tag") {
+            "https://github.com/${event.repository.fullName}/releases/tag/${event.ref}"
+        } else {
+            i18Code = WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC
+            "https://github.com/${event.repository.fullName}/tree/${event.ref}"
+        }
+        return I18Variable(
+            code = i18Code,
+            params = listOf(
+                getBranchName(event),
+                linkUrl,
+                getUsername(event),
+                DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubCreateEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun retrieveParams(

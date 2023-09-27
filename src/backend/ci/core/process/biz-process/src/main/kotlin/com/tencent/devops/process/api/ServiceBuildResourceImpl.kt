@@ -58,9 +58,11 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -72,7 +74,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -727,19 +730,27 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        return Result(
-            pipelineBuildFacadeService.buildManualStartup(
-                userId = userId,
-                startType = startType,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                values = values,
-                channelCode = channelCode,
-                buildNo = buildNo,
-                checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
-            )
+        val buildId = pipelineTriggerEventService.saveSpecificEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            requestParams = values,
+            userId = userId!!,
+            triggerType = PipelineTriggerType.SERVICE.name,
+            startAction = {
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = startType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = true
+                )
+            }
         )
+        return Result(buildId)
     }
 
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {

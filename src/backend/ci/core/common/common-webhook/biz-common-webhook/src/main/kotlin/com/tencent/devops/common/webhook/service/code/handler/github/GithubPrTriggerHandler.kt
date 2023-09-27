@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -78,9 +80,11 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -126,6 +130,22 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.title
     }
 
+    override fun getEventDesc(event: GithubPullRequestEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            params = listOf(
+                event.pullRequest.htmlUrl,
+                event.pullRequest.number.toString(),
+                getUsername(event),
+                event.action
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubPullRequestEvent): String {
+        return event.repository.id.toString()
+    }
+
     override fun getEnv(event: GithubPullRequestEvent): Map<String, Any> {
         return mapOf(GITHUB_PR_NUMBER to event.number)
     }
@@ -138,12 +158,12 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.base.repo.cloneUrl
     }
 
-    override fun preMatch(event: GithubPullRequestEvent): ScmWebhookMatcher.MatchResult {
+    override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
         if (!(event.action == "opened" || event.action == "reopened" || event.action == "synchronize")) {
             logger.info("Github pull request no open or update")
-            return ScmWebhookMatcher.MatchResult(false)
+            return WebhookMatchResult(false)
         }
-        return ScmWebhookMatcher.MatchResult(true)
+        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(
@@ -153,7 +173,39 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        return emptyList()
+        with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(getUsername(event))
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(getUsername(event))
+                ).toJsonStr()
+            )
+            val targetBranch = getBranchName(event)
+            val targetBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = targetBranch,
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(targetBranch)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(targetBranch)
+                ).toJsonStr()
+            )
+            return listOf(userFilter, targetBranchFilter)
+        }
     }
 
     override fun retrieveParams(

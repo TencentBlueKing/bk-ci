@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -79,6 +81,21 @@ class P4ShelveTriggerHandler(
     }
 
     override fun getMessage(event: P4ShelveEvent) = event.description
+
+    override fun getEventDesc(event: P4ShelveEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.P4_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                getUsername(event),
+                getFormatEventType(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: P4ShelveEvent): String {
+        return event.p4Port
+    }
 
     override fun getWebhookFilters(
         event: P4ShelveEvent,
@@ -137,7 +154,15 @@ class P4ShelveTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
-                            caseSensitive = caseSensitive
+                            caseSensitive = caseSensitive,
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
@@ -154,5 +179,12 @@ class P4ShelveTriggerHandler(
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
         return startParams
+    }
+
+    private fun getFormatEventType(event: P4ShelveEvent) = when (event.eventType) {
+        CodeEventType.SHELVE_COMMIT.name -> P4ShelveEvent.SHELVE_COMMIT
+        CodeEventType.SHELVE_SUBMIT.name -> P4ShelveEvent.SHELVE_SUBMIT
+        CodeEventType.SHELVE_DELETE.name -> P4ShelveEvent.SHELVE_DELETE
+        else -> event.eventType
     }
 }
