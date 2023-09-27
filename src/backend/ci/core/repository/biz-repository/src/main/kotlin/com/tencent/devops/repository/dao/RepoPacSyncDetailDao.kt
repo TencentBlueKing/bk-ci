@@ -88,6 +88,7 @@ class RepoPacSyncDetailDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
                 .and(CI_DIR_ID.eq(ciDirId))
+                .execute()
         }
     }
 

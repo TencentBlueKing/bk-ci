@@ -146,37 +146,33 @@ class PacYamlResourceService @Autowired constructor(
         logger.info("create yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
-        try {
-            val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
-                userId = action.data.setting.enableUser,
+        val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
+            userId = action.data.setting.enableUser,
+            projectId = projectId,
+            yml = yamlContent.content,
+            branchName = branch,
+            isDefaultBranch = branch == action.data.context.defaultBranch
+        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.save(
+                dslContext = transactionContext,
                 projectId = projectId,
-                yml = yamlContent.content,
-                branchName = branch,
-                isDefaultBranch = branch == action.data.context.defaultBranch
+                repoHashId = action.data.setting.repoHashId,
+                filePath = yamlFile.yamlPath,
+                pipelineId = deployPipelineResult.pipelineId,
+                userId = action.data.getUserId()
             )
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                pipelineYamlInfoDao.save(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = action.data.setting.repoHashId,
-                    filePath = yamlFile.yamlPath,
-                    pipelineId = deployPipelineResult.pipelineId,
-                    userId = action.data.getUserId()
-                )
-                pipelineYamlVersionDao.save(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = action.data.setting.repoHashId,
-                    filePath = yamlFile.yamlPath,
-                    blobId = yamlFile.blobId!!,
-                    pipelineId = deployPipelineResult.pipelineId,
-                    version = deployPipelineResult.version,
-                    versionName = deployPipelineResult.versionName!!
-                )
-            }
-        } catch (ignore: Exception) {
-            logger.error("Failed to create yaml pipeline|$projectId|$yamlFile", ignore)
+            pipelineYamlVersionDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = action.data.setting.repoHashId,
+                filePath = yamlFile.yamlPath,
+                blobId = yamlFile.blobId!!,
+                pipelineId = deployPipelineResult.pipelineId,
+                version = deployPipelineResult.version,
+                versionName = deployPipelineResult.versionName!!
+            )
         }
     }
 
@@ -189,27 +185,23 @@ class PacYamlResourceService @Autowired constructor(
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
-        try {
-            val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
-                userId = action.data.setting.enableUser,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                yml = yamlContent.content,
-                branchName = branch,
-                isDefaultBranch = branch == action.data.context.defaultBranch
-            )
-            pipelineYamlVersionDao.save(
-                dslContext = dslContext,
-                projectId = projectId,
-                repoHashId = action.data.setting.repoHashId,
-                filePath = yamlFile.yamlPath,
-                blobId = yamlFile.blobId!!,
-                pipelineId = deployPipelineResult.pipelineId,
-                version = deployPipelineResult.version,
-                versionName = deployPipelineResult.versionName!!
-            )
-        } catch (ignore: Exception) {
-            logger.error("Failed to update yaml pipeline|$projectId|$yamlFile", ignore)
-        }
+        val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
+            userId = action.data.setting.enableUser,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            yml = yamlContent.content,
+            branchName = branch,
+            isDefaultBranch = branch == action.data.context.defaultBranch
+        )
+        pipelineYamlVersionDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = action.data.setting.repoHashId,
+            filePath = yamlFile.yamlPath,
+            blobId = yamlFile.blobId!!,
+            pipelineId = deployPipelineResult.pipelineId,
+            version = deployPipelineResult.version,
+            versionName = deployPipelineResult.versionName!!
+        )
     }
 }

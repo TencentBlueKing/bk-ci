@@ -108,6 +108,37 @@ class RepositoryPacService @Autowired constructor(
         )
     }
 
+    fun refresh(userId: String, projectId: String, repositoryHashId: String) {
+        logger.info("refresh pac|$userId|$projectId|$repositoryHashId")
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        // 权限校验
+        repositoryService.validatePermission(
+            user = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            authPermission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
+
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
+        codeRepositoryService.pacCheckEnabled(
+            projectId = projectId,
+            userId = userId,
+            repository = repository
+        )
+        client.get(ServicePipelinePacResource::class).enable(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repositoryHashId,
+            scmType = ScmType.valueOf(repository.type)
+        )
+    }
+
     fun disablePac(
         userId: String,
         projectId: String,

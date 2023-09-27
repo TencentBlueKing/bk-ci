@@ -64,6 +64,15 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun refresh(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+        repositoryPacService.refresh(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId
+        )
+        return Result(true)
+    }
+
     override fun disablePac(
         userId: String,
         projectId: String,
