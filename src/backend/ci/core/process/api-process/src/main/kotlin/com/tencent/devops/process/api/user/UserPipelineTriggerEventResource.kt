@@ -136,6 +136,9 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("事件ID", required = false)
         @QueryParam("eventId")
         eventId: Long?,
+        @ApiParam("流水线名称", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String?,
         @ApiParam("开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,

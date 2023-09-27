@@ -154,6 +154,7 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?,
         eventId: Long?,
+        pipelineName:String?,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -173,6 +174,7 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerUser = triggerUser,
             pipelineId = pipelineId,
             eventId = eventId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -185,6 +187,7 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerUser = triggerUser,
             pipelineId = pipelineId,
             eventId = eventId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime,
             limit = sqlLimit.limit,

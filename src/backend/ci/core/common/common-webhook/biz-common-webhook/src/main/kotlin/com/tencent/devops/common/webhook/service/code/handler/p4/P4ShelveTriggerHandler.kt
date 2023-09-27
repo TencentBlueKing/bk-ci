@@ -87,8 +87,8 @@ class P4ShelveTriggerHandler(
             code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                getFormatEventType(event),
-                getUsername(event)
+                getUsername(event),
+                getFormatEventType(event)
             )
         ).toJsonStr()
     }
