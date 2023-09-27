@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataAction
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataScope
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -38,7 +39,11 @@ class DesktopWorkspaceService @Autowired constructor(
                 logger.debug("updateCCHost projectAndIps {}", projectAndIps)
 
                 projectAndIps.forEach { (projectId, ips) ->
-                    bkccService.updateHost(ips, workspaceCommon.genWorkspaceCCInfo(projectId))
+                    if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                        bkccService.updateHost(ips, mapOf("devx_meta" to ""))
+                    } else {
+                        bkccService.updateHost(ips, workspaceCommon.genWorkspaceCCInfo(projectId))
+                    }
                 }
 
                 return true
@@ -49,7 +54,11 @@ class DesktopWorkspaceService @Autowired constructor(
                     return false
                 }
 
-                bkccService.updateHost(data.host!!, workspaceCommon.genWorkspaceCCInfo(data.projectId!!))
+                if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                    bkccService.updateHost(data.host!!, mapOf("devx_meta" to ""))
+                } else {
+                    bkccService.updateHost(data.host!!, workspaceCommon.genWorkspaceCCInfo(data.projectId!!))
+                }
 
                 return true
             }

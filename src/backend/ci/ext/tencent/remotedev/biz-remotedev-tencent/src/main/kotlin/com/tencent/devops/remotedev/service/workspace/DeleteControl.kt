@@ -381,7 +381,7 @@ class DeleteControl @Autowired constructor(
         val hostIdSub = nodeIp?.split(".")
         if (!hostIdSub.isNullOrEmpty()) {
             val hostId = hostIdSub.subList(1, hostIdSub.size).joinToString { "." }
-            bkccService.updateHost(setOf(hostId), workspaceCommon.genWorkspaceCCInfo(projectId))
+            bkccService.updateHost(setOf(hostId), mapOf("devx_meta" to ""))
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

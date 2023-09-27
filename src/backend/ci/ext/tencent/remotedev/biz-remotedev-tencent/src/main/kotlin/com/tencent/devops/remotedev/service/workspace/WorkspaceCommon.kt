@@ -552,6 +552,6 @@ class WorkspaceCommon @Autowired constructor(
     fun genWorkspaceCCInfo(
         projectId: String
     ): Map<String, Any> {
-        return mapOf("devx_meta" to mapOf("projectId" to projectId))
+        return mapOf("devx_meta" to listOf(mapOf("projectId" to projectId)))
     }
 }
