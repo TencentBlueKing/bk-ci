@@ -35,10 +35,12 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.pojo.transfer.ElementInsertBody
 import com.tencent.devops.process.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.process.pojo.transfer.PositionResponse
+import com.tencent.devops.process.pojo.transfer.TransferVMBaseOS
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
@@ -65,7 +67,7 @@ class YamlIndexService @Autowired constructor(
     ): ElementInsertResponse {
         val pYml = YamlUtil.getObjectMapper().readValue(data.yaml, object : TypeReference<ITemplateFilter>() {})
         val position = position(
-            userId = userId,line = line, column = column, yaml = data.yaml, preYaml = pYml
+            userId = userId, line = line, column = column, yaml = data.yaml, preYaml = pYml
         )
         val yml = elementTransfer.element2YamlStep(data.data, projectId) ?: throw ErrorCodeException(errorCode = "")
         val index = TransferMapper.indexYaml(position = position, pYml = pYml, yml = yml, type = data.type)
@@ -122,6 +124,16 @@ class YamlIndexService @Autowired constructor(
                     stepIndex = index
                 }
             }
+
+            ITemplateFilter::finally.name -> {
+                val next = nodeIndex.next ?: return PositionResponse(
+                    type = PositionResponse.PositionType.STAGE,
+                    stageIndex = -1
+                )
+                return checkStage(userId, preYaml.finally!!, next.next).apply {
+                    stageIndex = -1
+                }
+            }
         }
         return PositionResponse(type = PositionResponse.PositionType.SETTING)
     }
@@ -155,17 +167,22 @@ class YamlIndexService @Autowired constructor(
         nodeIndex: TransferMapper.NodeIndex?
     ): PositionResponse {
         val runsOn = ScriptYmlUtils.formatRunsOn(job["runs-on"])
-        val (_, os) = dispatchTransfer.makeDispatchType(Job(runsOn = runsOn), null)
+        val baseOs = if (runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
+            TransferVMBaseOS.BUILD_LESS
+        } else {
+            val (_, os) = dispatchTransfer.makeDispatchType(Job(runsOn = runsOn), null)
+            TransferVMBaseOS.valueOf(os.name)
+        }
         if (nodeIndex?.key == PreJob::steps.name) {
             val steps = job[PreJob::steps.name] as List<Any>
             val next = nodeIndex.next ?: return PositionResponse(type = PositionResponse.PositionType.JOB)
             val index = next.index ?: throw PacYamlNotValidException(nodeIndex.toString())
             return checkStep(userId, steps[index] as Map<String, Any>, next.next).apply {
                 stepIndex = index
-                jobBaseOs = os
+                jobBaseOs = baseOs
             }
         }
-        return PositionResponse(type = PositionResponse.PositionType.JOB, jobBaseOs = os)
+        return PositionResponse(type = PositionResponse.PositionType.JOB, jobBaseOs = baseOs)
     }
 
     fun checkStep(

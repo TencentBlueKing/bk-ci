@@ -15,9 +15,11 @@ import com.github.difflib.DiffUtils
 import com.github.difflib.algorithm.myers.MeyersDiffWithLinearSpace
 import com.github.difflib.patch.DeltaType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.transfer.ElementInsertBody
 import com.tencent.devops.process.pojo.transfer.PositionResponse
 import com.tencent.devops.process.pojo.transfer.TransferMark
@@ -650,21 +652,39 @@ object TransferMapper {
         type: ElementInsertBody.ElementInsertType
     ): NodeIndex {
         return when (position.type) {
-            PositionResponse.PositionType.STEP -> addInYamlSteps(position, pYml, yml, type)
-            PositionResponse.PositionType.JOB, PositionResponse.PositionType.STAGE -> addInYamlJob(position, pYml, yml)
-            else -> addInYamlLastStage(pYml, yml)
+            PositionResponse.PositionType.STEP -> indexInYamlSteps(position, pYml, yml, type)
+            PositionResponse.PositionType.JOB, PositionResponse.PositionType.STAGE -> indexInYamlJob(
+                positionResponse = position,
+                preYaml = pYml,
+                preStep = yml,
+                type = type
+            )
+
+            else -> addInYamlLastStage(pYml, yml, type)
         }
     }
 
     /*
     * 光标在一个已有的 step 配置区域，则在该 step 之后 添加一个新的 step
     */
-    private fun addInYamlSteps(
+    private fun indexInYamlSteps(
         positionResponse: PositionResponse,
         preYaml: ITemplateFilter,
         preStep: PreStep,
         type: ElementInsertBody.ElementInsertType = ElementInsertBody.ElementInsertType.INSERT
     ): NodeIndex {
+        if (positionResponse.stageIndex == -1) {
+            return NodeIndex(
+                key = ITemplateFilter::finally.name,
+                next = indexInJob(
+                    positionResponse,
+                    preYaml.finally!!,
+                ) { steps ->
+                    nodeIndexInStep(type, steps, positionResponse, preStep)
+                }
+            )
+        }
+
         if (positionResponse.stageIndex != null) {
             return NodeIndex(
                 key = ITemplateFilter::stages.name,
@@ -726,17 +746,44 @@ object TransferMapper {
     /*
     * 光标在 job 配置区域，则在 job下的 steps 末尾添加一个新的 step
     */
-    private fun addInYamlJob(
+    private fun indexInYamlJob(
         positionResponse: PositionResponse,
         preYaml: ITemplateFilter,
-        preStep: PreStep
+        preStep: PreStep,
+        type: ElementInsertBody.ElementInsertType
     ): NodeIndex {
+        if (type != ElementInsertBody.ElementInsertType.INSERT) {
+            throw PipelineTransferException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = TransferMessageCode.ElementUpdateWrongPath,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    defaultMessage = TransferMessageCode.ElementUpdateWrongPath
+                )
+            )
+        }
+        if (positionResponse.stageIndex == -1) {
+            return NodeIndex(
+                key = ITemplateFilter::finally.name,
+                next = indexInJob(
+                    positionResponse = positionResponse,
+                    jobs = preYaml.finally!!,
+                    last = true
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+
         if (positionResponse.stageIndex != null) {
             return NodeIndex(
                 key = ITemplateFilter::stages.name,
                 next = indexInStage(
                     positionResponse,
                     preYaml.stages!!,
+                    last = true
                 ) { steps ->
                     steps.add(preStep)
                     NodeIndex(
@@ -751,7 +798,8 @@ object TransferMapper {
                 key = ITemplateFilter::jobs.name,
                 next = indexInJob(
                     positionResponse,
-                    preYaml.jobs!!
+                    preYaml.jobs!!,
+                    last = true
                 ) { steps ->
                     steps.add(preStep)
                     NodeIndex(
@@ -768,8 +816,34 @@ object TransferMapper {
     */
     private fun addInYamlLastStage(
         preYaml: ITemplateFilter,
-        preStep: PreStep
+        preStep: PreStep,
+        type: ElementInsertBody.ElementInsertType
     ): NodeIndex {
+        if (type != ElementInsertBody.ElementInsertType.INSERT) {
+            throw PipelineTransferException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = TransferMessageCode.ElementUpdateWrongPath,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    defaultMessage = TransferMessageCode.ElementUpdateWrongPath
+                )
+            )
+        }
+        if (preYaml.finally != null) {
+            return NodeIndex(
+                key = ITemplateFilter::finally.name,
+                next = indexInJob(
+                    positionResponse = PositionResponse(),
+                    jobs = preYaml.finally!!,
+                    last = true
+                ) { steps ->
+                    steps.add(preStep)
+                    NodeIndex(
+                        index = steps.size - 1
+                    )
+                }
+            )
+        }
+
         if (preYaml.stages != null) {
             return NodeIndex(
                 key = ITemplateFilter::stages.name,
@@ -787,9 +861,6 @@ object TransferMapper {
         }
 
         if (preYaml.jobs != null) {
-            val job = preYaml.jobs!!.values.last() as LinkedHashMap<String, Any>
-            val steps = job[PreJob::steps.name] as ArrayList<Any>
-            steps.add(preStep)
             return NodeIndex(
                 key = ITemplateFilter::jobs.name,
                 next = indexInJob(
@@ -818,9 +889,9 @@ object TransferMapper {
         positionResponse: PositionResponse,
         stages: ArrayList<Map<String, Any>>,
         last: Boolean = false,
-        action: (steps: ArrayList<Any>) -> NodeIndex
+        action: (steps: ArrayList<Any>) -> NodeIndex?
     ): NodeIndex {
-        val index = if (last) stages.lastIndex else positionResponse.stageIndex!!
+        val index = if (last && positionResponse.stageIndex == null) stages.lastIndex else positionResponse.stageIndex!!
         val jobs = stages[index][PreStage::jobs.name] as LinkedHashMap<String, Any>
         return NodeIndex(
             index = index,
@@ -835,9 +906,10 @@ object TransferMapper {
         positionResponse: PositionResponse,
         jobs: LinkedHashMap<String, Any>,
         last: Boolean = false,
-        action: (steps: ArrayList<Any>) -> NodeIndex
-    ): NodeIndex {
-        val key = if (last) jobs.entries.last().key else positionResponse.jobId
+        action: (steps: ArrayList<Any>) -> NodeIndex?
+    ): NodeIndex? {
+        val key = if (last && positionResponse.jobId == null) jobs.entries.last().key else positionResponse.jobId
+            ?: return null
         val job = jobs[key] as LinkedHashMap<String, Any>
         val steps = job[PreJob::steps.name] as ArrayList<Any>
         return NodeIndex(
@@ -848,8 +920,8 @@ object TransferMapper {
 
     private fun indexInStep(
         steps: ArrayList<Any>,
-        action: (steps: ArrayList<Any>) -> NodeIndex
-    ): NodeIndex {
+        action: (steps: ArrayList<Any>) -> NodeIndex?
+    ): NodeIndex? {
         return action(steps)
     }
 }
