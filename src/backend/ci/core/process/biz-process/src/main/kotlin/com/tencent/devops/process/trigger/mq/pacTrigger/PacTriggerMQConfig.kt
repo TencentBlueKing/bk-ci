@@ -52,7 +52,7 @@ class PacTriggerMQConfig {
      * pac流水线触发交换机
      */
     @Bean
-    fun pacExchange(): DirectExchange {
+    fun pacPipelineExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, true, false)
         directExchange.isDelayed = true
         return directExchange
@@ -64,9 +64,9 @@ class PacTriggerMQConfig {
     @Bean
     fun pacEnableQueueBind(
         @Autowired pacEnableQueue: Queue,
-        @Autowired pacExchange: DirectExchange
+        @Autowired pacPipelineExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacEnableQueue).to(pacExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
+        return BindingBuilder.bind(pacEnableQueue).to(pacPipelineExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
     }
 
     @Bean
@@ -74,14 +74,14 @@ class PacTriggerMQConfig {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pacEnableQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pacTriggerListener: PacTriggerListener,
+        @Autowired pacExchange: PacTriggerListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
             queue = pacEnableQueue,
             rabbitAdmin = rabbitAdmin,
-            buildListener = pacTriggerListener,
+            buildListener = pacExchange,
             messageConverter = messageConverter,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
@@ -97,9 +97,9 @@ class PacTriggerMQConfig {
     @Bean
     fun pacTriggerQueueBind(
         @Autowired pacTriggerQueue: Queue,
-        @Autowired pacTriggerExchange: DirectExchange
+        @Autowired pacPipelineExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacTriggerQueue).to(pacTriggerExchange).with(MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
+        return BindingBuilder.bind(pacTriggerQueue).to(pacPipelineExchange).with(MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
     }
 
     @Bean
