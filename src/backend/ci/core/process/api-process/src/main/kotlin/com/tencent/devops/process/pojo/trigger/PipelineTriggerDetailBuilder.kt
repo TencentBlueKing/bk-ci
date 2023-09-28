@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.trigger
 
 class PipelineTriggerDetailBuilder {
     private lateinit var projectId: String
+    private var detailId: Long? = null
     private var eventId: Long? = null
     private var eventSource: String? = null
     private var status: String = ""
@@ -42,6 +43,10 @@ class PipelineTriggerDetailBuilder {
 
     fun projectId(projectId: String) = apply {
         this.projectId = projectId
+    }
+
+    fun detailId(detailId: Long) = apply {
+        this.detailId = detailId
     }
 
     fun eventId(eventId: Long) = apply {

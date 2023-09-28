@@ -70,6 +70,7 @@ class PacYamlBuildService @Autowired constructor(
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
         val builder = PipelineTriggerDetailBuilder()
+            .detailId(pipelineTriggerEventService.getDetailId())
             .projectId(projectId)
             .pipelineId(pipelineYamlVersion.pipelineId)
             .eventId(action.data.context.eventId!!)
