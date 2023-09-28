@@ -22,14 +22,17 @@ object NetworkUtil {
         bkAuthorization: String,
         jobCloudReq: Class<T>?
     ): JobCloudResp<U> {
-        var request: Request?
         when (httpType) {
             "post" -> {
-                request = createPostRequest(url, bkAuthorization, jobCloudReq)
+                val request = createPostRequest(url, bkAuthorization, jobCloudReq)
+                logger.info("[executeHttpRequest] post request: $request")
+                return executeHttpRequest(operateName, request)
             }
 
             "get" -> {
-                request = createGetRequest(url, bkAuthorization)
+                val request = createGetRequest(url, bkAuthorization)
+                logger.info("[executeHttpRequest] get request: $request")
+                return executeHttpRequest(operateName, request)
             }
 
             else -> {
@@ -43,7 +46,6 @@ object NetworkUtil {
                 )
             }
         }
-        return executeHttpRequest(operateName, request)
     }
 
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
