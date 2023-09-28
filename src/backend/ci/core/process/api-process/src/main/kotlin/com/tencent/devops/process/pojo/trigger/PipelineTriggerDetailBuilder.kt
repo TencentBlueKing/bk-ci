@@ -94,6 +94,7 @@ class PipelineTriggerDetailBuilder {
     fun build(): PipelineTriggerDetail {
         return PipelineTriggerDetail(
             projectId = projectId,
+            detailId = detailId,
             eventId = eventId!!,
             status = status,
             pipelineId = pipelineId,
