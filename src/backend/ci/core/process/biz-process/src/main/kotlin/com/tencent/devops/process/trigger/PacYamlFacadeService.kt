@@ -144,9 +144,13 @@ class PacYamlFacadeService @Autowired constructor(
             logger.warn("pac trigger|request event not support|$eventObject")
             return
         }
+        val externalId = action.data.eventCommon.gitProjectId
         val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
-            externalId = action.data.eventCommon.gitProjectId, scmType = scmType
-        ).data ?: return
+            externalId = externalId, scmType = scmType
+        ).data ?: run {
+            logger.info("pac yaml trigger|repository not enable pac|$externalId|$scmType")
+            return
+        }
         val setting = PacRepoSetting(repository = repository)
         action.data.setting = setting
         action.initCacheData()

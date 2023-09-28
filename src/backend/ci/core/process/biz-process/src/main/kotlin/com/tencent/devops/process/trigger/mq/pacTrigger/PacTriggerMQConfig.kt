@@ -52,21 +52,54 @@ class PacTriggerMQConfig {
      * pac流水线触发交换机
      */
     @Bean
-    fun pacTriggerExchange(): DirectExchange {
+    fun pacExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
 
     @Bean
-    fun pacTriggerQueue() = Queue(MQ.QUEUE_PAC_ENABLE_PIPELINE_EVENT)
+    fun pacEnableQueue() = Queue(MQ.QUEUE_PAC_ENABLE_PIPELINE_EVENT)
+
+    @Bean
+    fun pacEnableQueueBind(
+        @Autowired pacEnableQueue: Queue,
+        @Autowired pacExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pacEnableQueue).to(pacExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
+    }
+
+    @Bean
+    fun pacEnableContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pacEnableQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired pacTriggerListener: PacTriggerListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pacEnableQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = pacTriggerListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20,
+            prefetchCount = 1
+        )
+    }
+
+    @Bean
+    fun pacTriggerQueue() = Queue(MQ.QUEUE_PAC_TRIGGER_PIPELINE_EVENT)
 
     @Bean
     fun pacTriggerQueueBind(
         @Autowired pacTriggerQueue: Queue,
         @Autowired pacTriggerExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacTriggerQueue).to(pacTriggerExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
+        return BindingBuilder.bind(pacTriggerQueue).to(pacTriggerExchange).with(MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
     }
 
     @Bean
@@ -86,7 +119,7 @@ class PacTriggerMQConfig {
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 30,
-            maxConcurrency = 30,
+            maxConcurrency = 50,
             prefetchCount = 1
         )
     }
