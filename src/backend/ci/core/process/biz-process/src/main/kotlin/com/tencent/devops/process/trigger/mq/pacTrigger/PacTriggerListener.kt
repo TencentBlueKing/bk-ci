@@ -66,6 +66,7 @@ class PacTriggerListener @Autowired constructor(
     }
 
     private fun enablePac(projectId: String, event: PacYamlEnableEvent) {
+        logger.info("receive enable pac|$projectId|${event.actionSetting}")
         val action = try {
             val action = actionFactory.loadEnableEvent(
                 eventStr = event.eventStr,
@@ -97,6 +98,7 @@ class PacTriggerListener @Autowired constructor(
     }
 
     private fun trigger(projectId: String, event: PacYamlTriggerEvent) {
+        logger.info("receive pac yaml trigger|$projectId|${event.actionSetting}")
         val action = try {
             val action = actionFactory.loadByData(
                 eventStr = event.eventStr,

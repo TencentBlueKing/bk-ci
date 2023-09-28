@@ -138,6 +138,7 @@ class PacYamlFacadeService @Autowired constructor(
         hookRequestId: Long,
         eventTime: LocalDateTime
     ) {
+        logger.info("pac yaml trigger|$hookRequestId|$scmType")
         val action = eventActionFactory.load(eventObject)
         if (action == null) {
             logger.warn("pac trigger|request event not support|$eventObject")
@@ -155,7 +156,7 @@ class PacYamlFacadeService @Autowired constructor(
         val yamlPathList = action.getYamlPathList()
         // 如果没有Yaml文件则不初始化
         if (yamlPathList.isEmpty()) {
-            logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
+            logger.warn("pac yaml trigger not found ci yaml from git|$projectId|$repoHashId")
             return
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
