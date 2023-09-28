@@ -8,13 +8,11 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
-class NetworkUtil @Autowired constructor(
-    val objectMapper: ObjectMapper
-) {
+object NetworkUtil {
+    private const val LOG_OUTPUT_MAX_LENGTH = 4000
     val logger = LoggerFactory.getLogger(NetworkUtil::class.java)
 
     fun <T, U> executeHttpRequest(
@@ -51,17 +49,14 @@ class NetworkUtil @Autowired constructor(
     }
 
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
-        val requestBody = objectMapper.writeValueAsString(jobCloudReq)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val requestBody = RequestBody.create(
+            "application/json;charset=utf-8".toMediaTypeOrNull(),
+            ObjectMapper().writeValueAsString(jobCloudReq)
+        )
+        logger.info("[createPostRequest]requestBody: $requestBody")
         return Request.Builder()
             .url(url)
-            .post(
-//                RequestBody.create(
-//                    "application/json;charset=utf-8".toMediaTypeOrNull(),
-//                    ObjectMapper().writeValueAsString(jobCloudReq)
-//                )
-                requestBody
-            )
+            .post(requestBody)
             .addHeader("Content-Type", "application/json")
             .addHeader("X-Bkapi-Authorization", bkAuthorization)
             .build()
@@ -80,13 +75,13 @@ class NetworkUtil @Autowired constructor(
             try {
                 val responseBody = response.body?.string()
                 val requestLog =
-                    if (request.toString().length > Companion.LOG_OUTPUT_MAX_LENGTH)
-                        request.toString().substring(0, Companion.LOG_OUTPUT_MAX_LENGTH)
+                    if (request.toString().length > LOG_OUTPUT_MAX_LENGTH)
+                        request.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                     else
                         request.toString()
                 val responseLog =
-                    if (responseBody.toString().length > Companion.LOG_OUTPUT_MAX_LENGTH)
-                        responseBody.toString().substring(0, Companion.LOG_OUTPUT_MAX_LENGTH)
+                    if (responseBody.toString().length > LOG_OUTPUT_MAX_LENGTH)
+                        responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                     else
                         responseBody.toString()
                 logger.info("[$operateName] requestBody: $requestLog, responseBody: $responseLog")
@@ -111,9 +106,5 @@ class NetworkUtil @Autowired constructor(
                 throw exception
             }
         }
-    }
-
-    companion object {
-        private const val LOG_OUTPUT_MAX_LENGTH = 4000
     }
 }
