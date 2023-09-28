@@ -6,10 +6,12 @@ import org.springframework.stereotype.Service
 
 @Service("AuthenticationService")
 class AuthenticationService {
-    @Value("\${auth.appCode:}")
+//    @Value("\${auth.appCode:}")
+    @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 
-    @Value("\${auth.appSecret:}")
+//    @Value("\${auth.appSecret:}")
+    @Value("\${job.bkAppSecret:}")
     private val bkAppSecret = ""
 
     @Value("\${job.bkScopeType:#{null}}")
