@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
@@ -118,9 +119,9 @@ class ExtItemServiceDao {
         }
         val sql = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("serviceName")!!.asc())
         return if (null != page && null != pageSize) {
-            sql.limit((page - 1) * pageSize, pageSize).fetch()
+            sql.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            sql.fetch()
+            sql.skipCheck().fetch()
         }
     }
 
