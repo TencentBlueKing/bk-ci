@@ -50,6 +50,7 @@ class TGitWebhookEventParser(
     override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
         val eventType = request.headers?.get("X-Event")
         val body = request.body
+        logger.info("Trigger code git build($body|$eventType)")
         return try {
             if (eventType == "Review Hook") {
                 objectMapper.readValue<GitReviewEvent>(body)
