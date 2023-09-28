@@ -31,6 +31,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -61,6 +62,7 @@ class PipelineYamlVersionDao {
                 FILE_PATH,
                 BLOB_ID,
                 PIPELINE_ID,
+                STATUS,
                 VERSION,
                 VERSION_NAME,
                 CREATOR,
@@ -73,8 +75,53 @@ class PipelineYamlVersionDao {
                 filePath,
                 blobId,
                 pipelineId,
+                RepoPacSyncStatusEnum.SUCCEED.name,
                 version,
                 versionName,
+                userId,
+                userId,
+                now,
+                now
+            ).execute()
+        }
+    }
+
+    fun saveFailed(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        blobId: String,
+        pipelineId: String,
+        reason: String,
+        reasonDetail: String,
+        userId: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                REPO_HASH_ID,
+                FILE_PATH,
+                BLOB_ID,
+                PIPELINE_ID,
+                STATUS,
+                REASON,
+                REASON_DETAIL,
+                CREATOR,
+                MODIFIER,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                projectId,
+                repoHashId,
+                filePath,
+                blobId,
+                pipelineId,
+                RepoPacSyncStatusEnum.FAILED.name,
+                reason,
+                reasonDetail,
                 userId,
                 userId,
                 now,
