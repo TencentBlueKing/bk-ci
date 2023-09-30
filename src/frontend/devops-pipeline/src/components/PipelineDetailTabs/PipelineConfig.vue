@@ -7,25 +7,24 @@
                 ref="versionSideslider"
                 @change="handleVersionChange"
             />
-            <template v-if="!isCurrentVersion">
-                <RollbackEntry
-                    :version="activePipelineVersion"
-                    :version-name="activePipelineVersionName"
-                    :draft-version-name="draftVersionName"
-                >
-                    <i class="devops-icon icon-rollback" />
-                    {{$t('rollback')}}
-                </RollbackEntry>
-                <VersionDiffEntry
-                    :version="activePipelineVersion"
-                    :release-version="releaseVersion"
-                    :current-yaml="pipelineYaml"
-                >
-                    <i class="devops-icon icon-diff" />
-                    {{$t('diff')}}
-                </VersionDiffEntry>
-            </template>
-
+            <RollbackEntry
+                v-if="canRollBack"
+                :version="activePipelineVersion"
+                :version-name="activePipelineVersionName"
+                :draft-version-name="draftVersionName"
+            >
+                <i class="devops-icon icon-rollback" />
+                {{$t('rollback')}}
+            </RollbackEntry>
+            <VersionDiffEntry
+                v-if="!isCurrentVersion"
+                :version="activePipelineVersion"
+                :latest-version="latestVersion"
+                :current-yaml="pipelineYaml"
+            >
+                <i class="devops-icon icon-diff" />
+                {{$t('diff')}}
+            </VersionDiffEntry>
         </header>
         <section class="pipeline-model-content">
             <YamlEditor
@@ -90,7 +89,8 @@
                 'pipelineInfo'
             ]),
             ...mapState('atom', [
-                'pipelineYaml'
+                'pipelineYaml',
+                'pipeline'
             ]),
             ...mapGetters({
                 pipelineWithoutTrigger: 'atom/pipelineWithoutTrigger',
@@ -99,14 +99,17 @@
             pipelineType () {
                 return this.$route.params.type
             },
-            releaseVersion () {
+            latestVersion () {
                 return this.pipelineInfo?.version
             },
-            releaseVersionName () {
+            latestVersionName () {
                 return this.pipelineInfo?.versionName
             },
+            canRollBack () {
+                return this.activePipelineVersion !== this.pipelineInfo?.version && !this.pipeline?.canDebug
+            },
             isCurrentVersion () {
-                return this.activePipelineVersion === this.releaseVersion
+                return this.activePipelineVersion === this.pipelineInfo?.version
             },
             draftVersionName () {
                 return this.$refs?.versionSideslider?.getDraftVersion()
@@ -147,20 +150,22 @@
                     this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType] ?? []
                 }
             },
-            releaseVersion (version) {
+            latestVersion (version) {
                 this.activePipelineVersion = version
                 this.$nextTick(() => {
                     this.init()
                 })
             },
-            releaseVersionName (versionName) {
+            latestVersionName (versionName) {
                 this.activePipelineVersionName = versionName
             }
         },
         created () {
-            if (this.releaseVersion) {
-                this.activePipelineVersion = this.releaseVersion
-                this.init()
+            if (this.latestVersion) {
+                this.activePipelineVersion = this.latestVersion
+                this.$nextTick(() => {
+                    this.init()
+                })
             }
         },
         methods: {
@@ -174,14 +179,14 @@
                 try {
                     if (this.activePipelineVersion) {
                         this.isLoading = true
-                        await this.requestPipeline({
+                        const yamlHighlightBlockMap = await this.requestPipeline({
                             ...this.$route.params,
                             version: this.activePipelineVersion
                         })
-                        // this.yamlHighlightBlockMap = yamlHighlightBlockMap
-                        // if (this.isCodeMode) {
-                        //     this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
-                        // }
+                        this.yamlHighlightBlockMap = yamlHighlightBlockMap
+                        if (this.isCodeMode) {
+                            this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
+                        }
                     }
                 } catch (error) {
                     this.$bkMessage({
@@ -208,7 +213,7 @@
         display: flex;
         height: 100%;
         flex-direction: column;
-        overflow: auto;
+        overflow: hidden;
         .pipeline-config-header {
             display: flex;
             align-items: center;
@@ -226,6 +231,7 @@
         }
         .pipeline-model-content {
             flex: 1;
+            overflow: hidden;
         }
     }
 </style>

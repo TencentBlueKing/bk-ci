@@ -192,7 +192,8 @@ export default {
                 stages: model.stages.slice(1)
             })
             commit(PIPELINE_SETTING_MUTATION, setting)
-            commit(SET_PIPELINE_YAML, pipelineRes.data.yaml)
+            commit(SET_PIPELINE_YAML, pipelineRes.data.yamlPreview.yaml)
+            return pipelineRes?.data.yamlPreview
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -202,7 +203,6 @@ export default {
     },
     fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
-            console.log(res)
             return res.data
         })
     },
@@ -702,5 +702,13 @@ export default {
     },
     previewAtomYAML ({ commit }, { projectId, pipelineId, ...params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/task2yaml`, params)
+    },
+    insertAtomYAML ({ commit }, { projectId, pipelineId, line, column, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}/taskInsert`, params, {
+            params: {
+                line,
+                column
+            }
+        })
     }
 }

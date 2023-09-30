@@ -216,7 +216,7 @@
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.reactiveData.editable && !this.isFirstStage
+                return this.isMiddleStage && this.reactiveData.editable && !this.stage.isTrigger
             },
             showDeleteStage () {
                 return this.reactiveData.editable && !this.stage.isTrigger

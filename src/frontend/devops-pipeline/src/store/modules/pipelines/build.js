@@ -134,13 +134,19 @@ const actions = {
      * @return {Promise} promise 对象
      */
     requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, version, params }) {
-        let url = `${prefix}${projectId}/${pipelineId}?version=${version}`
+        const url = `${prefix}${projectId}/${pipelineId}`
+        const query = {
+            version
+        }
         if (params.buildNo && typeof params.buildNo.buildNo !== 'undefined') {
-            url += `&buildNo=${params.buildNo.buildNo}`
+            Object.assign(query, {
+                buildNo: params.buildNo.buildNo
+            })
             delete params.buildNo
         }
-        return ajax.post(url, {
-            ...params
+        console.log('exec', query)
+        return ajax.post(url, params, {
+            params: query
         }).then(response => {
             return response.data
         })

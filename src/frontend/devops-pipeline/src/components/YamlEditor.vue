@@ -25,9 +25,11 @@
         }"
     >
     </div>
+
 </template>
 <script>
     import ciYamlTheme from '@/utils/ciYamlTheme'
+    import YAML from 'yaml'
     export default {
         props: {
             value: {
@@ -65,17 +67,12 @@
         watch: {
             value (newValue) {
                 if (this.editor) {
+                    this.registerCodeLensProvider()
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
                     }
                 }
             },
-            theme (newVal) {
-                if (this.editor) {
-                    this.monaco.editor.setTheme(newVal)
-                }
-            },
-
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
             },
@@ -100,31 +97,32 @@
                 'monaco-yaml'
             )
             // { configureMonacoYaml }
-            console.log(this.monacoYaml.configureMonacoYaml)
             this.monacoYaml.configureMonacoYaml(this.monaco, {
                 enableSchemaRequest: true,
                 schemas: [
-
                     {
                         fileMatch: [this.yamlUri],
-                        uri: 'https://dev-static.devops.woa.com/schema.json'
+                        uri: window.BKCI_YAML_SCHEMA_URI
                     }
                 ]
             })
 
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
+            this.monaco.editor.setTheme('ciYamlTheme')
+
             this.editor = this.monaco.editor.create(this.$el, {
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
-                theme: 'ciYamlTheme',
-                automaticLayout: true,
+                // automaticLayout: true,
                 formatonPaste: true,
                 minimap: {
                     enabled: false
                 },
                 readOnly: this.readOnly
             })
+
             this.isLoading = false
             this.highlightBlocks(this.highlightRanges)
+            this.registerCodeLensProvider()
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {
@@ -136,6 +134,7 @@
         },
         beforeDestroy () {
             this.editor?.getModel()?.dispose?.()
+            this.codeLens?.dispose?.()
             this.editor?.dispose?.()
         },
         methods: {
@@ -160,7 +159,77 @@
                     this.collections?.clear?.()
                     this.collections = this.editor.createDecorationsCollection(ranges)
                     this.editor.revealRangeInCenterIfOutsideViewport(ranges[0].range, this.monaco.editor.ScrollType.Smooth)
+                } else {
+                    this.collections?.clear?.()
                 }
+            },
+            handleYamlPluginClick (editingElementPos) {
+                console.log(YAML.parse(this.value))
+                const stages = YAML.parse(this.value).stages
+                const jobs = Object.values(stages[editingElementPos.stageIndex].jobs)
+
+                const element = jobs[editingElementPos.containerIndex].steps[editingElementPos.elementIndex].with
+                this.$emit('step-click', editingElementPos, element)
+            },
+            visitYaml (yaml) {
+                const lineCounter = new YAML.LineCounter()
+                const doc = YAML.parseDocument(yaml, {
+                    lineCounter
+                })
+
+                let steps = []
+                let stageIndex = -1
+                let containerIndex = -1
+
+                YAML.visit(doc, {
+                    Pair (_, pair) {
+                        if (pair.key && pair.key.value === 'jobs') {
+                            stageIndex++
+                            containerIndex = -1
+                        }
+                        if (pair.key && pair.key.value === 'steps') {
+                            containerIndex++
+                            steps = steps.concat(pair.value.items.map((item, index) => {
+                                return {
+                                    pos: lineCounter.linePos(item.range[0]),
+                                    editingElementPos: {
+                                        stageIndex,
+                                        containerIndex,
+                                        elementIndex: index
+                                    }
+                                }
+                            }))
+                            return YAML.visit.SKIP
+                        }
+                    }
+                })
+                return steps
+            },
+            registerCodeLensProvider (provider) {
+                console.log('codelens')
+                this.codeLens?.dispose?.()
+                const title = this.$t('atomModel')
+                const steps = this.visitYaml(this.value)
+                this.codeLens = this.monaco.languages.registerCodeLensProvider('yaml', {
+                    provideCodeLenses: (model, token) => {
+                        return {
+                            lenses: steps.map((item, index) => ({
+                                range: {
+                                    startLineNumber: item.pos.line,
+                                    startColumn: item.pos.col
+                                },
+                                id: index,
+                                command: {
+                                    id: this.editor.addCommand(0, () => {
+                                        this.handleYamlPluginClick(item.editingElementPos)
+                                    }),
+                                    title
+                                }
+                            })),
+                            dispose: () => {}
+                        }
+                    }
+                })
             }
         }
     }
@@ -170,6 +239,9 @@
     .code-highlight-block {
         background: #3A84FF;
         opacity: .1;
-
+    }
+    .monaco-editor .codelens-decoration  {
+        left: 0 !important;
+        color: #63656E !important;
     }
 </style>

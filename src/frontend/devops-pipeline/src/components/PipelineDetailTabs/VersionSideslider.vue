@@ -38,7 +38,8 @@
                         }"
                     >
                         <p>
-                            <i class="devops-icon icon-check-circle" />
+                            <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
+                            <i v-else class="devops-icon icon-check-circle" />
                             <span class="pipeline-version-name">
                                 {{ item.displayName }}
                             </span>
@@ -187,10 +188,9 @@
                 this.$emit('update:value', version.version, version)
             },
             isCurrentVersion (version) {
-                return version?.version === this.pipelineInfo?.version
+                return version?.version === this.pipelineInfo?.releaseVersion
             },
             searchVersion () {
-                console.log(this.searchKeyword, 212)
                 this.handlePipelineVersionList()
             },
             focusSearchInput () {
@@ -221,8 +221,9 @@
     .icon-check-circle {
         &.icon-check-circle {
             color: $successColor;
+            font-size: 18px;
         }
-        font-size: 16px;
+        font-size: 14px;
     }
     > span {
         @include ellipsis();

@@ -24,7 +24,7 @@
     </div>
 </template>
 <script>
-
+    import ciYamlTheme from '@/utils/ciYamlTheme'
     export default {
         props: {
             value: {
@@ -42,10 +42,6 @@
             lang: {
                 type: String,
                 default: 'text'
-            },
-            theme: {
-                type: String,
-                default: 'monokai'
             },
             readOnly: {
                 type: Boolean,
@@ -86,12 +82,6 @@
                 }
             },
 
-            theme (newVal) {
-                if (this.editor) {
-                    this.monaco.editor.setTheme(newVal)
-                }
-            },
-
             fullScreen () {
                 this.$el.classList.toggle('ace-full-screen')
             }
@@ -105,10 +95,11 @@
                 /* webpackChunkName: "monaco-editor" */
                 'monaco-editor'
             )
+            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
             this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
-                theme: 'vs-dark',
+                theme: 'ciYamlTheme',
                 automaticLayout: true,
                 minimap: {
                     enabled: false
@@ -138,7 +129,6 @@
                 return langMap[lang] || lang
             },
             calcSize (size) {
-                console.log(size, size.toString().match(/^[0-9]{1,2}%$/))
                 const _size = size.toString()
 
                 if (_size.match(/^\d*$/)) return `${size}px`

@@ -18,7 +18,7 @@
                 v-if="isCodeMode"
                 style="margin-top: 20px;"
                 :value="templateYaml"
-                readonly
+                read-only
                 :highlight-ranges="highlightMarkList"
             />
             <bk-tab

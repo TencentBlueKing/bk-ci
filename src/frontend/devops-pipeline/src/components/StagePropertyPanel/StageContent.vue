@@ -16,7 +16,7 @@
                 </bk-select>
             </div>
         </form-field>
-        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control v-if="!isTriggerStage" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :is-finally="stage.finally === true" :handle-stage-change="handleStageChange"></stage-control>
     </section>
 </template>
 
@@ -53,6 +53,9 @@
             stageTitle () {
                 return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
             },
+            isTriggerStage () {
+                return this.stage?.isTrigger ?? false
+            },
             stageControl () {
                 if (this.stage && this.stage.stageControlOption) {
                     return {
@@ -72,6 +75,7 @@
                 }
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'updateStage'

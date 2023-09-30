@@ -3,7 +3,7 @@
         class="bkci-property-panel"
         :width="640"
         :quick-close="true"
-        :before-close="beforeClose"
+        :before-close="handleBeforeClose"
         :is-show.sync="visible"
     >
         <header class="property-panel-header" slot="header">
@@ -41,7 +41,9 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            isInstanceTemplate: Boolean
+            isInstanceTemplate: Boolean,
+            closeConfirm: Boolean,
+            beforeClose: Function
         },
         data () {
             return {
@@ -105,10 +107,17 @@
                 'updateAtom',
                 'togglePropertyPanel'
             ]),
-            async beforeClose () {
+            async handleBeforeClose () {
+                console.log(navConfirm)
+                if (!this.closeConfirm) {
+                    return true
+                }
+                if (typeof this.beforeClose === 'function') {
+                    return await this.beforeClose()
+                }
                 const res = await navConfirm({
-                    title: this.$t('确认离开当前页面吗？'),
-                    content: this.$t('离开将会丢失未保存的信息，建议保存后离开')
+                    title: this.$t('leaveConfirmTitle'),
+                    content: this.$t('leaveConfirmTips')
                 })
                 return res
             },

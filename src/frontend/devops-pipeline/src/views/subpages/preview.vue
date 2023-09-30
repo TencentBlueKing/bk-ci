@@ -120,7 +120,7 @@
                     const res = await this.requestExecPipeline({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        version: this.pipelineInfo?.version,
+                        ...(this.isDebugPipeline ? { version: this.pipelineInfo?.version } : {}),
                         params: {
                             ...skipAtoms,
                             ...params

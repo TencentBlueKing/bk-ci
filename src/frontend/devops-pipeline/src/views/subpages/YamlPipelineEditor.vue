@@ -12,6 +12,8 @@
                 ref="editor"
                 :value="pipelineYaml"
                 @change="handleYamlChange"
+                :highlight-ranges="yamlHighlightBlock"
+                @step-click="handleStepClick"
             />
         </section>
         <template v-if="container">
@@ -25,6 +27,7 @@
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
                 <atom-property-panel
+                    close-confirm
                     v-bind="editingElementPos"
                     :editable="pipelineEditable"
                     :stages="stages"
@@ -32,19 +35,32 @@
                 >
                     <footer slot="footer">
                         <bk-button
+                            v-if="isUpdateElement"
+                            :disabled="isUpdating"
+                            :loading="isUpdating"
+                            @click="syncModelToYaml"
+                        >
+                            {{ $t('applyToYaml') }}
+                        </bk-button>
+                        <bk-button
+                            v-else
                             theme="primary"
+                            :loading="isAdding"
+                            :disabled="isAdding"
                             @click="confirmAdd"
                         >
                             {{ $t('add') }}
                         </bk-button>
+
                         <bk-button
                             @click="previewAtom"
-                            :disabled="isPreviewingAtomYAML"
+                            :disabled="isPreviewingAtomYAML || isAdding"
                             :loading="isPreviewingAtomYAML"
                         >
-                            {{ $t('预览YAML') }}
+                            {{ $t('previewYaml') }}
                         </bk-button>
                         <bk-button
+                            :disabled="isAdding || isUpdating"
                             @click="cancelAdd"
                         >
                             {{ $t('cancel') }}
@@ -78,11 +94,16 @@
             return {
                 showAtomYaml: false,
                 atomYaml: '',
-                isPreviewingAtomYAML: false
+                isPreviewingAtomYAML: false,
+                yamlHighlightBlock: [],
+                isAdding: false,
+                isUpdating: false,
+                isUpdateElement: false
             }
         },
         computed: {
             ...mapState('atom', [
+                'pipeline',
                 'pipelineWithoutTrigger',
                 'pipelineYaml',
                 'pipelineSetting',
@@ -122,30 +143,51 @@
                 'toggleAtomSelectorPopup',
                 'togglePropertyPanel',
                 'addAtom',
+                'updateAtom',
                 'setPipelineEditing',
                 'yamlNavToPipelineModel',
-                'previewAtomYAML'
+                'previewAtomYAML',
+                'insertAtomYAML',
+                'transfertModelToYaml'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, pipelineWithoutTrigger } = this
                 return getStage(pipelineWithoutTrigger.stages, stageIndex)
             },
             handleYamlChange (yaml) {
-                console.log(yaml)
                 this.$store.commit('atom/SET_PIPELINE_YAML', yaml)
+
+                this.yamlHighlightBlock = []
                 this.setPipelineEditing(true)
             },
-            confirmAdd () {
-                console.log(this.pipelineWithoutTrigger, this.element)
-                if (this.yamlPos) {
-                    this.$refs.editor.editor.executeEdits(this.pipelineYaml, [{
-                        range: this.$refs.editor.editor.getSelection(),
-                        text: this.atomYaml
-                    }])
-                    this.$refs.editor.format()
+            async confirmAdd () {
+                try {
+                    this.isAdding = true
+                    const pos = this.$refs.editor.editor.getPosition()
                     this.toggleAtomSelectorPopup(false)
+                    const { data } = await this.insertAtomYAML({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        line: pos.lineNumber,
+                        column: pos.column,
+                        yaml: this.pipelineYaml,
+                        data: this.element,
+                        type: 'INSERT'
+                    })
+                    this.handleYamlChange(data.yaml)
+                    this.yamlHighlightBlock = data.mark ? [data.mark] : []
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                } finally {
                     this.atomYaml = ''
                     this.showAtomYaml = false
+                    this.isAdding = false
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
                 }
             },
             async previewAtom () {
@@ -166,6 +208,20 @@
                     this.isPreviewingAtomYAML = false
                 }
             },
+            handleStepClick (editingElementPos, atom) {
+                console.log(editingElementPos, atom)
+                const { stageIndex, containerIndex, elementIndex } = editingElementPos
+                const element = this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                this.updateAtom({
+                    element,
+                    newParam: atom
+                })
+                this.isUpdateElement = true
+                this.togglePropertyPanel({
+                    isShow: true,
+                    editingElementPos
+                })
+            },
             async addPlugin () {
                 const pos = this.$refs.editor.editor.getPosition()
                 this.yamlPos = pos
@@ -178,7 +234,6 @@
                 const lastStageIndex = this.pipelineWithoutTrigger.stages.length - 1
                 const lastContainerIndex = this.pipelineWithoutTrigger.stages[lastStageIndex].containers.length - 1
                 const lastElemntIndex = this.pipelineWithoutTrigger.stages[lastStageIndex].containers[lastContainerIndex].elements.length - 1
-                console.log('getpos', pos, res)
                 const container = this.pipelineWithoutTrigger.stages[res.stageIndex ?? lastStageIndex].containers[res.jobIndex ?? lastContainerIndex]
                 this.addAtom({
                     stageIndex: res.stageIndex ?? lastStageIndex,
@@ -191,6 +246,36 @@
                 this.togglePropertyPanel({
                     isShow: false
                 })
+            },
+            async syncModelToYaml () {
+                try {
+                    this.isUpdating = true
+                    const pipeline = Object.assign({}, this.pipeline, {
+                        stages: [
+                            this.pipeline.stages[0],
+                            ...(this.pipelineWithoutTrigger?.stages ?? [])
+                        ]
+                    })
+                    await this.transfertModelToYaml({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        actionType: 'FULL_MODEL2YAML',
+                        modelAndSetting: {
+                            model: pipeline,
+                            setting: this.pipelineSetting
+                        },
+                        oldYaml: this.pipelineYaml
+                    })
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
+                    this.isUpdateElement = false
+                } catch (error) {
+                    console.log(error)
+                } finally {
+                    this.isUpdating = false
+                }
+                return false
             }
         }
     }

@@ -20,7 +20,7 @@
             <div v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
                 <header class="diff-version-header">
                     <span>
-                        {{ releaseVersionName }}
+                        {{ latestVersionName }}
                         <bk-tag theme="info">{{ $t('template.current') }}</bk-tag>
                     </span>
                     <span>
@@ -71,7 +71,7 @@
                 type: Number,
                 required: true
             },
-            releaseVersion: {
+            latestVersion: {
                 type: Number,
                 required: true
             }
@@ -93,8 +93,8 @@
             }
         },
         computed: {
-            releaseVersionName () {
-                return this.pipelineVersionList.find(item => item.version === this.releaseVersion)?.versionName ?? '--'
+            latestVersionName () {
+                return this.pipelineVersionList.find(item => item.version === this.latestVersion)?.versionName ?? '--'
             }
         },
         methods: {
@@ -144,7 +144,7 @@
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
-                            version: this.releaseVersion
+                            version: this.latestVersion
                         })
                     ])
                     this.activeYaml = yaml

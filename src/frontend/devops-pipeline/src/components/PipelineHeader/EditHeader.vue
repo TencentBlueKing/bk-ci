@@ -37,99 +37,12 @@
             <!-- <more-actions /> -->
             <span :class="['publish-pipeline-btn', {
                 'publish-diabled': saveStatus
-            }]" @click="showRelaseSlider">
+            }]" @click="showReleaseSlider">
                 <i class="devops-icon icon-check-small" />
                 {{ $t('release') }}
             </span>
         </aside>
-        <bk-sideslider
-            :is-show.sync="isReleaseSliderShow"
-            :width="800"
-            :title="$t('发布流水线')"
-        >
-            <section slot="content" class="release-pipeline-pac-form">
-                <div class="release-pipeline-pac-conf">
-                    <aside class="release-pipeline-pac-conf-leftside">
-                        <label for="enablePac">
-                            {{ $t('PAC模式') }}
-                        </label>
-                        <bk-switcher theme="primary" name="enablePac" v-model="releaseParams.enablePac" />
-                    </aside>
-                    <aside class="release-pipeline-pac-conf-rightside">
-                        <label for="enablePac">
-                            {{ $t('代码库源') }}
-                        </label>
-                        <bk-radio checked>
-                            {{ $t('工蜂') }}
-                        </bk-radio>
-                    </aside>
-                </div>
-                <div class="release-pipeline-pac-setting">
-                    <p class="release-pipeline-pac-codelib-link release-pac-pipeline-form-header">
-                        {{ $t('代码库设置') }}
-                        <i class="devops-icon icon-angle-right" />
-                    </p>
-                    <div class="release-pipeline-pac-submit-conf">
-                        <header class="release-pac-pipeline-form-header">
-                            {{ $t('提交设置') }}
-                        </header>
-                        <bk-form form-type="vertical">
-                            <bk-form-item :label="$t('版本描述')">
-                                <bk-input
-                                    type="textarea"
-                                    v-model="releaseParams.description"
-                                    :placeholder="$t('请输入提交信息')"
-                                />
-                                <span class="release-pac-version-desc">
-                                    {{ $t('将作为 commit message 提交到代码库') }}
-                                </span>
-                            </bk-form-item>
-                            <bk-form-item :label="$t('目标分支')">
-                                <bk-radio-group v-model="releaseParams.targetAction">
-                                    <bk-radio
-                                        v-for="option in targetActionOptions"
-                                        class="pac-pipeline-dest-branch-radio"
-                                        :key="option.label"
-                                        :value="option.value"
-                                    >
-                                        {{ option.label }}
-                                    </bk-radio>
-                                </bk-radio-group>
-                            </bk-form-item>
-                        </bk-form>
-                    </div>
-                    <div class="release-pipeline-pac-pipeline-conf">
-                        <header class="release-pac-pipeline-form-header">
-                            {{ $t('流水线设置') }}
-                        </header>
-                        <PipelineGroupSelector
-                            v-model="releaseParams.groupValue"
-                            :pipeline-name="pipelineName"
-                            ref="pipelineGroupSelector"
-                            :has-manage-permission="isManage"
-                        />
-                    </div>
-                </div>
-            </section>
-            <footer slot="footer" class="release-pipeline-pac-footer">
-                <bk-button
-                    theme="primary"
-                    @click="releasePipeline"
-                >
-                    {{$t('release')}}
-                </bk-button>
-                <bk-button
-
-                >
-                    {{$t('预览YAML')}}
-                </bk-button>
-                <bk-button
-
-                >
-                    {{$t('cancel')}}
-                </bk-button>
-            </footer>
-        </bk-sideslider>
+        <ReleasePipelineSideSlider :version="currentVersion" v-model="isReleaseSliderShow" />
     </div>
 </template>
 
@@ -137,29 +50,19 @@
     import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     // import MoreActions from './MoreActions.vue'
-    import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     import ModeSwitch from '@/components/ModeSwitch'
-    // import { HttpError } from '@/utils/util'
     export default {
         components: {
             PipelineBreadCrumb,
             // MoreActions,
             ModeSwitch,
-            PipelineGroupSelector
+            ReleasePipelineSideSlider
         },
         data () {
             return {
-                isReleaseSliderShow: false,
-                releaseParams: {
-                    enablePac: false,
-                    description: '',
-                    targetAction: 'MAIN',
-                    groupValue: {
-                        labels: [],
-                        staticViews: []
-                    }
-                }
+                isReleaseSliderShow: false
             }
         },
         computed: {
@@ -176,20 +79,13 @@
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
-            targetActionOptions () {
-                return [{
-                    label: this.$t('提交到主干'),
-                    value: 'COMMIT_TO_MASTER'
-                }, {
-                    label: this.$t('新建分支并创建 MR'),
-                    value: 'CHECKOUT_AND_REQUEST_MERGE'
-                }]
-            },
+
             btnDisabled () {
                 return this.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
             },
             canDebug () {
-                return this.pipeline?.canDebug ?? false
+                // TODO: 临时方案，后续需要后端支持
+                return (this.pipeline?.canDebug ?? false) && !this.saveStatus
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -205,13 +101,15 @@
             },
             pipelineName () {
                 return this.pipelineInfo?.name ?? '--'
+            },
+            currentVersion () {
+                return this.pipelineInfo?.version ?? ''
             }
         },
         methods: {
             ...mapActions('atom', [
                 'setPipelineEditing',
                 'saveDraftPipeline',
-                'releaseDraftPipeline',
                 'setSaveStatus',
                 'updateContainer'
             ]),
@@ -283,6 +181,10 @@
                         yaml: pipelineYaml
                     })
                     this.setPipelineEditing(false)
+                    this.updatePipelineInfo({
+                        key: 'canDebug',
+                        value: true
+                    })
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
@@ -318,47 +220,8 @@
                     pipelineSetting
                 )
             },
-            showRelaseSlider () {
+            showReleaseSlider () {
                 this.isReleaseSliderShow = true
-            },
-            async releasePipeline () {
-                console.log('releasePipeline', this.releaseParams)
-                const { pipelineId, projectId } = this.$route.params
-                try {
-                    this.setSaveStatus(true)
-                    console.log(this.pipeline.version, this.pipelineInfo.version)
-                    const responses = await this.releaseDraftPipeline({
-                        projectId,
-                        pipelineId,
-                        version: this.pipelineInfo.version,
-                        params: this.releaseParams
-                    })
-                    console.log(responses)
-                    this.$showTips({
-                        message: this.$t('saveSuc'),
-                        theme: 'success'
-                    })
-                } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
-                    return {
-                        code: e.code,
-                        message: e.message
-                    }
-                } finally {
-                    this.setSaveStatus(false)
-                }
             },
             goDraftDebugRecord () {
                 this.$router.push({
@@ -420,58 +283,6 @@
         }
     }
   }
-
-  .release-pipeline-pac-form {
-    height: calc(100vh - 108px);
-    overflow: auto;
-    .release-pac-pipeline-form-header {
-        display: flex;
-        justify-content: space-between;
-        font-weight: 700;
-        font-size: 14px;
-        border-bottom: 1px solid #DCDEE5;
-        padding-bottom: 8px;
-        margin-bottom: 16px;
-    }
-    .release-pipeline-pac-conf {
-        display: flex;
-        background: #FAFBFD;
-        height: 80px;
-        align-items: center;
-        font-size: 12px;
-        >:first-child {
-            border-right: 1px solid #DCDEE5;
-        }
-        .release-pipeline-pac-conf-leftside,
-        .release-pipeline-pac-conf-rightside {
-            display: flex;
-            flex-direction: column;
-            padding-left: 32px;
-            justify-content: center;
-            grid-gap: 8px;
-            flex: 1;
-
-            &.release-pipeline-pac-conf-leftside {
-                width: 176px;
-                flex-shrink: 0;
-            }
-        }
-    }
-    .release-pipeline-pac-setting {
-        padding: 24px;
-        .release-pac-version-desc {
-            font-size: 12px;
-            color: #979BA5;
-            letter-spacing: 0;
-            line-height: 20px;
-        }
-        .pac-pipeline-dest-branch-radio {
-            margin-right: 24px;
-        }
-    }
-  }
-  .release-pipeline-pac-footer {
-    padding: 0 24px;
-  }
 }
-</style>
+
+  </style>
