@@ -106,7 +106,7 @@
                 return this.pipelineInfo?.versionName
             },
             canRollBack () {
-                return this.activePipelineVersion !== this.pipelineInfo?.version && !this.pipeline?.canDebug
+                return this.activePipelineVersion !== this.pipelineInfo?.version && !this.pipelineInfo?.canDebug
             },
             isCurrentVersion () {
                 return this.activePipelineVersion === this.pipelineInfo?.version

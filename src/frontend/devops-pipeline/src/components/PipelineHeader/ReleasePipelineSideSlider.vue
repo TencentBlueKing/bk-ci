@@ -149,6 +149,14 @@
                         value: data.version
                     })
                     this.updatePipelineInfo({
+                        key: 'releaseVersion',
+                        value: data.version
+                    })
+                    this.updatePipelineInfo({
+                        key: 'releaseVersionName',
+                        value: data.version
+                    })
+                    this.updatePipelineInfo({
                         key: 'versionName',
                         value: data.versionName
                     })

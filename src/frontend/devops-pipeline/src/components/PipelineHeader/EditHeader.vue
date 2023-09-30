@@ -85,7 +85,7 @@
             },
             canDebug () {
                 // TODO: 临时方案，后续需要后端支持
-                return (this.pipeline?.canDebug ?? false) && !this.saveStatus
+                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -94,7 +94,7 @@
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
             currentVersionName () {
-                if (this.canDebug) {
+                if (this.pipelineInfo?.canDebug) {
                     return this.$t('editPage.draftVersion', [this.pipeline?.baseVersionName ?? '--'])
                 }
                 return this.pipelineInfo?.versionName ?? '--'

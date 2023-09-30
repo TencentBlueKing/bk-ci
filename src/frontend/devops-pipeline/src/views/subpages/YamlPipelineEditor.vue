@@ -10,6 +10,7 @@
         <section class="edit-pipeline-yaml-editor">
             <YamlEditor
                 ref="editor"
+                show-yaml-plugin
                 :value="pipelineYaml"
                 @change="handleYamlChange"
                 :highlight-ranges="yamlHighlightBlock"
@@ -21,6 +22,7 @@
                 v-bind="editingElementPos"
                 :container="container"
                 :show-atom-yaml="showAtomYaml"
+                :before-close="beforeClose"
                 :atom-yaml="atomYaml"
             />
         </template>
@@ -54,7 +56,7 @@
 
                         <bk-button
                             @click="previewAtom"
-                            :disabled="isPreviewingAtomYAML || isAdding"
+                            :disabled="!canPreviewYaml"
                             :loading="isPreviewingAtomYAML"
                         >
                             {{ $t('previewYaml') }}
@@ -129,10 +131,10 @@
                 return null
             },
             element () {
-                if (this.editingElementPos?.elementIndex) {
-                    return this.container.elements[this.editingElementPos.elementIndex]
-                }
-                return null
+                return this.container?.elements?.[this.editingElementPos?.elementIndex] ?? null
+            },
+            canPreviewYaml () {
+                return this.element?.atomCode && !this.isPreviewingAtomYAML && !this.isAdding
             },
             pipelineEditable () {
                 return this.editable && !this.pipelineWithoutTrigger.instanceFromTemplate
@@ -182,8 +184,7 @@
                         message: error.message
                     })
                 } finally {
-                    this.atomYaml = ''
-                    this.showAtomYaml = false
+                    this.beforeClose()
                     this.isAdding = false
                     this.togglePropertyPanel({
                         isShow: false
@@ -203,10 +204,14 @@
                     this.toggleAtomSelectorPopup(true)
                     this.atomYaml = res.data
                 } catch (error) {
-
+                    console.error(error)
                 } finally {
                     this.isPreviewingAtomYAML = false
                 }
+            },
+            beforeClose () {
+                this.showAtomYaml = false
+                this.atomYaml = ''
             },
             handleStepClick (editingElementPos, atom) {
                 console.log(editingElementPos, atom)
@@ -246,6 +251,9 @@
                 this.togglePropertyPanel({
                     isShow: false
                 })
+                this.isUpdateElement = false
+                this.toggleAtomSelectorPopup(false)
+                this.beforeClose()
             },
             async syncModelToYaml () {
                 try {
@@ -269,6 +277,7 @@
                     this.togglePropertyPanel({
                         isShow: false
                     })
+                    this.beforeClose()
                     this.isUpdateElement = false
                 } catch (error) {
                     console.log(error)

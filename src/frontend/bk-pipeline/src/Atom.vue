@@ -110,7 +110,7 @@
             </span>
 
             <Logo
-                v-if="reactiveData.editable && stageIndex !== 0 && !atom.isError"
+                v-if="reactiveData.editable && !atom.isError"
                 name="clipboard"
                 class="copy"
                 size="14"

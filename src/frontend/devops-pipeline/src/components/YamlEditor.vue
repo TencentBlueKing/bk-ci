@@ -55,6 +55,10 @@
             yamlUri: {
                 type: String,
                 default: '.ci.yml'
+            },
+            showYamlPlugin: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -67,7 +71,7 @@
         watch: {
             value (newValue) {
                 if (this.editor) {
-                    this.registerCodeLensProvider()
+                    this.showYamlPlugin && this.registerCodeLensProvider()
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
                     }
@@ -122,7 +126,7 @@
 
             this.isLoading = false
             this.highlightBlocks(this.highlightRanges)
-            this.registerCodeLensProvider()
+            this.showYamlPlugin && this.registerCodeLensProvider()
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
                 if (this.value !== value) {

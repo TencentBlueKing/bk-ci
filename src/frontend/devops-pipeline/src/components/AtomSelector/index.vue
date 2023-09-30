@@ -4,7 +4,7 @@
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
                 <div v-if="showAtomYaml" class="preview-atom-yaml-content">
                     <header>
-                        {{ $t('预览YAML') }}
+                        {{ $t('previewYaml') }}
                         <i class="devops-icon icon-close" @click="close" />
                     </header>
                     <YamlEditor
@@ -117,6 +117,9 @@
             element: {
                 type: Object,
                 default: () => ({})
+            },
+            beforeClose: {
+                type: Function
             },
             elementIndex: Number
         },
@@ -320,6 +323,7 @@
                 this.fetchAtomList()
             },
             close () {
+                this.beforeClose?.()
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },

@@ -50,9 +50,10 @@
                 return this.pipelineInfo?.canManualStartup ?? true
             },
             tooltip () {
+                console.log(this.executable)
                 return this.executable
                     ? {
-                        disalbed: true
+                        disabled: true
                     }
                     : {
                         content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
