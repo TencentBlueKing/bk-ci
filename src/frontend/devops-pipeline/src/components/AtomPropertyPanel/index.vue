@@ -4,6 +4,7 @@
         :width="640"
         :quick-close="true"
         :before-close="handleBeforeClose"
+        @animation-end="afterHidden"
         :is-show.sync="visible"
     >
         <header class="property-panel-header" slot="header">
@@ -43,7 +44,12 @@
             editable: Boolean,
             isInstanceTemplate: Boolean,
             closeConfirm: Boolean,
-            beforeClose: Function
+            beforeClose: Function,
+            afterHidden: {
+                type: Function,
+                default: () => () => {
+                }
+            }
         },
         data () {
             return {
@@ -108,12 +114,11 @@
                 'togglePropertyPanel'
             ]),
             async handleBeforeClose () {
-                console.log(navConfirm)
                 if (!this.closeConfirm) {
                     return true
                 }
                 if (typeof this.beforeClose === 'function') {
-                    return await this.beforeClose()
+                    await this.beforeClose()
                 }
                 const res = await navConfirm({
                     title: this.$t('leaveConfirmTitle'),

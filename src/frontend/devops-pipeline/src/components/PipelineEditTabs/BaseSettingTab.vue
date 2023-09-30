@@ -3,10 +3,12 @@
     <section>
         <base-info
             :pipeline-setting="pipelineSetting"
+            :editable="editable"
             :handle-base-info-change="handleBaseInfoChange">
         </base-info>
         <running-lock
             :pipeline-setting="pipelineSetting"
+            :editable="editable"
             :handle-running-lock-change="handleRunningLockChange"
             style="margin-top: 24px;">
         </running-lock>
@@ -24,6 +26,10 @@
             RunningLock
         },
         props: {
+            editable: {
+                type: Boolean,
+                default: true
+            },
             pipelineSetting: Object,
             updatePipelineSetting: Function
         },

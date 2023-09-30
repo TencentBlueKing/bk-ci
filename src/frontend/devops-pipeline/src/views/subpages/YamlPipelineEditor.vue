@@ -22,7 +22,7 @@
                 v-bind="editingElementPos"
                 :container="container"
                 :show-atom-yaml="showAtomYaml"
-                :before-close="beforeClose"
+                :before-close="resetPreviewAtomYaml"
                 :atom-yaml="atomYaml"
             />
         </template>
@@ -140,6 +140,13 @@
                 return this.editable && !this.pipelineWithoutTrigger.instanceFromTemplate
             }
         },
+        watch: {
+            editingElementPos (val) {
+                if (!val) {
+                    this.resetPreviewAtomYaml()
+                }
+            }
+        },
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
@@ -184,7 +191,7 @@
                         message: error.message
                     })
                 } finally {
-                    this.beforeClose()
+                    this.resetPreviewAtomYaml()
                     this.isAdding = false
                     this.togglePropertyPanel({
                         isShow: false
@@ -209,7 +216,7 @@
                     this.isPreviewingAtomYAML = false
                 }
             },
-            beforeClose () {
+            resetPreviewAtomYaml () {
                 this.showAtomYaml = false
                 this.atomYaml = ''
             },
@@ -253,7 +260,7 @@
                 })
                 this.isUpdateElement = false
                 this.toggleAtomSelectorPopup(false)
-                this.beforeClose()
+                this.resetPreviewAtomYaml()
             },
             async syncModelToYaml () {
                 try {
@@ -277,7 +284,7 @@
                     this.togglePropertyPanel({
                         isShow: false
                     })
-                    this.beforeClose()
+                    this.resetPreviewAtomYaml()
                     this.isUpdateElement = false
                 } catch (error) {
                     console.log(error)

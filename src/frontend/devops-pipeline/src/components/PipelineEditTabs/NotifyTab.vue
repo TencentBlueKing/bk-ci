@@ -4,7 +4,7 @@
             <bk-card :key="card.type" :is-collapse="true" :collapse-icons="icons" :border="false" class="notify-item">
                 <div slot="header" class="item-header">
                     <span class="notify-title">{{card.name}}</span>
-                    <bk-link theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
+                    <bk-link v-if="editable" theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
                         新增通知
                     </bk-link>
                 </div>
@@ -93,6 +93,10 @@
             NotifySetting
         },
         props: {
+            editable: {
+                type: Boolean,
+                default: true
+            },
             successSubscriptionList: Array,
             failSubscriptionList: Array,
             updateSubscription: Function

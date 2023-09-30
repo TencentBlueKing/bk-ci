@@ -3,7 +3,15 @@
         <div class="pipeline-setting-title">{{$t('settings.baseInfo')}}</div>
         <bk-form form-type="vertical" :label-width="300" class="new-ui-form">
             <bk-form-item :label="$t('pipelineName')" :required="true">
-                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="'required|max:40'" max-length="40" :handle-change="handleBaseInfoChange" />
+                <vuex-input
+                    :disabled="!editable"
+                    :placeholder="$t('pipelineNameInputTips')"
+                    name="pipelineName"
+                    :value="pipelineSetting.pipelineName"
+                    v-validate.initial="'required|max:40'"
+                    max-length="40"
+                    :handle-change="handleBaseInfoChange"
+                />
             </bk-form-item>
 
             <bk-form-item :required="false">
@@ -24,6 +32,7 @@
                             <label :title="item.name" class="pipeline-selector-label"> {{ item.name }} </label>
                             <bk-select
                                 class="sub-label-select"
+                                :disabled="!editable"
                                 :value="labelValues[index]"
                                 @selected="handleLabelSelect(index, arguments)"
                                 @clear="handleLabelSelect(index, [[]])"
@@ -46,7 +55,7 @@
             </bk-form-item>
 
             <bk-form-item :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
-                <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="'max:100'" :handle-change="handleBaseInfoChange" />
+                <vuex-textarea :disabled="!editable" name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="'max:100'" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
         </bk-form>
     </div>
@@ -65,6 +74,10 @@
         },
         props: {
             pipelineSetting: Object,
+            editable: {
+                type: Boolean,
+                default: true
+            },
             handleBaseInfoChange: Function
         },
         computed: {
@@ -130,7 +143,7 @@
 <style lang="scss">
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
-    
+
     .bkdevops-base-info-setting-tab {
         .pipeline-setting-title {
             font-size: 14px;

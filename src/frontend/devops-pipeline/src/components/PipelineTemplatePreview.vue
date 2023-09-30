@@ -48,20 +48,18 @@
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
     import Pipeline from '@/components/Pipeline'
-    import TriggerConfig from '@/components/PipelineDetailTabs/TriggerConfig'
-    import NotificationConfig from '@/components/PipelineDetailTabs/NotificationConfig'
-    import BaseConfig from '@/components/PipelineDetailTabs/BaseConfig'
+    import { BaseSettingTab, NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
     export default {
         components: {
             ModeSwitch,
             // eslint-disable-next-line vue/no-unused-components
             Pipeline,
             // eslint-disable-next-line vue/no-unused-components
-            TriggerConfig,
+            TriggerTab,
             // eslint-disable-next-line vue/no-unused-components
-            NotificationConfig,
+            NotifyTab,
             // eslint-disable-next-line vue/no-unused-components
-            BaseConfig,
+            BaseSettingTab,
             YamlEditor
 
         },
@@ -81,7 +79,8 @@
                 isLoading: false,
                 activePanel: 'pipelineModel',
                 templateYaml: '',
-                highlightMarkList: []
+                highlightMarkList: [],
+                pipelineSetting: null
             }
         },
         computed: {
@@ -104,7 +103,10 @@
                         label: this.$t('流水线编排'),
                         component: 'Pipeline',
                         props: {
-                            pipeline: this.templatePipeline,
+                            pipeline: {
+                                ...this.templatePipeline,
+                                stages: this.templatePipeline?.stages?.slice(1) ?? []
+                            },
                             editable: false,
                             showHeader: false
                         }
@@ -112,20 +114,30 @@
                     {
                         name: 'triggerConf',
                         label: this.$t('触发器'),
-                        component: 'TriggerConfig',
-                        props: {}
+                        component: 'triggerTab',
+                        props: {
+                            editable: false,
+                            pipeline: this.templatePipeline
+                        }
                     },
                     {
                         name: 'notification',
                         label: this.$t('通知'),
-                        component: 'NotificationConfig',
-                        props: {}
+                        component: 'NotifyTab',
+                        props: {
+                            editable: false,
+                            failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? null,
+                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? null
+                        }
                     },
                     {
                         name: 'baseConfig',
                         label: this.$t('基础设置'),
-                        component: 'BaseConfig',
-                        props: {}
+                        component: 'BaseSettingTab',
+                        props: {
+                            editable: false,
+                            pipelineSetting: this.pipelineSetting
+                        }
                     }
                 ]
             }
@@ -158,6 +170,7 @@
                     })
                     this.templateYaml = res.templateYaml
                     this.highlightMarkList = res.highlightMarkList ?? []
+                    this.pipelineSetting = res.setting
                     console.log('res', res)
                 } catch (error) {
                     this.$bkMessage({

@@ -17,16 +17,25 @@
                         </span>
                     </label>
                 </div>
-                <vuex-input name="buildNumRule" :value="pipelineSetting.buildNumRule" :placeholder="$t('buildDescInputTips')" v-validate.initial="{ buildNumRule: true }" max-length="256" :handle-change="handleBaseInfoChange" />
+                <vuex-input
+                    name="buildNumRule"
+                    max-length="256"
+                    :disabled="!editable"
+                    :value="pipelineSetting.buildNumRule"
+                    :placeholder="$t('buildDescInputTips')"
+                    v-validate.initial="{ buildNumRule: true }"
+                    :handle-change="handleBaseInfoChange"
+                />
                 <p class="error-tips"
                     v-if="errors.has('buildNumRule')">
                     {{ $t('settings.validatebuildNum') }}
                 </p>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.parallelSetting')">
+            <bk-form-item :label="$t('template.parallelSetting')">
                 <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
                     <div class="run-lock-radio-item">
                         <bk-radio
+                            :disabled="!editable"
                             :value="runTypeMap.MULTIPLE"
                         >
                             {{$t('settings.runningOption.multiple')}}
@@ -34,6 +43,7 @@
                     </div>
                     <div class="run-lock-radio-item">
                         <bk-radio
+                            :disabled="!editable"
                             :value="runTypeMap.GROUP"
                         >
                             {{$t('settings.runningOption.single')}}
@@ -52,12 +62,14 @@
                 >
                     <bk-input
                         :placeholder="$t('settings.itemPlaceholder')"
+                        :disabled="!editable"
                         v-model="pipelineSetting.concurrencyGroup"
                     />
                 </bk-form-item>
 
                 <bk-form-item property="concurrencyCancelInProgress">
                     <bk-checkbox
+                        :disabled="!editable"
                         :checked="pipelineSetting.concurrencyCancelInProgress"
                         @change="handleConCurrencyCancel"
                     >
@@ -73,6 +85,7 @@
                     >
                         <bk-input
                             type="number"
+                            :disabled="!editable"
                             :placeholder="$t('settings.itemPlaceholder')"
                             v-model="pipelineSetting.maxQueueSize"
                         >
@@ -88,6 +101,7 @@
                     >
                         <bk-input
                             type="number"
+                            :disabled="!editable"
                             :placeholder="$t('settings.itemPlaceholder')"
                             v-model="pipelineSetting.waitQueueTimeMinute"
                         >
@@ -123,6 +137,10 @@
         },
         props: {
             pipelineSetting: Object,
+            editable: {
+                type: Boolean,
+                default: true
+            },
             handleRunningLockChange: Function
         },
         computed: {

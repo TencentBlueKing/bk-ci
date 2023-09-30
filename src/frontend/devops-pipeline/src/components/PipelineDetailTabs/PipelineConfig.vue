@@ -134,7 +134,6 @@
                     case 'setting':
                         return {
                             is: BaseConfig
-
                         }
                     default:
                         return null
