@@ -39,14 +39,6 @@ export default {
     getPipelineSubscriptions: state => type => {
         return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
     },
-    pipelineWithoutTrigger: state => {
-        return state.pipeline
-            ? {
-                ...state.pipeline,
-                stages: state.pipeline?.stages?.length > 0 ? state.pipeline?.stages.slice(1) : []
-            }
-            : null
-    },
     curPipelineParams: state => {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
         return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []

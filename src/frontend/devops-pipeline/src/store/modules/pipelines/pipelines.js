@@ -307,7 +307,10 @@ const actions = {
         const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
 
         return ajax.get(url).then(response => {
-            commit('setPipelineInfo', response.data)
+            commit('setPipelineInfo', {
+                ...response.data,
+                canDebug: false
+            })
             return response.data
         })
     },

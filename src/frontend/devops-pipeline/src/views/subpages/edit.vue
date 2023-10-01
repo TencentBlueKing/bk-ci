@@ -166,7 +166,6 @@
                                 pipelineSetting: this.pipelineSetting,
                                 updatePipelineSetting: (...args) => {
                                     this.setPipelineEditing(true)
-                                    console.log('updatePipelineSetting', ...args)
                                     this.updatePipelineSetting(...args)
                                 }
                             }

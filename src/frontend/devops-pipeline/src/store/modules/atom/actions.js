@@ -191,6 +191,7 @@ export default {
                 ...model,
                 stages: model.stages.slice(1)
             })
+
             commit(PIPELINE_SETTING_MUTATION, setting)
             commit(SET_PIPELINE_YAML, pipelineRes.data.yamlPreview.yaml)
             return pipelineRes?.data.yamlPreview

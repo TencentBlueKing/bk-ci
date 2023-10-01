@@ -732,11 +732,6 @@
       .item-label {
         color: #c4cdd6;
       }
-      .icon-retry {
-        font-size: 20px;
-        color: $primaryColor;
-        cursor: pointer;
-      }
       .icon-stop-shape {
         font-size: 15px;
         color: $primaryColor;

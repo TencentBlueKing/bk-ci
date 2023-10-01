@@ -58,7 +58,6 @@ export default {
         ]),
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
-            'requestToggleCollect',
             'requestTemplatePermission',
             'requestRecyclePipelineList',
             'requestToggleCollect',
@@ -311,30 +310,6 @@ export default {
                     pipelineId
                 }
             })
-        },
-        /**
-         *  处理收藏和取消收藏
-         */
-        async togglePipelineCollect (pipelineId, isCollect = false) {
-            let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
-            let theme = 'success'
-            try {
-                const { projectId } = this.$route.params
-                await this.requestToggleCollect({
-                    projectId,
-                    pipelineId,
-                    isCollect
-                })
-                return true
-            } catch (err) {
-                message = err.message || err
-                theme = 'error'
-            } finally {
-                this.$showTips({
-                    message,
-                    theme
-                })
-            }
         },
         /**
          *  删除流水线
