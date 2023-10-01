@@ -1270,5 +1270,12 @@
   "CHECKOUT_AND_REQUEST_MERGE": "新建分支并创建 MR",
   "atomModel": "插件设置",
   "previewYaml": "预览YAML",
-  "applyToYaml": "应用"
+  "applyToYaml": "应用",
+  "yamlCodeLib": "存储流水线 YAML 的库",
+  "yamlDir": "YAML 文件路径",
+  "noPacEnableCodelibYet": "还没有代码库开启 PAC 模式",
+  "goCodelibsEnablePac": "前往代码库开启 PAC 模式",
+  "oauth": "OAUTH 授权",
+  "refreshOauthStatus": "刷新授权状态",
+  "oauthPacTips": "尚未授权，请先点击按钮授权。<br/> 授权后，将使用你的身份提交 YAML 文件到代码库。需拥有代码库开发者及以上权限。"
 }

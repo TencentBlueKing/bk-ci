@@ -38,7 +38,10 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
-.devops-icon.icon-diff:before {
+.devops-icon.icon-jump-link:before {
+    content: "\ea17";
+  }
+  .devops-icon.icon-diff:before {
     content: "\e91c";
   }
   .devops-icon.icon-rollback:before {
@@ -130,6 +133,7 @@
   }
   .devops-icon.icon-list-order:before {
     content: "\e9f9";
+    color: #737987;
   }
   .devops-icon.icon-qrcode:before {
     content: "\e9fc";
