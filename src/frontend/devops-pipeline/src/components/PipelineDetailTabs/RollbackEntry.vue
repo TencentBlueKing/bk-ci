@@ -65,12 +65,8 @@
                         version: this.version
                     })
                     this.updatePipelineInfo({
-                        key: 'version',
-                        value: version
-                    })
-                    this.updatePipelineInfo({
-                        key: 'versionName',
-                        value: versionName
+                        version,
+                        versionName
                     })
 
                     if (version) {

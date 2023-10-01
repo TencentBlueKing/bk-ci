@@ -144,9 +144,8 @@ const mutations = {
     setPipelineInfo (state, obj) {
         state.pipelineInfo = obj
     },
-    updatePipelineInfo (state, { key, value }) {
-        console.log(key, value)
-        state.pipelineInfo[key] = value
+    updatePipelineInfo (state, partOfInfo) {
+        Object.assign(state.pipelineInfo, partOfInfo)
     },
     /**
      * 更新 store.pipeline 中的 pipelineList 中的某一项的某个key的value

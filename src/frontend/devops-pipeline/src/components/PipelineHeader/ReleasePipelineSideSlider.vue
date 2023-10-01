@@ -252,33 +252,18 @@
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
 
-                    const { data } = await this.releaseDraftPipeline({
+                    const { data: { version, versionName } } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
                         version: this.version,
                         params: this.releaseParams
                     })
-                    console.log(data)
                     this.updatePipelineInfo({
-                        key: 'version',
-                        value: data.version
+                        releaseVersion: version,
+                        releaseVersionName: versionName,
+                        canDebug: false
                     })
-                    this.updatePipelineInfo({
-                        key: 'releaseVersion',
-                        value: data.version
-                    })
-                    this.updatePipelineInfo({
-                        key: 'releaseVersionName',
-                        value: data.version
-                    })
-                    this.updatePipelineInfo({
-                        key: 'versionName',
-                        value: data.versionName
-                    })
-                    this.updatePipelineInfo({
-                        key: 'canDebug',
-                        value: false
-                    })
+
                     const tipsI18nKey = this.releaseParams.enablePac ? 'pacPipelineReleaseTips' : 'releaseTips'
                     const tipsArrayLength = this.releaseParams.enablePac ? 4 : 2
                     const h = this.$createElement

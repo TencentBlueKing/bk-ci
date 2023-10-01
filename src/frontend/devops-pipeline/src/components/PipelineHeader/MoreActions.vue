@@ -149,8 +149,7 @@
             renameDone (name) {
                 this.$nextTick(() => {
                     this.updatePipelineInfo({
-                        key: 'pipelineName',
-                        value: name
+                        pipelineName: name
                     })
                     this.pipelineSetting
                         && Object.keys(this.pipelineSetting).length
@@ -235,8 +234,7 @@
                         isCollect
                     })
                     this.updatePipelineInfo({
-                        key: 'hasCollect',
-                        value: isCollect
+                        hasCollect: isCollect
                     })
                 } catch (err) {
                     message = err.message || err

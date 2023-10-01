@@ -166,7 +166,7 @@
                     // }
 
                     // 请求执行构建
-                    await this.saveDraftPipeline({
+                    const { version, versionName } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
                         baseVersion: pipeline.baseVersion,
@@ -182,9 +182,11 @@
                     })
                     this.setPipelineEditing(false)
                     this.updatePipelineInfo({
-                        key: 'canDebug',
-                        value: true
+                        canDebug: true,
+                        version,
+                        versionName
                     })
+
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
