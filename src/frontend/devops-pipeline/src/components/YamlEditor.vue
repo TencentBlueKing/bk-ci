@@ -29,7 +29,7 @@
             }"
         >
         </div>
-        <ul class="yaml-error-summary">
+        <ul v-if="!readOnly" class="yaml-error-summary">
             <li
                 v-for="(item, index) in errors"
                 :key="index"
@@ -46,7 +46,7 @@
     </section>
 </template>
 <script>
-    import ciYamlTheme from '@/utils/ciYamlTheme'
+    import MonacoEditor from '@/utils/monacoEditor'
     import YAML from 'yaml'
     // import { listen } from 'vscode-ws-jsonrpc'
 
@@ -105,7 +105,7 @@
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
                         setTimeout(() => {
-                            this.showYamlPlugin && this.registerCodeLensProvider()
+                            this.registerCodeLensProvider()
                         }, 0)
                     }
                 }
@@ -119,36 +119,7 @@
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-editor'
-            )
-            this.monacoYaml = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-yaml'
-            )
-            // MonacoServices.install(this.monaco)
-            // this.connectToLangServer()
-
-            this.monacoYaml.configureMonacoYaml(this.monaco, {
-                enableSchemaRequest: true,
-                schemas: [
-                    {
-                        fileMatch: [this.yamlUri],
-                        uri: window.BKCI_YAML_SCHEMA_URI
-                    }
-                ]
-            })
-
-            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
-            this.monaco.editor.setTheme('ciYamlTheme')
-
+            this.monaco = await MonacoEditor.instance()
             this.editor = this.monaco.editor.create(this.$refs.box, {
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
                 // automaticLayout: true,
@@ -166,7 +137,7 @@
 
             this.isLoading = false
             this.highlightBlocks(this.highlightRanges)
-            this.showYamlPlugin && this.registerCodeLensProvider()
+            this.registerCodeLensProvider()
 
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
@@ -184,7 +155,6 @@
         },
         beforeDestroy () {
             this.editor?.getModel()?.dispose?.()
-            this.codeLens?.dispose?.()
             this.editor?.dispose?.()
         },
         methods: {
@@ -295,30 +265,36 @@
                 return steps
             },
             registerCodeLensProvider (provider) {
-                console.log('codelens')
-                this.codeLens?.dispose?.()
-                const title = this.$t('atomModel')
-                const steps = this.visitYaml(this.value)
-                this.codeLens = this.monaco.languages.registerCodeLensProvider('yaml', {
-                    provideCodeLenses: (model, token) => {
-                        return {
-                            lenses: steps.map((item, index) => ({
-                                range: {
-                                    startLineNumber: item.pos.line,
-                                    startColumn: item.pos.col
-                                },
-                                id: index,
-                                command: {
-                                    id: this.editor.addCommand(0, () => {
-                                        this.handleYamlPluginClick(item.editingElementPos)
-                                    }),
-                                    title
-                                }
-                            })),
-                            dispose: () => {}
+                if (this.showYamlPlugin && !this.readOnly) {
+                    console.log('codelens')
+                    this.codeLens?.dispose?.()
+                    const title = this.$t('atomModel')
+                    const steps = this.visitYaml(this.value)
+                    this.codeLens = this.monaco.languages.registerCodeLensProvider('yaml', {
+                        provideCodeLenses: (model, token) => {
+                            return {
+                                lenses: steps.map((item, index) => ({
+                                    range: {
+                                        startLineNumber: item.pos.line,
+                                        startColumn: item.pos.col
+                                    },
+                                    id: index,
+                                    command: {
+                                        id: this.editor.addCommand(0, () => {
+                                            this.handleYamlPluginClick(item.editingElementPos)
+                                        }),
+                                        title
+                                    }
+                                })),
+                                dispose: () => {}
+                            }
                         }
-                    }
-                })
+                    })
+                } else {
+                    this.editor?.updateOptions?.({
+                        codeLens: false
+                    })
+                }
             }
         }
     }

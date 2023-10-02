@@ -135,7 +135,7 @@
                     this.loadMore(this.page)
                     this.activeVersion = version
 
-                    const [{ yaml }, current] = await Promise.all([
+                    const [{ yamlPreview }, current] = await Promise.all([
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
@@ -147,8 +147,9 @@
                             version: this.latestVersion
                         })
                     ])
-                    this.activeYaml = yaml
-                    this.currentYaml = current.yaml
+                    debugger
+                    this.activeYaml = yamlPreview.yaml
+                    this.currentYaml = current.yamlPreview.yaml
                 } catch (error) {
                     console.log(error)
                 } finally {

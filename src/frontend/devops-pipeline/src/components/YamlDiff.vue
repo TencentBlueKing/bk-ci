@@ -9,7 +9,7 @@
 </template>
 
 <script>
-    import ciYamlTheme from '@/utils/ciYamlTheme'
+    import MonacoEditor from '@/utils/monacoEditor'
     export default {
         props: {
             height: {
@@ -44,23 +44,13 @@
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(
-                /* webpackMode: "lazy" */
-                /* webpackPrefetch: true */
-                /* webpackPreload: true */
-                /* webpackChunkName: "monaco-editor" */
-                'monaco-editor'
-            )
-
+            this.monaco = await MonacoEditor.instance()
             this.isLoading = false
-
-            this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
 
             this.editor = this.monaco.editor.createDiffEditor(
                 this.$refs.diffBox,
                 {
                     language: 'yaml',
-                    theme: 'ciYamlTheme',
                     readOnly: this.readOnly,
                     automaticLayout: true,
                     hideCursorInOverviewRuler: false
