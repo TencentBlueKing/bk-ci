@@ -155,6 +155,7 @@
         },
         beforeDestroy () {
             this.editor?.getModel()?.dispose?.()
+            this.codeLens?.dispose?.()
             this.editor?.dispose?.()
         },
         methods: {
