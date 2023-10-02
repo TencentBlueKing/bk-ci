@@ -17,19 +17,48 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 <template>
-    <div
-        v-bkloading="{ isLoading }"
-        :style="{
-            height: '100%',
-            width: '100%'
-        }"
-    >
-    </div>
-
+    <section v-bkloading="{ isLoading }" :style="{
+        height: '100%',
+        width: '100%'
+    }">
+        <div
+            ref="box"
+            :style="{
+                height: '100%',
+                width: '100%'
+            }"
+        >
+        </div>
+        <ul class="yaml-error-summary">
+            <li
+                v-for="(item, index) in errors"
+                :key="index"
+            >
+                <i class="devops-icon icon-close-circle-fill"></i>
+                <p>
+                    <span>
+                        {{ item.message }}
+                    </span>
+                    ({{ item.startLineNumber }}, {{ item.startColumn }})
+                </p>
+            </li>
+        </ul>
+    </section>
 </template>
 <script>
     import ciYamlTheme from '@/utils/ciYamlTheme'
     import YAML from 'yaml'
+    // import { listen } from 'vscode-ws-jsonrpc'
+
+    // import {
+    //     MonacoLanguageClient,
+    //     CloseAction,
+    //     ErrorAction,
+    //     createConnection,
+    //     MonacoServices
+    // } from 'monaco-languageclient'
+
+    // window.setImmediate = window.setTimeout
     export default {
         props: {
             value: {
@@ -65,15 +94,19 @@
             return {
                 editor: null,
                 isLoading: false,
-                monaco: null
+                monaco: null,
+                errors: []
             }
         },
         watch: {
             value (newValue) {
+                console.log('change', newValue !== this.editor?.getValue?.())
                 if (this.editor) {
-                    this.showYamlPlugin && this.registerCodeLensProvider()
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
+                        setTimeout(() => {
+                            this.showYamlPlugin && this.registerCodeLensProvider()
+                        }, 0)
                     }
                 }
             },
@@ -100,7 +133,9 @@
                 /* webpackChunkName: "monaco-editor" */
                 'monaco-yaml'
             )
-            // { configureMonacoYaml }
+            // MonacoServices.install(this.monaco)
+            // this.connectToLangServer()
+
             this.monacoYaml.configureMonacoYaml(this.monaco, {
                 enableSchemaRequest: true,
                 schemas: [
@@ -114,21 +149,32 @@
             this.monaco.editor.defineTheme('ciYamlTheme', ciYamlTheme)
             this.monaco.editor.setTheme('ciYamlTheme')
 
-            this.editor = this.monaco.editor.create(this.$el, {
+            this.editor = this.monaco.editor.create(this.$refs.box, {
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
                 // automaticLayout: true,
-                formatonPaste: true,
+                formatOnPaste: true,
                 minimap: {
                     enabled: false
                 },
                 readOnly: this.readOnly
             })
+            this.monaco.editor.onDidChangeMarkers(() => {
+                this.errors = this.monaco.editor.getModelMarkers({
+                    resource: this.monaco.Uri.parse(this.yamlUri)
+                })
+            })
 
             this.isLoading = false
             this.highlightBlocks(this.highlightRanges)
             this.showYamlPlugin && this.registerCodeLensProvider()
+
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
+                console.log('didChanges')
+                this.errors = this.monaco.editor.getModelMarkers({
+                    resource: this.monaco.Uri.parse(this.yamlUri)
+                })
+
                 if (this.value !== value) {
                     this.$emit('change', value, event)
                     this.$emit('update:hasError', !value)
@@ -142,6 +188,45 @@
             this.editor?.dispose?.()
         },
         methods: {
+            // connectToLangServer () {
+            //     const webSocket = new WebSocket('ws://127.0.0.1:8989')
+
+            //     listen({
+            //         webSocket,
+            //         onConnection: (connection) => {
+            //             const languageClient = this.createLanguageClient(connection)
+            //             const disposable = languageClient.start()
+
+            //             connection.onClose(function () {
+            //                 return disposable.dispose()
+            //             })
+
+            //             connection.onError(function (error) {
+            //                 console.log(error)
+            //             })
+            //         }
+            //     })
+            // },
+            // createLanguageClient (connection) {
+            //     return new MonacoLanguageClient({
+            //         name: 'Monaco language client',
+            //         clientOptions: {
+            //             documentSelector: ['yaml'],
+            //             errorHandler: {
+            //                 error: () => ErrorAction.Continue,
+            //                 closed: () => CloseAction.DoNotRestart
+            //             }
+            //         },
+
+            //         connectionProvider: {
+            //             get: (errorHandler, closeHandler) => {
+            //                 return Promise.resolve(
+            //                     createConnection(connection, errorHandler, closeHandler)
+            //                 )
+            //             }
+            //         }
+            //     })
+            // },
             format () {
                 this.editor?.getAction('editor.action.formatDocument').run()
             },
@@ -240,6 +325,7 @@
 </script>
 
 <style lang="scss">
+    @import '@/scss/conf';
     .code-highlight-block {
         background: #3A84FF;
         opacity: .1;
@@ -247,5 +333,35 @@
     .monaco-editor .codelens-decoration  {
         left: 0 !important;
         color: #63656E !important;
+    }
+    .yaml-error-summary {
+        position: absolute;
+        bottom: 0;
+        max-height: 200px;
+        width: 100%;
+        background: #212121;
+        padding: 20px 16px;
+        overflow: auto;
+        ::webkit-scrollbar {
+            width: 14px;
+        }
+        ::webkit-scrollbar-thumb {
+            background: rgba(121, 121, 121, 0.4);
+        }
+        > li {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            grid-gap: 8px;
+            &:not(:last-child) {
+                margin-bottom: 12px;
+            }
+            > p > span {
+                color: white;
+            }
+            .devops-icon.icon-close-circle-fill {
+                color: $dangerColor;
+            }
+        }
     }
 </style>

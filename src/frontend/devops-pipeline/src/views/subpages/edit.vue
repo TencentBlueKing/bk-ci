@@ -98,6 +98,7 @@
                 'pipeline',
                 'pipelineWithoutTrigger',
                 'pipelineYaml',
+                'pipelineSetting',
                 'editfromImport'
             ]),
             ...mapGetters({
