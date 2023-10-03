@@ -195,7 +195,6 @@
                 }
             },
             isCodeMode (val) {
-                console.log(this.pipelineYaml)
                 const pipeline = Object.assign({}, this.pipeline, {
                     stages: [
                         this.pipeline.stages[0],
@@ -215,7 +214,7 @@
             }
         },
         mounted () {
-            if (!this.editfromImport && this.pipeline?.version !== this.pipelineVersion) {
+            if (!this.editfromImport) {
                 this.init()
             }
             this.getQualityAtom()
@@ -275,8 +274,8 @@
                     if (this.isEditing) {
                         this.leaving = true
                         navConfirm({ content: this.confirmMsg, type: 'warning' })
-                            .then(() => {
-                                next(true)
+                            .then((result) => {
+                                next(result)
                                 this.leaving = false
                             })
                             .catch(() => {

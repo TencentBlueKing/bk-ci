@@ -109,23 +109,25 @@
                 const content = this.$t('editPage.docker.stopTips')
 
                 navConfirm({ title: this.$t('editPage.docker.confirmStop'), content })
-                    .then(async () => {
-                        try {
-                            this.isExiting = true
-                            const { projectId, pipelineId, vmSeqId, realDispatchType } = this
-                            await this.$store.dispatch('common/stopDebugDocker', { projectId, pipelineId, vmSeqId, dispatchType: realDispatchType })
-                            this.$router.push({
-                                name: 'pipelinesEdit',
-                                params: {
-                                    pipelineId: this.pipelineId
-                                }
-                            })
-                        } catch (err) {
-                            this.isExiting = false
-                            this.$showTips({
-                                theme: 'error',
-                                message: err.message || err
-                            })
+                    .then(async (result) => {
+                        if (result) {
+                            try {
+                                this.isExiting = true
+                                const { projectId, pipelineId, vmSeqId, realDispatchType } = this
+                                await this.$store.dispatch('common/stopDebugDocker', { projectId, pipelineId, vmSeqId, dispatchType: realDispatchType })
+                                this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    params: {
+                                        pipelineId: this.pipelineId
+                                    }
+                                })
+                            } catch (err) {
+                                this.isExiting = false
+                                this.$showTips({
+                                    theme: 'error',
+                                    message: err.message || err
+                                })
+                            }
                         }
                     }).catch(() => {})
             },

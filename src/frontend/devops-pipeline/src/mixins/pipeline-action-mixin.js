@@ -385,9 +385,10 @@ export default {
         async restore ({ projectId, pipelineId, pipelineName }) {
             let message = this.$t('restore.restoreSuc')
             let theme = 'success'
-            await navConfirm({
+            const res = await navConfirm({
                 content: this.$t('restorePipelineConfirm', [pipelineName])
             })
+            if (!res) return
             try {
                 await this.restorePipeline({
                     projectId,

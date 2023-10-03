@@ -104,9 +104,6 @@
                 if (this.editor) {
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
-                        setTimeout(() => {
-                            this.registerCodeLensProvider()
-                        }, 0)
                     }
                 }
             },
@@ -141,15 +138,10 @@
 
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
-                console.log('didChanges')
-                this.errors = this.monaco.editor.getModelMarkers({
-                    resource: this.monaco.Uri.parse(this.yamlUri)
-                })
+                this.registerCodeLensProvider()
 
                 if (this.value !== value) {
-                    this.$emit('change', value, event)
-                    this.$emit('update:hasError', !value)
-                    this.$emit('input', value, this.editor, event)
+                    this.emitChange(value)
                 }
             })
         },
@@ -198,6 +190,24 @@
             //         }
             //     })
             // },
+
+            insertFragmentAtPos (text, { stageIndex, containerIndex, elementIndex }) {
+                try {
+                    const doc = YAML.parse(this.value)
+                    const jobs = Object.values(doc.stages[stageIndex].jobs)
+
+                    jobs[containerIndex].steps[elementIndex] = YAML.parse(text)
+                    const result = YAML.stringify(doc)
+                    this.emitChange(result)
+                } catch (error) {
+                    console.error(error)
+                }
+            },
+            emitChange (value) {
+                this.$emit('change', value)
+                this.$emit('update:hasError', this.errors.length > 0)
+                this.$emit('input', value, this.editor)
+            },
             format () {
                 this.editor?.getAction('editor.action.formatDocument').run()
             },
@@ -223,13 +233,9 @@
                     this.collections?.clear?.()
                 }
             },
-            handleYamlPluginClick (editingElementPos) {
-                console.log(YAML.parse(this.value))
-                const stages = YAML.parse(this.value).stages
-                const jobs = Object.values(stages[editingElementPos.stageIndex].jobs)
-
-                const element = jobs[editingElementPos.containerIndex].steps[editingElementPos.elementIndex].with
-                this.$emit('step-click', editingElementPos, element)
+            handleYamlPluginClick ({ editingElementPos, pos, range }) {
+                const atom = this.getAtomByPos(editingElementPos)
+                this.$emit('step-click', editingElementPos, atom.with)
             },
             visitYaml (yaml) {
                 const lineCounter = new YAML.LineCounter()
@@ -240,6 +246,7 @@
                 let steps = []
                 let stageIndex = -1
                 let containerIndex = -1
+                const monaco = this.monaco
 
                 YAML.visit(doc, {
                     Pair (_, pair) {
@@ -249,21 +256,39 @@
                         }
                         if (pair.key && pair.key.value === 'steps') {
                             containerIndex++
-                            steps = steps.concat(pair.value.items.map((item, index) => {
-                                return {
-                                    pos: lineCounter.linePos(item.range[0]),
-                                    editingElementPos: {
-                                        stageIndex,
-                                        containerIndex,
-                                        elementIndex: index
+                            if (Array.isArray(pair.value.items)) {
+                                steps = steps.concat(pair.value.items.map((item, index) => {
+                                    return {
+                                        pos: lineCounter.linePos(item.range[0]),
+                                        range: new monaco.Range(
+                                            lineCounter.linePos(item.range[0]).line,
+                                            lineCounter.linePos(item.range[0]).col,
+                                            lineCounter.linePos(item.range[1]).line,
+                                            lineCounter.linePos(item.range[1]).col
+                                        ),
+                                        editingElementPos: {
+                                            stageIndex,
+                                            containerIndex,
+                                            elementIndex: index
+                                        }
                                     }
-                                }
-                            }))
-                            return YAML.visit.SKIP
+                                }))
+                                return YAML.visit.SKIP
+                            }
                         }
                     }
                 })
                 return steps
+            },
+            getAtomByPos ({ stageIndex, containerIndex, elementIndex }) {
+                try {
+                    const doc = YAML.parse(this.value)
+                    const jobs = Object.values(doc.stages[stageIndex].jobs)
+
+                    return jobs[containerIndex].steps[elementIndex]
+                } catch (error) {
+                    return null
+                }
             },
             registerCodeLensProvider (provider) {
                 if (this.showYamlPlugin && !this.readOnly) {
@@ -282,7 +307,7 @@
                                     id: index,
                                     command: {
                                         id: this.editor.addCommand(0, () => {
-                                            this.handleYamlPluginClick(item.editingElementPos)
+                                            this.handleYamlPluginClick(item)
                                         }),
                                         title
                                     }

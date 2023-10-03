@@ -194,23 +194,25 @@
                     navConfirm({
                         content,
                         theme: 'danger'
-                    }).then(() => {
-                        this.deletePipelineVersion({
-                            projectId,
-                            pipelineId,
-                            version: row.version
-                        }).then(() => {
-                            this.getPipelineVersions(1)
-                            this.$showTips({
-                                message: this.$t('delete') + this.$t('version') + this.$t('success'),
-                                theme: 'success'
+                    }).then((val) => {
+                        if (val) {
+                            this.deletePipelineVersion({
+                                projectId,
+                                pipelineId,
+                                version: row.version
+                            }).then(() => {
+                                this.getPipelineVersions(1)
+                                this.$showTips({
+                                    message: this.$t('delete') + this.$t('version') + this.$t('success'),
+                                    theme: 'success'
+                                })
+                            }).catch(err => {
+                                this.$showTips({
+                                    message: err.message || err,
+                                    theme: 'error'
+                                })
                             })
-                        }).catch(err => {
-                            this.$showTips({
-                                message: err.message || err,
-                                theme: 'error'
-                            })
-                        })
+                        }
                     })
                 }
             },

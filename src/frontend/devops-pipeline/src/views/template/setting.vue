@@ -57,7 +57,7 @@
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning' })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)

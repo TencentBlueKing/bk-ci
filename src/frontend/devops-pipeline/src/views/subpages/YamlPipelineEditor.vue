@@ -198,18 +198,22 @@
                     })
                 }
             },
+            async atomModel2Yaml () {
+                const { data } = await this.previewAtomYAML({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    ...this.element
+                })
+                return data
+            },
             async previewAtom () {
                 if (this.isPreviewingAtomYAML) return
                 try {
                     this.showAtomYaml = true
                     this.isPreviewingAtomYAML = true
-                    const res = await this.previewAtomYAML({
-                        projectId: this.$route.params.projectId,
-                        pipelineId: this.$route.params.pipelineId,
-                        ...this.element
-                    })
+                    const yaml = await this.atomModel2Yaml()
                     this.toggleAtomSelectorPopup(true)
-                    this.atomYaml = res.data
+                    this.atomYaml = yaml
                 } catch (error) {
                     console.error(error)
                 } finally {
@@ -265,22 +269,12 @@
             async syncModelToYaml () {
                 try {
                     this.isUpdating = true
-                    const pipeline = Object.assign({}, this.pipeline, {
-                        stages: [
-                            this.pipeline.stages[0],
-                            ...(this.pipelineWithoutTrigger?.stages ?? [])
-                        ]
-                    })
-                    await this.transfertModelToYaml({
-                        projectId: this.$route.params.projectId,
-                        pipelineId: this.$route.params.pipelineId,
-                        actionType: 'FULL_MODEL2YAML',
-                        modelAndSetting: {
-                            model: pipeline,
-                            setting: this.pipelineSetting
-                        },
-                        oldYaml: this.pipelineYaml
-                    })
+                    if (!this.atomYaml) {
+                        this.atomYaml = await this.atomModel2Yaml()
+                    }
+
+                    this.$refs.editor.insertFragmentAtPos(this.atomYaml, this.editingElementPos)
+
                     this.togglePropertyPanel({
                         isShow: false
                     })

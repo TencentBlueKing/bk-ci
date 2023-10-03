@@ -274,8 +274,8 @@
                 if (this.template.hasPermission && this.currentVersionId !== row.version && this.template.templateType !== 'CONSTRAINT') {
                     const content = `${this.$t('delete')}${row.versionName}`
                     navConfirm({ type: 'warning', content })
-                        .then(() => {
-                            this.confirmDeleteVersion(row)
+                        .then((val) => {
+                            val && this.confirmDeleteVersion(row)
                         }).catch(() => {})
                 }
             },
@@ -298,7 +298,7 @@
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning' })
-                        .then(() => next())
+                        .then(next)
                         .catch(() => next(false))
                 } else {
                     next(true)
