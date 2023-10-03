@@ -89,7 +89,7 @@
                         this.requestStartupInfo({
                             projectId: this.projectId,
                             pipelineId: this.pipelineId,
-                            version: this.pipelineInfo?.version
+                            version: this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
                         }),
                         this.fetchPipelineByVersion(this.$route.params)
                     ])
