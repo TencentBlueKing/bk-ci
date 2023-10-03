@@ -166,7 +166,7 @@
                     // }
 
                     // 请求执行构建
-                    const { version, versionName } = await this.saveDraftPipeline({
+                    const { data: { version, versionName } } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
                         baseVersion: pipeline.baseVersion,
