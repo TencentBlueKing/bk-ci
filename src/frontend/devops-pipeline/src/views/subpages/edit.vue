@@ -159,9 +159,9 @@
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
             },
-            longProjectId () {
-                this.getRoleList()
-            },
+            // longProjectId () {
+            //     this.getRoleList()
+            // },
             pipeline (val) {
                 this.isLoading = false
                 this.requestInterceptAtom()
@@ -177,7 +177,7 @@
         },
         mounted () {
             if (this.editfromImport) {
-                this.getRoleList()
+                // this.getRoleList()
                 this.requestProjectGroupAndUsers(this.$route.params)
             } else {
                 this.init()
@@ -232,7 +232,7 @@
                     this.isLoading = true
                     await this.requestPipeline(this.$route.params)
                     await this.requestPipelineSetting(this.$route.params)
-                    await this.getRoleList()
+                    // await this.getRoleList()
                     this.isLoading = false
                 }
                 this.requestProjectGroupAndUsers(this.$route.params)
@@ -273,14 +273,14 @@
                 return this.confirmMsg
             },
 
-            getRoleList () {
-                if (this.longProjectId && this.pipelineId) {
-                    this.fetchRoleList({
-                        projectId: this.longProjectId,
-                        pipelineId: this.pipelineId
-                    })
-                }
-            },
+            // getRoleList () {
+            //     if (this.longProjectId && this.pipelineId) {
+            //         this.fetchRoleList({
+            //             projectId: this.longProjectId,
+            //             pipelineId: this.pipelineId
+            //         })
+            //     }
+            // },
             requestQualityAtom () {
                 this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
