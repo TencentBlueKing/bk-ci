@@ -517,6 +517,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 VersionStatus.BRANCH
             }
         )
+        newResource.setting.projectId = projectId
+        newResource.setting.pipelineId = result.pipelineId
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -545,6 +547,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
         val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
+        newResource.setting.projectId = projectId
+        newResource.setting.pipelineId = pipelineId
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,

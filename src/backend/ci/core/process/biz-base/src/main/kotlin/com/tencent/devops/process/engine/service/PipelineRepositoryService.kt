@@ -694,6 +694,7 @@ class PipelineRepositoryService constructor(
                                 dslContext = transactionContext,
                                 projectId = projectId,
                                 pipelineId = pipelineId,
+                                pipelineName = model.name,
                                 failNotifyTypes = notifyTypes,
                                 id = client.get(ServiceAllocIdResource::class)
                                     .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
