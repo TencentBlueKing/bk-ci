@@ -10,6 +10,7 @@ import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
@@ -92,6 +93,32 @@ class GitproxyBkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
+    fun existProject(userId: String, projectId: String): Boolean? {
+        logger.info("existProject, userId: $userId, projectId: $projectId")
+        val url = "$bkrepoDevxUrl/repository/api/project/exist/$projectId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(BKREPO_ROOT_USERID).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<Boolean?>>()!!.data
+    }
+
+    fun createProject(userId: String, projectId: String) {
+        logger.info("createProject, userId: $userId, projectId: $projectId")
+        val requestData = CreateProjectData(
+            name = projectId,
+            displayName = projectId,
+            description = ""
+        )
+        val request = Request.Builder()
+            .url("$bkrepoDevxUrl/repository/api/project/create")
+            .headers(getCommonHeaders(userId).toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
     private fun getCommonHeaders(userId: String): MutableMap<String, String> {
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = bkrepoDevxHeaderUserAuth ?: ""
@@ -130,5 +157,6 @@ class GitproxyBkRepoClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
         private val JSON_MEDIA_TYPE = MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()
+        private const val BKREPO_ROOT_USERID = "admin"
     }
 }
