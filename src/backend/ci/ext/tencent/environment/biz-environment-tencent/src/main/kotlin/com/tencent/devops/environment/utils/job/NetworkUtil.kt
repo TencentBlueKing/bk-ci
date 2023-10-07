@@ -48,21 +48,26 @@ object NetworkUtil {
         }
     }
 
+    private fun requestBodyToBytes(requestBody: RequestBody?): ByteArray {
+        val buffer = okio.Buffer()
+        if (requestBody != null) {
+            requestBody.writeTo(buffer)
+        }
+        return buffer.readByteArray()
+    }
+
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
         val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
-        val properties = jobCloudReq?.javaClass?.declaredFields // 获取所有属性
-        if (properties != null) {
-            for (property in properties) {
-                property.isAccessible = true // 设置可访问私有属性
-                val value = property.get(jobCloudReq) // 获取属性值
-                logger.info("[createPostRequest] ${property.name} = $value")
-            }
-        }
         logger.info("[createPostRequest] request body log: $requestContent")
+
+        val requestBodyBytes = requestBodyToBytes(requestBody)
+        val requestBodyString = requestBodyBytes.contentToString()
+        logger.info("[createPostRequest] request body string: $requestBodyString")
+
         return Request.Builder()
             .url(url)
             .post(requestBody)
