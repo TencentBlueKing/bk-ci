@@ -53,7 +53,7 @@ object NetworkUtil {
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             ObjectMapper().writeValueAsString(jobCloudReq)
         )
-        logger.info("[createPostRequest]requestBody: $requestBody")
+        logger.info("[createPostRequest] requestBody: $requestBody")
         return Request.Builder()
             .url(url)
             .post(requestBody)
@@ -84,7 +84,7 @@ object NetworkUtil {
                         responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                     else
                         responseBody.toString()
-                logger.info("[$operateName] requestBody: $requestLog, responseBody: $responseLog")
+                logger.info("[$operateName] request: $requestLog, responseBody: $responseLog")
 
                 val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
 
