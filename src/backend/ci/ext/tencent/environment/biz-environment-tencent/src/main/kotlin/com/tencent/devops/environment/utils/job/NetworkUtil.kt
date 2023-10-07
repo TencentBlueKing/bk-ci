@@ -53,7 +53,8 @@ object NetworkUtil {
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             ObjectMapper().writeValueAsString(jobCloudReq)
         )
-        logger.info("[createPostRequest] requestBody: $requestBody")
+        val requestBodyLog = requestBody.toString()
+        logger.info("[createPostRequest] requestBody: $requestBodyLog")
         return Request.Builder()
             .url(url)
             .post(requestBody)
