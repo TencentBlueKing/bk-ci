@@ -79,13 +79,4 @@ interface ServiceDeptResource {
         @ApiParam("用户名称", required = true)
         name: String
     ): Result<UserAndDeptInfoVo?>
-
-    @GET
-    @Path("/getUserInfoTest")
-    @ApiOperation("获取单个用户信息")
-    fun getUserInfoTest(
-        @QueryParam("name")
-        @ApiParam("用户名称", required = true)
-        name: String
-    ): Result<UserAndDeptInfoVo?>
 }
