@@ -52,6 +52,7 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +64,8 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceClient: WorkspaceStartCloudClient,
-    private val workspaceRedisUtils: WorkspaceRedisUtils
+    private val workspaceRedisUtils: WorkspaceRedisUtils,
+    private val startCloudRedisUtils: StartCloudRedisUtils
 ) : RemoteDevInterface {
 
     @Value("\${startCloud.appName}")
@@ -112,6 +114,10 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
             )
         )
+
+        // 创建成功后保存pipelineId
+        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+
         return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
     }
 
@@ -230,6 +236,16 @@ class StartCloudRemoteDevService @Autowired constructor(
                 }
             }
         }
+    }
+
+    fun refreshStartCloudOrderId(userId: String): Boolean {
+        logger.info("$userId refresh startCloud orderId.")
+        val startCloudWorkspaceList = dispatchWorkspaceDao.getStartCloudWorkspaceInfo(dslContext)
+        startCloudWorkspaceList.forEach {
+            startCloudRedisUtils.setStartCloudOrder(userId, it.workspaceName, it.taskId)
+        }
+
+        return true
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

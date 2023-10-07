@@ -24,28 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.dispatch.startcloud.utils
 
-@ApiModel("数据源")
-data class DataSource(
-    @ApiModelProperty("集群名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 64)
-    val clusterName: String,
-    @ApiModelProperty("模块标识", required = true)
-    val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称", required = true)
-    @field:BkField(minLength = 1, maxLength = 128)
-    val dataSourceName: String,
-    @ApiModelProperty("容量是否满标识", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
-    val fullFlag: Boolean = false,
-    @ApiModelProperty("数据源URL", required = false)
-    val dsUrl: String? = null,
-    @ApiModelProperty("数据标签", required = false)
-    val dataTag: String? = null
-)
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class StartCloudRedisUtils @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
+) {
+
+    /*-------------------------*/
+    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
+        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hset(
+            key = startCloudOrderKey(),
+            hashKey = workspaceName,
+            values = orderId
+        )
+    }
+
+    fun getStartCloudOrder(workspaceName: String): String? {
+        return redisOperation.hget(startCloudOrderKey(), workspaceName)
+    }
+
+    fun deleteStartCloudOrder(workspaceName: String) {
+        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
+    }
+
+    private fun startCloudOrderKey(): String {
+        return "dispatchkubernetes:startcloud:order"
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudRedisUtils::class.java)
+    }
+}
