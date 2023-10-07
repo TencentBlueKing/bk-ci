@@ -52,7 +52,7 @@ object NetworkUtil {
         val map = mutableMapOf<String, Any>()
         javaClass.declaredFields.forEach { field ->
             field.isAccessible = true
-            map[field.name] = field.get(this)
+            map[field.name] = field.get(this)?:""
         }
         return map
     }
