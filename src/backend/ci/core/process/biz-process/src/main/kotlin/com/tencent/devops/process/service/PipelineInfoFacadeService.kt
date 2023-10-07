@@ -158,7 +158,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
@@ -517,6 +517,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 VersionStatus.BRANCH
             }
         )
+        newResource.setting.projectId = projectId
+        newResource.setting.pipelineId = result.pipelineId
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -545,6 +547,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
         val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
+        newResource.setting.projectId = projectId
+        newResource.setting.pipelineId = pipelineId
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -728,7 +732,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -934,7 +938,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
+            val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1151,12 +1155,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
             includeDraft = includeDraft
-        ) ?: throw ErrorCodeException(
+        )?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1251,7 +1255,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
 
-            val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
+            val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS

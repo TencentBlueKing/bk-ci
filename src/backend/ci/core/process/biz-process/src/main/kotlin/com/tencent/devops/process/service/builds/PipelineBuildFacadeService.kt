@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -656,23 +657,29 @@ class PipelineBuildFacadeService(
     }
 
     private fun getModelAndBuildLevel(projectId: String, pipelineId: String, version: Int?): Pair<Model, Boolean> {
+        val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         if (version == null) {
-            return Pair(getModel(projectId, pipelineId), false)
+            if (defaultVersion?.status == null || defaultVersion.status != VersionStatus.RELEASED) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
+                )
+            }
+            return Pair(defaultVersion.model, false)
         }
 
-        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        if (releaseVersion != null && releaseVersion.version == version) {
-            return Pair(releaseVersion.model, false)
+        if (defaultVersion != null && defaultVersion.version == version) {
+            return Pair(defaultVersion.model, false)
         }
-        val draftResource = pipelineRepositoryService.getDraftVersionResource(
+        val targetResource = pipelineRepositoryService.getDraftVersionResource(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        if (draftResource != null && draftResource.version == version) {
-            return Pair(draftResource.model, true)
+        if (targetResource != null && targetResource.version == version) {
+            return Pair(targetResource.model, true)
         }
         throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
@@ -714,7 +721,7 @@ class PipelineBuildFacadeService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = pipeline.version)
+            val model = getPipelineResourceVersion(projectId, pipelineId, pipeline.version).model
 
             /**
              * 验证流水线参数构建启动参数
@@ -771,7 +778,7 @@ class PipelineBuildFacadeService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(projectId, pipelineId, readyToBuildPipelineInfo.version)
+            val model = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version).model
 
             /**
              * 验证流水线参数构建启动参数
@@ -2097,8 +2104,8 @@ class PipelineBuildFacadeService(
         return buildHistory
     }
 
-    fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
+    fun getPipelineResourceVersion(projectId: String, pipelineId: String, version: Int? = null) =
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )

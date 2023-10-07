@@ -490,7 +490,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             url = callbackInfo.callbackUrl
         )
         callbackInfo.callbackUrl = callBackUrl
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: return
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
 
         if (model.events?.isEmpty() == true) {

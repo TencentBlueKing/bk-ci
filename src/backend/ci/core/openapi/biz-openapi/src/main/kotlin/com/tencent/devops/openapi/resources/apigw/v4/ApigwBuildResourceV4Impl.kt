@@ -71,7 +71,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            debugVersion = debugVersion,
+            version = debugVersion,
             channelCode = apiGatewayUtil.getChannelCode()
         )
     }
