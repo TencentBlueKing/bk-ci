@@ -25,7 +25,7 @@ class BKCCService @Autowired constructor(
     val ccHost: String = ""
 
     @Value("\${bkCC.userName:}")
-    val bkUserName: String = ""
+    val userName: String = ""
 
     @Value("\${remoteDev.appCode:}")
     val appCode = ""
@@ -42,7 +42,7 @@ class BKCCService @Autowired constructor(
         val body = UpdateHostReqBody(
             bkAppCode = appCode,
             bkAppSecret = appSecret,
-            bkUserName = bkUserName,
+            bkUserName = userName,
             bkHostId = hostIds.joinToString(separator = ","),
             data = props
         )
