@@ -43,13 +43,11 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
@@ -161,7 +159,6 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
-
         val resp = workspaceClient.operateWorkspace(
             userId = userId,
             action = EnvironmentAction.DELETE_VM,
@@ -170,7 +167,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = appName,
                 userId = userId,
-                pipelineId = ""
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
             )
         )
 
@@ -255,7 +252,6 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
-        private const val EMPTY = ""
         private const val START_CREATE_TIMEOUT = 20 * 60 * 1000  // start生成资源最长轮训时间
         private const val START_CREATE_LOOP_INTERVAL = 1000L
     }
