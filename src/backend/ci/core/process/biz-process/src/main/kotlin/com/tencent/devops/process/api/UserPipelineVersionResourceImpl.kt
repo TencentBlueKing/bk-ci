@@ -106,6 +106,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        // 存在草稿版本就可以调试
+        val canDebug = draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -131,6 +133,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 hasCollect = detailInfo.hasCollect,
                 instanceFromTemplate = detailInfo.instanceFromTemplate,
                 canManualStartup = detailInfo.canManualStartup,
+                canDebug = canDebug,
                 hasPermission = detailInfo.hasPermission,
                 pipelineDesc = detailInfo.pipelineDesc,
                 creator = detailInfo.creator,

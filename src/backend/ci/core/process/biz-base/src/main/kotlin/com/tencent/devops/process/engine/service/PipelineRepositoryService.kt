@@ -1051,6 +1051,7 @@ class PipelineRepositoryService constructor(
         ).map { it.key to str2model(it.value, it.key) }.toMap()
     }
 
+    @Deprecated("废弃，改用getPipelineResourceVersion()，流水线多版本的信息需要一起获取")
     fun getModel(
         projectId: String,
         pipelineId: String,
@@ -1388,7 +1389,7 @@ class PipelineRepositoryService constructor(
             return
         }
 
-        val existModel = getModel(projectId, pipelineId, pipeline.version)
+        val existModel = getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
 
         if (existModel == null) {
             logger.warn("The pipeline($pipelineId) is not exist")
@@ -1549,7 +1550,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         days: Long?
     ): Model {
-        val existModel = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val existModel = getPipelineResourceVersion(projectId, pipelineId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )

@@ -412,7 +412,7 @@ class PipelineAtomService @Autowired constructor(
                 )
             )
         }
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
