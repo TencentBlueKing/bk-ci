@@ -24,6 +24,9 @@ class BKCCService @Autowired constructor(
     @Value("\${bkCC.host:}")
     val ccHost: String = ""
 
+    @Value("\${bkCC.userName:}")
+    val bkUserName: String = ""
+
     @Value("\${remoteDev.appCode:}")
     val appCode = ""
 
@@ -39,7 +42,8 @@ class BKCCService @Autowired constructor(
         val body = UpdateHostReqBody(
             bkAppCode = appCode,
             bkAppSecret = appSecret,
-            bkHostId = hostIds.joinToString { "," },
+            bkUserName = bkUserName,
+            bkHostId = hostIds.joinToString(separator = ","),
             data = props
         )
         val request = Request.Builder()
@@ -77,6 +81,8 @@ data class UpdateHostReqBody(
     val bkAppCode: String,
     @JsonProperty("bk_app_secret")
     val bkAppSecret: String,
+    @JsonProperty("bk_username")
+    val bkUserName: String,
     @JsonProperty("bk_host_id")
     val bkHostId: String,
     val data: Map<String, Any>
