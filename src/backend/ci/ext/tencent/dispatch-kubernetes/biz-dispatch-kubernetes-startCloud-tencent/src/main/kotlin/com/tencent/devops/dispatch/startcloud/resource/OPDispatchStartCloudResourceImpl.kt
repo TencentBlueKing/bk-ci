@@ -29,15 +29,14 @@ package com.tencent.devops.dispatch.startcloud.resource
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.api.op.OPRemoteDevResource
-import com.tencent.devops.dispatch.startcloud.service.StartCloudInterfaceService
+import com.tencent.devops.dispatch.kubernetes.api.op.OPDispatchStartCloudResource
 import com.tencent.devops.dispatch.startcloud.service.StartCloudRemoteDevService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OPRemoteDevResourceImpl @Autowired constructor(
+class OPDispatchStartCloudResourceImpl @Autowired constructor(
     private val startCloudRemoteDevService: StartCloudRemoteDevService
-) : OPRemoteDevResource {
+) : OPDispatchStartCloudResource {
     override fun refreshStartCloudOrderId(userId: String): Result<Boolean> {
         return Result(startCloudRemoteDevService.refreshStartCloudOrderId(userId))
     }

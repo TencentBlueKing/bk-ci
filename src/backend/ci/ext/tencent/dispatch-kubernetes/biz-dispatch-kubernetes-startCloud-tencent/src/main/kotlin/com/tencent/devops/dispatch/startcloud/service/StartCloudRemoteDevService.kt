@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.startcloud.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException

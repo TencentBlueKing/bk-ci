@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/remotedev")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OPRemoteDevResource {
+interface OPDispatchStartCloudResource {
 
     @POST
     @Path("/startcloud/order-refresh")
