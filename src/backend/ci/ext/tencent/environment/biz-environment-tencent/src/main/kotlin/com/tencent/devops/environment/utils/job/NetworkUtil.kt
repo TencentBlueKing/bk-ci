@@ -25,7 +25,8 @@ object NetworkUtil {
         when (httpType) {
             "post" -> {
                 val request = createPostRequest(url, bkAuthorization, jobCloudReq)
-                logger.info("[executeHttpRequest] post request: $request")
+                val requestBody = request.body.toString()
+                logger.info("[executeHttpRequest] post request: $request, request body: $requestBody")
                 return executeHttpRequest(operateName, request)
             }
 
@@ -49,15 +50,14 @@ object NetworkUtil {
     }
 
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
-        val requestBody = RequestBody.create(
-            "application/json;charset=utf-8".toMediaTypeOrNull(),
-            ObjectMapper().writeValueAsString(jobCloudReq)
-        )
-        val reqLog = jobCloudReq.toString()
-        logger.info("[createPostRequest] reqLog: $reqLog")
         return Request.Builder()
             .url(url)
-            .post(requestBody)
+            .post(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    ObjectMapper().writeValueAsString(jobCloudReq)
+                )
+            )
             .addHeader("Content-Type", "application/json")
             .addHeader("X-Bkapi-Authorization", bkAuthorization)
             .build()

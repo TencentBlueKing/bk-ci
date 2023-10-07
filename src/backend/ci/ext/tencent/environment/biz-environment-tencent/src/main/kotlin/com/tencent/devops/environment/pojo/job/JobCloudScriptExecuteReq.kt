@@ -44,19 +44,4 @@ data class JobCloudScriptExecuteReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
-    override fun toString(): String {
-        return "bkScopeType='$bkScopeType', " +
-            "bkScopeId=$bkScopeId," +
-            " scriptContent=$scriptContent," +
-            " scriptParam=$scriptParam," +
-            " timeout=$timeout," +
-            " accountAlias=$accountAlias," +
-            " isParamSensitive=$isParamSensitive," +
-            " scriptLanguage=$scriptLanguage," +
-            " targetServer=$targetServer," +
-            " bkAppCode=$bkAppCode," +
-            " bkAppSecret=$bkAppSecret," +
-            " bkUsername=$bkUsername"
-    }
-}
+) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)
