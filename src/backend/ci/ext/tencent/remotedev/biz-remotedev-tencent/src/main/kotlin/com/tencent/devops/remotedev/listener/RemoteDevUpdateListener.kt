@@ -62,7 +62,8 @@ class RemoteDevUpdateListener @Autowired constructor(
                     UpdateEventType.CREATE -> createControl.afterCreateWorkspace(event)
                     UpdateEventType.START -> startWorkspaceHandler.startWorkspaceCallback(event)
                     UpdateEventType.STOP -> stopWorkspaceHandler.stopWorkspaceCallback(event)
-                    UpdateEventType.DELETE -> restartWorkspaceHandler.restartWorkspaceCallback(event)
+                    UpdateEventType.RESTART -> restartWorkspaceHandler.restartWorkspaceCallback(event)
+                    UpdateEventType.DELETE -> deleteControl.afterDeleteWorkspace(event)
                     else -> {}
                 }
                 return
