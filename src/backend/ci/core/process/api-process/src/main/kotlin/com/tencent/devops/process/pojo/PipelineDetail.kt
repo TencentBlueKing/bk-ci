@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -49,6 +51,8 @@ data class PipelineDetail(
     val version: Int,
     @ApiModelProperty("草稿或最新的发布版本名称")
     val versionName: String?,
+    @ApiModelProperty("基准版本的状态", required = false)
+    val baseVersionStatus: VersionStatus,
     @ApiModelProperty("草稿或最新的发布版本")
     val releaseVersion: Int?,
     @ApiModelProperty("草稿或最新的发布版本名称")
@@ -66,5 +70,7 @@ data class PipelineDetail(
     @ApiModelProperty("流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
     @ApiModelProperty("Lock 类型", required = false)
-    val runLockType: PipelineRunLockType? = null
+    val runLockType: PipelineRunLockType? = null,
+    @ApiModelProperty("PAC配置", required = false)
+    val pipelineAsCodeSettings: PipelineAsCodeSettings?
 )

@@ -118,6 +118,13 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
+        val baseVersionStatus = draftVersion?.baseVersion?.let { base ->
+            pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = base
+            )?.status
+        } ?: VersionStatus.RELEASED
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
@@ -144,7 +151,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
                 releaseVersion = releaseVersion?.version,
                 releaseVersionName = releaseVersion?.versionName,
-                runLockType = setting.runLockType
+                baseVersionStatus = baseVersionStatus,
+                pipelineAsCodeSettings = setting.pipelineAsCodeSettings
             )
         )
     }
