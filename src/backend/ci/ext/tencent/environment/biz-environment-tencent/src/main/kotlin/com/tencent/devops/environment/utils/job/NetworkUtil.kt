@@ -25,8 +25,7 @@ object NetworkUtil {
         when (httpType) {
             "post" -> {
                 val request = createPostRequest(url, bkAuthorization, jobCloudReq)
-                val requestBody = request.body.toString()
-                logger.info("[executeHttpRequest] post request: $request, request body: $requestBody")
+                logger.info("[executeHttpRequest] post request: $request")
                 return executeHttpRequest(operateName, request)
             }
 
@@ -75,6 +74,7 @@ object NetworkUtil {
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
+                val requestBodyLog = request.body.toString()
                 val requestLog =
                     if (request.toString().length > LOG_OUTPUT_MAX_LENGTH)
                         request.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
@@ -85,7 +85,7 @@ object NetworkUtil {
                         responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                     else
                         responseBody.toString()
-                logger.info("[$operateName] request: $requestLog, responseBody: $responseLog")
+                logger.info("[$operateName] request: $requestLog, body: $requestBodyLog, responseBody: $responseLog")
 
                 val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
 
