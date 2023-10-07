@@ -302,6 +302,10 @@ export const CODE_LIB_TYPE = [
     }
 ]
 
+export function isRemoteType (param) {
+    return param?.payload?.type === 'remote'
+}
+
 export const isStringParam = paramType(STRING)
 export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)

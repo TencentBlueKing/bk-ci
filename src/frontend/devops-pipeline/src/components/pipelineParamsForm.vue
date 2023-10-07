@@ -38,6 +38,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
     import FileParamInput from '@/components/FileParamInput'
@@ -49,6 +50,7 @@
         isGitParam,
         isCodelibParam,
         isFileParam,
+        isRemoteType,
         ParamComponentMap,
         STRING,
         BOOLEAN,
@@ -66,6 +68,7 @@
 
         components: {
             Selector,
+            RequestSelector,
             EnumInput,
             VuexInput,
             VuexTextarea,
@@ -96,11 +99,18 @@
                 return this.params.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
-                        restParam = {
-                            ...restParam,
-                            displayKey: 'value',
-                            settingKey: 'key',
-                            list: this.getParamOpt(param)
+                        if (isRemoteType(param)) {
+                            restParam = {
+                                ...restParam,
+                                ...param.payload
+                            }
+                        } else {
+                            restParam = {
+                                ...restParam,
+                                displayKey: 'value',
+                                settingKey: 'key',
+                                list: this.getParamOpt(param)
+                            }
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
@@ -116,7 +126,7 @@
                         }
                     }
 
-                    if (!param.searchUrl) {
+                    if (!param.searchUrl && !isRemoteType(param)) {
                         if (isMultipleParam(param.type)) { // 去除不在选项里面的值
                             const mdv = this.getMultiSelectorValue(this.paramValues[param.id], param.options.map(v => v.key))
                             const mdvStr = mdv.join(',')
@@ -140,9 +150,9 @@
                     }
                     return {
                         ...param,
-                        component: ParamComponentMap[param.type],
+                        component: this.getParamComponentType(param),
                         name: param.id,
-                        required: param.type === SVN_TAG || param.type === GIT_REF,
+                        required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
                         ...restParam
                     }
@@ -150,6 +160,13 @@
             }
         },
         methods: {
+            getParamComponentType (param) {
+                if (isRemoteType(param)) {
+                    return 'request-selector'
+                } else {
+                    return ParamComponentMap[param.type]
+                }
+            },
             getParamOpt (param) {
                 switch (true) {
                     case param.type === BOOLEAN:
