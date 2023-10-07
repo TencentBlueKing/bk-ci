@@ -48,13 +48,22 @@ object NetworkUtil {
         }
     }
 
+    private fun Any.propertiesToMap(): Map<String, Any> {
+        val map = mutableMapOf<String, Any>()
+        javaClass.declaredFields.forEach { field ->
+            field.isAccessible = true
+            map[field.name] = field.get(this)
+        }
+        return map
+    }
+
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
+        val requestContent = ObjectMapper().writeValueAsString(jobCloudReq?.propertiesToMap())
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
-            ObjectMapper().writeValueAsString(jobCloudReq)
+            requestContent
         )
-        val requestBodyLog = ObjectMapper().writeValueAsString(jobCloudReq)
-        logger.info("[createPostRequest] request body log: $requestBodyLog")
+        logger.info("[createPostRequest] request body log: $requestContent")
         return Request.Builder()
             .url(url)
             .post(requestBody)
