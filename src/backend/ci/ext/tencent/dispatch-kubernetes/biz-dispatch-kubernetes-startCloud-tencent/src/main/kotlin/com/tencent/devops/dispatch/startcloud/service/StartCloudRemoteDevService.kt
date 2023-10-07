@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.startcloud.service
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -46,6 +47,7 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +58,8 @@ import org.springframework.stereotype.Service
 class StartCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceClient: WorkspaceStartCloudClient
+    private val workspaceClient: WorkspaceStartCloudClient,
+    private val startCloudRedisUtils: StartCloudRedisUtils
 ) : RemoteDevInterface {
 
     @Value("\${startCloud.appName}")
@@ -103,6 +106,10 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
             )
         )
+
+        // 创建成功后保存pipelineId
+        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, pipelineId)
+
         return CreateWorkspaceRes(res.cgsIp, pipelineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
     }
 
@@ -164,9 +171,21 @@ class StartCloudRemoteDevService @Autowired constructor(
             regionId = workspaceInfo.regionId
         )
     }
+
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
     }
+
+    fun refreshStartCloudOrderId(userId: String): Boolean {
+        logger.info("$userId refresh startCloud orderId.")
+        val startCloudWorkspaceList = dispatchWorkspaceDao.getStartCloudWorkspaceInfo(dslContext)
+        startCloudWorkspaceList.forEach {
+            startCloudRedisUtils.setStartCloudOrder(userId, it.workspaceName, it.taskId)
+        }
+
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""
