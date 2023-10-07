@@ -285,7 +285,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             // 构造itsm表格中对应组的详细内容
             val groupContent = applyJoinGroupInfo.groupIds.map { it.toString() }.associateWith {
-                val resourceGroupInfo = getResourceGroupInfo(
+                val resourceGroupInfo = getResourceGroupInfoForApply(
                     projectCode = projectCode,
                     projectName = projectInfo.projectName,
                     groupId = it
@@ -335,11 +335,12 @@ class RbacPermissionApplyService @Autowired constructor(
         return true
     }
 
-    private fun getResourceGroupInfo(
+    private fun getResourceGroupInfoForApply(
         projectCode: String,
         projectName: String,
         groupId: String
     ): ResourceGroupInfo {
+        logger.info("get resource group for apply :$projectCode|$projectName|$groupId")
         val dbResourceGroupInfo = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -355,8 +356,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 resourceCode = dbResourceGroupInfo.resourceCode
             )
         } else {
-            // 若是在权限中心界面创建的组，不会同步到蓝盾库，需要再次调iam查询‘
-            logger.info("get resource group info from iam:$projectCode|$projectName|$groupId")
+            // 若是在权限中心界面创建的组，不会同步到蓝盾库，需要再次调iam查询
             val gradeManagerId = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -371,6 +371,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 bkIamPath = null,
                 relationId = gradeManagerId
             ).results.first()
+            logger.info("get resource group info from iam:$projectCode|$projectName|$groupId|$iamGroupInfo")
             ResourceGroupInfo(
                 groupId = groupId,
                 groupName = iamGroupInfo.name,
