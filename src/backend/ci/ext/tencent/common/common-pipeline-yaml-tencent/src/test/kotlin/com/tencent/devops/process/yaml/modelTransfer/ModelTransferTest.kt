@@ -51,7 +51,6 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
@@ -311,120 +310,57 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "yaml-model-001-v3"
-        ]
-    )
-    fun markerYaml(value: String) {
-        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
-        val index = TransferMapper.indexYaml(yaml, 365, 18)!!
-        val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<ITemplateFilter>() {})
-        val res = yamlIndexService.checkYamlIndex("testUser", pYml, index)
-        println(res)
-    }
-
-    @ParameterizedTest
-    @ValueSource(
-        strings = [
-            "yaml-model-001-v3"
+            "yaml,341,21 -> yaml-step",
+            "yaml,459,24 -> yaml-job",
+            "yaml,219,14 -> yaml-stage",
+            "yaml,600,12 -> yaml-setting",
+            "yaml,30,14 -> yaml-setting-2"
         ]
     )
     fun yamlElementInsert(value: String) {
-        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
+        val (input, output) = value.split(" -> ")
+        val (yamlPath, line, column) = input.split(",")
+        val yaml = testReadResourceFile("transfer/yaml-element-insert-V3/$yamlPath.yaml")
+        val compare = testReadResourceFile("transfer/yaml-element-insert-V3/$output.yaml")
         val res = yamlIndexService.modelTaskInsert(
-            "testuesr", "test", "p-test", 365, 25, ElementInsertBody(
+            "testuesr", "test", "p-test", line.toInt(), column.toInt(), ElementInsertBody(
                 yaml, MarketBuildAtomElement("yamlElementInsert test"), ElementInsertBody.ElementInsertType.INSERT
             )
         )
         println(res.mark)
-        Assertions.assertEquals(yaml, res.yaml)
+        Assertions.assertEquals(compare, res.yaml)
     }
 
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "yaml-model-001-v3"
+            "yaml,341,21 -> yaml-1",
+            "yaml,381,20 -> yaml-2",
+            "yaml,173,29 -> yaml-3",
+            "yaml,340,12 -> yaml-4",
+            "yaml,30,14 -> PipelineTransferException-ElementUpdateWrongPath"
         ]
     )
     fun yamlElementUpdate(value: String) {
-        val yaml = testReadResourceFile("transfer/$value/yaml.yaml")
-        val res = yamlIndexService.modelTaskInsert(
-            "testuesr", "test", "p-test", 365, 25, ElementInsertBody(
-                yaml, MarketBuildAtomElement("yamlElementInsert test"), ElementInsertBody.ElementInsertType.UPDATE
-            )
-        )
-        println(res.mark)
-        Assertions.assertEquals(yaml, res.yaml)
-    }
-
-    @Test
-    fun yaml2Model() {
-        val watcher = Watcher(id = "yaml2Model")
-        watcher.start("read file")
-        val yml = testReadResourceFile("temp.yml")
-        watcher.start("parse PreScriptBuildYaml")
-        val pYml = YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
-        watcher.start("normalize Yaml")
-        pYml.replaceTemplate {
-            YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<PreScriptBuildYaml>() {})
-        }
-        watcher.start("yaml2Model")
-        val input = YamlTransferInput(
-            "a",
-            "a",
-            pipelineInfo,
-            pYml
-        )
-        val model = modelTransfer.yaml2Model(input)
-        val setting = modelTransfer.yaml2Setting(input)
-        watcher.start("model2yaml")
-        val ymls = modelTransfer.model2yaml(ModelTransferInput("test", model, setting, YamlVersion.Version.V2_0))
-        watcher.start("step_2|mergeYaml")
-        val newYaml = TransferMapper.toYaml(ymls)
-        watcher.stop()
-        println(watcher)
-        Assertions.assertEquals(yml, newYaml)
-//        println(JsonUtil.toJson(model))
-    }
-
-    @Test
-    fun yaml2ModelV3() {
-        val watcher = Watcher(id = "yaml2Model")
-        watcher.start("read file")
-        val yml = testReadResourceFile("tempV3.yml")
-        watcher.start("parse PreScriptBuildYaml")
-        val pYml = YamlUtil.getObjectMapper().readValue(yml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
-        watcher.start("normalize Yaml")
-        pYml.replaceTemplate { templateFilter ->
-            YamlTemplate(
-                yamlObject = templateFilter,
-                filePath = TemplatePath("TEMPLATE_ROOT_FILE"),
-                extraParameters = this,
-                getTemplateMethod = ::getTemplate,
-                nowRepo = null,
-                repo = null,
-                resourcePoolMapExt = null,
-                conf = YamlTemplateConf(
-                    useOldParametersExpression = false // todo
+        val (input, output) = value.split(" -> ")
+        val (yamlPath, line, column) = input.split(",")
+        val yaml = testReadResourceFile("transfer/yaml-element-update-V3/$yamlPath.yaml")
+        val compare = testReadResourceFile("transfer/yaml-element-update-V3/$output.yaml")
+        val res = kotlin.runCatching {
+            yamlIndexService.modelTaskInsert(
+                "testuesr", "test", "p-test", line.toInt(), column.toInt(), ElementInsertBody(
+                    yaml, MarketBuildAtomElement("yamlElementInsert test"), ElementInsertBody.ElementInsertType.UPDATE
                 )
-            ).replace()
-        }
-        watcher.start("yaml2Model")
-        val input = YamlTransferInput(
-            "a",
-            "a",
-            pipelineInfo,
-            pYml
-        )
-        val model = modelTransfer.yaml2Model(input)
-        val setting = modelTransfer.yaml2Setting(input)
-        watcher.start("model2yaml")
-        val ymls = modelTransfer.model2yaml(ModelTransferInput("test", model, setting, YamlVersion.Version.V3_0))
-        watcher.start("step_2|mergeYaml")
-        val newYaml = TransferMapper.toYaml(ymls)
-        watcher.stop()
-        println(watcher)
-        Assertions.assertEquals(yml, newYaml)
-//        println(JsonUtil.toJson(model))
+            )
+        }.onFailure {
+            if (output.contains("PipelineTransferException")) {
+                Assertions.assertEquals("${it::class.simpleName}-${it.message}", output)
+                return
+            }
+            throw it
+        }.getOrNull()
+        println(res?.mark)
+        Assertions.assertEquals(compare, res?.yaml)
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {
