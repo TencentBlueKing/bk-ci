@@ -94,7 +94,7 @@
         cvalue +
         '; ' +
         'domain=' +
-        domain +
+        (domain || '') +
         '; path=/;expires=Fri, 31 Dec 2030 23:59:59 GMT"'
     }
 
@@ -103,7 +103,7 @@
         cname +
         '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;' +
         'domain=' +
-        domain +
+        (domain || '') +
         ';'
     }
 
@@ -131,6 +131,7 @@
           subDomains.forEach(domain => {
             removeCookie(X_DEVOPS_PROJECT_ID, domain)
           })
+          removeCookie(X_DEVOPS_PROJECT_ID, '') // remove root domain cookie
           setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
           window.GLOBAL_PID = projectId
         }
