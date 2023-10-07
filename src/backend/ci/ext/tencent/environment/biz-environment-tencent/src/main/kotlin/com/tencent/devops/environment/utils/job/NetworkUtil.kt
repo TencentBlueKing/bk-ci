@@ -54,6 +54,14 @@ object NetworkUtil {
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
+        val properties = jobCloudReq?.javaClass?.declaredFields // 获取所有属性
+        if (properties != null) {
+            for (property in properties) {
+                property.isAccessible = true // 设置可访问私有属性
+                val value = property.get(jobCloudReq) // 获取属性值
+                logger.info("[createPostRequest] ${property.name} = $value")
+            }
+        }
         logger.info("[createPostRequest] request body log: $requestContent")
         return Request.Builder()
             .url(url)
