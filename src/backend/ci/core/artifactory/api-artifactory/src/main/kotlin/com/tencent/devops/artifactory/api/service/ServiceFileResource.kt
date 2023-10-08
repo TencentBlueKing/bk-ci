@@ -28,13 +28,12 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
@@ -46,6 +45,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 /**
  * 注意，此类用了MULTIPART_FORM_DATA，导致Feign会有问题，不要直接用Feign去调用。
@@ -78,7 +79,10 @@ interface ServiceFileResource {
         fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
         @ApiParam("是否为插件logo", required = false)
         @QueryParam("logo")
-        logo: Boolean? = false
+        logo: Boolean? = false,
+        @ApiParam("文件类型", required = false)
+        @QueryParam("fileType")
+        fileType: FileTypeEnum? = null
     ): Result<String?>
 
     @ApiOperation("下载文件")

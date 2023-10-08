@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -52,7 +53,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         client: Client,
         fileDirPath: String,
         logoFlag: Boolean,
-        result: MutableMap<String, String>
+        result: MutableMap<String, String>,
+        fileType: FileTypeEnum?
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath${fileSeparator}$path")
@@ -65,7 +67,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                         file = file,
                         logo = logoFlag,
                         fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        fileType = fileType?.fileType
                     ).data
                     fileUrl?.let { result[path] = fileUrl }
                 } else {
