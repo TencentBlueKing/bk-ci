@@ -69,7 +69,25 @@ object NetworkUtil {
             "scriptLanguage" to 1,
             "executeTarget" to jsonObject2
         )
-        val requestContent2 = ObjectMapper().writeValueAsString(requestData)
+
+        val jsonObject3 = JSONObject()
+        jsonObject3.put("bk_cloud_id", 0)
+        jsonObject3.put("ip", "9.146.98.105")
+        val jsonArray2 = arrayOf(jsonObject3)
+        val jsonObject4 = JSONObject()
+        jsonObject4.put("ip_list", jsonArray2)
+        val requestData2: Map<String, Any> = mapOf(
+            "bk_scope_type" to "biz",
+            "bk_scope_id" to "309",
+            "script_content" to "ZWNobyAkMQ==",
+            "script_param" to "aGVsbG8=",
+            "timeout" to 1000,
+            "account_id" to "root",
+            "is_param_sensitive" to 0,
+            "script_language" to 1,
+            "target_server" to jsonObject4
+        )
+        val requestContent2 = ObjectMapper().writeValueAsString(requestData2)
 
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
