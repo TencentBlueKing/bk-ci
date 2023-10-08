@@ -9,6 +9,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudResp
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.tools.json.JSONObject
 import org.slf4j.LoggerFactory
 
 object NetworkUtil {
@@ -50,9 +51,29 @@ object NetworkUtil {
 
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
         val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
+
+        val jsonObject = JSONObject()
+        jsonObject.put("bkCloudId", 0)
+        jsonObject.put("ip", "9.146.98.105")
+        val jsonArray = arrayOf(jsonObject)
+        val jsonObject2 = JSONObject()
+        jsonObject2.put("ipList", jsonArray)
+        val requestData: Map<String, Any> = mapOf(
+            "bkScopeType" to "biz",
+            "bkScopeId" to "309",
+            "scriptContent" to "ZWNobyAkMQ==",
+            "scriptParam" to "aGVsbG8=",
+            "timeout" to 1000,
+            "account" to "root",
+            "isParamSensitive" to 0,
+            "scriptLanguage" to 1,
+            "executeTarget" to jsonObject2
+        )
+        val requestContent2 = ObjectMapper().writeValueAsString(requestData)
+
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
-            requestContent
+            requestContent2
         )
         logger.info("[createPostRequest] request writeValueAsString requestContent: $requestContent")
 
