@@ -26,9 +26,6 @@ class ScriptExecuteService @Autowired constructor(
         jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
-        val reqw = jobCloudScriptExecuteReq.toString()
-        logger.info("[executeScript] jobCloudScriptExecuteReq.toString(): $reqw")
-
         val jobCloudResp: JobCloudResp<ScriptExecuteResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "post",
@@ -37,21 +34,12 @@ class ScriptExecuteService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
-        val scriptExecuteData = jobCloudResp.data
-        val scriptExecuteResult: ScriptExecuteResult =
-            if (null != scriptExecuteData) {
-                ScriptExecuteResult(
-                    jobInstanceId = scriptExecuteData.jobInstanceId,
-                    jobInstanceName = scriptExecuteData.jobInstanceName,
-                    stepInstanceId = scriptExecuteData.stepInstanceId
-                )
-            } else {
-                ScriptExecuteResult(
-                    jobInstanceId = 0L,
-                    jobInstanceName = "",
-                    stepInstanceId = 0L
-                )
-            }
+        val scriptExecuteData: ScriptExecuteResult = jobCloudResp.data as ScriptExecuteResult
+        val scriptExecuteResult = ScriptExecuteResult(
+            jobInstanceId = scriptExecuteData.jobInstanceId,
+            jobInstanceName = scriptExecuteData.jobInstanceName,
+            stepInstanceId = scriptExecuteData.stepInstanceId
+        )
 
         return Result(
             status = jobCloudResp.code,
