@@ -109,12 +109,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 "&tokenType=${TokenTypeEnum.OAUTH.name}" +
                 "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
                 "&format=${format ?: "zip"}"
-        val response = OkhttpUtils.doPost(url, "")
-        if (!response.isSuccessful) {
-            logger.warn("descriptionAnalysis response code:${response.code} message:${response.message}")
-        } else {
-            OkhttpUtils.downloadFile(response, file)
-        }
+        OkhttpUtils.downloadFile(url, file)
     }
 
     override fun getFileNames(

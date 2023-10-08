@@ -53,22 +53,26 @@ class TxStoreFileServiceImpl : StoreFileService() {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
+        logoFlag: Boolean,
         result: MutableMap<String, String>
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath$fileSeparator$path")
-            if (file.exists()) {
-                val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoStaticResource::class)
-                val fileUrl = serviceUploadFile(
-                    userId = userId,
-                    serviceUrlPrefix = serviceUrlPrefix,
-                    file = file
-                ).data
-                fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
-            } else {
-                logger.warn("Resource file does not exist:${file.path}")
+            try {
+                if (file.exists()) {
+                    val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoStaticResource::class)
+                    val fileUrl = serviceUploadFile(
+                        userId = userId,
+                        serviceUrlPrefix = serviceUrlPrefix,
+                        file = file
+                    ).data
+                    fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
+                } else {
+                    logger.warn("Resource file does not exist:${file.path}")
+                }
+            } finally {
+                file.delete()
             }
-            file.delete()
         }
         return result
     }
