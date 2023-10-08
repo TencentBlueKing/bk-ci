@@ -24,47 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.dispatch.startcloud.utils
 
-package com.tencent.devops.process.yaml.v2.models.on
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+@Component
+class StartCloudRedisUtils @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
+) {
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class MrRule(
-    @ApiModelProperty(name = "source-branches-ignore")
-    @JsonProperty("source-branches-ignore")
-    val sourceBranchesIgnore: List<String>? = null,
+    /*-------------------------*/
+    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
+        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hset(
+            key = startCloudOrderKey(),
+            hashKey = workspaceName,
+            values = orderId
+        )
+    }
 
-    @ApiModelProperty(name = "target-branches")
-    @JsonProperty("target-branches")
-    val targetBranches: List<String>? = null,
+    fun getStartCloudOrder(workspaceName: String): String? {
+        return redisOperation.hget(startCloudOrderKey(), workspaceName)
+    }
 
-    val paths: List<String>? = null,
+    fun deleteStartCloudOrder(workspaceName: String) {
+        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
+    }
 
-    @ApiModelProperty(name = "paths-ignore")
-    @JsonProperty("paths-ignore")
-    val pathsIgnore: List<String>? = null,
+    private fun startCloudOrderKey(): String {
+        return "dispatchkubernetes:startcloud:order"
+    }
 
-    val action: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @ApiModelProperty(name = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-
-    @ApiModelProperty(name = "report-commit-check")
-    @JsonProperty("report-commit-check")
-    val reportCommitCheck: Boolean? = null,
-
-    @ApiModelProperty(name = "block-mr")
-    @JsonProperty("block-mr")
-    val blockMr: Boolean? = null
-)
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudRedisUtils::class.java)
+    }
+}

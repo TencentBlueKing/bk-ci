@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
+import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
+import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -71,4 +73,15 @@ interface OpProjectWorkspaceResource {
         @ApiParam("查询参数")
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
+
+    @ApiOperation("批量获取指定项目的云桌面的云研发管理员和拥有者")
+    @POST
+    @Path("/fetchOwnerAndAdmin")
+    fun fetchOwnerAndAdmin(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("获取数据")
+        data: FetchOwnerAndAdminData
+    ): Result<Map<String, FetchOwnerAndAdminItem>>
 }

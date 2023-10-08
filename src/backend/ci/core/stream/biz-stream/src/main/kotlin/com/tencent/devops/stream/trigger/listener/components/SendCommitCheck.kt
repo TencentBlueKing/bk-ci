@@ -27,14 +27,18 @@
 
 package com.tencent.devops.stream.trigger.listener.components
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -79,11 +83,27 @@ class SendCommitCheck @Autowired constructor(
         action: BaseAction
     ) {
         try {
+            fixSettingFromYaml(action)
             if (action.data.setting.enableCommitCheck && action.needSendCommitCheck()) {
                 sendCommitCheckV2(action)
             }
         } catch (e: Throwable) {
             logger.warn("SendCommitCheck|error=${action.format()}")
+        }
+    }
+
+    private fun fixSettingFromYaml(action: BaseAction) {
+        val realYaml = ScriptYmlUtils.formatYaml(action.data.context.originYaml!!)
+        val preTriggerOn = YamlUtil.getObjectMapper().readValue(
+            realYaml, object : TypeReference<NoReplaceTemplate>() {}
+        ).triggerOn
+        val triggerOn = ScriptYmlUtils.formatTriggerOn(preTriggerOn)
+        if (triggerOn.mr?.reportCommitCheck != null) {
+            action.data.setting.enableCommitCheck = triggerOn.mr?.reportCommitCheck!!
+        }
+
+        if (triggerOn.mr?.blockMr != null) {
+            action.data.setting.enableMrBlock = triggerOn.mr?.blockMr!!
         }
     }
 

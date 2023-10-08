@@ -25,46 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.on
+package com.tencent.devops.common.web.handler
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.bk.sdk.iam.exception.IamException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class MrRule(
-    @ApiModelProperty(name = "source-branches-ignore")
-    @JsonProperty("source-branches-ignore")
-    val sourceBranchesIgnore: List<String>? = null,
+@BkExceptionMapper
+class IamExceptionMapper : ExceptionMapper<IamException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(IamExceptionMapper::class.java)!!
+    }
 
-    @ApiModelProperty(name = "target-branches")
-    @JsonProperty("target-branches")
-    val targetBranches: List<String>? = null,
-
-    val paths: List<String>? = null,
-
-    @ApiModelProperty(name = "paths-ignore")
-    @JsonProperty("paths-ignore")
-    val pathsIgnore: List<String>? = null,
-
-    val action: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @ApiModelProperty(name = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-
-    @ApiModelProperty(name = "report-commit-check")
-    @JsonProperty("report-commit-check")
-    val reportCommitCheck: Boolean? = null,
-
-    @ApiModelProperty(name = "block-mr")
-    @JsonProperty("block-mr")
-    val blockMr: Boolean? = null
-)
+    override fun toResponse(exception: IamException): Response {
+        logger.warn("Failed with iam request exception", exception)
+        val status = Response.Status.BAD_REQUEST
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "Failed with iam request exception"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
+    }
+}

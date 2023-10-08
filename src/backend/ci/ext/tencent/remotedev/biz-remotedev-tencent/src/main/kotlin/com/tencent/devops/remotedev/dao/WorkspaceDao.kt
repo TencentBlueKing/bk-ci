@@ -258,10 +258,11 @@ class WorkspaceDao {
      */
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
-        limit: SQLLimit,
+        limit: SQLLimit? = null,
         userId: String? = null,
         projectId: String? = null,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
+        deleted: Boolean = false
     ): List<WorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
@@ -272,7 +273,7 @@ class WorkspaceDao {
                         WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
                     }.and(OWNER_TYPE.eq(ownerType.name))
                 }
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
@@ -282,9 +283,11 @@ class WorkspaceDao {
                                 )
                             )
                         )
-                    ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    ).let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
-                .limit(limit.limit).offset(limit.offset)
+                .let {
+                    if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
+                }
                 .fetch(workspaceMapper)
         }
     }
@@ -541,7 +544,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
+        projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
@@ -556,8 +559,13 @@ class WorkspaceDao {
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
-        projectId?.let {
-            conditions.add(t1.PROJECT_ID.eq(projectId))
+
+        if (!projectIds.isNullOrEmpty()) {
+            if (projectIds.size == 1) {
+                conditions.add(t1.PROJECT_ID.eq(projectIds.first()))
+            } else {
+                conditions.add(t1.PROJECT_ID.`in`(projectIds))
+            }
         }
 
         ip?.let {

@@ -44,7 +44,8 @@ data class WorkspaceStartCloudDetail(
     val name: String? = null,
     @ApiModelProperty("创建人")
     val creator: String? = null,
+    @ApiModelProperty("拥有者")
+    val owner: String? = null,
     @ApiModelProperty("resourceId")
     val resourceId: String? = null
-
 )
