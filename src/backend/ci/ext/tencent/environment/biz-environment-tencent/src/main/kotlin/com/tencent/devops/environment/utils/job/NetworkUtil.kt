@@ -9,7 +9,6 @@ import com.tencent.devops.environment.pojo.job.JobCloudResp
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.jooq.tools.json.JSONObject
 import org.slf4j.LoggerFactory
 
 object NetworkUtil {
@@ -105,6 +104,7 @@ object NetworkUtil {
                 logger.info("[$operateName] request: $requestLog, responseBody: $responseLog")
 
                 val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
+                logger.info("[$operateName] serializedRespBody: $serializedRespBody")
 
                 if (!serializedRespBody.result) {
                     logger.error(
