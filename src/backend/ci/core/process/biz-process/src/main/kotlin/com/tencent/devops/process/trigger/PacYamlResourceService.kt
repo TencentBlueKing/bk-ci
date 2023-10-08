@@ -28,13 +28,18 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlUrl
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.trigger.actions.BaseAction
 import com.tencent.devops.process.trigger.pojo.PacTriggerLock
 import com.tencent.devops.process.trigger.pojo.YamlPathListEntry
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -47,7 +52,8 @@ class PacYamlResourceService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val client: Client
 ) {
 
     companion object {
@@ -205,5 +211,43 @@ class PacYamlResourceService @Autowired constructor(
             versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId()
         )
+    }
+
+    fun getPipelineYamlUrl(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineYamlUrl? {
+        val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: run {
+            logger.info("pipeline yaml version not found|$projectId|$pipelineId|$version")
+            return null
+        }
+        with(pipelineYamlVersion) {
+            val repository = client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
+            ).data ?: run {
+                logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$version|$repoHashId")
+                return null
+            }
+            return when (repository) {
+                is CodeGitRepository -> {
+                    val homePage =
+                        repository.url.replace("git@", "https://").removeSuffix(".git")
+                    PipelineYamlUrl(
+                        repoName = repository.projectName,
+                        repoUrl = homePage,
+                        filePath = filePath,
+                        fileUrl = "$homePage/blob/master/$filePath"
+                    )
+                }
+
+                else -> null
+            }
+        }
     }
 }

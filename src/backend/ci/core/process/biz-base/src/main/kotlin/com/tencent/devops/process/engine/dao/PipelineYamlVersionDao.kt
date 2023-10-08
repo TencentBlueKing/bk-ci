@@ -148,6 +148,22 @@ class PipelineYamlVersionDao {
         }
     }
 
+    fun getByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineYamlVersion? {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .fetchAny()
+            return record?.let { convert(it) }
+        }
+    }
+
     fun convert(record: TPipelineYamlVersionRecord): PipelineYamlVersion {
         return with(record) {
             PipelineYamlVersion(
