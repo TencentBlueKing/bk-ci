@@ -37,12 +37,22 @@ class ScriptExecuteService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
+        val scriptExecuteData = jobCloudResp.data
+        val scriptExecuteResult: ScriptExecuteResult =
+            if (null != scriptExecuteData) {
+                ScriptExecuteResult(
+                    jobInstanceId = scriptExecuteData.jobInstanceId,
+                    jobInstanceName = scriptExecuteData.jobInstanceName,
+                    stepInstanceId = scriptExecuteData.stepInstanceId
+                )
+            } else {
+                ScriptExecuteResult(
+                    jobInstanceId = 0L,
+                    jobInstanceName = "",
+                    stepInstanceId = 0L
+                )
+            }
 
-        val scriptExecuteResult = ScriptExecuteResult(
-            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
-            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
-            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
-        )
         return Result(
             status = jobCloudResp.code,
             message = jobCloudResp.message,
