@@ -11,5 +11,7 @@ data class OPUserSetting(
     val allowedDownload: Boolean?,
     val needWatermark: Boolean?,
     val autoDeletedDays: Int?,
-    val mountType: WorkspaceMountType?
+    val mountType: WorkspaceMountType?,
+    val clientWhiteList: Boolean?,
+    val startWhiteList: Boolean?
 )

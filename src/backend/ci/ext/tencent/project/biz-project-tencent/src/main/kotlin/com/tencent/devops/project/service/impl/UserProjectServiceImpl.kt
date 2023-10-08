@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
@@ -44,7 +45,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
-import javax.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -53,8 +53,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
-@Suppress("UNUSED", "LongParameterList", "LongMethod")
+@Suppress("UNUSED", "LongParameterList", "LongMethod", "ExplicitItLambdaParameter")
 @Service
 class UserProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -84,8 +85,11 @@ class UserProjectServiceImpl @Autowired constructor(
             val serviceListVO = ArrayList<ServiceListVO>()
 
             val serviceTypeMap = serviceTypeDao.getAllIdAndTitle(dslContext)
-
-            val serviceList = serviceDao.getServiceList(dslContext)
+            val serviceList = serviceDao.getServiceList(
+                dslContext = dslContext,
+                // 根据集群类型，来获取对应的服务列表
+                clusterType = if (UserUtil.isTaiUser(userId)) devxClusterType else ""
+            )
             val groupService = serviceList.groupBy { it.serviceTypeId }
 
             val favorServices = favoriteDao.list(dslContext, userId).map {
@@ -105,8 +109,8 @@ class UserProjectServiceImpl @Autowired constructor(
                     .ifBlank { serviceType.title }
                 val services = ArrayList<ServiceVO>()
 
-                val s = groupService[typeId]
-                s?.forEach { it ->
+                val serviceListByTypeId = groupService[typeId]
+                serviceListByTypeId?.forEach { it ->
                     val favor = favorServices.contains(it.id)
                     val (newWindow, newWindowUrl) = getNewWindow(
                         tServiceRecord = it,
@@ -147,20 +151,21 @@ class UserProjectServiceImpl @Autowired constructor(
                             logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
-                            newWindowUrl = newWindowUrl
+                            newWindowUrl = newWindowUrl,
+                            clusterType = it.clusterType
                         )
                     )
                 }
-
-                serviceListVO.add(
-                    ServiceListVO(
-                        title = typeName,
-                        weigHt = serviceType.weight ?: 0,
-                        children = services.sortedByDescending { it.weigHt }
+                if (serviceListByTypeId != null) {
+                    serviceListVO.add(
+                        ServiceListVO(
+                            title = typeName,
+                            weigHt = serviceType.weight ?: 0,
+                            children = services.sortedByDescending { it.weigHt }
+                        )
                     )
-                )
+                }
             }
-
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
@@ -182,7 +187,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     messageCode = BK_CONTAINER_SERVICE,
                     language = I18nUtil.getLanguage(userId)
                 )
-        ) &&
+            ) &&
             tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
             request != null &&
             bkToken != null &&
@@ -196,7 +201,8 @@ class UserProjectServiceImpl @Autowired constructor(
             logger.info("listService interface containerBgIdList:$containerBgIdList")
             if (containerBgIdList.isNotEmpty() &&
                 containerUrlList.isNotEmpty() &&
-                containerUrlList.size == containerBgIdList.size
+                containerUrlList.size == containerBgIdList.size &&
+                !UserUtil.isTaiUser(userId)
             ) {
                 val userDeptDetail = tofService.getUserDeptDetail(userId)
                 run breaking@{
@@ -242,6 +248,7 @@ class UserProjectServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserProjectServiceImpl::class.java)
         private val MAP = mapOf("http://" to "https://", ".oa.com" to ".woa.com")
         private val regex = Regex("((http[s]?://)([-a-z0-9A-Z]+\\.)+([w]?oa\\.com)).*")
+        private const val devxClusterType = "devx"
     }
 
     private fun getReplaceMapByRequest(): Map<String, String> {
@@ -289,13 +296,13 @@ class UserProjectServiceImpl @Autowired constructor(
     }
 
     private fun replacePermFavorServiceId(serviceRecords: List<TServiceRecord>, favorServiceId: Long): Long {
-        val oldPermService = serviceRecords.first { it.englishName == "Perm" }
-        val newPermService = serviceRecords.first { it.englishName == "Permission" }
+        val oldPermService = serviceRecords.firstOrNull() { it.englishName == "Perm" }
+        val newPermService = serviceRecords.firstOrNull() { it.englishName == "Permission" }
         // 收藏中是否有旧版权限
-        val favor = favorServiceId == oldPermService.id
+        val favor = favorServiceId == oldPermService?.id
         val isRbacCluster = bkTag.getLocalTag().contains("rbac")
         // 如果收藏中有旧版权限,并且在rbac权限管理中,需要替换成新版权限中心
-        return if (favor && isRbacCluster) {
+        return if (favor && isRbacCluster && newPermService != null) {
             newPermService.id
         } else {
             favorServiceId

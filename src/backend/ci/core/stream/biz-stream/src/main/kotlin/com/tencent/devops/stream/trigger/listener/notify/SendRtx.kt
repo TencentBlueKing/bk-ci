@@ -55,7 +55,8 @@ object SendRtx {
         streamUrl: String,
         content: String?,
         gitProjectId: String,
-        scmType: ScmType
+        scmType: ScmType,
+        extensionAction: String
     ): SendNotifyMessageTemplateRequest {
         val titleParams = mapOf(
             "title" to ""
@@ -75,7 +76,8 @@ object SendRtx {
                     buildTime = buildTime,
                     gitUrl = gitUrl,
                     streamUrl = streamUrl,
-                    gitProjectId = gitProjectId
+                    gitProjectId = gitProjectId,
+                    extensionAction = extensionAction
                 )
             } else {
                 getRtxCustomUserContent(
@@ -136,7 +138,8 @@ object SendRtx {
         buildTime: Long?,
         gitUrl: String,
         streamUrl: String,
-        gitProjectId: String
+        gitProjectId: String,
+        extensionAction: String
     ): String {
         val state = when {
             status.isSuccess() -> Triple("✔", "info", "success")
@@ -146,7 +149,7 @@ object SendRtx {
 
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                    "opened by $openUser \n"
+                    "$extensionAction by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +

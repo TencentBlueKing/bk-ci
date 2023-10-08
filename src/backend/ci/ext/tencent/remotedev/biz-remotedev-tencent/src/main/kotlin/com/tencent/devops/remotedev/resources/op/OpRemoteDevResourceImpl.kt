@@ -8,18 +8,13 @@ import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
-import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
-import com.tencent.devops.remotedev.pojo.WindowsResourceConfig
-import com.tencent.devops.remotedev.pojo.WorkspaceShared
-import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
@@ -39,7 +34,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
     private val deleteControl: DeleteControl,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val dataTransferService: DataTransferService
 ) : OpRemoteDevResource {
 
@@ -133,70 +127,19 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceConfig>> {
-        return Result(windowsResourceConfigService.getAllConfig())
-    }
-
-    override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceConfig): Result<Boolean> {
-        return Result(windowsResourceConfigService.addWindowsResource(windowsResourceConfig))
-    }
-
-    override fun updateWindowsResource(
-        userId: String,
-        id: Long,
-        windowsResourceConfig: WindowsResourceConfig
-    ): Result<Boolean> {
-        return Result(windowsResourceConfigService.updateWindowsResource(id, windowsResourceConfig))
-    }
-
-    override fun deleteWindowsResource(userId: String, id: Long): Result<Boolean> {
-        return Result(windowsResourceConfigService.deleteWindowsResource(id))
-    }
-
-    override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
-        return Result(
-            workspaceService.shareWorkspace(
-                workspaceShared.operator,
-                workspaceShared.workspaceName,
-                workspaceShared.sharedUser,
-                needPermission = false
-            )
-        )
-    }
-
-    override fun getShareWorkspace(userId: String, workspaceName: String?): Result<List<WorkspaceShared>> {
-        return Result(workspaceService.getShareWorkspace(workspaceName))
-    }
-
-    override fun deleteShareWorkspace(userId: String, id: Long): Result<Boolean> {
-        return Result(workspaceService.deleteSharedWorkspace(id))
-    }
-
-    override fun getProjectWorkspaceList(
-        userId: String,
-        projectId: String?,
-        systemType: WorkspaceSystemType?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(projectId, systemType, page, pageSize))
-    }
-
     override fun getStartCloudResourceList(
         userId: String,
-        zoneId: String?,
-        machineType: String?,
-        status: Int?,
-        page: Int?,
-        pageSize: Int?
+        data: WindowsPoolListFetchData
     ): Result<Page<Map<String, Any>>> {
         val resourceList = workspaceCommon.syncStartCloudResourceList()
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
+        val pageNotNull = data.page ?: 1
+        val pageSizeNotNull = data.pageSize ?: 6666
         val filteredResources = resourceList.filter {
-            (zoneId.isNullOrEmpty() || it.zoneId == zoneId) &&
-                    (machineType.isNullOrEmpty() || it.machineType == machineType) &&
-                    (status == null || it.status == status)
+            (data.zoneId.isNullOrEmpty() || it.zoneId == data.zoneId) &&
+                    (data.machineType.isNullOrEmpty() || it.machineType == data.machineType) &&
+                    (data.ips.isNullOrEmpty() || data.ips?.contains(it.cgsIp) == true) &&
+                    (data.status == null || it.status == data.status) &&
+                    (data.lockedFlag == null || it.locked == data.lockedFlag)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
@@ -219,15 +162,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
-    }
-
-    override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
-        // 先获取工作空间信息
-        val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)
-            ?: return Result(false)
-
-        workspaceCommon.updateWorkspaceDetail(workspaceName, workspaceDetail.workspaceMountType)
-        return Result(true)
     }
 
     override fun windowsWorkspaceDaoInit(userId: String): Result<Boolean> {

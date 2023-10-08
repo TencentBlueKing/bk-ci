@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
 import com.tencent.devops.project.dao.ServiceDao
@@ -41,9 +42,13 @@ class ServiceProjectService @Autowired constructor(
     private val projectServiceDao: ServiceDao,
     private val dslContext: DSLContext
 ) {
-    fun getServiceList(): Result<List<ServiceVO>> {
+    @Suppress("ComplexMethod")
+    fun getServiceList(userId: String): Result<List<ServiceVO>> {
         val serviceList = mutableListOf<ServiceVO>()
-        val serviceRecodes = projectServiceDao.getServiceList(dslContext)
+        val serviceRecodes = projectServiceDao.getServiceList(
+            dslContext = dslContext,
+            clusterType = if (UserUtil.isTaiUser(userId)) "devx" else ""
+        )
         if (serviceRecodes != null) {
             for (serviceRecode in serviceRecodes) {
                 serviceList.add(
@@ -67,7 +72,8 @@ class ServiceProjectService @Autowired constructor(
                         collected = true,
                         weigHt = serviceRecode.weight ?: 0,
                         logoUrl = serviceRecode.logoUrl ?: "",
-                        webSocket = serviceRecode.webSocket ?: ""
+                        webSocket = serviceRecode.webSocket ?: "",
+                        clusterType = serviceRecode.clusterType
                     )
                 )
             }

@@ -541,7 +541,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 根据用户和插件名称获取插件信息
      */
     override fun getMyAtoms(
-        accessToken: String,
         userId: String,
         atomName: String?,
         page: Int,
@@ -901,13 +900,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      */
     @BkTimed(extraTags = ["web_operation", "installAtom"], value = "store_web_operation")
     override fun installAtom(
-        accessToken: String,
         userId: String,
         channelCode: ChannelCode,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         // 判断插件标识是否合法
-        logger.info("installAtom params:[$accessToken|$userId|$channelCode|$installAtomReq]")
+        logger.info("installAtom params:[$userId|$channelCode|$installAtomReq]")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         if (null == atom || atom.deleteFlag == true) {
             return I18nUtil.generateResponseDataObject(

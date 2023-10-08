@@ -53,8 +53,10 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称',
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
+    `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     PRIMARY KEY (`ID`),
-    UNIQUE `ukey`(`WORKSPACE_NAME`)
+    UNIQUE `ukey`(`WORKSPACE_NAME`),
+    KEY `ipKey`(`HOST_IP`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 
@@ -215,10 +217,12 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_CONFIG` (
     `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
     `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
     `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
+    `TYPE` varchar(32) NOT NULL DEFAULT '3080' COMMENT 'GPU卡类型',
     `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
     `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
     `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
-    `DISK` int(11) NOT NULL DEFAULT '100' COMMENT 'SSD磁盘',
+    `DISK` int(11) NOT NULL DEFAULT '200' COMMENT '数据盘，本地SSD盘，单位GB',
+    `HDISK` int(11) NOT NULL DEFAULT '1' COMMENT '云SSD盘，单位TB',
     `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -226,6 +230,42 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_CONFIG` (
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='WINDOWS GPU资源配置表';
 
+-- ----------------------------
+-- Table structure for T_WINDOWS_RESOURCE_ZONE 云桌面地域配置
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_ZONE` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
+    `SHORT_NAME` varchar(10) NOT NULL DEFAULT '' COMMENT '区域简称，SZ,NJ',
+    `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
+    `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`ZONE`,`SHORT_NAME`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='云桌面地域配置';
+
+-- ----------------------------
+-- Table structure for T_WINDOWS_RESOURCE_TYPE 云桌面资源配置
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
+    `TYPE` varchar(32) NOT NULL DEFAULT '3080' COMMENT 'GPU卡类型',
+    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
+    `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
+    `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
+    `SDISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '系统盘，本地SSD盘，单位GB',
+    `DISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '本地SSD盘，单位GB',
+    `HDISK` varchar(32) NOT NULL DEFAULT '1' COMMENT '云SSD盘，单位TB',
+    `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
+    `WEIGHT` int(11) NOT NULL DEFAULT '0' COMMENT '权重，用于控制台页面展示先后顺序',
+    `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_size` (`SIZE`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='云桌面资源配置';
 -- ----------------------------
 -- Table structure for T_PROJECT_IMAGES 项目下镜像信息
 -- ----------------------------
@@ -334,5 +374,18 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_DETAIL` (
     UNIQUE `ukey`(`WORKSPACE_NAME`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='工作空间详情数据';
 
+-- ----------------------------
+-- Table structure for T_WHITE_LIST 白名单控制
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WHITE_LIST` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '名称',
+    `TYPE` varchar(32) NOT NULL COMMENT '白名单类型',
+    `WINDOWS_GPU_LIMIT` int(11) NULL COMMENT '云桌面访问限制，type=WINDOWS_GPU 有效',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`NAME`,`TYPE`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='白名单控制';
 
 SET FOREIGN_KEY_CHECKS = 1;

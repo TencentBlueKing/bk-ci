@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import org.jooq.DSLContext
+import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -99,16 +101,7 @@ class WorkspaceSharedDao {
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .let { if (!sharedUsers.isNullOrEmpty()) it.and(SHARED_USER.`in`(sharedUsers)) else it }
                 .let { if (assignType != null) it.and(ASSIGN_TYPE.eq(assignType.name)) else it }
-                .fetch().map {
-                    WorkspaceShared(
-                        id = it.id,
-                        workspaceName = it.workspaceName,
-                        operator = it.operator,
-                        sharedUser = it.sharedUser,
-                        type = WorkspaceShared.AssignType.valueOf(it.assignType),
-                        resourceId = it.resourceId
-                    )
-                }
+                .fetch(sharedMapper)
         }
     }
 
@@ -117,28 +110,32 @@ class WorkspaceSharedDao {
         workspaceNames: List<String>
     ): List<WorkspaceShared> {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch().map {
-                WorkspaceShared(
-                    id = it.id,
-                    workspaceName = it.workspaceName,
-                    operator = it.operator,
-                    sharedUser = it.sharedUser,
-                    type = WorkspaceShared.AssignType.valueOf(it.assignType),
-                    resourceId = it.resourceId
-                )
-            }
+            return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch(sharedMapper)
         }
     }
 
-    fun batchSelectAssignType(
-        dslContext: DSLContext,
-        userId: String,
-        workspaceNames: List<String>
-    ): Map<String, WorkspaceShared.AssignType> {
+    fun fetchSharedWorkspaceById(
+        id: Long,
+        dslContext: DSLContext
+    ): WorkspaceShared? {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.select(WORKSPACE_NAME, ASSIGN_TYPE).from(this).where(SHARED_USER.eq(userId))
-                .and(WORKSPACE_NAME.`in`(workspaceNames)).fetch()
-                .associateBy({ it.value1() }, { WorkspaceShared.AssignType.valueOf(it.value2()) })
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .limit(1)
+                .fetchAny(sharedMapper)
+        }
+    }
+
+    fun fetchSharedWorkspaceByUser(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUser: String
+    ): WorkspaceShared? {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(sharedUser))
+                .fetchAny(sharedMapper)
         }
     }
 
@@ -170,5 +167,24 @@ class WorkspaceSharedDao {
                 .and(ASSIGN_TYPE.eq(assignType.name))
                 .execute()
         }
+    }
+
+    class TSharedRecordJooqMapper : RecordMapper<TWorkspaceSharedRecord, WorkspaceShared> {
+        override fun map(record: TWorkspaceSharedRecord?): WorkspaceShared? {
+            return record?.run {
+                WorkspaceShared(
+                    id = id,
+                    workspaceName = workspaceName,
+                    operator = operator,
+                    sharedUser = sharedUser,
+                    type = WorkspaceShared.AssignType.valueOf(assignType),
+                    resourceId = resourceId
+                )
+            }
+        }
+    }
+
+    companion object {
+        val sharedMapper = TSharedRecordJooqMapper()
     }
 }
