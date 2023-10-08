@@ -393,8 +393,7 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             projectId = projectId,
-            ip = ip,
-            assignType = WorkspaceShared.AssignType.OWNER
+            ip = ip
         ) ?: emptyList()
 
         return result.map {
