@@ -33,7 +33,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -41,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTxUserResourceImpl @Autowired constructor(
     val projectServiceCode: BSProjectServiceCodec,
     val authProjectApi: AuthProjectApi,
-    val tofService: TOFService
+    val tofService: TOFService,
+    val projectUserService: ProjectUserService
 ) : ServiceTxUserResource {
     override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
         return Result(authProjectApi.getProjectUsers(projectServiceCode, projectCode, roleId))
@@ -54,5 +57,9 @@ class ServiceTxUserResourceImpl @Autowired constructor(
     override fun getUser(userId: String): Result<Boolean> {
         tofService.getStaffInfo(userId)
         return Result(true)
+    }
+
+    override fun getRemoteDevAdmin(data: FetchRemoteDevData): Result<Map<String, Set<String>?>> {
+        return Result(projectUserService.getRemoteDevAdmin(data.projectIds))
     }
 }

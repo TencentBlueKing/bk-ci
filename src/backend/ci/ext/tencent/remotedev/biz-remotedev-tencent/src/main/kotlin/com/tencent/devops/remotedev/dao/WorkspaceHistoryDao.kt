@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWorkspaceHistory
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import org.jooq.DSLContext
@@ -111,7 +112,7 @@ class WorkspaceHistoryDao {
                         )
                     ).groupBy(WORKSPACE_NAME)
                 )
-            ).fetch()
+            ).skipCheck().fetch()
         }
     }
 }

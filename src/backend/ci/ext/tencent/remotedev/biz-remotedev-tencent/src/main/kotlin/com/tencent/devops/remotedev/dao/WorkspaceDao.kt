@@ -540,7 +540,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
+        projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
@@ -554,8 +554,13 @@ class WorkspaceDao {
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
-        projectId?.let {
-            conditions.add(t1.PROJECT_ID.eq(projectId))
+
+        if (!projectIds.isNullOrEmpty()) {
+            if (projectIds.size == 1) {
+                conditions.add(t1.PROJECT_ID.eq(projectIds.first()))
+            } else {
+                conditions.add(t1.PROJECT_ID.`in`(projectIds))
+            }
         }
 
         ip?.let {
