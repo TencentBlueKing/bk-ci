@@ -34,7 +34,7 @@ class ScriptExecuteService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
-
+        logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
         val scriptExecuteResult = ScriptExecuteResult(
             jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
             jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",

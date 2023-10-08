@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("请求上云版job接口的返回")
-data class JobCloudResp<Any>(
+data class JobCloudResp<T>(
     @ApiModelProperty(value = "状态码", required = true)
     @JsonProperty("code")
     var code: Int,
@@ -20,5 +20,6 @@ data class JobCloudResp<Any>(
     var message: String?,
     @ApiModelProperty(value = "返回数据", required = true)
     @JsonProperty("data")
-    var data: Any? = null
+    var data: T? = null
+//    var data: MutableMap<String, *>
 )
