@@ -39,9 +39,9 @@ class ScriptExecuteService @Autowired constructor(
             )
 
         val scriptExecuteResult = ScriptExecuteResult(
-            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0,
+            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
             jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
-            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0
+            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
         )
         return Result(
             status = jobCloudResp.code,

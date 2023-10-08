@@ -52,24 +52,6 @@ object NetworkUtil {
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
         val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
 
-//        val jsonObject = JSONObject()
-//        jsonObject.put("bkCloudId", 0)
-//        jsonObject.put("ip", "9.146.98.105")
-//        val jsonArray = arrayOf(jsonObject)
-//        val jsonObject2 = JSONObject()
-//        jsonObject2.put("ipList", jsonArray)
-//        val requestData: Map<String, Any> = mapOf(
-//            "bkScopeType" to "biz",
-//            "bkScopeId" to "309",
-//            "scriptContent" to "ZWNobyAkMQ==",
-//            "scriptParam" to "aGVsbG8=",
-//            "timeout" to 1000,
-//            "account" to "root",
-//            "isParamSensitive" to 0,
-//            "scriptLanguage" to 1,
-//            "executeTarget" to jsonObject2
-//        )
-//
         val jsonArray2 = arrayOf(mapOf("bk_cloud_id" to 0, "ip" to "9.146.98.105"))
         val requestData2: Map<String, Any> = mapOf(
             "bk_scope_type" to "biz",
