@@ -396,7 +396,7 @@ class WorkspaceService @Autowired constructor(
             ip = ip
         ) ?: emptyList()
 
-        return result.map {
+        return result.filter { (it["ASSIGN_TYPE"] as String) != "VIEWER" }.map {
             val detail = workspaceCommon.getWorkspaceDetail(it["NAME"] as String)
             WeSecProjectWorkspace(
                 workspaceName = it["NAME"] as String,
