@@ -105,8 +105,14 @@ data class VariableProps(
     val description: String? = null,
     val multiple: Boolean? = null,
     val required: Boolean? = null,
+    @JsonProperty("repo-id")
+    @ApiModelProperty(name = "repo-id")
     val repoHashId: String? = null,
+    @JsonProperty("scm-type")
+    @ApiModelProperty(name = "scm-type")
     val scmType: String? = null,
+    @JsonProperty("container-type")
+    @ApiModelProperty(name = "container-type")
     val containerType: BuildContainerType? = null,
     @ApiModelProperty("自定义仓库通配符", required = false)
     val glob: String? = null,
@@ -165,12 +171,12 @@ enum class VariablePropType(val value: String) {
     BOOLEAN("boolean"),
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
-    GIT_REF("git_ref"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"),
+    GIT_REF("git-ref"),
+    CODE_LIB("code-lib"),
+    CONTAINER_TYPE("container-type"),
     ARTIFACTORY("artifactory"),
-    SUB_PIPELINE("sub_pipeline"),
-    CUSTOM_FILE("custom_file"),
+    SUB_PIPELINE("sub-pipeline"),
+    CUSTOM_FILE("custom-file"),
     TIPS("tips");
 
     fun toBuildFormPropertyType() = when (this) {

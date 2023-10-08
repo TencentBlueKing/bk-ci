@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class Job(
     // val job: JobDetail,
+    var enable: Boolean? = null,
     val id: String? = "",
     val name: String? = "",
     @JsonProperty("mutex")

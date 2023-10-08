@@ -42,6 +42,7 @@ interface IPreJob
  */
 @JsonFilter(YAME_META_DATA_JSON_FILTER)
 data class PreJob(
+    var enable: Boolean? = null,
     // val job: JobDetail,
     val name: String?,
     @JsonProperty("mutex")

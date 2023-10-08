@@ -27,10 +27,14 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.type.BuildType
+import io.swagger.annotations.ApiModelProperty
 
 data class BuildContainerType(
+    @JsonProperty("build-type")
+    @ApiModelProperty(name = "build-type")
     val buildType: BuildType,
     val os: OS
 )
