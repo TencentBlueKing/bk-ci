@@ -571,7 +571,7 @@ class WorkspaceDao {
         }
 
         return dslContext.selectDistinct(
-            t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.SHARED_USER, t2.ASSIGN_TYPE
+            t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.SHARED_USER
         )
             .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
@@ -579,14 +579,13 @@ class WorkspaceDao {
                 if (assignType != null) {
                     it.and(t2.ASSIGN_TYPE.eq(assignType.name))
                 } else {
-                    it
+                    it.and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name).or(t2.ASSIGN_TYPE.isNull))
                 }
             }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.selectDistinct(
-                    t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"),
-                    DSL.field(DSL.`val`<String>("OWNER", String::class.java).`as`("ASSIGN_TYPE"))
+                    t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
                 )
                     .from(t1)
                     .where(conditions)
