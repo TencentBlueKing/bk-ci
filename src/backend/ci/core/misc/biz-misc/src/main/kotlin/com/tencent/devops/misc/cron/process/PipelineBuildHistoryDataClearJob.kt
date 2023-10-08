@@ -156,11 +156,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                         item = index.toString(),
                         isDistinguishCluster = true)
                 ) {
-                    val mutableListOf = mutableListOf("test4")
-                    projectIdList?.let { mutableListOf.addAll(it) }
                     doClearBus(
                         threadNo = index,
-                        projectIdList = mutableListOf,
+                        projectIdList = projectIdList,
                         minThreadProjectPrimaryId = (index - 1) * avgProjectNum,
                         maxThreadProjectPrimaryId = maxThreadProjectPrimaryId
                     )
