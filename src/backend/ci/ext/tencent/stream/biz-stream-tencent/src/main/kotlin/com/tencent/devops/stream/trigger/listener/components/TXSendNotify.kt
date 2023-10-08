@@ -3,6 +3,7 @@ package com.tencent.devops.stream.trigger.listener.components
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -125,7 +126,8 @@ class TXSendNotify @Autowired constructor(
                     gitUrl = config.gitUrl!!,
                     v2GitUrl = config.v2GitUrl!!,
                     content = content,
-                    gitProjectId = action.data.getGitProjectId().toLong()
+                    gitProjectId = action.data.getGitProjectId().toLong(),
+                    extensionAction = action.data.context.extensionAction ?: StreamMrEventAction.OPEN.value
                 )
             }
             else -> {
