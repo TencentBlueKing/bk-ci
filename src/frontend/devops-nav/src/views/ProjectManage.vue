@@ -239,14 +239,14 @@
 </template>
 
 <script lang="ts">
+    import {
+        RESOURCE_ACTION,
+        handleProjectNoPermission
+    } from '@/utils/permission'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import logoDialog from '../components/logoDialog/index.vue'
-    import {
-        handleProjectNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
 
     @Component({
         components: {
