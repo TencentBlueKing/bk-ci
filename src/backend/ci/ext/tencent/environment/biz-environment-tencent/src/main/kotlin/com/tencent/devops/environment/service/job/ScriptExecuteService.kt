@@ -6,6 +6,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
+import com.tencent.devops.environment.utils.job.NetworkUtil.logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -24,6 +25,9 @@ class ScriptExecuteService @Autowired constructor(
         jobCloudScriptExecuteReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
         jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
+
+        val reqw = jobCloudScriptExecuteReq.toString()
+        logger.info("[executeScript] jobCloudScriptExecuteReq.toString(): $reqw")
 
         val jobCloudResp: JobCloudResp<ScriptExecuteResult> =
             NetworkUtil.executeHttpRequest(

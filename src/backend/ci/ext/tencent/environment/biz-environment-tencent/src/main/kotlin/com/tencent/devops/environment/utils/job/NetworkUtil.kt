@@ -56,9 +56,6 @@ object NetworkUtil {
         )
         logger.info("[createPostRequest] request writeValueAsString requestContent: $requestContent")
 
-        val requestBodyLog = jobCloudReq.toString()
-        logger.info("[createPostRequest] request body (override toString): $requestBodyLog")
-
         return Request.Builder()
             .url(url)
             .post(requestBody)
