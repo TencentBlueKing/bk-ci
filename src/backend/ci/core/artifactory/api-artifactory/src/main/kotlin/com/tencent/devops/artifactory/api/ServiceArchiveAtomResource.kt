@@ -37,7 +37,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -62,8 +61,8 @@ interface ServiceArchiveAtomResource {
     ): Result<String>
 
     @ApiOperation("下载插件包文件")
-    @POST
-    @Path("/atom/file/content")
+    @GET
+    @Path("/atom/file/download")
     fun downloadAtomFile(
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")

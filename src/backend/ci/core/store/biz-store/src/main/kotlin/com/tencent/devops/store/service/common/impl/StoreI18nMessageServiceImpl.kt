@@ -42,6 +42,7 @@ import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
@@ -240,12 +241,14 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
                 if (!description.isNullOrBlank()) {
                     val descriptionStr = getDescriptionI18nContent(
-                        userId = userId,
                         projectCode = projectCode,
-                        fileDir = fileDir,
-                        repositoryHashId = repositoryHashId,
-                        content = description,
-                        language = language
+                        userId = userId,
+                        request = TextReferenceFileParseRequest(
+                            fileDir = fileDir,
+                            repositoryHashId = repositoryHashId,
+                            content = description,
+                            language = language
+                        )
                     )
                     if (description != descriptionStr) {
                         fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
@@ -355,12 +358,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     private fun getDescriptionI18nContent(
         userId: String,
         projectCode: String,
-        fileDir: String,
-        repositoryHashId: String? = null,
-        branch: String? = null,
-        content: String,
-        language: String
+        request: TextReferenceFileParseRequest
     ): String {
+        val content = request.content
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(content)
         val path: String
@@ -369,22 +369,22 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         } else {
             return content
         }
-        // 存在文件路径引用，解析路径
-        val fileStr = getFileStr(
+        return getFileStr(
             projectCode = projectCode,
-            fileDir = fileDir,
+            fileDir = request.fileDir,
             fileName = "file/$path",
-            repositoryHashId = repositoryHashId,
-            branch = branch
-        ) ?: return content
-        return descriptionAnalysis(
-            userId = userId,
-            projectCode = projectCode,
-            description = fileStr,
-            fileDir = fileDir,
-            language = language,
-            repositoryHashId = repositoryHashId
-        )
+            repositoryHashId = request.repositoryHashId,
+            branch = request.branch
+        )?.let { fileStr ->
+            descriptionAnalysis(
+                userId = userId,
+                projectCode = projectCode,
+                description = fileStr,
+                fileDir = request.fileDir,
+                language = request.language,
+                repositoryHashId = request.repositoryHashId
+            )
+        } ?: content
     }
 
     abstract fun descriptionAnalysis(
