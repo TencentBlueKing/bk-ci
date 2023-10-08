@@ -1,5 +1,7 @@
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
@@ -35,11 +37,15 @@ class ScriptExecuteService @Autowired constructor(
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
         logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
-        val scriptExecuteResult = ScriptExecuteResult(
-            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
-            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
-            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
-        )
+        var scriptExecuteResult = ScriptExecuteResult(0L, "", 0L)
+        if (null != jobCloudResp.data) {
+            scriptExecuteResult = jacksonObjectMapper().readValue(jobCloudResp.data.toString())
+        }
+//        val scriptExecuteResult = ScriptExecuteResult(
+//            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
+//            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
+//            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
+//        )
 
         return Result(
             status = jobCloudResp.code,
