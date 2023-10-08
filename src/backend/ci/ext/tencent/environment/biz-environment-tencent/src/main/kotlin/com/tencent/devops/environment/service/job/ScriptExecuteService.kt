@@ -34,11 +34,11 @@ class ScriptExecuteService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
-        val scriptExecuteData: ScriptExecuteResult = jobCloudResp.data as ScriptExecuteResult
+
         val scriptExecuteResult = ScriptExecuteResult(
-            jobInstanceId = scriptExecuteData.jobInstanceId,
-            jobInstanceName = scriptExecuteData.jobInstanceName,
-            stepInstanceId = scriptExecuteData.stepInstanceId
+            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
+            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
+            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
         )
 
         return Result(
