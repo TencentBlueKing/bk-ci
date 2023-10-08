@@ -46,6 +46,7 @@ class P4WebhookEventParser(
     }
 
     override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        logger.info("Trigger p4 build(${request.body})")
         return try {
             objectMapper.readValue(request.body, P4Event::class.java)
         } catch (e: Exception) {
