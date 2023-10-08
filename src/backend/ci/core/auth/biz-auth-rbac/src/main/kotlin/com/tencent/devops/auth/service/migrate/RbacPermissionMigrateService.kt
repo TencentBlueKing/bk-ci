@@ -217,6 +217,14 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        logger.info("fit sec to rbac:$migrateProjectConditionDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.fitSecToRbacAuth(migrateProjectConditionDTO = migrateProjectConditionDTO)
+        }
+        return true
+    }
+
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,

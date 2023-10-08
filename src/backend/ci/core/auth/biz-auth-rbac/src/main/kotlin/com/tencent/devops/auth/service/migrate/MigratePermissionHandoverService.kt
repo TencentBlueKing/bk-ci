@@ -28,12 +28,14 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
@@ -106,6 +108,54 @@ class MigratePermissionHandoverService constructor(
                         handoverFrom
                     )
                 }
+            } while (resourceList.size == limit)
+        }
+    }
+
+    fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO) {
+        val resourceType = migrateProjectConditionDTO.resourceType!!
+        val projectCreator = migrateProjectConditionDTO.projectCreator!!
+        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
+            var offset = 0
+            val limit = 100
+            do {
+                val resourceList = authResourceService.listByCreator(
+                    resourceType = resourceType,
+                    projectCode = projectCode,
+                    creator = projectCreator,
+                    offset = offset,
+                    limit = limit
+                )
+                logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
+                resourceList.forEach { resource ->
+                    val resourceManagerGroup = authResourceGroupDao.get(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resource.resourceCode,
+                        groupCode = DefaultGroupType.MANAGER.value
+                    )
+                    val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
+                        resourceManagerGroup!!.relationId.toInt(),
+                        V2PageInfoDTO().apply {
+                            page = 1
+                            pageSize = 10
+                        }
+                    )
+                    if (roleGroupMember.count == 1 && roleGroupMember.results.first().name == projectCreator)
+                        logger.info(
+                            "delete resource manager group:$projectCode|${resourceManagerGroup.groupName}" +
+                                "|${resource.resourceCode}"
+                        )
+                    authResourceGroupDao.delete(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resource.resourceCode,
+                        groupName = resourceManagerGroup.groupName
+                    )
+                }
+                offset += limit
             } while (resourceList.size == limit)
         }
     }

@@ -74,7 +74,7 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
             permissionMigrateService.migrateResource(
                 projectCode = projectCode,
                 resourceType = resourceType,
-                projectCreator
+                projectCreator = projectCreator
             )
         )
     }
@@ -85,5 +85,9 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
 
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
         return Result(permissionMigrateService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO))
+    }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        return Result(permissionMigrateService.fitSecToRbacAuth(migrateProjectConditionDTO = migrateProjectConditionDTO))
     }
 }
