@@ -46,6 +46,7 @@ class GitlabWebhookEventParser(
     }
 
     override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        logger.info("Trigger gitlab build(${request.body})")
         return try {
             objectMapper.readValue(request.body, GitEvent::class.java)
         } catch (e: Exception) {
