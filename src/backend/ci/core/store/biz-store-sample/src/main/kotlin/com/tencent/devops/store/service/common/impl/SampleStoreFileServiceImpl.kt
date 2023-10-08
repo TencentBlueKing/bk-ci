@@ -51,25 +51,29 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
+        logoFlag: Boolean,
         result: MutableMap<String, String>
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath${fileSeparator}$path")
-            if (file.exists()) {
-                val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-                val fileUrl = CommonUtils.serviceUploadFile(
-                    userId = userId,
-                    serviceUrlPrefix = serviceUrlPrefix,
-                    file = file,
-                    fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                    logo = true,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ).data
-                fileUrl?.let { result[path] = fileUrl }
-            } else {
-                logger.warn("Resource file does not exist:${file.path}")
+            try {
+                if (file.exists()) {
+                    val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+                    val fileUrl = CommonUtils.serviceUploadFile(
+                        userId = userId,
+                        serviceUrlPrefix = serviceUrlPrefix,
+                        file = file,
+                        logo = logoFlag,
+                        fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ).data
+                    fileUrl?.let { result[path] = fileUrl }
+                } else {
+                    logger.warn("Resource file does not exist:${file.path}")
+                }
+            } finally {
+                file.delete()
             }
-            file.delete()
         }
         return result
     }

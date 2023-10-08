@@ -71,12 +71,9 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         format: String?
     ) {
         val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
-                "/service/artifactories/atom/file/content?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
         logger.info("downloadFile filePath:$filePath")
-        val response = OkhttpUtils.doPost(url, "")
-        if (response.isSuccessful) {
-            OkhttpUtils.downloadFile(response, file)
-        }
+        OkhttpUtils.downloadFile(url, file)
     }
 
     override fun getFileNames(

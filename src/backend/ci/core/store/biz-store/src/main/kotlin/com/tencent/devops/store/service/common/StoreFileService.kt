@@ -42,7 +42,6 @@ import org.springframework.stereotype.Service
  * since: 2019-08-15
  */
 @Service
-@Suppress("ALL")
 abstract class StoreFileService {
 
     companion object {
@@ -105,6 +104,7 @@ abstract class StoreFileService {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
+        logoFlag: Boolean = false,
         result: MutableMap<String, String>
     ): Map<String, String>
 

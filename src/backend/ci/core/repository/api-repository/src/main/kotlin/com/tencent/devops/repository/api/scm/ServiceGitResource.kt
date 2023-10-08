@@ -385,7 +385,7 @@ interface ServiceGitResource {
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库文件")
-    @POST
+    @GET
     @Path("repoIds/{repoId}/downloadTGitRepoFile")
     fun downloadGitRepoFile(
         @ApiParam(value = "仓库id")
