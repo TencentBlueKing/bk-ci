@@ -57,7 +57,7 @@ data class GithubReviewEvent(
     }
 
     // 当存在多个必要评审人时,一个用户评审通过不算通过,需判断合并状态
-    private fun isApproved() = pullRequest.mergeable == true && pullRequest.mergeableState == "clean"
+    private fun isApproved() = pullRequest.mergeable == true
 
     private fun isChangeRequired() = review.state == GithubReviewState.CHANGES_REQUESTED.value
 

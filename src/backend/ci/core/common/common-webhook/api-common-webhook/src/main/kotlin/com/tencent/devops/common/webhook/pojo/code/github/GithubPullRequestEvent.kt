@@ -54,44 +54,6 @@ fun GithubPullRequestEvent.isPrForkNotMergeEvent() =
 
 fun GithubPullRequestEvent.isPrForkEvent() = this.pullRequest.base.repo.id != this.pullRequest.head.repo.id
 
-/**
- * 以下情况需要同步触发GithubReview事件
- * 1. 重新打开Pr
- * 2. Pr请求评审
- * 3. 源分支推送更新
- */
-fun GithubPullRequestEvent.convertGithubReviewEvent(): GithubReviewEvent? {
-    val review = when (action) {
-        "opened", "reopened", "synchronize", "review_requested" -> {
-            GithubReview(
-                id = pullRequest.id.toLong(),
-                nodeId = "",
-                htmlUrl = pullRequest.htmlUrl,
-                createdAt = pullRequest.createdAt, // 2022-06-21T08:45:41Z
-                updatedAt = pullRequest.updatedAt, // 2022-06-21T08:45:41Z
-                user = sender,
-                body = pullRequest.body,
-                commitId = pullRequest.head.sha,
-                submittedAt = pullRequest.updatedAt ?: "",
-                state = GithubReviewState.APPROVING.value,
-                pullRequestUrl = pullRequest.htmlUrl,
-                authorAssociation = ""
-            )
-        }
-
-        else -> {
-            return null
-        }
-    }
-    return GithubReviewEvent(
-        repository = repository,
-        pullRequest = pullRequest,
-        review = review,
-        sender = sender,
-        action = "submitted"
-    )
-}
-
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPullRequest(

@@ -65,10 +65,6 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             params.eventType = element.eventType
             params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
             params.codeType = CodeType.GITHUB
-            params.includeUsers = includeUsers
-            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
-            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
-            params.webhookQueue = webhookQueue ?: false
             params.includeCrState = joinToString(includeCrState)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)
