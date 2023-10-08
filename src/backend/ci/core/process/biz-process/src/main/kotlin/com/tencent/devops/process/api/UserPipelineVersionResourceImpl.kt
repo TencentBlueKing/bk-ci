@@ -65,6 +65,7 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -88,7 +89,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val templateFacadeService: TemplateFacadeService
+    private val templateFacadeService: TemplateFacadeService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : UserPipelineVersionResource {
 
     override fun getPipelineDetailIncludeDraft(
@@ -118,13 +120,22 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        val baseVersionStatus = draftVersion?.baseVersion?.let { base ->
-            pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = base
-            )?.status
-        } ?: VersionStatus.RELEASED
+        // TODO #8161 增加分支名称的保存
+        var baseVersionBranch: String? = "master"
+        var canRelease = false
+        var baseVersionStatus = VersionStatus.RELEASED
+        draftVersion?.let { draft ->
+            val baseVersion = draft.baseVersion?.let { base ->
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = base
+                )
+            }
+            baseVersion?.status?.let { baseVersionStatus = it }
+//            baseVersionBranch = baseVersion.ref
+            canRelease =  pipelineRuntimeService.getBuildInfo(projectId, pipelineId)?.status?.isSuccess() == true
+        }
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
@@ -141,6 +152,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 instanceFromTemplate = detailInfo.instanceFromTemplate,
                 canManualStartup = detailInfo.canManualStartup,
                 canDebug = canDebug,
+                canRelease = canRelease,
                 hasPermission = detailInfo.hasPermission,
                 pipelineDesc = detailInfo.pipelineDesc,
                 creator = detailInfo.creator,
@@ -152,6 +164,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 releaseVersion = releaseVersion?.version,
                 releaseVersionName = releaseVersion?.versionName,
                 baseVersionStatus = baseVersionStatus,
+                baseVersionBranch = baseVersionBranch,
                 pipelineAsCodeSettings = setting.pipelineAsCodeSettings
             )
         )
