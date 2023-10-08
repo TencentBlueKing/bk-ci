@@ -29,7 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.service.ServiceDispatchDockerHostResource
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import com.tencent.devops.openapi.api.apigw.v4.ApigwDispatchResourceV4
 import org.slf4j.LoggerFactory
@@ -47,7 +47,7 @@ class ApigwDispatchResourceV4Impl @Autowired constructor(
         specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean> {
         logger.info("OPENAPI_DISPATCH_V4|$userId|create special docker host|$specialDockerHostVOs")
-        client.get(ServiceDispatchDockerHostResource::class).createSpecialDockerHost(
+        client.get(ServiceDockerHostResource::class).createSpecialDockerHost(
             userId = userId,
             specialDockerHostVOs = specialDockerHostVOs
         )

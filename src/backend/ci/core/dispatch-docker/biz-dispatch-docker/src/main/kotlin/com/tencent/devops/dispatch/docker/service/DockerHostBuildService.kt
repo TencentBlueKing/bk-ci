@@ -55,7 +55,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
-class DispatchDockerHostBuildService @Autowired constructor(
+class DockerHostBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dockerHostClient: DockerHostClient,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
@@ -349,6 +349,6 @@ class DispatchDockerHostBuildService @Autowired constructor(
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(DispatchDockerHostBuildService::class.java)
+        private val LOG = LoggerFactory.getLogger(DockerHostBuildService::class.java)
     }
 }

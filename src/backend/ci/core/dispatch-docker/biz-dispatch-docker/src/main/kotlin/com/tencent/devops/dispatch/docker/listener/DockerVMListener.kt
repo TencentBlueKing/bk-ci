@@ -51,7 +51,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
-import com.tencent.devops.dispatch.docker.service.DispatchDockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -71,7 +71,7 @@ class DockerVMListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
     private val defaultImageConfig: DefaultImageConfig,
-    private val dispatchDockerHostBuildService: DispatchDockerHostBuildService,
+    private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
@@ -117,7 +117,7 @@ class DockerVMListener @Autowired constructor(
 
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
         if (dockerRoutingType == DockerRoutingType.VM) {
-            dispatchDockerHostBuildService.finishDockerBuild(event)
+            dockerHostBuildService.finishDockerBuild(event)
         } else {
             pipelineEventDispatcher.dispatch(event.copy(
                 routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix,

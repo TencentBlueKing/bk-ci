@@ -28,14 +28,14 @@
 package com.tencent.devops.buildless.schedule
 
 import com.tencent.devops.buildless.ContainerPoolExecutor
-import com.tencent.devops.buildless.utils.BuildlessRedisUtils
+import com.tencent.devops.buildless.utils.RedisUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
 class ContainerPoolSchedule @Autowired constructor(
-    private val buildlessRedisUtils: BuildlessRedisUtils,
+    private val redisUtils: RedisUtils,
     private val containerPoolExecutor: ContainerPoolExecutor
 ) {
     /**
@@ -44,9 +44,9 @@ class ContainerPoolSchedule @Autowired constructor(
     @Scheduled(cron = "0 0/1 * * * ?")
     fun execute() {
         // 校准空闲池大小
-        if (buildlessRedisUtils.getBuildLessReadyTaskSize() == 0L) {
-            val idleContainerPoolSize = buildlessRedisUtils.getBuildLessPoolContainerIdle()
-            buildlessRedisUtils.setIdlePool(idleContainerPoolSize)
+        if (redisUtils.getBuildLessReadyTaskSize() == 0L) {
+            val idleContainerPoolSize = redisUtils.getBuildLessPoolContainerIdle()
+            redisUtils.setIdlePool(idleContainerPoolSize)
         }
 
         containerPoolExecutor.addContainer()

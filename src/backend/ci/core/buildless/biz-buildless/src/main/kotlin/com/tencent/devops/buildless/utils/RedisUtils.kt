@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class BuildlessRedisUtils @Autowired constructor(
+class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
@@ -139,6 +139,6 @@ class BuildlessRedisUtils @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildlessRedisUtils::class.java)
+        private val logger = LoggerFactory.getLogger(RedisUtils::class.java)
     }
 }

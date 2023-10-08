@@ -32,7 +32,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class BuildlessSystemInfoRunner {
+class SystemInfoRunner {
 
     @Scheduled(cron = "0/5 * * * * ?")
     fun startCollect() {

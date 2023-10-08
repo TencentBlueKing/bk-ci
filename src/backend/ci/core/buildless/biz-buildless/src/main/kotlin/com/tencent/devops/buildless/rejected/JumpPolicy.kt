@@ -29,19 +29,19 @@ package com.tencent.devops.buildless.rejected
 
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
-import com.tencent.devops.buildless.utils.BuildlessRedisUtils
+import com.tencent.devops.buildless.utils.RedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class JumpPolicy @Autowired constructor(
-    private val buildlessRedisUtils: BuildlessRedisUtils
+    private val redisUtils: RedisUtils
 ) : RejectedExecutionHandler {
     override fun rejectedExecution(buildLessStartInfo: BuildLessStartInfo): Boolean {
         with(buildLessStartInfo) {
             logger.info("$buildId|$vmSeqId|$executionCount jump allocate container.")
-            buildlessRedisUtils.rightPushBuildLessReadyTask(
+            redisUtils.rightPushBuildLessReadyTask(
                 BuildLessTask(
                     projectId = projectId,
                     pipelineId = pipelineId,

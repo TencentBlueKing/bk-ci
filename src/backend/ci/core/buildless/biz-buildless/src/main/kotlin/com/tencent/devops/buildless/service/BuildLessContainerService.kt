@@ -56,7 +56,7 @@ import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_BK_TAG
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
 import com.tencent.devops.buildless.utils.RandomUtil
-import com.tencent.devops.buildless.utils.BuildlessRedisUtils
+import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
@@ -76,7 +76,7 @@ import kotlin.streams.toList
 @Service
 class BuildLessContainerService(
     private val bkTag: BkTag,
-    private val buildlessRedisUtils: BuildlessRedisUtils,
+    private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
     private val buildLessConfig: BuildLessConfig
 ) {
@@ -139,8 +139,8 @@ class BuildLessContainerService(
             httpDockerCli.startContainerCmd(container.id).exec()
 
             logger.info("===> created container: $container, containerName: $containerName. ")
-            buildlessRedisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
-            buildlessRedisUtils.increIdlePool(1)
+            redisUtils.setBuildLessPoolContainer(container.id, ContainerStatus.IDLE)
+            redisUtils.increIdlePool(1)
             logger.info("===> buildLessPoolKey hset ${container.id} ${ContainerStatus.IDLE.name}.")
         } catch (e: Exception) {
             logger.error("===> failed to created container.", e)
@@ -181,7 +181,7 @@ class BuildLessContainerService(
                 ignored
             )
         } finally {
-            buildlessRedisUtils.deleteBuildLessPoolContainer(containerId)
+            redisUtils.deleteBuildLessPoolContainer(containerId)
         }
     }
 
@@ -206,10 +206,10 @@ class BuildLessContainerService(
             }.toList()
 
             // 不在containerIds列表内的同步删除缓存
-            val buildLessPoolContainerMap = buildlessRedisUtils.getBuildLessPoolContainerList()
+            val buildLessPoolContainerMap = redisUtils.getBuildLessPoolContainerList()
             buildLessPoolContainerMap.forEach { (key, _) ->
                 if (!containerIds.contains(key)) {
-                    buildlessRedisUtils.deleteBuildLessPoolContainer(key)
+                    redisUtils.deleteBuildLessPoolContainer(key)
                 }
             }
 
@@ -217,7 +217,7 @@ class BuildLessContainerService(
             containerIds.forEach {
                 if (!buildLessPoolContainerMap.keys.contains(it)) {
                     logger.info("Supplemental cache buildLessPoolKey hset $it ${ContainerStatus.IDLE.name}.")
-                    buildlessRedisUtils.setBuildLessPoolContainer(it, ContainerStatus.IDLE)
+                    redisUtils.setBuildLessPoolContainer(it, ContainerStatus.IDLE)
                 }
             }
         }
@@ -231,7 +231,7 @@ class BuildLessContainerService(
         for (container in containerInfo) {
             val startTime = httpDockerCli.inspectContainerCmd(container.id).exec().state.startedAt
             // 是否已运行超过12小时
-            val buildLessPoolInfo = buildlessRedisUtils.getBuildLessPoolContainer(container.id)
+            val buildLessPoolInfo = redisUtils.getBuildLessPoolContainer(container.id)
             if (checkStartTime(startTime) &&
                 (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)) {
                 timeoutContainerList.add(container.id)

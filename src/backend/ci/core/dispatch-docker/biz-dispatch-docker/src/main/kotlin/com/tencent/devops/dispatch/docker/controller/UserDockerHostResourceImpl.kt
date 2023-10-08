@@ -48,7 +48,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
-import com.tencent.devops.dispatch.docker.service.DispatchDockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -60,7 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserDockerHostResourceImpl @Autowired constructor(
-    private val dispatchDockerHostBuildService: DispatchDockerHostBuildService,
+    private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostDebugService: DockerHostDebugServiceImpl,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -185,7 +185,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     ): Result<ContainerInfo>? {
         checkPermission(userId, projectId, pipelineId, vmSeqId)
 
-        return dispatchDockerHostBuildService.getContainerInfo(buildId, vmSeqId.toInt())
+        return dockerHostBuildService.getContainerInfo(buildId, vmSeqId.toInt())
     }
 
     override fun getGreyWebConsoleProject(userId: String): Result<List<String>> {
@@ -198,7 +198,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun getDockerHostLoad(userId: String): Result<DockerHostLoad> {
-        return Result(dispatchDockerHostBuildService.getDockerHostLoad(userId))
+        return Result(dockerHostBuildService.getDockerHostLoad(userId))
     }
 
     fun checkParam(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {

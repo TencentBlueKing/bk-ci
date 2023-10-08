@@ -10,7 +10,7 @@ import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
-import com.tencent.devops.buildless.utils.BuildlessRedisUtils
+import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.buildless.utils.ThreadPoolName
 import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 @Component
 class ContainerPoolExecutor @Autowired constructor(
-    private val buildlessRedisUtils: BuildlessRedisUtils,
+    private val redisUtils: RedisUtils,
     private val buildLessConfig: BuildLessConfig,
     private val rejectedExecutionFactory: RejectedExecutionFactory,
     private val buildLessContainerService: BuildLessContainerService
@@ -35,7 +35,7 @@ class ContainerPoolExecutor @Autowired constructor(
             }
 
             logger.info("$buildId|$vmSeqId|$executionCount left push buildLessReadyTask")
-            buildlessRedisUtils.leftPushBuildLessReadyTask(
+            redisUtils.leftPushBuildLessReadyTask(
                 BuildLessTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -85,7 +85,7 @@ class ContainerPoolExecutor @Autowired constructor(
 
     fun getContainerStatus(containerId: String): BuildLessPoolInfo? {
         synchronized(containerId.intern()) {
-            return buildlessRedisUtils.getBuildLessPoolContainer(containerId)
+            return redisUtils.getBuildLessPoolContainer(containerId)
         }
     }
 
@@ -124,7 +124,7 @@ class ContainerPoolExecutor @Autowired constructor(
             }
 
             retry@ while (true) {
-                val idlePoolSize = buildlessRedisUtils.getIdlePoolSize()
+                val idlePoolSize = redisUtils.getIdlePoolSize()
 
                 // 无空闲容器时执行拒绝策略
                 logger.info("${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId} idlePoolSize: $idlePoolSize")
@@ -135,10 +135,10 @@ class ContainerPoolExecutor @Autowired constructor(
                 }
 
                 // 再次check idlePoolSize，有变更则retry
-                if (idlePoolSize != buildlessRedisUtils.getIdlePoolSize()) continue@retry
+                if (idlePoolSize != redisUtils.getIdlePoolSize()) continue@retry
 
                 // 已经进入需求池，资源池减1
-                buildlessRedisUtils.increIdlePool(-1)
+                redisUtils.increIdlePool(-1)
                 return false
             }
         } finally {
