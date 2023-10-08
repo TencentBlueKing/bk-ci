@@ -10,7 +10,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import kotlin.reflect.full.declaredMemberProperties
 
 object NetworkUtil {
     private const val LOG_OUTPUT_MAX_LENGTH = 4000
@@ -49,7 +48,7 @@ object NetworkUtil {
         }
     }
 
-    private fun createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Any): Request {
+    private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
         val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
