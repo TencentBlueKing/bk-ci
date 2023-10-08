@@ -49,23 +49,16 @@ object NetworkUtil {
         }
     }
 
-    fun printAllPropertyNames(obj: Any) {
-        val clazz = obj::class
-        val properties = clazz.declaredMemberProperties
-        properties.forEach { logger.info("[printAllPropertyNames] ${it.name}") }
-    }
-
-    private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
+    private fun createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Any): Request {
         val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
-        logger.info("[createPostRequest] request body log: $requestContent")
+        logger.info("[createPostRequest] request writeValueAsString requestContent: $requestContent")
 
-        if (jobCloudReq != null) {
-            printAllPropertyNames(jobCloudReq)
-        }
+        val requestBodyLog = jobCloudReq.toString()
+        logger.info("[createPostRequest] request body (override toString): $requestBodyLog")
 
         return Request.Builder()
             .url(url)
