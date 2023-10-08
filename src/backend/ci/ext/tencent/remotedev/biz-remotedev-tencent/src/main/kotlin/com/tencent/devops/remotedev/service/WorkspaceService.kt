@@ -393,7 +393,7 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
-            projectId = projectId,
+            projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
             assignType = WorkspaceShared.AssignType.OWNER
         ) ?: emptyList()
