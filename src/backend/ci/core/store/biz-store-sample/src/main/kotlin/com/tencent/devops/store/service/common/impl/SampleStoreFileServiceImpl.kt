@@ -68,7 +68,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                         logo = logoFlag,
                         fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        fileType = fileType?.fileType
+                        fileType = fileType?.name
                     ).data
                     fileUrl?.let { result[path] = fileUrl }
                 } else {
