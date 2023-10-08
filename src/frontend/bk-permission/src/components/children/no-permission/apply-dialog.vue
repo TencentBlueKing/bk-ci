@@ -135,6 +135,10 @@ export default {
       type: String,
       default: '',
     },
+    projectCode: {
+      type: String,
+      default: '',
+    },
   },
   emits: ['update:show'],
   data() {
@@ -270,6 +274,7 @@ export default {
             expiredAt: this.formData.expireTime,
             reason: this.formData.reason,
             applicant: this.userName,
+            projectCode: this.projectCode,
           })
           .then(() => {
             this.$bkMessage({
