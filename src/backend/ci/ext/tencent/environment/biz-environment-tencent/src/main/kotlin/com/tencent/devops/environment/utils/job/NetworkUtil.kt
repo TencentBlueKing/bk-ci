@@ -82,7 +82,7 @@ object NetworkUtil {
             "script_content" to "ZWNobyAkMQ==",
             "script_param" to "aGVsbG8=",
             "timeout" to 1000,
-            "account_id" to "root",
+            "account_id" to 578,
             "is_param_sensitive" to 0,
             "script_language" to 1,
             "target_server" to jsonObject4
