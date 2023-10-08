@@ -45,6 +45,8 @@ data class PipelineDetail(
     val canManualStartup: Boolean,
     @ApiModelProperty("是否可以调试")
     val canDebug: Boolean,
+    @ApiModelProperty("是否可以发布")
+    val canRelease: Boolean,
     @ApiModelProperty("是否从模板实例化")
     val instanceFromTemplate: Boolean,
     @ApiModelProperty("草稿或最新的发布版本")
@@ -53,6 +55,8 @@ data class PipelineDetail(
     val versionName: String?,
     @ApiModelProperty("基准版本的状态", required = false)
     val baseVersionStatus: VersionStatus,
+    @ApiModelProperty("基准版本的分支名")
+    val baseVersionBranch: String?,
     @ApiModelProperty("草稿或最新的发布版本")
     val releaseVersion: Int?,
     @ApiModelProperty("草稿或最新的发布版本名称")
