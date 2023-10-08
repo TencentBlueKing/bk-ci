@@ -67,6 +67,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
@@ -391,7 +392,6 @@ class WorkspaceService @Autowired constructor(
         logger.info("op get project $projectId workspace list")
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
-            status = WorkspaceStatus.RUNNING,
             mountType = WorkspaceMountType.START,
             projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
@@ -407,7 +407,8 @@ class WorkspaceService @Autowired constructor(
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
+                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String,
+                status = WorkspaceStatus.values()[it["STATUS"] as Int]
             )
         }
     }
@@ -430,7 +431,8 @@ class WorkspaceService @Autowired constructor(
         it: WorkspaceRecord,
         status: WorkspaceStatus,
         assignType: WorkspaceShared.AssignType,
-        winConfigId: Int?
+        winConfigId: Int?,
+        owner: String?
     ) = Workspace(
         workspaceId = it.workspaceId,
         workspaceName = it.workspaceName,
@@ -445,6 +447,7 @@ class WorkspaceService @Autowired constructor(
         lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
         sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
         createUserId = it.createUserId,
+        owner = owner,
         workPath = it.workPath,
         workspaceFolder = it.workspaceFolder,
         hostName = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
@@ -474,9 +477,9 @@ class WorkspaceService @Autowired constructor(
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
-        val sharedWorkspace = result.filter { it.createUserId != userId }.ifEmpty { null }?.let {
-            workspaceSharedDao.batchSelectAssignType(dslContext, userId, it.map { i -> i.workspaceName })
-        } ?: emptyMap()
+        val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
+            workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
+        }?.groupBy { it.workspaceName } ?: emptyMap()
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
             dslContext,
@@ -504,8 +507,12 @@ class WorkspaceService @Autowired constructor(
                 parsingWorkspace(
                     it = it,
                     status = status,
-                    assignType = sharedWorkspace.getOrElse(it.workspaceName) { WorkspaceShared.AssignType.OWNER },
-                    winConfigId = allWindows[it.workspaceName]?.winConfigId
+                    assignType = sharedWorkspace[it.workspaceName]?.find { shared -> shared.sharedUser == userId }?.type
+                        ?: WorkspaceShared.AssignType.OWNER,
+                    winConfigId = allWindows[it.workspaceName]?.winConfigId,
+                    owner = sharedWorkspace[it.workspaceName]?.find { shared ->
+                        shared.type == WorkspaceShared.AssignType.OWNER
+                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
                 )
             }
         )
@@ -513,7 +520,11 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
         logger.info("$userId get his all workspace ")
-        val workspaces = workspaceDao.fetchWorkspace(dslContext, userId) ?: emptyList()
+        val workspaces = workspaceDao.limitFetchUserWorkspace(
+            dslContext = dslContext,
+            userId = userId,
+            deleted = true
+        ) ?: emptyList()
         val status = workspaces.map { it.status }
         val now = LocalDateTime.now()
 
@@ -668,6 +679,13 @@ class WorkspaceService @Autowired constructor(
         } else {
             workspaceWindowsDao.fetchAnyWorkspaceSharedInfo(dslContext, workspaceName)?.resourceId
         }
+        val owner = if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ).firstOrNull()?.sharedUser
+        } else workspace.createUserId
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
@@ -675,6 +693,7 @@ class WorkspaceService @Autowired constructor(
             projectId = workspace.projectId,
             name = workspace.workspaceName,
             creator = workspace.createUserId,
+            owner = owner,
             resourceId = resourceId
         )
     }
@@ -879,7 +898,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = info.workspaceName,
                 operator = ADMIN_NAME,
                 sharedUsers = listOf(info.sharedUser),
-                assignType = WorkspaceShared.AssignType.valueOf(info.assignType),
+                assignType = info.type,
                 mountType = if (info.resourceId.isNotBlank()) WorkspaceMountType.START else null
             )
             return true
@@ -901,7 +920,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = it.workspaceName,
                 operator = ADMIN_NAME,
                 sharedUsers = listOf(it.sharedUser),
-                assignType = WorkspaceShared.AssignType.valueOf(it.assignType),
+                assignType = it.type,
                 mountType = if (it.resourceId.isNotBlank()) WorkspaceMountType.START else null
             )
             return true
