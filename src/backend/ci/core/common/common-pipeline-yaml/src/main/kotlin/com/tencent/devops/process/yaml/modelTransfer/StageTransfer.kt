@@ -68,7 +68,7 @@ import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import com.tencent.devops.process.yaml.v3.models.stage.Stage as StreamV2Stage
+import com.tencent.devops.process.yaml.v3.models.stage.Stage as StreamV3Stage
 
 @Component
 class StageTransfer @Autowired(required = false) constructor(
@@ -108,7 +108,7 @@ class StageTransfer @Autowired(required = false) constructor(
         yamlInput: YamlTransferInput
     ): Stage {
         return yaml2Stage(
-            stage = StreamV2Stage(
+            stage = StreamV3Stage(
                 name = "Finally",
                 label = emptyList(),
                 ifField = null,
@@ -124,7 +124,7 @@ class StageTransfer @Autowired(required = false) constructor(
     }
 
     fun yaml2Stage(
-        stage: StreamV2Stage,
+        stage: StreamV3Stage,
         stageIndex: Int,
         yamlInput: YamlTransferInput,
         finalStage: Boolean = false
@@ -137,12 +137,14 @@ class StageTransfer @Autowired(required = false) constructor(
                 yamlInput = yamlInput
             )
 
+            val jobEnable = if (job.enable != null) job.enable!! else true
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 containerTransfer.addNormalContainer(
                     job = job,
                     elementList = elementList,
                     containerList = containerList,
                     jobIndex = jobIndex,
+                    jobEnable = jobEnable,
                     finalStage = finalStage
                 )
             } else {
@@ -153,11 +155,14 @@ class StageTransfer @Autowired(required = false) constructor(
                     jobIndex = jobIndex,
                     projectCode = yamlInput.projectCode,
                     finalStage = finalStage,
+                    jobEnable = jobEnable,
                     resources = yamlInput.yaml.formatResources(),
                     buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
                 )
             }
         }
+
+        val stageEnable = if (stage.enable != null) stage.enable!! else true
 
         // 根据if设置stageController
         val stageControlOption = if (!finalStage && !stage.ifField.isNullOrBlank()) {
@@ -172,6 +177,7 @@ class StageTransfer @Autowired(required = false) constructor(
                 if (!stage.ifField.isNullOrBlank()) StageRunCondition.CUSTOM_CONDITION_MATCH else null
             } ?: StageRunCondition.AFTER_LAST_FINISHED
             StageControlOption(
+                enable = stageEnable,
                 runCondition = runCondition,
                 customCondition = if (runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
                     ModelCreateUtil.removeIfBrackets(stage.ifField)
@@ -180,7 +186,10 @@ class StageTransfer @Autowired(required = false) constructor(
                 },
                 customVariables = customVariables
             )
-        } else StageControlOption()
+        } else StageControlOption(
+            enable = stageEnable
+        )
+
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(

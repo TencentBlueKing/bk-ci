@@ -363,6 +363,7 @@ object ScriptYmlUtils {
 
             jobs.add(
                 Job(
+                    enable = preJob.enable,
                     id = index,
                     name = preJob.name,
                     mutex = preJob.mutex,
@@ -501,6 +502,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
+                    enable = it.enable,
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,

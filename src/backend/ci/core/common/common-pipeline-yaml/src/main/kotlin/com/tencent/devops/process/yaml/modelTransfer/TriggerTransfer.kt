@@ -124,9 +124,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore,
-                    block = mr.block,
+                    block = mr.blockMr,
                     webhookQueue = mr.webhookQueue,
-                    enableCheck = mr.enableCheck,
+                    enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
@@ -243,9 +243,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         pathsIgnore = git.excludePaths?.disjoin(),
                         users = git.includeUsers,
                         usersIgnore = git.excludeUsers,
-                        block = git.block,
+                        blockMr = git.block,
                         webhookQueue = git.webhookQueue,
-                        enableCheck = git.enableCheck,
+                        reportCommitCheck = git.enableCheck,
                         pathFilterType = git.pathFilterType?.name,
                         // todo action
                         action = null
@@ -358,9 +358,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                             includeUsers = mr.users,
                             excludeUsers = mr.usersIgnore,
-                            block = mr.block,
+                            block = mr.blockMr,
                             webhookQueue = mr.webhookQueue,
-                            enableCheck = mr.enableCheck,
+                            enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                             // todo action
                             eventType = CodeEventType.MERGE_REQUEST,
@@ -486,7 +486,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore.nonEmptyOrNull()?.join(),
                     webhookQueue = mr.webhookQueue,
-                    enableCheck = mr.enableCheck,
+                    enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.PULL_REQUEST,
@@ -676,7 +676,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore,
-                    block = mr.block,
+                    block = mr.blockMr,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,

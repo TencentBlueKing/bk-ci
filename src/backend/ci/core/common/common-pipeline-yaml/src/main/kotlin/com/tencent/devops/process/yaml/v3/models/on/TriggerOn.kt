@@ -56,10 +56,11 @@ data class TriggerOn(
     var manual: ManualRule? = null,
     var remote: String? = null,
     val openapi: String? = null,
+    @JsonProperty("repo-name")
+    @ApiModelProperty(name = "repo-name")
     var repoName: String? = null,
-    var triggerName: String? = null,
-    @JsonProperty("repoId")
-    @ApiModelProperty(name = "repoId")
+    @JsonProperty("repo-id")
+    @ApiModelProperty(name = "repo-id")
     var repoHashId: String? = null,
     var credentials: String? = null
 ) {
