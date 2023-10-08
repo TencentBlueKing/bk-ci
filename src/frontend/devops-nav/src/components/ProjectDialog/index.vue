@@ -180,14 +180,14 @@
 </template>
 
 <script lang='ts'>
+    import {
+        RESOURCE_ACTION,
+        handleProjectNoPermission
+    } from '@/utils/permission'
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
-    import {
-        handleProjectNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
 
     @Component
     export default class ProjectDialog extends Vue {
