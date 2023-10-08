@@ -145,6 +145,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             projectIdType = tServiceRecord.projectIdType,
             logoUrl = tServiceRecord.logoUrl,
             webSocket = tServiceRecord.webSocket,
+            weight = tServiceRecord.weight,
             createdUser = tServiceRecord.createdUser ?: "",
             createdTime = DateTimeUtil.toDateTime(tServiceRecord.createdTime),
             updatedUser = tServiceRecord.updatedUser ?: "",

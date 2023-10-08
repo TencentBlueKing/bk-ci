@@ -70,6 +70,8 @@ data class OPPServiceVO(
     val logoUrl: String?,
     @ApiModelProperty("支持webSocket的页面")
     val webSocket: String?,
+    @ApiModelProperty("权重")
+    val weight: Int? = null,
     @ApiModelProperty("创建人")
     val createdUser: String,
     @ApiModelProperty("创建时间")
