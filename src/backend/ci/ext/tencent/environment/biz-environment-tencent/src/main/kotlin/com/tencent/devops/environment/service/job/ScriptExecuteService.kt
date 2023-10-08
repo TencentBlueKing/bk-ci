@@ -37,16 +37,22 @@ class ScriptExecuteService @Autowired constructor(
                 jobCloudReq = jobCloudScriptExecuteReq.javaClass
             )
         logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
-        var scriptExecuteResult = ScriptExecuteResult(0L, "", 0L)
-        if (null != jobCloudResp.data) {
-            scriptExecuteResult = jacksonObjectMapper().readValue(jobCloudResp.data.toString())
-        }
+
+        val scriptExecuteResult: ScriptExecuteResult =
+            if (null != jobCloudResp.data) {
+                val jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                jacksonObjectMapper().readValue(jsonData)
+            } else {
+                ScriptExecuteResult(0L, "", 0L)
+            }
+
 //        val scriptExecuteResult = ScriptExecuteResult(
 //            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
 //            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
 //            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
 //        )
-
+        logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
+        logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
         return Result(
             status = jobCloudResp.code,
             message = jobCloudResp.message,
