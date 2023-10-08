@@ -10,6 +10,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import kotlin.reflect.full.declaredMemberProperties
 
 object NetworkUtil {
     private const val LOG_OUTPUT_MAX_LENGTH = 4000
@@ -48,12 +49,10 @@ object NetworkUtil {
         }
     }
 
-    private fun requestBodyToBytes(requestBody: RequestBody?): ByteArray {
-        val buffer = okio.Buffer()
-        if (requestBody != null) {
-            requestBody.writeTo(buffer)
-        }
-        return buffer.readByteArray()
+    fun printAllPropertyNames(obj: Any) {
+        val clazz = obj::class
+        val properties = clazz.declaredMemberProperties
+        properties.forEach { logger.info("[printAllPropertyNames] ${it.name}") }
     }
 
     private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Class<T>?): Request {
@@ -64,9 +63,9 @@ object NetworkUtil {
         )
         logger.info("[createPostRequest] request body log: $requestContent")
 
-        val requestBodyBytes = requestBodyToBytes(requestBody)
-        val requestBodyString = requestBodyBytes.contentToString()
-        logger.info("[createPostRequest] request body string: $requestBodyString")
+        if (jobCloudReq != null) {
+            printAllPropertyNames(jobCloudReq)
+        }
 
         return Request.Builder()
             .url(url)
