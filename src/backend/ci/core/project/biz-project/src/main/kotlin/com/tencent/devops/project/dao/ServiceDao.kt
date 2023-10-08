@@ -239,6 +239,9 @@ class ServiceDao {
             if (serviceUpdateInfo.deleted != null) {
                 execute.set(DELETED, serviceUpdateInfo.deleted)
             }
+            if (serviceUpdateInfo.weight != null) {
+                execute.set(WEIGHT, serviceUpdateInfo.weight)
+            }
             execute.set(CLUSTER_TYPE, serviceUpdateInfo.clusterType)
             return execute.set(UPDATED_USER, userId)
                 .set(UPDATED_TIME, LocalDateTime.now())
