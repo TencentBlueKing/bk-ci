@@ -207,10 +207,10 @@ class WorkspaceService @Autowired constructor(
             }
 
             workspaceCommon.shareWorkspace(
-                workspaceName,
-                userId,
-                listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
-                workspace.workspaceMountType
+                workspaceName = workspaceName,
+                operator = userId,
+                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
+                mountType = workspace.workspaceMountType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -311,7 +311,7 @@ class WorkspaceService @Autowired constructor(
 
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
-        val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
+        val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
@@ -478,7 +478,7 @@ class WorkspaceService @Autowired constructor(
             workspaceSharedDao.batchSelectAssignType(dslContext, userId, it.map { i -> i.workspaceName })
         } ?: emptyMap()
 
-        val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
+        val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
@@ -666,7 +666,7 @@ class WorkspaceService @Autowired constructor(
                 sharedUsers = listOf(userId)
             ).firstOrNull()?.resourceId
         } else {
-            workspaceWindowsDao.fetchAnyWorkspaceSharedInfo(dslContext, workspaceName)?.resourceId
+            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.resourceId
         }
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,

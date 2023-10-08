@@ -51,6 +51,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -103,7 +104,8 @@ class WorkspaceCommon @Autowired constructor(
     @org.springframework.context.annotation.Lazy
     private val deleteControl: DeleteControl,
     private val objectMapper: ObjectMapper,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
 
     companion object {
@@ -515,10 +517,22 @@ class WorkspaceCommon @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>,
         mountType: WorkspaceMountType
     ) {
+        // 获取workspaceName对应的cgsId
+        val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(
+                    workspaceName,
+                    "cgsIp is null"
+                )
+            )
+
         val resourceId = if (mountType == WorkspaceMountType.START) {
             client.get(ServiceStartCloudResource::class)
                 .shareWorkspace(
-                    operator = operator, workspaceName = workspaceName, receivers = assigns.map { it.userId }
+                    operator = operator,
+                    cgsId = cgsId,
+                    receivers = assigns.map { it.userId }
                 ).data!!
         } else {
             ""
