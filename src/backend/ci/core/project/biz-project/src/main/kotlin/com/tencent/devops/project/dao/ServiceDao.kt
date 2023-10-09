@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
@@ -46,6 +47,7 @@ class ServiceDao {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
                 .let { if (clusterType == null) it else it.and(CLUSTER_TYPE.eq(clusterType)) }
+                .skipCheck()
                 .fetch()
         }
     }
