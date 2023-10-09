@@ -35,7 +35,6 @@ import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
@@ -161,7 +160,6 @@ class MigratePermissionHandoverService constructor(
             }
             offset += limit
         } while (resourceList.size == limit)
-
     }
 
     companion object {
