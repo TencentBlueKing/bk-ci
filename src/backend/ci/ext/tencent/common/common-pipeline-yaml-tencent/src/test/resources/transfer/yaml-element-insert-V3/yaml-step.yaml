@@ -4,8 +4,8 @@ on:
 - schedules:
     cron: "0 0 1 ? * 3,4,5"
   remote: enabled
-- repoName: aliasName/xxx
-  repoHashId: kjVY7
+- repo-name: aliasName/xxx
+  repo-id: kjVY7
   type: git
   push:
     branches:
@@ -22,8 +22,8 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: aliasName/xxx
-  repoHashId: 6DOdE
+- repo-name: aliasName/xxx
+  repo-id: 6DOdE
   type: tgit
   push:
     branches:
@@ -38,8 +38,8 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: aliasName/xxx
-  repoHashId: Nz0Vj
+- repo-name: aliasName/xxx
+  repo-id: Nz0Vj
   type: github
   push:
     branches:
@@ -50,7 +50,7 @@ on:
     - 排除以下人员：
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: 按代码库别名输入
+- repo-name: 按代码库别名输入
   type: svn
   push:
     paths:
@@ -63,7 +63,7 @@ on:
     - yongyiduan
     path-filter-type: NamePrefixFilter
   manual: disabled
-- repoName: "123"
+- repo-name: "123"
   type: p4
   push:
     paths:
@@ -71,8 +71,8 @@ on:
     paths-ignore:
     - 排除以下路径：
   manual: disabled
-- repoName: aliasName/xxx
-  repoHashId: kA3B
+- repo-name: aliasName/xxx
+  repo-id: kA3B
   type: gitlab
   tag:
     tags:
@@ -123,20 +123,20 @@ variables:
   代码库:
     value: lockiechen/obb-demo
     props:
-      type: code_lib
-      scmType: git
+      type: code-lib
+      scm-type: git
   git分支或tag:
     value: ""
     props:
-      type: git_ref
-      repoHashId: 302rW
+      type: git-ref
+      repo-id: 302rW
   构建资源:
     value: tlinux2.2
     props:
-      type: container_type
+      type: container-type
       description: 描述描述描述描述描述
-      containerType:
-        buildType: DOCKER
+      container-type:
+        build-type: DOCKER
         os: LINUX
   版本仓库过滤器:
     value: ""
@@ -150,11 +150,11 @@ variables:
   子流水线:
     value: test123
     props:
-      type: sub_pipeline
+      type: sub-pipeline
   文件:
     value: "123"
     props:
-      type: custom_file
+      type: custom-file
 stages:
 - name: win
   label:
@@ -286,7 +286,7 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          imageType: THIRD
+          image-type: THIRD
           credentials: royalhuang_up
       steps:
       - name: Bash
@@ -334,7 +334,7 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          imageType: BKSTORE
+          image-type: BKSTORE
       steps:
       - name: Bash
         uses: linuxScript@1.*
@@ -360,7 +360,7 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          imageType: BKSTORE
+          image-type: BKSTORE
       if: 3333 == '6666'
       steps:
       - name: Bash
@@ -459,7 +459,7 @@ finally:
       pool-name: docker
       container:
         image: tlinux3_ci:2.*
-        imageType: BKSTORE
+        image-type: BKSTORE
     steps:
     - checkout: https://git.code.oa.com/XXX/XXX.git
       name: Checkout

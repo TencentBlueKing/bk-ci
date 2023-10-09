@@ -37,13 +37,13 @@ import com.tencent.devops.common.pipeline.CommonPipelineAutoConfiguration
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
-import com.tencent.devops.process.pojo.transfer.ElementInsertBody
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
@@ -51,7 +51,6 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
@@ -62,7 +61,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -354,7 +352,8 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             )
         }.onFailure {
             if (output.contains("PipelineTransferException")) {
-                Assertions.assertEquals("${it::class.simpleName}-${it.message}", output)
+                val error = it as PipelineTransferException
+                Assertions.assertEquals("${it::class.simpleName}-${error.errorCode}", output)
                 return
             }
             throw it
