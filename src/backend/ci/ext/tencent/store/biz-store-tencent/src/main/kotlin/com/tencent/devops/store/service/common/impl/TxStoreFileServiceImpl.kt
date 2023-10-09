@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -53,8 +54,9 @@ class TxStoreFileServiceImpl : StoreFileService() {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
-        logoFlag: Boolean,
-        result: MutableMap<String, String>
+        storeStatic: Boolean,
+        result: MutableMap<String, String>,
+        fileType: FileTypeEnum?
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath$fileSeparator$path")
