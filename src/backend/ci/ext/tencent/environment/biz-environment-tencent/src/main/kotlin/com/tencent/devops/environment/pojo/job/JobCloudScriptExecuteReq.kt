@@ -55,7 +55,7 @@ data class JobCloudScriptExecuteReq(
         map["account_alias"] = accountAlias
         map["is_param_sensitive"] = isParamSensitive
         map["script_language"] = scriptLanguage
-        map["bk_app_code"] = targetServer
+        map["target_server"] = targetServer
         map["bk_app_code"] = bkAppCode
         map["bk_app_secret"] = bkAppSecret
         map["bk_username"] = bkUsername
