@@ -30,8 +30,9 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.BuildContainerType
+import com.tencent.devops.common.pipeline.type.BuildType
 import io.swagger.annotations.ApiModelProperty
 
 // @JsonDeserialize(using = IVariableDeserializer::class)
@@ -113,7 +114,7 @@ data class VariableProps(
     val scmType: String? = null,
     @JsonProperty("container-type")
     @ApiModelProperty(name = "container-type")
-    val containerType: BuildContainerType? = null,
+    val containerType: BuildContainerTypeYaml? = null,
     @ApiModelProperty("自定义仓库通配符", required = false)
     val glob: String? = null,
     @ApiModelProperty("文件元数据", required = false)
@@ -133,6 +134,12 @@ data class VariablePropOption(
     val id: Any,
     val label: String? = null,
     val description: String? = null
+)
+data class BuildContainerTypeYaml(
+    @JsonProperty("build-type")
+    @ApiModelProperty(name = "build-type")
+    val buildType: BuildType,
+    val os: OS
 )
 
 /**

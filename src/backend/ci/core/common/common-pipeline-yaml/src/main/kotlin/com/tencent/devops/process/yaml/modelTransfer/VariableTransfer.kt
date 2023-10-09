@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
@@ -105,7 +107,13 @@ class VariableTransfer @Autowired constructor() {
 
                 it.type == BuildFormPropertyType.CONTAINER_TYPE -> VariableProps(
                     type = VariablePropType.CONTAINER_TYPE.value,
-                    containerType = it.containerType,
+                    containerType = with(it.containerType) {
+                        this?.let {
+                            BuildContainerTypeYaml(
+                                buildType, os
+                            )
+                        }
+                    },
                     description = it.desc.nullIfDefault("")
                 ) // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
                 it.type == BuildFormPropertyType.ARTIFACTORY -> VariableProps(
@@ -166,7 +174,13 @@ class VariableTransfer @Autowired constructor() {
                     repoHashId = variable.props?.repoHashId,
                     relativePath = null,
                     scmType = ScmType.parse(variable.props?.scmType),
-                    containerType = variable.props?.containerType,
+                    containerType = with(variable.props?.containerType) {
+                        this?.let {
+                            BuildContainerType(
+                                buildType, os
+                            )
+                        }
+                    },
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
                     readOnly = variable.readonly,
