@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -50,6 +51,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
@@ -62,6 +64,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
@@ -88,7 +91,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val marketAtomService: MarketAtomService
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -122,6 +126,22 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )?.map { it.value1() } ?: emptyList()
             // 判断是否存在不可用插件
             validateAtomCodeList.removeAll(validAtomCodeList)
+            val userId = I18nUtil.getRequestUserId()
+            userId?.let {
+                validateAtomCodeList.forEach {
+                    val installAtomResult = marketAtomService.installAtom(
+                        userId = userId,
+                        channelCode = ChannelCode.BS,
+                        installAtomReq = InstallAtomReq(
+                            projectCode = arrayListOf(projectCode),
+                            atomCode = it
+                        )
+                    ).data
+                    if (installAtomResult == true) {
+                        validateAtomCodeList.remove(it)
+                    }
+                }
+            }
         }
         if (validateAtomCodeList.isNotEmpty()) {
             // 存在不可用插件，给出错误提示
