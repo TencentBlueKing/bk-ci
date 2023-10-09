@@ -146,8 +146,6 @@ class PipelineTransferYamlService @Autowired constructor(
                     return TransferResponse(modelAndSetting = PipelineModelAndSetting(model, setting))
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("PAC|TRANSFER|transferAction", t)
         } finally {
             watcher.stop()
         }
