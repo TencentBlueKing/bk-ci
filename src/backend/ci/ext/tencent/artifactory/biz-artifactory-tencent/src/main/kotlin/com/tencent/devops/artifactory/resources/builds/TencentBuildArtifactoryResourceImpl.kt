@@ -137,7 +137,7 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         checkParam(projectId, path)
         return Result(
-            bkRepoDownloadService.getThirdPartyDownloadUrl(
+            bkRepoDownloadService.innerCrossDownloadUrl(
                 projectId,
                 pipelineId,
                 buildId,

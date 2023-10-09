@@ -112,12 +112,14 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        val isDirected = directed ?: false
         return Result(
-            bkRepoDownloadService.serviceGetExternalDownloadUrl(
-                creatorId, userId,
-                projectId, artifactoryType, path,
-                ttl, isDirected
+            bkRepoDownloadService.outerDownloadUrlByToken(
+                creatorId = creatorId,
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path,
+                ttl = ttl
             )
         )
     }
@@ -129,7 +131,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         return Result(
-            bkRepoDownloadService.getExternalUrl(
+            bkRepoDownloadService.outerHtmlUrl4Download(
                 userId = userId,
                 projectId = projectId,
                 artifactoryType = artifactoryType,
@@ -145,7 +147,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path))
     }
 
     override fun downloadUrl(
@@ -160,11 +162,13 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        val isDirected = directed ?: false
         return Result(
-            bkRepoDownloadService.serviceGetInnerDownloadUrl(
-                userId, projectId, artifactoryType, path, ttl,
-                isDirected
+            bkRepoDownloadService.innerDownloadUrlByToken(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = ttl
             )
         )
     }
@@ -190,13 +194,15 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
         val result = bkRepoSearchService.serviceSearch(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-        return Result(FileInfoPage(
-            count = result.first,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            records = result.second,
-            timestamp = LocalDateTime.now().timestamp()
-        ))
+        return Result(
+            FileInfoPage(
+                count = result.first,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                records = result.second,
+                timestamp = LocalDateTime.now().timestamp()
+            )
+        )
     }
 
     override fun searchCustomFiles(
