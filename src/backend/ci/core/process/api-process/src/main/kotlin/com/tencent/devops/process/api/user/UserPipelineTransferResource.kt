@@ -67,7 +67,7 @@ interface UserPipelineTransferResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = true)
+        @ApiParam("流水线id", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
         @ApiParam("操作类型", required = true)
