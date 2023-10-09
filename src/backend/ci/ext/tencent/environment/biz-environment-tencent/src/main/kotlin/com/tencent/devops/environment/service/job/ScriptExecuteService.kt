@@ -38,9 +38,10 @@ class ScriptExecuteService @Autowired constructor(
             )
         logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
 
+        var jsonData = ""
         val scriptExecuteResult: ScriptExecuteResult =
             if (null != jobCloudResp.data) {
-                val jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
                 ScriptExecuteResult(0L, "", 0L)
@@ -52,6 +53,7 @@ class ScriptExecuteService @Autowired constructor(
 //            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
 //        )
         logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
+        logger.info("[executeScript] jsonData: $jsonData")
         logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
         return Result(
             status = jobCloudResp.code,
