@@ -19,7 +19,7 @@ class JobCloudQueryJobInstanceLogsReq(
     val stepInstanceId: Long,
     @ApiModelProperty(value = "主机/主机ID列表", required = true)
     @JsonProperty("ip_list")
-    val hostList: List<JobCloudHost>?,
+    val hostList: List<JobCloudHost>,
     @ApiModelProperty(value = "应用ID", required = true)
     @JsonProperty("bk_app_code")
     override var bkAppCode: String,
@@ -29,4 +29,17 @@ class JobCloudQueryJobInstanceLogsReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)
+) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername){
+    fun toMap(): Map<String, Any> {
+        val map: MutableMap<String, Any> = mutableMapOf()
+        map["bkScopeType"] = bkScopeType
+        map["bkScopeId"] = bkScopeId
+        map["jobInstanceId"] = jobInstanceId
+        map["stepInstanceId"] = stepInstanceId
+        map["hostList"] = hostList
+        map["bkAppCode"] = bkAppCode
+        map["bkAppSecret"] = bkAppSecret
+        map["bkUsername"] = bkUsername
+        return map
+    }
+}

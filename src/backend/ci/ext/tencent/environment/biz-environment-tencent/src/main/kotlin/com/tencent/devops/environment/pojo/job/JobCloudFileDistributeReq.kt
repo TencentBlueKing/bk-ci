@@ -35,4 +35,19 @@ data class JobCloudFileDistributeReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)
+) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername){
+    fun toMap(): Map<String, Any> {
+        val map: MutableMap<String, Any> = mutableMapOf()
+        map["bkScopeType"] = bkScopeType
+        map["bkScopeId"] = bkScopeId
+        map["fileSourceList"] = fileSourceList
+        map["fileTargetPath"] = fileTargetPath
+        map["executeTarget"] = executeTarget
+        map["accountAlias"] = accountAlias
+        map["timeout"] = timeout
+        map["bkAppCode"] = bkAppCode
+        map["bkAppSecret"] = bkAppSecret
+        map["bkUsername"] = bkUsername
+        return map
+    }
+}

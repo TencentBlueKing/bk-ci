@@ -31,7 +31,7 @@ class FileDistributeService @Autowired constructor(
                 operateName = "distributeFile",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudFileDistributeReq.javaClass
+                jobCloudReq = jobCloudFileDistributeReq.toMap()
             )
 
         val fileDistributeResult = FileDistributeResult(

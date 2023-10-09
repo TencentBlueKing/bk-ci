@@ -41,7 +41,7 @@ class QueryJobInstanceStatusService @Autowired constructor(
                     returnIpResult
                 ),
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = Void::class.java
+                jobCloudReq = mapOf<String, Any>()
             )
 
         val queryJobInstanceStatusResult = QueryJobInstanceStatusResult(

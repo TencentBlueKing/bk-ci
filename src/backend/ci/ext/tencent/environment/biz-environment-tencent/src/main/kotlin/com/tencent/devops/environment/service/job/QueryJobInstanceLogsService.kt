@@ -34,7 +34,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 operateName = "queryJobInstanceLogs",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudQueryJobInstanceLogsReq.javaClass
+                jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()
             )
 
         val queryJobInstanceLogsResult: QueryJobInstanceLogsResult
