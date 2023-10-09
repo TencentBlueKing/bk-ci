@@ -28,7 +28,6 @@
 package com.tencent.devops.environment.resources.job
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.JobCloudAccount
@@ -48,6 +47,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudFileSource
 import com.tencent.devops.environment.pojo.job.JobCloudHost
 import com.tencent.devops.environment.pojo.job.JobCloudQueryAccountAliasReq
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.ParseHashListService
@@ -71,7 +71,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
-    ): Result<ScriptExecuteResult> {
+    ): JobResult<ScriptExecuteResult> {
         checkParam(userId, projectId)
         val accountAlias = queryAccountAliasService.queryAccountAlias(
             JobCloudQueryAccountAliasReq(
@@ -120,7 +120,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         fileDistributeReq: FileDistributeReq
-    ): Result<FileDistributeResult> {
+    ): JobResult<FileDistributeResult> {
         checkParam(userId, projectId)
         val accountAlias = queryAccountAliasService.queryAccountAlias(
             JobCloudQueryAccountAliasReq(
@@ -188,9 +188,9 @@ class ServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         taskTerminateReq: TaskTerminateReq
-    ): Result<TaskTerminateResult> {
+    ): JobResult<TaskTerminateResult> {
         checkParam(userId, projectId)
-        return Result(taskTerminateService.terminateTask(userId, projectId, taskTerminateReq))
+        return JobResult(taskTerminateService.terminateTask(userId, projectId, taskTerminateReq))
     }
 
     override fun queryJobInstanceStatus(
@@ -198,7 +198,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         jobInstanceId: Long,
         returnIpResult: Boolean?
-    ): Result<QueryJobInstanceStatusResult> {
+    ): JobResult<QueryJobInstanceStatusResult> {
         checkParam(userId, projectId)
         return queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
     }
@@ -207,7 +207,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
-    ): Result<QueryJobInstanceLogsResult> {
+    ): JobResult<QueryJobInstanceLogsResult> {
         checkParam(userId, projectId)
         val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
             bkScopeType = "",

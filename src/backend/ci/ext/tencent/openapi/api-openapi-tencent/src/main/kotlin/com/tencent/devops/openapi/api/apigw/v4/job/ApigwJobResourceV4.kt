@@ -6,9 +6,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
@@ -53,7 +53,7 @@ interface ApigwJobResourceV4 {
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
         scriptExecuteReq: ScriptExecuteReq
-    ): Result<ScriptExecuteResult>
+    ): JobResult<ScriptExecuteResult>
 
     @ApiOperation("文件分发的Job接口", tags = ["v4_app_job_file_distribute"])
     @POST
@@ -73,7 +73,7 @@ interface ApigwJobResourceV4 {
         projectId: String,
         @ApiParam(value = "文件分发的信息", required = true)
         fileDistributeReq: FileDistributeReq
-    ): Result<FileDistributeResult>
+    ): JobResult<FileDistributeResult>
 
     @ApiOperation("终止任务的Job接口", tags = ["v4_app_job_task_terminate"])
     @POST
@@ -93,7 +93,7 @@ interface ApigwJobResourceV4 {
         projectId: String,
         @ApiParam(value = "终止任务的信息", required = true)
         taskTerminateReq: TaskTerminateReq
-    ): Result<TaskTerminateResult>
+    ): JobResult<TaskTerminateResult>
 
     @ApiOperation("查询任务状态的Job接口", tags = ["v4_app_job_query_job_instance_status"])
     @GET
@@ -117,7 +117,7 @@ interface ApigwJobResourceV4 {
         @ApiParam(value = "是否返回每个ip上的任务详情，默认false")
         @QueryParam("returnIpResult")
         returnIpResult: Boolean?
-    ): Result<QueryJobInstanceStatusResult>
+    ): JobResult<QueryJobInstanceStatusResult>
 
     @ApiOperation("批量查询日志的Job接口", tags = ["v4_app_job_query_job_instance_logs"])
     @POST
@@ -137,5 +137,5 @@ interface ApigwJobResourceV4 {
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
-    ): Result<QueryJobInstanceLogsResult>
+    ): JobResult<QueryJobInstanceLogsResult>
 }

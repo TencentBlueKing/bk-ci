@@ -2,11 +2,11 @@ package com.tencent.devops.environment.service.job
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import com.tencent.devops.environment.utils.job.NetworkUtil.logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 class ScriptExecuteService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): Result<ScriptExecuteResult> {
+    fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): JobResult<ScriptExecuteResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "executeScript",
@@ -49,9 +49,10 @@ class ScriptExecuteService @Autowired constructor(
         logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
         logger.info("[executeScript] serialized jsonData: $jsonData")
         logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
-        return Result(
+        return JobResult(
             status = jobCloudResp.code,
-            message = jobCloudResp.message,
+            result = jobCloudResp.result,
+            jobRequestId = jobCloudResp.jobRequestId,
             data = scriptExecuteResult
         )
     }

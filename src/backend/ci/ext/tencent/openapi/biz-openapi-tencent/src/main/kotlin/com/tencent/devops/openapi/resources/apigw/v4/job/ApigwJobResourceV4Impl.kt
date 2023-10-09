@@ -1,11 +1,11 @@
 package com.tencent.devops.openapi.resources.apigw.v4.job
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
@@ -27,7 +27,7 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
-    ): Result<ScriptExecuteResult> {
+    ): JobResult<ScriptExecuteResult> {
         return client.get(ServiceJobResource::class).executeScript(userId, projectId, scriptExecuteReq)
     }
 
@@ -37,7 +37,7 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         fileDistributeReq: FileDistributeReq
-    ): Result<FileDistributeResult> {
+    ): JobResult<FileDistributeResult> {
         return client.get(ServiceJobResource::class).distributeFile(userId, projectId, fileDistributeReq)
     }
 
@@ -47,7 +47,7 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         taskTerminateReq: TaskTerminateReq
-    ): Result<TaskTerminateResult> {
+    ): JobResult<TaskTerminateResult> {
         return client.get(ServiceJobResource::class).terminateTask(userId, projectId, taskTerminateReq)
     }
 
@@ -58,7 +58,7 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         projectId: String,
         jobInstanceId: Long,
         returnIpResult: Boolean?
-    ): Result<QueryJobInstanceStatusResult> {
+    ): JobResult<QueryJobInstanceStatusResult> {
         return client.get(ServiceJobResource::class).queryJobInstanceStatus(
             userId, projectId, jobInstanceId, returnIpResult
         )
@@ -70,7 +70,7 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
-    ): Result<QueryJobInstanceLogsResult> {
+    ): JobResult<QueryJobInstanceLogsResult> {
         return client.get(ServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
     }
 }

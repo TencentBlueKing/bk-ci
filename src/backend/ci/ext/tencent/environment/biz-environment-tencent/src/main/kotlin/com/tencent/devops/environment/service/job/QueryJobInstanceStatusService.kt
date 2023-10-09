@@ -1,10 +1,10 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.Host
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobInstance
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.JobStepInstance
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.StepHostResult
@@ -21,7 +21,7 @@ class QueryJobInstanceStatusService @Autowired constructor(
         projectId: String,
         jobInstanceId: Long,
         returnIpResult: Boolean?
-    ): Result<QueryJobInstanceStatusResult> {
+    ): JobResult<QueryJobInstanceStatusResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "queryJobInstanceStatus",
@@ -85,9 +85,10 @@ class QueryJobInstanceStatusService @Autowired constructor(
                 )
             }
         )
-        return Result(
+        return JobResult(
             status = jobCloudResp.code,
-            message = jobCloudResp.message,
+            result = jobCloudResp.result,
+            jobRequestId = jobCloudResp.jobRequestId,
             data = queryJobInstanceStatusResult
         )
     }

@@ -1,10 +1,10 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.Host
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +16,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
 ) {
     fun queryJobInstanceLogs(
         jobCloudQueryJobInstanceLogsReq: JobCloudQueryJobInstanceLogsReq
-    ): Result<QueryJobInstanceLogsResult> {
+    ): JobResult<QueryJobInstanceLogsResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "queryJobInstanceLogs",
@@ -77,9 +77,10 @@ class QueryJobInstanceLogsService @Autowired constructor(
             }
         }
 
-        return Result(
+        return JobResult(
             status = jobCloudResp.code,
-            message = jobCloudResp.message,
+            result = jobCloudResp.result,
+            jobRequestId = jobCloudResp.jobRequestId,
             data = queryJobInstanceLogsResult
         )
     }

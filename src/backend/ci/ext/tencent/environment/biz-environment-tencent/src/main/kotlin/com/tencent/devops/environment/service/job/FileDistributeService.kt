@@ -1,10 +1,10 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
+import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 class FileDistributeService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): Result<FileDistributeResult> {
+    fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "distributeFile",
@@ -39,9 +39,10 @@ class FileDistributeService @Autowired constructor(
             jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
             stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
         )
-        return Result(
+        return JobResult(
             status = jobCloudResp.code,
-            message = jobCloudResp.message,
+            result = jobCloudResp.result,
+            jobRequestId = jobCloudResp.jobRequestId,
             data = fileDistributeResult
         )
     }
