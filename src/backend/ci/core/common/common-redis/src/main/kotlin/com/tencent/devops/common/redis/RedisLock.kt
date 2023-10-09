@@ -94,7 +94,7 @@ open class RedisLock(
             }
         } catch (e: Exception) {
             logger.error("unlock error", e)
-            unLockRemote()// try again
+            unLockRemote() // try again
         }
     }
 
@@ -134,7 +134,6 @@ open class RedisLock(
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .maximumSize(100000)
             .build<String/*lockKey*/, Any/*localLock*/> { Any() }
-        private const val EMPTY = ""
         private val unLockLua = """
             if redis.call("get", KEYS[1]) == ARGV[1] then
                 return redis.call("del", KEYS[1])
