@@ -329,10 +329,6 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            if (ws.workspaceSystemType.needSafeInitialization()) {
-                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
-            }
-
             if (ws.workspaceSystemType.checkWindows()) {
                 workspaceWindowsDao.updateWindowsResourceId(
                     dslContext,
@@ -340,6 +336,10 @@ class CreateControl @Autowired constructor(
                     event.resourceId,
                     event.environmentIp
                 )
+            }
+
+            if (ws.workspaceSystemType.needSafeInitialization()) {
+                deliverControl.safeInitialization(ws.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索

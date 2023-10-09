@@ -46,8 +46,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -60,6 +58,8 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Repository
 class WorkspaceDao {
@@ -258,10 +258,11 @@ class WorkspaceDao {
      */
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
-        limit: SQLLimit,
+        limit: SQLLimit? = null,
         userId: String? = null,
         projectId: String? = null,
-        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        ownerType: WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL,
+        deleted: Boolean = false
     ): List<WorkspaceRecord>? {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
@@ -272,7 +273,7 @@ class WorkspaceDao {
                         WorkspaceOwnerType.PROJECT -> it.where(PROJECT_ID.eq(projectId!!))
                     }.and(OWNER_TYPE.eq(ownerType.name))
                 }
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
@@ -282,9 +283,11 @@ class WorkspaceDao {
                                 )
                             )
                         )
-                    ).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    ).let { if (!deleted) it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)) else it }
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
-                .limit(limit.limit).offset(limit.offset)
+                .let {
+                    if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
+                }
                 .fetch(workspaceMapper)
         }
     }
@@ -303,14 +306,16 @@ class WorkspaceDao {
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             return if (ips.isNullOrEmpty()) {
-                (genFetchProjectWorkspaceCond(
+                (
+                    genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     projectId = projectId,
                     workspaceName = workspaceName,
                     systemType = systemType,
                     queryType = queryType,
                     ips = ips
-                ) as SelectConditionStep<TWorkspaceRecord>).orderBy(CREATE_TIME.desc(), ID.desc())
+                ) as SelectConditionStep<TWorkspaceRecord>
+                ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(workspaceMapper)
             } else {
@@ -489,7 +494,9 @@ class WorkspaceDao {
                 .let { i ->
                     if (mountType != null) {
                         i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
-                    } else i
+                    } else {
+                        i
+                    }
                 }
                 .fetch()
         }
@@ -537,7 +544,7 @@ class WorkspaceDao {
         dslContext: DSLContext,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null,
+        projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
@@ -545,14 +552,20 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
+        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
         }
-        projectId?.let {
-            conditions.add(t1.PROJECT_ID.eq(projectId))
+
+        if (!projectIds.isNullOrEmpty()) {
+            if (projectIds.size == 1) {
+                conditions.add(t1.PROJECT_ID.eq(projectIds.first()))
+            } else {
+                conditions.add(t1.PROJECT_ID.`in`(projectIds))
+            }
         }
 
         ip?.let {
@@ -565,17 +578,23 @@ class WorkspaceDao {
             )
         }
 
-        return dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t2.SHARED_USER)
+        return dslContext.selectDistinct(
+            t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.SHARED_USER
+        )
             .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
             .let {
                 if (assignType != null) {
                     it.and(t2.ASSIGN_TYPE.eq(assignType.name))
-                } else it
+                } else {
+                    it.and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name).or(t2.ASSIGN_TYPE.isNull))
+                }
             }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
-                dslContext.select(t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER"))
+                dslContext.selectDistinct(
+                    t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
+                )
                     .from(t1)
                     .where(conditions)
                     .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))

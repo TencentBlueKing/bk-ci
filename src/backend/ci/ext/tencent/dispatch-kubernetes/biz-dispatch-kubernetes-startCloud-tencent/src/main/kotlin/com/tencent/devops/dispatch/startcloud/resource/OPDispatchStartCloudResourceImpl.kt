@@ -25,46 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.on
+package com.tencent.devops.dispatch.startcloud.resource
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.op.OPDispatchStartCloudResource
+import com.tencent.devops.dispatch.startcloud.service.StartCloudRemoteDevService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class MrRule(
-    @ApiModelProperty(name = "source-branches-ignore")
-    @JsonProperty("source-branches-ignore")
-    val sourceBranchesIgnore: List<String>? = null,
-
-    @ApiModelProperty(name = "target-branches")
-    @JsonProperty("target-branches")
-    val targetBranches: List<String>? = null,
-
-    val paths: List<String>? = null,
-
-    @ApiModelProperty(name = "paths-ignore")
-    @JsonProperty("paths-ignore")
-    val pathsIgnore: List<String>? = null,
-
-    val action: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @ApiModelProperty(name = "users-ignore")
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null,
-
-    @ApiModelProperty(name = "report-commit-check")
-    @JsonProperty("report-commit-check")
-    val reportCommitCheck: Boolean? = null,
-
-    @ApiModelProperty(name = "block-mr")
-    @JsonProperty("block-mr")
-    val blockMr: Boolean? = null
-)
+@RestResource
+class OPDispatchStartCloudResourceImpl @Autowired constructor(
+    private val startCloudRemoteDevService: StartCloudRemoteDevService
+) : OPDispatchStartCloudResource {
+    override fun refreshStartCloudOrderId(userId: String): Result<Boolean> {
+        return Result(startCloudRemoteDevService.refreshStartCloudOrderId(userId))
+    }
+}

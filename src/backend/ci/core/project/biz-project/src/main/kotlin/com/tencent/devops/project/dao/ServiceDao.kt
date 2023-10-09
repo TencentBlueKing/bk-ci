@@ -129,6 +129,7 @@ class ServiceDao {
                 LOGO_URL,
                 WEB_SOCKET,
                 GRAY_IFRAME_URL,
+                WEIGHT,
                 CLUSTER_TYPE
             ).values(
                 serviceCreateInfo.name,
@@ -152,6 +153,7 @@ class ServiceDao {
                 serviceCreateInfo.logoUrl,
                 serviceCreateInfo.webSocket,
                 serviceCreateInfo.grayIframeUrl,
+                serviceCreateInfo.weight,
                 serviceCreateInfo.clusterType
             ).returning().fetchOne()
         }
@@ -236,6 +238,9 @@ class ServiceDao {
             }
             if (serviceUpdateInfo.deleted != null) {
                 execute.set(DELETED, serviceUpdateInfo.deleted)
+            }
+            if (serviceUpdateInfo.weight != null) {
+                execute.set(WEIGHT, serviceUpdateInfo.weight)
             }
             execute.set(CLUSTER_TYPE, serviceUpdateInfo.clusterType)
             return execute.set(UPDATED_USER, userId)
