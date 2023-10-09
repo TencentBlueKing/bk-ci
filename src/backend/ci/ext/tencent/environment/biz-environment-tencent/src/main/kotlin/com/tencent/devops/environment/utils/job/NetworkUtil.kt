@@ -67,7 +67,7 @@ object NetworkUtil {
 
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
-            requestContent2
+            requestContent
         )
         logger.info("[createPostRequest] request writeValueAsString requestContent: $requestContent")
 
