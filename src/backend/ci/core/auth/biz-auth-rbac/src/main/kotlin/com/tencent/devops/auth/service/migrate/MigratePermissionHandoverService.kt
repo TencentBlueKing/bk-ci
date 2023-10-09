@@ -149,12 +149,9 @@ class MigratePermissionHandoverService constructor(
                             resourceManagerGroup.groupName
                     )
                     v2ManagerService.deleteRoleGroupV2(groupId)
-                    authResourceGroupDao.delete(
+                    authResourceGroupDao.deleteByIds(
                         dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resource.resourceCode,
-                        groupName = resourceManagerGroup.groupName
+                        ids = listOf(resourceManagerGroup.id)
                     )
                 }
             }
