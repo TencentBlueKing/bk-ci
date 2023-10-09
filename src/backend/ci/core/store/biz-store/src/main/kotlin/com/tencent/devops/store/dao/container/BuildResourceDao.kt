@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.container
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TBuildResource
 import com.tencent.devops.model.store.tables.TContainerResourceRel
 import com.tencent.devops.model.store.tables.records.TBuildResourceRecord
@@ -145,6 +146,7 @@ class BuildResourceDao {
             .join(b)
             .on(a.ID.eq(b.RESOURCE_ID))
             .where(conditions)
+            .skipCheck()
             .fetch()
     }
 
