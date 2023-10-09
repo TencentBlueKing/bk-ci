@@ -487,7 +487,7 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String?
     ): AuthApplyRedirectInfoVo {
         logger.info(
-            "RbacPermissionApplyService|getRedirectInformation: $userId|$projectId" +
+            "PermissionApplyService|getRedirectInformation: $userId|$projectId" +
                 "|$resourceType|$resourceCode|$action|"
         )
         val groupInfoList: MutableList<AuthRedirectGroupInfoVo> = mutableListOf()
