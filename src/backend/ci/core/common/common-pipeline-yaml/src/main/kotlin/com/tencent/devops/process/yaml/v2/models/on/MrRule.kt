@@ -58,5 +58,13 @@ data class MrRule(
 
     @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null
+    val usersIgnore: List<String>? = null,
+
+    @ApiModelProperty(name = "report-commit-check")
+    @JsonProperty("report-commit-check")
+    val reportCommitCheck: Boolean? = null,
+
+    @ApiModelProperty(name = "block-mr")
+    @JsonProperty("block-mr")
+    val blockMr: Boolean? = null
 )
