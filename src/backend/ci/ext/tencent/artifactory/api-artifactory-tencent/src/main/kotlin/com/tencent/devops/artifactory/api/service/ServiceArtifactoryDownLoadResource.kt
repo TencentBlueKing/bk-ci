@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api.service
 
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
@@ -36,6 +37,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -95,7 +97,6 @@ interface ServiceArtifactoryDownLoadResource {
     ): Result<List<String>>
 
     @ApiOperation("创建下载链接")
-    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
@@ -118,6 +119,32 @@ interface ServiceArtifactoryDownLoadResource {
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>
+
+    @ApiOperation("apk包安全加固")
+    @Path("/apkDefender")
+    @POST
+    fun apkDefender(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("加固请求", required = true)
+        request: ApkDefenderRequest
+    ): Result<ApkDefenderTasks>
+
+    @ApiOperation("检查apk安全加固任务是否完成")
+    @Path("/apkDefenderTask/check")
+    @GET
+    fun checkApkDefenderTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("任务ID", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<Boolean>
 
     @ApiOperation("创建不包含网关的临时分享下载链接")
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")

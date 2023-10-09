@@ -24,26 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.experience.constant
-
-object ExperienceConstant {
-    /****************** 公开体验相关 ***********************/
-    const val PUBLIC_GROUP = 0L
-    val PUBLIC_INNER_USERS = mutableSetOf("全公司")
-    const val PUBLIC_NAME = "公开体验"
-
-    /****************** 外部用户相关 ***********************/
-    const val HEADER_O_TOKEN = "X-OTOKEN"
-    const val ORGANIZATION_OUTER = "outer"
-
-    /****************** 红点相关 ***********************/
-    private const val RED_POINT_KEY = "experience:red:point"
-    const val RED_POINT_MAX_TIME = 60 * 60 * 24 * 30L // 30天
-    fun redPointKey(userId: String) = "$RED_POINT_KEY:$userId"
-
-    // APK加固
-    const val APK_DEFENDER_EXPERIENCE_IDS = "experience:apk:defenders"
-    private const val APK_DEFENDER_TASKS = "experience:apk:defenders:tasks"
-    fun apkDefendersKey(experienceId: Long) = "$APK_DEFENDER_TASKS:$experienceId"
-}
+data class ApkDefenderRequest(
+    val projectId: String,
+    val repoName: String,
+    val fullPath: String,
+    val scanner: String,
+    val users: Collection<String>,
+    val batchSize: Int
+)

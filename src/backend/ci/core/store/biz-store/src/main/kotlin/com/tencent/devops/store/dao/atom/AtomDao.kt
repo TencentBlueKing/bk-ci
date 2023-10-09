@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -633,9 +634,9 @@ class AtomDao : AtomBaseDao() {
         val t = queryAtomStep.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
