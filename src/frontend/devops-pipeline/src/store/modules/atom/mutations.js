@@ -56,7 +56,6 @@ import {
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
-    SET_IMPORTED_JSON,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_PIPELINE_CONTAINER,
@@ -415,9 +414,6 @@ export default {
     },
     [SET_STORE_SEARCH]: (state, str) => {
         state.storeAtomData.keyword = str
-    },
-    [SET_IMPORTED_JSON]: (state, importedPipelineJson) => {
-        state.importedPipelineJson = importedPipelineJson
     },
     [SET_ATOMS_CLASSIFY]: (state, { atomClassifyMap, atomClassifyCodeList }) => {
         Object.assign(state, {

@@ -14,7 +14,7 @@
                     </label>
                     <bk-switcher theme="primary" name="enablePac" v-model="releaseParams.enablePac" />
                 </aside>
-                <aside class="release-pipeline-pac-conf-rightside">
+                <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
                     <label for="enablePac">
                         {{ $t('codelibSrc') }}
                     </label>
@@ -24,7 +24,7 @@
                 </aside>
             </div>
             <bk-form
-                v-if="hasOauth"
+                v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
                 label-width="auto"
                 form-type="vertical"
                 :model="releaseParams"
@@ -33,7 +33,7 @@
                 class="release-pipeline-pac-setting"
                 error-display-type="normal"
             >
-                <div>
+                <div v-if="releaseParams.enablePac && hasOauth">
                     <header @click="togglePacCodelibSettingForm" class="release-pac-pipeline-form-header">
                         {{ $t('codelibSetting') }}
                         <i :class="['devops-icon icon-angle-right', {
@@ -112,7 +112,7 @@
                                 :key="option"
                                 :value="option"
                             >
-                                {{ $t(option) }}
+                                {{ $t(option, [baseVersionBranch]) }}
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -130,7 +130,7 @@
                     />
                 </div>
             </bk-form>
-            <div v-else class="pac-oauth-enable">
+            <div v-if="releaseParams.enablePac && !hasOauth" class="pac-oauth-enable">
                 <header>
                     <bk-button
                         :loading="oauthing"
@@ -170,7 +170,7 @@
 
 <script>
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
-    import { mapActions, mapState, mapMutations } from 'vuex'
+    import { mapActions, mapState, mapMutations, mapGetters } from 'vuex'
     export default {
         components: {
             PipelineGroupSelector
@@ -207,6 +207,10 @@
         },
         computed: {
             ...mapState('pipelines', ['pipelineInfo', 'isManage']),
+            ...mapGetters('pipelines', ['isBranchVersion']),
+            baseVersionBranch () {
+                return this.pipelineInfo?.baseVersionBranch
+            },
             rules () {
                 return {
                     codelibUrl: [{
@@ -234,7 +238,7 @@
             targetActionOptions () {
                 return [
                     'COMMIT_TO_MASTER',
-                    'CHECKOUT_AND_REQUEST_MERGE'
+                    this.isBranchVersion ? 'PUSH_BRANCH_AND_REQUEST_MERGE' : 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 ]
             }
         },
@@ -251,12 +255,15 @@
                 try {
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
-
+                    const { groupValue, ...rest } = this.releaseParams
                     const { data: { version, versionName } } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
                         version: this.version,
-                        params: this.releaseParams
+                        params: {
+                            ...rest,
+                            ...groupValue
+                        }
                     })
                     this.updatePipelineInfo({
                         releaseVersion: version,

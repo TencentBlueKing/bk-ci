@@ -71,7 +71,6 @@ export default {
         showReviewDialog: false,
         reviewInfo: null,
         showStageReviewPanel: {},
-        importedPipelineJson: null,
         atomVersionChangedKeys: [],
         pipelineLimit: {
             stageLimit: 20,

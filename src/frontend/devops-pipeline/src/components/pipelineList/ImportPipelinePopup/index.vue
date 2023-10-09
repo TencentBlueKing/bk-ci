@@ -42,8 +42,9 @@
         },
         methods: {
             ...mapActions('atom', [
-                'setImportedPipelineJson',
+                'transferModelToYaml',
                 'setPipeline',
+                'setPipelineYaml',
                 'setPipelineSetting'
             ]),
 
@@ -82,26 +83,33 @@
                 reader.addEventListener('progress', onProgress)
             },
 
-            handleSuccess (result) {
+            async handleSuccess (result) {
                 if (typeof this.handleImportSuccess === 'function') {
                     this.handleImportSuccess(result)
                     return
                 }
                 const newPipelineName = `${result.model.name}_${hashID().slice(0, 8)}`
-                this.setImportedPipelineJson(result)
+                const res = await this.transferModelToYaml({
+                    projectId: this.$route.params.projectId,
+                    actionType: 'FULL_MODEL2YAML',
+                    modelAndSetting: result,
+                    oldYaml: ''
+                })
+                console.log(res)
                 this.setPipelineSetting({
                     ...result.setting,
-                    pipelineName: newPipelineName
+                    name: newPipelineName
                 })
                 this.setPipeline({
                     ...result.model,
                     name: newPipelineName
                 })
-                this.$nextTick(() => {
-                    this.$router.push({
-                        name: 'pipelineImportEdit'
-                    })
-                })
+                this.setPipelineYaml(res.data.yaml)
+                // this.$nextTick(() => {
+                //     this.$router.push({
+                //         name: 'pipelineImportEdit'
+                //     })
+                // })
             },
             handleUploadError (file) {
                 this.$showTips({

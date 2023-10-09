@@ -156,8 +156,7 @@
                 'setPipelineEditing',
                 'yamlNavToPipelineModel',
                 'previewAtomYAML',
-                'insertAtomYAML',
-                'transfertModelToYaml'
+                'insertAtomYAML'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, pipelineWithoutTrigger } = this

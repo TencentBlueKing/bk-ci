@@ -55,7 +55,6 @@ import {
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
-    SET_IMPORTED_JSON,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_PIPELINE_CONTAINER,
@@ -184,8 +183,7 @@ export default {
                 version,
                 versionName: pipelineRes.data.versionName,
                 baseVersion: pipelineRes.data.baseVersion,
-                baseVersionName: pipelineRes.data.baseVersionName,
-                canDebug: pipelineRes?.data?.canDebug
+                baseVersionName: pipelineRes.data.baseVersionName
             })
             commit(SET_PIPELINE_WITHOUT_TRIGGER, {
                 ...model,
@@ -207,8 +205,13 @@ export default {
             return res.data
         })
     },
-    transfertModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
-        return request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/pipelines/${pipelineId}?actionType=${actionType}`, params).then(res => {
+    transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
+        return request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+            params: {
+                pipelineId,
+                actionType
+            }
+        }).then(res => {
             switch (actionType) {
                 case 'FULL_YAML2MODEL':
                     commit(SET_PIPELINE, res.data?.modelAndSetting?.model)
@@ -656,10 +659,6 @@ export default {
         return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
             return res.data
         })
-    },
-
-    setImportedPipelineJson ({ commit }, importedJson) {
-        commit(SET_IMPORTED_JSON, importedJson)
     },
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {

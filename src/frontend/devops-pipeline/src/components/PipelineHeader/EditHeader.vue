@@ -22,7 +22,12 @@
                 <span class="debug-pipeline-draft-btn">
                     {{ $t("debug") }}
                     <e>|</e>
-                    <i @click.stop="goDraftDebugRecord" class="devops-icon icon-txt" />
+                    <i
+                        :class="['devops-icon icon-txt', {
+                            'icon-txt-disabled': !canDebug
+                        }]"
+                        @click.stop="goDraftDebugRecord"
+                    />
                 </span>
             </bk-button>
             <bk-button
@@ -36,7 +41,7 @@
             </bk-button>
             <!-- <more-actions /> -->
             <span :class="['publish-pipeline-btn', {
-                'publish-diabled': saveStatus
+                'publish-diabled': !canRelease
             }]" @click="showReleaseSlider">
                 <i class="devops-icon icon-check-small" />
                 {{ $t('release') }}
@@ -84,8 +89,10 @@
                 return this.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
             },
             canDebug () {
-                // TODO: 临时方案，后续需要后端支持
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
+            },
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -223,15 +230,19 @@
                 )
             },
             showReleaseSlider () {
-                this.isReleaseSliderShow = true
+                if (this.canRelease) {
+                    this.isReleaseSliderShow = true
+                }
             },
             goDraftDebugRecord () {
-                this.$router.push({
-                    name: 'draftDebugRecord',
-                    params: {
-                        version: this.pipelineInfo?.version
-                    }
-                })
+                if (this.canDebug) {
+                    this.$router.push({
+                        name: 'draftDebugRecord',
+                        params: {
+                            version: this.pipelineInfo?.version
+                        }
+                    })
+                }
             }
         }
     }
@@ -253,7 +264,10 @@
     > e {
         color: #DCDEE5;
     }
-    > i:hover {
+    .icon-txt-disabled {
+        cursor: not-allowed;
+    }
+    > i:not(.icon-txt-disabled):hover {
         color: $primaryColor;
     }
   }
