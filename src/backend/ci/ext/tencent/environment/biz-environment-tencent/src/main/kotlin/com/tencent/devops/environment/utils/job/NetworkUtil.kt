@@ -15,7 +15,7 @@ object NetworkUtil {
     private const val LOG_OUTPUT_MAX_LENGTH = 4000
     val logger = LoggerFactory.getLogger(NetworkUtil::class.java)
 
-    fun <T, U> executeHttpRequest(
+    fun <T, U : Any> executeHttpRequest(
         httpType: String,
         operateName: String,
         url: String,

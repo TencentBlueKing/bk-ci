@@ -46,12 +46,6 @@ class ScriptExecuteService @Autowired constructor(
             } else {
                 ScriptExecuteResult(0L, "", 0L)
             }
-
-//        val scriptExecuteResult = ScriptExecuteResult(
-//            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
-//            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
-//            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
-//        )
         logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
         logger.info("[executeScript] jsonData: $jsonData")
         logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
