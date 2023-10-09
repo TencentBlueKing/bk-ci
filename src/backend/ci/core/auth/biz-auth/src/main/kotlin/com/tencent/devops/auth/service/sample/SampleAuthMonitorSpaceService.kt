@@ -15,4 +15,8 @@ class SampleAuthMonitorSpaceService : AuthMonitorSpaceService {
     ): String = ""
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? = null
+
+    override fun getMonitorGroupConfig(groupCode: String): String? = null
+
+    override fun getMonitorActionName(action: String): String? = null
 }

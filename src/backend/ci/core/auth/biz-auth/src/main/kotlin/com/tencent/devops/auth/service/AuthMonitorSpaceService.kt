@@ -26,4 +26,14 @@ interface AuthMonitorSpaceService {
      * 获取监控空间详情
      */
     fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO?
+
+    /**
+     * 获取监控空间组权限配置
+     */
+    fun getMonitorGroupConfig(groupCode: String): String?
+
+    /**
+     * 获取监控空间组权限配置
+     */
+    fun getMonitorActionName(action: String): String?
 }

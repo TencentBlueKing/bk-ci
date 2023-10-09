@@ -34,3 +34,4 @@ codecc:
 monitor:
   register: __BK_CI_MONITOR_REGISTER__
   url: __BK_CI_MONITOR_URL__
+  iamSystem: __BK_CI_MONITOR_IAM_SYSTEM__

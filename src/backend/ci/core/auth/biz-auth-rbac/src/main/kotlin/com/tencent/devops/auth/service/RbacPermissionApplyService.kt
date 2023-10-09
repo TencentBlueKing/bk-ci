@@ -61,6 +61,12 @@ class RbacPermissionApplyService @Autowired constructor(
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
+    @Value("\${monitor.register:false}")
+    private val registerMonitor: Boolean = false
+
+    @Value("\${monitor.iamSystem:}")
+    private val monitorSystemId = ""
+
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
         "&iamResourceCode=%s&action=%s&groupName=%s&groupId=%s"
@@ -283,8 +289,16 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
+        return if (registerMonitor) {
+            getGroupPermissionDetailBySystem(systemId, groupId).plus(getGroupPermissionDetailBySystem(monitorSystemId, groupId))
+        } else {
+            getGroupPermissionDetailBySystem(systemId, groupId)
+        }
+    }
+
+    private fun getGroupPermissionDetailBySystem(systemId: String, groupId: Int): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(groupId)
+            v2ManagerService.getGroupPermissionDetail(groupId, systemId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,

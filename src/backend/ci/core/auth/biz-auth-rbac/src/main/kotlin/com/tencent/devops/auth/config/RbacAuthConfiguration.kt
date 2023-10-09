@@ -481,14 +481,10 @@ class RbacAuthConfiguration {
 
     @Bean
     fun rbacPermissionAuthorizationScopesService(
-        systemService: SystemService,
         authMonitorSpaceService: AuthMonitorSpaceService,
-        objectMapper: ObjectMapper,
         iamConfiguration: IamConfiguration
     ) = RbacPermissionAuthorizationScopesService(
-        systemService = systemService,
         authMonitorSpaceService = authMonitorSpaceService,
-        objectMapper = objectMapper,
         iamConfiguration = iamConfiguration
     )
 
@@ -496,10 +492,12 @@ class RbacAuthConfiguration {
     fun rbacPermissionAuthMonitorSpaceService(
         authMonitorSpaceDao: AuthMonitorSpaceDao,
         dslContext: DSLContext,
-        objectMapper: ObjectMapper
+        objectMapper: ObjectMapper,
+        systemService: SystemService
     ) = RbacPermissionAuthMonitorSpaceService(
         authMonitorSpaceDao = authMonitorSpaceDao,
         dslContext = dslContext,
-        objectMapper = objectMapper
+        objectMapper = objectMapper,
+        systemService = systemService
     )
 }
