@@ -127,15 +127,15 @@ class MigratePermissionHandoverService constructor(
                 limit = limit
             )
             logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
-            resourceList.forEach { resource ->
+            resourceList.forEach foreach@{ resource ->
                 val resourceManagerGroup = authResourceGroupDao.get(
                     dslContext = dslContext,
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resource.resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value
-                )
-                val groupId = resourceManagerGroup!!.relationId.toInt()
+                ) ?: return@foreach
+                val groupId = resourceManagerGroup.relationId.toInt()
                 val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
                     groupId,
                     V2PageInfoDTO().apply {
