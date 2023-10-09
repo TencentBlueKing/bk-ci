@@ -396,15 +396,13 @@ class ElementTransfer @Autowired(required = false) constructor(
         val stepList = mutableListOf<PreStep>()
         job.elements.forEach { element ->
             val step = element2YamlStep(element, projectId)
-            if (step != null) {
-                stepList.add(step)
-            }
+            stepList.add(step)
         }
         return stepList
     }
 
     @Suppress("ComplexMethod")
-    fun element2YamlStep(element: Element, projectId: String): PreStep? {
+    fun element2YamlStep(element: Element, projectId: String): PreStep {
         val uses = "${element.getAtomCode()}@${element.version}"
         return when {
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
@@ -483,7 +481,10 @@ class ElementTransfer @Autowired(required = false) constructor(
             } else {
                 null
             }
-        }
+        } ?: throw PipelineTransferException(
+            TransferMessageCode.ElementNotSupportTransfer,
+            arrayOf(uses)
+        )
     }
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {

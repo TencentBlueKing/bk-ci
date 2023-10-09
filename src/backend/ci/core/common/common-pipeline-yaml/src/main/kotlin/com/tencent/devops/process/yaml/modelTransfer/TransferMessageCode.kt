@@ -47,5 +47,6 @@ package com.tencent.devops.process.yaml.modelTransfer
  */
 object TransferMessageCode {
     const val ElementUpdateWrongPath = "ElementUpdateWrongPath" // 更新插件的标注位置有误
+    const val ElementNotSupportTransfer = "ElementNotSupportTransfer" // [{0}]该插件不支持转换
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
 }

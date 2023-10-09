@@ -28,22 +28,21 @@
 package com.tencent.devops.process.service.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
@@ -158,7 +157,7 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         data: Element
     ): String {
-        val yml = elementTransfer.element2YamlStep(data, projectId) ?: throw ErrorCodeException(errorCode = "")
+        val yml = elementTransfer.element2YamlStep(data, projectId)
         return TransferMapper.toYaml(yml)
     }
 
