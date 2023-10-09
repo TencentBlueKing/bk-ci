@@ -54,7 +54,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         fileDirPath: String,
         storeStatic: Boolean,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum?,
+        fileType: FileTypeEnum?
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath${fileSeparator}$path")
