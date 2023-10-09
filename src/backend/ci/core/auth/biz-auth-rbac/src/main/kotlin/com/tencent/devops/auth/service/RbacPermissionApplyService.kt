@@ -63,7 +63,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
-    val itsmService: ItsmService
+    val itsmService: ItsmService,
+    val monitorSpaceService: AuthMonitorSpaceService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -423,9 +424,9 @@ class RbacPermissionApplyService @Autowired constructor(
         }
     }
 
-    private fun getGroupPermissionDetailBySystem(systemId: String, groupId: Int): List<GroupPermissionDetailVo> {
+    private fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(groupId, systemId)
+            v2ManagerService.getGroupPermissionDetail(groupId, iamSystemId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
@@ -435,7 +436,11 @@ class RbacPermissionApplyService @Autowired constructor(
         }
         return iamGroupPermissionDetailList.map { detail ->
             val relatedResourceTypesDTO = detail.resourceGroups[0].relatedResourceTypesDTO[0]
-            buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
+            // 将resourceType转化为对应的资源类型名称
+            buildRelatedResourceTypesName(
+                iamSystemId = iamSystemId,
+                instancesDTO = relatedResourceTypesDTO.condition[0].instances[0]
+            )
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
                 name = I18nUtil.getCodeLanMessage(
@@ -443,20 +448,26 @@ class RbacPermissionApplyService @Autowired constructor(
                 ),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
+            val actionName = if (iamSystemId == monitorSystemId) {
+                monitorSpaceService.getMonitorActionName(action = detail.id)
+            } else {
+                rbacCacheService.getActionInfo(action = detail.id).actionName
+            }
             GroupPermissionDetailVo(
                 actionId = detail.id,
-                name = rbacCacheService.getActionInfo(action = detail.id).actionName,
+                name = actionName!!,
                 relatedResourceInfo = relatedResourceInfo
             )
         }.sortedBy { it.relatedResourceInfo.type }
     }
 
-    private fun buildRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
+    private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
         instancesDTO.let {
-            it.name = rbacCacheService.getResourceTypeInfo(it.type).name
+            val resourceTypeName = if (iamSystemId == systemId) rbacCacheService.getResourceTypeInfo(it.type).name else SPACE_CN_NAME
+            it.name = resourceTypeName
             it.path.forEach { element1 ->
                 element1.forEach { element2 ->
-                    element2.typeName = rbacCacheService.getResourceTypeInfo(element2.type).name
+                    element2.typeName = resourceTypeName
                 }
             }
         }
@@ -633,5 +644,6 @@ class RbacPermissionApplyService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private val executor = Executors.newFixedThreadPool(10)
+        private const val SPACE_CN_NAME = "空间"
     }
 }
