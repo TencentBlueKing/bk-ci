@@ -1,6 +1,5 @@
 package com.tencent.devops.environment.utils.job
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -49,27 +48,12 @@ object NetworkUtil {
     }
 
     private fun createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Map<String, Any>?): Request {
-//        val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
-//        val requestData = jobCloudReq.toMap()
-//        val jsonArray2 = arrayOf(mapOf("bk_cloud_id" to 0, "ip" to "9.146.98.105"))
-//        val requestData2: Map<String, Any> = mapOf(
-//            "bk_scope_type" to "biz",
-//            "bk_scope_id" to "309",
-//            "script_content" to "ZWNobyAkMQ==",
-//            "script_param" to "aGVsbG8=",
-//            "timeout" to 1000,
-//            "account_id" to 578,
-//            "is_param_sensitive" to 0,
-//            "script_language" to 1,
-//            "target_server" to mapOf("ip_list" to jsonArray2)
-//        )
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
-        logger.info("[createPostRequest] request writeValueAsString requestContent: $requestContent")
-
+        logger.info("[createPostRequest] serialized requestContent: $requestContent")
         return Request.Builder()
             .url(url)
             .post(requestBody)
