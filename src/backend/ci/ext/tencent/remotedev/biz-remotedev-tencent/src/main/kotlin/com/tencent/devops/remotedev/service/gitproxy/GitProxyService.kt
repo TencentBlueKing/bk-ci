@@ -26,7 +26,8 @@ class GitProxyService @Autowired constructor(
             projectId = data.projectId,
             repoName = data.repoName,
             url = data.url,
-            desc = data.desc
+            desc = data.desc,
+            gitType = data.gitType
         )
         return true
     }

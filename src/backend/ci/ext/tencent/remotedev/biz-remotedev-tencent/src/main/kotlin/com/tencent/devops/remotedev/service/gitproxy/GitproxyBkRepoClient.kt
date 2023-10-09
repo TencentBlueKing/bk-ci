@@ -13,6 +13,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
+import com.tencent.devops.remotedev.pojo.gitproxy.GitType
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
@@ -41,13 +42,14 @@ class GitproxyBkRepoClient @Autowired constructor(
         projectId: String,
         repoName: String,
         url: String,
-        desc: String?
+        desc: String?,
+        gitType: GitType
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId")
         val requestData = CreateRepoData(
             projectId = projectId,
             name = repoName,
-            type = "GIT",
+            type = gitType.value,
             category = "PROXY",
             public = false,
             description = desc ?: "",
