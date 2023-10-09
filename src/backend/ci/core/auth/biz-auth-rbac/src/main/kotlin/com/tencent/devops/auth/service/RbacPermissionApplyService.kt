@@ -416,12 +416,18 @@ class RbacPermissionApplyService @Autowired constructor(
         }
     }
 
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
-        return if (registerMonitor) {
-            getGroupPermissionDetailBySystem(systemId, groupId).plus(getGroupPermissionDetailBySystem(monitorSystemId, groupId))
-        } else {
+    override fun getGroupPermissionDetail(userId: String, groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+        val groupPermissionMap = mutableMapOf<String, List<GroupPermissionDetailVo>>()
+        groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DEVOPS_NAME)] =
             getGroupPermissionDetailBySystem(systemId, groupId)
+        if (registerMonitor) {
+            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, groupId)
+            if (monitorGroupPermissionDetail.isNotEmpty()) {
+                groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
+                    getGroupPermissionDetailBySystem(systemId, groupId)
+            }
         }
+        return groupPermissionMap
     }
 
     private fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {

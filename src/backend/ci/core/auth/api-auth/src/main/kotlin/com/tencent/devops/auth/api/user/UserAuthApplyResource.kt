@@ -88,7 +88,7 @@ interface UserAuthApplyResource {
         @ApiParam("用户组ID")
         @PathParam("groupId")
         groupId: Int
-    ): Result<List<GroupPermissionDetailVo>>
+    ): Result<Map<String, List<GroupPermissionDetailVo>>>
 
     @GET
     @Path("getRedirectInformation")
