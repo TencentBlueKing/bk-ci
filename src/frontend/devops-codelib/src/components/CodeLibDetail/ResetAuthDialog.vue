@@ -16,7 +16,9 @@
             {{ $t('codelib.resetAuth') }}
         </h3>
         <bk-form
+            ref="form"
             :label-width="120"
+            :rules="rules"
         >
             <!-- Github 重置授权 -->
             <bk-form-item
@@ -179,6 +181,7 @@
                     :label="$t('codelib.codelibCredential')"
                     :required="true"
                     property="credentialId"
+                    error-display-type="normal"
                 >
                     <bk-select
                         v-model="newRepoInfo.credentialId"
@@ -195,7 +198,7 @@
                             :key="option.credentialId"
                             :id="option.credentialId"
                             :name="option.credentialId">
-                            <span>
+                            <span :title="option.credentialId">
                                 {{option.credentialId}}
                             </span>
                             <i
@@ -269,7 +272,16 @@
                 isSaveLoading: false,
                 isLoadingTickets: false,
                 newRepoInfo: {},
-                cacheRepoInfo: {}
+                cacheRepoInfo: {},
+                rules: {
+                    credentialId: [
+                        {
+                            required: true,
+                            message: this.$t('codelib.请选择凭证'),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
             }
         },
         computed: {
@@ -512,7 +524,10 @@
             },
             handleConfirm () {
                 if (this.isOAUTH) return
-                this.handleUpdateRepo()
+                this.$refs.form.validate().then(() => {
+                    console.log(12321)
+                    this.handleUpdateRepo()
+                })
             },
             handleClose (val) {
                 if (!val) {
@@ -541,5 +556,7 @@
             font-size: 12px;
             color: #979BA5;
         }
+    }
+    .codelib-credential-selector {
     }
 </style>

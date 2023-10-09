@@ -13,9 +13,9 @@
                             'collapse-item-header': true,
                             'active': activeIndex === index
                         }" @click="handleShowDetail(item, index)">
-                        <div>
-                            <StatusIcon :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
-                            <span v-html="item.eventDesc"></span>
+                        <div class="title">
+                            <StatusIcon class="icon" :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
+                            <span class="desc" :title="item.eventDesc" v-html="item.eventDesc"></span>
                             <span class="trigger-time">
                                 {{ new Date(item.eventTime).toLocaleString().split('.').join('-') }}
                             </span>
@@ -26,23 +26,26 @@
                                 ({{ item.success }}/{{ item.total }})
                             </span>
                         </div>
-                        <bk-icon
-                            :class="{
-                                'right-shape': true,
-                                'right-down': activeIndex === index
-                            }"
-                            svg
-                            type="angle-right"
-                            width="24"
-                            height="24"
-                        />
-                        <a
-                            v-if="activeIndex === index"
-                            class="one-click-trigger"
-                            @click.stop="handleReplayAll(item.eventId)"
-                        >
-                            {{ $t('codelib.一键重新触发') }}
-                        </a>
+                        <div class="header-right">
+                            <a
+                                v-if="activeIndex === index"
+                                class="one-click-trigger"
+                                @click.stop="handleReplayAll(item.eventId)"
+                            >
+                                {{ $t('codelib.一键重新触发') }}
+                            </a>
+                            <bk-icon
+                                :class="{
+                                    'right-shape': true,
+                                    'right-down': activeIndex === index
+                                }"
+                                svg
+                                type="angle-right"
+                                width="24"
+                                height="24"
+                            />
+                        </div>
+                        
                     </div>
                     <div
                         class="trigger-list-table"
@@ -67,7 +70,7 @@
                                         <div class="cell">
                                             <div v-for="i in detail.reasonDetailList" :key="i">
                                                 <StatusIcon :status="detail.status"></StatusIcon>
-                                                <span style="color: red;">{{ detail.reason }}</span>  |
+                                                <span style="color: red;">TRIGGER_NOT_MATCH</span>  |
                                                 <span>{{ i }}</span>
                                             </div>
                                         </div>
@@ -247,10 +250,29 @@
             &.active {
                 background-color: #E1ECFF;
             }
+            .title {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
+                align-items: center;
+            }
+            .icon {
+                flex-shrink: 0;
+            }
+            .desc {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: 50px;
             .one-click-trigger {
-                position: absolute;
-                right: 60px;
                 font-size: 12px;
+                margin-right: 20px;
             }
         }
         .right-shape {
@@ -262,9 +284,11 @@
         .trigger-time {
             padding-left: 8px;
             color: #979BA5;
+            flex-shrink: 0;
         }
         .success-num {
             padding-left: 24px;
+            flex-shrink: 0;
             &.red {
                 color: red;
             }

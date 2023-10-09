@@ -349,9 +349,19 @@
             margin-right: 30px;
         }
     }
-    .cre-icon {
-        float: right;
-        margin-top: 10px;
+    .bk-option-content {
+        display: flex;
+        span {
+            display: inline-block;
+            width: 92%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cre-icon {
+            position: absolute;
+            right: 15px;
+            margin-top: 10px;
+        }
     }
     .flex-content {
         display: flex;

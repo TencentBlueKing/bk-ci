@@ -17,7 +17,7 @@
                     success: 'green',
                     error: 'red',
                     normal: 'gray',
-                    succeed: 'gray',
+                    succeed: 'green',
                     failed: 'red'
                 })
             }

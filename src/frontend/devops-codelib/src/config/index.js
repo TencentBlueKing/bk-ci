@@ -98,7 +98,7 @@ export const codelibConfig = {
     gitlab_http: {
         credentialTypes: 'ACCESSTOKEN',
         addType: 'ACCESSTOKEN',
-        label: 'Gitlab',
+        label: 'GitLab',
         typeName: 'codeGitLab'
     },
     tgit: {

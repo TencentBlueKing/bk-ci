@@ -236,14 +236,15 @@
             },
 
             clearAliasName () {
-                if (this.aliasName === '') this.refreshCodelibList()
+                if (this.aliasName === '') {
+                    this.refreshCodelibList()
+                }
             },
 
             switchPage (page, pageSize) {
                 const { projectId } = this
                 this.refreshCodelibList(projectId, page, pageSize)
             },
-
             async refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
