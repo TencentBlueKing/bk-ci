@@ -210,6 +210,8 @@ class WorkspaceCommon @Autowired constructor(
             )
         }
 
+        logger.info("$workspaceName update workspaceDetail $cache")
+
         workspaceDao.saveOrUpdateWorkspaceDetail(
             dslContext = dslContext,
             workspaceName = workspaceName,
@@ -463,6 +465,7 @@ class WorkspaceCommon @Autowired constructor(
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
+            logger.warn("$workspaceName get workspaceDetail $result")
             if (result != null) {
                 objectMapper.readValue<WorkSpaceCacheInfo>(result)
             } else {
