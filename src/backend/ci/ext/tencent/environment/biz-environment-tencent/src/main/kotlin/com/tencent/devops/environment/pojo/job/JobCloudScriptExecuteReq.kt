@@ -44,19 +44,21 @@ data class JobCloudScriptExecuteReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername){
-    override fun toString(): String {
-        return "bkScopeType='${bkScopeType}', " +
-            "bkScopeId=$bkScopeId," +
-            " scriptContent=$scriptContent," +
-            " scriptParam=$scriptParam," +
-            " timeout=$timeout," +
-            " accountAlias=$accountAlias," +
-            " isParamSensitive=$isParamSensitive," +
-            " scriptLanguage=$scriptLanguage," +
-            " targetServer=$targetServer," +
-            " bkAppCode=$bkAppCode," +
-            " bkAppSecret=$bkAppSecret," +
-            " bkUsername=$bkUsername"
+) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
+    fun toMap(): Map<String, Any> {
+        val map: MutableMap<String, Any> = mutableMapOf()
+        map["bkScopeType"] = bkScopeType
+        map["bkScopeId"] = bkScopeId
+        map["scriptContent"] = scriptContent
+        map["scriptParam"] = scriptParam
+        map["timeout"] = timeout
+        map["accountAlias"] = accountAlias
+        map["isParamSensitive"] = isParamSensitive
+        map["scriptLanguage"] = scriptLanguage
+        map["targetServer"] = targetServer
+        map["bkAppCode"] = bkAppCode
+        map["bkAppSecret"] = bkAppSecret
+        map["bkUsername"] = bkUsername
+        return map
     }
 }

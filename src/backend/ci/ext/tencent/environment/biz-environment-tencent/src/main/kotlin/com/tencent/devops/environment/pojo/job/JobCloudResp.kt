@@ -21,5 +21,4 @@ data class JobCloudResp<T>(
     @ApiModelProperty(value = "返回数据", required = true)
     @JsonProperty("data")
     var data: T? = null
-//    var data: MutableMap<String, *>
 )

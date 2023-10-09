@@ -34,7 +34,7 @@ class ScriptExecuteService @Autowired constructor(
                 operateName = "executeScript",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudScriptExecuteReq.javaClass
+                jobCloudReq = jobCloudScriptExecuteReq.toMap()
             )
         logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
 
