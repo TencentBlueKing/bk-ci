@@ -380,8 +380,13 @@ class DeleteControl @Autowired constructor(
         // 删除时给 cmdb 去掉字段方便监控检索
         val hostIdSub = nodeIp?.split(".")
         if (!hostIdSub.isNullOrEmpty()) {
-            val hostId = hostIdSub.subList(1, hostIdSub.size).joinToString { "." }
-            bkccService.updateHost(setOf(hostId), mapOf("devx_meta" to ""))
+            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString { "." }
+            bkccService.updateHostMonitor(
+                regionId = null,
+                workspaceName = workspaceName,
+                ips = setOf(ip),
+                props = mapOf("devx_meta" to "")
+            )
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

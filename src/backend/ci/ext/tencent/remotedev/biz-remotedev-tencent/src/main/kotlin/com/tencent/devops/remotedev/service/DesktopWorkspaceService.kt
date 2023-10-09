@@ -57,6 +57,10 @@ class DesktopWorkspaceService @Autowired constructor(
 
             val projectId = it["PROJECT_ID"] as String
 
+            if (owner.isBlank()) {
+                return@forEach
+            }
+
             res[projectId]?.owner?.add(owner)
         }
 
@@ -68,26 +72,38 @@ class DesktopWorkspaceService @Autowired constructor(
     ): Boolean {
         when (data.scope) {
             OpOpUpdateCCHostDataScope.ALL -> {
-                val projectAndIps = mutableMapOf<String, MutableSet<String>>()
-                val records = workspaceDao.fetchWinWorkspaceIp(dslContext)
-                records.forEach { (projectId, ip) ->
+                val projectAndRegIdAndIps = mutableMapOf<String, MutableMap<Int, MutableSet<String>>>()
+                val records = workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext)
+                records.forEach { (projectId, ip, regId) ->
+                    if (regId == null) {
+                        return@forEach
+                    }
                     if (ip.isNullOrEmpty()) {
                         return@forEach
                     }
-                    if (projectAndIps[projectId] == null) {
-                        projectAndIps[projectId] = mutableSetOf(ip)
+                    if (projectAndRegIdAndIps[projectId] == null) {
+                        projectAndRegIdAndIps[projectId] = mutableMapOf(regId to mutableSetOf(ip))
+                    } else if (projectAndRegIdAndIps[projectId]!![regId] == null) {
+                        projectAndRegIdAndIps[projectId]!![regId] = mutableSetOf(ip)
                     } else {
-                        projectAndIps[projectId]!!.add(ip)
+                        projectAndRegIdAndIps[projectId]!![regId]!!.add(ip)
                     }
                 }
 
-                logger.debug("updateCCHost projectAndIps {}", projectAndIps)
+                logger.debug("updateCCHost projectAndRegIdAndIps {}", projectAndRegIdAndIps)
 
-                projectAndIps.forEach { (projectId, ips) ->
-                    if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
-                        bkccService.updateHost(ips, mapOf("devx_meta" to ""))
-                    } else {
-                        bkccService.updateHost(ips, workspaceCommon.genWorkspaceCCInfo(projectId))
+                projectAndRegIdAndIps.forEach { (projectId, regAndIps) ->
+                    regAndIps.forEach { (regId, ips) ->
+                        if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                            bkccService.updateHostMonitor(regId, null, ips, mapOf("devx_meta" to ""))
+                        } else {
+                            bkccService.updateHostMonitor(
+                                regionId = regId,
+                                workspaceName = null,
+                                ips = ips,
+                                props = workspaceCommon.genWorkspaceCCInfo(projectId)
+                            )
+                        }
                     }
                 }
 

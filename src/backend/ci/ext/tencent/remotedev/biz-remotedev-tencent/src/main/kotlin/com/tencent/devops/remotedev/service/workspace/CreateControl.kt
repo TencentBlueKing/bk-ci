@@ -317,7 +317,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
+            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -345,8 +345,13 @@ class CreateControl @Autowired constructor(
             // 创建成功时给 cmdb 添加字段方便监控检索
             val hostIdSub = event.environmentIp?.split(".")
             if (!hostIdSub.isNullOrEmpty()) {
-                val hostId = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-                bkccService.updateHost(setOf(hostId), workspaceCommon.genWorkspaceCCInfo(ws.projectId))
+                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                bkccService.updateHostMonitor(
+                    regionId = detail.regionId,
+                    workspaceName = null,
+                    ips = setOf(ip),
+                    props = workspaceCommon.genWorkspaceCCInfo(ws.projectId)
+                )
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
