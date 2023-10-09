@@ -161,8 +161,7 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? =
-        TODO("${this.getClassType()} 这个类型的插件暂未支持互转。需要添加。")
+    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = null
 
     open fun isElementEnable(): Boolean {
         if (additionalOptions == null) {
