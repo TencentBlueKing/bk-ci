@@ -63,7 +63,7 @@ object NetworkUtil {
 //            "script_language" to 1,
 //            "target_server" to mapOf("ip_list" to jsonArray2)
 //        )
-        val requestContent = ObjectMapper().writeValueAsString(jobCloudReq)
+        val requestContent = jacksonObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
