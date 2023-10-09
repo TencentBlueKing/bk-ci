@@ -47,18 +47,18 @@ data class JobCloudScriptExecuteReq(
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
-        map["bkScopeType"] = bkScopeType
-        map["bkScopeId"] = bkScopeId
-        map["scriptContent"] = scriptContent
-        map["scriptParam"] = scriptParam
+        map["bk_scope_type"] = bkScopeType
+        map["bk_scope_id"] = bkScopeId
+        map["script_content"] = scriptContent
+        map["script_param"] = scriptParam
         map["timeout"] = timeout
-        map["accountAlias"] = accountAlias
-        map["isParamSensitive"] = isParamSensitive
-        map["scriptLanguage"] = scriptLanguage
-        map["targetServer"] = targetServer
-        map["bkAppCode"] = bkAppCode
-        map["bkAppSecret"] = bkAppSecret
-        map["bkUsername"] = bkUsername
+        map["account_alias"] = accountAlias
+        map["is_param_sensitive"] = isParamSensitive
+        map["script_language"] = scriptLanguage
+        map["bk_app_code"] = targetServer
+        map["bk_app_code"] = bkAppCode
+        map["bk_app_secret"] = bkAppSecret
+        map["bk_username"] = bkUsername
         return map
     }
 }

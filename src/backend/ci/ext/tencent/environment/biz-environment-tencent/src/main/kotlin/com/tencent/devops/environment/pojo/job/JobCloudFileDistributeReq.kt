@@ -38,16 +38,16 @@ data class JobCloudFileDistributeReq(
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername){
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
-        map["bkScopeType"] = bkScopeType
-        map["bkScopeId"] = bkScopeId
-        map["fileSourceList"] = fileSourceList
-        map["fileTargetPath"] = fileTargetPath
-        map["executeTarget"] = executeTarget
-        map["accountAlias"] = accountAlias
+        map["bk_scope_type"] = bkScopeType
+        map["bk_scope_id"] = bkScopeId
+        map["file_source_list"] = fileSourceList
+        map["file_target_path"] = fileTargetPath
+        map["target_server"] = executeTarget
+        map["account_alias"] = accountAlias
         map["timeout"] = timeout
-        map["bkAppCode"] = bkAppCode
-        map["bkAppSecret"] = bkAppSecret
-        map["bkUsername"] = bkUsername
+        map["bk_app_code"] = bkAppCode
+        map["bk_app_secret"] = bkAppSecret
+        map["bk_username"] = bkUsername
         return map
     }
 }

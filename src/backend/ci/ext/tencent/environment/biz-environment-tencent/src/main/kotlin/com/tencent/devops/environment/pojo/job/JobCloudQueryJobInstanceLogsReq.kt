@@ -32,16 +32,16 @@ class JobCloudQueryJobInstanceLogsReq(
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
-        map["bkScopeType"] = bkScopeType
-        map["bkScopeId"] = bkScopeId
-        map["jobInstanceId"] = jobInstanceId
-        map["stepInstanceId"] = stepInstanceId
+        map["bk_scope_type"] = bkScopeType
+        map["bk_scope_id"] = bkScopeId
+        map["job_instance_id"] = jobInstanceId
+        map["step_instance_id"] = stepInstanceId
         if (null != hostList) {
-            map["hostList"] = hostList
+            map["ip_list"] = hostList
         }
-        map["bkAppCode"] = bkAppCode
-        map["bkAppSecret"] = bkAppSecret
-        map["bkUsername"] = bkUsername
+        map["bk_app_code"] = bkAppCode
+        map["bk_app_secret"] = bkAppSecret
+        map["bk_username"] = bkUsername
         return map
     }
 }
