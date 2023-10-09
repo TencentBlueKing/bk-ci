@@ -144,7 +144,7 @@ class MigratePermissionHandoverService constructor(
                         pageSize = 10
                     }
                 )
-                if (roleGroupMember.count == 1 && roleGroupMember.results.first().name == projectCreator) {
+                if (roleGroupMember.count == 1 && roleGroupMember.results.first().id == projectCreator) {
                     logger.info(
                         "delete resource manager group:$projectCode|${resource.resourceCode}|" +
                             resourceManagerGroup.groupName
