@@ -176,8 +176,8 @@ class WorkspaceCommon @Autowired constructor(
         mountType: WorkspaceMountType,
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
+        logger.info("$workspaceName update workspaceDetail, $event")
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
-            logger.info("$workspaceName update workspaceDetail, $event")
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
             WorkSpaceCacheInfo(
