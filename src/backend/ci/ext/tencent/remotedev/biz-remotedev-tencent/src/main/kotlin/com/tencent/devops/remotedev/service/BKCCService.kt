@@ -107,6 +107,7 @@ class BKCCService @Autowired constructor(
         hostIds: Set<String>,
         props: Map<String, Any>
     ) {
+        logger.info("updateHost|hostIds|$hostIds|props|$props")
         val url = "$ccHost/update_host/"
         val body = UpdateHostReqBody(
             bkAppCode = appCode,
