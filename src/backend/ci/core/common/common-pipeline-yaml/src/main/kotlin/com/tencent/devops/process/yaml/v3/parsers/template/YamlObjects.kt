@@ -58,6 +58,7 @@ import com.tencent.devops.process.yaml.v3.models.job.Strategy
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
@@ -174,15 +175,15 @@ object YamlObjects {
         )
     }
 
-    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerType? {
+    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerTypeYaml? {
         if (containerType == null) {
             return null
         }
 
         val map = transValue<Map<String, Any?>>(fromPath, "containerType", containerType)
 
-        return BuildContainerType(
-            buildType = BuildType.valueOf(getNotNullValue("buildType", "containerType", map)),
+        return BuildContainerTypeYaml(
+            buildType = BuildType.valueOf(getNotNullValue("build-type", "containerType", map)),
             os = OS.valueOf(getNotNullValue("os", "containerType", map))
         )
     }
