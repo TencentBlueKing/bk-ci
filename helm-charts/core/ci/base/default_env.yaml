@@ -18,7 +18,7 @@ bkCiAppCode: bk_ci
 bkCiNotifyWeworkSendChannel: weworkAgent
 bkCiInfluxdbDb: agentMetrix
 bkCiEnvironmentAgentCollectorOn: true
-bkCiDocsUrl: https://bk.tencent.com/docs/markdown/持续集成平台/产品白皮书
+bkCiDocsUrl: https://bk.tencent.com
 bkCiArtifactoryRealm: local
 bkRepoHost: repo.demo.com
 bkRepoFqdn: repo.demo.com
