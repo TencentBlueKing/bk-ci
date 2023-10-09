@@ -112,41 +112,44 @@ class MigratePermissionHandoverService constructor(
         }
     }
 
-    fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO) {
-        val resourceType = migrateProjectConditionDTO.resourceType!!
-        val projectCreator = migrateProjectConditionDTO.projectCreator!!
-        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
-            var offset = 0
-            val limit = 100
-            do {
-                val resourceList = authResourceService.listByCreator(
-                    resourceType = resourceType,
+    fun fitSecToRbacAuth(
+        projectCode: String,
+        projectCreator: String,
+        resourceType: String
+    ) {
+        var offset = 0
+        val limit = 100
+        do {
+            val resourceList = authResourceService.listByCreator(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                creator = projectCreator,
+                offset = offset,
+                limit = limit
+            )
+            logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
+            resourceList.forEach { resource ->
+                val resourceManagerGroup = authResourceGroupDao.get(
+                    dslContext = dslContext,
                     projectCode = projectCode,
-                    creator = projectCreator,
-                    offset = offset,
-                    limit = limit
+                    resourceType = resourceType,
+                    resourceCode = resource.resourceCode,
+                    groupCode = DefaultGroupType.MANAGER.value
                 )
-                logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
-                resourceList.forEach { resource ->
-                    val resourceManagerGroup = authResourceGroupDao.get(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resource.resourceCode,
-                        groupCode = DefaultGroupType.MANAGER.value
+                val groupId = resourceManagerGroup!!.relationId.toInt()
+                val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
+                    groupId,
+                    V2PageInfoDTO().apply {
+                        page = 1
+                        pageSize = 10
+                    }
+                )
+                if (roleGroupMember.count == 1 && roleGroupMember.results.first().name == projectCreator) {
+                    logger.info(
+                        "delete resource manager group:$projectCode|${resource.resourceCode}|" +
+                            resourceManagerGroup.groupName
                     )
-                    val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
-                        resourceManagerGroup!!.relationId.toInt(),
-                        V2PageInfoDTO().apply {
-                            page = 1
-                            pageSize = 10
-                        }
-                    )
-                    if (roleGroupMember.count == 1 && roleGroupMember.results.first().name == projectCreator)
-                        logger.info(
-                            "delete resource manager group:$projectCode|${resourceManagerGroup.groupName}" +
-                                "|${resource.resourceCode}"
-                        )
+                    v2ManagerService.deleteRoleGroupV2(groupId)
                     authResourceGroupDao.delete(
                         dslContext = dslContext,
                         projectCode = projectCode,
@@ -155,9 +158,10 @@ class MigratePermissionHandoverService constructor(
                         groupName = resourceManagerGroup.groupName
                     )
                 }
-                offset += limit
-            } while (resourceList.size == limit)
-        }
+            }
+            offset += limit
+        } while (resourceList.size == limit)
+
     }
 
     companion object {

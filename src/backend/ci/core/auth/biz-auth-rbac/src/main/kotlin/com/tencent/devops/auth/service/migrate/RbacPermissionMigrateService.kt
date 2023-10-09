@@ -219,8 +219,16 @@ class RbacPermissionMigrateService constructor(
 
     override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
         logger.info("fit sec to rbac:$migrateProjectConditionDTO")
-        toRbacExecutorService.submit {
-            migratePermissionHandoverService.fitSecToRbacAuth(migrateProjectConditionDTO = migrateProjectConditionDTO)
+        val traceId = MDC.get(TraceTag.BIZID)
+        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
+            toRbacExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migratePermissionHandoverService.fitSecToRbacAuth(
+                    projectCode = projectCode,
+                    projectCreator = migrateProjectConditionDTO.projectCreator!!,
+                    resourceType = migrateProjectConditionDTO.resourceType!!
+                )
+            }
         }
         return true
     }
