@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
-import com.tencent.devops.openapi.service.IndexService
+import com.tencent.devops.openapi.service.OpenApiIndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
@@ -56,7 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwBuildResourceV4Impl @Autowired constructor(
     private val client: Client,
     private val apiGatewayUtil: ApiGatewayUtil,
-    private val indexService: IndexService
+    private val openApiIndexService: OpenApiIndexService
 ) : ApigwBuildResourceV4 {
     override fun manualStartupInfo(
         appCode: String?,
@@ -407,7 +407,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = indexService.getHandle(buildId) {
+        val pipelineIdFormDB = openApiIndexService.getHandle(buildId) {
             kotlin.runCatching {
                 client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
             }.getOrElse {

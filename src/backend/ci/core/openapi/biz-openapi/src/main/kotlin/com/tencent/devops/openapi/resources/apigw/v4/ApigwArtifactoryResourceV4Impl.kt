@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwArtifactoryResourceV4
-import com.tencent.devops.openapi.service.IndexService
+import com.tencent.devops.openapi.service.OpenApiIndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     private val client: Client,
-    private val indexService: IndexService
+    private val openApiIndexService: OpenApiIndexService
 ) : ApigwArtifactoryResourceV4 {
 
     override fun getUserDownloadUrl(
@@ -163,7 +163,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = indexService.getHandle(buildId) {
+        val pipelineIdFormDB = openApiIndexService.getHandle(buildId) {
             kotlin.runCatching {
                 client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
             }.getOrElse {

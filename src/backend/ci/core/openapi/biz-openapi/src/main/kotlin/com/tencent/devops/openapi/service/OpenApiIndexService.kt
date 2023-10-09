@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class IndexService {
+class OpenApiIndexService {
     private val indexCache = CacheBuilder.newBuilder()
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)

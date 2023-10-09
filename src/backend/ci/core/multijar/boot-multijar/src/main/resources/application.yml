@@ -15,17 +15,13 @@ spring:
       - dispatch-docker
       - dispatch-kubernetes
       - artifactory
-      - buildless
-      - dockerhost
-      - metrics
-      - monitoring
       - plugin
-      - stream
       - worker
       - websocket
       - misc
       - store
       - quality
+      - log
   application:
     name: multijar
     desc: DevOps MULTIJAR Service
