@@ -17,6 +17,9 @@ data class JobCloudFileDistributeReq(
     @ApiModelProperty(value = "文件传输目标路径", required = true)
     @JsonProperty("file_target_path")
     val fileTargetPath: String,
+    @ApiModelProperty(value = "传输模式", notes = "1 - 严谨模式, 2 - 强制模式, 默认2")
+    @JsonProperty("transfer_mode")
+    val transferMode: Int = 2,
     @ApiModelProperty(value = "执行目标", required = true)
     @JsonProperty("target_server")
     val executeTarget: JobCloudExecuteTarget,
@@ -42,6 +45,7 @@ data class JobCloudFileDistributeReq(
         map["bk_scope_id"] = bkScopeId
         map["file_source_list"] = fileSourceList
         map["file_target_path"] = fileTargetPath
+        map["transfer_mode"] = transferMode
         map["target_server"] = executeTarget
         map["account_alias"] = accountAlias
         map["timeout"] = timeout

@@ -1,5 +1,7 @@
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
@@ -34,11 +36,16 @@ class FileDistributeService @Autowired constructor(
                 jobCloudReq = jobCloudFileDistributeReq.toMap()
             )
 
-        val fileDistributeResult = FileDistributeResult(
-            jobInstanceId = jobCloudResp.data?.jobInstanceId ?: 0L,
-            jobInstanceName = jobCloudResp.data?.jobInstanceName ?: "",
-            stepInstanceId = jobCloudResp.data?.stepInstanceId ?: 0L
-        )
+        var jsonData = ""
+        val fileDistributeResult: FileDistributeResult =
+            if (null != jobCloudResp.data) {
+                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                jacksonObjectMapper().readValue(jsonData)
+            } else {
+                FileDistributeResult(-1L, "null", -1L)
+            }
+        NetworkUtil.logger.info("[distributeFile] fileDistributeResult: $fileDistributeResult")
+
         return JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,

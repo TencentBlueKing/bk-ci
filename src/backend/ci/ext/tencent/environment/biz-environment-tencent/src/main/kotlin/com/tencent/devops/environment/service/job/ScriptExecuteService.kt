@@ -49,6 +49,7 @@ class ScriptExecuteService @Autowired constructor(
         logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
         logger.info("[executeScript] serialized jsonData: $jsonData")
         logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
+
         return JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,

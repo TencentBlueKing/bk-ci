@@ -9,6 +9,8 @@ data class FileDistributeReq(
     val fileSourceList: List<FileSource>,
     @ApiModelProperty(value = "文件传输目标路径", required = true)
     val fileTargetPath: String,
+    @ApiModelProperty(value = "传输模式", notes = "1 - 严谨模式, 2 - 强制模式, 默认2")
+    val transferMode: Int = 2,
     @ApiModelProperty(value = "执行目标", required = true)
     val executeTarget: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
