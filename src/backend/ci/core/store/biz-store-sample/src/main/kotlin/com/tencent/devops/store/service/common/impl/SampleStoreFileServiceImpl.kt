@@ -52,9 +52,9 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
-        logoFlag: Boolean,
+        storeStatic: Boolean,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum?
+        fileType: FileTypeEnum?,
     ): Map<String, String> {
         pathList.forEach { path ->
             val file = File("$fileDirPath${fileSeparator}$path")
@@ -65,7 +65,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                         userId = userId,
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file,
-                        logo = logoFlag,
+                        storeStatic = storeStatic,
                         fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         fileType = fileType?.name

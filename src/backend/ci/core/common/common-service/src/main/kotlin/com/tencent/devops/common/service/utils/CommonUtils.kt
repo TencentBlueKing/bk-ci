@@ -137,12 +137,12 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false,
+        storeStatic: Boolean = false,
         language: String,
         fileType: String? = null
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
-                "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo" +
+                "?userId=$userId&fileChannelType=$fileChannelType&storeStatic=$storeStatic" +
                 (fileType?.let { "&fileType=$it" } ?: "")
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->

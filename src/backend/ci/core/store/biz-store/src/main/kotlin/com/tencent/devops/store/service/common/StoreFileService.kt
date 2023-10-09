@@ -96,7 +96,7 @@ abstract class StoreFileService {
             client = client,
             fileDirPath = fileDirPath,
             result = result,
-            fileType = FileTypeEnum.BK_STATIC
+            storeStatic = true
         )
         return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
     }
@@ -106,9 +106,9 @@ abstract class StoreFileService {
         pathList: List<String>,
         client: Client,
         fileDirPath: String,
-        logoFlag: Boolean = false,
+        storeStatic: Boolean = false,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum?
+        fileType: FileTypeEnum? = null
     ): Map<String, String>
 
     abstract fun serviceArchiveAtomFile(
