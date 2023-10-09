@@ -343,7 +343,6 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         }
     }
 
-
     override fun getMonitorActionName(action: String): String? {
         return monitorActionNameCache.getIfPresent(action) ?: putAndGetMonitorActionNameCache(action)
     }
