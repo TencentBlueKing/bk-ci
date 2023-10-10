@@ -283,7 +283,7 @@ class DeleteControl @Autowired constructor(
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
-        logger.info("afterDeleteWorkspace|RemoteDevUpdateEvent|$event")
+        logger.debug("afterDeleteWorkspace|RemoteDevUpdateEvent{}|", event)
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
@@ -296,14 +296,13 @@ class DeleteControl @Autowired constructor(
                 )
             }
         }
-        doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
+        doDeleteWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
     fun doDeleteWS(
         status: Boolean,
         operator: String,
         workspaceName: String,
-        nodeIp: String?,
         errorMsg: String? = null
     ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -313,6 +312,8 @@ class DeleteControl @Autowired constructor(
             )
         if (workspace.status.checkDeleted()) return
 
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+
         val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
         if (status) {
             // 删除环境管理第三方构建机记录
@@ -321,7 +322,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -379,7 +380,7 @@ class DeleteControl @Autowired constructor(
         }
 
         // 删除时给 cmdb 去掉字段方便监控检索
-        val hostIdSub = nodeIp?.split(".")
+        val hostIdSub = detail?.environmentIP?.split(".")
         if (!hostIdSub.isNullOrEmpty()) {
             val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
             bkccService.updateHostMonitor(
