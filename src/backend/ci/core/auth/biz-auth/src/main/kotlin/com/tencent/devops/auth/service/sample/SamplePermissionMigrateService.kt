@@ -72,4 +72,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
         return true
     }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        return true
+    }
 }

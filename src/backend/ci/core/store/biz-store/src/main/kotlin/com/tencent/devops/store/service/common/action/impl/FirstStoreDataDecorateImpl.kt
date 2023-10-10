@@ -25,22 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.springframework.stereotype.Component
 import javax.annotation.Priority
 
 @Component
 @Priority(Int.MAX_VALUE)
 @Suppress("UNUSED")
-open class FirstAtomPropsDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
+open class FirstStoreDataDecorateImpl : AbstractStoreDecorateImpl<Map<String, Any>>() {
 
-    override fun type() = AtomDecorateFactory.Kind.PROPS
+    override fun type() = StoreDecorateFactory.Kind.DATA
 
-    override fun deserialize(json: String): Map<String, Any> {
-        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
+    override fun doBus(str: String): Map<String, Any> {
+        return JsonUtil.toOrNull(str, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
 }

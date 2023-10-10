@@ -25,29 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.constant
+package com.tencent.devops.store.service.common.action.impl
 
-// 归档元数据
-const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
-const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
-const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
-const val ARCHIVE_PROPS_BUILD_ID = "buildId"
-const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
-const val ARCHIVE_PROPS_USER_ID = "userId"
-const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
-const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
-const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
-const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
-const val ARCHIVE_PROPS_APP_IMAGE = "image"
-const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
-const val ARCHIVE_PROPS_SOURCE = "source"
-const val ARCHIVE_PROPS_FILE_NAME = "fileName"
-const val ARCHIVE_PROPS_APP_ICON = "appIcon"
-const val ARCHIVE_PROPS_APP_SCHEME = "appScheme"
-const val ARCHIVE_PROPS_APP_NAME = "appName"
-const val ARCHIVE_PROPS_BK_CI_APP_STAGE = "BK-CI-APP-STAGE"
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-const val REPO_PIPELINE = "pipeline"
-const val REPO_CUSTOM = "custom"
-const val REPO_REPORT = "report"
-const val REPO_LOG = "log"
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstStorePropsDecorateImpl : AbstractStoreDecorateImpl<Map<String, Any>>() {
+
+    override fun type() = StoreDecorateFactory.Kind.PROPS
+
+    override fun doBus(str: String): Map<String, Any> {
+        return JsonUtil.toOrNull(str, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
+    }
+}

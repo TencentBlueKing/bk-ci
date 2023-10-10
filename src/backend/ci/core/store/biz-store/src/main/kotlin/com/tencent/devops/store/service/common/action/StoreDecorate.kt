@@ -23,67 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.store.service.common.action
 
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import javax.annotation.PostConstruct
 
 /**
- * 权限中心迁移服务
+ * 装饰组件信息
  */
-interface PermissionMigrateService {
+interface StoreDecorate<S : Any> {
+
+    @PostConstruct
+    fun init() {
+        StoreDecorateFactory.register(kind = type(), storeDecorate = this)
+    }
+
+    fun type(): StoreDecorateFactory.Kind
+
+    fun setNext(next: StoreDecorate<S>)
+
+    fun getNext(): StoreDecorate<S>?
 
     /**
-     * v3批量迁移到rbac
+     * 主入口
      */
-    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
+    fun decorate(str: String): S = decorateSpecial(doBus(str))
 
     /**
-     * v0批量迁移到rbac
+     * 处理业务逻辑
      */
-    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
+    fun doBus(str: String): S
 
     /**
-     * 全部迁移到rbac
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
      */
-    fun allToRbacAuth(): Boolean
-
-    /**
-     * 按条件升级到rbac权限
-     */
-    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
-
-    /**
-     * 对比迁移鉴权结果
-     */
-    fun compareResult(projectCode: String): Boolean
-
-    /**
-     * 迁移特定资源类型资源
-     */
-    fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean
-
-    /**
-     * 授予项目下自定义用户组RBAC新增的权限
-     */
-    fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
-
-    /**
-     * 权限交接
-     */
-    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
-
-    /**
-     * 迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目
-     */
-    fun migrateMonitorResource(projectCodes: List<String>): Boolean
-
-    fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }
