@@ -421,17 +421,19 @@ open class MarketAtomTask : ITask() {
         val fileCacheDir = "$cacheDirPrefix${File.separator}$atomExecuteFileDir"
         // 获取构建机缓存文件区域大小
         val maxFileCacheSize = if (BuildEnv.isThirdParty()) {
-            AgentEnv.getEnvProp(AgentEnv.PUBLIC_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
-                ?: DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
-        } else {
             AgentEnv.getEnvProp(AgentEnv.THIRD_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
                 ?: DEFAULT_THIRD_HOST_MAX_FILE_CACHE_SIZE
+        } else {
+            AgentEnv.getEnvProp(AgentEnv.PUBLIC_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
+                ?: DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
         }
-        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.createDiskLruFileCache(fileCacheDir, maxFileCacheSize)
+        logger.info("getDiskLruFileCache fileCacheDir:$fileCacheDir,maxFileCacheSize:$maxFileCacheSize")
+        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, maxFileCacheSize)
         val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
         bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
         try {
             if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1) {
+                logger.info("local file[$atomExecuteFileName] is not exist,start downloading from the repo!")
                 // 下载atom执行文件
                 downloadAtomExecuteFile(
                     projectId = projectId,

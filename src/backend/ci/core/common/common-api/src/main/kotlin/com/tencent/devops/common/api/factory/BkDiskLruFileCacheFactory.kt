@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 
 object BkDiskLruFileCacheFactory {
 
-    fun createDiskLruFileCache(
+    fun getDiskLruFileCache(
         cacheDir: String,
         cacheSize: Long
     ): BkDiskLruFileCache {
