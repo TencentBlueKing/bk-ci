@@ -18,6 +18,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
+import com.tencent.devops.remotedev.pojo.gitproxy.GitType
 
 @Api(tags = ["USER_GITPEROXY"], description = "用户-GitProxy")
 @Path("/user/gitproxy")
@@ -51,7 +52,10 @@ interface UserProjectGitProxyResource {
         page: Int,
         @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("gitType")
+        gitType: GitType?
     ): Result<Page<FetchRepoResp>>
 
     @ApiOperation("删除gitproxy")

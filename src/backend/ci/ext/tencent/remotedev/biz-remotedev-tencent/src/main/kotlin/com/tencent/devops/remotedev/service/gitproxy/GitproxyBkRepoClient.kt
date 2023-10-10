@@ -72,10 +72,13 @@ class GitproxyBkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoInfo> {
+    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: GitType?): Page<RepoInfo> {
         logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
-        val url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
-                "?type=GIT&category=PROXY&display=false"
+        var url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
+                "?category=PROXY&display=false"
+        if (gitType != null) {
+            url = "$url&${gitType.value}"
+        }
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(userId).toHeaders())
