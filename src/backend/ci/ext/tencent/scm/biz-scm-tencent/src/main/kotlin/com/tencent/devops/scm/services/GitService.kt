@@ -45,6 +45,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -135,7 +137,8 @@ import org.springframework.util.StringUtils
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
-    private val sampleProjectGitFileService: SampleProjectGitFileService
+    private val sampleProjectGitFileService: SampleProjectGitFileService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -1719,16 +1722,37 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String? = null,
+        format: String? = "zip",
+        isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
+        logger.info(
+            "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath is $filePath"
+        )
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
-        OkhttpUtils.downloadFile(url.toString(), response)
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        url.append("&format=$format")
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        response.contentType = "application/$format"
+        response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
+        val redisLock =
+            RedisLock(redisOperation, "downloadGitRepoFile:$repoName:lock:key", 20)
+        try {
+            redisLock.lock()
+            // 避免限流，增加2秒休眠时间
+            OkhttpUtils.downloadFile(url.toString(), response)
+            Thread.sleep(2 * 1100)
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")

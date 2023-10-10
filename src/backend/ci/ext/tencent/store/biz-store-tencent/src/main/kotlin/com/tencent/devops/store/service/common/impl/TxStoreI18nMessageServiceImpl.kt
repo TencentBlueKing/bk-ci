@@ -31,12 +31,20 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.constant.MASTER
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import java.io.File
+import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
+import org.springframework.util.FileSystemUtils
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
@@ -48,20 +56,20 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
     }
 
-    override fun getPropertiesFileStr(
+    override fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
     ): String? {
+        logger.info("getFileStr repositoryHashId:$repositoryHashId")
         return if (!repositoryHashId.isNullOrBlank()) {
             // 从工蜂拉取文件
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
                     repoId = repositoryHashId,
-                    filePath = "$i18nDir/$fileName",
+                    filePath = fileName,
                     reversion = null,
                     branch = branch,
                     repositoryType = null
@@ -71,22 +79,43 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 null
             }
         } else {
-            // 直接从仓库拉取文件
-            val filePath =
-                URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
-            return client.get(ServiceArtifactoryResource::class).getFileContent(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = bkrepoStoreProjectId,
-                repoName = BkRepoEnum.PLUGIN.repoName,
-                filePath = filePath
-            ).data
+            try {
+                // 直接从仓库拉取文件
+                val filePath =
+                    URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
+                return client.get(ServiceArtifactoryResource::class).getFileContent(
+                    userId = BKREPO_DEFAULT_USER,
+                    projectId = bkrepoStoreProjectId,
+                    repoName = BkRepoEnum.PLUGIN.repoName,
+                    filePath = filePath
+                ).data
+            } catch (ignored: Throwable) {
+                logger.warn("getPropertiesFileStr ffilePath:${"$projectCode/$fileDir/$fileName"} error", ignored)
+                null
+            }
         }
     }
 
-    override fun getPropertiesFileNames(
+    override fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?,
+        format: String?
+    ) {
+        val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
+        val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
+                "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
+                "&tokenType=${TokenTypeEnum.OAUTH.name}" +
+                "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
+                "&format=${format ?: "zip"}"
+        OkhttpUtils.downloadFile(url, file)
+    }
+
+    override fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
+        i18nDir: String?,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
@@ -108,5 +137,46 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 filePath = filePath
             ).data
         }
+    }
+
+    override fun descriptionAnalysis(
+        userId: String,
+        projectCode: String,
+        description: String,
+        fileDir: String,
+        language: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): String {
+        if (repositoryHashId.isNullOrBlank()) return description
+        var result = description
+        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
+            userId = userId,
+            atomDir = fileDir
+        ) + "/file"
+        val file = File(fileDirPath, "file.zip")
+        try {
+            downloadFile(
+                filePath = "file",
+                file = file,
+                repositoryHashId = repositoryHashId,
+                branch = branch
+            )
+            if (file.exists()) {
+                ZipUtil.unZipFile(file, fileDirPath, false)
+                result = storeFileService.descriptionAnalysis(
+                    userId = userId,
+                    description = description,
+                    client = client,
+                    fileDirPath = fileDirPath
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
+        } finally {
+            file.delete()
+            FileSystemUtils.deleteRecursively(File(fileDirPath).parentFile)
+        }
+        return result
     }
 }
