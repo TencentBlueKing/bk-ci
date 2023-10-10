@@ -94,17 +94,21 @@ class DesktopWorkspaceService @Autowired constructor(
                 logger.debug("updateCCHost projectAndRegIdAndIps {}", projectAndRegIdAndIps)
 
                 projectAndRegIdAndIps.forEach { (projectId, regAndIps) ->
-                    regAndIps.forEach { (regId, ips) ->
-                        if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
-                            bkccService.updateHostMonitor(regId, null, ips, mapOf("devx_meta" to ""))
-                        } else {
-                            bkccService.updateHostMonitor(
-                                regionId = regId,
-                                workspaceName = null,
-                                ips = ips,
-                                props = workspaceCommon.genWorkspaceCCInfo(projectId)
-                            )
+                    try {
+                        regAndIps.forEach { (regId, ips) ->
+                            if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                                bkccService.updateHostMonitor(regId, null, ips, mapOf("devx_meta" to ""))
+                            } else {
+                                bkccService.updateHostMonitor(
+                                    regionId = regId,
+                                    workspaceName = null,
+                                    ips = ips,
+                                    props = workspaceCommon.genWorkspaceCCInfo(projectId)
+                                )
+                            }
                         }
+                    } catch (e: Exception) {
+                        logger.warn("updateCCHost {} {} request cc api error", projectId, regAndIps, e)
                     }
                 }
 
