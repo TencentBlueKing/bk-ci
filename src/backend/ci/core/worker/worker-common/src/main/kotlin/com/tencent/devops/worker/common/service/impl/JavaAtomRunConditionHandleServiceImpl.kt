@@ -28,8 +28,6 @@
 package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
@@ -74,11 +72,6 @@ class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         pkgName: String,
         runtimeVersion: String?
     ): String {
-        val preCmds = CommonUtils.strToList(preCmd).toMutableList()
-        if (osName != OSType.WINDOWS.name.lowercase()) {
-            preCmds.add(0, "chmod +x $pkgName")
-        }
-        logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
-        return JsonUtil.toJson(preCmds, false)
+        return preCmd
     }
 }

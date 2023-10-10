@@ -263,7 +263,7 @@ open class MarketAtomTask : ITask() {
         try {
             LoggerService.addFoldStartLine("[Install plugin]")
             // 获取插件执行包文件
-            val atomExecuteFile = getAtomExecuteFile(atomData, workspace, projectId)
+            val atomExecuteFile = getAtomExecuteFile(atomData, atomTmpSpace, workspace, projectId)
             // 检查插件包的完整性
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -390,6 +390,7 @@ open class MarketAtomTask : ITask() {
 
     private fun getAtomExecuteFile(
         atomData: AtomEnv,
+        atomTmpSpace: File,
         workspace: File,
         projectId: String
     ): File {
@@ -397,9 +398,9 @@ open class MarketAtomTask : ITask() {
         val atomFilePath = atomData.pkgPath!!
         val lastFx = atomFilePath.lastIndexOf("/")
         val atomExecuteFile = if (lastFx > 0) {
-            File(workspace, atomFilePath.substring(lastFx + 1))
+            File(atomTmpSpace, atomFilePath.substring(lastFx + 1))
         } else {
-            File(workspace, atomFilePath)
+            File(atomTmpSpace, atomFilePath)
         }
         val atomExecuteFileName = atomExecuteFile.name
         // 从缓存中获取插件执行包文件
