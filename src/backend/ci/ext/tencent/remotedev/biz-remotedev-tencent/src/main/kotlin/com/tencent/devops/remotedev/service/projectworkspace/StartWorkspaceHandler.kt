@@ -205,11 +205,6 @@ class StartWorkspaceHandler @Autowired constructor(
                     )
                 )
             }
-
-            workspaceCommon.updateWorkspaceDetail(
-                event.workspaceName,
-                event.mountType
-            )
         } else {
             // 启动失败,记录为EXCEPTION
             logger.warn("start workspace ${event.workspaceName} failed")

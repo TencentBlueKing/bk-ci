@@ -340,7 +340,7 @@ class BcsRemoteDevService @Autowired constructor(
         private fun getEnvironmentUid(workspaceName: String): String {
             val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
             return workspaceRecord?.environmentUid
-                ?: throw RuntimeException("No devcloud environment with $workspaceName")
+                ?: throw RuntimeException("No bcs environment with $workspaceName")
         }
 
         private fun getWorkspaceEnvPatchStr(
