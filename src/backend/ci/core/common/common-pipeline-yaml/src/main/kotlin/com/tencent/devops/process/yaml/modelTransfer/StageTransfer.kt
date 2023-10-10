@@ -51,7 +51,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_MINUTES
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_HOURS
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
@@ -274,7 +274,6 @@ class StageTransfer @Autowired(required = false) constructor(
                 )
             },
             description = stage.checkIn?.reviewDesc,
-            timeout = stage.checkIn?.timeout?.nullIfDefault(DEFAULT_CHECKIN_TIMEOUT_MINUTES),
             sendMarkdown = stage.checkIn?.markdownContent?.nullIfDefault(false),
             notifyType = stage.checkIn?.notifyType?.ifEmpty { null },
             notifyGroups = stage.checkIn?.notifyGroup?.ifEmpty { null }
@@ -285,7 +284,7 @@ class StageTransfer @Autowired(required = false) constructor(
         return PreStageCheck(
             reviews = reviews,
             gates = null,
-            timeoutHours = stage.checkIn?.timeout
+            timeoutHours = stage.checkIn?.timeout?.nullIfDefault(DEFAULT_CHECKIN_TIMEOUT_HOURS)
         )
     }
 
@@ -294,7 +293,7 @@ class StageTransfer @Autowired(required = false) constructor(
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
-        check.timeout = stageCheck.timeoutHours
+        check.timeout = stageCheck.timeoutHours ?: DEFAULT_CHECKIN_TIMEOUT_HOURS
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
             check.reviewDesc = stageCheck.reviews.description
@@ -305,7 +304,6 @@ class StageTransfer @Autowired(required = false) constructor(
                     reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
                 )
             }.toMutableList()
-            check.timeout = stageCheck.reviews.timeout ?: DEFAULT_CHECKIN_TIMEOUT_MINUTES
             check.markdownContent = stageCheck.reviews.sendMarkdown ?: false
             check.notifyType = stageCheck.reviews.notifyType?.toMutableList() ?: mutableListOf()
             check.notifyGroup = stageCheck.reviews.notifyGroups?.toMutableList() ?: mutableListOf()

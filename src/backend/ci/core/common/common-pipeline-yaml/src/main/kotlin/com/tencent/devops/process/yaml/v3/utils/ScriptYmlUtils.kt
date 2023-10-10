@@ -533,7 +533,6 @@ object ScriptYmlUtils {
                     },
                     variables = preCheck.reviews.variables,
                     description = preCheck.reviews.description,
-                    timeout = preCheck.reviews.timeout,
                     sendMarkdown = preCheck.reviews.sendMarkdown,
                     notifyType = preCheck.reviews.notifyType,
                     notifyGroups = preCheck.reviews.notifyGroups

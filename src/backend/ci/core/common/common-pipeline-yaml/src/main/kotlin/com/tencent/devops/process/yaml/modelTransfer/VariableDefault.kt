@@ -15,7 +15,7 @@ object VariableDefault {
     const val DEFAULT_JOB_MAX_RUNNING_MINUTES = 900
     const val DEFAULT_MUTEX_QUEUE_LENGTH = 5
     const val DEFAULT_MUTEX_TIMEOUT_MINUTES = 900
-    const val DEFAULT_CHECKIN_TIMEOUT_MINUTES = 24
+    const val DEFAULT_CHECKIN_TIMEOUT_HOURS = 24
     const val DEFAULT_MUTEX_QUEUE_ENABLE = false
     val DEFAULT_MANUAL_RULE = ManualRule(canElementSkip = null, useLatestParameters = null)
 
