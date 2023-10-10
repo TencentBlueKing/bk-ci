@@ -989,7 +989,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("ComplexMethod")
     override fun creatAtomBranchTestVersion(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
