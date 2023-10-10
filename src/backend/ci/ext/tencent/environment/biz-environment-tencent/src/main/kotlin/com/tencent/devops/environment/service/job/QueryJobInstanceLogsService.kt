@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.environment.pojo.job.Host
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
@@ -37,45 +38,56 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()
             )
 
-        val queryJobInstanceLogsResult: QueryJobInstanceLogsResult
-        when (jobCloudResp.data?.logType) {
-            1 -> { // 1 - 脚本执行任务日志
-                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-                    host = Host(
-                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
-                        ip = jobCloudResp.data?.host?.ip,
-                        bkHostId = jobCloudResp.data?.host?.bkHostId
-                    ),
-                    logType = jobCloudResp.data?.logType!!,
-                    scriptTaskLogs = jobCloudResp.data?.scriptTaskLogs,
-                    fileTaskLogs = null
-                )
+//        val queryJobInstanceLogsResult: QueryJobInstanceLogsResult
+//        when (jobCloudResp.data?.logType) {
+//            1 -> { // 1 - 脚本执行任务日志
+//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
+//                    host = HostInRes(
+//                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
+//                        ip = jobCloudResp.data?.host?.ip,
+//                        bkHostId = jobCloudResp.data?.host?.bkHostId
+//                    ),
+//                    logType = jobCloudResp.data?.logType!!,
+//                    scriptTaskLogs = jobCloudResp.data?.scriptTaskLogs,
+//                    fileTaskLogs = null
+//                )
+//            }
+//            2 -> { // 2 - 文件分发任务日志
+//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
+//                    host = HostInRes(
+//                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
+//                        ip = jobCloudResp.data?.host?.ip,
+//                        bkHostId = jobCloudResp.data?.host?.bkHostId
+//                    ),
+//                    logType = jobCloudResp.data?.logType!!,
+//                    scriptTaskLogs = null,
+//                    fileTaskLogs = jobCloudResp.data?.fileTaskLogs
+//                )
+//            }
+//            else -> {
+//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
+//                    host = HostInRes(
+//                        bkCloudId = null,
+//                        ip = null,
+//                        bkHostId = null
+//                    ),
+//                    logType = jobCloudResp.data?.logType!!,
+//                    scriptTaskLogs = null,
+//                    fileTaskLogs = null
+//                )
+//            }
+//        }
+        var jsonData = ""
+        val queryJobInstanceLogsResult: QueryJobInstanceLogsResult =
+            if (null != jobCloudResp.data) {
+                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                jacksonObjectMapper().readValue(jsonData)
+            } else {
+                QueryJobInstanceLogsResult()
             }
-            2 -> { // 2 - 文件分发任务日志
-                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-                    host = Host(
-                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
-                        ip = jobCloudResp.data?.host?.ip,
-                        bkHostId = jobCloudResp.data?.host?.bkHostId
-                    ),
-                    logType = jobCloudResp.data?.logType!!,
-                    scriptTaskLogs = null,
-                    fileTaskLogs = jobCloudResp.data?.fileTaskLogs
-                )
-            }
-            else -> {
-                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-                    host = Host(
-                        bkCloudId = null,
-                        ip = null,
-                        bkHostId = null
-                    ),
-                    logType = jobCloudResp.data?.logType!!,
-                    scriptTaskLogs = null,
-                    fileTaskLogs = null
-                )
-            }
-        }
+        NetworkUtil.logger.info("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
+        NetworkUtil.logger.info("[queryJobInstanceLogs] serialized jsonData: $jsonData")
+        NetworkUtil.logger.info("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
 
         return JobResult(
             status = jobCloudResp.code,
