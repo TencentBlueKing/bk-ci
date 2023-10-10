@@ -4,6 +4,8 @@ import com.jakewharton.disklrucache.DiskLruCache
 import com.tencent.devops.common.api.util.ShaUtils
 import org.springframework.util.FileCopyUtils
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 
 /**
@@ -16,6 +18,10 @@ class BkDiskLruFileCache(
 
     private val diskCache: DiskLruCache = DiskLruCache.open(File(cacheDir), 1, 1, cacheSize)
 
+    companion object {
+        private const val BUFFER_SIZE = 1024
+    }
+
     /**
      * 把文件放入磁盘缓存
      * @param key 磁盘缓存key
@@ -24,12 +30,19 @@ class BkDiskLruFileCache(
     @Throws(IOException::class)
     fun put(key: String, inputFile: File) {
         // 根据key获取缓存编辑器（为了保证key格式符合DiskLruCache规范，key需要用sha算法计算出散列值进行转换）
-        val editor = diskCache.edit(ShaUtils.sha256(key))
-        if (editor != null) {
-            // 如果编辑器不为空，把文件写入磁盘缓存
-            FileCopyUtils.copy(inputFile.inputStream(), editor.newOutputStream(0))
-            editor.commit()
+        val editor = diskCache.edit(ShaUtils.sha256(key)) ?: return
+        // 如果编辑器不为空，把文件写入磁盘缓存
+        FileCopyUtils.copy(inputFile.inputStream(), editor.newOutputStream(0))
+        FileInputStream(inputFile).use { inputStream ->
+            editor.newOutputStream(0).use { outputStream ->
+                val buffer = ByteArray(BUFFER_SIZE)
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                }
+            }
         }
+        editor.commit()
     }
 
     /**
@@ -41,9 +54,15 @@ class BkDiskLruFileCache(
     fun get(key: String, outputFile: File) {
         // 根据key从磁盘缓存获取snapshot对象
         val snapshot = diskCache[ShaUtils.sha256(key)]
-        snapshot?.getInputStream(0)?.use { input ->
+        snapshot?.getInputStream(0)?.use { inputStream ->
             // 将snapshot对象输出流写入输出文件
-            FileCopyUtils.copy(input, outputFile.outputStream())
+            FileOutputStream(outputFile).use { outputStream ->
+                val buffer = ByteArray(BUFFER_SIZE)
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                }
+            }
         }
     }
 
