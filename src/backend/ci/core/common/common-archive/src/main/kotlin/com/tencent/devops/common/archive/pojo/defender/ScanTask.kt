@@ -21,21 +21,48 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.store.service.atom.action.impl
+data class ScanTask(
+    val name: String?,
+    val taskId: String?,
+    val projectId: String?,
+    val createdBy: String?,
+    val lastModifiedDateTime: String?,
+    val triggerDateTime: String?,
+    val startDateTime: String?,
+    val finishedDateTime: String?,
+    val triggerType: String?,
+    val status: String?,
+    val scanPlan: String?,
+    val rule: Rule?,
+    val total: Int?,
+    val scanning: Int?,
+    val failed: Int?,
+    val scanned: Int?,
+    val passed: Int?,
+    val scanner: String?,
+    val scannerType: String?,
+    val scannerVersion: String?,
+    val force: Boolean?,
+    val metadata: ArrayList<Metadata>?
+) {
+    data class Rules(
+        val field: String?,
+        val value: String?,
+        val operation: String?
+    )
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+    data class Rule(
+        val rules: ArrayList<Rules>?,
+        val relation: String?
+    )
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
-
-    private var nextPtr: AtomDecorate<S>? = null
-
-    override fun setNext(next: AtomDecorate<S>) {
-        nextPtr = next
-    }
-
-    override fun getNext(): AtomDecorate<S>? = nextPtr
+    data class Metadata(
+        val key: String?,
+        val value: String?
+    )
 }
