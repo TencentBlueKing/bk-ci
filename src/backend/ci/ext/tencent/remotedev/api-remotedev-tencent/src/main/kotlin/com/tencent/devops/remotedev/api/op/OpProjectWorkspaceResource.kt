@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
+import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -84,4 +85,15 @@ interface OpProjectWorkspaceResource {
         @ApiParam("获取数据")
         data: FetchOwnerAndAdminData
     ): Result<Map<String, FetchOwnerAndAdminItem>>
+
+    @ApiOperation("修改云研发机器在 CMDB 的属性")
+    @POST
+    @Path("/updateCCHost")
+    fun updateCCHost(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("修改数据")
+        data: OpUpdateCCHostData
+    ): Result<Boolean>
 }
