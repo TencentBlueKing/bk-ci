@@ -150,7 +150,10 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
-        preCmds.add(0, "tar -xzf $pkgName")
+        if (osName != OSType.WINDOWS.name.lowercase()) {
+            preCmds.add(0, "chmod +x $pkgName")
+        }
+        preCmds.add(preCmds.size, "tar -xzf $pkgName")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
     }

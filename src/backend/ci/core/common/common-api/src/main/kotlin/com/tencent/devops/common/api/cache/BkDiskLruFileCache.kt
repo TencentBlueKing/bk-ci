@@ -2,6 +2,7 @@ package com.tencent.devops.common.api.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
 import com.tencent.devops.common.api.util.ShaUtils
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -19,6 +20,7 @@ class BkDiskLruFileCache(
 
     companion object {
         private const val BUFFER_SIZE = 1024
+        private val logger = LoggerFactory.getLogger(BkDiskLruFileCache::class.java)
     }
 
     /**
@@ -62,7 +64,12 @@ class BkDiskLruFileCache(
                 }
             }
         }
-        outputFile.setExecutable(true)
+        val success = outputFile.setExecutable(true)
+        if (success) {
+            logger.info("file[${outputFile.name}] execution permission added successfully.");
+        } else {
+            logger.warn("file[${outputFile.name}] failed to add execution permission.");
+        }
     }
 
     /**

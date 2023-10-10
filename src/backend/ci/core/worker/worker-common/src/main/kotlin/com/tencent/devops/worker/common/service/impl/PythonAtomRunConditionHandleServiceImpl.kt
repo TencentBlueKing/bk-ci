@@ -67,12 +67,15 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
+        if (osName != OSType.WINDOWS.name.lowercase()) {
+            preCmds.add(0, "chmod +x $pkgName")
+        }
         val pipType = if (runtimeVersion == "python3") {
             "pip3"
         } else {
             "pip"
         }
-        preCmds.add(0, "$pipType --default-timeout=600 install $pkgName --upgrade")
+        preCmds.add(preCmds.size, "$pipType --default-timeout=600 install $pkgName --upgrade")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
     }
