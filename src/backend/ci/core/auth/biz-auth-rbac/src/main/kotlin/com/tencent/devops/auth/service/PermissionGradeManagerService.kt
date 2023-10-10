@@ -45,6 +45,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REVISE_BKCI_PROJECT_APPLICATION
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
@@ -77,6 +78,7 @@ class PermissionGradeManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
@@ -240,7 +242,7 @@ class PermissionGradeManagerService @Autowired constructor(
         gradeManagerId: String,
         projectCode: String,
         projectName: String,
-        /*该字段主要用于当创建项目时，需要注册监控权限资源，此时修改分级管理员不走审批流程*/
+        /*该字段主要用于当创建项目审批回调时，需要修改分级管理员并注册监控权限资源，此时不走审批流程*/
         registerMonitorPermission: Boolean = false
     ): Boolean {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
@@ -265,7 +267,8 @@ class PermissionGradeManagerService @Autowired constructor(
             projectCode = projectCode,
             projectName = projectName,
             creator = projectApprovalInfo.creator!!,
-            bkciManagerGroupConfig = groupConfig.authorizationScopes
+            bkciManagerGroupConfig = groupConfig.authorizationScopes,
+            registerMonitorPermission = registerMonitorPermission
         )
         logger.info("PermissionGradeManagerService|modifyGradeManager|$authorizationScopes")
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
@@ -355,7 +358,8 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String,
         creator: String,
-        bkciManagerGroupConfig: String
+        bkciManagerGroupConfig: String,
+        registerMonitorPermission: Boolean,
     ): List<AuthorizationScopes> {
         val bkciAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = bkciManagerGroupConfig,
@@ -364,13 +368,22 @@ class PermissionGradeManagerService @Autowired constructor(
             iamResourceCode = projectCode,
             resourceName = projectName
         )
-        val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
-            projectName = projectName,
-            projectCode = projectCode,
-            groupCode = BkAuthGroup.GRADE_ADMIN.value,
-            userId = creator
+        val monitorSpaceInfo = authMonitorSpaceDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode
         )
-        return bkciAuthorizationScopes.plus(monitorAuthorizationScopes)
+        // 对于正常修改项目流程时，仅对项目的分级管理员已具有监控的授权范围，才需要加上监控授权范围；否则，只需要蓝盾的授权范围。
+        return if (monitorSpaceInfo != null || registerMonitorPermission) {
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = BkAuthGroup.GRADE_ADMIN.value,
+                userId = creator
+            )
+            bkciAuthorizationScopes.plus(monitorAuthorizationScopes)
+        } else {
+            bkciAuthorizationScopes
+        }
     }
 
     /**
