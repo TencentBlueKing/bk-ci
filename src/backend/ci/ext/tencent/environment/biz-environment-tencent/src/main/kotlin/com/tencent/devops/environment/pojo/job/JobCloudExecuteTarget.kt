@@ -11,7 +11,7 @@ data class JobCloudExecuteTarget(
     @ApiModelProperty(value = "动态topo节点列表")
     @JsonProperty("topo_node_list")
     val topoNodeList: List<String>?,
-    @ApiModelProperty(value = "静态IP列表")
+    @ApiModelProperty(value = "主机列表")
     @JsonProperty("ip_list")
-    val ipList: List<JobCloudHost>?
+    val hostList: List<JobCloudHost>?
 )
