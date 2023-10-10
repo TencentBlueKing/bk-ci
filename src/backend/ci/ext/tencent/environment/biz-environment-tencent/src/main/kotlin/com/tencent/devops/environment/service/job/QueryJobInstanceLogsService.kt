@@ -37,46 +37,6 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()
             )
-
-//        val queryJobInstanceLogsResult: QueryJobInstanceLogsResult
-//        when (jobCloudResp.data?.logType) {
-//            1 -> { // 1 - 脚本执行任务日志
-//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-//                    host = HostInRes(
-//                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
-//                        ip = jobCloudResp.data?.host?.ip,
-//                        bkHostId = jobCloudResp.data?.host?.bkHostId
-//                    ),
-//                    logType = jobCloudResp.data?.logType!!,
-//                    scriptTaskLogs = jobCloudResp.data?.scriptTaskLogs,
-//                    fileTaskLogs = null
-//                )
-//            }
-//            2 -> { // 2 - 文件分发任务日志
-//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-//                    host = HostInRes(
-//                        bkCloudId = jobCloudResp.data?.host?.bkCloudId,
-//                        ip = jobCloudResp.data?.host?.ip,
-//                        bkHostId = jobCloudResp.data?.host?.bkHostId
-//                    ),
-//                    logType = jobCloudResp.data?.logType!!,
-//                    scriptTaskLogs = null,
-//                    fileTaskLogs = jobCloudResp.data?.fileTaskLogs
-//                )
-//            }
-//            else -> {
-//                queryJobInstanceLogsResult = QueryJobInstanceLogsResult(
-//                    host = HostInRes(
-//                        bkCloudId = null,
-//                        ip = null,
-//                        bkHostId = null
-//                    ),
-//                    logType = jobCloudResp.data?.logType!!,
-//                    scriptTaskLogs = null,
-//                    fileTaskLogs = null
-//                )
-//            }
-//        }
         var jsonData = ""
         val queryJobInstanceLogsResult: QueryJobInstanceLogsResult =
             if (null != jobCloudResp.data) {

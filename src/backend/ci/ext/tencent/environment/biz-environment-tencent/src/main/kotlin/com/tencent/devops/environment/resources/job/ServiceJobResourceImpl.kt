@@ -216,11 +216,11 @@ class ServiceJobResourceImpl @Autowired constructor(
             bkScopeId = "",
             jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
             stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
-            hostList = queryJobInstanceLogsReq.hostIdList?.map {
+            hostList = queryJobInstanceLogsReq.hostList?.map {
                 JobCloudHost(
-                    bkHostId = it,
-                    bkCloudId = null,
-                    ip = null
+                    bkHostId = it.bkHostId,
+                    bkCloudId = it.bkCloudId,
+                    ip = it.ip
                 )
             },
             bkAppCode = "",

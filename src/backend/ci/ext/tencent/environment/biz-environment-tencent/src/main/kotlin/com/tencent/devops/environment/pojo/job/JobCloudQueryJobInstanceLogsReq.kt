@@ -17,7 +17,7 @@ class JobCloudQueryJobInstanceLogsReq(
     @ApiModelProperty(value = "步骤实例ID", required = true)
     @JsonProperty("step_instance_id")
     val stepInstanceId: Long,
-    @ApiModelProperty(value = "主机/主机ID列表", required = true)
+    @ApiModelProperty(value = "主机/主机列表", required = true)
     @JsonProperty("ip_list")
     val hostList: List<JobCloudHost>?,
     @ApiModelProperty(value = "应用ID", required = true)
