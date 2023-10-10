@@ -14,12 +14,12 @@ data class FileLog(
     @ApiModelProperty(value = "源文件路径", required = true)
     @JsonProperty("src_path")
     val srcPath: String,
-    @ApiModelProperty(value = "分发目标主机信息", notes = "mode == 1 时有值", required = true)
+    @ApiModelProperty(value = "分发目标主机信息", notes = "mode == 1 时有值")
     @JsonProperty("dest_ip")
-    val destHost: HostInRes,
-    @ApiModelProperty(value = "目标路径", notes = "mode == 1 时有值", required = true)
+    val destHost: HostInRes? = null,
+    @ApiModelProperty(value = "目标路径", notes = "mode == 1 时有值")
     @JsonProperty("dest_path")
-    val destPath: String,
+    val destPath: String?,
     @ApiModelProperty(value = "任务状态", notes = "1-等待开始，2-上传中，3-下载中，4-成功，5-失败", required = true)
     val status: Int,
     @ApiModelProperty(value = "文件分发日志内容", required = true)
