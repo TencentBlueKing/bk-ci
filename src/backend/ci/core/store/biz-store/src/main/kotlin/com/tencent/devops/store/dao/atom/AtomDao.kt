@@ -260,6 +260,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomTestVersion(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$versionPrefix-%")))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getPipelineAtom(
         dslContext: DSLContext,
         atomCode: String,
@@ -629,6 +639,8 @@ class AtomDao : AtomBaseDao() {
                     .join(tspr)
                     .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
                     .where(initTestAtomCondition)
+                    .groupBy(ta.ATOM_CODE)
+                    .orderBy(ta.CREATE_TIME.desc())
             )
         }
         val t = queryAtomStep.asTable("t")
@@ -1075,6 +1087,23 @@ class AtomDao : AtomBaseDao() {
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ATOM_CODE.eq(atomCode))
+                .execute()
+        }
+    }
+
+    fun updateAtomDescriptionByCode(
+        dslContext: DSLContext,
+        userId: String,
+        atomCode: String,
+        description: String,
+        version: String
+    ) {
+        return with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(DESCRIPTION, description)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
                 .execute()
         }
     }

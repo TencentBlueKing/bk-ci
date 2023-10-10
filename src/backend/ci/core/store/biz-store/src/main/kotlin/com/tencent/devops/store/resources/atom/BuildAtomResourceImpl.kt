@@ -29,16 +29,35 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.BuildAtomResource
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
+    private val atomService: AtomService,
+    private val atomReleaseService: AtomReleaseService
 ) : BuildAtomResource {
 
     override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
         return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
+    }
+
+    override fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String> {
+        return atomReleaseService.creatAtomBranchTestVersion(userId, marketAtomUpdateRequest)
+    }
+
+    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> {
+        return atomReleaseService.endBranchVersionTest(userId, atomId)
+    }
+
+    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
+        return atomReleaseService.getProcessInfo(userId, atomId)
     }
 }

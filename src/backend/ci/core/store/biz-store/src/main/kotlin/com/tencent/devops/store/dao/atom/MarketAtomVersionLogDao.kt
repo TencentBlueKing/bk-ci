@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.records.TAtomVersionLogRecord
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -85,6 +86,7 @@ class MarketAtomVersionLogDao {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.`in`(atomIds))
+                .and(RELEASE_TYPE.notEqual(ReleaseTypeEnum.BRANCH_TEST.releaseType.toByte()))
                 .fetch()
         }
     }

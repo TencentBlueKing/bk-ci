@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
@@ -579,6 +580,7 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
+                .and(VERSION.notContains(TEST))
                 .orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()

@@ -49,7 +49,7 @@ interface AtomReleaseService {
         userId: String,
         projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?>
+    ): Result<String>
 
     /**
      * 获取插件版本发布进度
@@ -95,4 +95,17 @@ interface AtomReleaseService {
         repositoryHashId: String?,
         branch: String?
     )
+
+    /**
+     * 创建分支测试版本
+     */
+    fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String>
+
+    /**
+     * 结束分支版本测试
+     */
+    fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean>
 }

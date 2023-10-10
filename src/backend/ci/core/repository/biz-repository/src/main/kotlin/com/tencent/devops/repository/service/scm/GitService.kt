@@ -41,6 +41,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -113,7 +115,8 @@ import org.springframework.util.StringUtils
 @Suppress("ALL")
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val redisOperation: RedisOperation
 ) : IGitService {
 
     companion object {
@@ -1172,6 +1175,9 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     ) {
         logger.info("downloadGitRepoFile  repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
@@ -1181,7 +1187,23 @@ class GitService @Autowired constructor(
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
-        OkhttpUtils.downloadFile(url.toString(), response)
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        if (!format.isNullOrBlank()) {
+            url.append("&format=$format")
+        }
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        val redisLock =
+            RedisLock(redisOperation, "downloadGitRepoFile:$repoName:lock:key", 20)
+        try {
+            redisLock.lock()
+            // 避免限流，增加2秒休眠时间
+            OkhttpUtils.downloadFile(url.toString(), response)
+            Thread.sleep(2 * 1100)
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
