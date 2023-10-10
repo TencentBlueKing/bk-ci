@@ -283,6 +283,7 @@ class DeleteControl @Autowired constructor(
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
+        logger.info("afterDeleteWorkspace|RemoteDevUpdateEvent|$event")
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
