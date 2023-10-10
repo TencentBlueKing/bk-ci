@@ -71,13 +71,19 @@ enum class PipelineTriggerType {
 
     companion object {
 
-        fun toMap(): List<IdValue> {
-            return PipelineTriggerType.values().map {
+        fun toMap(
+            scmType: ScmType?,
+            userId: String
+        ): List<IdValue> {
+            return PipelineTriggerType.values().filter {
+                scmType == null || scmType.name == it.name
+            }.map {
                 IdValue(
                     id = it.name,
                     value = I18nUtil.getCodeLanMessage(
                         messageCode = "TRIGGER_TYPE_${it.name}",
-                        defaultMessage = it.name
+                        defaultMessage = it.name,
+                        language = I18nUtil.getLanguage(userId)
                     )
                 )
             }
