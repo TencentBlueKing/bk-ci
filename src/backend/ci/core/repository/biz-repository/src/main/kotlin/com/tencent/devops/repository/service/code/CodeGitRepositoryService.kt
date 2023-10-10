@@ -64,7 +64,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService
-) : CodeRepositoryService<CodeGitRepository> {
+) : CommonGitRepositoryService<CodeGitRepository>() {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
     }

@@ -57,7 +57,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: IScmService,
     private val credentialService: CredentialService
-) : CodeRepositoryService<CodeGitlabRepository> {
+) : CommonGitRepositoryService<CodeGitlabRepository>() {
     override fun repositoryType(): String {
         return CodeGitlabRepository::class.java.name
     }

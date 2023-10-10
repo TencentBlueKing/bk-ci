@@ -195,6 +195,13 @@ class CodeP4RepositoryService @Autowired constructor(
         )
     }
 
+    override fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: CodeP4Repository
+    ): Boolean {
+        return sourceRepo.url != targetRepo.url
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeP4RepositoryService::class.java)
     }

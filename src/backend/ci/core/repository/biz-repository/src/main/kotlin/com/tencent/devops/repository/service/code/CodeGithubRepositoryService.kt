@@ -53,7 +53,7 @@ class CodeGithubRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val githubRepositoryService: GithubRepositoryService,
     private val githubTokenService: GithubTokenService
-) : CodeRepositoryService<GithubRepository> {
+) : CommonGitRepositoryService<GithubRepository>() {
     override fun repositoryType(): String {
         return GithubRepository::class.java.name
     }
