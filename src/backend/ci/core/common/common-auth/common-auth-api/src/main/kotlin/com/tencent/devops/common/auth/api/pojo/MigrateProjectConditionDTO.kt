@@ -12,5 +12,9 @@ data class MigrateProjectConditionDTO(
     @ApiModelProperty("项目创建人")
     val projectCreator: String? = null,
     @ApiModelProperty("排除项目code")
-    val excludedProjectCodes: List<String>? = null
+    val excludedProjectCodes: List<String>? = null,
+    @ApiModelProperty("项目ID列表")
+    val projectCodes: List<String>? = null,
+    @ApiModelProperty("资源类型")
+    val resourceType: String? = null
 )
