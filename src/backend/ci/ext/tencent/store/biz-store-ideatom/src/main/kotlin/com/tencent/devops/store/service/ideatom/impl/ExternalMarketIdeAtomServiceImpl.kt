@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
 import com.tencent.devops.store.service.common.OperationLogService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.ideatom.ExternalMarketIdeAtomService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -123,20 +124,23 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         atoms.forEach {
             val atomCode = it["ATOM_CODE"] as String
             val statistic = atomStatisticData[atomCode]
+            val logoUrl = it["LOGO_URL"] as? String
             results.add(
-                    ExternalIdeAtomItem(
-                            atomId = it["ID"] as String,
-                            atomName = it["ATOM_NAME"] as String,
-                            atomCode = atomCode,
-                            version = it["VERSION"] as String,
-                            logoUrl = it["LOGO_URL"] as? String,
-                            summary = it["SUMMARY"] as? String,
-                            publisher = it["PUBLISHER"] as String,
-                            downloads = statistic?.downloads ?: 0,
-                            score = statistic?.score ?: 0.toDouble(),
-                            codeSrc = it["CODE_SRC"] as? String,
-                            weight = it["WEIGHT"] as? Int
-                    )
+                ExternalIdeAtomItem(
+                    atomId = it["ID"] as String,
+                    atomName = it["ATOM_NAME"] as String,
+                    atomCode = atomCode,
+                    version = it["VERSION"] as String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
+                    summary = it["SUMMARY"] as? String,
+                    publisher = it["PUBLISHER"] as String,
+                    downloads = statistic?.downloads ?: 0,
+                    score = statistic?.score ?: 0.toDouble(),
+                    codeSrc = it["CODE_SRC"] as? String,
+                    weight = it["WEIGHT"] as? Int
+                )
             )
         }
         return ExternalIdeAtomResp(count, page, pageSize, results)
@@ -156,20 +160,22 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): ExternalIdeAtomResp {
-        logger.info("[list]categoryCode=$categoryCode, atomName=$atomName, classifyCode=$classifyCode, labelCode=$labelCode, " +
-                "score=$score, sortType=$sortType, page=$page, pageSize=$pageSize")
+        logger.info(
+            "[list]categoryCode=$categoryCode, atomName=$atomName, classifyCode=$classifyCode, labelCode=$labelCode, " +
+                "score=$score, sortType=$sortType, page=$page, pageSize=$pageSize"
+        )
 
         return doList(
-                keyword = atomName,
-                categoryCode = categoryCode,
-                classifyCode = classifyCode,
-                labelCode = labelCode,
-                score = score,
-                rdType = rdType,
-                sortType = sortType,
-                desc = true,
-                page = page,
-                pageSize = pageSize
+            keyword = atomName,
+            categoryCode = categoryCode,
+            classifyCode = classifyCode,
+            labelCode = labelCode,
+            score = score,
+            rdType = rdType,
+            sortType = sortType,
+            desc = true,
+            page = page,
+            pageSize = pageSize
         )
     }
 

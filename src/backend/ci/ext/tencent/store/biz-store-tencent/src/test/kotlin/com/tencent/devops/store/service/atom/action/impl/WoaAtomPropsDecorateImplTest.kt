@@ -28,7 +28,8 @@
 package com.tencent.devops.store.service.atom.action.impl
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import com.tencent.devops.store.service.common.action.impl.FirstStorePropsDecorateImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -55,9 +56,9 @@ class WoaAtomPropsDecorateImplTest {
     fun decorateSpecial() {
 
         val bean2 = WoaAtomPropsDecorateImpl().apply { this.init() }
-        val bean1 = FirstAtomPropsDecorateImpl().apply { this.init() }
+        val bean1 = FirstStorePropsDecorateImpl().apply { this.init() }
 
-        val props = AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+        val props = StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
         Assertions.assertEquals(bean1, props)
         Assertions.assertEquals(bean2, props?.getNext())
 
