@@ -49,7 +49,7 @@ class TxProcessRelatedPlatformDataClearServiceImpl(
 
     private val basicAuths = properties.basicAuths
 
-    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>) {
+    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>?) {
         basicAuths.forEach {
             cleanBuildDataRequest(
                 projectId = projectId,
@@ -65,16 +65,18 @@ class TxProcessRelatedPlatformDataClearServiceImpl(
     private fun cleanBuildDataRequest(
         projectId: String,
         pipelineId: String,
-        buildIds: List<String>,
+        buildIds: List<String>?,
         url: String,
         userName: String,
         password: String
     ) {
-        val context = mapOf<String, Any>(
+        val context = mutableMapOf<String, Any>(
             "projectId" to projectId,
-            "pipelineId" to pipelineId,
-            "buildIds" to buildIds
+            "pipelineId" to pipelineId
         )
+        if (!buildIds.isNullOrEmpty()) {
+            context["buildIds"] = buildIds
+        }
 
         val body = RequestBody.create(
             "application/json".toMediaTypeOrNull(),

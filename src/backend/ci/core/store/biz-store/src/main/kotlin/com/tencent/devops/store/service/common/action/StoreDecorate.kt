@@ -23,53 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.store.service.common.action
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import javax.annotation.PostConstruct
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
+/**
+ * 装饰组件信息
+ */
+interface StoreDecorate<S : Any> {
+
+    @PostConstruct
+    fun init() {
+        StoreDecorateFactory.register(kind = type(), storeDecorate = this)
     }
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
+    fun type(): StoreDecorateFactory.Kind
 
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
+    fun setNext(next: StoreDecorate<S>)
 
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
+    fun getNext(): StoreDecorate<S>?
 
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
+    /**
+     * 主入口
+     */
+    fun decorate(str: String): S = decorateSpecial(doBus(str))
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
+    /**
+     * 处理业务逻辑
+     */
+    fun doBus(str: String): S
 
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
+    /**
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
+     */
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }
