@@ -6,10 +6,6 @@ plugins {
 apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
-    repositories {
-        maven(url = "https://mirrors.tencent.com/repository/maven/bk-audit-java-sdk/")
-    }
-
     apply(plugin = "com.tencent.devops.boot")
 
     // 包路径
