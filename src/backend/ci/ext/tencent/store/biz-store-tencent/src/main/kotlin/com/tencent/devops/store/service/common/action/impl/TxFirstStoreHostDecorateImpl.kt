@@ -25,53 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action
+package com.tencent.devops.store.service.common.action.impl
 
-import java.util.concurrent.ConcurrentHashMap
+import com.tencent.devops.common.ci.UserUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import javax.annotation.Priority
 
-/**
- * 用于对Atom进行修饰工厂类
- */
-object AtomDecorateFactory {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
 
-    enum class Kind {
-        @Suppress("UNUSED")
-        DATA, // data
+    @Value("\${bkrepo.staticRepoPrefixUrl:#{null}}")
+    val staticRepoPrefixUrl: String? = null
 
-        @Suppress("UNUSED")
-        PROPS // task.json
-    }
+    @Value("\${bkrepo.dexStaticRepoPrefixUrl:#{null}}")
+    val dexStaticRepoPrefixUrl: String? = null
 
-    private val cache = ConcurrentHashMap<Kind, AtomDecorate<out Any>>()
-
-    fun <S : Any> register(kind: Kind, atomDecorate: AtomDecorate<S>) {
-        @Suppress("UNCHECKED_CAST") // 故障强转，让编码扩展类型不匹配直接在启动时失败，防止带病运行
-        val currentAD = cache[kind] as AtomDecorate<S>?
-        if (currentAD == null) {
-            cache[kind] = atomDecorate
-            return
+    override fun handleHostBus(str: String): String {
+        val userId = I18nUtil.getRequestUserId()
+        val hostReplaceFlag = userId == null || UserUtil.isTaiUser(userId)
+        if (hostReplaceFlag && !staticRepoPrefixUrl.isNullOrBlank() && !dexStaticRepoPrefixUrl.isNullOrBlank()) {
+            // 进行域名替换
+            return str.replace(staticRepoPrefixUrl!!, dexStaticRepoPrefixUrl!!)
         }
-        val currentP = getPriority(currentAD)
-
-        val newP = getPriority(atomDecorate)
-        if (currentP <= newP) {
-            cache[kind] = atomDecorate
-            atomDecorate.setNext(currentAD)
-        } else {
-            var beforeAD = currentAD
-            var ptrAD = currentAD.getNext()
-            while (getPriority(ptrAD) > newP) {
-                beforeAD = ptrAD
-                ptrAD = ptrAD?.getNext()
-            }
-            beforeAD?.setNext(atomDecorate)
-            ptrAD?.let { atomDecorate.setNext(it) }
-        }
+        return str
     }
-
-    private fun getPriority(atomDecorate: AtomDecorate<out Any>?) =
-        atomDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
-
-    fun get(kind: Kind) = cache[kind]
 }

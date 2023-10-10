@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action.impl
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+import com.tencent.devops.store.service.common.action.StoreDecorate
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
+abstract class AbstractStoreDecorateImpl<S : Any> : StoreDecorate<S> {
 
-    private var nextPtr: AtomDecorate<S>? = null
+    private var nextPtr: StoreDecorate<S>? = null
 
-    override fun setNext(next: AtomDecorate<S>) {
+    override fun setNext(next: StoreDecorate<S>) {
         nextPtr = next
     }
 
-    override fun getNext(): AtomDecorate<S>? = nextPtr
+    override fun getNext(): StoreDecorate<S>? = nextPtr
 }
