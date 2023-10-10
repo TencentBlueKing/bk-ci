@@ -15,9 +15,9 @@ data class FileDistributeReq(
     @ApiModelProperty(value = "执行目标", required = true)
     val executeTarget: ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名")
-    val accountAlias: String,
+    val accountAlias: String = "user00",
     @ApiModelProperty(value = "机器执行帐号ID")
-    val accountId: Long,
+    val accountId: Long?,
     @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。")
     val timeout: Long = 7200
 )

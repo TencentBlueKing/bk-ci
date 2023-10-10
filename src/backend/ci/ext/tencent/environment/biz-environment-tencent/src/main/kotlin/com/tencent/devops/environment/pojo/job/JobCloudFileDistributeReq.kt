@@ -28,7 +28,7 @@ data class JobCloudFileDistributeReq(
     val accountAlias: String,
     @ApiModelProperty(value = "机器执行帐号别名")
     @JsonProperty("account_id")
-    val accountId: Long,
+    val accountId: Long?,
     @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。")
     @JsonProperty("timeout")
     val timeout: Long,
@@ -41,7 +41,7 @@ data class JobCloudFileDistributeReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername){
+) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
         map["bk_scope_type"] = bkScopeType
@@ -51,7 +51,9 @@ data class JobCloudFileDistributeReq(
         map["transfer_mode"] = transferMode
         map["target_server"] = executeTarget
         map["account_alias"] = accountAlias
-        map["account_id"] = accountId
+        if (null != accountId) {
+            map["account_id"] = accountId
+        }
         map["timeout"] = timeout
         map["bk_app_code"] = bkAppCode
         map["bk_app_secret"] = bkAppSecret
