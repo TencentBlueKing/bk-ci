@@ -104,8 +104,9 @@ class ProjectUserService @Autowired constructor(
                 return@forEach
             }
 
-            res[project.englishName] = projectProperties.remotedevManager?.split(";")?.toMutableSet()
-                ?: mutableSetOf()
+            res[project.englishName] = projectProperties.remotedevManager?.split(";")
+                ?.filter { it.isNotBlank() }
+                ?.toMutableSet() ?: mutableSetOf()
         }
 
         // 获取项目的权限管理员
@@ -117,7 +118,7 @@ class ProjectUserService @Autowired constructor(
                 null
             } ?: return@forEach
 
-            members.addAll(auths)
+            members.addAll(auths.filter { it.isNotBlank() })
         }
 
         return res
