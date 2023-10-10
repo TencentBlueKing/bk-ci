@@ -2,7 +2,6 @@ package com.tencent.devops.common.api.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
 import com.tencent.devops.common.api.util.ShaUtils
-import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -32,7 +31,6 @@ class BkDiskLruFileCache(
         // 根据key获取缓存编辑器（为了保证key格式符合DiskLruCache规范，key需要用sha算法计算出散列值进行转换）
         val editor = diskCache.edit(ShaUtils.sha256(key)) ?: return
         // 如果编辑器不为空，把文件写入磁盘缓存
-        FileCopyUtils.copy(inputFile.inputStream(), editor.newOutputStream(0))
         FileInputStream(inputFile).use { inputStream ->
             editor.newOutputStream(0).use { outputStream ->
                 val buffer = ByteArray(BUFFER_SIZE)
