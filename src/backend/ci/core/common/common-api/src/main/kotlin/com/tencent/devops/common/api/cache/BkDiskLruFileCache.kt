@@ -66,9 +66,9 @@ class BkDiskLruFileCache(
         }
         val success = outputFile.setExecutable(true)
         if (success) {
-            logger.info("file[${outputFile.name}] execution permission added successfully.");
+            logger.info("file[${outputFile.name}] execution permission added successfully.")
         } else {
-            logger.warn("file[${outputFile.name}] failed to add execution permission.");
+            logger.warn("file[${outputFile.name}] failed to add execution permission.")
         }
     }
 
