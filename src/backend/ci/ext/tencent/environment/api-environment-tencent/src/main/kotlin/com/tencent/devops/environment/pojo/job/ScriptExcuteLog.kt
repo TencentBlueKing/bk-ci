@@ -14,6 +14,8 @@ data class ScriptExcuteLog(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("host_id")
     val bkHostId: Long?,
+    @ApiModelProperty(value = "ipv6地址")
+    val ipv6: String?,
     @ApiModelProperty(value = "脚本执行日志内容", required = true)
     @JsonProperty("log_content")
     val logContent: String
