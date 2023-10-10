@@ -40,4 +40,5 @@ object AuthI18nConstants {
     const val BK_DAY = "bkDay" // days
     const val BK_DEVOPS_NAME = "bkDevopsName" // 蓝盾名称
     const val BK_MONITOR_NAME = "bkMonitorName" // 监控平台名称
+    const val BK_MONITOR_SPACE = "bkMonitorSpace" // 监控空间
 }

@@ -469,7 +469,11 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
         instancesDTO.let {
-            val resourceTypeName = if (iamSystemId == systemId) rbacCacheService.getResourceTypeInfo(it.type).name else SPACE_CN_NAME
+            val resourceTypeName = if (iamSystemId == systemId) {
+                rbacCacheService.getResourceTypeInfo(it.type).name
+            } else {
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
+            }
             it.name = resourceTypeName
             it.path.forEach { element1 ->
                 element1.forEach { element2 ->
@@ -650,6 +654,5 @@ class RbacPermissionApplyService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private val executor = Executors.newFixedThreadPool(10)
-        private const val SPACE_CN_NAME = "空间"
     }
 }
