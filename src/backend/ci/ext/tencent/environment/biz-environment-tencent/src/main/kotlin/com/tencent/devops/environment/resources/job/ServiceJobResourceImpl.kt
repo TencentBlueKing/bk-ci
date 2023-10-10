@@ -101,7 +101,7 @@ class ServiceJobResourceImpl @Autowired constructor(
                 topoNodeList = parseHashListService.getTopoNodeList(
                     scriptExecuteReq.executeTarget.nodeHashIdList
                 ),
-                ipList = scriptExecuteReq.executeTarget.hostList?.map {
+                hostList = scriptExecuteReq.executeTarget.hostList?.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId ?: 0,
                         bkCloudId = it.bkCloudId ?: 0,
@@ -135,17 +135,17 @@ class ServiceJobResourceImpl @Autowired constructor(
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             bkScopeType = "",
             bkScopeId = "",
-            fileSourceList = fileDistributeReq.fileSourceList.map { fileSourceList ->
+            fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 JobCloudFileSource(
-                    fileList = fileSourceList.fileList.toList(),
+                    fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
                         dynamicGroupList = parseHashListService.getDynamicGroupList(
-                            fileSourceList.sourceFileTarget.envHashIdList
+                            fileSource.sourceFileServer.envHashIdList
                         ),
                         topoNodeList = parseHashListService.getTopoNodeList(
-                            fileSourceList.sourceFileTarget.nodeHashIdList
+                            fileSource.sourceFileServer.nodeHashIdList
                         ),
-                        ipList = fileSourceList.sourceFileTarget.hostList?.map {
+                        hostList = fileSource.sourceFileServer.hostList?.map {
                             JobCloudHost(
                                 bkHostId = it.bkHostId ?: 0,
                                 bkCloudId = it.bkCloudId ?: 0,
@@ -154,12 +154,13 @@ class ServiceJobResourceImpl @Autowired constructor(
                         }
                     ),
                     account = JobCloudAccount(
-                        id = null,
-                        alias = accountAlias
+                        id = fileSource.account.id,
+                        alias = fileSource.account.alias
                     )
                 )
             },
             fileTargetPath = fileDistributeReq.fileTargetPath,
+            transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
                 dynamicGroupList = parseHashListService.getDynamicGroupList(
                     fileDistributeReq.executeTarget.envHashIdList
@@ -167,7 +168,7 @@ class ServiceJobResourceImpl @Autowired constructor(
                 topoNodeList = parseHashListService.getTopoNodeList(
                     fileDistributeReq.executeTarget.nodeHashIdList
                 ),
-                ipList = fileDistributeReq.executeTarget.hostList?.map {
+                hostList = fileDistributeReq.executeTarget.hostList?.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId ?: 0,
                         bkCloudId = it.bkCloudId ?: 0,
@@ -175,7 +176,8 @@ class ServiceJobResourceImpl @Autowired constructor(
                     )
                 }
             ),
-            accountAlias = accountAlias,
+            accountAlias = fileDistributeReq.accountAlias,
+            accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,
             bkAppCode = "",
             bkAppSecret = "",
