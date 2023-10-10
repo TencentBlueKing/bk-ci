@@ -63,6 +63,7 @@ object NetworkUtil {
     }
 
     private fun createGetRequest(url: String, bkAuthorization: String): Request {
+        logger.info("[createGetRequest] url: $url")
         return Request.Builder()
             .url(url)
             .addHeader("X-Bkapi-Authorization", bkAuthorization)
