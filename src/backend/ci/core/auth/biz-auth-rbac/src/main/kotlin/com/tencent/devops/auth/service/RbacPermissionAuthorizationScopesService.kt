@@ -14,6 +14,9 @@ class RbacPermissionAuthorizationScopesService constructor(
     @Value("\${monitor.register:false}")
     private val registerMonitor: Boolean = false
 
+    @Value("\${monitor.iamSystem:}")
+    private val monitorSystemId = ""
+
     override fun generateBkciAuthorizationScopes(
         authorizationScopesStr: String,
         projectCode: String,
@@ -47,7 +50,7 @@ class RbacPermissionAuthorizationScopesService constructor(
         )
         logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$spaceBizId")
         return buildAuthorizationScopes(
-            systemId = MONITOR_SYSTEM_ID,
+            systemId = monitorSystemId,
             authorizationScopesStr = authMonitorSpaceService.getMonitorGroupConfig(groupCode)!!,
             projectCode = "-$spaceBizId",
             projectName = projectName,
@@ -83,6 +86,5 @@ class RbacPermissionAuthorizationScopesService constructor(
         private const val PROJECT_NAME_PLACEHOLDER = "#projectName#"
         private const val RESOURCE_CODE_PLACEHOLDER = "#resourceCode#"
         private const val RESOURCE_NAME_PLACEHOLDER = "#resourceName#"
-        private const val MONITOR_SYSTEM_ID = "bk_monitorv3"
     }
 }

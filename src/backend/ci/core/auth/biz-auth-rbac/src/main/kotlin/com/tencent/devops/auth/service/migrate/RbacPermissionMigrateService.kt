@@ -204,18 +204,16 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
-        toRbacExecutorService.submit {
-            val traceId = MDC.get(TraceTag.BIZID)
-            client.get(ServiceProjectResource::class).listByProjectCode(
-                projectCodes = projectCodes.toSet()
-            ).data?.filter {
-                // 仅迁移已迁移成功的项目
-                it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
-            }?.map {
-                migrateProjectsExecutorService.submit {
-                    MDC.put(TraceTag.BIZID, traceId)
-                    migrateResourceService.migrateMonitorResource(projectCode = it.englishName)
-                }
+        val traceId = MDC.get(TraceTag.BIZID)
+        client.get(ServiceProjectResource::class).listByProjectCode(
+            projectCodes = projectCodes.toSet()
+        ).data?.filter {
+            // 仅迁移已迁移成功的项目
+            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+        }?.forEach {
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateResourceService.migrateMonitorResource(projectCode = it.englishName)
             }
         }
         return true

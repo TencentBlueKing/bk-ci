@@ -42,6 +42,9 @@ class RbacPermissionAuthMonitorSpaceService constructor(
     @Value("\${monitor.url:#{null}}")
     private val monitorUrlPrefix = ""
 
+    @Value("\${monitor.iamSystem:}")
+    private val monitorSystemId = ""
+
     /*监控平台组配置*/
     private val monitorGroupConfigCache = Caffeine.newBuilder()
         .maximumSize(20)
@@ -256,10 +259,10 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         val readOnlyGroupConfig = mutableListOf<AuthorizationScopes>()
 
         // 1、通过system接口获取监控平台action组。
-        val actionList = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID).actions
+        val actionList = systemService.getSystemFieldsInfo(monitorSystemId).actions
         logger.info("putAndGetMonitorGroupConfigCache|actionList:$actionList")
         // 2、获取监控平台常用配置组动作组
-        val commonActions = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID).commonActions
+        val commonActions = systemService.getSystemFieldsInfo(monitorSystemId).commonActions
         // 3、分别获取业务只读动作组和业务运维动作组
         val readOnlyActions = commonActions.find { it.englishName == READ_ONLY_ACTIONS }?.actions?.map { it.id }
             ?: throw ErrorCodeException(
@@ -324,18 +327,18 @@ class RbacPermissionAuthMonitorSpaceService constructor(
             }
         } else {
             val managerPath = ManagerPath().apply {
-                system = MONITOR_SYSTEM_ID
+                system = monitorSystemId
                 type = SPACE_RESOURCE_TYPE
                 id = PROJECT_ID_PLACEHOLDER
                 name = PROJECT_NAME_PLACEHOLDER
             }
             val managerResources = ManagerResources().apply {
-                system = MONITOR_SYSTEM_ID
+                system = monitorSystemId
                 type = actionRelatedResourceType
                 paths = listOf(listOf(managerPath))
             }
             val authorizationScopes = AuthorizationScopes().apply {
-                system = MONITOR_SYSTEM_ID
+                system = monitorSystemId
                 actions = listOf(Action(action.id))
                 resources = listOf(managerResources)
             }
@@ -348,7 +351,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
     }
 
     private fun putAndGetMonitorActionNameCache(action: String): String? {
-        val actionList = systemService.getSystemFieldsInfo(MONITOR_SYSTEM_ID).actions
+        val actionList = systemService.getSystemFieldsInfo(monitorSystemId).actions
         actionList.forEach {
             monitorActionNameCache.put(it.id, it.name)
         }
@@ -372,6 +375,5 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         private const val READ_ONLY_GROUP_CONFIG_NAME = "readOnlyGroupConfig"
         private const val READ_ONLY_ACTIONS = "Read-only Actions"
         private const val OPS_ACTIONS = "Ops Actions"
-        private const val MONITOR_SYSTEM_ID = "bk_monitorv3"
     }
 }
