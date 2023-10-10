@@ -11,8 +11,8 @@ data class JobResult<out T>(
     val status: Int,
     @ApiModelProperty("结果bool值")
     val result: Boolean? = null,
-    @ApiModelProperty("请求ID")
-    @JsonProperty("job_request_id, required = true")
+    @ApiModelProperty("请求ID", required = true)
+    @JsonProperty("job_request_id")
     val jobRequestId: String?,
     @ApiModelProperty("数据")
     @BkFieldI18n
