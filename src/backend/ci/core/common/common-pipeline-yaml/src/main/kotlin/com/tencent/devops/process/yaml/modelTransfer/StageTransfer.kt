@@ -65,6 +65,7 @@ import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v3.stageCheck.PreStageReviews
 import com.tencent.devops.process.yaml.v3.stageCheck.ReviewVariable
 import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
+import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -220,7 +221,7 @@ class StageTransfer @Autowired(required = false) constructor(
         val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
             val steps = elementTransfer.model2YamlSteps(job, projectId)
 
-            (job.jobId ?: "job_${job.id}") to when (job.getClassType()) {
+            (job.jobId?.ifBlank { null } ?: ScriptYmlUtils.randomString("job_")) to when (job.getClassType()) {
                 NormalContainer.classType -> containerTransfer.addYamlNormalContainer(job as NormalContainer, steps)
                 VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")

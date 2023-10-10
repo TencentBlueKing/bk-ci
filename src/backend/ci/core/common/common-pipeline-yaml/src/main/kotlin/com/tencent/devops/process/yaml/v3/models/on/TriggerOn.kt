@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MANUAL_RULE
+import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.PreTriggerOnV3Properties
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
@@ -59,9 +60,6 @@ data class TriggerOn(
     @JsonProperty("repo-name")
     @ApiModelProperty(name = "repo-name")
     var repoName: String? = null,
-    @JsonProperty("repo-id")
-    @ApiModelProperty(name = "repo-id")
-    var repoHashId: String? = null,
     var credentials: String? = null
 ) {
     fun toPre(version: YamlVersion.Version) = when (version) {
@@ -87,7 +85,6 @@ data class TriggerOn(
 
     private fun toPreV3() = PreTriggerOnV3(
         repoName = repoName,
-        repoHashId = repoHashId,
         type = null,
         credentials = credentials,
         push = push,
@@ -103,7 +100,11 @@ data class TriggerOn(
         manual = (manual ?: EnableType.FALSE.value).nullIfDefault(DEFAULT_MANUAL_RULE),
         openapi = openapi,
         remote = remote
-    )
+    ).apply {
+        if (PreTriggerOnV3Properties.all { it.get(receiver = this) == null }) {
+            manual = EnableType.TRUE.value
+        }
+    }
 }
 
 interface IPreTriggerOn : YamlVersion {

@@ -711,7 +711,6 @@ object ScriptYmlUtils {
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
-            res.repoHashId = preTriggerOn.repoHashId
             res.repoName = preTriggerOn.repoName
             res.credentials = preTriggerOn.credentials
         }
@@ -1031,10 +1030,10 @@ object ScriptYmlUtils {
         return Pair(list[0], list[1])
     }
 
-    private fun randomString(flag: String): String {
+    fun randomString(flag: String): String {
         val random = Random()
         val buf = StringBuffer(flag)
-        for (i in 0 until 7) {
+        for (i in 0 until 3) {
             val num = random.nextInt(secretSeed.length)
             buf.append(secretSeed[num])
         }
