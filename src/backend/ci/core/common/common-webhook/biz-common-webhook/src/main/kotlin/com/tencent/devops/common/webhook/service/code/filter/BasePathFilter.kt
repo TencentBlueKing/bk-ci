@@ -59,13 +59,22 @@ abstract class BasePathFilter(
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
             val matchUserPaths = mutableSetOf<String>()
+            val matchPathsMap = mutableMapOf<String, MutableSet<String>>()
             triggerOnPath.forEach eventPath@{ eventPath ->
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
                         matchUserPaths.add(userPath)
+                        // 构建最终匹配路径
+                        buildFinalIncludePath(eventPath, userPath, matchPathsMap)
                         return@eventPath
                     }
+                }
+            }
+            if (matchPathsMap.isNotEmpty()) {
+                matchUserPaths.clear()
+                matchPathsMap.forEach {
+                    matchUserPaths.addAll(it.value)
                 }
             }
             if (matchUserPaths.isNotEmpty()) {
@@ -97,4 +106,10 @@ abstract class BasePathFilter(
     }
 
     abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
+
+    open fun buildFinalIncludePath(
+        eventPath: String,
+        userPath: String,
+        matchPathsMap: MutableMap<String, MutableSet<String>>
+    ) = Unit
 }

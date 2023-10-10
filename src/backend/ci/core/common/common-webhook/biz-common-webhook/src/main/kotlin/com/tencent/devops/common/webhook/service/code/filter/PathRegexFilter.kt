@@ -48,4 +48,46 @@ class PathRegexFilter(
         matcher.setCaseSensitive(caseSensitive)
         return matcher.match(userPath, eventPath)
     }
+
+    override fun buildFinalIncludePath(
+        eventPath: String,
+        userPath: String,
+        matchPathsMap: MutableMap<String, MutableSet<String>>
+    ) {
+        if (matchPathsMap[userPath] == null) {
+            matchPathsMap[userPath] = mutableSetOf()
+        }
+        var targetEventPath = getShortPath(userPath, eventPath)
+        if (userPath.endsWith("/*") && !userPath.endsWith("/**/*") && targetEventPath.contains("/")) {
+            targetEventPath = targetEventPath.substring(0, targetEventPath.lastIndexOf("/"))
+        }
+        println("targetEventPath = $targetEventPath")
+        matchPathsMap[userPath]!!.add(targetEventPath)
+    }
+
+    private fun patternIsMatchDir(userPath: String) =
+        userPath.endsWith("/*") ||
+                userPath.endsWith("/**") ||
+                userPath == "**"
+
+    private fun getShortPath(userPath: String, eventPath: String): String {
+        return if (patternIsMatchDir(userPath)) {
+            if (eventPath.contains("/")) {
+                var targetShortPath = eventPath
+                var shortPath = eventPath.substring(0, eventPath.lastIndexOf("/"))
+                while (matcher.match(userPath, shortPath)) {
+                    targetShortPath = shortPath
+                    if (!shortPath.contains("/")) {
+                        break
+                    }
+                    shortPath = shortPath.substring(0, shortPath.lastIndexOf("/"))
+                }
+                targetShortPath
+            } else {
+                eventPath
+            }
+        } else {
+            eventPath
+        }
+    }
 }
