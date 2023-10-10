@@ -55,7 +55,7 @@ data class PreTriggerOnV3(
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
-    override val manual: Any? = null,
+    override var manual: Any? = null,
     override val openapi: String? = null,
     override val remote: String? = null
 ) : IPreTriggerOn {
