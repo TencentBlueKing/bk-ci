@@ -42,8 +42,8 @@ import org.springframework.context.annotation.FilterType
         )
     ]
 )
-class MutijarApplication
+class MultijarApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(MutijarApplication::class, args)
+    MicroServiceApplication.run(MultijarApplication::class, args)
 }
