@@ -64,6 +64,7 @@ class BkDiskLruFileCache(
                 }
             }
         }
+        outputFile.setExecutable(true)
     }
 
     /**
