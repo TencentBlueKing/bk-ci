@@ -47,6 +47,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudFileSource
 import com.tencent.devops.environment.pojo.job.JobCloudHost
 import com.tencent.devops.environment.pojo.job.JobCloudQueryAccountAliasReq
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
@@ -65,7 +66,8 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
     private val queryJobInstanceLogsService: QueryJobInstanceLogsService,
     private val queryAccountAliasService: QueryAccountAliasService,
-    private val parseHashListService: ParseHashListService
+    private val parseHashListService: ParseHashListService,
+    jobCloudTaskTerminateReq: JobCloudTaskTerminateReq
 ) : ServiceJobResource {
     override fun executeScript(
         userId: String,
@@ -192,7 +194,16 @@ class ServiceJobResourceImpl @Autowired constructor(
         taskTerminateReq: TaskTerminateReq
     ): JobResult<TaskTerminateResult> {
         checkParam(userId, projectId)
-        return JobResult(taskTerminateService.terminateTask(userId, projectId, taskTerminateReq))
+        val jobCloudTaskTerminateReq = JobCloudTaskTerminateReq(
+            bkScopeType = "",
+            bkScopeId = "",
+            jobInstanceId = taskTerminateReq.jobInstanceId,
+            operationCode = taskTerminateReq.operationCode,
+            bkAppCode = "",
+            bkAppSecret = "",
+            bkUsername = userId
+        )
+        return taskTerminateService.terminateTask(jobCloudTaskTerminateReq)
     }
 
     override fun queryJobInstanceStatus(
