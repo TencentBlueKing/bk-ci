@@ -25,39 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action
+package com.tencent.devops.store.service.common.action
 
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.Priority
 
 /**
- * 用于对Atom进行修饰工厂类
+ * 用于对组件进行修饰工厂类
  */
-object AtomDecorateFactory {
+object StoreDecorateFactory {
 
     enum class Kind {
         @Suppress("UNUSED")
         DATA, // data
 
         @Suppress("UNUSED")
-        PROPS // task.json
+        PROPS, // task.json
+
+        HOST
     }
 
-    private val cache = ConcurrentHashMap<Kind, AtomDecorate<out Any>>()
+    private val cache = ConcurrentHashMap<Kind, StoreDecorate<out Any>>()
 
-    fun <S : Any> register(kind: Kind, atomDecorate: AtomDecorate<S>) {
+    fun <S : Any> register(kind: Kind, storeDecorate: StoreDecorate<S>) {
         @Suppress("UNCHECKED_CAST") // 故障强转，让编码扩展类型不匹配直接在启动时失败，防止带病运行
-        val currentAD = cache[kind] as AtomDecorate<S>?
+        val currentAD = cache[kind] as StoreDecorate<S>?
         if (currentAD == null) {
-            cache[kind] = atomDecorate
+            cache[kind] = storeDecorate
             return
         }
         val currentP = getPriority(currentAD)
 
-        val newP = getPriority(atomDecorate)
+        val newP = getPriority(storeDecorate)
         if (currentP <= newP) {
-            cache[kind] = atomDecorate
-            atomDecorate.setNext(currentAD)
+            cache[kind] = storeDecorate
+            storeDecorate.setNext(currentAD)
         } else {
             var beforeAD = currentAD
             var ptrAD = currentAD.getNext()
@@ -65,13 +67,13 @@ object AtomDecorateFactory {
                 beforeAD = ptrAD
                 ptrAD = ptrAD?.getNext()
             }
-            beforeAD?.setNext(atomDecorate)
-            ptrAD?.let { atomDecorate.setNext(it) }
+            beforeAD?.setNext(storeDecorate)
+            ptrAD?.let { storeDecorate.setNext(it) }
         }
     }
 
-    private fun getPriority(atomDecorate: AtomDecorate<out Any>?) =
-        atomDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
+    private fun getPriority(storeDecorate: StoreDecorate<out Any>?) =
+        storeDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
 
     fun get(kind: Kind) = cache[kind]
 }

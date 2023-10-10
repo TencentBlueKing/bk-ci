@@ -106,7 +106,7 @@ class SlaveGatewayService @Autowired constructor(
             synchronized(this) {
                 if (need2Refresh()) {
                     try {
-                        logger.info("Refresh the gateway")
+                        logger.debug("Refresh the gateway")
                         cache.clear()
                         val records = slaveGatewayDao.list(dslContext)
                         if (records.isNotEmpty()) {
@@ -125,7 +125,7 @@ class SlaveGatewayService @Autowired constructor(
                     } finally {
                         lastUpdate = System.currentTimeMillis()
                     }
-                    logger.info("Get the gateway $cache")
+                    logger.debug("Get the gateway $cache")
                 }
             }
         }
