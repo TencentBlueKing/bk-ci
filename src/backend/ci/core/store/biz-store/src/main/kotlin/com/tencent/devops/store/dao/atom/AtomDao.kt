@@ -521,7 +521,7 @@ class AtomDao : AtomBaseDao() {
         ).from(t)
             .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
         limitNum?.let { queryStep.limit(it) }
-        return queryStep.fetch()
+        return queryStep.skipCheck().fetch()
     }
 
     fun getPipelineAtoms(

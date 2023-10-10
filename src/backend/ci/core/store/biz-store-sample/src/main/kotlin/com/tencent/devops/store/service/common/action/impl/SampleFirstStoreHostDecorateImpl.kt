@@ -25,12 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.process
+package com.tencent.devops.store.service.common.action.impl
 
-interface ProcessRelatedPlatformDataClearService {
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-    /**
-     * 清除构建相关平台数据
-     */
-    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>? = null)
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+class SampleFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
+
+    override fun handleHostBus(str: String): String {
+        // 开源版暂不涉及域名替换
+        return str
+    }
 }

@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SampleProcessRelatedPlatformDataClearServiceImpl : ProcessRelatedPlatformDataClearService {
-    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>) {
+    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>?) {
         // 开源版无需额外清理数据
     }
 }

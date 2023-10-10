@@ -25,12 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.process
+package com.tencent.devops.store.service.common.action.impl
 
-interface ProcessRelatedPlatformDataClearService {
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 
-    /**
-     * 清除构建相关平台数据
-     */
-    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>? = null)
+abstract class AbstractStoreHostDecorateImpl : AbstractStoreDecorateImpl<String>() {
+
+    override fun type() = StoreDecorateFactory.Kind.HOST
+
+    override fun doBus(str: String): String {
+        return handleHostBus(str)
+    }
+
+    abstract fun handleHostBus(str: String): String
 }
