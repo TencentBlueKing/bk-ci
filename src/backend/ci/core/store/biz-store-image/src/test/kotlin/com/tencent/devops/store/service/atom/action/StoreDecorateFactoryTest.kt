@@ -27,25 +27,26 @@
 
 package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.store.service.atom.action.impl.FirstAtomDataDecorateImpl
-import com.tencent.devops.store.service.atom.action.impl.FirstAtomPropsDecorateImpl
+import com.tencent.devops.store.service.common.action.impl.FirstStoreDataDecorateImpl
+import com.tencent.devops.store.service.common.action.impl.FirstStorePropsDecorateImpl
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import javax.annotation.Priority
 
 @Suppress("MagicNumber")
-class AtomDecorateFactoryTest {
+class StoreDecorateFactoryTest {
 
     @Test
     fun test() {
-        val bean2 = AtomProps2().apply { this.init() }
-        val bean4 = AtomProps4().apply { this.init() }
-        val bean3 = AtomProps3().apply { this.init() }
-        val bean1 = AtomProps1().apply { this.init() }
-        val beanOther = AtomData5().apply { this.init() } // 不同分类
+        val bean2 = StoreProps2().apply { this.init() }
+        val bean4 = StoreProps4().apply { this.init() }
+        val bean3 = StoreProps3().apply { this.init() }
+        val bean1 = StoreProps1().apply { this.init() }
+        val beanOther = StoreData5().apply { this.init() } // 不同分类
 
         val json = "{\"p\": 0, \"str\": \"hello\" }"
-        val props = AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+        val props = StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
         Assertions.assertNotEquals(beanOther, props)
         Assertions.assertEquals(bean4, props)
         Assertions.assertEquals(bean3, props?.getNext())
@@ -55,7 +56,7 @@ class AtomDecorateFactoryTest {
         @Suppress("UNCHECKED_CAST")
         Assertions.assertEquals(10, (decorateMap as Map<String, Any>)["p"].toString().toInt())
 
-        val data = AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+        val data = StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
         Assertions.assertEquals(beanOther, data)
         val decorate = data?.decorate(json)
         @Suppress("UNCHECKED_CAST")
@@ -63,9 +64,9 @@ class AtomDecorateFactoryTest {
     }
 
     @Priority(1)
-    class AtomProps1 : FirstAtomPropsDecorateImpl() {
+    class StoreProps1 : FirstStorePropsDecorateImpl() {
 
-        override fun type() = AtomDecorateFactory.Kind.PROPS
+        override fun type() = StoreDecorateFactory.Kind.PROPS
 
         override fun decorateSpecial(obj: Map<String, Any>): Map<String, Any> {
             val p = javaClass.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
@@ -77,18 +78,18 @@ class AtomDecorateFactoryTest {
     }
 
     @Priority(2)
-    class AtomProps2 : AtomProps1()
+    class StoreProps2 : StoreProps1()
 
     @Priority(3)
-    class AtomProps3 : AtomProps1()
+    class StoreProps3 : StoreProps1()
 
     @Priority(4)
-    class AtomProps4 : AtomProps1()
+    class StoreProps4 : StoreProps1()
 
     @Priority(5)
-    class AtomData5 : FirstAtomDataDecorateImpl() {
+    class StoreData5 : FirstStoreDataDecorateImpl() {
 
-        override fun type() = AtomDecorateFactory.Kind.DATA
+        override fun type() = StoreDecorateFactory.Kind.DATA
 
         override fun decorateSpecial(obj: Map<String, Any>): Map<String, Any> {
             val p = javaClass.getDeclaredAnnotation(Priority::class.java)?.value ?: 0

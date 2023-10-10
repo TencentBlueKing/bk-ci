@@ -21,21 +21,42 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+import javax.annotation.PostConstruct
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
+/**
+ * 装饰组件信息
+ */
+interface StoreDecorate<S : Any> {
 
-    private var nextPtr: AtomDecorate<S>? = null
-
-    override fun setNext(next: AtomDecorate<S>) {
-        nextPtr = next
+    @PostConstruct
+    fun init() {
+        StoreDecorateFactory.register(kind = type(), storeDecorate = this)
     }
 
-    override fun getNext(): AtomDecorate<S>? = nextPtr
+    fun type(): StoreDecorateFactory.Kind
+
+    fun setNext(next: StoreDecorate<S>)
+
+    fun getNext(): StoreDecorate<S>?
+
+    /**
+     * 主入口
+     */
+    fun decorate(str: String): S = decorateSpecial(doBus(str))
+
+    /**
+     * 处理业务逻辑
+     */
+    fun doBus(str: String): S
+
+    /**
+     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
+     */
+    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
 }
