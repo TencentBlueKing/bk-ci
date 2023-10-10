@@ -61,7 +61,7 @@ class RbacPermissionProjectService(
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client
 ) : PermissionProjectService {
 

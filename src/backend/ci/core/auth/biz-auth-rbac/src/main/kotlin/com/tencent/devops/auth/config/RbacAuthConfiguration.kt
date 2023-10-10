@@ -240,7 +240,7 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         rbacCacheService: RbacCacheService,
         deptService: DeptService,
-        permissionGradeManagerService: PermissionGradeManagerService,
+        resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
@@ -251,7 +251,7 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         rbacCacheService = rbacCacheService,
         deptService = deptService,
-        permissionGradeManagerService = permissionGradeManagerService,
+        resourceGroupMemberService = resourceGroupMemberService,
         client = client
     )
 
