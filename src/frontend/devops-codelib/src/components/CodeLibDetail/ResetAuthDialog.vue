@@ -83,14 +83,14 @@
                         <bk-radio
                             value="HTTP"
                         >
-                            {{ $t('codelib.用户名密码+个人token') }}
+                            {{ $t('codelib.用户名+密码') }}
                         </bk-radio>
                     </template>
                     <template v-else>
                         <bk-radio
                             value="HTTPS"
                         >
-                            {{ $t('codelib.用户名密码+个人token') }}
+                            {{ $t('codelib.用户名+密码') }}
                         </bk-radio>
                     </template>
                 </bk-radio-group>
@@ -369,7 +369,11 @@
                     if (this.isGit) {
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
-                            this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                            if (url.startsWith('https://')) {
+                                this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                            } else {
+                                this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'http://')
+                            }
                             this.newRepoInfo.credentialId = ''
                         }
                         if (val === 'SSH' && this.cacheRepoInfo.authType === 'OAUTH') {

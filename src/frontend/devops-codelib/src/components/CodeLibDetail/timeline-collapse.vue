@@ -144,14 +144,20 @@
              * 一键重新触发
              */
             handleReplayAll (id) {
-                this.replayAllEvent({
-                    projectId: this.projectId,
-                    eventId: id
-                }).then(() => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('codelib.触发成功')
-                    })
+                this.$bkInfo({
+                    title: this.$t('codelib.请确认是否一键重新触发？'),
+                    confirmLoading: true,
+                    confirmFn: async () => {
+                        this.replayAllEvent({
+                            projectId: this.projectId,
+                            eventId: id
+                        }).then(() => {
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('codelib.触发成功')
+                            })
+                        })
+                    }
                 })
             },
 
@@ -159,14 +165,20 @@
              * 重新触发
              */
             handleReplay (id) {
-                this.replayEvent({
-                    projectId: this.projectId,
-                    detailId: id
-                }).then(() => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('codelib.触发成功')
-                    })
+                this.$bkInfo({
+                    title: this.$t('codelib.请确认是否重新触发？'),
+                    confirmLoading: true,
+                    confirmFn: async () => {
+                        this.replayEvent({
+                            projectId: this.projectId,
+                            detailId: id
+                        }).then(() => {
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('codelib.触发成功')
+                            })
+                        })
+                    }
                 })
             },
 

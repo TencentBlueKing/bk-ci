@@ -491,8 +491,8 @@ const actions = {
      * 获取事件类型
      */
 
-    fetchTriggerType ({ commit }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType`)
+    fetchTriggerType ({ commit }, { scmType }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType?scmType=${scmType}`)
     }
 }
 

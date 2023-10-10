@@ -17,7 +17,7 @@
                     class="mr20"
                     value="HTTPS"
                 >
-                    {{ $t('codelib.用户名密码+个人token') }}
+                    {{ $t('codelib.用户名+密码') }}
                 </bk-radio>
             </bk-radio-group>
         </bk-form-item>

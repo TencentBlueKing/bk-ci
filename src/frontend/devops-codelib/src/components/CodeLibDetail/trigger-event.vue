@@ -185,7 +185,9 @@
                 })
             },
             getTriggerTypeList () {
-                this.fetchTriggerType().then(res => {
+                this.fetchTriggerType({
+                    scmType: this.triggerType
+                }).then(res => {
                     this.triggerTypeList = res.map(i => {
                         return {
                             ...i,
