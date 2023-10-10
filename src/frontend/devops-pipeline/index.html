@@ -95,11 +95,12 @@
             try {
                 var pathProjectId = location.pathname.match(/^\/pipeline\/zhiyan\/([\w\-]+)?/)?.[1]
                 var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
-                if (pathProjectId && cookiePid && cookiePid !== pathProjectId) {
+                if (pathProjectId && cookiePid !== pathProjectId) {
                     var subDomains = getSubDomain()
                     subDomains.forEach(domain => {
                         removeCookie(X_DEVOPS_PROJECT_ID, domain)
                     })
+                    removeCookie(X_DEVOPS_PROJECT_ID, '')
                     setCookie(X_DEVOPS_PROJECT_ID, pathProjectId, location.hostname)
                     location.reload()
                 }
