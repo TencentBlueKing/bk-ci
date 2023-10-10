@@ -359,7 +359,7 @@ class PermissionGradeManagerService @Autowired constructor(
         projectName: String,
         creator: String,
         bkciManagerGroupConfig: String,
-        registerMonitorPermission: Boolean,
+        registerMonitorPermission: Boolean
     ): List<AuthorizationScopes> {
         val bkciAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = bkciManagerGroupConfig,
