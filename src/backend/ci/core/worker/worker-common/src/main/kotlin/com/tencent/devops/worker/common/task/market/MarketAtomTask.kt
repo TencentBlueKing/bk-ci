@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
@@ -124,15 +125,17 @@ open class MarketAtomTask : ITask() {
     private val inputFile = "input.json"
 
     private val sdkFile = ".sdk.json"
+
     private val paramFile = ".param.json"
 
-    private lateinit var atomExecuteFile: File
+    private val atomExecuteFileDir = "store${File.separator}cache${File.separator}plugins"
 
     private val qualityGatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
 
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
+        val projectId = buildVariables.projectId
         val taskName = taskParams["name"] as String
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
@@ -258,15 +261,10 @@ open class MarketAtomTask : ITask() {
 
         var error: Throwable? = null
         try {
-            // 下载atom执行文件
             LoggerService.addFoldStartLine("[Install plugin]")
-            atomExecuteFile = downloadAtomExecuteFile(
-                projectId = buildVariables.projectId,
-                atomFilePath = atomData.pkgPath!!,
-                workspace = atomTmpSpace,
-                authFlag = atomData.authFlag ?: true
-            )
-
+            // 获取插件执行包文件
+            val atomExecuteFile = getAtomExecuteFile(atomData, workspace, projectId)
+            // 检查插件包的完整性
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
             val atomLanguage = atomData.language!!
@@ -388,6 +386,73 @@ open class MarketAtomTask : ITask() {
                 )
             }
         }
+    }
+
+    private fun getAtomExecuteFile(
+        atomData: AtomEnv,
+        workspace: File,
+        projectId: String
+    ): File {
+        // 取插件文件名
+        val atomFilePath = atomData.pkgPath!!
+        val lastFx = atomFilePath.lastIndexOf("/")
+        val atomExecuteFile = if (lastFx > 0) {
+            File(workspace, atomFilePath.substring(lastFx + 1))
+        } else {
+            File(workspace, atomFilePath)
+        }
+        val atomExecuteFileName = atomExecuteFile.name
+        // 从缓存中获取插件执行包文件
+        val cacheDirPrefix = if (BuildEnv.isThirdParty()) {
+            // 如果是第三方构建机，插件包缓存放入构建机的公共区域
+            val parentFile1 = workspace.parentFile
+            val parentFile2 = parentFile1.parentFile
+            if (parentFile1.exists() && parentFile2.exists()) {
+                parentFile2.absolutePath
+            } else if (parentFile1.exists() && !parentFile2.exists()) {
+                parentFile1.absolutePath
+            } else {
+                workspace.absolutePath
+            }
+        } else {
+            // 如果是公共构建机，插件包缓存放入流水线的工作空间中
+            workspace.absolutePath
+        }
+        val fileCacheDir = "$cacheDirPrefix${File.separator}$atomExecuteFileDir"
+        // 获取构建机缓存文件区域大小
+        val maxFileCacheSize = if (BuildEnv.isThirdParty()) {
+            AgentEnv.getEnvProp(AgentEnv.PUBLIC_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
+                ?: DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
+        } else {
+            AgentEnv.getEnvProp(AgentEnv.THIRD_HOST_MAX_FILE_CACHE_SIZE)?.toLong()
+                ?: DEFAULT_THIRD_HOST_MAX_FILE_CACHE_SIZE
+        }
+        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.createDiskLruFileCache(fileCacheDir, maxFileCacheSize)
+        val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
+        bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
+        try {
+            if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1) {
+                // 下载atom执行文件
+                downloadAtomExecuteFile(
+                    projectId = projectId,
+                    atomFilePath = atomFilePath,
+                    atomExecuteFile = atomExecuteFile,
+                    authFlag = atomData.authFlag ?: true
+                )
+                if (atomData.authFlag != true) {
+                    // 无需鉴权的插件包放入缓存中
+                    bkDiskLruFileCache.put(fileCacheKey, atomExecuteFile)
+                }
+            } else {
+                if (atomData.authFlag == true) {
+                    // 插件如果是敏感插件需要删除插件包的缓存
+                    bkDiskLruFileCache.remove(fileCacheKey)
+                }
+            }
+        } finally {
+            bkDiskLruFileCache.close()
+        }
+        return atomExecuteFile
     }
 
     private fun parseInputParams(
@@ -949,24 +1014,17 @@ open class MarketAtomTask : ITask() {
     private fun downloadAtomExecuteFile(
         projectId: String,
         atomFilePath: String,
-        workspace: File,
+        atomExecuteFile: File,
         authFlag: Boolean
     ): File {
         try {
-            // 取插件文件名
-            val lastFx = atomFilePath.lastIndexOf("/")
-            val file = if (lastFx > 0) {
-                File(workspace, atomFilePath.substring(lastFx + 1))
-            } else {
-                File(workspace, atomFilePath)
-            }
             atomApi.downloadAtom(
                 projectId = projectId,
                 atomFilePath = atomFilePath,
-                file = file,
+                file = atomExecuteFile,
                 authFlag = authFlag
             )
-            return file
+            return atomExecuteFile
         } catch (t: Throwable) {
             logger.error("download plugin execute file fail:", t)
             LoggerService.addErrorLine("download plugin execute file fail: ${t.message}")
@@ -1012,6 +1070,8 @@ open class MarketAtomTask : ITask() {
         private const val DIR_ENV = "bk_data_dir"
         private const val INPUT_ENV = "bk_data_input"
         private const val OUTPUT_ENV = "bk_data_output"
+        private const val DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE = 209715200L
+        private const val DEFAULT_THIRD_HOST_MAX_FILE_CACHE_SIZE = 2147483648L
         private val logger = LoggerFactory.getLogger(MarketAtomTask::class.java)
     }
 }
