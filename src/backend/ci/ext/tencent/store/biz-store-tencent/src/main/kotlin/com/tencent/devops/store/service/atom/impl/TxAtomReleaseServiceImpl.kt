@@ -1149,15 +1149,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     atomRecord = atomRecord
                 )
             }
-            val value = redisOperation.hget(
-                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = BRANCH_TEST_VERSION
-            )?.toInt() ?: 0
-            redisOperation.hset(
-                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = BRANCH_TEST_VERSION,
-                values = "${value + 1}"
-            )
             // 更新红线标识
             val qualityFlag = getAtomQualityResult.errorCode == "0"
             marketAtomFeatureDao.updateAtomFeature(
@@ -1204,19 +1195,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 userId = userId,
                 msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
             )
-            val value = redisOperation.hget(
-                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = BRANCH_TEST_VERSION
-            )?.toInt()
-            value?.let {
-                if (it > 0) {
-                    redisOperation.hset(
-                        key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                        hashKey = BRANCH_TEST_VERSION,
-                        values = "${value - 1}"
-                    )
-                }
-            }
             doCancelReleaseBus(userId, atomId)
         }
         // 删除质量红线相关数据
