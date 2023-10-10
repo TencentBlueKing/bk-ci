@@ -321,7 +321,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?> {
+    ): Result<String> {
         logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
         val version = marketAtomUpdateRequest.version
@@ -379,7 +379,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             i18nDir = i18nDir,
             propertiesKeyPrefix = KEY_RELEASE_INFO,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            repositoryHashId = atomRecord.repositoryHashId,
+            branch = branch
         ).toMutableMap()
         updateRequestDataMap[versionContentFieldName] =
             updateRequestDataMap["$KEY_VERSION_INFO.$versionContentFieldName"].toString()
@@ -414,7 +415,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             fileDir = "$atomCode/$version",
             i18nDir = i18nDir,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            repositoryHashId = atomRecord.repositoryHashId,
+            branch = branch
         )
         // 校验插件发布类型
         marketAtomCommonService.validateReleaseType(
@@ -578,7 +580,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         validOsArchFlag: Boolean? = null
     )
 
-    private fun updateMarketAtom(
+    protected fun updateMarketAtom(
         context: DSLContext,
         userId: String,
         atomId: String,
@@ -662,7 +664,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     fileDir = "$atomCode/$atomVersion",
                     i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
                     keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
-                    repositoryHashId = repositoryHashId
+                    repositoryHashId = repositoryHashId,
+                    branch = branch
                 )
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
@@ -688,6 +691,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         branch: String? = null
     ): GetAtomQualityConfigResult {
         try {
+            val testVersionFlag = branch?.let { it != MASTER } ?: false
             val qualityJsonStr = getFileStr(
                 projectCode = projectCode,
                 atomCode = atomCode,
@@ -704,7 +708,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     fileDir = "$atomCode/$atomVersion",
                     i18nDir = i18nDir,
                     dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-                    repositoryHashId = repositoryHashId
+                    repositoryHashId = repositoryHashId,
+                    branch = branch
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())
@@ -718,8 +723,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 // 先注册基础数据
                 val metadataResultMap = registerMetadata(
                     userId = userId,
-                    atomCode = atomCode,
-                    atomName = atomName,
+                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
+                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
                     indicators = indicators
                 )
 
@@ -727,8 +732,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 registerIndicator(
                     userId = userId,
                     projectId = projectCode,
-                    atomCode = atomCode,
-                    atomName = atomName,
+                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
+                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     metadataResultMap = metadataResultMap,
@@ -738,8 +743,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 // 最后注册控制点
                 registerControlPoint(
                     userId = userId,
-                    atomCode = atomCode,
-                    atomName = atomName,
+                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
+                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     projectId = projectCode
@@ -748,9 +753,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
                 try {
-                    client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                    client.get(ServiceQualityIndicatorMarketResource::class)
+                        .deleteTestIndicator(if (testVersionFlag) "$atomCode-$branch" else atomCode)
+                    client.get(ServiceQualityMetadataMarketResource::class)
+                        .deleteTestMetadata(if (testVersionFlag) "$atomCode-$branch" else atomCode)
+                    client.get(ServiceQualityControlPointMarketResource::class)
+                        .deleteTestControlPoint(if (testVersionFlag) "$atomCode-$branch" else atomCode)
                 } catch (ignored: Throwable) {
                     logger.warn("clear atom:$atomCode test quality data fail", ignored)
                 }
@@ -931,7 +939,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return flag
     }
 
-    private fun upgradeMarketAtom(
+    protected fun upgradeMarketAtom(
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         context: DSLContext,
         userId: String,

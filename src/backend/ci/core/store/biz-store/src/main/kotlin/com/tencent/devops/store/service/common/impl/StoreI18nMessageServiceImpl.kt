@@ -91,7 +91,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         i18nDir: String,
         propertiesKeyPrefix: String?,
         dbKeyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        branch: String?
     ): Map<String, Any> {
         logger.info(
             "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
@@ -108,7 +109,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             fileDir = fileDir,
             i18nDir = i18nDir,
             fileName = fileName,
-            repositoryHashId = repositoryHashId
+            repositoryHashId = repositoryHashId,
+            branch = branch
         )
         val fieldLocaleInfos = if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
@@ -140,7 +142,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 repositoryHashId = repositoryHashId,
                 fieldLocaleInfos = fieldLocaleInfos,
                 dbKeyPrefix = dbKeyPrefix,
-                userId = userId
+                userId = userId,
+                branch = branch
             )
         }
         return jsonMap
@@ -153,9 +156,12 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileDir: String,
         i18nDir: String,
         keyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        branch: String?
     ) {
-        logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId]")
+        logger.info(
+            "parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId|$branch]"
+        )
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         errorCodes.forEach { errorCode ->
             fieldLocaleInfos.add(FieldLocaleInfo(fieldName = errorCode.toString(), fieldValue = ""))
@@ -168,7 +174,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             repositoryHashId = repositoryHashId,
             fieldLocaleInfos = fieldLocaleInfos,
             dbKeyPrefix = keyPrefix,
-            userId = userId
+            userId = userId,
+            branch = branch
         )
     }
 
@@ -215,7 +222,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         repositoryHashId: String?,
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         dbKeyPrefix: String?,
-        userId: String
+        userId: String,
+        branch: String?
     ) {
         executors.submit {
             // 获取资源文件名称列表
@@ -223,7 +231,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 projectCode = projectCode,
                 fileDir = fileDir,
                 i18nDir = i18nDir,
-                repositoryHashId = repositoryHashId
+                repositoryHashId = repositoryHashId,
+                branch = branch
             )
             logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
             val regex = MESSAGE_NAME_TEMPLATE.format("(.*)").toRegex()
@@ -236,7 +245,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileDir = fileDir,
                     i18nDir = i18nDir,
                     fileName = propertiesFileName,
-                    repositoryHashId = repositoryHashId
+                    repositoryHashId = repositoryHashId,
+                    branch = branch
                 ) ?: return@forEach
                 val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
                 if (!description.isNullOrBlank()) {
@@ -316,13 +326,15 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileDir: String,
         i18nDir: String,
         fileName: String,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        branch: String? = null
     ): Properties? {
         val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
             fileName = "$i18nDir/$fileName",
-            repositoryHashId = repositoryHashId
+            repositoryHashId = repositoryHashId,
+            branch = branch
         )
         return if (fileStr.isNullOrBlank()) {
             null

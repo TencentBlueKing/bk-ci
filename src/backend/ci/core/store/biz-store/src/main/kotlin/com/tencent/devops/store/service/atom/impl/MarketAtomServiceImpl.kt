@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.constant.OR
 import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -579,7 +580,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 获取插件处于流程中的版本信息
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
-            if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank()) {
+            if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank()
+                || processingAtomRecord.version.contains(TEST)) {
                 return@forEach
             }
             if (processingVersionInfoMap == null) {

@@ -219,4 +219,11 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return if (validateFlag) Triple(true, "", null)
         else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
+
+    override fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String> = Result("")
+
+    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> = Result(true)
 }
