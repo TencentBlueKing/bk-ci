@@ -68,4 +68,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        return true
+    }
 }

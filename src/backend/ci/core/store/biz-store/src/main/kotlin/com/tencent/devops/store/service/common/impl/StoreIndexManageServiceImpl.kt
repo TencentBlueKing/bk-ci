@@ -60,6 +60,8 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreIndexPipelineService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -226,11 +228,14 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val tStoreIndexResult = TStoreIndexResult.T_STORE_INDEX_RESULT
             val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
             val tStoreIndexLevelInfo = TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO
+            val iconUrl = it[tStoreIndexLevelInfo.ICON_URL]
             storeIndexInfos.add(
                 StoreIndexInfo(
                     indexCode = it[tStoreIndexResult.INDEX_CODE],
                     indexName = it[tStoreIndexBaseInfo.INDEX_NAME],
-                    iconUrl = it[tStoreIndexLevelInfo.ICON_URL],
+                    iconUrl = iconUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(iconUrl) as? String
+                    } ?: "",
                     description = it[tStoreIndexBaseInfo.DESCRIPTION],
                     indexLevelName = it[tStoreIndexLevelInfo.LEVEL_NAME],
                     hover = it[tStoreIndexResult.ICON_TIPS]

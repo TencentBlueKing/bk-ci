@@ -72,7 +72,6 @@ class SampleImageInitService @Autowired constructor(
         val projectCode = imageInitRequest?.projectCode ?: "demo"
         val userId = imageInitRequest?.userId ?: "admin"
         val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
-        val accessToken = imageInitRequest?.accessToken ?: ""
         val ticketId = imageInitRequest?.ticketId
         logger.info("begin init image: $imageInitRequest")
         // 创建demo项目
@@ -108,7 +107,6 @@ class SampleImageInitService @Autowired constructor(
             return Result(true)
         }
         val addImageResult = imageReleaseService.addMarketImage(
-            accessToken = accessToken,
             userId = userId,
             imageCode = imageCode,
             marketImageRelRequest = MarketImageRelRequest(

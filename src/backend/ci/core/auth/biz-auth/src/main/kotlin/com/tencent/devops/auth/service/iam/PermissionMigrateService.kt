@@ -79,4 +79,6 @@ interface PermissionMigrateService {
      * 权限交接
      */
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
+
+    fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 }

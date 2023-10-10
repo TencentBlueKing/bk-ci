@@ -115,4 +115,12 @@ interface OpAuthMigrateResource {
         @ApiParam("权限交接请求体", required = true)
         permissionHandoverDTO: PermissionHandoverDTO
     ): Result<Boolean>
+
+    @POST
+    @Path("/fitSecToRbacAuth/")
+    @ApiOperation("fitSec升级到rbac权限")
+    fun fitSecToRbacAuth(
+        @ApiParam("按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
 }
