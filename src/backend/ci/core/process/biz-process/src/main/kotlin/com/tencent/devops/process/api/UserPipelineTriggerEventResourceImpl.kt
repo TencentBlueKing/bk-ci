@@ -46,8 +46,16 @@ class UserPipelineTriggerEventResourceImpl(
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) : UserPipelineTriggerEventResource {
 
-    override fun listTriggerType(): Result<List<IdValue>> {
-        return Result(PipelineTriggerType.toMap())
+    override fun listTriggerType(
+        userId: String,
+        scmType: ScmType?
+    ): Result<List<IdValue>> {
+        return Result(
+            PipelineTriggerType.toMap(
+                userId = userId,
+                scmType = scmType
+            )
+        )
     }
 
     override fun listEventType(
