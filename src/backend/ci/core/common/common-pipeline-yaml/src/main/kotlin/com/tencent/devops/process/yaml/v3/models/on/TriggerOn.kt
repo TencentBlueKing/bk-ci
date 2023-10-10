@@ -60,9 +60,6 @@ data class TriggerOn(
     @JsonProperty("repo-name")
     @ApiModelProperty(name = "repo-name")
     var repoName: String? = null,
-    @JsonProperty("repo-id")
-    @ApiModelProperty(name = "repo-id")
-    var repoHashId: String? = null,
     var credentials: String? = null
 ) {
     fun toPre(version: YamlVersion.Version) = when (version) {
@@ -88,7 +85,6 @@ data class TriggerOn(
 
     private fun toPreV3() = PreTriggerOnV3(
         repoName = repoName,
-        repoHashId = repoHashId,
         type = null,
         credentials = credentials,
         push = push,

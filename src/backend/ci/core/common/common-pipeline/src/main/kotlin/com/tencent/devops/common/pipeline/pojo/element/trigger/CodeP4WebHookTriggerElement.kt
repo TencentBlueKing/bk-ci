@@ -65,7 +65,7 @@ data class CodeP4WebHookTriggerData(
 
 data class CodeP4WebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")

@@ -39,9 +39,6 @@ data class PreTriggerOnV3(
     @JsonProperty("repo-name")
     @ApiModelProperty(name = "repo-name")
     val repoName: String? = null,
-    @JsonProperty("repo-id")
-    @ApiModelProperty(name = "repo-id")
-    var repoHashId: String? = null,
     var type: String? = null,
     val credentials: String? = null,
     override val push: Any? = null,

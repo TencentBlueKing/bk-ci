@@ -711,7 +711,6 @@ object ScriptYmlUtils {
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
-            res.repoHashId = preTriggerOn.repoHashId
             res.repoName = preTriggerOn.repoName
             res.credentials = preTriggerOn.credentials
         }
