@@ -32,5 +32,5 @@ interface ProcessRelatedPlatformDataClearService {
     /**
      * 清除构建相关平台数据
      */
-    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
+    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>? = null)
 }
