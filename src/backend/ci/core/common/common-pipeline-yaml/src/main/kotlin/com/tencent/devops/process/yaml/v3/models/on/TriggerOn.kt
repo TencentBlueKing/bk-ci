@@ -97,7 +97,7 @@ data class TriggerOn(
         note = note,
         // todo
         repoHook = null,
-        manual = (manual ?: EnableType.FALSE.value).nullIfDefault(DEFAULT_MANUAL_RULE),
+        manual = manual?.nullIfDefault(DEFAULT_MANUAL_RULE),
         openapi = openapi,
         remote = remote
     ).apply {
