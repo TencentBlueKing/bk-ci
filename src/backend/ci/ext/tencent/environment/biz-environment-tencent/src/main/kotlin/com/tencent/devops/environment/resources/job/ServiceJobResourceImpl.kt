@@ -126,7 +126,7 @@ class ServiceJobResourceImpl @Autowired constructor(
             JobCloudQueryAccountAliasReq(
                 bkScopeType = "",
                 bkScopeId = "",
-                account = fileDistributeReq.account,
+                account = fileDistributeReq.accountId.toString(),
                 bkAppCode = "",
                 bkAppSecret = "",
                 bkUsername = userId
