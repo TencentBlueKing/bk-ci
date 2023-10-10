@@ -1184,7 +1184,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
                     hashKey = VersionUtils.convertLatestVersion("branch-test-version"),
-                    values =  "${value - 1}"
+                    values = "${value - 1}"
                 )
             }
         }
