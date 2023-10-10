@@ -47,5 +47,6 @@ data class RepoTriggerRefVo(
     @ApiModelProperty("触发条件md5")
     val triggerConditionMd5: String?,
     @ApiModelProperty("流水线引用数量")
-    val pipelineRefCount: Int
+    val pipelineRefCount: Int,
+    val atomLogo: String? = null
 )

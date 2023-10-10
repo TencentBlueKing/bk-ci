@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
@@ -39,6 +40,7 @@ import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.RepoTriggerRefVo
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -50,7 +52,8 @@ import org.springframework.stereotype.Service
 class RepoPipelineService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val dslContext: DSLContext,
-    private val repoPipelineRefDao: RepoPipelineRefDao
+    private val repoPipelineRefDao: RepoPipelineRefDao,
+    private val client: Client
 ) {
 
     companion object {
@@ -209,10 +212,12 @@ class RepoPipelineService @Autowired constructor(
             limit = limit,
             offset = offset
         )
-        val records = repoPipelineRefDao.listByIds(
+        val pipelineRefRecords = repoPipelineRefDao.listByIds(
             dslContext = dslContext,
             ids = pipelineRefCountMap.keys.toList()
-        ).map {
+        )
+        val atomProps = getAtomProp(pipelineRefRecords.map { it.atomCode }.toSet())
+        val triggerRecords = pipelineRefRecords.map {
             RepoTriggerRefVo(
                 projectId = it.projectId,
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
@@ -226,9 +231,19 @@ class RepoPipelineService @Autowired constructor(
                         object : TypeReference<Map<String, Any>>() {})
                 },
                 triggerConditionMd5 = it.triggerConditionMd5,
-                pipelineRefCount = pipelineRefCountMap[it.id] ?: 0
+                pipelineRefCount = pipelineRefCountMap[it.id] ?: 0,
+                atomLogo = atomProps?.run {
+                    this[it.atomCode]?.logoUrl ?: ""
+                }
             )
         }
-        return SQLPage(count = count, records = records)
+        return SQLPage(count = count, records = triggerRecords)
+    }
+
+    private fun getAtomProp(atomCodes: Set<String>) = try {
+        client.get(ServiceAtomResource::class).getAtomProps(atomCodes).data
+    } catch (ignored: Exception) {
+        logger.warn("fail to get atom prop|atomCodes[$atomCodes]")
+        null
     }
 }
