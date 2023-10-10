@@ -27,26 +27,34 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import java.io.File
 import java.net.URLEncoder
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
-    override fun getPropertiesFileStr(
+    companion object {
+        private val logger = LoggerFactory.getLogger(SampleStoreI18nMessageServiceImpl::class.java)
+    }
+
+    override fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
     ): String? {
         val filePath =
-            URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
+            URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).getFileContent(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
@@ -55,19 +63,71 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ).data
     }
 
-    override fun getPropertiesFileNames(
+    override fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?,
+        format: String?
+    ) {
+        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        logger.info("downloadFile filePath:$filePath")
+        OkhttpUtils.downloadFile(url, file)
+    }
+
+    override fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
+        i18nDir: String?,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
+        var filePath = "$projectCode/$fileDir"
+        i18nDir?.let { filePath = "$filePath/$i18nDir" }
+        logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,
-            filePath = filePath
+            filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
         ).data
+    }
+
+    override fun descriptionAnalysis(
+        userId: String,
+        projectCode: String,
+        description: String,
+        fileDir: String,
+        language: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): String {
+        val separator = File.separator
+        val fileNameList = getFileNames(
+            projectCode = projectCode,
+            fileDir = "$fileDir${separator}file"
+        )
+        if (fileNameList.isNullOrEmpty()) {
+            logger.info("descriptionAnalysis get fileNameList fail")
+            return description
+        }
+        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
+            userId = userId,
+            atomDir = fileDir
+        )
+        fileNameList.forEach {
+            downloadFile(
+                "$projectCode$separator$fileDir${separator}file$separator$it",
+                File("$fileDirPath${separator}file", it)
+            )
+        }
+
+        return storeFileService.descriptionAnalysis(
+            fileDirPath = "$fileDirPath${separator}file",
+            userId = userId,
+            description = description,
+            client = client
+        )
     }
 }

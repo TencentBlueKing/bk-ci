@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -60,6 +61,7 @@ import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
+import java.io.File
 import java.net.URLEncoder
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -102,6 +104,25 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
         val taskJsonStr = client.get(ServiceArchiveAtomResource::class).getAtomFileContent(filePath).data
         return taskJsonStr!!
+    }
+
+    override fun downloadFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        file: File
+    ) {
+        logger.info("downloadFile params:[$projectCode|$atomCode|$version|$fileName")
+        val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
+        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                "/service/artifactories/atom/file/content?filePath=$filePath"
+        val response = OkhttpUtils.doPost(url, "")
+        if (response.isSuccessful) {
+            OkhttpUtils.downloadFile(response, file)
+        } else {
+            logger.warn("downloadFile file [$fileName] fail,code:${response.code} | message: ${response.message}")
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

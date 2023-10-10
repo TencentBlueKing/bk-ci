@@ -79,6 +79,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
@@ -113,6 +114,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeWebsocketService: StoreWebsocketService,
     private val classifyService: ClassifyService,
     private val storeI18nMessageService: StoreI18nMessageService,
+    private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) : OpAtomService {
@@ -481,9 +483,9 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         }
         // 解析description
-        releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
+        releaseInfo.description = storeFileService.descriptionAnalysis(
             description = releaseInfo.description,
-            atomPath = atomPath,
+            fileDirPath = "$atomPath${fileSeparator}file",
             client = client,
             userId = userId
         )
@@ -496,7 +498,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
+                val archiveAtomResult = storeFileService.serviceArchiveAtomFile(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
                     atomCode = atomCode,

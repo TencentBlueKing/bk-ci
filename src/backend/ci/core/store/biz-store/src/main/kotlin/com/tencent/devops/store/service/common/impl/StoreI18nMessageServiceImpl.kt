@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
@@ -39,14 +40,22 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
+import com.tencent.devops.store.service.common.StoreFileService
+import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import java.io.File
+import java.util.Properties
+import java.util.concurrent.Executors
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Properties
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList")
@@ -60,6 +69,12 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     @Autowired
     lateinit var commonConfig: CommonConfig
+
+    @Autowired
+    lateinit var storeFileService: StoreFileService
+
+    @Autowired
+    lateinit var atomDao: AtomDao
 
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
@@ -204,7 +219,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     ) {
         executors.submit {
             // 获取资源文件名称列表
-            val propertiesFileNames = getPropertiesFileNames(
+            val propertiesFileNames = getFileNames(
                 projectCode = projectCode,
                 fileDir = fileDir,
                 i18nDir = i18nDir,
@@ -223,6 +238,34 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
+                val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
+                if (!description.isNullOrBlank()) {
+                    val descriptionStr = getDescriptionI18nContent(
+                        projectCode = projectCode,
+                        userId = userId,
+                        request = TextReferenceFileParseRequest(
+                            fileDir = fileDir,
+                            repositoryHashId = repositoryHashId,
+                            content = description,
+                            language = language
+                        )
+                    )
+                    if (description != descriptionStr) {
+                        fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
+                        if (language == commonConfig.devopsDefaultLocaleLanguage) {
+                            // 默认环境不替换国际化信息，因此需要把解析的描述信息更新到T_AOM
+                            val atomCode = fileDir.substringBefore("/")
+                            val version = fileDir.substringAfter("/")
+                            atomDao.updateAtomDescriptionByCode(
+                                dslContext = dslContext,
+                                userId = userId,
+                                atomCode = atomCode,
+                                description = descriptionStr,
+                                version = version
+                            )
+                        }
+                    }
+                }
                 val i18nMessages = generateI18nMessages(
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
@@ -275,11 +318,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileName: String,
         repositoryHashId: String?
     ): Properties? {
-        val fileStr = getPropertiesFileStr(
+        val fileStr = getFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
-            i18nDir = i18nDir,
-            fileName = fileName,
+            fileName = "$i18nDir/$fileName",
             repositoryHashId = repositoryHashId
         )
         return if (fileStr.isNullOrBlank()) {
@@ -289,20 +331,69 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         }
     }
 
-    abstract fun getPropertiesFileStr(
+    abstract fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String? = null,
         branch: String? = null
     ): String?
 
-    abstract fun getPropertiesFileNames(
+    abstract fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String? = null,
+        branch: String? = null,
+        format: String? = null
+    )
+
+    abstract fun getFileNames(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
+        i18nDir: String? = null,
         repositoryHashId: String? = null,
         branch: String? = null
     ): List<String>?
+
+    private fun getDescriptionI18nContent(
+        userId: String,
+        projectCode: String,
+        request: TextReferenceFileParseRequest
+    ): String {
+        val content = request.content
+        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
+        val matcher: Matcher = pattern.matcher(content)
+        val path: String
+        if (matcher.find()) {
+            path = matcher.group(2).replace("\"", "")
+        } else {
+            return content
+        }
+        return getFileStr(
+            projectCode = projectCode,
+            fileDir = request.fileDir,
+            fileName = "file/$path",
+            repositoryHashId = request.repositoryHashId,
+            branch = request.branch
+        )?.let { fileStr ->
+            descriptionAnalysis(
+                userId = userId,
+                projectCode = projectCode,
+                description = fileStr,
+                fileDir = request.fileDir,
+                language = request.language,
+                repositoryHashId = request.repositoryHashId
+            )
+        } ?: content
+    }
+
+    abstract fun descriptionAnalysis(
+        userId: String,
+        projectCode: String,
+        description: String,
+        fileDir: String,
+        language: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ): String
 }
