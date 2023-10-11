@@ -5,6 +5,7 @@
         ref="pipelineTable"
         row-key="pipelineId"
         height="100%"
+        row-auto-height
         :data="pipelineList"
         :size="tableSize"
         :pagination="pagination"
@@ -17,7 +18,6 @@
         @header-dragend="handelHeaderDragend"
         @row-mouse-enter="handleRowMouseEnter"
         @row-mouse-leave="handleRowMouseLeave"
-        :row-style="{ height: '56px' }"
         v-on="$listeners"
         :key="viewId"
     >
@@ -73,7 +73,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
-                        v-bk-tooltips="{ content: viewName, delay: [300, 0], allowHTML: false }"
+                        v-bk-overflow-tips="{ delay: [500, 0] }"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -94,7 +94,7 @@
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
                                 ext-cls="pipeline-group-name-tag"
                                 :key="hiddenGroup"
-                                v-bk-tooltips="{ content: hiddenGroup, delay: [300, 0], allowHTML: false }"
+                                v-bk-overflow-tips="{ delay: [500, 0] }"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
@@ -307,7 +307,7 @@
                 RESOURCE_ACTION,
                 PROJECT_RESOURCE_ACTION,
                 tableWidthMap: {},
-                tableSize: 'small',
+                tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
                 showCollectIndex: -1
