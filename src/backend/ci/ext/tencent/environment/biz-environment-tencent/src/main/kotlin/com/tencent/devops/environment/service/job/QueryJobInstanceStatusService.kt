@@ -1,13 +1,11 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.environment.pojo.job.Host
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
-import com.tencent.devops.environment.pojo.job.JobInstance
 import com.tencent.devops.environment.pojo.job.JobResult
-import com.tencent.devops.environment.pojo.job.JobStepInstance
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.StepHostResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,47 +42,59 @@ class QueryJobInstanceStatusService @Autowired constructor(
                 jobCloudReq = mapOf<String, Any>()
             )
 
-        val queryJobInstanceStatusResult = QueryJobInstanceStatusResult(
-            finished = jobCloudResp.data?.finished ?: false,
-            jobInstance = jobCloudResp.data?.jobInstance ?: JobInstance(
-                name = "",
-                status = -1,
-                createTime = 0,
-                startTime = 0,
-                endTime = 0,
-                totalTime = 0,
-                jobInstanceId = -1
-            ),
-            stepInstanceList = jobCloudResp.data?.stepInstanceList?.map {
-                JobStepInstance(
-                    stepInstanceId = -1,
-                    type = -1,
-                    name = "",
-                    stepStatus = -1,
-                    createTime = -1,
-                    startTime = -1,
-                    endTime = -1,
-                    totalTime = -1,
-                    stepRetries = -1,
-                    stepHostResultList = it.stepHostResultList.map {
-                        StepHostResult(
-                            host = Host(
-                                bkCloudId = -1,
-                                ip = "",
-                                bkHostId = -1
-                            ),
-                            status = -1,
-                            tag = "",
-                            exitCode = -1,
-                            errorCode = -1,
-                            startTime = -1,
-                            endTime = -1,
-                            totalTime = -1
-                        )
-                    }
-                )
+//        val queryJobInstanceStatusResult = QueryJobInstanceStatusResult(
+//            finished = jobCloudResp.data?.finished ?: false,
+//            jobInstance = jobCloudResp.data?.jobInstance ?: JobInstance(
+//                name = "",
+//                status = -1,
+//                createTime = 0,
+//                startTime = 0,
+//                endTime = 0,
+//                totalTime = 0,
+//                jobInstanceId = -1
+//            ),
+//            stepInstanceList = jobCloudResp.data?.stepInstanceList?.map {
+//                JobStepInstance(
+//                    stepInstanceId = -1,
+//                    type = -1,
+//                    name = "",
+//                    stepStatus = -1,
+//                    createTime = -1,
+//                    startTime = -1,
+//                    endTime = -1,
+//                    totalTime = -1,
+//                    stepRetries = -1,
+//                    stepHostResultList = it.stepHostResultList.map {
+//                        StepHostResult(
+//                            host = Host(
+//                                bkCloudId = -1,
+//                                ip = "",
+//                                bkHostId = -1
+//                            ),
+//                            status = -1,
+//                            tag = "",
+//                            exitCode = -1,
+//                            errorCode = -1,
+//                            startTime = -1,
+//                            endTime = -1,
+//                            totalTime = -1
+//                        )
+//                    }
+//                )
+//            }
+//        )
+        var jsonData = ""
+        val queryJobInstanceStatusResult: QueryJobInstanceStatusResult =
+            if (null != jobCloudResp.data) {
+                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                jacksonObjectMapper().readValue(jsonData)
+            } else {
+                QueryJobInstanceStatusResult()
             }
-        )
+        NetworkUtil.logger.info("[queryJobInstanceStatus] jobCloudResp.data: ${jobCloudResp.data}")
+        NetworkUtil.logger.info("[queryJobInstanceStatus] serialized jsonData: $jsonData")
+        NetworkUtil.logger.info("[queryJobInstanceStatus] queryJobInstanceStatusResult: $queryJobInstanceStatusResult")
+
         return JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,

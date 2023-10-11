@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.job
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -7,8 +8,12 @@ import io.swagger.annotations.ApiModelProperty
 data class QueryJobInstanceStatusResult(
     @ApiModelProperty(value = "作业是否结束", required = true)
     val finished: Boolean,
-    @ApiModelProperty(value = "作业实例基本信息", required = true)
-    val jobInstance: JobInstance,
-    @ApiModelProperty(value = "作业步骤列表", required = true)
+    @ApiModelProperty(value = "作业实例基本信息")
+    @JsonProperty("job_instance")
+    val jobInstance: JobInstance?,
+    @ApiModelProperty(value = "作业步骤列表")
+    @JsonProperty("step_instance_list")
     val stepInstanceList: List<JobStepInstance>?
-)
+) {
+    constructor() : this(false, null, null)
+}
