@@ -67,12 +67,7 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.CodeP4Repository
-import com.tencent.devops.repository.pojo.CodeSvnRepository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.*
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -736,6 +731,7 @@ class PipelineWebhookService @Autowired constructor(
         is CodeGitlabRepository -> repository.gitProjectId
         is CodeSvnRepository -> repository.url
         is CodeP4Repository -> repository.url
+        is GithubRepository -> repository.gitProjectId
         else -> ""
     }?.toString() ?: ""
 }

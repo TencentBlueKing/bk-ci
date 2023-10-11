@@ -99,12 +99,17 @@ class TGitReviewTriggerHandler(
     }
 
     override fun getEventDesc(event: GitReviewEvent): String {
+        val (state, username) = if (event.reviewer != null) {
+            event.reviewer!!.state to event.reviewer!!.reviewer.name
+        } else {
+            event.state to getUsername(event)
+        }
         return I18Variable(
-            code = getI18Code(event),
+            code = getI18Code(state),
             params = listOf(
                 "${event.repository.homepage}/reviews/${event.iid}",
                 event.iid,
-                getUsername(event)
+                username
             )
         ).toJsonStr()
     }
@@ -239,7 +244,7 @@ class TGitReviewTriggerHandler(
         }
     }
 
-    private fun getI18Code(event: GitReviewEvent) = when (event.state) {
+    private fun getI18Code(state: String) = when (state) {
         GitReviewEvent.ACTION_APPROVED -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
         GitReviewEvent.ACTION_APPROVING -> WebhookI18nConstants.TGIT_REVIEW_APPROVING_EVENT_DESC
         GitReviewEvent.ACTION_CHANGE_DENIED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
