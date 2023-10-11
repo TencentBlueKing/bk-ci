@@ -51,7 +51,15 @@ class StartCloudClient @Autowired constructor(
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        return doRequest(request).resolveResponse<List<StartCloudComputerStatusRespData>?>()
+        val resp = doRequest(request).resolveResponse<StartCloudComputerStatusResp>()
+        if (resp.code != 0) {
+            throw RemoteServiceException(
+                "request api[${request.url.toUrl()}] error ${resp.message}",
+                resp.code
+            )
+        }
+
+        return resp.data
     }
 
     fun genStartApiHeaders(
@@ -74,7 +82,7 @@ class StartCloudClient @Autowired constructor(
         }
     }
 
-    private inline fun <reified T> okhttp3.Response.resolveResponse(): T? {
+    private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
         this.use {
             val responseContent = this.body!!.string()
             if (!this.isSuccessful) {
@@ -82,19 +90,12 @@ class StartCloudClient @Autowired constructor(
             }
 
             val responseData = try {
-                objectMapper.readValue(responseContent, jacksonTypeRef<StartCloudComputerResp<T>>())
+                objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             } catch (e: Exception) {
                 throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
             }
 
-            if (responseData.code != 0) {
-                throw RemoteServiceException(
-                    "request api[${this.request.url.toUrl()}] error ${responseData.message}",
-                    this.code
-                )
-            }
-
-            return responseData.data
+            return responseData
         }
     }
 
@@ -108,10 +109,11 @@ data class StartCloudComputerStatusReqBody(
     val cgsIds: Set<String>?
 )
 
-data class StartCloudComputerResp<T>(
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class StartCloudComputerStatusResp(
     val code: Int,
-    val data: T,
-    val message: String
+    val data: List<StartCloudComputerStatusRespData>?,
+    val message: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
