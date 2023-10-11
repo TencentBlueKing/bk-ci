@@ -925,7 +925,7 @@ class WorkspaceDao {
         return sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
             .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             .fetch()
-            .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, it["REG_ID"] as Int?) }
+            .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, (it["REG_ID"] as String?)?.toInt()) }
     }
 
     companion object {
