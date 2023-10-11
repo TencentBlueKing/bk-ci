@@ -38,17 +38,17 @@
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
                     <span>
-                        {{ curRepo.authType }}@
+                        {{ repoInfo.authType || curRepo.authType }}@
                     </span>
                     <a
-                        v-if="!['OAUTH'].includes(curRepo.authType)"
+                        v-if="repoInfo.authType && !['OAUTH'].includes(repoInfo.authType)"
                         :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
                         target="_blank"
                     >
                         {{ repoInfo.credentialId }}
                     </a>
                     <span v-else>
-                        {{ repoInfo.userName }}
+                        {{ repoInfo.userName || curRepo.userName }}
                     </span>
                     <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
@@ -241,6 +241,7 @@
             :is-git="isGit"
             :is-github="isGithub"
             :fetch-repo-detail="fetchRepoDetail"
+            @updateList="updateList"
         />
     </section>
 </template>
@@ -261,7 +262,7 @@
         prettyDateTimeFormat
     } from '@/utils/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
-
+ 
     export default {
         name: 'basicSetting',
         components: {
@@ -415,7 +416,6 @@
              * 校验仓库是否已经在其他项目开启了PAC
              */
             handleCheckPacProject (repoUrl) {
-                console.log(this.repositoryType, 'this.repositoryType')
                 if (this.isGit && repoUrl) {
                     this.checkPacProject({
                         repoUrl,
@@ -603,6 +603,10 @@
 
             async openValidate () {
                 window.location.href = this[`${this.codelibTypeConstants}OAuth`].url
+            },
+
+            updateList () {
+                this.$emit('updateList')
             }
         }
     }

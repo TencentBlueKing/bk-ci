@@ -53,6 +53,7 @@
                             :cur-repo-id.sync="curRepoId"
                             :codelib-list="codelibList"
                             :refresh-codelib-list="refreshCodelibList"
+                            :switch-page="switchPage"
                             @updateList="handleUpdateRepoList"
                         />
                     </template>

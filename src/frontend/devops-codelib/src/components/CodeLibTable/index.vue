@@ -326,12 +326,12 @@
             })
 
             this.tableWidthMap = JSON.parse(localStorage.getItem(CACHE_CODELIB_TABLE_WIDTH_MAP)) || {
-                aliasName: 400,
-                url: 400,
-                authType: 400,
-                updatedUser: 250,
-                updatedTime: 250,
-                operation: 100
+                aliasName: '',
+                url: '',
+                authType: 200,
+                updatedUser: 200,
+                updatedTime: 200,
+                operation: 80
             }
         },
 

@@ -17,6 +17,7 @@
         </h3>
         <bk-form
             ref="form"
+            :model="newRepoInfo"
             :label-width="120"
             :rules="rules"
         >
@@ -369,16 +370,17 @@
                     if (this.isGit) {
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
-                            if (url.startsWith('https://')) {
-                                this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
-                            } else {
-                                this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'http://')
-                            }
+                            this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
                             this.newRepoInfo.credentialId = ''
                         }
-                        if (val === 'SSH' && this.cacheRepoInfo.authType === 'OAUTH') {
+                        
+                        if (val === 'SSH' && ['OAUTH', 'HTTP'].includes(this.cacheRepoInfo.authType)) {
                             const { url } = this.newRepoInfo
-                            this.newRepoInfo.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                            if (url.startsWith('https://')) {
+                                this.newRepoInfo.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                            } else {
+                                this.newRepoInfo.url = url.replace('com/', 'com:').replace('http://', 'git@')
+                            }
                             this.newRepoInfo.credentialId = ''
                         }
 
@@ -440,6 +442,7 @@
                         } else {
                             window.location.href = res.url
                         }
+                        this.$emit('updateList')
                     }).finally(() => {
                         const { id, page, limit } = this.$route.query
                         this.$router.push({
@@ -516,6 +519,7 @@
                         message: this.$t('codelib.重置成功')
                     })
                     this.fetchRepoDetail(this.newRepoInfo.repositoryHashId)
+                    this.$emit('updateList')
                 }).catch((e) => {
                     this.$bkMessage({
                         theme: 'error',
@@ -528,9 +532,8 @@
             },
             handleConfirm () {
                 if (this.isOAUTH) return
-                this.$refs.form.validate().then(() => {
-                    console.log(12321)
-                    this.handleUpdateRepo()
+                this.$refs.form.validate().then(async () => {
+                    await this.handleUpdateRepo()
                 })
             },
             handleClose (val) {
