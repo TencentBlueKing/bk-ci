@@ -43,6 +43,8 @@ class BkDiskLruFileCache(
             }
         }
         editor.commit()
+        // 手动触发淘汰策略
+        diskCache.flush()
     }
 
     /**
@@ -65,11 +67,13 @@ class BkDiskLruFileCache(
             }
         }
         // 将文件设置为可执行文件
-        val success = outputFile.setExecutable(true)
-        if (success) {
-            logger.info("file[${outputFile.absolutePath}] execution permission added successfully.")
-        } else {
-            logger.warn("file[${outputFile.absolutePath}] failed to add execution permission.")
+        if (outputFile.exists()) {
+            val success = outputFile.setExecutable(true)
+            if (success) {
+                logger.info("file[${outputFile.absolutePath}] execution permission added successfully.")
+            } else {
+                logger.warn("file[${outputFile.absolutePath}] failed to add execution permission.")
+            }
         }
     }
 
