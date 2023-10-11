@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service.startcloud
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -75,7 +74,7 @@ class StartCloudClient @Autowired constructor(
         }
     }
 
-    private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
+    private inline fun <reified T> okhttp3.Response.resolveResponse(): T? {
         this.use {
             val responseContent = this.body!!.string()
             if (!this.isSuccessful) {
@@ -84,7 +83,7 @@ class StartCloudClient @Autowired constructor(
 
             val responseData = try {
                 objectMapper.readValue(responseContent, jacksonTypeRef<StartCloudComputerResp<T>>())
-            } catch (e: JacksonException) {
+            } catch (e: Exception) {
                 throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
             }
 
