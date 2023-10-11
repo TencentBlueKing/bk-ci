@@ -66,8 +66,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
     private val queryJobInstanceLogsService: QueryJobInstanceLogsService,
     private val queryAccountAliasService: QueryAccountAliasService,
-    private val parseHashListService: ParseHashListService,
-    jobCloudTaskTerminateReq: JobCloudTaskTerminateReq
+    private val parseHashListService: ParseHashListService
 ) : ServiceJobResource {
     override fun executeScript(
         userId: String,
