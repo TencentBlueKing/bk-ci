@@ -692,7 +692,7 @@ class PipelineWebhookService @Autowired constructor(
                             RepositoryConfig(
                                 repositoryHashId = it.repoHashId,
                                 repositoryName = it.repoName,
-                                repositoryType = RepositoryType.valueOf(it.repositoryType)
+                                repositoryType = RepositoryType.valueOf(it.repoType)
                             )
                         )
                     } catch (ignored: Exception) {
