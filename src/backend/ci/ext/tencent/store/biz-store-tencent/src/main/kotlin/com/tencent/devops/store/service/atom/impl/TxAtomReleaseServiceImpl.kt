@@ -1137,11 +1137,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             val value = redisOperation.hget(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion("branch-test-version")
+                hashKey = "branch-test-version"
             )?.toInt() ?: 0
             redisOperation.hset(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion("branch-test-version"),
+                hashKey = "branch-test-version",
                 values = "${value + 1}"
             )
             // 更新红线标识
@@ -1177,13 +1177,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         )
         val value = redisOperation.hget(
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-            hashKey = VersionUtils.convertLatestVersion("branch-test-version")
+            hashKey = "branch-test-version"
         )?.toInt()
         value?.let {
             if (it > 0) {
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                    hashKey = VersionUtils.convertLatestVersion("branch-test-version"),
+                    hashKey = "branch-test-version",
                     values = "${value - 1}"
                 )
             }
