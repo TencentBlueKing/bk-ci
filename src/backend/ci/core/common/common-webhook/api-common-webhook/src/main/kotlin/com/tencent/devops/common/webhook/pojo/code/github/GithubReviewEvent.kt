@@ -57,7 +57,8 @@ data class GithubReviewEvent(
     }
 
     // 当存在多个必要评审人时,一个用户评审通过不算通过,需判断合并状态
-    private fun isApproved() = pullRequest.mergeable == true
+    private fun isApproved() = (pullRequest.mergeable == true) &&
+            ((pullRequest.mergeableState?.toUpperCase() ?: "") == ReviewMergeStateStatus.CLEAN.name)
 
     private fun isChangeRequired() = review.state == GithubReviewState.CHANGES_REQUESTED.value
 
@@ -121,4 +122,24 @@ enum class GithubReviewState(val value: String) {
 
     @ApiModelProperty("评审中【自定义枚举项，实际不存在】")
     APPROVING("approving")
+}
+
+@ApiModel("Github Review 合并状态")
+enum class ReviewMergeStateStatus {
+    @ApiModelProperty("头标已过时")
+    BEHIND,
+    @ApiModelProperty("阻塞")
+    BLOCKED,
+    @ApiModelProperty("可合并和传递提交状态")
+    CLEAN,
+    @ApiModelProperty("无法干净地创建合并提交")
+    DIRTY,
+    @ApiModelProperty("由于拉取请求是草稿")
+    DRAFT,
+    @ApiModelProperty("可与传递的提交状态和预接收挂钩合并")
+    HAS_HOOKS,
+    @ApiModelProperty("目前无法确定状态")
+    UNKNOWN,
+    @ApiModelProperty("可与非传递提交状态合并")
+    UNSTABLE
 }
