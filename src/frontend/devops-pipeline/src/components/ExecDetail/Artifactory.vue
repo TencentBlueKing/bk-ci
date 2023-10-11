@@ -25,25 +25,13 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column
-                :label="$t('details.path')"
-                prop="fullName"
-                show-overflow-tooltip
-            ></bk-table-column>
-            <bk-table-column
-                :label="$t('details.filesize')"
-                width="150"
-                prop="size"
-                :formatter="sizeFormatter"
-                show-overflow-tooltip
-            ></bk-table-column>
-            <bk-table-column
-                :label="$t('details.repoType')"
-                width="150"
-                prop="artifactoryType"
-                :formatter="repoTypeFormatter"
-                show-overflow-tooltip
-            ></bk-table-column>
+            <bk-table-column :label="$t('details.path')" prop="fullName" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('details.filesize')" width="150" prop="size" show-overflow-tooltip>
+                <template slot-scope="props">
+                    {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('details.repoType')" width="150" prop="artifactoryType" :formatter="repoTypeFormatter" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('operate')" width="150">
                 <template slot-scope="props">
                     <artifact-download-button
@@ -121,7 +109,7 @@
                         this.artifactories
                             = res.records.map((item) => ({
                                 ...item,
-                                icon: extForFile(item.name)
+                                icon: item.folder ? 'folder' : extForFile(item.name)
                             })) || []
                         this.hasPermission = permission
                         if (this.artifactories.length <= 0) {
@@ -146,8 +134,21 @@
                 return typeMap[cellValue]
             },
 
-            sizeFormatter (row, column, cellValue, index) {
+            sizeFormatter (cellValue) {
                 return (cellValue >= 0 && convertFileSize(cellValue, 'B')) || ''
+            },
+
+            getFolderSize (payload) {
+                if (!payload.folder) return '0'
+                return this.getValuesByKey(payload.properties, 'size')
+            },
+
+            getValuesByKey (data, key) {
+                for (const item of data) {
+                    if (key.includes(item.key)) {
+                        return item.value
+                    }
+                }
             }
         }
     }

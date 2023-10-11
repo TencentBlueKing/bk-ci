@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
@@ -44,6 +46,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -241,6 +244,7 @@ interface ServicePipelineResource {
     @ApiOperation("批量获取流水线编排与配置")
     @POST
     @Path("/{projectId}/batchGet")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBatch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -421,6 +425,7 @@ interface ServicePipelineResource {
     @POST
     // @Path("/projects/{projectId}/getPipelines")
     @Path("/{projectId}/getPipelines")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -433,6 +438,7 @@ interface ServicePipelineResource {
     @POST
     // @Path("/projects/{projectId}/getPipelineNames")
     @Path("/{projectId}/getPipelineNames")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -445,6 +451,7 @@ interface ServicePipelineResource {
     @POST
     // @Path("/getBuildNoByIds")
     @Path("/buildIds/getBuildNo")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildNoByBuildIds(
         @ApiParam("构建id", required = true)
         buildIds: Set<String>,
@@ -488,6 +495,7 @@ interface ServicePipelineResource {
     @ApiOperation("获取项目下流水线Id列表")
     @PUT
     @Path("/projects/{projectCode}/idList")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getProjectPipelineIds(
         @ApiParam("项目Id", required = true)
         @PathParam("projectCode")
@@ -497,6 +505,7 @@ interface ServicePipelineResource {
     @ApiOperation("获取项目下流水线Id")
     @PUT
     @Path("/projects/{projectCode}/pipelines/{pipelineId}/id")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineId(
         @ApiParam("项目Id", required = true)
         @PathParam("projectCode")
@@ -518,6 +527,7 @@ interface ServicePipelineResource {
     @ApiOperation("根据项目ID获取流水线标签关系列表")
     @POST
     @Path("/labelinfos/list")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineLabelInfos(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -540,6 +550,27 @@ interface ServicePipelineResource {
         @QueryParam("pipelineName")
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
+
+    @ApiOperation("根据流水线名称搜索")
+    @GET
+    @Path("/projects/{projectId}/paging_search_by_name")
+    fun pagingSearchByName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("搜索名称")
+        @QueryParam("pipelineName")
+        pipelineName: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @ApiOperation("批量更新modelName")
     @POST

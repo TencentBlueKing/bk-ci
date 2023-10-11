@@ -95,8 +95,9 @@
     <apply-dialog
       :is-show="apply.isShow"
       :ajax-prefix="ajaxPrefix"
-      v-bind="apply"
+      :project-code="projectCode"
       :resource-type="resourceType"
+      v-bind="apply"
       @cancel="() => apply.isShow = false"
     />
   </article>

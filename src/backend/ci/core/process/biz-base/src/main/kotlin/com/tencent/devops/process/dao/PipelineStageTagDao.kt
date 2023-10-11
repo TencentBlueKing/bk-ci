@@ -28,6 +28,7 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.process.tables.TPipelineStageTag
 import com.tencent.devops.model.process.tables.records.TPipelineStageTagRecord
 import com.tencent.devops.process.pojo.PipelineStageTag
@@ -102,6 +103,7 @@ class PipelineStageTagDao {
             return dslContext
                 .selectFrom(this)
                 .orderBy(WEIGHT.desc())
+                .skipCheck()
                 .fetch()
         }
     }

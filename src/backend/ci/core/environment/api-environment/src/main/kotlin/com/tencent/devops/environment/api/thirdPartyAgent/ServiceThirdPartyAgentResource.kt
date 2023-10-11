@@ -75,6 +75,19 @@ interface ServiceThirdPartyAgentResource {
         agentId: String
     ): AgentResult<ThirdPartyAgent?>
 
+    @ApiOperation("根据ID获取Agent信息,全局")
+    @GET
+    @Path("/projects/{projectId}/agents/{agentId}/global")
+    @Deprecated("getAgentById")
+    fun getAgentByIdGlobal(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): AgentResult<ThirdPartyAgent?>
+
     @ApiOperation("根据环境名称获取Agent信息")
     @GET
     @Path("/projects/{projectId}/displayNames")

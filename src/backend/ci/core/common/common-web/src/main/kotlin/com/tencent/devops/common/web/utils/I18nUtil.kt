@@ -95,7 +95,7 @@ object I18nUtil {
      * 获取接口请求渠道信息
      * @return 渠道信息
      */
-    private fun getRequestChannel(): String? {
+    fun getRequestChannel(): String? {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         return if (null != attributes) {
             val request = attributes.request

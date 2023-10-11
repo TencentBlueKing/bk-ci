@@ -67,18 +67,18 @@ class AgentUpgradeJob @Autowired constructor(
     @Scheduled(initialDelay = SECONDS_10, fixedDelay = SECONDS_30)
     fun updateCanUpgradeAgentList() {
         val watcher = Watcher("updateCanUpgradeAgentList")
-        logger.info("updateCanUpgradeAgentList start")
+        logger.debug("updateCanUpgradeAgentList start")
         watcher.start("try lock")
         val lock = RedisLock(redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = MINUTES_10)
         try {
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.debug("get lock failed, skip")
                 return
             }
             watcher.start("get maxParallelCount")
             val maxParallelCount = agentPropsScope.getMaxParallelUpgradeCount()
             if (maxParallelCount < 1) {
-                logger.warn("parallel count set to zero")
+                logger.debug("parallel count set to zero")
                 agentScope.setCanUpgradeAgents(listOf())
                 return
             }
