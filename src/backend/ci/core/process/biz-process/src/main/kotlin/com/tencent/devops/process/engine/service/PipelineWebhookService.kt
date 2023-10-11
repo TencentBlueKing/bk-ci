@@ -686,14 +686,19 @@ class PipelineWebhookService @Autowired constructor(
             val repoSize = webhookList.size
             webhookList.forEach {
                 with(it) {
-                    val repositoryInfo = scmProxyService.getRepo(
-                        it.projectId,
-                        RepositoryConfig(
-                            repositoryHashId = it.repoHashId,
-                            repositoryName = it.repoName,
-                            repositoryType = RepositoryType.valueOf(it.repositoryType)
+                    val repositoryInfo = try {
+                        scmProxyService.getRepo(
+                            it.projectId,
+                            RepositoryConfig(
+                                repositoryHashId = it.repoHashId,
+                                repositoryName = it.repoName,
+                                repositoryType = RepositoryType.valueOf(it.repositoryType)
+                            )
                         )
-                    )
+                    } catch (ignored: Exception) {
+                        logger.warn("fail to get repository info", ignored)
+                        null
+                    }
                     val model = getModel(it.projectId, it.pipelineId)
                     if (model == null) {
                         logger.info("$projectId|$pipelineId|model is null")
@@ -715,7 +720,7 @@ class PipelineWebhookService @Autowired constructor(
                                 projectId = it.projectId,
                                 pipelineId = it.pipelineId,
                                 taskId = it.taskId,
-                                repoHashId = repositoryInfo.repoHashId
+                                repoHashId = repositoryInfo?.repoHashId
                             )
                         }
                     }
