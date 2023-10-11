@@ -126,22 +126,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )?.map { it.value1() } ?: emptyList()
             // 判断是否存在不可用插件
             validateAtomCodeList.removeAll(validAtomCodeList)
-            val userId = I18nUtil.getRequestUserId()
-            userId?.let {
-                validateAtomCodeList.forEach {
-                    val installAtomResult = marketAtomService.installAtom(
-                        userId = userId,
-                        channelCode = ChannelCode.BS,
-                        installAtomReq = InstallAtomReq(
-                            projectCode = arrayListOf(projectCode),
-                            atomCode = it
-                        )
-                    ).data
-                    if (installAtomResult == true) {
-                        validateAtomCodeList.remove(it)
-                    }
-                }
-            }
         }
         if (validateAtomCodeList.isNotEmpty()) {
             // 存在不可用插件，给出错误提示

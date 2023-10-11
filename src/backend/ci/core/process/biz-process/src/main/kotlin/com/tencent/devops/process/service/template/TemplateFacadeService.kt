@@ -969,19 +969,6 @@ class TemplateFacadeService @Autowired constructor(
         }
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        if (!latestTemplate.storeFlag || latestTemplate.srcTemplateId.isNullOrBlank()) {
-            try {
-                checkTemplate(templateResult, projectId)
-            } catch (ignored: ErrorCodeException) {
-                // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageUtil.getMessageByLocale(
-                    messageCode = ignored.errorCode,
-                    params = ignored.params,
-                    language = I18nUtil.getLanguage(userId)
-                )
-                templateResult.tips = message
-            }
-        }
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,
             versionName = latestTemplate.versionName,
