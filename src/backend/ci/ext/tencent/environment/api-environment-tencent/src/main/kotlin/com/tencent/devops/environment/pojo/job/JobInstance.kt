@@ -27,5 +27,14 @@ data class JobInstance(
     val totalTime: Int,
     @ApiModelProperty(value = "作业实例ID", required = true)
     @JsonProperty("job_instance_id")
-    val jobInstanceId: Long
+    val jobInstanceId: Long,
+    @ApiModelProperty(value = "业务ID", required = true)
+    @JsonProperty("bk_biz_id")
+    val bkBizId: Long,
+    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
+    @JsonProperty("bk_scope_type")
+    var bkScopeType: String,
+    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
+    @JsonProperty("bk_scope_id")
+    var bkScopeId: String
 )
