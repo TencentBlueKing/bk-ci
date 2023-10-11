@@ -178,6 +178,7 @@ object CommandLineUtils {
             return
         }
         appendVariableToFile(tmpLine, workspace, resultLogFile)
+        appendRemarkToFile(tmpLine, workspace, resultLogFile)
         // 上下文返回给全局时追加jobs前缀
         if (jobId.isNullOrBlank() || stepId.isNullOrBlank()) {
             return
@@ -198,6 +199,24 @@ object CommandLineUtils {
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
+            }
+        }
+    }
+
+    private fun appendRemarkToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String
+    ) {
+        val pattenVar = "[\"]?::set-remark\\s.*"
+        val prefixVar = "::set-remark "
+        if (Pattern.matches(pattenVar, tmpLine)) {
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
+            val keyValue = value.split("::")
+            if (keyValue.size >= 2) {
+                File(workspace, resultLogFile).appendText(
+                    "BK_CI_BUILD_REMARK=$value\n"
                 )
             }
         }
