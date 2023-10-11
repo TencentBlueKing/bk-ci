@@ -7,13 +7,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
-import com.tencent.devops.remotedev.pojo.gitproxy.GitType
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
@@ -43,13 +43,16 @@ class GitproxyBkRepoClient @Autowired constructor(
         repoName: String,
         url: String,
         desc: String?,
-        gitType: GitType
+        gitType: ScmType
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId")
         val requestData = CreateRepoData(
             projectId = projectId,
             name = repoName,
-            type = gitType.value,
+            type = when (gitType) {
+                ScmType.CODE_SVN -> "SVN"
+                else -> "GIT"
+            },
             category = "PROXY",
             public = false,
             description = desc ?: "",
@@ -72,12 +75,17 @@ class GitproxyBkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: GitType?): Page<RepoInfo> {
+    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: ScmType?): Page<RepoInfo> {
         logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
         var url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
                 "?category=PROXY&display=false"
         if (gitType != null) {
-            url = "$url&${gitType.value}"
+            url = "$url&${
+                when (gitType) {
+                    ScmType.CODE_SVN -> "SVN"
+                    else -> "GIT"
+                }
+            }"
         }
         val request = Request.Builder()
             .url(url)

@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
@@ -8,7 +9,6 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
-import com.tencent.devops.remotedev.pojo.gitproxy.GitType
 
 @RestResource
 class UserProjectGitProxyResourceImpl @Autowired constructor(
@@ -23,7 +23,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         projectId: String,
         page: Int,
         pageSize: Int,
-        gitType: GitType?
+        gitType: ScmType?
     ): Result<Page<FetchRepoResp>> {
         return Result(
             gitProxyService.fetchRepo(
