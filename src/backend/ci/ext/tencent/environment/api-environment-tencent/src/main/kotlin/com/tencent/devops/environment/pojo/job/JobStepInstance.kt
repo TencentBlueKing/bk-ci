@@ -34,7 +34,7 @@ data class JobStepInstance(
     @ApiModelProperty(value = "步骤重试次数", required = true)
     @JsonProperty("execute_count")
     val stepRetries: Int,
-    @ApiModelProperty(value = "每个主机的任务执行结果", required = true)
+    @ApiModelProperty(value = "每个主机的任务执行结果")
     @JsonProperty("step_ip_result_list")
-    val stepHostResultList: List<StepHostResult>
+    val stepHostResultList: List<StepHostResult>? = null
 )
