@@ -101,9 +101,6 @@ class CertServiceImpl @Autowired constructor(
     private val certMaxSize = 64 * 1024
     private val certIdMaxSize = 32
 
-    @AuditEntry(
-        actionId = ActionId.CERT_CREATE
-    )
     @ActionAuditRecord(
         actionId = ActionId.CERT_CREATE,
         instance = AuditInstanceRecord(
@@ -240,7 +237,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CERT_EDIT,
         instance = AuditInstanceRecord(
@@ -374,7 +370,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.CERT_CREATE,
         instance = AuditInstanceRecord(
@@ -495,7 +490,6 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.CERT_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CERT_EDIT,
         instance = AuditInstanceRecord(
@@ -607,7 +601,6 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.CERT_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.CERT_CREATE,
         instance = AuditInstanceRecord(
@@ -747,7 +740,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CERT_EDIT,
         instance = AuditInstanceRecord(
@@ -890,7 +882,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.CERT_CREATE,
         instance = AuditInstanceRecord(
@@ -1040,7 +1031,6 @@ class CertServiceImpl @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.CERT_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CERT_EDIT,
         instance = AuditInstanceRecord(
@@ -1330,7 +1320,6 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
-    @AuditEntry(actionId = ActionId.CERT_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CERT_VIEW,
         instance = AuditInstanceRecord(
@@ -1361,7 +1350,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CERT_VIEW,
         instance = AuditInstanceRecord(
@@ -1380,7 +1368,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CERT_VIEW,
         instance = AuditInstanceRecord(
@@ -1412,7 +1399,6 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CERT_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CERT_VIEW,
         instance = AuditInstanceRecord(
@@ -1435,6 +1421,15 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -1493,6 +1488,15 @@ class CertServiceImpl @Autowired constructor(
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise {
         val certRecord = certDao.get(dslContext, projectId, certId)
         // 生成公钥和密钥
@@ -1511,6 +1515,15 @@ class CertServiceImpl @Autowired constructor(
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -1547,6 +1560,15 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryAndroidByProject(
         projectId: String,
         certId: String,
@@ -1603,6 +1625,15 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CERT_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CERT,
+            instanceIds = "#certId",
+            instanceNames = "#certId"
+        ),
+        content = ActionAuditContent.CERT_VIEW_CONTENT
+    )
     override fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls {
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)

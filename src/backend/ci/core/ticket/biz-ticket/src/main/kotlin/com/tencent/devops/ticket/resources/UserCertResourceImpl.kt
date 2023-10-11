@@ -27,12 +27,14 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -67,10 +69,12 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(certPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getIos(userId: String, projectId: String, certId: String): Result<CertIOSInfo> {
         return Result(certService.getIos(userId, projectId, certId))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
     override fun uploadIos(
         userId: String,
         projectId: String,
@@ -111,6 +115,7 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
     override fun updateIos(
         userId: String,
         projectId: String,
@@ -137,10 +142,15 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getAndroid(userId: String, projectId: String, certId: String): Result<CertAndroidInfo> {
         return Result(certService.getAndroid(userId, projectId, certId))
     }
 
+    @AuditEntry(
+        actionId = ActionId.CERT_CREATE,
+        subActionIds = [ActionId.CREDENTIAL_VIEW]
+    )
     override fun uploadAndroid(
         userId: String,
         projectId: String,
@@ -185,6 +195,10 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(
+        actionId = ActionId.CERT_EDIT,
+        subActionIds = [ActionId.CREDENTIAL_VIEW]
+    )
     override fun updateAndroid(
         userId: String,
         projectId: String,
@@ -211,10 +225,12 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getTls(userId: String, projectId: String, certId: String): Result<CertTlsInfo> {
         return Result(certService.getTls(projectId, certId))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
     override fun uploadTls(
         userId: String,
         projectId: String,
@@ -267,6 +283,7 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
     override fun updateTls(
         userId: String,
         projectId: String,
@@ -368,6 +385,7 @@ class UserCertResourceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.CERT_EDIT)
     override fun updateEnterprise(
         userId: String,
         projectId: String,
@@ -388,6 +406,7 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_CREATE)
     override fun uploadEnterprise(
         userId: String,
         projectId: String,
@@ -399,7 +418,8 @@ class UserCertResourceImpl @Autowired constructor(
         checkParams(userId, projectId, certId)
         if (!mpDisposition.fileName.endsWith(".mobileprovision")) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(DESCRIPTION_FILE_TYPE_ERROR,
+                MessageUtil.getMessageByLocale(
+                    DESCRIPTION_FILE_TYPE_ERROR,
                     I18nUtil.getLanguage(userId),
                     arrayOf(".mobileprovision")
                 )
@@ -416,6 +436,7 @@ class UserCertResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getEnterprise(
         userId: String,
         projectId: String,

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.BuildAgentCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
@@ -40,6 +42,7 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildAgentCredentialResource {
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     override fun get(
         projectId: String,
         buildId: String,

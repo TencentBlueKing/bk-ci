@@ -158,7 +158,6 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun createPipelineCallBack(
         userId: String,
         projectId: String,

@@ -194,7 +194,6 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.maxErrorReasonLength:200}")
     private val maxErrorReasonLength: Int = 200
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -236,7 +235,6 @@ class TemplateFacadeService @Autowired constructor(
         return templateId
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -308,7 +306,6 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 流水线另存为模版
      */
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -373,7 +370,6 @@ class TemplateFacadeService @Autowired constructor(
         return templateId
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -425,7 +421,6 @@ class TemplateFacadeService @Autowired constructor(
         return true
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -463,7 +458,6 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -505,7 +499,6 @@ class TemplateFacadeService @Autowired constructor(
         return true
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -581,7 +574,6 @@ class TemplateFacadeService @Autowired constructor(
         return version
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
     @ActionAuditRecord(
         actionId = ActionId.PROJECT_MANAGE,
         instance = AuditInstanceRecord(
@@ -1504,7 +1496,6 @@ class TemplateFacadeService @Autowired constructor(
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     fun updateTemplateInstanceInfo(
         userId: String,
         useTemplateSettings: Boolean,

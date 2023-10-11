@@ -126,7 +126,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_CREATE,
         instance = AuditInstanceRecord(
@@ -214,7 +213,6 @@ class CredentialServiceImpl @Autowired constructor(
         credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_EDIT,
         instance = AuditInstanceRecord(
@@ -257,7 +255,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_EDIT)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_EDIT,
         instance = AuditInstanceRecord(
@@ -300,7 +297,6 @@ class CredentialServiceImpl @Autowired constructor(
         ) > 0
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_DELETE)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_DELETE,
         instance = AuditInstanceRecord(
@@ -471,7 +467,6 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_VIEW,
         instance = AuditInstanceRecord(
@@ -526,7 +521,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_VIEW,
         instance = AuditInstanceRecord(
@@ -582,14 +576,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
-    @ActionAuditRecord(
-        actionId = ActionId.CREDENTIAL_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CREDENTIAL
-        ),
-        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
-    )
     override fun buildGet(
         projectId: String,
         buildId: String,
@@ -626,16 +612,6 @@ class CredentialServiceImpl @Autowired constructor(
         return serviceGetAcrossProject(targetProjectId, credentialId, publicKey)
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
-    @ActionAuditRecord(
-        actionId = ActionId.CREDENTIAL_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CREDENTIAL,
-            instanceNames = "#credentialId",
-            instanceIds = "#credentialId"
-        ),
-        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
-    )
     override fun buildGetDetail(
         projectId: String,
         buildId: String,
@@ -672,13 +648,21 @@ class CredentialServiceImpl @Autowired constructor(
         return ret
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         return credentialInfo(publicKey, credentialRecord)
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_VIEW,
         instance = AuditInstanceRecord(
@@ -743,7 +727,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     @ActionAuditRecord(
         actionId = ActionId.CREDENTIAL_VIEW,
         instance = AuditInstanceRecord(
@@ -832,14 +815,6 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
-    @ActionAuditRecord(
-        actionId = ActionId.CREDENTIAL_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CREDENTIAL
-        ),
-        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
-    )
     override fun searchByCredentialId(
         projectId: String,
         offset: Int,
@@ -855,12 +830,6 @@ class CredentialServiceImpl @Autowired constructor(
             credentialId = credentialId
         )
         val result = credentialRecords.map {
-            ActionAuditContext.current().addInstanceInfo(
-                it.credentialId,
-                it.credentialName,
-                null,
-                null
-            )
             Credential(
                 credentialId = it.credentialId,
                 credentialName = it.credentialName ?: it.credentialId,

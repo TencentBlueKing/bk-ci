@@ -140,6 +140,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     @Timed
     override fun create(
         userId: String,

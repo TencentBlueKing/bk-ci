@@ -99,7 +99,6 @@ class PipelineBuildService(
         private const val CONTEXT_PREFIX = "variables."
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_EXECUTE,
         instance = AuditInstanceRecord(

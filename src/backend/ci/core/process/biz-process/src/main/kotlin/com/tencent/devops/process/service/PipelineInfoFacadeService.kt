@@ -255,7 +255,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
-    @AuditEntry(actionId = ActionId.PIPELINE_CREATE)
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_CREATE,
         instance = AuditInstanceRecord(
@@ -465,8 +464,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId
                 )
                 ActionAuditContext.current()
-                    .setInstanceId(pipelineId)
-                    .setInstanceName(model.name)
+                    .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -696,7 +694,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        @AuditRequestBody
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
@@ -787,10 +784,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
             // 审计
             ActionAuditContext.current()
-                .setInstanceId(pipelineId)
-                .setInstanceName(model.name)
-                .setOriginInstance(existModel)
-                .setInstance(model)
+                .addInstanceInfo(pipelineId, model.name, existModel, model)
             success = true
             return deployResult
         } finally {
