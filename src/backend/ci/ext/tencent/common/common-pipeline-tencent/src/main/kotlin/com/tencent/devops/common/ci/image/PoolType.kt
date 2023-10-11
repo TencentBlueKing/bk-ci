@@ -108,7 +108,7 @@ enum class PoolType {
                     poolType = null,
                     container = when (dispatcher.imageType) {
                         ImageType.BKSTORE, ImageType.THIRD -> Container2(
-                            image = "${dispatcher.dockerBuildVersion}:${dispatcher.imageVersion}",
+                            image = "${dispatcher.value}:${dispatcher.imageVersion}",
                             credentials = dispatcher.credentialId?.ifBlank { null },
                             imageType = dispatcher.imageType!!.name
                         )
