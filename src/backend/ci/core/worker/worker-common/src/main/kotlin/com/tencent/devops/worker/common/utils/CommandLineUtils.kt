@@ -37,13 +37,13 @@ import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.nio.charset.Charset
+import java.util.regex.Pattern
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.nio.charset.Charset
-import java.util.regex.Pattern
 
 @Suppress("LongParameterList")
 object CommandLineUtils {
@@ -147,8 +147,8 @@ object CommandLineUtils {
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
-                        "Error message tracking:\n" +
-                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+                            "Error message tracking:\n" +
+                            errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {
@@ -213,12 +213,9 @@ object CommandLineUtils {
         val prefixVar = "::set-remark "
         if (Pattern.matches(pattenVar, tmpLine)) {
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
-            val keyValue = value.split("::")
-            if (keyValue.size >= 2) {
-                File(workspace, resultLogFile).appendText(
-                    "BK_CI_BUILD_REMARK=$value\n"
-                )
-            }
+            File(workspace, resultLogFile).appendText(
+                "BK_CI_BUILD_REMARK=$value\n"
+            )
         }
     }
 
