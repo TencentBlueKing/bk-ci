@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.job
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -17,6 +18,7 @@ data class StepHostResult(
     )
     val tag: String? = null,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
+    @JsonProperty("exit_code")
     val exitCode: Int,
     @ApiModelProperty(
         value = "主机任务状态码", notes = "1.Agent异常; 3.上次已成功; 5.等待执行; 7.正在执行; 9.执行成功; " +
@@ -24,11 +26,15 @@ data class StepHostResult(
         "104.脚本返回码非零; 202.文件传输失败; 203.源文件不存在; 310.Agent异常; 311.用户名不存在; 320.文件获取失败; " +
         "321.文件超出限制; 329.文件传输错误; 399.任务执行出错", required = true
     )
+    @JsonProperty("error_code")
     val errorCode: Int,
     @ApiModelProperty(value = "开始执行时间", notes = "Unix时间戳，单位毫秒", required = true)
+    @JsonProperty("start_time")
     val startTime: Long,
     @ApiModelProperty(value = "执行结束时间", notes = "Unix时间戳，单位毫秒", required = true)
+    @JsonProperty("end_time")
     val endTime: Long,
     @ApiModelProperty(value = "总耗时", notes = "单位毫秒", required = true)
+    @JsonProperty("total_time")
     val totalTime: Int
 )
