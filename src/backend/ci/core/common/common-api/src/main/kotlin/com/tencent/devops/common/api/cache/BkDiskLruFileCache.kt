@@ -64,11 +64,12 @@ class BkDiskLruFileCache(
                 }
             }
         }
+        // 将文件设置为可执行文件
         val success = outputFile.setExecutable(true)
         if (success) {
-            logger.info("file[${outputFile.name}] execution permission added successfully.")
+            logger.info("file[${outputFile.absolutePath}] execution permission added successfully.")
         } else {
-            logger.warn("file[${outputFile.name}] failed to add execution permission.")
+            logger.warn("file[${outputFile.absolutePath}] failed to add execution permission.")
         }
     }
 

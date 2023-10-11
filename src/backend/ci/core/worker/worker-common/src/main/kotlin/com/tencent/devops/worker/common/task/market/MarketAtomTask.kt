@@ -263,7 +263,12 @@ open class MarketAtomTask : ITask() {
         try {
             LoggerService.addFoldStartLine("[Install plugin]")
             // 获取插件执行包文件
-            val atomExecuteFile = getAtomExecuteFile(atomData, atomTmpSpace, workspace, projectId)
+            val atomExecuteFile = getAtomExecuteFile(
+                atomData = atomData,
+                atomTmpSpace = atomTmpSpace,
+                workspace = workspace,
+                projectId = projectId
+            )
             // 检查插件包的完整性
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -401,6 +406,9 @@ open class MarketAtomTask : ITask() {
             File(atomTmpSpace, atomFilePath.substring(lastFx + 1))
         } else {
             File(atomTmpSpace, atomFilePath)
+        }
+        if (atomExecuteFile.exists() && atomExecuteFile.length() > 0) {
+            return atomExecuteFile
         }
         val atomExecuteFileName = atomExecuteFile.name
         // 从缓存中获取插件执行包文件
@@ -683,6 +691,7 @@ open class MarketAtomTask : ITask() {
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
+        deletePluginFile(atomTmpSpace)
         // 添加插件监控数据
         val monitorData = atomResult?.monitorData
         if (monitorData != null) {
@@ -710,7 +719,6 @@ open class MarketAtomTask : ITask() {
                         "the library. Please contact Devops-helper to register first")
             }
         }
-        deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addWarnLine("No output")
