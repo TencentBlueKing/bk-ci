@@ -37,12 +37,14 @@ class StartWorkspaceService @Autowired constructor(
         // 拼接仪表信息
         var statusNormalValue = 0
         var statusAbnormalValue = 0
+        var statusShutdownValue = 0
         var userLoginValue = 0
         var userLogoutValue = 0
         resp.forEach {
             when (it.state) {
                 0 -> statusAbnormalValue++
                 1 -> statusNormalValue++
+                2 -> statusShutdownValue++
             }
             if (!it.userInfos.isNullOrEmpty()) {
                 userLoginValue++
@@ -54,7 +56,8 @@ class StartWorkspaceService @Autowired constructor(
             count = resp.size,
             status = listOf(
                 ComputerStatusData(statusNormalValue, ComputerStatusEnum.NORMAL),
-                ComputerStatusData(statusAbnormalValue, ComputerStatusEnum.ABNORMAL)
+                ComputerStatusData(statusAbnormalValue, ComputerStatusEnum.ABNORMAL),
+                ComputerStatusData(statusShutdownValue, ComputerStatusEnum.SHUTDOWN)
             ),
             users = listOf(
                 ComputerUserData(userLoginValue, ComputerUserEnum.LOGIN),

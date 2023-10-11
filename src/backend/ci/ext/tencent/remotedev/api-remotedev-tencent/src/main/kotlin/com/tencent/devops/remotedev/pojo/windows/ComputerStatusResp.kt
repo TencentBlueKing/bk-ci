@@ -21,7 +21,10 @@ data class ComputerStatusData(
 
 enum class ComputerStatusEnum {
     NORMAL,
-    ABNORMAL
+    ABNORMAL,
+
+    // 关机
+    SHUTDOWN
 }
 
 data class ComputerUserData(

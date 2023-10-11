@@ -120,6 +120,7 @@ data class StartCloudComputerStatusResp(
 data class StartCloudComputerStatusRespData(
     val cgsId: String,
     val state: Int,
+    val message: String?,
     val userInfos: List<StartCloudComputerStatusUserInfo>?
 )
 
