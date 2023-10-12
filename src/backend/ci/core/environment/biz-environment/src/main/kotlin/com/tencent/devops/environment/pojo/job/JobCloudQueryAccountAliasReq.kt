@@ -23,5 +23,5 @@ data class JobCloudQueryAccountAliasReq(
     override var bkAppSecret: String? = "",
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
-    override var bkUsername: String? = ""
+    override var bkUsername: String
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)

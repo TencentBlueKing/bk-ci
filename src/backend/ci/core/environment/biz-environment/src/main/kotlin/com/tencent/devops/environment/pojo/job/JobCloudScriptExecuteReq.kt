@@ -43,7 +43,7 @@ data class JobCloudScriptExecuteReq(
     override var bkAppSecret: String? = "",
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
-    override var bkUsername: String? = ""
+    override var bkUsername: String
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
@@ -62,8 +62,7 @@ data class JobCloudScriptExecuteReq(
             map["bk_app_code"] = bkAppCode!!
         if (null != bkAppSecret)
             map["bk_app_secret"] = bkAppSecret!!
-        if (null != bkUsername)
-            map["bk_username"] = bkUsername!!
+        map["bk_username"] = bkUsername
         return map
     }
 }

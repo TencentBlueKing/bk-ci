@@ -11,7 +11,7 @@ abstract class JobCloudPermission(
     @ApiModelProperty(value = "安全秘钥")
     @JsonProperty("bk_app_secret")
     open var bkAppSecret: String? = "",
-    @ApiModelProperty(value = "当前用户用户名")
+    @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
-    open var bkUsername: String? = ""
+    open var bkUsername: String
 )
