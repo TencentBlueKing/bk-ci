@@ -77,7 +77,6 @@ enum class PoolType {
 
     DockerOnDevCloud {
         override fun transfer(pool: Pool): DispatchType {
-            val imageType = pool.image?.imageType ?: ImageType.THIRD
             return PublicDevCloudDispathcType(
                 image = pool.container ?: pool.image?.imageCode,
                 performanceConfigId = "0",
