@@ -449,6 +449,12 @@
                 return this.$route.params
             },
             errorPopupHeight () {
+                if (!this.showErrorPopup) {
+                    return '0px'
+                }
+                if (!this.showErrors) {
+                    return '42px'
+                }
                 return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
@@ -587,7 +593,7 @@
             },
             setScrollBarPostion () {
                 const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                rootCssVar.style.setProperty('--track-bottom', this.errorPopupHeight)
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
