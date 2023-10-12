@@ -575,6 +575,15 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun buildGet(
         projectId: String,
         buildId: String,
