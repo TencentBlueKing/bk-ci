@@ -8,5 +8,11 @@ import io.swagger.annotations.ApiModelProperty
 data class TaskTerminateResult(
     @ApiModelProperty(value = "作业实例ID", required = true)
     @JsonProperty("job_instance_id")
-    val jobInstanceId: Long
+    val jobInstanceId: Long,
+    @ApiModelProperty(value = "作业实例名称", required = true)
+    @JsonProperty("job_instance_name")
+    val jobInstanceName: String,
+    @ApiModelProperty(value = "步骤实例ID", required = true)
+    @JsonProperty("step_instance_id")
+    val stepInstanceId: Long
 )
