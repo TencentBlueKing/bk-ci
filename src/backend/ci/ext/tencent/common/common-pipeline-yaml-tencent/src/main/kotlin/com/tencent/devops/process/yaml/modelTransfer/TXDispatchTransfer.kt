@@ -163,6 +163,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                 )
                 val cImage = container.image.split(":")
                 containerPool = Pool(
+                    container = container.image,
                     credential = Credential(
                         user = "",
                         password = "",
