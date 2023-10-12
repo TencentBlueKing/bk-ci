@@ -30,9 +30,15 @@ package com.tencent.devops.dispatch
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.dispatch")
+@EnableScheduling
+@ComponentScan(
+    "com.tencent.devops.plugin",
+    "com.tencent.devops.dispatch",
+    "com.tencent.devops.common.dispatch.sdk"
+)
 class DispatchApplication
 
 fun main(args: Array<String>) {
