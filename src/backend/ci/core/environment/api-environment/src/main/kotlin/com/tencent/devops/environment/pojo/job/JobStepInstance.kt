@@ -36,5 +36,5 @@ data class JobStepInstance(
     val stepRetries: Int,
     @ApiModelProperty(value = "每个主机的任务执行结果")
     @JsonProperty("step_ip_result_list")
-    val stepHostResultList: List<com.tencent.devops.environment.pojo.job.StepHostResult>? = null
+    val stepHostResultList: List<StepHostResult>? = null
 )

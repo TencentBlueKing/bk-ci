@@ -68,8 +68,8 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "执行脚本的信息", required = true)
-        scriptExecuteReq: com.tencent.devops.environment.pojo.job.ScriptExecuteReq
-    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.ScriptExecuteResult>
+        scriptExecuteReq: ScriptExecuteReq
+    ): JobResult<ScriptExecuteResult>
 
     @ApiOperation("文件分发的Job接口")
     @POST
@@ -82,8 +82,8 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "文件分发的信息", required = true)
-        fileDistributeReq: com.tencent.devops.environment.pojo.job.FileDistributeReq
-    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.FileDistributeResult>
+        fileDistributeReq: FileDistributeReq
+    ): JobResult<FileDistributeResult>
 
     @ApiOperation("终止任务的Job接口")
     @POST
@@ -96,8 +96,8 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "终止任务的信息", required = true)
-        taskTerminateReq: com.tencent.devops.environment.pojo.job.TaskTerminateReq
-    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.TaskTerminateResult>
+        taskTerminateReq: TaskTerminateReq
+    ): JobResult<TaskTerminateResult>
 
     @ApiOperation("查询任务状态的Job接口")
     @GET
@@ -115,7 +115,7 @@ interface ServiceJobResource {
         @ApiParam(value = "是否返回每个ip上的任务详情，默认false", required = true)
         @QueryParam("returnIpResult")
         returnIpResult: Boolean? = false
-    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult>
+    ): JobResult<QueryJobInstanceStatusResult>
 
     @ApiOperation("批量查询日志的Job接口")
     @POST
@@ -128,6 +128,6 @@ interface ServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
-        queryLogsReq: com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
-    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult>
+        queryLogsReq: QueryJobInstanceLogsReq
+    ): JobResult<QueryJobInstanceLogsResult>
 }

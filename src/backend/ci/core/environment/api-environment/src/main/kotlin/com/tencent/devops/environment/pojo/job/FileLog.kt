@@ -10,13 +10,13 @@ data class FileLog(
     val mode: Int,
     @ApiModelProperty(value = "文件源主机信息", required = true)
     @JsonProperty("src_ip")
-    val srcHost: com.tencent.devops.environment.pojo.job.HostInRes,
+    val srcHost: HostInRes,
     @ApiModelProperty(value = "源文件路径", required = true)
     @JsonProperty("src_path")
     val srcPath: String,
     @ApiModelProperty(value = "分发目标主机信息", notes = "mode == 1 时有值")
     @JsonProperty("dest_ip")
-    val destHost: com.tencent.devops.environment.pojo.job.HostInRes? = null,
+    val destHost: HostInRes? = null,
     @ApiModelProperty(value = "目标路径", notes = "mode == 1 时有值")
     @JsonProperty("dest_path")
     val destPath: String?,

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 class FileDistributeService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.FileDistributeResult> {
+    fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "distributeFile",
@@ -38,12 +38,12 @@ class FileDistributeService @Autowired constructor(
             )
 
         var jsonData = ""
-        val fileDistributeResult: com.tencent.devops.environment.pojo.job.FileDistributeResult =
+        val fileDistributeResult: FileDistributeResult =
             if (null != jobCloudResp.data) {
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                com.tencent.devops.environment.pojo.job.FileDistributeResult(-1L, "null", -1L)
+                FileDistributeResult(-1L, "null", -1L)
             }
         if (logger.isDebugEnabled) {
             logger.info("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
@@ -51,7 +51,7 @@ class FileDistributeService @Autowired constructor(
             logger.info("[distributeFile] fileDistributeResult: $fileDistributeResult")
         }
 
-        return com.tencent.devops.environment.pojo.job.JobResult(
+        return JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,
             jobRequestId = jobCloudResp.jobRequestId,

@@ -17,10 +17,10 @@ data class QueryJobInstanceLogsResult(
     val logType: Int,
     @ApiModelProperty(value = "脚本执行任务日志", allowEmptyValue = true)
     @JsonProperty("script_task_logs")
-    val scriptTaskLogs: List<com.tencent.devops.environment.pojo.job.ScriptExcuteLog>? = null,
+    val scriptTaskLogs: List<ScriptExcuteLog>? = null,
     @ApiModelProperty(value = "文件分发任务日志", allowEmptyValue = true)
     @JsonProperty("file_task_logs")
-    val fileTaskLogs: List<com.tencent.devops.environment.pojo.job.FileDistributeLog>? = null
+    val fileTaskLogs: List<FileDistributeLog>? = null
 ) {
     constructor() : this(-1, -1, -1, null, null)
 }

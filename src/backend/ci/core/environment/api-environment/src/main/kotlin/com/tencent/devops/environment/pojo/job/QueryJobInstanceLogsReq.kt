@@ -10,5 +10,5 @@ data class QueryJobInstanceLogsReq(
     @ApiModelProperty(value = "步骤实例ID", required = true)
     val stepInstanceId: Long,
     @ApiModelProperty(value = "源/目标主机列表")
-    val hostList: List<com.tencent.devops.environment.pojo.job.Host>?
+    val hostList: List<Host>?
 )
