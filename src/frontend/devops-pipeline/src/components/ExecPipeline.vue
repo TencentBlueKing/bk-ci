@@ -479,9 +479,7 @@
 
         },
         updated () {
-            if (this.showErrorPopup) {
-                this.setScrollBarPostion()
-            }
+            this.setScrollBarPostion()
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
