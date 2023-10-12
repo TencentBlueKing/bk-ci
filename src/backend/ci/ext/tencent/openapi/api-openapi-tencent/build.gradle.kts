@@ -49,5 +49,4 @@ dependencies {
     api(project(":ext:tencent:experience:api-experience-tencent"))
     api(project(":ext:tencent:dispatch-devcloud:api-dispatch-devcloud-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
 }
