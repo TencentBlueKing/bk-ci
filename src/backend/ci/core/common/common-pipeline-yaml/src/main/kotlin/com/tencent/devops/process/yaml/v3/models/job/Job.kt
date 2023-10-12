@@ -73,6 +73,7 @@ data class Job(
 
 data class Container(
     val image: String,
+    @JsonProperty("image-type")
     val imageType: String? = ImageType.THIRD.name,
     val credentials: Credentials? = null,
     val options: DockerOptions? = null,
