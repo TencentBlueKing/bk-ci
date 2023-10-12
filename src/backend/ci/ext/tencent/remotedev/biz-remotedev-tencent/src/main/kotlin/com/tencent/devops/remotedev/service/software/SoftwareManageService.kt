@@ -208,7 +208,7 @@ class SoftwareManageService @Autowired constructor(
 
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
             "?type=USER&key=$externalKey&workspaceName=$workspaceName&" +
-            "autoAssign=false&projectId=$projectId&userId=$userId"
+            "autoAssign=false&projectId=$projectId&userId=$userId&x-devops-project-id=$projectId"
         val installSoftwareRes = installSoftwareFromXingyun(
             userId = userId,
             ip = ip.substringAfter("."),
@@ -257,7 +257,7 @@ class SoftwareManageService @Autowired constructor(
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
             "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
-            "autoAssign=$autoAssign&projectId=$projectId&userId=$creator"
+            "autoAssign=$autoAssign&projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
         val installSoftwareRes = installSoftwareFromXingyun(
             userId = creator,
             ip = ip.substringAfter("."),
