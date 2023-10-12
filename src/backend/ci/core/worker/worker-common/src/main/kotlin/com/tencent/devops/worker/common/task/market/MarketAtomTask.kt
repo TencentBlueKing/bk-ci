@@ -442,8 +442,14 @@ open class MarketAtomTask : ITask() {
                     atomExecuteFile = atomExecuteFile,
                     authFlag = atomData.authFlag ?: true
                 )
-                if (atomData.authFlag != true && checkSha1(atomExecuteFile, atomData.shaContent!!)) {
-                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
+                if (atomData.authFlag != true && checkSha1(atomExecuteFile, atomData.shaContent!!) &&
+                    atomData.atomStatus !in listOf(
+                        AtomStatusEnum.TESTING.name,
+                        AtomStatusEnum.CODECCING.name,
+                        AtomStatusEnum.AUDITING.name
+                    )
+                ) {
+                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中(未发布的插件版本内容可能会变化故也不存入缓存)
                     bkDiskLruFileCache.put(fileCacheKey, atomExecuteFile)
                 }
             } else {
