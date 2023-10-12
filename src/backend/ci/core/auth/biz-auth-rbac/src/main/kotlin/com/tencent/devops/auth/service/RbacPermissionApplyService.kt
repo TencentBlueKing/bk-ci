@@ -424,7 +424,7 @@ class RbacPermissionApplyService @Autowired constructor(
             val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, groupId)
             if (monitorGroupPermissionDetail.isNotEmpty()) {
                 groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
-                    getGroupPermissionDetailBySystem(systemId, groupId)
+                    getGroupPermissionDetailBySystem(monitorSystemId, groupId)
             }
         }
         return groupPermissionMap
