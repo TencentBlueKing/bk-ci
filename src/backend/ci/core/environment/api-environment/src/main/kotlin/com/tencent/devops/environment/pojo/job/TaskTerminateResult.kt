@@ -9,10 +9,12 @@ data class TaskTerminateResult(
     @ApiModelProperty(value = "作业实例ID", required = true)
     @JsonProperty("job_instance_id")
     val jobInstanceId: Long,
-    @ApiModelProperty(value = "作业实例名称", required = true)
+    @ApiModelProperty(value = "作业实例名称")
     @JsonProperty("job_instance_name")
-    val jobInstanceName: String,
-    @ApiModelProperty(value = "步骤实例ID", required = true)
+    val jobInstanceName: String? = "",
+    @ApiModelProperty(value = "步骤实例ID")
     @JsonProperty("step_instance_id")
-    val stepInstanceId: Long
-)
+    val stepInstanceId: Long? = -1L
+) {
+    constructor() : this(-1L, "", -1L)
+}

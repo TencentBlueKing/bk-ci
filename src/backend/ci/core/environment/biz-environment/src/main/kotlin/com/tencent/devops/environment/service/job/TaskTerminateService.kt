@@ -43,7 +43,7 @@ class TaskTerminateService @Autowired constructor(
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                TaskTerminateResult(-1L)
+                TaskTerminateResult()
             }
         if (logger.isDebugEnabled) {
             logger.info("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")

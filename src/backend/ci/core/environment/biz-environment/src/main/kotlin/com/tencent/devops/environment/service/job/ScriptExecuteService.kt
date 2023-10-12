@@ -43,7 +43,7 @@ class ScriptExecuteService @Autowired constructor(
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                ScriptExecuteResult(-1L, "null", -1L)
+                ScriptExecuteResult()
             }
         if (logger.isDebugEnabled) {
             logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")

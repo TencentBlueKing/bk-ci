@@ -43,7 +43,7 @@ class FileDistributeService @Autowired constructor(
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                FileDistributeResult(-1L, "null", -1L)
+                FileDistributeResult()
             }
         if (logger.isDebugEnabled) {
             logger.info("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
