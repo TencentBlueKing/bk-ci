@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -482,7 +483,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 null
             }
         } ?: throw PipelineTransferException(
-            TransferMessageCode.ElementNotSupportTransfer,
+            ELEMENT_NOT_SUPPORT_TRANSFER,
             arrayOf(uses)
         )
     }
