@@ -36,7 +36,6 @@ class FileDistributeService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudFileDistributeReq.toMap()
             )
-        logger.info("[distributeFile] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
 
         var jsonData = ""
         val fileDistributeResult: FileDistributeResult =
@@ -46,9 +45,11 @@ class FileDistributeService @Autowired constructor(
             } else {
                 FileDistributeResult(-1L, "null", -1L)
             }
-        logger.info("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
-        logger.info("[distributeFile] serialized jsonData: $jsonData")
-        logger.info("[distributeFile] fileDistributeResult: $fileDistributeResult")
+        if (logger.isDebugEnabled) {
+            logger.info("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.info("[distributeFile] serialized jsonData: $jsonData")
+            logger.info("[distributeFile] fileDistributeResult: $fileDistributeResult")
+        }
 
         return JobResult(
             status = jobCloudResp.code,

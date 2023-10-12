@@ -37,6 +37,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()
             )
+
         var jsonData = ""
         val queryJobInstanceLogsResult: QueryJobInstanceLogsResult =
             if (null != jobCloudResp.data) {
@@ -45,9 +46,11 @@ class QueryJobInstanceLogsService @Autowired constructor(
             } else {
                 QueryJobInstanceLogsResult()
             }
-        NetworkUtil.logger.info("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
-        NetworkUtil.logger.info("[queryJobInstanceLogs] serialized jsonData: $jsonData")
-        NetworkUtil.logger.info("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
+        if (NetworkUtil.logger.isDebugEnabled) {
+            NetworkUtil.logger.info("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
+            NetworkUtil.logger.info("[queryJobInstanceLogs] serialized jsonData: $jsonData")
+            NetworkUtil.logger.info("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
+        }
 
         return JobResult(
             status = jobCloudResp.code,

@@ -24,13 +24,11 @@ object NetworkUtil {
         when (httpType) {
             "post" -> {
                 val request = createPostRequest(url, bkAuthorization, jobCloudReq)
-                logger.info("[executeHttpRequest] post request: $request")
                 return executeHttpRequest(operateName, request)
             }
 
             "get" -> {
                 val request = createGetRequest(url, bkAuthorization)
-                logger.info("[executeHttpRequest] get request: $request")
                 return executeHttpRequest(operateName, request)
             }
 
@@ -53,7 +51,7 @@ object NetworkUtil {
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
-        logger.info("[createPostRequest] serialized requestContent: $requestContent")
+        if (logger.isDebugEnabled) logger.info("[createPostRequest] request body(serialized): $requestContent")
         return Request.Builder()
             .url(url)
             .post(requestBody)
@@ -63,7 +61,6 @@ object NetworkUtil {
     }
 
     private fun createGetRequest(url: String, bkAuthorization: String): Request {
-        logger.info("[createGetRequest] url: $url")
         return Request.Builder()
             .url(url)
             .addHeader("X-Bkapi-Authorization", bkAuthorization)
@@ -75,34 +72,38 @@ object NetworkUtil {
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
-                val requestLog =
-                    if (request.toString().length > LOG_OUTPUT_MAX_LENGTH)
-                        request.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
-                    else
-                        request.toString()
-                val responseLog =
-                    if (responseBody.toString().length > LOG_OUTPUT_MAX_LENGTH)
-                        responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
-                    else
-                        responseBody.toString()
-                logger.info("[$operateName] request: $requestLog, responseBody: $responseLog")
+                if (logger.isDebugEnabled) {
+                    val requestLog =
+                        if (request.toString().length > LOG_OUTPUT_MAX_LENGTH)
+                            request.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
+                        else
+                            request.toString()
+                    val responseLog =
+                        if (responseBody.toString().length > LOG_OUTPUT_MAX_LENGTH)
+                            responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
+                        else
+                            responseBody.toString()
+                    logger.info("[$operateName] request method/url/headers: $requestLog")
+                    logger.info("[$operateName] response body(origin): $responseLog")
+                }
 
-                val serializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
-                logger.info("[$operateName] serializedRespBody: $serializedRespBody")
+                val deserializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
+                if (logger.isDebugEnabled)
+                    logger.info("[$operateName] response body(deserialized JobCloudResp<T>): $deserializedRespBody")
 
-                if (!serializedRespBody.result) {
+                if (!deserializedRespBody.result) {
                     logger.error(
-                        "[$operateName] Execute failed! Req ID: ${serializedRespBody.jobRequestId}, " +
-                            "Error code: ${serializedRespBody.code}, " +
-                            "Error msg: ${serializedRespBody.message}"
+                        "[$operateName] Execute failed! Req ID: ${deserializedRespBody.jobRequestId}, " +
+                            "Error code: ${deserializedRespBody.code}, " +
+                            "Error msg: ${deserializedRespBody.message}"
                     )
                     throw RemoteServiceException(
-                        "Execute failed! Req ID: ${serializedRespBody.jobRequestId}, " +
-                            "Error code: ${serializedRespBody.code}, " +
-                            "Error msg: ${serializedRespBody.message}"
+                        "Execute failed! Req ID: ${deserializedRespBody.jobRequestId}, " +
+                            "Error code: ${deserializedRespBody.code}, " +
+                            "Error msg: ${deserializedRespBody.message}"
                     )
                 }
-                return serializedRespBody
+                return deserializedRespBody
             } catch (exception: Exception) {
                 logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
                 throw exception

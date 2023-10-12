@@ -50,9 +50,11 @@ class QueryJobInstanceStatusService @Autowired constructor(
             } else {
                 QueryJobInstanceStatusResult()
             }
-        NetworkUtil.logger.info("[queryJobInstanceStatus] jobCloudResp.data: ${jobCloudResp.data}")
-        NetworkUtil.logger.info("[queryJobInstanceStatus] serialized jsonData: $jsonData")
-        NetworkUtil.logger.info("[queryJobInstanceStatus] queryJobInstanceStatusResult: $queryJobInstanceStatusResult")
+        if (NetworkUtil.logger.isDebugEnabled) {
+            NetworkUtil.logger.info("[queryJobInstanceStatus] jobCloudResp.data: ${jobCloudResp.data}")
+            NetworkUtil.logger.info("[queryJobInstanceStatus] serialized jsonData: $jsonData")
+            NetworkUtil.logger.info("[queryJobInstanceStatus] queryJobInsStatusResult: $queryJobInstanceStatusResult")
+        }
 
         return JobResult(
             status = jobCloudResp.code,

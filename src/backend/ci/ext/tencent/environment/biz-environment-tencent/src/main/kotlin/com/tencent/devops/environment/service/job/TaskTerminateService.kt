@@ -36,7 +36,6 @@ class TaskTerminateService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudTaskTerminateReq.toMap()
             )
-        logger.info("[terminateTask] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
 
         var jsonData = ""
         val taskTerminateResult: TaskTerminateResult =
@@ -46,9 +45,11 @@ class TaskTerminateService @Autowired constructor(
             } else {
                 TaskTerminateResult(-1L)
             }
-        logger.info("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")
-        logger.info("[terminateTask] serialized jsonData: $jsonData")
-        logger.info("[terminateTask] taskTerminateResult: $taskTerminateResult")
+        if (logger.isDebugEnabled) {
+            logger.info("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.info("[terminateTask] serialized jsonData: $jsonData")
+            logger.info("[terminateTask] taskTerminateResult: $taskTerminateResult")
+        }
 
         return JobResult(
             status = jobCloudResp.code,

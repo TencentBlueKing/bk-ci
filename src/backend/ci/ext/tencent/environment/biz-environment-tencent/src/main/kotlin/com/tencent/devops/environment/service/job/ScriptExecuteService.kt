@@ -36,7 +36,6 @@ class ScriptExecuteService @Autowired constructor(
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.toMap()
             )
-        logger.info("[executeScript] jobCloudResp: $jobCloudResp, type: ${jobCloudResp::class}")
 
         var jsonData = ""
         val scriptExecuteResult: ScriptExecuteResult =
@@ -46,9 +45,11 @@ class ScriptExecuteService @Autowired constructor(
             } else {
                 ScriptExecuteResult(-1L, "null", -1L)
             }
-        logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
-        logger.info("[executeScript] serialized jsonData: $jsonData")
-        logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
+        if (logger.isDebugEnabled) {
+            logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.info("[executeScript] serialized jsonData: $jsonData")
+            logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
+        }
 
         return JobResult(
             status = jobCloudResp.code,
