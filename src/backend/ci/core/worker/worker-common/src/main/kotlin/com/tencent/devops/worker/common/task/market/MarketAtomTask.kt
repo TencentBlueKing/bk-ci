@@ -450,8 +450,8 @@ open class MarketAtomTask : ITask() {
                     atomExecuteFile = atomExecuteFile,
                     authFlag = atomData.authFlag ?: true
                 )
-                if (atomData.authFlag != true) {
-                    // 无需鉴权的插件包放入缓存中
+                if (atomData.authFlag != true && checkSha1(atomExecuteFile, atomData.shaContent!!)) {
+                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
                     bkDiskLruFileCache.put(fileCacheKey, atomExecuteFile)
                 }
             } else {
@@ -1011,7 +1011,7 @@ open class MarketAtomTask : ITask() {
         return JsonUtil.to(json, AtomResult::class.java)
     }
 
-    private fun checkSha1(file: File, sha1: String) {
+    private fun checkSha1(file: File, sha1: String): Boolean {
         val fileSha1 = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         if (fileSha1 != sha1) {
             throw TaskExecuteException(
@@ -1020,6 +1020,7 @@ open class MarketAtomTask : ITask() {
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
+        return true
     }
 
     private fun downloadAtomExecuteFile(
