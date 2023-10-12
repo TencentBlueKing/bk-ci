@@ -436,7 +436,12 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
-                    with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).ifEmpty { null },
+                    with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
+                        this.remove(CheckoutAtomParam::repositoryType.name)
+                        this.remove(CheckoutAtomParam::repositoryHashId.name)
+                        this.remove(CheckoutAtomParam::repositoryName.name)
+                        this.remove(CheckoutAtomParam::repositoryUrl.name)
+                    }.ifEmpty { null },
                     checkout = checkout
                 )
             }
