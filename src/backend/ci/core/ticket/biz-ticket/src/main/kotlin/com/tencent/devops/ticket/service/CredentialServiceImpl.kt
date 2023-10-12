@@ -226,7 +226,6 @@ class CredentialServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         credentialId: String,
-        @AuditRequestBody
         credential: CredentialUpdate
     ) {
         val edit = AuthPermission.EDIT
