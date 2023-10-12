@@ -59,7 +59,7 @@ interface UserPipelineTransferResource {
 
     @ApiOperation("model与yaml互转入口")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}")
+    @Path("/projects/{projectId}")
     fun transfer(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -67,9 +67,9 @@ interface UserPipelineTransferResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+        @ApiParam("流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("操作类型", required = true)
         @QueryParam("actionType")
         actionType: TransferActionType,

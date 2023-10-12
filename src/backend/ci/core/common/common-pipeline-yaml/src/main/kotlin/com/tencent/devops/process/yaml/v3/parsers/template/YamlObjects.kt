@@ -58,6 +58,7 @@ import com.tencent.devops.process.yaml.v3.models.job.Strategy
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
@@ -174,15 +175,15 @@ object YamlObjects {
         )
     }
 
-    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerType? {
+    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerTypeYaml? {
         if (containerType == null) {
             return null
         }
 
         val map = transValue<Map<String, Any?>>(fromPath, "containerType", containerType)
 
-        return BuildContainerType(
-            buildType = BuildType.valueOf(getNotNullValue("buildType", "containerType", map)),
+        return BuildContainerTypeYaml(
+            buildType = BuildType.valueOf(getNotNullValue("build-type", "containerType", map)),
             os = OS.valueOf(getNotNullValue("os", "containerType", map))
         )
     }
@@ -477,6 +478,7 @@ fun <T> YamlTemplate<T>.getStage(
     deepTree: TemplateDeepTreeNode
 ): PreStage {
     return PreStage(
+        enable = YamlObjects.getNullValue("enable", stage)?.toBoolean(),
         name = stage["name"]?.toString(),
         label = stage["label"],
         ifField = stage["if"]?.toString(),
@@ -526,6 +528,7 @@ fun <T> YamlTemplate<T>.getStage(
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
 fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
     val preJob = PreJob(
+        enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
         mutex = if (job["mutex"] == null) {

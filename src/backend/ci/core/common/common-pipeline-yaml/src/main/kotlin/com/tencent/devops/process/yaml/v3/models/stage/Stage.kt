@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Stage(
+    var enable: Boolean? = null,
     val name: String?,
     val label: List<String> = emptyList(),
     @ApiModelProperty(name = "if")

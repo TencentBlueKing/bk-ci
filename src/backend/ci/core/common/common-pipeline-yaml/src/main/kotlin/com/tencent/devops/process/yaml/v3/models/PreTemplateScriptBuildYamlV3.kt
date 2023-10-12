@@ -103,7 +103,7 @@ data class PreTemplateScriptBuildYamlV3(
         val res = mutableListOf<Pair<TriggerType, TriggerOn>>()
         var baseOk = false
         runsOn.forEach {
-            if (!baseOk && it.repoName == null && it.repoHashId == null && it.type == null) {
+            if (!baseOk && it.repoName == null && it.type == null) {
                 res.add(TriggerType.BASE to ScriptYmlUtils.formatTriggerOn(it))
                 baseOk = true
                 return@forEach

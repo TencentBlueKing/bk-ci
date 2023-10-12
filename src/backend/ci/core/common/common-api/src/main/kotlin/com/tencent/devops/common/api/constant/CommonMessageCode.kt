@@ -173,6 +173,10 @@ object CommonMessageCode {
     const val ERROR_PROJECT_API_ACCESS_NO_PERMISSION = "2100122" // 项目[{0}]没有接口[{1}]的访问权限
     const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
 
+    //互转使用
+    const val ELEMENT_UPDATE_WRONG_PATH = "2100124" // 更新插件的标注位置有误
+    const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100125" // [{0}]该插件不支持转换
+
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 

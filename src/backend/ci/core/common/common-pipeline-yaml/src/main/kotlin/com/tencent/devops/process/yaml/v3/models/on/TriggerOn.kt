@@ -56,11 +56,9 @@ data class TriggerOn(
     var manual: ManualRule? = null,
     var remote: String? = null,
     val openapi: String? = null,
+    @JsonProperty("repo-name")
+    @ApiModelProperty(name = "repo-name")
     var repoName: String? = null,
-    var triggerName: String? = null,
-    @JsonProperty("repoId")
-    @ApiModelProperty(name = "repoId")
-    var repoHashId: String? = null,
     var credentials: String? = null
 ) {
     fun toPre(version: YamlVersion.Version) = when (version) {
@@ -86,7 +84,6 @@ data class TriggerOn(
 
     private fun toPreV3() = PreTriggerOnV3(
         repoName = repoName,
-        repoHashId = repoHashId,
         type = null,
         credentials = credentials,
         push = push,
@@ -99,10 +96,16 @@ data class TriggerOn(
         note = note,
         // todo
         repoHook = null,
-        manual = (manual ?: EnableType.FALSE.value).nullIfDefault(DEFAULT_MANUAL_RULE),
+        manual = simpleManual(),
         openapi = openapi,
         remote = remote
     )
+
+    private fun simpleManual() = when {
+        manual?.nullIfDefault(DEFAULT_MANUAL_RULE) == null -> EnableType.TRUE.value
+        manual!!.enable == false -> EnableType.FALSE.value
+        else -> manual?.copy(enable = null)
+    }
 }
 
 interface IPreTriggerOn : YamlVersion {

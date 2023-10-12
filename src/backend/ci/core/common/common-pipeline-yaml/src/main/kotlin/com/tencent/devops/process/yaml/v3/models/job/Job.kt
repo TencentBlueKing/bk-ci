@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class Job(
     // val job: JobDetail,
+    var enable: Boolean? = null,
     val id: String? = "",
     val name: String? = "",
     @JsonProperty("mutex")
@@ -72,6 +73,7 @@ data class Job(
 
 data class Container(
     val image: String,
+    @JsonProperty("image-type")
     val imageType: String? = ImageType.THIRD.name,
     val credentials: Credentials? = null,
     val options: DockerOptions? = null,
@@ -81,6 +83,7 @@ data class Container(
 
 data class Container2(
     val image: String,
+    @JsonProperty("image-type")
     val imageType: String? = ImageType.THIRD.name,
     val credentials: String? = null,
     val options: DockerOptions? = null,
@@ -90,6 +93,7 @@ data class Container2(
 
 data class Container3(
     val image: String,
+    @JsonProperty("image-type")
     val imageType: String? = ImageType.THIRD.name,
     val credentials: Any? = null,
     val options: DockerOptions? = null,
