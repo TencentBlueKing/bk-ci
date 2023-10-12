@@ -19,7 +19,7 @@ class TaskTerminateService @Autowired constructor(
     fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): JobResult<TaskTerminateResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
-                operationName = "executeScript",
+                operationName = "terminateTask",
                 operationEnv = "prod",
                 bkUsername = jobCloudTaskTerminateReq.bkUsername
             )
