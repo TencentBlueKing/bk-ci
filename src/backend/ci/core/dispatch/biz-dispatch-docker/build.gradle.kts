@@ -38,5 +38,5 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:log:api-log"))
     api(project(":core:buildless:api-buildless"))
-    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
+    api(project(":core:dispatch:api-dispatch-kubernetes"))
 }
