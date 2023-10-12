@@ -17,14 +17,21 @@
             Preview
         },
         data () {
+            const prefix = 'https://ftp.woa.com/fapi/sdk/prod'
+
             return {
-                loadPreview: false
+                loadPreview: false,
+                jsUrl: `${prefix}/js/bk-pipeline`,
+                cssUrl: `${prefix}/css/bk-pipeline`
             }
         },
         computed: {
             ftpComponent () {
                 return PipelineIndex
             }
+        },
+        created () {
+            this.loadScripts()
         },
         beforeRouteLeave (to, from, next) {
             if (from.name === 'ftpPipelinesDetail' || from.name === 'ftpPipelinesEdit' || from.name === 'ftpPipelinesHistory') {
@@ -70,6 +77,41 @@
                 } else {
                     next()
                 }
+            }
+        },
+        methods: {
+            loadScripts (jsUrl = this.jsUrl, cssUrl = this.cssUrl) {
+                if (!jsUrl && !cssUrl) {
+                    return
+                }
+
+                try {
+                    Promise.all([
+                        cssUrl && this.importStyle({ href: cssUrl }),
+                        jsUrl && this.importJS({ url: jsUrl })
+                    ])
+                } catch (e) {}
+            },
+            importStyle ({ type, href, name }, parent = document.head) {
+                return new Promise((resolve, reject) => {
+                    const link = document.createElement('link')
+                    type && (link.type = type)
+                    link.rel = 'stylesheet'
+                    link.href = href
+                    name && (link.setAttribute('data-name', name))
+                    link.onload = () => resolve(link)
+                    link.onerror = reject
+                    parent.appendChild(link)
+                })
+            },
+            importJS ({ url }, parent = document.body) {
+                return new Promise((resolve, reject) => {
+                    const s = document.createElement('script')
+                    s.src = url
+                    s.onload = () => resolve(s)
+                    s.onerror = reject
+                    parent.appendChild(s)
+                })
             }
         }
     }

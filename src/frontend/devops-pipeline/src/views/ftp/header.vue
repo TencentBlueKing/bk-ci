@@ -114,7 +114,7 @@
 
         .bread-prefix {
             position: absolute;
-            top: 8px;
+            top: 7px;
             left: 20px;
             z-index: 10;
             height: 32px;
@@ -172,9 +172,13 @@
             }
         }
         .bkdevops-bread-crumb {
-            margin-left: 46px;
+            margin-left: 40px;
         }
         .bread-crumb-item:first-child {
+            display: none;
+        }
+
+        .bk-dropdown-menu {
             display: none;
         }
     }
