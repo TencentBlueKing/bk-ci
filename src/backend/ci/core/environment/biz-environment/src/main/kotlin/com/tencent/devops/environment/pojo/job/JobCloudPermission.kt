@@ -5,13 +5,13 @@ import io.swagger.annotations.ApiModelProperty
 
 @Suppress("ALL")
 abstract class JobCloudPermission(
-    @ApiModelProperty(value = "应用ID", required = true)
+    @ApiModelProperty(value = "应用ID")
     @JsonProperty("bk_app_code")
-    open var bkAppCode: String,
-    @ApiModelProperty(value = "安全秘钥", required = true)
+    open var bkAppCode: String? = "",
+    @ApiModelProperty(value = "安全秘钥")
     @JsonProperty("bk_app_secret")
-    open var bkAppSecret: String,
-    @ApiModelProperty(value = "当前用户用户名", required = true)
+    open var bkAppSecret: String? = "",
+    @ApiModelProperty(value = "当前用户用户名")
     @JsonProperty("bk_username")
-    open var bkUsername: String
+    open var bkUsername: String? = ""
 )

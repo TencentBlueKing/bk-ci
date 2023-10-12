@@ -7,10 +7,10 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudFileDistributeReq(
     @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
     @JsonProperty("bk_scope_type")
-    var bkScopeType: String,
+    var bkScopeType: String? = "",
     @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
     @JsonProperty("bk_scope_id")
-    var bkScopeId: String,
+    var bkScopeId: String? = "",
     @ApiModelProperty(value = "源文件列表", required = true)
     @JsonProperty("file_source_list")
     val fileSourceList: List<JobCloudFileSource>,
@@ -34,30 +34,34 @@ data class JobCloudFileDistributeReq(
     val timeout: Long,
     @ApiModelProperty(value = "应用ID", required = true)
     @JsonProperty("bk_app_code")
-    override var bkAppCode: String,
+    override var bkAppCode: String? = "",
     @ApiModelProperty(value = "安全秘钥", required = true)
     @JsonProperty("bk_app_secret")
-    override var bkAppSecret: String,
+    override var bkAppSecret: String? = "",
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
-    override var bkUsername: String
+    override var bkUsername: String? = ""
 ) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername) {
     fun toMap(): Map<String, Any> {
         val map: MutableMap<String, Any> = mutableMapOf()
-        map["bk_scope_type"] = bkScopeType
-        map["bk_scope_id"] = bkScopeId
+        if (null != bkScopeType)
+            map["bk_scope_type"] = bkScopeType!!
+        if (null != bkScopeId)
+            map["bk_scope_id"] = bkScopeId!!
         map["file_source_list"] = fileSourceList
         map["file_target_path"] = fileTargetPath
         map["transfer_mode"] = transferMode
         map["target_server"] = executeTarget
         map["account_alias"] = accountAlias
-        if (null != accountId) {
+        if (null != accountId)
             map["account_id"] = accountId
-        }
         map["timeout"] = timeout
-        map["bk_app_code"] = bkAppCode
-        map["bk_app_secret"] = bkAppSecret
-        map["bk_username"] = bkUsername
+        if (null != bkAppCode)
+            map["bk_app_code"] = bkAppCode!!
+        if (null != bkAppSecret)
+            map["bk_app_secret"] = bkAppSecret!!
+        if (null != bkUsername)
+            map["bk_username"] = bkUsername!!
         return map
     }
 }

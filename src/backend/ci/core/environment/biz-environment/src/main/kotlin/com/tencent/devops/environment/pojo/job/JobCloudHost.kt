@@ -7,11 +7,11 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudHost(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    var bkHostId: Long?,
+    var bkHostId: Long? = 0L,
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
-    var bkCloudId: Long?,
+    var bkCloudId: Long? = 0L,
     @ApiModelProperty(value = "IP地址")
     @JsonProperty("ip")
-    var ip: String?
+    var ip: String? = ""
 )

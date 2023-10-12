@@ -76,19 +76,13 @@ class ServiceJobResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val accountAlias = queryAccountAliasService.queryAccountAlias(
             JobCloudQueryAccountAliasReq(
-                bkScopeType = "",
-                bkScopeId = "",
                 account = scriptExecuteReq.account,
-                bkAppCode = "",
-                bkAppSecret = "",
                 bkUsername = userId
             )
         )
         val dynamicGroupList: List<JobCloudHost> = emptyList()
         val topoNodeList: List<JobCloudHost> = emptyList()
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
-            bkScopeType = "",
-            bkScopeId = "",
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
             timeout = scriptExecuteReq.timeout,
@@ -104,14 +98,12 @@ class ServiceJobResourceImpl @Autowired constructor(
                 ),
                 hostList = scriptExecuteReq.executeTarget.hostList?.map {
                     JobCloudHost(
-                        bkHostId = it.bkHostId ?: 0,
-                        bkCloudId = it.bkCloudId ?: 0,
-                        ip = it.ip ?: ""
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
                     )
                 }
             ),
-            bkAppCode = "",
-            bkAppSecret = "",
             bkUsername = userId
         )
         return scriptExecuteService.executeScript(jobCloudScriptExecuteReq)
@@ -125,17 +117,11 @@ class ServiceJobResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val accountAlias = queryAccountAliasService.queryAccountAlias(
             JobCloudQueryAccountAliasReq(
-                bkScopeType = "",
-                bkScopeId = "",
                 account = fileDistributeReq.accountId.toString(),
-                bkAppCode = "",
-                bkAppSecret = "",
                 bkUsername = userId
             )
         )
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
-            bkScopeType = "",
-            bkScopeId = "",
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
@@ -148,9 +134,9 @@ class ServiceJobResourceImpl @Autowired constructor(
                         ),
                         hostList = fileSource.sourceFileServer.hostList?.map {
                             JobCloudHost(
-                                bkHostId = it.bkHostId ?: 0,
-                                bkCloudId = it.bkCloudId ?: 0,
-                                ip = it.ip ?: ""
+                                bkHostId = it.bkHostId,
+                                bkCloudId = it.bkCloudId,
+                                ip = it.ip
                             )
                         }
                     ),
@@ -171,17 +157,15 @@ class ServiceJobResourceImpl @Autowired constructor(
                 ),
                 hostList = fileDistributeReq.executeTarget.hostList?.map {
                     JobCloudHost(
-                        bkHostId = it.bkHostId ?: 0,
-                        bkCloudId = it.bkCloudId ?: 0,
-                        ip = it.ip ?: ""
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
                     )
                 }
             ),
             accountAlias = fileDistributeReq.accountAlias,
             accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,
-            bkAppCode = "",
-            bkAppSecret = "",
             bkUsername = userId
         )
         return fileDistributeService.distributeFile(jobCloudFileDistributeReq)
@@ -194,12 +178,8 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<TaskTerminateResult> {
         checkParam(userId, projectId)
         val jobCloudTaskTerminateReq = JobCloudTaskTerminateReq(
-            bkScopeType = "",
-            bkScopeId = "",
             jobInstanceId = taskTerminateReq.jobInstanceId,
             operationCode = taskTerminateReq.operationCode,
-            bkAppCode = "",
-            bkAppSecret = "",
             bkUsername = userId
         )
         return taskTerminateService.terminateTask(jobCloudTaskTerminateReq)
@@ -222,8 +202,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceLogsResult> {
         checkParam(userId, projectId)
         val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
-            bkScopeType = "",
-            bkScopeId = "",
             jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
             stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
             hostList = queryJobInstanceLogsReq.hostList?.map {
@@ -233,8 +211,6 @@ class ServiceJobResourceImpl @Autowired constructor(
                     ip = it.ip
                 )
             },
-            bkAppCode = "",
-            bkAppSecret = "",
             bkUsername = userId
         )
         return queryJobInstanceLogsService.queryJobInstanceLogs(jobCloudQueryJobInstanceLogsReq)
