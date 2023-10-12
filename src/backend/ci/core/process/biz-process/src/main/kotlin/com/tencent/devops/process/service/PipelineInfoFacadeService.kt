@@ -375,6 +375,19 @@ class PipelineInfoFacadeService @Autowired constructor(
                 } else {
                     model
                 }
+                watcher.start("generateYaml")
+                val savedYaml = yaml ?: transferService.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = null,
+                    actionType = TransferActionType.FULL_MODEL2YAML,
+                    data = TransferBody(
+                        modelAndSetting = PipelineModelAndSetting(
+                            model = model,
+                            setting = PipelineSetting() // TODO #8161 定义流水线设置的默认值
+                        )
+                    )
+                ).newYaml
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
@@ -388,7 +401,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     versionStatus = versionStatus,
                     templateId = templateId,
                     description = null,
-                    yamlStr = yaml,
+                    yamlStr = savedYaml,
                     baseVersion = null
                 )
                 pipelineId = result.pipelineId
