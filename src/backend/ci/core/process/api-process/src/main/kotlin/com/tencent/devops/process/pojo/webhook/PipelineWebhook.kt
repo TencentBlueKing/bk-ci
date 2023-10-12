@@ -54,6 +54,8 @@ data class PipelineWebhook(
     val taskId: String? = null,
     @ApiModelProperty("事件类型", required = false)
     var eventType: String? = null,
+    @ApiModelProperty("事件源,代码库hashId", required = false)
+    var eventSource: String? = null,
     @ApiModelProperty("事件源外联Id", required = false)
     var externalId: String? = null
 )
