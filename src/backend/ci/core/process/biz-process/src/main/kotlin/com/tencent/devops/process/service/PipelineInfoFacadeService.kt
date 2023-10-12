@@ -264,7 +264,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     fun createPipeline(
         userId: String,
         projectId: String,
-        @AuditRequestBody
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,

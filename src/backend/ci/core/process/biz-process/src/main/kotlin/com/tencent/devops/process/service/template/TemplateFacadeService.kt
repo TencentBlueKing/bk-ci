@@ -588,7 +588,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Boolean {
         logger.info("Start to update the template setting - [$projectId|$userId|$templateId]")
         checkPermission(projectId, userId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(templateId)
+        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(setting.pipelineName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(
