@@ -34,13 +34,7 @@ object NetworkUtil {
 
             else -> {
                 logger.error("[executeHttpRequest] Invalid http type.")
-                return JobCloudResp(
-                    code = -1,
-                    result = false,
-                    jobRequestId = "",
-                    message = "[executeHttpRequest] Invalid http type.",
-                    data = null
-                )
+                throw IllegalArgumentException("Invalid http request type")
             }
         }
     }
