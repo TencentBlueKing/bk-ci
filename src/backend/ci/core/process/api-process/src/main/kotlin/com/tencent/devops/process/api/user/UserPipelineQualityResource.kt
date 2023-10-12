@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.PipelineListRequest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
@@ -76,6 +78,7 @@ interface UserPipelineQualityResource {
     @ApiOperation("根据id列出流水线")
     @POST
     @Path("/{projectId}/")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

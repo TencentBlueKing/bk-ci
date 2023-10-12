@@ -29,12 +29,9 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
-import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -64,7 +61,7 @@ class RbacPermissionProjectService(
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
     private val deptService: DeptService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val resourceGroupMemberService: RbacPermissionResourceMemberService
     private val client: Client
 ) : PermissionProjectService {
 
@@ -74,76 +71,24 @@ class RbacPermissionProjectService(
         private const val USER_TYPE = "user"
     }
 
-    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        return when (group) {
-            // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员
-            BkAuthGroup.CIADMIN, BkAuthGroup.CI_MANAGER -> emptyList()
-            // 获取项目下组全部成员
-            null -> {
-                getProjectGroupAndUserList(projectCode).flatMap { it.userIdList }.distinct()
-            }
-            else -> {
-                val dbGroupInfo = authResourceGroupDao.get(
-                    dslContext = dslContext,
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    groupCode = group.value
-                ) ?: return emptyList()
-                val groupInfo = getProjectGroupAndUserList(projectCode)
-                    .find { it.roleId == dbGroupInfo.relationId.toInt() }
-                groupInfo?.userIdList ?: emptyList()
-            }
-        }
+    override fun getProjectUsers(
+        projectCode: String,
+        group: BkAuthGroup?
+    ): List<String> {
+        return resourceGroupMemberService.getResourceGroupMembers(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            group = group
+        )
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
-        // 1、获取分级管理员id
-        val gradeManagerId = authResourceService.get(
+        return resourceGroupMemberService.getResourceGroupAndMembers(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
-        ).relationId
-        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-        val groupInfoList = permissionGradeManagerService.listGroup(
-            gradeManagerId = gradeManagerId,
-            searchGroupDTO = searchGroupDTO,
-            page = 1,
-            pageSize = 1000
         )
-        logger.info(
-            "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
-                " gradeManagerId = $gradeManagerId | groupInfoList: $groupInfoList"
-        )
-        val result = mutableListOf<BkAuthGroupAndUserList>()
-        groupInfoList.forEach {
-            // 3、获取组成员
-            val pageInfoDTO = PageInfoDTO().apply {
-                limit = 1000
-                offset = 0
-            }
-            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
-            logger.info(
-                "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
-                    "| groupMemberInfoList: $groupMemberInfoList"
-            )
-            val members = mutableListOf<String>()
-            groupMemberInfoList.forEach { memberInfo ->
-                // todo 暂时不返回部门的用户
-                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
-                    members.add(memberInfo.id)
-                }
-            }
-            val groupAndUser = BkAuthGroupAndUserList(
-                displayName = it.name,
-                roleId = it.id,
-                roleName = it.name,
-                userIdList = members.toSet().toList(),
-                type = ""
-            )
-            result.add(groupAndUser)
-        }
-        return result
     }
 
     override fun getUserProjects(userId: String): List<String> {

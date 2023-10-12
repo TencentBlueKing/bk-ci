@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceService
@@ -106,9 +107,56 @@ class MigratePermissionHandoverService constructor(
                         handoverFrom
                     )
                 }
-                offset += limit
             } while (resourceList.size == limit)
         }
+    }
+
+    fun fitSecToRbacAuth(
+        projectCode: String,
+        projectCreator: String,
+        resourceType: String
+    ) {
+        var offset = 0
+        val limit = 100
+        do {
+            val resourceList = authResourceService.listByCreator(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                creator = projectCreator,
+                offset = offset,
+                limit = limit
+            )
+            logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
+            resourceList.forEach foreach@{ resource ->
+                val resourceManagerGroup = authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resource.resourceCode,
+                    groupCode = DefaultGroupType.MANAGER.value
+                ) ?: return@foreach
+                val groupId = resourceManagerGroup.relationId.toInt()
+                val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
+                    groupId,
+                    V2PageInfoDTO().apply {
+                        page = 1
+                        pageSize = 10
+                    }
+                )
+                if (roleGroupMember.count == 1 && roleGroupMember.results.first().id == projectCreator) {
+                    logger.info(
+                        "delete resource manager group:$projectCode|${resource.resourceCode}|" +
+                            resourceManagerGroup.groupName
+                    )
+                    v2ManagerService.deleteRoleGroupV2(groupId)
+                    authResourceGroupDao.deleteByIds(
+                        dslContext = dslContext,
+                        ids = listOf(resourceManagerGroup.id)
+                    )
+                }
+            }
+            offset += limit
+        } while (resourceList.size == limit)
     }
 
     companion object {

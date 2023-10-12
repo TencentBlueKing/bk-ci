@@ -48,7 +48,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         .build<String, String>()
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        val allGroupAndUser = getProjectGroupAndUserList(projectCode)
+        val allGroupAndUser = getProjectGroupAndUserList(projectCode = projectCode)
+
         return if (group == null) {
             val allMembers = mutableSetOf<String>()
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
