@@ -74,6 +74,7 @@ interface IVariable
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
     val value: String?,
+    val name: String? = null,
     val readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = false,

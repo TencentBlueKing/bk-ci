@@ -31,18 +31,19 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.BuildContainerType
+import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
+import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.GitNotices
-import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.ResourcesPools
-import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableDatasource
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
@@ -57,8 +58,6 @@ import com.tencent.devops.process.yaml.v3.models.job.ServiceWith
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
@@ -72,6 +71,8 @@ object YamlObjects {
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
         val va = Variable(
             value = variable["value"]?.toString(),
+            name = variable["name"]?.toString(),
+            valueNotEmpty = getNullValue("value-not-empty", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
             props = if (variable["props"] == null) {
