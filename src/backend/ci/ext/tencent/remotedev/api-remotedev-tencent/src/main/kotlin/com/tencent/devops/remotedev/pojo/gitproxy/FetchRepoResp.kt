@@ -6,5 +6,6 @@ data class FetchRepoResp(
     val creator: String,
     val createdDate: String,
     val repoName: String,
-    val type: String
+    val type: String,
+    val desc: String?
 )

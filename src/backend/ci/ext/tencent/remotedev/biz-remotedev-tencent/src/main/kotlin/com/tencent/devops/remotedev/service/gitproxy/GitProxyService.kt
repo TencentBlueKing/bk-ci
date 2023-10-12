@@ -59,7 +59,8 @@ class GitProxyService @Autowired constructor(
                 creator = record.createdBy,
                 createdDate = record.createdDate,
                 repoName = record.name,
-                type = record.type
+                type = record.type,
+                desc = record.description
             )
         }
         return Page(
