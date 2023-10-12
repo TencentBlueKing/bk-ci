@@ -57,6 +57,7 @@ class PipelineWebhookDao {
                     PROJECT_NAME,
                     TASK_ID,
                     EVENT_TYPE,
+                    EVENT_SOURCE,
                     EXTERNAL_ID
                 )
                     .values(
@@ -69,6 +70,7 @@ class PipelineWebhookDao {
                         projectName,
                         taskId,
                         eventType,
+                        eventSource,
                         externalId
                     )
                     .onDuplicateKeyUpdate()
@@ -76,8 +78,9 @@ class PipelineWebhookDao {
                     .set(REPO_HASH_ID, repoHashId)
                     .set(REPO_NAME, repoName)
                     .set(PROJECT_NAME, projectName)
-                    .set(EXTERNAL_ID, externalId)
                     .set(EVENT_TYPE, eventType)
+                    .set(EVENT_SOURCE, eventSource)
+                    .set(EXTERNAL_ID, externalId)
                     .execute()
             }
         }
@@ -246,6 +249,7 @@ class PipelineWebhookDao {
             }
             dslContext.selectFrom(this)
                 .where(conditions)
+                .orderBy(PROJECT_ID.desc())
                 .limit(offset, limit)
                 .fetch()
         }
@@ -253,7 +257,7 @@ class PipelineWebhookDao {
 
     fun updateWebhookEventInfo(
         dslContext: DSLContext,
-        repoHashId: String?,
+        eventSource: String?,
         eventType: String,
         externalId: String,
         pipelineId: String,
@@ -262,7 +266,7 @@ class PipelineWebhookDao {
     ) {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.update(this)
-                .set(REPO_HASH_ID, repoHashId)
+                .set(EVENT_SOURCE, eventSource)
                 .set(EVENT_TYPE, eventType)
                 .set(EXTERNAL_ID, externalId)
                 .where(PROJECT_ID.eq(projectId))
