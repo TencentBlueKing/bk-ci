@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -298,6 +299,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        @AuditRequestBody
         setting: PipelineSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)
@@ -619,6 +621,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     )
     override fun uploadPipeline(
         userId: String,
+        @AuditRequestBody
         pipelineInfo: PipelineModelAndSetting,
         projectId: String
     ): Result<String?> {

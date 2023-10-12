@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.pipeline
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -98,7 +97,6 @@ class PipelineSettingFacadeService @Autowired constructor(
     )
     fun saveSetting(
         userId: String,
-        @AuditRequestBody
         setting: PipelineSetting,
         checkPermission: Boolean = true,
         version: Int = 0,

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
@@ -43,7 +44,11 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
 ) : UserPipelineSettingResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
+    override fun saveSetting(
+        userId: String,
+        @AuditRequestBody
+        setting: PipelineSetting
+    ): Result<String> {
         return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
     }
 
