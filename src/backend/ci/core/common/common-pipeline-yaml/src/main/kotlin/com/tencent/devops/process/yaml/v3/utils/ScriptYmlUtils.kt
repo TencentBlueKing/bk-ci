@@ -756,7 +756,7 @@ object ScriptYmlUtils {
 
     private fun manualRule(
         preTriggerOn: IPreTriggerOn
-    ): ManualRule? {
+    ): ManualRule {
         if (preTriggerOn.manual == null) {
             return ManualRule()
         }
@@ -766,7 +766,7 @@ object ScriptYmlUtils {
                 return ManualRule()
             }
             preTriggerOn.manual is String && preTriggerOn.manual == EnableType.FALSE.value -> {
-                return null
+                return ManualRule(false)
             }
             preTriggerOn.manual is Map<*, *> -> kotlin.runCatching {
                 JsonUtil.anyTo(preTriggerOn.manual, object : TypeReference<ManualRule>() {})
