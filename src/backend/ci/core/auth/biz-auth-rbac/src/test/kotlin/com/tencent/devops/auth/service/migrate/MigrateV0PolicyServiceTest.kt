@@ -51,7 +51,8 @@ class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
             rbacCacheService = rbacCacheService,
             authMigrationDao = authMigrationDao,
             deptService = deptService,
-            permissionGroupPoliciesService = permissionGroupPoliciesService
+            permissionGroupPoliciesService = permissionGroupPoliciesService,
+            groupService = groupService
         ),
         recordPrivateCalls = true
     )
