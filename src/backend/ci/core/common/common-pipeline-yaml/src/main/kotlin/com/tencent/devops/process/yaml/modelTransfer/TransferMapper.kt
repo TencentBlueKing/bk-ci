@@ -14,15 +14,14 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.difflib.DiffUtils
 import com.github.difflib.algorithm.myers.MeyersDiffWithLinearSpace
 import com.github.difflib.patch.DeltaType
+import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_UPDATE_WRONG_PATH
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -754,7 +753,7 @@ object TransferMapper {
     ): NodeIndex {
         if (type != ElementInsertBody.ElementInsertType.INSERT) {
             throw PipelineTransferException(
-                TransferMessageCode.ElementUpdateWrongPath
+                ELEMENT_UPDATE_WRONG_PATH
             )
         }
         if (positionResponse.stageIndex == -1) {
@@ -817,7 +816,7 @@ object TransferMapper {
     ): NodeIndex {
         if (type != ElementInsertBody.ElementInsertType.INSERT) {
             throw PipelineTransferException(
-                TransferMessageCode.ElementUpdateWrongPath
+                ELEMENT_UPDATE_WRONG_PATH
             )
         }
         if (preYaml.finally != null) {
