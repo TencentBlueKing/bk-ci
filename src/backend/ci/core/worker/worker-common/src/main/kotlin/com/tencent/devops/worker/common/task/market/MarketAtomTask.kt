@@ -105,10 +105,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -414,15 +414,7 @@ open class MarketAtomTask : ITask() {
         // 从缓存中获取插件执行包文件
         val cacheDirPrefix = if (BuildEnv.isThirdParty()) {
             // 如果是第三方构建机，插件包缓存放入构建机的公共区域
-            val parentFile1 = workspace.parentFile
-            val parentFile2 = parentFile1.parentFile
-            if (parentFile1.exists() && parentFile2.exists()) {
-                parentFile2.absolutePath
-            } else if (parentFile1.exists() && !parentFile2.exists()) {
-                parentFile1.absolutePath
-            } else {
-                workspace.absolutePath
-            }
+            System.getProperty("user.dir")
         } else {
             // 如果是公共构建机，插件包缓存放入流水线的工作空间中
             workspace.absolutePath
