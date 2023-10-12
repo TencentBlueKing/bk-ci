@@ -32,11 +32,14 @@ object TransferUtil {
         }
     }
 
-    fun simplifyParams(defaultValue: Map<String, String>?, input: Map<String, Any>): Map<String, Any> {
+    fun simplifyParams(defaultValue: Map<String, String>?, input: Map<String, Any>): MutableMap<String, Any> {
         val out = input.toMutableMap()
         defaultValue?.forEach {
             val value = out[it.key]
             if (value is String && it.value == value) {
+                out.remove(it.key)
+            }
+            if (value is Boolean && it.value == value.toString()) {
                 out.remove(it.key)
             }
             // 单独针对list的情况
