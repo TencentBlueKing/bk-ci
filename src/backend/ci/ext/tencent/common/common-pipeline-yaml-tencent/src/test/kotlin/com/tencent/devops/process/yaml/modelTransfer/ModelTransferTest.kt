@@ -132,6 +132,58 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @BeforeEach
     fun setUp() {
         every {
+            transferCache.getAtomDefaultValue("CodeccCheckAtomDebug@4.*")
+        }.returns("""{
+    "beAutoLang" : "false",
+    "languages" : "",
+    "checkerSetType" : "normal",
+    "tools" : "",
+    "asyncTask" : "false",
+    "asyncTaskId" : "",
+    "goPath" : "",
+    "pyVersion" : "py3",
+    "bk_atom_del_hook_url_method" : "DELETE",
+    "scriptType" : "SHELL",
+    "script" : "# Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷\n# 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh\n# 确保build.sh能够编译代码\n# cd path/to/build.sh\n# sh build.sh",
+    "languageRuleSetMap" : "{}",
+    "C_CPP_RULE" : "",
+    "checkerSetEnvType" : "prod",
+    "multiPipelineMark" : "",
+    "rtxReceiverType" : "1",
+    "rtxReceiverList" : "",
+    "botWebhookUrl" : "",
+    "botRemindRange" : "2",
+    "botRemindSeverity" : "7",
+    "botRemaindTools" : "",
+    "emailReceiverType" : "1",
+    "emailReceiverList" : "",
+    "emailCCReceiverList" : "",
+    "instantReportStatus" : "2",
+    "reportDate" : "",
+    "reportTime" : "",
+    "reportTools" : "",
+    "toolScanType" : "1",
+    "diffBranch" : "",
+    "byFile" : "false",
+    "mrCommentEnable" : "true",
+    "prohibitIgnore" : "false",
+    "newDefectJudgeFromDate" : "",
+    "transferAuthorList" : "",
+    "path" : "",
+    "customPath" : "",
+    "scanTestSource" : "false",
+    "openScanPrj" : "false",
+    "issueSystem" : "TAPD",
+    "issueSubSystem" : "",
+    "issueResolvers" : "",
+    "issueReceivers" : "",
+    "issueFindByVersion" : "",
+    "maxIssue" : "1000",
+    "issueAutoCommit" : "false",
+    "issueTools" : "",
+    "issueSeverities" : ""
+  }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
+        every {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
         }.returns(emptyMap())
         every {
