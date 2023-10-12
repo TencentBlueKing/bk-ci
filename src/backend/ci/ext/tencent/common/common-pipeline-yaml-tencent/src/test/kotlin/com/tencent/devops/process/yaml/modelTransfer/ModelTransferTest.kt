@@ -132,8 +132,40 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @BeforeEach
     fun setUp() {
         every {
-            transferCache.getAtomDefaultValue(any())
+            transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
         }.returns(emptyMap())
+        every {
+            transferCache.getAtomDefaultValue("checkout@1.*")
+        }.returns("""{
+    "repositoryType" : "ID",
+    "repositoryHashId" : "",
+    "repositoryName" : "",
+    "repositoryUrl" : "",
+    "authType" : "TICKET",
+    "persistCredentials" : "true",
+    "pullType" : "BRANCH",
+    "refName" : "master",
+    "localPath" : "",
+    "strategy" : "REVERT_UPDATE",
+    "fetchDepth" : "",
+    "fetchOnlyCurrentRef" : "false",
+    "enableFetchRefSpec" : "false",
+    "fetchRefSpec" : "",
+    "enablePartialClone" : "false",
+    "includePath" : "",
+    "excludePath" : "",
+    "cachePath" : "",
+    "enableGitLfs" : "true",
+    "enableSubmodule" : "true",
+    "submodulePath" : "",
+    "enableSubmoduleRemote" : "false",
+    "enableSubmoduleRecursive" : "true",
+    "enableVirtualMergeBranch" : "true",
+    "enableGitClean" : "true",
+    "enableGitCleanIgnore" : "true",
+    "autoCrlf" : "false",
+    "enableTrace" : "false"
+  }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
 
         every {
             transferCache.getStoreImageInfo(any(), any())
