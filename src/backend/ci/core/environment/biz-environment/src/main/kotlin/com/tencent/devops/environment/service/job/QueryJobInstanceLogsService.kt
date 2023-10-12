@@ -8,6 +8,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service
 class QueryJobInstanceLogsService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
+    val logger = LoggerFactory.getLogger(QueryJobInstanceLogsService::class.java)
     fun queryJobInstanceLogs(
         jobCloudQueryJobInstanceLogsReq: JobCloudQueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
@@ -46,10 +48,10 @@ class QueryJobInstanceLogsService @Autowired constructor(
             } else {
                 QueryJobInstanceLogsResult()
             }
-        if (NetworkUtil.logger.isDebugEnabled) {
-            NetworkUtil.logger.info("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
-            NetworkUtil.logger.info("[queryJobInstanceLogs] serialized jsonData: $jsonData")
-            NetworkUtil.logger.info("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
+        if (logger.isDebugEnabled) {
+            logger.debug("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.debug("[queryJobInstanceLogs] serialized jsonData: $jsonData")
+            logger.debug("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
         }
 
         return JobResult(

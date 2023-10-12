@@ -8,7 +8,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
-import com.tencent.devops.environment.utils.job.NetworkUtil.logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 class TaskTerminateService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
+    val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
     fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): JobResult<TaskTerminateResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
@@ -46,9 +47,9 @@ class TaskTerminateService @Autowired constructor(
                 TaskTerminateResult()
             }
         if (logger.isDebugEnabled) {
-            logger.info("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")
-            logger.info("[terminateTask] serialized jsonData: $jsonData")
-            logger.info("[terminateTask] taskTerminateResult: $taskTerminateResult")
+            logger.debug("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.debug("[terminateTask] serialized jsonData: $jsonData")
+            logger.debug("[terminateTask] taskTerminateResult: $taskTerminateResult")
         }
 
         return JobResult(

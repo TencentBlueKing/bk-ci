@@ -51,7 +51,7 @@ object NetworkUtil {
             "application/json;charset=utf-8".toMediaTypeOrNull(),
             requestContent
         )
-        if (logger.isDebugEnabled) logger.info("[createPostRequest] request body(serialized): $requestContent")
+        if (logger.isDebugEnabled) logger.debug("[createPostRequest] request body(serialized): $requestContent")
         return Request.Builder()
             .url(url)
             .post(requestBody)
@@ -83,13 +83,13 @@ object NetworkUtil {
                             responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                         else
                             responseBody.toString()
-                    logger.info("[$operateName] request method/url/headers: $requestLog")
-                    logger.info("[$operateName] response body(origin): $responseLog")
+                    logger.debug("[$operateName] request method/url/headers: $requestLog")
+                    logger.debug("[$operateName] response body(origin): $responseLog")
                 }
 
                 val deserializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
                 if (logger.isDebugEnabled)
-                    logger.info("[$operateName] response body(deserialized JobCloudResp<T>): $deserializedRespBody")
+                    logger.debug("[$operateName] response body(deserialized JobCloudResp<T>): $deserializedRespBody")
 
                 if (!deserializedRespBody.result) {
                     logger.error(

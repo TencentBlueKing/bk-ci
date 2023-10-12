@@ -8,7 +8,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
-import com.tencent.devops.environment.utils.job.NetworkUtil.logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 class ScriptExecuteService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
+    val logger = LoggerFactory.getLogger(ScriptExecuteService::class.java)
     fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): JobResult<ScriptExecuteResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
@@ -46,9 +47,9 @@ class ScriptExecuteService @Autowired constructor(
                 ScriptExecuteResult()
             }
         if (logger.isDebugEnabled) {
-            logger.info("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
-            logger.info("[executeScript] serialized jsonData: $jsonData")
-            logger.info("[executeScript] scriptExecuteResult: $scriptExecuteResult")
+            logger.debug("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.debug("[executeScript] serialized jsonData: $jsonData")
+            logger.debug("[executeScript] scriptExecuteResult: $scriptExecuteResult")
         }
 
         return JobResult(

@@ -8,7 +8,7 @@ import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.utils.job.NetworkUtil
-import com.tencent.devops.environment.utils.job.NetworkUtil.logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 class FileDistributeService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
+    val logger = LoggerFactory.getLogger(FileDistributeService::class.java)
     fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
@@ -46,9 +47,9 @@ class FileDistributeService @Autowired constructor(
                 FileDistributeResult()
             }
         if (logger.isDebugEnabled) {
-            logger.info("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
-            logger.info("[distributeFile] serialized jsonData: $jsonData")
-            logger.info("[distributeFile] fileDistributeResult: $fileDistributeResult")
+            logger.debug("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
+            logger.debug("[distributeFile] serialized jsonData: $jsonData")
+            logger.debug("[distributeFile] fileDistributeResult: $fileDistributeResult")
         }
 
         return JobResult(
