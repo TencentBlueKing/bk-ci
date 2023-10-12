@@ -42,7 +42,7 @@ class RbacPermissionAuthorizationScopesService constructor(
     ): List<AuthorizationScopes> {
         if (!registerMonitor)
             return listOf()
-        val spaceBizId = authMonitorSpaceService.getMonitorSpaceBizId(
+        val spaceBizId = authMonitorSpaceService.getOrCreateMonitorSpace(
             projectName = projectName,
             projectCode = projectCode,
             groupCode = groupCode,

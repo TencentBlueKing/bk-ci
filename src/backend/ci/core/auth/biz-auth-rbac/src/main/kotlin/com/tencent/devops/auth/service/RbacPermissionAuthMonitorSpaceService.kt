@@ -102,7 +102,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         return monitorSpaceDetailVO
     }
 
-    override fun getMonitorSpaceBizId(
+    override fun getOrCreateMonitorSpace(
         projectName: String,
         projectCode: String,
         groupCode: String,
@@ -154,6 +154,15 @@ class RbacPermissionAuthMonitorSpaceService constructor(
                 )
             }
         }
+    }
+
+    override fun getMonitorSpaceBizId(projectCode: String): String {
+        val dbMonitorSpaceRecord = authMonitorSpaceDao.get(dslContext, projectCode)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
+                defaultMessage = "The monitoring space($projectCode) does not exist "
+            )
+        return "-${dbMonitorSpaceRecord.spaceBizId}"
     }
 
     private fun updateMonitorSpace(

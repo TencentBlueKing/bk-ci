@@ -7,12 +7,14 @@ import com.tencent.devops.auth.service.AuthMonitorSpaceService
 class SampleAuthMonitorSpaceService : AuthMonitorSpaceService {
     override fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String = ""
 
-    override fun getMonitorSpaceBizId(
+    override fun getOrCreateMonitorSpace(
         projectName: String,
         projectCode: String,
         groupCode: String,
         userId: String?
     ): String = ""
+
+    override fun getMonitorSpaceBizId(projectCode: String): String = ""
 
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? = null
 

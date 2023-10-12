@@ -13,14 +13,19 @@ interface AuthMonitorSpaceService {
     fun createMonitorSpace(monitorSpaceCreateInfo: MonitorSpaceCreateInfo): String
 
     /**
-     * 获取监控空间业务id
+     * 获取获取创建监控空间
      */
-    fun getMonitorSpaceBizId(
+    fun getOrCreateMonitorSpace(
         projectName: String,
         projectCode: String,
         groupCode: String,
         userId: String?
     ): String
+
+    /**
+     * 获取监控空间业务id
+     */
+    fun getMonitorSpaceBizId(projectCode: String): String
 
     /**
      * 获取监控空间详情
