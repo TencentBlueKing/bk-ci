@@ -25,11 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.dao
+
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspaceOpHis
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class DispatchWorkspaceOpHisDao {
+
+    fun createWorkspaceHistory(
+        dslContext: DSLContext,
+        workspaceName: String,
+        environmentUid: String,
+        operator: String,
+        action: EnvironmentAction,
+        actionMsg: String = ""
+    ) {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_NAME,
+                ENVIRONMENT_UID,
+                OPERATOR,
+                ACTION,
+                ACTION_MSG,
+                CREATED_TIME
+            )
+                .values(
+                    workspaceName,
+                    environmentUid,
+                    operator,
+                    action.name,
+                    actionMsg,
+                    LocalDateTime.now()
+                ).execute()
+        }
+    }
 }

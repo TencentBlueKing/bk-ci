@@ -25,11 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.pojo
+
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class EnvironmentAction(private val action: String) {
+    CREATE("create"),
+    START("start"),
+    STOP("stop"),
+    RECREATE("recreate"),
+    SCALE("scale"),
+    DELETE("delete");
+
+    @JsonValue
+    fun getValue(): String {
+        return action
+    }
 }

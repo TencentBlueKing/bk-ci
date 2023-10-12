@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.config
+
+import com.tencent.devops.common.api.enums.EnumModifier
+import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+
+class DockerRoutingTypeEnumModifier : EnumModifier {
+
+    override fun modified() {
+        EnumUtil.addEnum(
+            enumType = DockerRoutingType::class.java,
+            enumName = "STARTCLOUD", // start 云游戏
+            additionalValues = arrayOf()
+        )
+    }
 }

@@ -25,11 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.resource.service
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceRemoteDevResourceImpl @Autowired constructor(
+    private val remoteDevService: RemoteDevService
+) : ServiceRemoteDevResource {
+
+    override fun getWorkspaceUrl(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType
+    ): Result<String?> {
+        return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName, mountType))
+    }
+
+    override fun getWorkspaceInfo(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType
+    ): Result<WorkspaceInfo> {
+        return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName, mountType))
+    }
 }

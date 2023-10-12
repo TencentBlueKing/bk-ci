@@ -25,11 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
+
+/**
+ * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
+ */
+enum class EnvStatusEnum {
+    pending,
+    running,
+    succeeded,
+    failed,
+    stopped,
+    unknow,
+    deleted,
+    readyToRun
 }

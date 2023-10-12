@@ -25,11 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
-}
+package com.tencent.devops.dispatch.kubernetes.pojo.mq
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.remotedev.MQ
+import com.tencent.devops.common.remotedev.WorkspaceEvent
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import io.swagger.annotations.ApiModelProperty
+
+@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_OPERATE_STARTUP)
+data class WorkspaceOperateEvent(
+    override val userId: String,
+    override val traceId: String = TraceTag.buildBiz(),
+    val type: UpdateEventType,
+    @ApiModelProperty("用户设置里云开发的环境变量")
+    val settingEnvs: Map<String, String> = emptyMap(),
+    @ApiModelProperty("包含了创建者 ssh key 的字符串")
+    val sshKeys: String = "",
+    val bkTicket: String? = null,
+    val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
+    override val workspaceName: String,
+    override val delayMills: Int = 0,
+    override val retryTime: Int = 0
+) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

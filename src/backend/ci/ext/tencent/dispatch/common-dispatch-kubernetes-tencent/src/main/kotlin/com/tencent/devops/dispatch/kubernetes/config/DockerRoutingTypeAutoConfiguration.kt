@@ -25,11 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.config
+
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.annotation.PostConstruct
+
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class DockerRoutingTypeAutoConfiguration {
+
+    /**
+     * 动态扩展DockerRoutingType中的配置项
+     */
+    @PostConstruct
+    fun notifyTypeChange() {
+        DockerRoutingTypeEnumModifier().modified()
+    }
 }

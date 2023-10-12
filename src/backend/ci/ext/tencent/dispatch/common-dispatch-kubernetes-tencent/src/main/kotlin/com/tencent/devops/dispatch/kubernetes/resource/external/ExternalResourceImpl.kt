@@ -25,11 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.kubernetes.resource.external
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ExternalResourceImpl @Autowired constructor(
+    private val remoteDevService: RemoteDevService
+) : ExternalResource {
+
+    override fun workspaceTaskCallback(type: WorkspaceMountType?, taskStatus: TaskStatus): Result<Boolean> {
+        return Result(remoteDevService.workspaceTaskCallback(taskStatus, type ?: WorkspaceMountType.DEVCLOUD))
+    }
 }

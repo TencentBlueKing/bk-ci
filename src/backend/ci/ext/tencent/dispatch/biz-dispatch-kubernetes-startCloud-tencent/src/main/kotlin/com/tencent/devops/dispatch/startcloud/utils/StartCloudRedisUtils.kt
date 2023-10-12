@@ -24,12 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.dispatch.startcloud.utils
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class StartCloudRedisUtils @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
+) {
+
+    /*-------------------------*/
+    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
+        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hset(
+            key = startCloudOrderKey(),
+            hashKey = workspaceName,
+            values = orderId
+        )
+    }
+
+    fun getStartCloudOrder(workspaceName: String): String? {
+        return redisOperation.hget(startCloudOrderKey(), workspaceName)
+    }
+
+    fun deleteStartCloudOrder(workspaceName: String) {
+        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
+    }
+
+    private fun startCloudOrderKey(): String {
+        return "dispatchkubernetes:startcloud:order"
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudRedisUtils::class.java)
+    }
 }

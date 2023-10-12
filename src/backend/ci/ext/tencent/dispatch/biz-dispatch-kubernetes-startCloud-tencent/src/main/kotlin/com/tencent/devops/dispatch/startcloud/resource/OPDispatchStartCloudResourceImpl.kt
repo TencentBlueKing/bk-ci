@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:biz-dispatch-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-docker-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-devcloud-tencent"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-kubernetes-startCloud-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.dispatch.startcloud.resource
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.op.OPDispatchStartCloudResource
+import com.tencent.devops.dispatch.startcloud.service.StartCloudRemoteDevService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OPDispatchStartCloudResourceImpl @Autowired constructor(
+    private val startCloudRemoteDevService: StartCloudRemoteDevService
+) : OPDispatchStartCloudResource {
+    override fun refreshStartCloudOrderId(userId: String): Result<Boolean> {
+        return Result(startCloudRemoteDevService.refreshStartCloudOrderId(userId))
+    }
 }
