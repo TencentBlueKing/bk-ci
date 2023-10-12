@@ -397,7 +397,7 @@
                 }
             },
             async showDetail (output) {
-                const { projectId } = this.$route.params
+                const { projectId, pipelineId } = this.$route.params
                 try {
                     this.isLoading = true
                     const params = {
@@ -418,14 +418,11 @@
                     }
                     this.isLoading = false
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.view,
-                            resourceId: this.$permissionResourceMap.artifactory,
-                            instanceId: [],
-                            projectId: projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 }
             },
             getFolderSize (payload) {
