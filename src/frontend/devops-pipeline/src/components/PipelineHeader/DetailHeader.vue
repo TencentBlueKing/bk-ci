@@ -13,6 +13,7 @@
                 :icon="loading ? 'loading' : ''"
                 outline
                 theme="warning"
+                key="cancel"
                 @click="handleClick"
             >
                 {{ $t("cancel") }}
@@ -46,6 +47,7 @@
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
+                key="edit"
                 @click="goEdit"
             >
                 {{ $t("edit") }}
@@ -60,6 +62,7 @@
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
+                key="exec"
                 @click="goExecPreview"
             >
                 {{ $t("exec") }}
