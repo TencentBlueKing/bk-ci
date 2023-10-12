@@ -17,7 +17,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
 ) {
     fun queryJobInstanceLogs(
         jobCloudQueryJobInstanceLogsReq: JobCloudQueryJobInstanceLogsReq
-    ): JobResult<QueryJobInstanceLogsResult> {
+    ): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "queryJobInstanceLogs",
@@ -39,12 +39,12 @@ class QueryJobInstanceLogsService @Autowired constructor(
             )
 
         var jsonData = ""
-        val queryJobInstanceLogsResult: QueryJobInstanceLogsResult =
+        val queryJobInstanceLogsResult: com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult =
             if (null != jobCloudResp.data) {
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                QueryJobInstanceLogsResult()
+                com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult()
             }
         if (NetworkUtil.logger.isDebugEnabled) {
             NetworkUtil.logger.info("[queryJobInstanceLogs] jobCloudResp.data: ${jobCloudResp.data}")
@@ -52,7 +52,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
             NetworkUtil.logger.info("[queryJobInstanceLogs] queryJobInstanceLogsResult: $queryJobInstanceLogsResult")
         }
 
-        return JobResult(
+        return com.tencent.devops.environment.pojo.job.JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,
             jobRequestId = jobCloudResp.jobRequestId,

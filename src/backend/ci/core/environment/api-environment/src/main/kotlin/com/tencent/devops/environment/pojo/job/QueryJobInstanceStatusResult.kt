@@ -10,10 +10,10 @@ data class QueryJobInstanceStatusResult(
     val finished: Boolean,
     @ApiModelProperty(value = "作业实例基本信息")
     @JsonProperty("job_instance")
-    val jobInstance: JobInstance?,
+    val jobInstance: com.tencent.devops.environment.pojo.job.JobInstance?,
     @ApiModelProperty(value = "作业步骤列表")
     @JsonProperty("step_instance_list")
-    val stepInstanceList: List<JobStepInstance>?
+    val stepInstanceList: List<com.tencent.devops.environment.pojo.job.JobStepInstance>?
 ) {
     constructor() : this(false, null, null)
 }

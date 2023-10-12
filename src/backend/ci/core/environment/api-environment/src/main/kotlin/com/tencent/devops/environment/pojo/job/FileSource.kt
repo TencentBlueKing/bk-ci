@@ -9,7 +9,7 @@ data class FileSource(
     @ApiModelProperty(value = "文件列表", required = true)
     val fileList: List<String>,
     @ApiModelProperty(value = "源文件服务器", required = true)
-    val sourceFileServer: ExecuteTarget,
+    val sourceFileServer: com.tencent.devops.environment.pojo.job.ExecuteTarget,
     @ApiModelProperty(value = "文件源账号", required = true)
-    val account: Account
+    val account: com.tencent.devops.environment.pojo.job.Account
 )

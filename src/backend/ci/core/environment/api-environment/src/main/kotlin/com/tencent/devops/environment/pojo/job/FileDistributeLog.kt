@@ -16,5 +16,5 @@ data class FileDistributeLog(
     val bkHostId: Long?,
     @ApiModelProperty(value = "文件分发日志内容", required = true)
     @JsonProperty("file_logs")
-    val fileLogList: List<FileLog>
+    val fileLogList: List<com.tencent.devops.environment.pojo.job.FileLog>
 )

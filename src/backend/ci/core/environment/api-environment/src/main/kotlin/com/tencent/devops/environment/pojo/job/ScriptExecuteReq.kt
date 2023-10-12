@@ -19,7 +19,7 @@ data class ScriptExecuteReq(
     )
     val scriptLanguage: Int,
     @ApiModelProperty(value = "执行目标", required = true)
-    val executeTarget: ExecuteTarget,
+    val executeTarget: com.tencent.devops.environment.pojo.job.ExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号用户名", required = true)
     val account: String
 )

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 class TaskTerminateService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): JobResult<TaskTerminateResult> {
+    fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): com.tencent.devops.environment.pojo.job.JobResult<com.tencent.devops.environment.pojo.job.TaskTerminateResult> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "executeScript",
@@ -38,12 +38,12 @@ class TaskTerminateService @Autowired constructor(
             )
 
         var jsonData = ""
-        val taskTerminateResult: TaskTerminateResult =
+        val taskTerminateResult: com.tencent.devops.environment.pojo.job.TaskTerminateResult =
             if (null != jobCloudResp.data) {
                 jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
                 jacksonObjectMapper().readValue(jsonData)
             } else {
-                TaskTerminateResult(-1L)
+                com.tencent.devops.environment.pojo.job.TaskTerminateResult(-1L)
             }
         if (logger.isDebugEnabled) {
             logger.info("[terminateTask] jobCloudResp.data: ${jobCloudResp.data}")
@@ -51,7 +51,7 @@ class TaskTerminateService @Autowired constructor(
             logger.info("[terminateTask] taskTerminateResult: $taskTerminateResult")
         }
 
-        return JobResult(
+        return com.tencent.devops.environment.pojo.job.JobResult(
             status = jobCloudResp.code,
             result = jobCloudResp.result,
             jobRequestId = jobCloudResp.jobRequestId,
