@@ -32,6 +32,12 @@ class AuthenticationService {
     @Value("\${job.distributeFileStagUrl:#{null}}")
     val distributeFileStagUrl: String? = null
 
+    @Value("\${job.terminateTaskProdUrl:#{null}}")
+    val terminateTaskProdUrl: String? = null
+
+    @Value("\${job.terminateTaskStagUrl:#{null}}")
+    val terminateTaskStagUrl: String? = null
+
     @Value("\${job.queryJobInstanceStatusProdUrl:#{null}}")
     val queryJobInstanceStatusProdUrl: String? = null
 
@@ -67,6 +73,14 @@ class AuthenticationService {
                     url = distributeFileProdUrl
                 } else {
                     url = distributeFileStagUrl
+                }
+            }
+
+            "terminateTask" -> {
+                if ("prod" == operationEnv) {
+                    url = terminateTaskProdUrl
+                } else {
+                    url = terminateTaskStagUrl
                 }
             }
 
