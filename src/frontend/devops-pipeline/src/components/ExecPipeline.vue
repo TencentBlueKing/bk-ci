@@ -449,6 +449,12 @@
                 return this.$route.params
             },
             errorPopupHeight () {
+                if (!this.showErrorPopup) {
+                    return '0px'
+                }
+                if (!this.showErrors) {
+                    return '42px'
+                }
                 return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
@@ -479,9 +485,7 @@
 
         },
         updated () {
-            if (this.showErrorPopup) {
-                this.setScrollBarPostion()
-            }
+            this.setScrollBarPostion()
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
@@ -589,7 +593,7 @@
             },
             setScrollBarPostion () {
                 const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                rootCssVar.style.setProperty('--track-bottom', this.errorPopupHeight)
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
@@ -757,19 +761,11 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
-                                }
-                            ],
-                            projectId: this.routerParams.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.routerParams.projectId,
+                        resourceCode: this.routerParams.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     message
                         && this.$showTips({

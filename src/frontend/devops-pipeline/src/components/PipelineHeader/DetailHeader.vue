@@ -130,19 +130,11 @@
                         await this.retry(this.execDetail?.id)
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.curPipeline.pipelineName
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                     this.loading = false
                 }
             },
