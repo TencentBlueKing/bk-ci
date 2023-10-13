@@ -147,8 +147,6 @@ class DeliverControl @Autowired constructor(
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
 
-
-
         when {
             existOwner == null && assign2Owner != null -> {
                 val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)

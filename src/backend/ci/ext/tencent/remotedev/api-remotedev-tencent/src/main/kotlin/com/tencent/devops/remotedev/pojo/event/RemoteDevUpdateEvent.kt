@@ -21,6 +21,7 @@ data class RemoteDevUpdateEvent(
     var environmentIp: String? = null,
     var resourceId: String? = null,
     var errorMsg: String? = null,
+    var imageCosFile: String? = null,
     val bkTicket: String? = null,
     val autoAssign: Boolean? = false,
     override var delayMills: Int = 0,

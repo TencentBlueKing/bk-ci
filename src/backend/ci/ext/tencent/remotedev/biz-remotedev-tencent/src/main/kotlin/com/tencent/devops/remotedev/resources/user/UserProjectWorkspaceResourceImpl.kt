@@ -34,8 +34,10 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.projectworkspace.MakeImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
@@ -54,7 +56,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
-    private val restartWorkspaceHandler: RestartWorkspaceHandler
+    private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val makeImageHandler: MakeImageHandler
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -129,6 +132,16 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
+        return Result(true)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        makeImageReq: MakeVmImageReq
+    ): Result<Boolean> {
+        makeImageHandler.makeImageByVm(userId, projectId, workspaceName, makeImageReq)
         return Result(true)
     }
 }

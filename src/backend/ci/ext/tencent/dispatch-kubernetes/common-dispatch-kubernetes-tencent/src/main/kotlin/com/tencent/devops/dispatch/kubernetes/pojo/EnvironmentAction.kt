@@ -37,7 +37,8 @@ enum class EnvironmentAction(val action: String) {
     SCALE("scale"),
     DELETE("delete"),
     DELETE_VM("deletevm"),
-    RESTART("restart");
+    RESTART("restart"),
+    MAKE_IMAGE("copyvm");
 
     @JsonValue
     fun getValue(): String {

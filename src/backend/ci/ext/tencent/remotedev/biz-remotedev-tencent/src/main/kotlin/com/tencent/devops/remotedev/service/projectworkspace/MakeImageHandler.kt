@@ -35,7 +35,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -46,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
@@ -60,7 +63,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class RestartWorkspaceHandler @Autowired constructor(
+class MakeImageHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -68,17 +71,23 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val workspaceCommon: WorkspaceCommon,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val workspaceCommon: WorkspaceCommon
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
+        private val logger = LoggerFactory.getLogger(MakeImageHandler::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun restartWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
-        logger.info("$userId restart project workspace $workspaceName")
+    fun makeImageByVm(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        makeImageReq: MakeVmImageReq
+    ): WorkspaceResponse {
+        logger.info("$userId make image ${makeImageReq.imageName} workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
         RedisCallLimit(
             redisOperation,
@@ -89,33 +98,36 @@ class RestartWorkspaceHandler @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.RESTART,
-                actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
-            )
-
-            workspaceDao.updateWorkspaceStatus(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                status = WorkspaceStatus.STARTING
+                action = WorkspaceAction.MAKE_IMAGE,
+                actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
             )
 
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
-                action = WorkspaceAction.RESTART,
+                action = WorkspaceAction.MAKE_IMAGE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.RUNNING,
-                    WorkspaceStatus.RESTARTING
+                    WorkspaceStatus.STOPPING.name,
+                    WorkspaceStatus.MAKING_IMAGE.name
                 )
             )
+
+            // 更新工作区状态
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.MAKING_IMAGE
+            )
+
+            val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp  ?: ""
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
                     traceId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz(),
-                    type = UpdateEventType.RESTART,
+                    type = UpdateEventType.MAKE_IMAGE,
                     sshKeys = sshService.getSshPublicKeys4Ws(
                         workspaceDao.fetchWorkspaceUser(
                             dslContext,
@@ -125,6 +137,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
+                    cgsId = cgsId,
                     mountType = WorkspaceMountType.START
                 )
             )
@@ -134,9 +147,9 @@ class RestartWorkspaceHandler @Autowired constructor(
                 workspaceName = workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
-                type = WebSocketActionType.WORKSPACE_RESTART,
+                type = WebSocketActionType.WORKSPACE_MAKE_IMAGE,
                 status = true,
-                action = WorkspaceAction.RESTARTING,
+                action = WorkspaceAction.MAKE_IMAGE,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
                 ownerType = WorkspaceOwnerType.PROJECT
@@ -145,14 +158,14 @@ class RestartWorkspaceHandler @Autowired constructor(
             return WorkspaceResponse(
                 workspaceName = workspaceName,
                 workspaceHost = "",
-                status = WorkspaceAction.RESTARTING,
+                status = WorkspaceAction.MAKE_IMAGE,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START
             )
         }
     }
 
-    fun restartWorkspaceCallback(event: RemoteDevUpdateEvent) {
+    fun makeImageByVmCallback(event: RemoteDevUpdateEvent) {
         val workspace = workspaceDao.fetchAnyWorkspace(
             dslContext = dslContext,
             workspaceName = event.workspaceName
@@ -165,24 +178,25 @@ class RestartWorkspaceHandler @Autowired constructor(
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.RUNNING,
+                    status = WorkspaceStatus.STOPPED,
                     dslContext = transactionContext
                 )
+
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
                     operator = event.userId,
-                    action = WorkspaceAction.RESTART,
+                    action = WorkspaceAction.START,
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                        WorkspaceStatus.RESTARTING,
+                        workspace.status.name,
                         WorkspaceStatus.RUNNING.name
                     )
                 )
             }
         } else {
             // 启动失败,记录为EXCEPTION
-            logger.warn("start workspace ${event.workspaceName} failed")
+            logger.warn("stop workspace ${event.workspaceName} failed")
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
                 status = WorkspaceStatus.EXCEPTION,
@@ -193,7 +207,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = event.workspaceName,
                 operator = event.userId,
-                action = WorkspaceAction.RESTART,
+                action = WorkspaceAction.STOP,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status.name,
@@ -208,9 +222,9 @@ class RestartWorkspaceHandler @Autowired constructor(
             workspaceName = event.workspaceName,
             workspaceHost = "",
             errorMsg = event.errorMsg,
-            type = WebSocketActionType.WORKSPACE_RESTART,
+            type = WebSocketActionType.WORKSPACE_STOP,
             status = event.status,
-            action = WorkspaceAction.RESTART,
+            action = WorkspaceAction.STOP,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType

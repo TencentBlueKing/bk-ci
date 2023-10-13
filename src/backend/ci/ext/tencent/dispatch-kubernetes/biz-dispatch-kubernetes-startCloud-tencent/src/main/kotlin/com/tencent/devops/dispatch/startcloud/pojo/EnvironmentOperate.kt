@@ -5,5 +5,6 @@ data class EnvironmentOperate(
     val userId: String? = null,
     val appName: String? = null,
     val pipelineId: String? = null,
-    val env: Map<String, String>? = null
+    val env: Map<String, String>? = null,
+    val cgsId: String? = null
 )

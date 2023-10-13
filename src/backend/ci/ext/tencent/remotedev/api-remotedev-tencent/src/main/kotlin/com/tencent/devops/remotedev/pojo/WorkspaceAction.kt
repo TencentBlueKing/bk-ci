@@ -43,5 +43,6 @@ enum class WorkspaceAction {
     NEED_RENEWAL,
     SYSTEM_CHANGES,
     STOPPING,
-    RESTARTING
+    RESTARTING,
+    MAKE_IMAGE
 }

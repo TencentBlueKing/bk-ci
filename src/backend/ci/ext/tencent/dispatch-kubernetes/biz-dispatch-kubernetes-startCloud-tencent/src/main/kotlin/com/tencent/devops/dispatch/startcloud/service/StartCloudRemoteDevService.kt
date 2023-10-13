@@ -174,6 +174,23 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.MAKE_IMAGE,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                appName = appName,
+                userId = userId,
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
+                cgsId = cgsId
+            )
+        )
+
+        return resp.taskUid
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
@@ -226,7 +243,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(
                             DispatchBuildTaskStatusEnum.SUCCEEDED,
-                            JsonUtil.toJson(taskStatus.vmCreateResp ?: "")
+                            JsonUtil.toJson(taskStatus)
                     )
                 } else {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())

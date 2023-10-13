@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -148,7 +149,7 @@ interface UserProjectWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("休眠工作空间")
+    @ApiOperation("停止工作空间")
     @POST
     @Path("/workspace/{workspaceName}/stop")
     fun stopWorkspace(
@@ -163,7 +164,7 @@ interface UserProjectWorkspaceResource {
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("休眠工作空间")
+    @ApiOperation("重启工作空间")
     @POST
     @Path("/workspace/{workspaceName}/restart")
     fun restartWorkspace(
@@ -176,5 +177,22 @@ interface UserProjectWorkspaceResource {
         @ApiParam("工作空间名称", required = true)
         @PathParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("根据已存在的vm制作镜像")
+    @POST
+    @Path("/workspace/{workspaceName}/make_vm_image")
+    fun makeImageByVm(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @ApiParam("请求报文", required = true)
+        makeImageReq: MakeVmImageReq
     ): Result<Boolean>
 }

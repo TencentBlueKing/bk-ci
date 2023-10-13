@@ -238,7 +238,11 @@ class BcsRemoteDevService @Autowired constructor(
             return resp.taskUid
         }
 
-        override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
             TODO("Not yet implemented")
         }
 

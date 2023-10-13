@@ -44,7 +44,8 @@ enum class WorkspaceStatus {
     DISTRIBUTING, // 10 待分配
     DELIVERING_FAILED, // 11 交付失败
     STOPPING,
-    RESTART;
+    RESTARTING,
+    MAKING_IMAGE;
 
     fun checkRunning() = this == RUNNING
 
