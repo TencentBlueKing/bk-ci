@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
@@ -17,8 +18,22 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyService.createRepo(userId, data))
     }
 
-    override fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Result<Page<FetchRepoResp>> {
-        return Result(gitProxyService.fetchRepo(userId, projectId, page, pageSize))
+    override fun fetchRepo(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        gitType: ScmType?
+    ): Result<Page<FetchRepoResp>> {
+        return Result(
+            gitProxyService.fetchRepo(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                gitType = gitType
+            )
+        )
     }
 
     override fun deleteRepo(userId: String, projectId: String, repoName: String): Result<Boolean> {
