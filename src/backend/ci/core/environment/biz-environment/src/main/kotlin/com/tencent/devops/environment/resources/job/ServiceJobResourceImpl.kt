@@ -33,6 +33,7 @@ import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
@@ -79,13 +80,15 @@ class ServiceJobResourceImpl @Autowired constructor(
             accountAlias = scriptExecuteReq.account,
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
-            targetServer = scriptExecuteReq.executeTarget.hostList.map {
-                JobCloudHost(
-                    bkHostId = it.bkHostId,
-                    bkCloudId = it.bkCloudId,
-                    ip = it.ip
-                )
-            },
+            targetServer = JobCloudExecuteTarget(
+                hostList = scriptExecuteReq.executeTarget.hostList.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
+                    )
+                }
+            ),
             bkUsername = userId
         )
         return scriptExecuteService.executeScript(jobCloudScriptExecuteReq)
@@ -101,13 +104,15 @@ class ServiceJobResourceImpl @Autowired constructor(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
-                    server = fileSource.sourceFileServer.hostList.map {
-                        JobCloudHost(
-                            bkHostId = it.bkHostId,
-                            bkCloudId = it.bkCloudId,
-                            ip = it.ip
-                        )
-                    },
+                    server = JobCloudExecuteTarget(
+                        hostList = fileSource.sourceFileServer.hostList.map {
+                            JobCloudHost(
+                                bkHostId = it.bkHostId,
+                                bkCloudId = it.bkCloudId,
+                                ip = it.ip
+                            )
+                        }
+                    ),
                     account = JobCloudAccount(
                         id = fileSource.account.id,
                         alias = fileSource.account.alias
@@ -116,13 +121,15 @@ class ServiceJobResourceImpl @Autowired constructor(
             },
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
-            executeTarget = fileDistributeReq.executeTarget.hostList.map {
-                JobCloudHost(
-                    bkHostId = it.bkHostId,
-                    bkCloudId = it.bkCloudId,
-                    ip = it.ip
-                )
-            },
+            executeTarget = JobCloudExecuteTarget(
+                hostList = fileDistributeReq.executeTarget.hostList.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
+                    )
+                }
+            ),
             accountAlias = fileDistributeReq.accountAlias,
             accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,

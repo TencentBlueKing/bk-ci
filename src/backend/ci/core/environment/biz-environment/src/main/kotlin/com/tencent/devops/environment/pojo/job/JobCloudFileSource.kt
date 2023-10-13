@@ -10,7 +10,7 @@ class JobCloudFileSource(
     val fileList: List<String>,
     @ApiModelProperty(value = "源文件服务器", required = true)
     @JsonProperty("server")
-    val server: List<JobCloudHost>,
+    val server: JobCloudExecuteTarget,
     @ApiModelProperty(value = "文件源账号", required = true)
     @JsonProperty("account")
     val account: JobCloudAccount

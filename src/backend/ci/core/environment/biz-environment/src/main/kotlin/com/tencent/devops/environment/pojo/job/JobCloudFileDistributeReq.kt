@@ -22,7 +22,7 @@ data class JobCloudFileDistributeReq(
     val transferMode: Int = 2,
     @ApiModelProperty(value = "执行目标", required = true)
     @JsonProperty("target_server")
-    val executeTarget: List<JobCloudHost>,
+    val executeTarget: JobCloudExecuteTarget,
     @ApiModelProperty(value = "机器执行帐号别名")
     @JsonProperty("account_alias")
     val accountAlias: String,

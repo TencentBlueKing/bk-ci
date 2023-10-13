@@ -34,7 +34,7 @@ data class JobCloudScriptExecuteReq(
     val scriptLanguage: Int,
     @ApiModelProperty(value = "执行目标主机列表", required = true)
     @JsonProperty("target_server")
-    val targetServer: List<JobCloudHost>,
+    val targetServer: JobCloudExecuteTarget,
     @ApiModelProperty(value = "应用ID", required = true)
     @JsonProperty("bk_app_code")
     override var bkAppCode: String? = "",
