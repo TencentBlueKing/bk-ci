@@ -381,7 +381,7 @@ class DeleteControl @Autowired constructor(
 
         // 删除时给 cmdb 去掉字段方便监控检索
         val hostIdSub = detail?.environmentIP?.split(".")
-        if (!hostIdSub.isNullOrEmpty()) {
+        if (!hostIdSub.isNullOrEmpty() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
             bkccService.updateHostMonitor(
                 regionId = null,

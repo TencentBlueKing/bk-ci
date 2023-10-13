@@ -134,6 +134,13 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
+
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
         permissionService.checkViewerPermission(userId, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -145,7 +152,9 @@ class WorkspaceService @Autowired constructor(
         }
 
         // 同步修改 cc 主机名称
-        bkccService.updateHostName(displayName, workspaceName)
+        if (ws.workspaceSystemType.checkWindows()) {
+            bkccService.updateHostName(displayName, workspaceName)
+        }
 
         return true
     }
