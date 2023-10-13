@@ -120,10 +120,10 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             )
         }
 
-        return storeFileService.descriptionAnalysis(
+        return storeFileService.textReferenceFileAnalysis(
             fileDirPath = "$fileDirPath${separator}file",
             userId = userId,
-            description = request.content,
+            content = request.content,
             client = client
         )
     }
