@@ -410,34 +410,20 @@ class RbacPermissionMigrateService constructor(
         projectInfo: ProjectVO,
         projectCreator: String
     ): Int? {
-        val projectName = projectInfo.projectName
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        repeat(2) { suffix ->
-            try {
-                permissionResourceService.resourceCreateRelation(
-                    userId = projectCreator,
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(projectName, suffix),
-                    async = false
-                )
-                return authResourceService.getOrNull(
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode
-                )?.relationId?.toInt()
-            } catch (iamException: IamException) {
-                // 由于iam项目大小写不敏感，蓝盾敏感，可能会出现分级管理员名称重复,需要进行处理
-                handleRepeatProjectName(
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    iamException = iamException,
-                    suffix = suffix
-                )
-            }
-        }
-        return null
+        permissionResourceService.resourceCreateRelation(
+            userId = projectCreator,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectInfo.projectName,
+            async = false
+        )
+        return authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )?.relationId?.toInt()
     }
 
     private fun handleRepeatProjectName(

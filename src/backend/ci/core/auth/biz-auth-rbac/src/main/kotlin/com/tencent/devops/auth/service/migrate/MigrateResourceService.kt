@@ -188,9 +188,7 @@ class MigrateResourceService @Autowired constructor(
                 )?.let { authResource ->
                     val resourceName = authResource.resourceName
                     // 如果存在,说明重复迁移,判断资源名称是否相同,如果不同则需要修改
-                    // 但是对于资源名称重复被加尾缀的资源需要特殊处理，得确认是否是因为
-                    // 加了尾缀而导致的资源表资源名称和实际名称不一致
-                    if (instance.displayName != resourceName && !isResourceNameAddSuffix(resourceName)) {
+                    if (instance.displayName != resourceName) {
                         rbacPermissionResourceService.resourceModifyRelation(
                             projectCode = projectCode,
                             resourceType = resourceType,
@@ -199,7 +197,7 @@ class MigrateResourceService @Autowired constructor(
                         )
                     }
                 } ?: run {
-                    // 迁移资源，可能会出现重名
+                    // 由于蓝盾创建资源大小写不敏感，权限中心大小写敏感，所以可能会出现名称重复现象，需要做名称重复处理。
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
@@ -224,10 +222,6 @@ class MigrateResourceService @Autowired constructor(
             }
             offset += limit
         } while (resourceData!!.data.result.size.toLong() == limit)
-    }
-
-    private fun isResourceNameAddSuffix(resourceName: String): Boolean {
-        return suffixList.contains(resourceName.takeLast(3))
     }
 
     private fun listInstance(
@@ -304,6 +298,5 @@ class MigrateResourceService @Autowired constructor(
         private val executorService = Executors.newFixedThreadPool(50)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
         private const val MAX_RETRY_TIMES = 5
-        private val suffixList = listOf("(1)", "(2)", "(3)", "(4)", "(5)")
     }
 }

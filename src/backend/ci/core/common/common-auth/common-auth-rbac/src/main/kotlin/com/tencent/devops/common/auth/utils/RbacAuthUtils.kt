@@ -4,6 +4,7 @@ import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.joda.time.LocalDateTime
 
 object RbacAuthUtils {
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
@@ -97,6 +98,7 @@ object RbacAuthUtils {
     }
 
     fun addSuffixIfNeed(resourceName: String, suffix: Int): String {
-        return if (suffix == 0) resourceName else "$resourceName($suffix)"
+        val migrateTime = LocalDateTime.now().toString("yyMMddHHmmSS")
+        return if (suffix == 0) resourceName else "$resourceName[$migrateTime]"
     }
 }
