@@ -20,20 +20,23 @@ class AuthenticationService {
     @Value("\${job.bkScopeId:#{null}}")
     val bkScopeId: String? = null
 
-    @Value("\${job.executeScriptProdUrl:#{null}}")
-    val executeScriptProdUrl: String? = null
+    @Value("\${job.jobCloudProdUrlPrefix:#{null}}")
+    val jobCloudProdUrlPrefix: String? = null
 
-    @Value("\${job.distributeFileProdUrl:#{null}}")
-    val distributeFileProdUrl: String? = null
+    @Value("\${job.executeScriptPath:#{null}}")
+    val executeScriptPath: String? = null
 
-    @Value("\${job.terminateTaskProdUrl:#{null}}")
-    val terminateTaskProdUrl: String? = null
+    @Value("\${job.distributeFilePath:#{null}}")
+    val distributeFilePath: String? = null
 
-    @Value("\${job.queryJobInstanceStatusProdUrl:#{null}}")
-    val queryJobInstanceStatusProdUrl: String? = null
+    @Value("\${job.terminateTaskPath:#{null}}")
+    val terminateTaskPath: String? = null
 
-    @Value("\${job.queryJobInstanceLogsProdUrl:#{null}}")
-    val queryJobInstanceLogsProdUrl: String? = null
+    @Value("\${job.queryJobInstanceStatusPath:#{null}}")
+    val queryJobInstanceStatusPath: String? = null
+
+    @Value("\${job.queryJobInstanceLogsPath:#{null}}")
+    val queryJobInstanceLogsPath: String? = null
 
     fun appAuthentication(
         operationName: String,
@@ -41,16 +44,16 @@ class AuthenticationService {
     ): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-        val url = when (operationName) {
-            "executeScript" -> executeScriptProdUrl
-            "distributeFile" -> distributeFileProdUrl
-            "terminateTask" -> terminateTaskProdUrl
-            "queryJobInstanceStatus" -> queryJobInstanceStatusProdUrl
-            "queryJobInstanceLogs" -> queryJobInstanceLogsProdUrl
+        val url = jobCloudProdUrlPrefix + when (operationName) {
+            "executeScript" -> executeScriptPath
+            "distributeFile" -> distributeFilePath
+            "terminateTask" -> terminateTaskPath
+            "queryJobInstanceStatus" -> queryJobInstanceStatusPath
+            "queryJobInstanceLogs" -> queryJobInstanceLogsPath
             else -> ""
         }
         return JobCloudAuthenticationReq(
-            url = url ?: "",
+            url = url,
             bkAuthorization = bkAuthorization,
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
