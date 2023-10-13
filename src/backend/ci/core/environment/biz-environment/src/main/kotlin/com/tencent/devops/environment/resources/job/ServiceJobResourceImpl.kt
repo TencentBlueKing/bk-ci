@@ -52,7 +52,6 @@ import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.ParseHashListService
-import com.tencent.devops.environment.service.job.QueryAccountAliasService
 import com.tencent.devops.environment.service.job.TaskTerminateService
 import com.tencent.devops.environment.service.job.QueryJobInstanceStatusService
 import com.tencent.devops.environment.service.job.QueryJobInstanceLogsService
@@ -65,7 +64,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val taskTerminateService: TaskTerminateService,
     private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
     private val queryJobInstanceLogsService: QueryJobInstanceLogsService,
-    private val queryAccountAliasService: QueryAccountAliasService,
     private val parseHashListService: ParseHashListService
 ) : ServiceJobResource {
     override fun executeScript(
@@ -74,19 +72,13 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         checkParam(userId, projectId)
-        val accountAlias = queryAccountAliasService.queryAccountAlias(
-            JobCloudQueryAccountAliasReq(
-                account = scriptExecuteReq.account,
-                bkUsername = userId
-            )
-        )
         val dynamicGroupList: List<JobCloudHost> = emptyList()
         val topoNodeList: List<JobCloudHost> = emptyList()
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
             timeout = scriptExecuteReq.timeout,
-            accountAlias = accountAlias,
+            accountAlias = scriptExecuteReq.account,
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
@@ -115,12 +107,6 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
         checkParam(userId, projectId)
-        val accountAlias = queryAccountAliasService.queryAccountAlias(
-            JobCloudQueryAccountAliasReq(
-                account = fileDistributeReq.accountId.toString(),
-                bkUsername = userId
-            )
-        )
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 JobCloudFileSource(
