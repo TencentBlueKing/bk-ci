@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -42,9 +43,14 @@ class AuthenticationService {
         operationName: String,
         bkUsername: String
     ): JobCloudAuthenticationReq {
+        val logger = LoggerFactory.getLogger(AuthenticationService::class.java)
+
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-        val url = jobCloudProdUrlPrefix + when (operationName) {
+
+        val localVal = ThreadLocal<String>().get()
+        logger.info("[appAuthentication] thread local localval: $localVal, operationName: $operationName")
+        val url = jobCloudProdUrlPrefix + when (localVal) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
             "terminateTask" -> terminateTaskPath
