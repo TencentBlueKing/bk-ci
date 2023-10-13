@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -51,15 +51,13 @@ class TxStoreFileServiceImpl : StoreFileService() {
     }
     override fun uploadFileToPath(
         userId: String,
-        pathList: List<String>,
         client: Client,
-        fileDirPath: String,
-        storeStatic: Boolean,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum?
+        localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String> {
-        pathList.forEach { path ->
-            val file = File("$fileDirPath$fileSeparator$path")
+        val pathList = localDirectoryInfo.pathList
+        pathList.forEach { pathInfo ->
+            val file = File("${localDirectoryInfo.fileDirPath}$fileSeparator${pathInfo.relativePath}")
             try {
                 if (file.exists()) {
                     val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoStaticResource::class)
@@ -68,7 +66,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file
                     ).data
-                    fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
+                    fileUrl?.let { result[pathInfo.relativePath] = StoreUtils.removeUrlHost(fileUrl) }
                 } else {
                     logger.warn("Resource file does not exist:${file.path}")
                 }

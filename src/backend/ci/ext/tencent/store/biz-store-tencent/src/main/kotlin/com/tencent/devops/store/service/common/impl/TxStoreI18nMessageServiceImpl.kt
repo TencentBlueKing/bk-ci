@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
@@ -139,36 +140,32 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         }
     }
 
-    override fun descriptionAnalysis(
+    override fun textReferenceFileAnalysis(
         userId: String,
         projectCode: String,
-        description: String,
-        fileDir: String,
-        language: String,
-        repositoryHashId: String?,
-        branch: String?
+        request: TextReferenceFileParseRequest
     ): String {
-        if (repositoryHashId.isNullOrBlank()) return description
-        var result = description
+        if (request.repositoryHashId.isNullOrBlank()) return request.content
+        var result = request.content
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
-            atomDir = fileDir
+            atomDir = request.fileDir
         ) + "/file"
         val file = File(fileDirPath, "file.zip")
         try {
             downloadFile(
                 filePath = "file",
                 file = file,
-                repositoryHashId = repositoryHashId,
-                branch = branch
+                repositoryHashId = request.repositoryHashId,
+                branch = request.branch
             )
             if (file.exists()) {
                 ZipUtil.unZipFile(file, fileDirPath, false)
-                result = storeFileService.descriptionAnalysis(
+                result = storeFileService.textReferenceFileAnalysis(
                     userId = userId,
-                    description = description,
+                    content = request.content,
                     client = client,
-                    fileDirPath = fileDirPath
+                    fileDirPath = request.fileDir
                 )
             }
         } catch (ignored: Throwable) {
