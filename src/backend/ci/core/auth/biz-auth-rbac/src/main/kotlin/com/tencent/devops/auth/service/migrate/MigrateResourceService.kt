@@ -186,9 +186,8 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 )?.let { authResource ->
-                    val resourceName = authResource.resourceName
                     // 如果存在,说明重复迁移,判断资源名称是否相同,如果不同则需要修改
-                    if (instance.displayName != resourceName) {
+                    if (instance.displayName != authResource.resourceName) {
                         rbacPermissionResourceService.resourceModifyRelation(
                             projectCode = projectCode,
                             resourceType = resourceType,

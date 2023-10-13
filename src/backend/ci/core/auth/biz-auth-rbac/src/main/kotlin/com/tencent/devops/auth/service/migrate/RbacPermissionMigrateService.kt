@@ -83,8 +83,6 @@ class RbacPermissionMigrateService constructor(
         private const val ALL_MEMBERS_NAME = "allMembersName"
         private val toRbacExecutorService = Executors.newFixedThreadPool(5)
         private val migrateProjectsExecutorService = Executors.newFixedThreadPool(5)
-        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
-        private const val MAX_RETRY_TIMES = 1
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -450,25 +448,6 @@ class RbacPermissionMigrateService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         )?.relationId?.toInt()
-    }
-
-    private fun handleRepeatProjectName(
-        projectCode: String,
-        projectName: String,
-        iamException: IamException,
-        suffix: Int
-    ) {
-        logger.info("handle repeat project name:$projectCode|$projectName|$iamException")
-        if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR || suffix == MAX_RETRY_TIMES) {
-            throw iamException
-        } else {
-            val projectNames = client.get(ServiceProjectResource::class)
-                .getProjectNameByNameCaseSensitive(projectName = projectName).data ?: throw iamException
-            logger.info("duplicate project name|$projectCode|$projectNames")
-            if (projectNames.size <= 1) {
-                throw iamException
-            }
-        }
     }
 
     private fun handleException(exception: Exception, projectCode: String) {

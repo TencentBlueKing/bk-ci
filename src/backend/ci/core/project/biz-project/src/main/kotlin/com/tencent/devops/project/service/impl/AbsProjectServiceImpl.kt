@@ -380,10 +380,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record)
     }
 
-    override fun getProjectNameByNameCaseSensitive(projectName: String): List<String> {
-        return projectDao.getProjectNameByNameCaseSensitive(dslContext, projectName)
-    }
-
     override fun update(
         userId: String,
         englishName: String,
