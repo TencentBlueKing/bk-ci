@@ -25,7 +25,6 @@ class QueryJobInstanceStatusService @Autowired constructor(
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "queryJobInstanceStatus",
-                operationEnv = "prod",
                 bkUsername = userId
             )
 

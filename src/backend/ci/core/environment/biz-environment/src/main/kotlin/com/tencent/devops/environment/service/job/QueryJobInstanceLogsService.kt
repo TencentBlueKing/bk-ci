@@ -23,7 +23,6 @@ class QueryJobInstanceLogsService @Autowired constructor(
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "queryJobInstanceLogs",
-                operationEnv = "prod",
                 bkUsername = jobCloudQueryJobInstanceLogsReq.bkUsername
             )
         jobCloudQueryJobInstanceLogsReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode

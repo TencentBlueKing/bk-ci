@@ -23,84 +23,31 @@ class AuthenticationService {
     @Value("\${job.executeScriptProdUrl:#{null}}")
     val executeScriptProdUrl: String? = null
 
-    @Value("\${job.executeScriptStagUrl:#{null}}")
-    val executeScriptStagUrl: String? = null
-
     @Value("\${job.distributeFileProdUrl:#{null}}")
     val distributeFileProdUrl: String? = null
-
-    @Value("\${job.distributeFileStagUrl:#{null}}")
-    val distributeFileStagUrl: String? = null
 
     @Value("\${job.terminateTaskProdUrl:#{null}}")
     val terminateTaskProdUrl: String? = null
 
-    @Value("\${job.terminateTaskStagUrl:#{null}}")
-    val terminateTaskStagUrl: String? = null
-
     @Value("\${job.queryJobInstanceStatusProdUrl:#{null}}")
     val queryJobInstanceStatusProdUrl: String? = null
-
-    @Value("\${job.queryJobInstanceStatusStagUrl:#{null}}")
-    val queryJobInstanceStatusStagUrl: String? = null
 
     @Value("\${job.queryJobInstanceLogsProdUrl:#{null}}")
     val queryJobInstanceLogsProdUrl: String? = null
 
-    @Value("\${job.queryJobInstanceLogsStagUrl:#{null}}")
-    val queryJobInstanceLogsStagUrl: String? = null
-
     fun appAuthentication(
         operationName: String,
-        operationEnv: String,
         bkUsername: String
     ): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-
-        var url: String?
-        when (operationName) {
-            "executeScript" -> {
-                if ("prod" == operationEnv) {
-                    url = executeScriptProdUrl
-                } else {
-                    url = executeScriptStagUrl
-                }
-            }
-
-            "distributeFile" -> {
-                if ("prod" == operationEnv) {
-                    url = distributeFileProdUrl
-                } else {
-                    url = distributeFileStagUrl
-                }
-            }
-
-            "terminateTask" -> {
-                if ("prod" == operationEnv) {
-                    url = terminateTaskProdUrl
-                } else {
-                    url = terminateTaskStagUrl
-                }
-            }
-
-            "queryJobInstanceStatus" -> {
-                if ("prod" == operationEnv) {
-                    url = queryJobInstanceStatusProdUrl
-                } else {
-                    url = queryJobInstanceStatusStagUrl
-                }
-            }
-
-            "queryJobInstanceLogs" -> {
-                if ("prod" == operationEnv) {
-                    url = queryJobInstanceLogsProdUrl
-                } else {
-                    url = queryJobInstanceLogsStagUrl
-                }
-            }
-
-            else -> url = ""
+        val url = when (operationName) {
+            "executeScript" -> executeScriptProdUrl
+            "distributeFile" -> distributeFileProdUrl
+            "terminateTask" -> terminateTaskProdUrl
+            "queryJobInstanceStatus" -> queryJobInstanceStatusProdUrl
+            "queryJobInstanceLogs" -> queryJobInstanceLogsProdUrl
+            else -> ""
         }
         return JobCloudAuthenticationReq(
             url = url ?: "",

@@ -21,7 +21,6 @@ class ScriptExecuteService @Autowired constructor(
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "executeScript",
-                operationEnv = "prod",
                 bkUsername = jobCloudScriptExecuteReq.bkUsername
             )
         jobCloudScriptExecuteReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode

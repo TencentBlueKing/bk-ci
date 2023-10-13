@@ -21,7 +21,6 @@ class FileDistributeService @Autowired constructor(
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "distributeFile",
-                operationEnv = "prod",
                 bkUsername = jobCloudFileDistributeReq.bkUsername
             )
         jobCloudFileDistributeReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode

@@ -21,7 +21,6 @@ class TaskTerminateService @Autowired constructor(
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(
                 operationName = "terminateTask",
-                operationEnv = "prod",
                 bkUsername = jobCloudTaskTerminateReq.bkUsername
             )
         jobCloudTaskTerminateReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
