@@ -951,11 +951,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
+            val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = null,
+                includeDraft = true
+            )?.model ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
             // 对已经存在的模型做处理
             val param = BeforeDeleteParam(
                 userId = userId,
