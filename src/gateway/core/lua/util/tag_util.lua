@@ -18,7 +18,7 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
-    if ngx.var.use_default_tag == 'true' or ns_config.use_default_tag then
+    if ngx.var.use_default_tag == 'true' then
         return ns_config.tag
     end
 
