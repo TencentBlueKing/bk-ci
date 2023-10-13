@@ -140,6 +140,9 @@
             position: absolute;
             top: 6px;
             right: 6px;
+            .bk-dropdown-menu {
+                display: inline-block;
+            }
             .icon-more {
                 display: inline-block;
                 font-size: 25px;
