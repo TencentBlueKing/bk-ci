@@ -41,11 +41,9 @@ import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
-import com.tencent.devops.environment.pojo.job.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.JobCloudFileSource
 import com.tencent.devops.environment.pojo.job.JobCloudHost
-import com.tencent.devops.environment.pojo.job.JobCloudQueryAccountAliasReq
 import com.tencent.devops.environment.pojo.job.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
@@ -81,21 +79,13 @@ class ServiceJobResourceImpl @Autowired constructor(
             accountAlias = scriptExecuteReq.account,
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
-            targetServer = JobCloudExecuteTarget(
-                dynamicGroupList = parseHashListService.getDynamicGroupList(
-                    scriptExecuteReq.executeTarget.envHashIdList
-                ),
-                topoNodeList = parseHashListService.getTopoNodeList(
-                    scriptExecuteReq.executeTarget.nodeHashIdList
-                ),
-                hostList = scriptExecuteReq.executeTarget.hostList?.map {
-                    JobCloudHost(
-                        bkHostId = it.bkHostId,
-                        bkCloudId = it.bkCloudId,
-                        ip = it.ip
-                    )
-                }
-            ),
+            targetServer = scriptExecuteReq.executeTarget.hostList.map {
+                JobCloudHost(
+                    bkHostId = it.bkHostId,
+                    bkCloudId = it.bkCloudId,
+                    ip = it.ip
+                )
+            },
             bkUsername = userId
         )
         return scriptExecuteService.executeScript(jobCloudScriptExecuteReq)
@@ -111,21 +101,13 @@ class ServiceJobResourceImpl @Autowired constructor(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
-                    server = JobCloudExecuteTarget(
-                        dynamicGroupList = parseHashListService.getDynamicGroupList(
-                            fileSource.sourceFileServer.envHashIdList
-                        ),
-                        topoNodeList = parseHashListService.getTopoNodeList(
-                            fileSource.sourceFileServer.nodeHashIdList
-                        ),
-                        hostList = fileSource.sourceFileServer.hostList?.map {
-                            JobCloudHost(
-                                bkHostId = it.bkHostId,
-                                bkCloudId = it.bkCloudId,
-                                ip = it.ip
-                            )
-                        }
-                    ),
+                    server = fileSource.sourceFileServer.hostList.map {
+                        JobCloudHost(
+                            bkHostId = it.bkHostId,
+                            bkCloudId = it.bkCloudId,
+                            ip = it.ip
+                        )
+                    },
                     account = JobCloudAccount(
                         id = fileSource.account.id,
                         alias = fileSource.account.alias
@@ -134,21 +116,13 @@ class ServiceJobResourceImpl @Autowired constructor(
             },
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
-            executeTarget = JobCloudExecuteTarget(
-                dynamicGroupList = parseHashListService.getDynamicGroupList(
-                    fileDistributeReq.executeTarget.envHashIdList
-                ),
-                topoNodeList = parseHashListService.getTopoNodeList(
-                    fileDistributeReq.executeTarget.nodeHashIdList
-                ),
-                hostList = fileDistributeReq.executeTarget.hostList?.map {
-                    JobCloudHost(
-                        bkHostId = it.bkHostId,
-                        bkCloudId = it.bkCloudId,
-                        ip = it.ip
-                    )
-                }
-            ),
+            executeTarget = fileDistributeReq.executeTarget.hostList.map {
+                JobCloudHost(
+                    bkHostId = it.bkHostId,
+                    bkCloudId = it.bkCloudId,
+                    ip = it.ip
+                )
+            },
             accountAlias = fileDistributeReq.accountAlias,
             accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,
