@@ -483,8 +483,8 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         }
         // 解析description
-        releaseInfo.description = storeFileService.descriptionAnalysis(
-            description = releaseInfo.description,
+        releaseInfo.description = storeFileService.textReferenceFileAnalysis(
+            content = releaseInfo.description,
             fileDirPath = "$atomPath${fileSeparator}file",
             client = client,
             userId = userId
