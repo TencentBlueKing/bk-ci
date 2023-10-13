@@ -25,21 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.pipeline.enums.PipelineStorageType
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import io.swagger.annotations.ApiModelProperty
+enum class PipelineStorageType(val desc: String) {
+    YAML("YAML编排"),
+    MODEL("JSON编排");
 
-data class PipelineModelWithYamlRequest(
-    @ApiModelProperty("草稿的来源版本（前端保存时传递）", required = true)
-    val baseVersion: Int,
-    @ApiModelProperty("流水线模型", required = true)
-    val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
-    val yaml: String?,
-    @ApiModelProperty("存储格式", required = false)
-    val storageType: PipelineStorageType? = PipelineStorageType.MODEL,
-    @ApiModelProperty("版本变更说明", required = false)
-    val description: String? = null
-)
+    companion object {
+        fun getActionType(type: String): PipelineStorageType {
+            return when (type) {
+                "YAML" -> YAML
+                else -> MODEL
+            }
+        }
+    }
+}
