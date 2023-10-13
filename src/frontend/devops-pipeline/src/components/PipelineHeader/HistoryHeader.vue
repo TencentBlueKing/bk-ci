@@ -2,7 +2,7 @@
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb />
-            <pac-tag />
+            <pac-tag v-if="pacEnabled" :info="yamlInfo" />
             <badge
                 class="pipeline-latest-exec-badge"
                 :project-id="$route.params.projectId"
@@ -43,6 +43,12 @@
             ...mapGetters({
                 isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
             }),
+            pacEnabled () {
+                return this.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+            },
+            yamlInfo () {
+                return this.pipelineInfo?.yamlInfo
+            },
             executable () {
                 return !this.isCurPipelineLocked && this.canManualStartup
             },

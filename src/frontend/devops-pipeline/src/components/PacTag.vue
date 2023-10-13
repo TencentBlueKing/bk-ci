@@ -8,13 +8,13 @@
             <h6 class="pac-enable-tip">{{ $t('pacEnableTips') }}</h6>
             <div class="pac-info">
                 <p class="pac-info-row">
-                    <logo size="16" :name="info.codeType" />
+                    <logo size="16" name="CODE_GIT" />
                     <bk-link
                         class="pac-info-row-link"
                         target="_blank"
-                        :href="info.codelibUrl"
+                        :href="info.repoUrl"
                     >
-                        {{info.codelibUrl}}
+                        {{info.repoName}}
                     </bk-link>
                 </p>
                 <p class="pac-info-row">
@@ -22,9 +22,9 @@
                     <bk-link
                         class="pac-info-row-link"
                         target="_blank"
-                        :href="info.ymlUrl"
+                        :href="info.fileUrl"
                     >
-                        {{info.ymlUrl}}
+                        {{info.filePath}}
                     </bk-link>
                     <bk-button text theme="primary">
                         <logo size="16" name="tiaozhuan" />

@@ -17,17 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 <template>
-    <section v-bkloading="{ isLoading }" :style="{
-        height: '100%',
-        width: '100%'
-    }">
-        <div
-            ref="box"
-            :style="{
-                height: '100%',
-                width: '100%'
-            }"
-        >
+    <section v-bkloading="{ isLoading }" :style="style">
+        <div ref="box" :style="style">
         </div>
         <ul v-if="!readOnly" class="yaml-error-summary">
             <li
@@ -48,17 +39,7 @@
 <script>
     import MonacoEditor from '@/utils/monacoEditor'
     import YAML from 'yaml'
-    // import { listen } from 'vscode-ws-jsonrpc'
 
-    // import {
-    //     MonacoLanguageClient,
-    //     CloseAction,
-    //     ErrorAction,
-    //     createConnection,
-    //     MonacoServices
-    // } from 'monaco-languageclient'
-
-    // window.setImmediate = window.setTimeout
     export default {
         props: {
             value: {
@@ -92,15 +73,20 @@
         },
         data () {
             return {
-                editor: null,
+                // editor: null,
                 isLoading: false,
-                monaco: null,
-                errors: []
+                errors: [],
+                style: {
+                    height: '100%',
+                    width: '100%'
+                }
             }
         },
         watch: {
             value (newValue) {
-                console.log('change', newValue !== this.editor?.getValue?.())
+                if (this.monaco && !this.codeLens) {
+                    this.registerCodeLensProvider()
+                }
                 if (this.editor) {
                     if (newValue !== this.editor.getValue()) {
                         this.editor.setValue(newValue)
@@ -119,7 +105,7 @@
             this.monaco = await MonacoEditor.instance()
             this.editor = this.monaco.editor.create(this.$refs.box, {
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
-                // automaticLayout: true,
+                automaticLayout: true,
                 formatOnPaste: true,
                 minimap: {
                     enabled: false
@@ -131,17 +117,24 @@
                     resource: this.monaco.Uri.parse(this.yamlUri)
                 })
             })
-
+            if (!this.codeLens && !!this.value) {
+                this.registerCodeLensProvider()
+            }
             this.isLoading = false
             this.highlightBlocks(this.highlightRanges)
-            this.registerCodeLensProvider()
 
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
-                this.registerCodeLensProvider()
-
+                console.log('change', 'value')
                 if (this.value !== value) {
                     this.emitChange(value)
+                }
+                if (this.monaco && !this.codeLens) {
+                    this.registerCodeLensProvider()
+                } else {
+                    this.$nextTick(() => {
+                        this.scheuleUpdateCodeLens?.()
+                    })
                 }
             })
         },
@@ -151,46 +144,6 @@
             this.editor?.dispose?.()
         },
         methods: {
-            // connectToLangServer () {
-            //     const webSocket = new WebSocket('ws://127.0.0.1:8989')
-
-            //     listen({
-            //         webSocket,
-            //         onConnection: (connection) => {
-            //             const languageClient = this.createLanguageClient(connection)
-            //             const disposable = languageClient.start()
-
-            //             connection.onClose(function () {
-            //                 return disposable.dispose()
-            //             })
-
-            //             connection.onError(function (error) {
-            //                 console.log(error)
-            //             })
-            //         }
-            //     })
-            // },
-            // createLanguageClient (connection) {
-            //     return new MonacoLanguageClient({
-            //         name: 'Monaco language client',
-            //         clientOptions: {
-            //             documentSelector: ['yaml'],
-            //             errorHandler: {
-            //                 error: () => ErrorAction.Continue,
-            //                 closed: () => CloseAction.DoNotRestart
-            //             }
-            //         },
-
-            //         connectionProvider: {
-            //             get: (errorHandler, closeHandler) => {
-            //                 return Promise.resolve(
-            //                     createConnection(connection, errorHandler, closeHandler)
-            //                 )
-            //             }
-            //         }
-            //     })
-            // },
-
             insertFragmentAtPos (text, { stageIndex, containerIndex, elementIndex }) {
                 try {
                     const doc = YAML.parse(this.value)
@@ -293,26 +246,35 @@
             registerCodeLensProvider (provider) {
                 if (this.showYamlPlugin && !this.readOnly) {
                     console.log('codelens')
-                    this.codeLens?.dispose?.()
-                    const title = this.$t('atomModel')
-                    const steps = this.visitYaml(this.value)
+
                     this.codeLens = this.monaco.languages.registerCodeLensProvider('yaml', {
+                        onDidChange: (cb) => {
+                            this.scheuleUpdateCodeLens = cb
+                            return {
+                                dispose: () => {
+                                }
+                            }
+                        },
                         provideCodeLenses: (model, token) => {
+                            const title = this.$t('atomModel')
+                            const steps = this.visitYaml(this.value)
                             return {
                                 lenses: steps.map((item, index) => ({
                                     range: {
                                         startLineNumber: item.pos.line,
+                                        endLineNumber: item.pos.line,
                                         startColumn: item.pos.col
                                     },
                                     id: index,
                                     command: {
                                         id: this.editor.addCommand(0, () => {
                                             this.handleYamlPluginClick(item)
-                                        }),
+                                        }, ''),
                                         title
                                     }
                                 })),
-                                dispose: () => {}
+                                dispose: () => {
+                                }
                             }
                         }
                     })
@@ -333,7 +295,7 @@
         opacity: .1;
     }
     .monaco-editor .codelens-decoration  {
-        left: 0 !important;
+        // left: 0 !important;
         color: #63656E !important;
     }
     .yaml-error-summary {
