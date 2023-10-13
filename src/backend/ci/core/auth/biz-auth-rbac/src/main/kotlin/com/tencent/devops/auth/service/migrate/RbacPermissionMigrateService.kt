@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -71,6 +72,7 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -207,6 +209,30 @@ class RbacPermissionMigrateService constructor(
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        logger.info("handover permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
+        return true
+    }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        logger.info("fit sec to rbac:$migrateProjectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
+            toRbacExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migratePermissionHandoverService.fitSecToRbacAuth(
+                    projectCode = projectCode,
+                    projectCreator = migrateProjectConditionDTO.projectCreator!!,
+                    resourceType = migrateProjectConditionDTO.resourceType!!
+                )
+            }
+        }
         return true
     }
 

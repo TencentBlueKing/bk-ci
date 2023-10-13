@@ -37,6 +37,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -55,7 +56,8 @@ class CodeGitScmImpl constructor(
     private val privateKey: String?,
     private val passPhrase: String?,
     private val token: String,
-    gitConfig: GitConfig,
+    private val gitConfig: GitConfig,
+    private val gitApi: GitApi,
     private val event: String? = null
 ) : IScm {
 
@@ -309,8 +311,16 @@ class CodeGitScmImpl constructor(
         )
     }
 
+    override fun getCommitReviewInfo(crId: Long): GitCommitReviewInfo {
+        val url = "projects/${urlEncode(projectName)}/review/$crId"
+        return gitApi.getCommitReviewInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitScmImpl::class.java)
-        private val gitApi = GitApi()
     }
 }

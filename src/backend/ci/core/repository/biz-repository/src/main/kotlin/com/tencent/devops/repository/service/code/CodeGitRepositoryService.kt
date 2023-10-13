@@ -126,7 +126,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId = 0L
+        var gitProjectId: Long? = 0L
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
             logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +

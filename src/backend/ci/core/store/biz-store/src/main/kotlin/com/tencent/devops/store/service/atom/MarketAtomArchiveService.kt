@@ -69,6 +69,7 @@ interface MarketAtomArchiveService {
     fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
+        projectCode: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
 }

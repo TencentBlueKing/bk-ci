@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.db.config
 
+import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import org.jooq.DSLContext
 import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
@@ -36,6 +37,7 @@ import org.jooq.impl.DefaultConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -50,6 +52,23 @@ class BkShardingJooqConfiguration {
     @Bean
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
+        shardingDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DSLContext {
+        return createDslContext(shardingDataSource, executeListenerProviders)
+    }
+
+    @Bean(name = [MIGRATING_SHARDING_DSL_CONTEXT])
+    @ConditionalOnProperty(prefix = "sharding", name = ["migrationFlag"], havingValue = "Y")
+    fun migratingShardingDslContext(
+        @Qualifier("migratingShardingDataSource")
+        migratingShardingDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DSLContext {
+        return createDslContext(migratingShardingDataSource, executeListenerProviders)
+    }
+
+    private fun createDslContext(
         shardingDataSource: DataSource,
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {

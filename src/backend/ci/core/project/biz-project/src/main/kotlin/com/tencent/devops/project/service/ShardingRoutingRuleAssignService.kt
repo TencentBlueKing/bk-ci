@@ -39,23 +39,27 @@ interface ShardingRoutingRuleAssignService {
      * @param channelCode 渠道代码
      * @param routingName 规则名称
      * @param moduleCodes 模块代码列表
+     * @param dataTag 数据标签
      * @return 布尔值
      */
     fun assignShardingRoutingRule(
         channelCode: ProjectChannelCode,
         routingName: String,
-        moduleCodes: List<SystemModuleEnum>
+        moduleCodes: List<SystemModuleEnum>,
+        dataTag: String? = null
     ): Boolean
 
     /**
      * 分配DB分片路由规则
      * @param moduleCode 模块代码
      * @param routingName 规则名称
+     * @param dataTag 数据标签
      * @return DB分片路由规则
      */
     fun assignDbShardingRoutingRule(
         moduleCode: SystemModuleEnum,
-        routingName: String
+        routingName: String,
+        dataTag: String? = null
     ): ShardingRoutingRule
 
     /**

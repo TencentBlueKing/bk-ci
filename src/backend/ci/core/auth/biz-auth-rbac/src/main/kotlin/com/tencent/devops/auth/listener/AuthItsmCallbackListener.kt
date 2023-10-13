@@ -74,6 +74,10 @@ class AuthItsmCallbackListener @Autowired constructor(
             params = arrayOf(sn),
             defaultMessage = "itsm application form $sn does not exist"
         )
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
@@ -110,8 +114,9 @@ class AuthItsmCallbackListener @Autowired constructor(
             )
         } else {
             permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
-            client.get(ServiceProjectApprovalResource::class).createReject(
+            client.get(ServiceProjectApprovalResource::class).createRejectOrRevoke(
                 projectId = englishName,
+                itsmTicketStatus = itsmCallBackInfo.currentStatus,
                 applicant = callBackInfo.applicant,
                 approver = itsmCallBackInfo.lastApprover
             )
@@ -128,6 +133,10 @@ class AuthItsmCallbackListener @Autowired constructor(
             params = arrayOf(sn),
             defaultMessage = "itsm application form $sn does not exist"
         )
+        if (callBackInfo.approveResult != null) {
+            logger.warn("itsm application has ended, no need to handle|itsmCallBackInfo|$itsmCallBackInfo")
+            return
+        }
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
@@ -164,8 +173,9 @@ class AuthItsmCallbackListener @Autowired constructor(
             )
         } else {
             permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
-            client.get(ServiceProjectApprovalResource::class).updateReject(
+            client.get(ServiceProjectApprovalResource::class).updateRejectOrRevoke(
                 projectId = englishName,
+                itsmTicketStatus = itsmCallBackInfo.currentStatus,
                 applicant = callBackInfo.applicant,
                 approver = itsmCallBackInfo.lastApprover
             )

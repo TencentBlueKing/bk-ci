@@ -477,7 +477,8 @@ class QualityHistoryService @Autowired constructor(
                 checkTimes = it.checkTimes,
                 remark = remark,
                 pipelineIsDelete = pipeline?.isDelete ?: false,
-                qualityRuleBuildHisOpt = qualityReview
+                qualityRuleBuildHisOpt = qualityReview,
+                interceptList = interceptList
             )
         }
         return Pair(count, list)
@@ -732,7 +733,8 @@ class QualityHistoryService @Autowired constructor(
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
                 checkTimes = it.checkTimes,
                 remark = remark,
-                pipelineIsDelete = pipeline?.isDelete ?: false
+                pipelineIsDelete = pipeline?.isDelete ?: false,
+                interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             )
         }
         return Pair(count, list)

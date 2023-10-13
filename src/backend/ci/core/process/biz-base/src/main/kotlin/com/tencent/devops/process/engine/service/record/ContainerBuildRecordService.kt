@@ -204,7 +204,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateContainerStatus#$containerId"
+            cancelUser = null, operation = "$operation#$containerId"
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
