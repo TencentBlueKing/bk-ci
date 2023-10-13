@@ -165,7 +165,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     userId = userId,
                     content = request.content,
                     client = client,
-                    fileDirPath = request.fileDir
+                    fileDirPath = fileDirPath
                 )
             }
         } catch (ignored: Throwable) {
