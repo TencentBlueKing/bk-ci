@@ -137,6 +137,7 @@ class RemoteDevSettingService @Autowired constructor(
                     userId = userId,
                     md5 = computeMd5
                 )
+
                 it.md5 != computeMd5 -> remoteDevFileDao.updateFile(
                     dslContext = dslContext, file = it, md5 = computeMd5, userId = userId
                 )
@@ -147,25 +148,27 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
-        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
-        // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
-        data.clientWhiteList?.let { isEnabled ->
-            if (isEnabled) {
-                whiteListService.addWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
-            } else {
-                whiteListService.removeWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+        data.userIds.forEach { userId ->
+            remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
+            // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
+            data.clientWhiteList?.let { isEnabled ->
+                if (isEnabled) {
+                    whiteListService.addWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                } else {
+                    whiteListService.removeWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                }
             }
-        }
 
-        data.startWhiteList?.let { isEnabled ->
-            if (isEnabled) {
-                whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
-            } else {
-                whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = data.userId)
+            data.startWhiteList?.let { isEnabled ->
+                if (isEnabled) {
+                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                } else {
+                    whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                }
             }
-        }
 
-        computeWinUsageTime(data.userId)
+            computeWinUsageTime(userId)
+        }
     }
 
     fun getUserSetting(userId: String): RemoteDevUserSettings {
