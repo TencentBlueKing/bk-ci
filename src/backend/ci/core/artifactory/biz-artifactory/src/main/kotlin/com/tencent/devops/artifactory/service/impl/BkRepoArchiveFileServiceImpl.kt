@@ -109,7 +109,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        storeStatic: Boolean?
+        staticFlag: Boolean?
     ): String {
         val pathSplit = file.name.split('.')
         val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
@@ -145,7 +145,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             } else {
                 defaultUrl
             }
-        } else if (storeStatic == true) {
+        } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,

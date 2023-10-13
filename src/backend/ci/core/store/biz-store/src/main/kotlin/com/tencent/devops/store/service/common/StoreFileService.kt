@@ -26,7 +26,8 @@
  */
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
+import com.tencent.devops.artifactory.pojo.LocalFileInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
@@ -92,23 +93,21 @@ abstract class StoreFileService {
         // 上传文件获取远程静态文件url
         val uploadFileToPathResult = uploadFileToPath(
             userId = userId,
-            pathList = pathList,
             client = client,
-            fileDirPath = fileDirPath,
             result = result,
-            storeStatic = true
+            localDirectoryInfo = LocalDirectoryInfo(
+                fileDirPath = fileDirPath,
+                pathList = pathList.map { LocalFileInfo(it) },
+            )
         )
         return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
     }
 
     abstract fun uploadFileToPath(
         userId: String,
-        pathList: List<String>,
         client: Client,
-        fileDirPath: String,
-        storeStatic: Boolean = false,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum? = null
+        localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String>
 
     abstract fun serviceArchiveAtomFile(

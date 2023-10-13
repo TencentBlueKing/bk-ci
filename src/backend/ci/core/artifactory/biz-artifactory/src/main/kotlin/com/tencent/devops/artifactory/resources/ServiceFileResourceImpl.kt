@@ -48,7 +48,7 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         disposition: FormDataContentDisposition,
         projectCode: String?,
         fileChannelType: FileChannelTypeEnum,
-        storeStatic: Boolean?,
+        staticFlag: Boolean?,
         fileType: FileTypeEnum?
     ): Result<String?> {
         val url = archiveFileService.uploadFile(
@@ -57,7 +57,7 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
             disposition = disposition,
             projectId = projectCode,
             fileChannelType = fileChannelType,
-            storeStatic = storeStatic,
+            staticFlag = staticFlag,
             fileType = fileType
         )
         return Result(url)
