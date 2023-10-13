@@ -30,6 +30,10 @@ class StartWorkspaceService @Autowired constructor(
             csgIds.add(cgsId)
         }
 
+        if (csgIds.isEmpty()) {
+            return ComputerStatusResp(0, emptyList(), emptyList())
+        }
+
         // 获取状态信息
         val resp = startCloudClient.computerStatus(userId, csgIds)
             ?: return ComputerStatusResp(0, emptyList(), emptyList())
