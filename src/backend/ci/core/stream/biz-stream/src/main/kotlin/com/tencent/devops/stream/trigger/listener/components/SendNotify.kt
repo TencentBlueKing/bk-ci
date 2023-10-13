@@ -37,6 +37,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -201,7 +202,8 @@ class SendNotify @Autowired constructor(
                     streamUrl = streamGitConfig.streamUrl!!,
                     content = content,
                     gitProjectId = action.data.getGitProjectId(),
-                    scmType = streamGitConfig.getScmType()
+                    scmType = streamGitConfig.getScmType(),
+                    extensionAction = action.data.context.extensionAction ?: StreamMrEventAction.OPEN.value
                 )
             }
             else -> {

@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -450,10 +451,13 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
-    fun getCgsData(cgsId: String): EnvironmentResourceData? {
+    fun getCgsData(
+        cgsIds: List<String>?,
+        ips: List<String>?
+    ): List<EnvironmentResourceData>? {
         return kotlin.runCatching {
             client.get(ServiceStartCloudResource::class)
-                .getCgsData(cgsId).data
+                .getCgsData(FetchWinPoolData(cgsIds = cgsIds, ips = ips)).data
         }.onFailure {
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull()
@@ -512,10 +516,9 @@ class WorkspaceCommon @Autowired constructor(
         val unShareInfo = sharedDao.fetchWorkspaceSharedInfo(
             dslContext = dslContext,
             workspaceName = workspaceName,
-            sharedUsers = sharedUsers,
-            assignType = assignType
+            sharedUsers = sharedUsers
         )
-        if (mountType == WorkspaceMountType.START) {
+        if (mountType == WorkspaceMountType.START && checkUserNeedUnShare(unShareInfo, assignType)) {
             unShareInfo.groupBy { it.resourceId }.forEach { (resourceId, info) ->
                 val receivers = info.map { it.sharedUser }
                 logger.info("unShareWorkspace|$workspaceName|$operator|$receivers")
@@ -535,5 +538,20 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+    }
+
+    private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
+        var res = false
+        ws.forEach {
+            if (it.type != assignType) return false
+            else res = true
+        }
+        return res
+    }
+
+    fun genWorkspaceCCInfo(
+        projectId: String
+    ): Map<String, Any> {
+        return mapOf("devx_meta" to JsonUtil.toJson(listOf(mapOf("projectId" to projectId)), formatted = false))
     }
 }

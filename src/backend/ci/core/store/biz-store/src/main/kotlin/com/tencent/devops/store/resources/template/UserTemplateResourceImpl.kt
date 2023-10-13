@@ -52,11 +52,10 @@ class UserTemplateResourceImpl @Autowired constructor(
 ) : UserTemplateResource {
 
     override fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         templateCode: String
     ): Result<List<InstalledProjRespItem?>> {
-        return storeProjectService.getInstalledProjects(accessToken, userId, templateCode, StoreTypeEnum.TEMPLATE)
+        return storeProjectService.getInstalledProjects(userId, templateCode, StoreTypeEnum.TEMPLATE)
     }
 
     override fun getMyTemplates(
@@ -69,7 +68,6 @@ class UserTemplateResourceImpl @Autowired constructor(
     }
 
     override fun installTemplate(
-        accessToken: String,
         userId: String,
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {

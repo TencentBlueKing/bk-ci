@@ -123,16 +123,16 @@ class WhiteListService @Autowired constructor(
         如果没有白名单，则抛出异常
         如果白名单中没有对应id，则抛出异常
         */
-    fun numberLimit(key: String, id: String, value: Long) {
-        val limit = cacheService.hentries(key)?.get(id)?.toLong()
-        logger.info("numberLimit|$key|$id|$value|$limit")
+    fun windowsNumberLimit(userId: String, value: Long) {
+        val limit = cacheService.checkWindowsGpuLimit(userId)
+        logger.info("numberLimit|$value|$limit")
         if (limit != null && value < limit) {
             // 没有达到限制，直接return
             return
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("User($id) not in the whiteList or exceeding the limit")
+            params = arrayOf("User($userId) exceeding the limit($limit)")
         )
     }
 

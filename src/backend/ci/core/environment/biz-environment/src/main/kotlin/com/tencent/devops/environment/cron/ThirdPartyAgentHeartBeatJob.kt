@@ -62,7 +62,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
         RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600).use { lock ->
 
             if (!lock.tryLock()) {
-                logger.info("get heartbeat lock failed, skip")
                 return
             }
             checkOKAgent()
@@ -103,7 +102,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                         action = AgentAction.OFFLINE.name
                     )
                     if (record.nodeId == null) {
-                        logger.info("[${record.projectId}|${record.id}|${record.ip}] The node id is null")
                         return@transaction
                     }
                     val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)

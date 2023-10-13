@@ -114,7 +114,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreHonorService
@@ -214,7 +214,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,
@@ -235,7 +234,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val validateFlag: Boolean?
             try {
                 validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                    accessToken = accessToken,
                     projectCode = projectCode,
                     userId = userId
                 ).data
@@ -377,6 +375,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 userId = userId,
                 visibleList = atomVisibleDataMap?.get(atomCode),
                 userDeptList = userDeptList!!) else null
+            val description = it[KEY_DESCRIPTION] as? String
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -385,7 +384,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 classType = classType,
                 serviceScope = serviceScopeList,
                 os = osList,
-                logoUrl = logoUrl,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 icon = it[KEY_ICON] as? String,
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
@@ -394,7 +395,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 docsLink = it[KEY_DOCSLINK] as? String,
                 atomType = AtomTypeEnum.getAtomType(atomType.toInt()),
                 atomStatus = AtomStatusEnum.getAtomStatus(atomStatus.toInt()),
-                description = it[KEY_DESCRIPTION] as? String,
+                description = description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                },
                 publisher = it[KEY_PUBLISHER] as? String,
                 creator = it[KEY_CREATOR] as String,
                 modifier = it[KEY_MODIFIER] as String,
@@ -604,7 +607,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     atomCode = pipelineAtomRecord.atomCode,
                     version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
-                    logoUrl = pipelineAtomRecord.logoUrl,
+                    logoUrl = pipelineAtomRecord.logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     icon = pipelineAtomRecord.icon,
                     summary = pipelineAtomRecord.summary,
                     serviceScope =
@@ -618,7 +623,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),
-                    description = pipelineAtomRecord.description,
+                    description = pipelineAtomRecord.description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     versionList = versionList!!,
                     atomLabelList = atomLabelList,
                     creator = pipelineAtomRecord.creator,
@@ -636,11 +643,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                                 version = pipelineAtomRecord.version
                             )
                         )
-                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
                             ?.decorate(propJsonStr) as Map<String, Any>?
                     },
                     data = pipelineAtomRecord.data?.let {
-                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
                             ?.decorate(pipelineAtomRecord.data) as Map<String, Any>?
                     },
                     recommendFlag = atomFeature?.recommendFlag,
@@ -950,7 +957,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val result = mutableListOf<InstalledAtom>()
         val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
         if (count == 0) {
-            return Page(page, pageSize, count.toLong(), result)
+            return Page(page, pageSize, 0, result)
         }
         val records = atomDao.getInstalledAtoms(
             dslContext = dslContext,
@@ -984,13 +991,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$atomClassifyCode",
                 defaultMessage = classifyName
             )
+            val logoUrl = it[KEY_LOGO_URL] as? String
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
                     atomCode = atomCode,
                     version = it[KEY_VERSION] as String,
                     name = it[NAME] as String,
-                    logoUrl = it[KEY_LOGO_URL] as? String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     classifyCode = atomClassifyCode,
                     classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
@@ -1029,13 +1039,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
+            val logoUrl = it[KEY_LOGO_URL] as? String
             // 判断项目是否是初始化项目或者调试项目
             InstalledAtom(
                 atomId = it[KEY_ID] as String,
                 atomCode = atomCode,
                 version = it[KEY_VERSION] as String,
                 name = it[NAME] as String,
-                logoUrl = it[KEY_LOGO_URL] as? String,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
                 category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
@@ -1051,12 +1064,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
         // 获取自研插件
         val selfAtoms = atomDao.getSelfDevelopAtoms(dslContext)?.map {
+            val logoUrl = it.logoUrl
             InstalledAtom(
                 atomId = it.id,
                 atomCode = it.atomCode,
                 version = it[KEY_VERSION] as String,
                 name = it.name,
-                logoUrl = it.logoUrl,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 classifyCode = "",
                 classifyName = "",
                 category = AtomCategoryEnum.getAtomCategory((it.categroy).toInt()),

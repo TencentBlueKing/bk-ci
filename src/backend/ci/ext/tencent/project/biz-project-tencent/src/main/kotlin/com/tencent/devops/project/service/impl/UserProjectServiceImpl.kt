@@ -29,9 +29,9 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
@@ -45,7 +45,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
-import javax.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -54,6 +53,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED", "LongParameterList", "LongMethod", "ExplicitItLambdaParameter")
 @Service
@@ -65,8 +65,7 @@ class UserProjectServiceImpl @Autowired constructor(
     gray: Gray,
     redisOperation: RedisOperation,
     private val tofService: TOFService,
-    private val bkTag: BkTag,
-    private val profile: Profile
+    private val bkTag: BkTag
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
     @Value("\${project.container.url:#{null}}")
@@ -89,7 +88,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val serviceList = serviceDao.getServiceList(
                 dslContext = dslContext,
                 // 根据集群类型，来获取对应的服务列表
-                clusterType = if (profile.isDevx()) devxClusterType else ""
+                clusterType = if (UserUtil.isTaiUser(userId)) devxClusterType else ""
             )
             val groupService = serviceList.groupBy { it.serviceTypeId }
 
@@ -202,7 +201,8 @@ class UserProjectServiceImpl @Autowired constructor(
             logger.info("listService interface containerBgIdList:$containerBgIdList")
             if (containerBgIdList.isNotEmpty() &&
                 containerUrlList.isNotEmpty() &&
-                containerUrlList.size == containerBgIdList.size
+                containerUrlList.size == containerBgIdList.size &&
+                !UserUtil.isTaiUser(userId)
             ) {
                 val userDeptDetail = tofService.getUserDeptDetail(userId)
                 run breaking@{
@@ -296,13 +296,13 @@ class UserProjectServiceImpl @Autowired constructor(
     }
 
     private fun replacePermFavorServiceId(serviceRecords: List<TServiceRecord>, favorServiceId: Long): Long {
-        val oldPermService = serviceRecords.first { it.englishName == "Perm" }
-        val newPermService = serviceRecords.first { it.englishName == "Permission" }
+        val oldPermService = serviceRecords.firstOrNull() { it.englishName == "Perm" }
+        val newPermService = serviceRecords.firstOrNull() { it.englishName == "Permission" }
         // 收藏中是否有旧版权限
-        val favor = favorServiceId == oldPermService.id
+        val favor = favorServiceId == oldPermService?.id
         val isRbacCluster = bkTag.getLocalTag().contains("rbac")
         // 如果收藏中有旧版权限,并且在rbac权限管理中,需要替换成新版权限中心
-        return if (favor && isRbacCluster) {
+        return if (favor && isRbacCluster && newPermService != null) {
             newPermService.id
         } else {
             favorServiceId

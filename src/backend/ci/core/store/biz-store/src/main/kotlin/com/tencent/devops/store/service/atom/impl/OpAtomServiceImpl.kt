@@ -77,7 +77,7 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
@@ -227,7 +227,9 @@ class OpAtomServiceImpl @Autowired constructor(
             name = atomRecord.name,
             atomCode = atomRecord.atomCode,
             classType = atomRecord.classType,
-            logoUrl = atomRecord.logoUrl,
+            logoUrl = atomRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             icon = atomRecord.icon,
             summary = atomRecord.summary,
             serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
@@ -240,7 +242,9 @@ class OpAtomServiceImpl @Autowired constructor(
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
-            description = atomRecord.description,
+            description = atomRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             version = atomRecord.version,
             creator = atomRecord.creator,
             createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
@@ -260,11 +264,11 @@ class OpAtomServiceImpl @Autowired constructor(
                         version = atomRecord.version
                     )
                 )
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
                     ?.decorate(propJsonStr) as Map<String, Any>?
             },
             data = atomRecord.data?.let {
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
                     ?.decorate(atomRecord.data) as Map<String, Any>?
             },
             recommendFlag = atomFeature?.recommendFlag,
