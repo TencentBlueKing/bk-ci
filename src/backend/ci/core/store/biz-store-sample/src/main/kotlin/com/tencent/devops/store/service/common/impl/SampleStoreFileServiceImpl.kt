@@ -46,6 +46,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
     companion object {
         private val logger = LoggerFactory.getLogger(SampleStoreFileServiceImpl::class.java)
     }
+
+    @Suppress("NestedBlockDepth")
     override fun uploadFileToPath(
         userId: String,
         client: Client,
