@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -41,13 +42,17 @@ class GitproxyBkRepoClient @Autowired constructor(
         projectId: String,
         repoName: String,
         url: String,
-        desc: String?
+        desc: String?,
+        gitType: ScmType
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId")
         val requestData = CreateRepoData(
             projectId = projectId,
             name = repoName,
-            type = "GIT",
+            type = when (gitType) {
+                ScmType.CODE_SVN -> "SVN"
+                else -> "GIT"
+            },
             category = "PROXY",
             public = false,
             description = desc ?: "",
@@ -70,10 +75,18 @@ class GitproxyBkRepoClient @Autowired constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int): Page<RepoInfo> {
+    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: ScmType?): Page<RepoInfo> {
         logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
-        val url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
-                "?type=GIT&category=PROXY&display=false"
+        var url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
+                "?category=PROXY&display=false"
+        if (gitType != null) {
+            url = "$url&${
+                when (gitType) {
+                    ScmType.CODE_SVN -> "SVN"
+                    else -> "GIT"
+                }
+            }"
+        }
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(userId).toHeaders())
