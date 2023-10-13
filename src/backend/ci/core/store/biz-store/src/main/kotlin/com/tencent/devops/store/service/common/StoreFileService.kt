@@ -98,7 +98,7 @@ abstract class StoreFileService {
             result = result,
             localDirectoryInfo = LocalDirectoryInfo(
                 fileDirPath = fileDirPath,
-                pathList = pathList.map { LocalFileInfo(it) },
+                pathList = pathList.map { LocalFileInfo(it) }
             )
         )
         return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
