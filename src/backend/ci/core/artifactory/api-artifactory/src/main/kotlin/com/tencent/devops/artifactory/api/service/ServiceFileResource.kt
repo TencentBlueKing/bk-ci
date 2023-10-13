@@ -77,9 +77,9 @@ interface ServiceFileResource {
         @ApiParam("渠道类型", required = true)
         @QueryParam("fileChannelType")
         fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
-        @ApiParam("是否为研发商店静态文件", required = false)
-        @QueryParam("storeStatic")
-        storeStatic: Boolean? = false,
+        @ApiParam("是否静态文件", required = false)
+        @QueryParam("staticFlag")
+        staticFlag: Boolean? = false,
         @ApiParam("文件类型", required = false)
         @QueryParam("fileType")
         fileType: FileTypeEnum? = null

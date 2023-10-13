@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
-import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
@@ -41,7 +40,6 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
@@ -238,34 +236,23 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
-                val description = fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"]?.toString()
-                if (!description.isNullOrBlank()) {
-                    val descriptionStr = getDescriptionI18nContent(
-                        projectCode = projectCode,
-                        userId = userId,
-                        request = TextReferenceFileParseRequest(
-                            fileDir = fileDir,
-                            repositoryHashId = repositoryHashId,
-                            content = description,
-                            language = language
-                        )
-                    )
-                    if (description != descriptionStr) {
-                        fileProperties["$KEY_RELEASE_INFO.$KEY_DESCRIPTION"] = descriptionStr
-                        if (language == commonConfig.devopsDefaultLocaleLanguage) {
-                            // 默认环境不替换国际化信息，因此需要把解析的描述信息更新到T_AOM
-                            val atomCode = fileDir.substringBefore("/")
-                            val version = fileDir.substringAfter("/")
-                            atomDao.updateAtomDescriptionByCode(
-                                dslContext = dslContext,
-                                userId = userId,
-                                atomCode = atomCode,
-                                description = descriptionStr,
-                                version = version
+                fileProperties.keys.forEach {
+                    var value = fileProperties["$it"]?.toString()
+                    if (!value.isNullOrBlank()) {
+                        value = getTextReferenceFileContent(
+                            projectCode = projectCode,
+                            userId = userId,
+                            request = TextReferenceFileParseRequest(
+                                fileDir = fileDir,
+                                repositoryHashId = repositoryHashId,
+                                content = value,
+                                language = language
                             )
-                        }
+                        )
+                        fileProperties["$it"] = value
                     }
                 }
+
                 val i18nMessages = generateI18nMessages(
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
@@ -355,7 +342,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): List<String>?
 
-    private fun getDescriptionI18nContent(
+    private fun getTextReferenceFileContent(
         userId: String,
         projectCode: String,
         request: TextReferenceFileParseRequest
@@ -376,24 +363,22 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             repositoryHashId = request.repositoryHashId,
             branch = request.branch
         )?.let { fileStr ->
-            descriptionAnalysis(
+            textReferenceFileAnalysis(
                 userId = userId,
                 projectCode = projectCode,
-                description = fileStr,
-                fileDir = request.fileDir,
-                language = request.language,
-                repositoryHashId = request.repositoryHashId
+                request = TextReferenceFileParseRequest(
+                    content = fileStr,
+                    fileDir = request.fileDir,
+                    language = request.language,
+                    repositoryHashId = request.repositoryHashId
+                )
             )
         } ?: content
     }
 
-    abstract fun descriptionAnalysis(
+    abstract fun textReferenceFileAnalysis(
         userId: String,
         projectCode: String,
-        description: String,
-        fileDir: String,
-        language: String,
-        repositoryHashId: String? = null,
-        branch: String? = null
+        request: TextReferenceFileParseRequest
     ): String
 }

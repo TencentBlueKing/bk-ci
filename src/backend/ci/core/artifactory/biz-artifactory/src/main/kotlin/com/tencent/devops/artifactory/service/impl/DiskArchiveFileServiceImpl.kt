@@ -357,7 +357,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        storeStatic: Boolean?
+        staticFlag: Boolean?
     ): String {
         logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
