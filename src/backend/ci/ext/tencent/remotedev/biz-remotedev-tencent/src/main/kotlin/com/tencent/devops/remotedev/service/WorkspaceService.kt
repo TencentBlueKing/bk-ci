@@ -119,7 +119,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -142,6 +143,10 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
+
+        // 同步修改 cc 主机名称
+        bkccService.updateHostName(displayName, workspaceName)
+
         return true
     }
 

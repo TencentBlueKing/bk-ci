@@ -389,6 +389,9 @@ class DeleteControl @Autowired constructor(
                 ips = setOf(ip),
                 props = mapOf("devx_meta" to "")
             )
+
+            // 删除 cmdb 的机器别名
+            bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
