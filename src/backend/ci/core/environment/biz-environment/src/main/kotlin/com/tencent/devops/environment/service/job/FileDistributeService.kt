@@ -23,8 +23,6 @@ class FileDistributeService @Autowired constructor(
                 operationName = "distributeFile",
                 bkUsername = jobCloudFileDistributeReq.bkUsername
             )
-        jobCloudFileDistributeReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
-        jobCloudFileDistributeReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
         jobCloudFileDistributeReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudFileDistributeReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 

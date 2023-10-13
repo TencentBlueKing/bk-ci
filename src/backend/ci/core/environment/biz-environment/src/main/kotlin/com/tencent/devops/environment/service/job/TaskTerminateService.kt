@@ -23,8 +23,6 @@ class TaskTerminateService @Autowired constructor(
                 operationName = "terminateTask",
                 bkUsername = jobCloudTaskTerminateReq.bkUsername
             )
-        jobCloudTaskTerminateReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
-        jobCloudTaskTerminateReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
         jobCloudTaskTerminateReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudTaskTerminateReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 

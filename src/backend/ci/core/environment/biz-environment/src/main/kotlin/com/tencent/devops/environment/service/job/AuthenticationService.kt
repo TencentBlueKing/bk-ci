@@ -55,8 +55,6 @@ class AuthenticationService {
         return JobCloudAuthenticationReq(
             url = url,
             bkAuthorization = bkAuthorization,
-            bkAppCode = bkAppCode,
-            bkAppSecret = bkAppSecret,
             bkScopeType = bkScopeType ?: "",
             bkScopeId = bkScopeId ?: ""
         )

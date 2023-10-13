@@ -25,8 +25,6 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 operationName = "queryJobInstanceLogs",
                 bkUsername = jobCloudQueryJobInstanceLogsReq.bkUsername
             )
-        jobCloudQueryJobInstanceLogsReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
-        jobCloudQueryJobInstanceLogsReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
         jobCloudQueryJobInstanceLogsReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudQueryJobInstanceLogsReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 

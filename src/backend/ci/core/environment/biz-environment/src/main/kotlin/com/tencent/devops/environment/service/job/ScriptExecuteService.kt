@@ -23,8 +23,6 @@ class ScriptExecuteService @Autowired constructor(
                 operationName = "executeScript",
                 bkUsername = jobCloudScriptExecuteReq.bkUsername
             )
-        jobCloudScriptExecuteReq.bkAppCode = jobCloudAuthenticationReq.bkAppCode
-        jobCloudScriptExecuteReq.bkAppSecret = jobCloudAuthenticationReq.bkAppSecret
         jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
