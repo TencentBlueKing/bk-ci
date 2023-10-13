@@ -180,9 +180,7 @@ enum class JobRunsOnPoolType {
 data class Mutex(
     val label: String,
     @JsonProperty("queue-length")
-    val queueLength: Int? = 0,
+    val queueLength: Int? = null,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: String? = null,
-    @JsonProperty("queue-enable")
-    val queueEnable: Boolean? = false
+    val timeoutMinutes: String? = null
 )

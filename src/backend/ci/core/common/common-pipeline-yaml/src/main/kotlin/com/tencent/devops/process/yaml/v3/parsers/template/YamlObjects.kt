@@ -243,8 +243,7 @@ object YamlObjects {
         return Mutex(
             label = getNotNullValue(key = "label", mapName = "mutex", map = resourceMap),
             queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
-            timeoutMinutes = resourceMap["timeout-minutes"]?.toString(),
-            queueEnable = transNullValue(fromPath, "queue-enable", "queue-enable", resourceMap)
+            timeoutMinutes = resourceMap["timeout-minutes"]?.toString()
         )
     }
 
