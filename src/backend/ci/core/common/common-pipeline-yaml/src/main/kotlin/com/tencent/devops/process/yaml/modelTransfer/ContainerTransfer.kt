@@ -40,16 +40,17 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CONTINUE_WHEN_FAILED
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_MAX_QUEUE_MINUTES
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_ENABLE
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_LENGTH
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.v3.models.Resources
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -57,8 +58,6 @@ import com.tencent.devops.process.yaml.v3.models.job.Mutex
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.common.pipeline.utils.TransferUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -352,7 +351,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         return MutexGroup(
             enable = true,
             mutexGroupName = resource.label,
-            queueEnable = resource.queueEnable ?: DEFAULT_MUTEX_QUEUE_ENABLE,
+            queueEnable = resource.queueLength != null,
             queue = resource.queueLength ?: DEFAULT_MUTEX_QUEUE_LENGTH,
             timeout = resource.timeoutMinutes?.toIntOrNull() ?: DEFAULT_MUTEX_TIMEOUT_MINUTES,
             timeoutVar = resource.timeoutMinutes ?: DEFAULT_MUTEX_TIMEOUT_MINUTES.toString()
@@ -365,10 +364,17 @@ class ContainerTransfer @Autowired(required = false) constructor(
         }
         return Mutex(
             label = resource?.mutexGroupName!!,
-            queueEnable = resource.queueEnable.nullIfDefault(DEFAULT_MUTEX_QUEUE_ENABLE),
-            queueLength = resource.queue.nullIfDefault(DEFAULT_MUTEX_QUEUE_LENGTH),
-            timeoutMinutes = resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
-                ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+            queueLength = if (resource.queueEnable) {
+                resource.queue.nullIfDefault(DEFAULT_MUTEX_QUEUE_LENGTH)
+            } else {
+                null
+            },
+            timeoutMinutes = if (resource.queueEnable) {
+                resource.timeoutVar.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES.toString())
+                    ?: resource.timeout.nullIfDefault(DEFAULT_MUTEX_TIMEOUT_MINUTES)?.toString()
+            } else {
+                null
+            }
         )
     }
 
