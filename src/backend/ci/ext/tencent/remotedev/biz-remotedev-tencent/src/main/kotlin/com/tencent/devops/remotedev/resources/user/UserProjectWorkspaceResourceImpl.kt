@@ -34,8 +34,10 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
@@ -57,7 +59,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
-    private val makeImageHandler: MakeImageHandler
+    private val makeImageHandler: MakeImageHandler,
+    private val startWorkspaceService: StartWorkspaceService
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -72,7 +75,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             cgsId = null,
             autoAssign = false,
             workspaceCreate = workspace
-            )
+        )
         return Result(true)
     }
 
@@ -143,5 +146,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         makeImageHandler.makeImageByVm(userId, projectId, workspaceName, makeImageReq)
         return Result(true)
+    }
+
+    override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
+        return Result(startWorkspaceService.computerStatus(userId, projectId))
     }
 }

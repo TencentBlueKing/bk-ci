@@ -30,7 +30,8 @@ object TXSendRtx {
         v2GitUrl: String,
         content: String?,
         messageType: MessageType = MessageType.MARKDOWN,
-        gitProjectId: Long
+        gitProjectId: Long,
+        extensionAction: String
     ) {
         val realContent = if (content.isNullOrBlank()) {
             getRtxCustomContent(
@@ -46,7 +47,8 @@ object TXSendRtx {
                 buildTime = buildTime,
                 gitUrl = gitUrl,
                 v2GitUrl = v2GitUrl,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                extensionAction = extensionAction
             )
         } else {
             getRtxCustomUserContent(
@@ -111,7 +113,8 @@ object TXSendRtx {
         buildTime: Long?,
         gitUrl: String,
         v2GitUrl: String,
-        gitProjectId: Long
+        gitProjectId: Long,
+        extensionAction: String
     ): String {
         val state = when {
             status.isSuccess() -> Triple("✔", "info", "success")
@@ -120,7 +123,7 @@ object TXSendRtx {
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                "opened by $openUser \n"
+                "$extensionAction by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +

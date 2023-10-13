@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.action.impl
 
+import com.tencent.devops.store.service.common.action.impl.FirstStorePropsDecorateImpl
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
@@ -35,7 +36,7 @@ import javax.annotation.Priority
 
 @Priority(Int.MAX_VALUE - 1)
 @Component
-class WoaAtomPropsDecorateImpl : FirstAtomPropsDecorateImpl() {
+class WoaAtomPropsDecorateImpl : FirstStorePropsDecorateImpl() {
 
     override fun decorateSpecial(obj: Map<String, Any>): Map<String, Any> {
         val replaceMap = getReplaceMapByRequest()

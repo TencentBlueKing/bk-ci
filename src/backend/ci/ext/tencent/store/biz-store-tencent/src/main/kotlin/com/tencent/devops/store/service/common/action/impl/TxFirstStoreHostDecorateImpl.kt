@@ -21,21 +21,36 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action.impl
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+import com.tencent.devops.common.ci.UserUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
 
-    private var nextPtr: AtomDecorate<S>? = null
+    @Value("\${bkrepo.staticRepoPrefixUrl:#{null}}")
+    val staticRepoPrefixUrl: String? = null
 
-    override fun setNext(next: AtomDecorate<S>) {
-        nextPtr = next
+    @Value("\${bkrepo.dexStaticRepoPrefixUrl:#{null}}")
+    val dexStaticRepoPrefixUrl: String? = null
+
+    override fun handleHostBus(str: String): String {
+        val userId = I18nUtil.getRequestUserId()
+        val hostReplaceFlag = userId == null || UserUtil.isTaiUser(userId)
+        if (hostReplaceFlag && !staticRepoPrefixUrl.isNullOrBlank() && !dexStaticRepoPrefixUrl.isNullOrBlank()) {
+            // 进行域名替换
+            return str.replace(staticRepoPrefixUrl!!, dexStaticRepoPrefixUrl!!)
+        }
+        return str
     }
-
-    override fun getNext(): AtomDecorate<S>? = nextPtr
 }

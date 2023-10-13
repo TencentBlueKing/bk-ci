@@ -28,11 +28,15 @@
 package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
+import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
+    private val bkRepoClient: BkRepoClient,
     private val commonConfig: CommonConfig
 ) : ServiceArtifactoryDownLoadResource {
 
@@ -58,7 +63,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         checkParam(projectId, path)
         return Result(
-            bkRepoDownloadService.getThirdPartyDownloadUrl(
+            bkRepoDownloadService.innerCrossDownloadUrl(
                 projectId = projectId,
                 pipelineId = pipelineId ?: "",
                 buildId = buildId ?: "",
@@ -83,9 +88,34 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
-        val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl,
-            isDirected))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByToken(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = ttl
+            )
+        )
+    }
+
+    override fun apkDefender(userId: String, request: ApkDefenderRequest): Result<ApkDefenderTasks> {
+        return Result(
+            bkRepoClient.apkDefender(
+                userId = userId,
+                projectId = request.projectId,
+                repoName = RepoUtils.getRepoByType(request.artifactoryType),
+                fullPath = request.fullPath,
+                userIds = request.userIds,
+                batchSize = request.batchSize
+            )
+        )
+    }
+
+    override fun checkApkDefenderTask(projectId: String, userId: String, taskId: String): Result<Boolean> {
+        return Result(
+            bkRepoClient.checkApkDefenderTask(projectId, userId, taskId)
+        )
     }
 
     override fun downloadIndexUrl(

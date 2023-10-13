@@ -174,7 +174,7 @@
                     </template>
                 </bk-form>
                 <div class="submit-btn-bar">
-                    <bk-button theme="primary" @click.prevent="submitFn">{{ submitText }}</bk-button>
+                    <bk-button theme="primary" @click.prevent="beforeSubmit">{{ submitText }}</bk-button>
                     <bk-button theme="default" @click="cancel">取消</bk-button>
                 </div>
             </template>
@@ -335,6 +335,16 @@
                     typeLabel: '外部人员：',
                     key: 'outerUsers'
                 }]
+            },
+            isPublicExp () {
+                return this.experienceRange === 'public'
+            },
+            isAlphaApk () {
+                return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
+            },
+            
+            createInnerApkExpTips () {
+                return `${this.createReleaseForm.name}${this.isPublicExp ? '为开发测试版本，确定发起公开体验吗' : '为开发测试版本，准备体验包过程需要一段时间，请耐心等待'}`
             }
         },
         watch: {
@@ -436,7 +446,7 @@
                     this.createReleaseForm.path = res.path
                     this.createReleaseForm.artifactoryType = res.artifactoryType
                     this.createReleaseForm.version_no = res.version
-                    this.createReleaseForm.end_date = this.localConvertTime(res.expireDate).split(' ')[0]
+                    this.createReleaseForm.end_date = convertTime(res.expireDate * 1000).split(' ')[0]
                     this.query.initDate = this.createReleaseForm.end_date
                     this.createReleaseForm.desc = res.remark
                     this.createReleaseForm.versionTitle = res.versionTitle
@@ -672,8 +682,21 @@
                 })
                 localStorage.setItem('groupIdStr', this.groupIdStorage.sort().join(';'))
             },
+            beforeSubmit () {
+                if (!this.isAlphaApk) {
+                    this.submitFn()
+                    return
+                }
+                this.$bkInfo({
+                    subTitle: this.createInnerApkExpTips,
+                    type: 'warning',
+                    confirmFn: () => {
+                        this.submitFn()
+                    }
+                })
+            },
             async submitFn () {
-                if (this.experienceRange === 'public') {
+                if (this.isPublicExp) {
                     this.createReleaseForm.experienceGroups = ['kygplomw']
                     this.createReleaseForm.internal_list = []
                     this.createReleaseForm.external_list = []
@@ -805,12 +828,7 @@
                     }
                 }
             },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
-            },
+            
             toExperienceList () {
                 this.$router.push({
                     name: 'experienceList',
@@ -826,7 +844,6 @@
 <style lang="scss">
     @import './../../scss/conf';
     @import '@/scss/mixins/ellipsis';
-
     .create-experience-wrapper {
         .experience-form {
             width: 800px;

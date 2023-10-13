@@ -25,47 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.bk.sdk.iam.exception.IamException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@SuppressWarnings("LongParameterList")
-interface AppService {
-    fun getExternalDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
+@BkExceptionMapper
+class IamExceptionMapper : ExceptionMapper<IamException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(IamExceptionMapper::class.java)!!
+    }
 
-    fun getExternalDownloadUrlDirected(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int
-    ): Url
-
-    fun getExternalPlistDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
-
-    fun getPlistFile(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false,
-        experienceHashId: String?,
-        organization: String?
-    ): String
+    override fun toResponse(exception: IamException): Response {
+        logger.warn("Failed with iam request exception", exception)
+        val status = Response.Status.BAD_REQUEST
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "Failed with iam request exception"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
+    }
 }

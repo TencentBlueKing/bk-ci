@@ -24,39 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.store.service.atom.action
-
-import javax.annotation.PostConstruct
-
-/**
- * 装饰插件信息
- */
-interface AtomDecorate<S : Any> {
-
-    @PostConstruct
-    fun init() {
-        AtomDecorateFactory.register(kind = type(), atomDecorate = this)
-    }
-
-    fun type(): AtomDecorateFactory.Kind
-
-    fun setNext(next: AtomDecorate<S>)
-
-    fun getNext(): AtomDecorate<S>?
-
-    /**
-     * 主入口
-     */
-    fun decorate(json: String): S = decorateSpecial(deserialize(json))
-
-    /**
-     * 子类必须实现的反序列化
-     */
-    fun deserialize(json: String): S
-
-    /**
-     * 需要进行特殊装饰才去实现，一般是直接将反序列化的结果
-     */
-    fun decorateSpecial(obj: S): S = getNext()?.decorateSpecial(obj) ?: obj
-}
+data class ApkDefenderRequest(
+    val projectId: String,
+    val repoName: String,
+    val fullPath: String,
+    val scanner: String,
+    val users: Collection<String>,
+    val batchSize: Int
+)

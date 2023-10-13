@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -133,6 +134,18 @@ interface UserProjectWorkspaceResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取云研发机器状态")
+    @GET
+    @Path("/computerStatus")
+    fun computerStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<ComputerStatusResp>
 
     @ApiOperation("开启工作空间")
     @POST
