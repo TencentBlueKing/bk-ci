@@ -105,8 +105,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         format: String?
     ) {
         val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
-        val url = "$serviceUrl/service/git/repoIds/$repositoryHashId/downloadTGitRepoFile?" +
-                "repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
+        val url = "$serviceUrl/service/git/downloadGitRepoFile?" +
+                "repoId=$repositoryHashId&repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
                 "&tokenType=${TokenTypeEnum.OAUTH.name}" +
                 "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
                 "&format=${format ?: "zip"}"
