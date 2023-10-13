@@ -123,7 +123,10 @@ class BKCCService @Autowired constructor(
             return
         }
 
-        val (page, filter) = genHostIdFilter(detail.regionId, setOf(detail.hostIP))
+        val hostIdSub = detail.environmentIP.split(".")
+        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+        val (page, filter) = genHostIdFilter(detail.regionId, setOf(ip))
 
         val hostIds = listBizHosts(
             fields = listOf(element = "bk_host_id"),
@@ -131,7 +134,7 @@ class BKCCService @Autowired constructor(
             hostPropertyFilter = filter
         )?.info?.map { it["bk_host_id"].toString() }?.toSet()
         if (hostIds.isNullOrEmpty()) {
-            logger.warn("updateHostName|${detail.regionId}|$workspaceName|${detail.hostIP} hostids is empty")
+            logger.warn("updateHostName|${detail.regionId}|$workspaceName|${detail.environmentIP} hostids is empty")
             return
         }
 
