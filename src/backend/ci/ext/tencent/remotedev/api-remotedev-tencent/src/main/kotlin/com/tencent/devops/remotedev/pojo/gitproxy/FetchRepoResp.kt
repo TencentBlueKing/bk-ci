@@ -5,5 +5,7 @@ data class FetchRepoResp(
     val proxyUrl: String?,
     val creator: String,
     val createdDate: String,
-    val repoName: String
+    val repoName: String,
+    val type: String,
+    val desc: String?
 )
