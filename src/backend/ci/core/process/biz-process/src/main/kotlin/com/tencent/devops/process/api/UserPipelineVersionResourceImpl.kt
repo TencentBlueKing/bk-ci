@@ -408,7 +408,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             actionType = TransferActionType.FULL_YAML2MODEL,
             data = TransferBody(
                 modelAndSetting = modelAndYaml.modelAndSetting,
-                oldYaml = baseVersion?.yaml ?: ""
+                oldYaml = modelAndYaml.yaml ?: ""
             )
         )
         val savedSetting = pipelineSettingFacadeService.saveSetting(
