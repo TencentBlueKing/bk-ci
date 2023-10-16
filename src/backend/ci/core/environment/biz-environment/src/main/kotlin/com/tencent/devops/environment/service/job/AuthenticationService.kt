@@ -48,6 +48,7 @@ class AuthenticationService {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
+        val localVal0 = ThreadLocal<String>().set("executeScript")
         val localVal = ThreadLocal<String>().get()
         val localVal2 = ThreadLocal<String>().toString()
         logger.debug("[appAuthentication] thread local localval.get(): $localVal, operationName: $operationName")
