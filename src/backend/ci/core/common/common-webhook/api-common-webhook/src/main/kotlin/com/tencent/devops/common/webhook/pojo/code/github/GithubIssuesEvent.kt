@@ -57,7 +57,7 @@ data class GithubIssuesEvent(
 }
 
 data class GithubIssue(
-    override val url: String,
+    override val url: String?,
     @JsonProperty("html_url")
     @ApiModelProperty("Issue/Pull Request链接[网页链接]")
     override val htmlUrl: String,

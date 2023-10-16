@@ -21,6 +21,6 @@ data class EventRepositoryCache(
     var repoAuthUser: String? = null,
     var p4ChangeFiles: P4ChangeList? = null,
     var p4ShelveChangeFiles: P4ChangeList? = null,
-    val serverInfo: P4ServerInfo? = null,
+    var serverInfo: P4ServerInfo? = null,
     var githubPrInfo: PullRequestResponse? = null
 )

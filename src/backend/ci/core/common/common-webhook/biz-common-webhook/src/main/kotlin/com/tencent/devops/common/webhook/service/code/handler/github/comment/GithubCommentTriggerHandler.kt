@@ -136,9 +136,9 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_ID] = id
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = projectId.toString()
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID] = user.id
-            startParams[BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT] = createdAt
-            startParams[BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT] = updatedAt
-            startParams[BK_REPO_GIT_WEBHOOK_NOTE_URL] = url
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT] = createdAt ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT] = updatedAt ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_URL] = url ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE] = event.getCommentType()
         }
         // 填充其他参数

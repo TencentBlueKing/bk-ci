@@ -160,7 +160,7 @@ abstract class GithubComment(
     @ApiModelProperty("评论ID")
     override val id: Long,
     @ApiModelProperty("评论链接[API链接]")
-    override val url: String,
+    override val url: String?,
     @JsonProperty("html_url")
     @ApiModelProperty("评论链接[网页链接]")
     override val htmlUrl: String,
@@ -172,10 +172,10 @@ abstract class GithubComment(
     open val user: GithubUser,
     @JsonProperty("created_at")
     @ApiModelProperty("创建时间")
-    override val createdAt: String, // 2022-06-21T08:45:41Z
+    override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
     @ApiModelProperty("修改时间")
-    override val updatedAt: String // 2022-06-21T08:45:41Z
+    override val updatedAt: String? // 2022-06-21T08:45:41Z
 ) : GithubBaseInfo(
     id = id,
     url = url,
@@ -188,7 +188,7 @@ abstract class GithubComment(
 @SuppressWarnings("LongParameterList")
 open class GithubCommitComment(
     override val id: Long,
-    override val url: String,
+    override val url: String?,
     @JsonProperty("html_url")
     override val htmlUrl: String,
     @JsonProperty("node_id")
@@ -196,9 +196,9 @@ open class GithubCommitComment(
     override val body: String,
     override val user: GithubUser,
     @JsonProperty("created_at")
-    override val createdAt: String,
+    override val createdAt: String?,
     @JsonProperty("updated_at")
-    override val updatedAt: String,
+    override val updatedAt: String?,
     @JsonProperty("commit_id")
     @ApiModelProperty("commit sha")
     val commitId: String

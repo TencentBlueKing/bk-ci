@@ -93,7 +93,7 @@ data class GithubUser(
     @JsonProperty("gravatar_id")
     val gravatarId: String,
     @JsonProperty("html_url")
-    override val htmlUrl: String, // https://github.com/yongyiduan
+    override val htmlUrl: String?, // https://github.com/yongyiduan
     @JsonProperty("id")
     override val id: Long, // 88175075
     @JsonProperty("login")
@@ -115,7 +115,7 @@ data class GithubUser(
     @JsonProperty("type")
     val type: String, // User
 //    @JsonProperty("url")
-    override val url: String, // https://api.github.com/users/yongyiduan,
+    override val url: String?, // https://api.github.com/users/yongyiduan,
     @JsonProperty("created_at")
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")

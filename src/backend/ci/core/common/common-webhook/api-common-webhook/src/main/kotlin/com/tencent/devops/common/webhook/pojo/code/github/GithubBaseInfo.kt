@@ -36,10 +36,10 @@ open class GithubBaseInfo(
     @ApiModelProperty("ID")
     open val id: Long,
     @ApiModelProperty("链接[API链接]")
-    open val url: String = "",
+    open val url: String? = "",
     @JsonProperty("html_url")
     @ApiModelProperty("链接[网页链接]")
-    open val htmlUrl: String,
+    open val htmlUrl: String? = "",
     @JsonProperty("node_id")
     open val nodeId: String,
     @JsonProperty("created_at")

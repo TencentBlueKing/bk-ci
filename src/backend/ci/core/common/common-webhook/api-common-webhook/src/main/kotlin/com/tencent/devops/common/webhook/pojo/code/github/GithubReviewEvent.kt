@@ -75,7 +75,7 @@ data class GithubReview(
     override val nodeId: String,
     @JsonProperty("html_url")
     @ApiModelProperty("评审地址[网页地址]")
-    override val htmlUrl: String,
+    override val htmlUrl: String?,
     @JsonProperty("created_at")
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
