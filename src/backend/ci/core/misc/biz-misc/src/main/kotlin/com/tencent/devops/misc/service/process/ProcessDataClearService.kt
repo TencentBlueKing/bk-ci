@@ -27,8 +27,8 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataClearDao
 import com.tencent.devops.misc.lock.PipelineVersionLock
@@ -42,7 +42,8 @@ class ProcessDataClearService @Autowired constructor(
     private val dslContext: DSLContext,
     private val processDao: ProcessDao,
     private val processDataClearDao: ProcessDataClearDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val processRelatedPlatformDataClearService: ProcessRelatedPlatformDataClearService
 ) {
 
     /**
@@ -77,6 +78,7 @@ class ProcessDataClearService @Autowired constructor(
             )
             processDataClearDao.deletePipelineInfoByPipelineId(context, projectId, pipelineId)
         }
+        processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
     }
 
     /**

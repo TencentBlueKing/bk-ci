@@ -363,6 +363,7 @@ object ScriptYmlUtils {
 
             jobs.add(
                 Job(
+                    enable = preJob.enable,
                     id = index,
                     name = preJob.name,
                     mutex = preJob.mutex,
@@ -501,6 +502,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
+                    enable = it.enable,
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
@@ -531,7 +533,6 @@ object ScriptYmlUtils {
                     },
                     variables = preCheck.reviews.variables,
                     description = preCheck.reviews.description,
-                    timeout = preCheck.reviews.timeout,
                     sendMarkdown = preCheck.reviews.sendMarkdown,
                     notifyType = preCheck.reviews.notifyType,
                     notifyGroups = preCheck.reviews.notifyGroups
@@ -709,7 +710,6 @@ object ScriptYmlUtils {
         )
 
         if (preTriggerOn is PreTriggerOnV3) {
-            res.repoHashId = preTriggerOn.repoHashId
             res.repoName = preTriggerOn.repoName
             res.credentials = preTriggerOn.credentials
         }
@@ -756,7 +756,7 @@ object ScriptYmlUtils {
 
     private fun manualRule(
         preTriggerOn: IPreTriggerOn
-    ): ManualRule? {
+    ): ManualRule {
         if (preTriggerOn.manual == null) {
             return ManualRule()
         }
@@ -766,7 +766,7 @@ object ScriptYmlUtils {
                 return ManualRule()
             }
             preTriggerOn.manual is String && preTriggerOn.manual == EnableType.FALSE.value -> {
-                return null
+                return ManualRule(false)
             }
             preTriggerOn.manual is Map<*, *> -> kotlin.runCatching {
                 JsonUtil.anyTo(preTriggerOn.manual, object : TypeReference<ManualRule>() {})
@@ -1029,10 +1029,10 @@ object ScriptYmlUtils {
         return Pair(list[0], list[1])
     }
 
-    private fun randomString(flag: String): String {
+    fun randomString(flag: String): String {
         val random = Random()
         val buf = StringBuffer(flag)
-        for (i in 0 until 7) {
+        for (i in 0 until 3) {
             val num = random.nextInt(secretSeed.length)
             buf.append(secretSeed[num])
         }

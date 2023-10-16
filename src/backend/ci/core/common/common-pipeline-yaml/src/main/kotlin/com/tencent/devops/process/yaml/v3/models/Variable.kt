@@ -30,8 +30,9 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.BuildContainerType
+import com.tencent.devops.common.pipeline.type.BuildType
 import io.swagger.annotations.ApiModelProperty
 
 // @JsonDeserialize(using = IVariableDeserializer::class)
@@ -73,6 +74,7 @@ interface IVariable
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
     val value: String?,
+    val name: String? = null,
     val readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = false,
@@ -105,9 +107,15 @@ data class VariableProps(
     val description: String? = null,
     val multiple: Boolean? = null,
     val required: Boolean? = null,
+    @JsonProperty("repo-id")
+    @ApiModelProperty(name = "repo-id")
     val repoHashId: String? = null,
+    @JsonProperty("scm-type")
+    @ApiModelProperty(name = "scm-type")
     val scmType: String? = null,
-    val containerType: BuildContainerType? = null,
+    @JsonProperty("container-type")
+    @ApiModelProperty(name = "container-type")
+    val containerType: BuildContainerTypeYaml? = null,
     @ApiModelProperty("自定义仓库通配符", required = false)
     val glob: String? = null,
     @ApiModelProperty("文件元数据", required = false)
@@ -127,6 +135,12 @@ data class VariablePropOption(
     val id: Any,
     val label: String? = null,
     val description: String? = null
+)
+data class BuildContainerTypeYaml(
+    @JsonProperty("build-type")
+    @ApiModelProperty(name = "build-type")
+    val buildType: BuildType,
+    val os: OS
 )
 
 /**
@@ -165,12 +179,12 @@ enum class VariablePropType(val value: String) {
     BOOLEAN("boolean"),
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
-    GIT_REF("git_ref"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"),
+    GIT_REF("git-ref"),
+    CODE_LIB("code-lib"),
+    CONTAINER_TYPE("container-type"),
     ARTIFACTORY("artifactory"),
-    SUB_PIPELINE("sub_pipeline"),
-    CUSTOM_FILE("custom_file"),
+    SUB_PIPELINE("sub-pipeline"),
+    CUSTOM_FILE("custom-file"),
     TIPS("tips");
 
     fun toBuildFormPropertyType() = when (this) {

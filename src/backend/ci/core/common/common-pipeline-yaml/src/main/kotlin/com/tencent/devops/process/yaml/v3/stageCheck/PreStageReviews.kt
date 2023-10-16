@@ -35,7 +35,6 @@ data class PreStageReviews(
     val flows: List<PreFlow>?,
     val variables: Map<String, ReviewVariable>?,
     val description: String?,
-    val timeout: Int?,
     @JsonProperty("send-markdown")
     val sendMarkdown: Boolean?,
     @JsonProperty("notify-type")

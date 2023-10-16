@@ -21,21 +21,26 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action.impl
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstStoreDataDecorateImpl : AbstractStoreDecorateImpl<Map<String, Any>>() {
 
-    private var nextPtr: AtomDecorate<S>? = null
+    override fun type() = StoreDecorateFactory.Kind.DATA
 
-    override fun setNext(next: AtomDecorate<S>) {
-        nextPtr = next
+    override fun doBus(str: String): Map<String, Any> {
+        return JsonUtil.toOrNull(str, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
-
-    override fun getNext(): AtomDecorate<S>? = nextPtr
 }

@@ -36,8 +36,9 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTriggerOnV3(
+    @JsonProperty("repo-name")
+    @ApiModelProperty(name = "repo-name")
     val repoName: String? = null,
-    var repoHashId: String? = null,
     var type: String? = null,
     val credentials: String? = null,
     override val push: Any? = null,
@@ -51,7 +52,7 @@ data class PreTriggerOnV3(
     @ApiModelProperty(name = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
-    override val manual: Any? = null,
+    override var manual: Any? = null,
     override val openapi: String? = null,
     override val remote: String? = null
 ) : IPreTriggerOn {

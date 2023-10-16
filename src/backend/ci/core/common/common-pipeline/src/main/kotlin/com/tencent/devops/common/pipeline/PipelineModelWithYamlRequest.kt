@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,6 +38,8 @@ data class PipelineModelWithYamlRequest(
     val modelAndSetting: PipelineModelAndSetting,
     @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?,
+    @ApiModelProperty("存储格式", required = false)
+    val storageType: PipelineStorageType? = PipelineStorageType.MODEL,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null
 )

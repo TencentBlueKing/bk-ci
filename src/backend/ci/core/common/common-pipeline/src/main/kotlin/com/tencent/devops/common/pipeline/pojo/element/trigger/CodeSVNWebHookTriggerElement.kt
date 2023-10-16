@@ -42,7 +42,7 @@ data class CodeSVNWebHookTriggerElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("相对路径", required = true)

@@ -161,7 +161,7 @@ abstract class Element(
 
     open fun cleanUp() {}
 
-    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = TODO(this.getClassType())
+    open fun transferYaml(defaultValue: Map<String, String>?): PreStep? = null
 
     open fun isElementEnable(): Boolean {
         if (additionalOptions == null) {

@@ -32,10 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.user.UserPipelineTransferResource
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.PositionBody
@@ -43,6 +39,10 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.api.user.UserPipelineTransferResource
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -55,27 +55,29 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
     override fun transfer(
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineId: String?,
         actionType: TransferActionType,
         data: TransferBody
     ): Result<TransferResponse> {
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
+        if (pipelineId != null) {
+            val permission = AuthPermission.VIEW
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
                 )
             )
-        )
+        }
         return Result(transferService.transfer(userId, projectId, pipelineId, actionType, data))
     }
 

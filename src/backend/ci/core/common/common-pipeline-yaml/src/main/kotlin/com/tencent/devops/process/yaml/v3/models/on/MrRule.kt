@@ -69,11 +69,17 @@ data class MrRule(
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    val block: Boolean? = null,
+    @ApiModelProperty(name = "block-mr")
+    @JsonProperty("block-mr")
+    val blockMr: Boolean? = null,
 
+    @ApiModelProperty(name = "webhook-queue")
+    @JsonProperty("webhook-queue")
     val webhookQueue: Boolean? = null,
 
-    val enableCheck: Boolean? = null,
+    @ApiModelProperty(name = "report-commit-check")
+    @JsonProperty("report-commit-check")
+    val reportCommitCheck: Boolean? = null,
 
     @ApiModelProperty(name = "path-filter-type")
     @JsonProperty("path-filter-type")

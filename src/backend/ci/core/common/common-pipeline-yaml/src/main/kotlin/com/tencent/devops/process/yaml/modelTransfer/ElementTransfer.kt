@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -109,6 +110,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         elements.forEach { element ->
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
+                    enable = element.isElementEnable().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(true),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
@@ -396,15 +398,13 @@ class ElementTransfer @Autowired(required = false) constructor(
         val stepList = mutableListOf<PreStep>()
         job.elements.forEach { element ->
             val step = element2YamlStep(element, projectId)
-            if (step != null) {
-                stepList.add(step)
-            }
+            stepList.add(step)
         }
         return stepList
     }
 
     @Suppress("ComplexMethod")
-    fun element2YamlStep(element: Element, projectId: String): PreStep? {
+    fun element2YamlStep(element: Element, projectId: String): PreStep {
         val uses = "${element.getAtomCode()}@${element.version}"
         return when {
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
@@ -437,7 +437,12 @@ class ElementTransfer @Autowired(required = false) constructor(
                     // 插件上的
                     ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
-                    with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).ifEmpty { null },
+                    with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
+                        this.remove(CheckoutAtomParam::repositoryType.name)
+                        this.remove(CheckoutAtomParam::repositoryHashId.name)
+                        this.remove(CheckoutAtomParam::repositoryName.name)
+                        this.remove(CheckoutAtomParam::repositoryUrl.name)
+                    }.ifEmpty { null },
                     checkout = checkout
                 )
             }
@@ -483,7 +488,10 @@ class ElementTransfer @Autowired(required = false) constructor(
             } else {
                 null
             }
-        }
+        } ?: throw PipelineTransferException(
+            ELEMENT_NOT_SUPPORT_TRANSFER,
+            arrayOf(uses)
+        )
     }
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {

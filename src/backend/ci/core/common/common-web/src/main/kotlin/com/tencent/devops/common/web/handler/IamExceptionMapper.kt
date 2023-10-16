@@ -25,53 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action
+package com.tencent.devops.common.web.handler
 
-import java.util.concurrent.ConcurrentHashMap
-import javax.annotation.Priority
+import com.tencent.bk.sdk.iam.exception.IamException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-/**
- * 用于对Atom进行修饰工厂类
- */
-object AtomDecorateFactory {
-
-    enum class Kind {
-        @Suppress("UNUSED")
-        DATA, // data
-
-        @Suppress("UNUSED")
-        PROPS // task.json
+@BkExceptionMapper
+class IamExceptionMapper : ExceptionMapper<IamException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(IamExceptionMapper::class.java)!!
     }
 
-    private val cache = ConcurrentHashMap<Kind, AtomDecorate<out Any>>()
-
-    fun <S : Any> register(kind: Kind, atomDecorate: AtomDecorate<S>) {
-        @Suppress("UNCHECKED_CAST") // 故障强转，让编码扩展类型不匹配直接在启动时失败，防止带病运行
-        val currentAD = cache[kind] as AtomDecorate<S>?
-        if (currentAD == null) {
-            cache[kind] = atomDecorate
-            return
-        }
-        val currentP = getPriority(currentAD)
-
-        val newP = getPriority(atomDecorate)
-        if (currentP <= newP) {
-            cache[kind] = atomDecorate
-            atomDecorate.setNext(currentAD)
+    override fun toResponse(exception: IamException): Response {
+        logger.warn("Failed with iam request exception", exception)
+        val status = Response.Status.BAD_REQUEST
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
         } else {
-            var beforeAD = currentAD
-            var ptrAD = currentAD.getNext()
-            while (getPriority(ptrAD) > newP) {
-                beforeAD = ptrAD
-                ptrAD = ptrAD?.getNext()
-            }
-            beforeAD?.setNext(atomDecorate)
-            ptrAD?.let { atomDecorate.setNext(it) }
+            "Failed with iam request exception"
         }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.errorMsg)).build()
     }
-
-    private fun getPriority(atomDecorate: AtomDecorate<out Any>?) =
-        atomDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
-
-    fun get(kind: Kind) = cache[kind]
 }

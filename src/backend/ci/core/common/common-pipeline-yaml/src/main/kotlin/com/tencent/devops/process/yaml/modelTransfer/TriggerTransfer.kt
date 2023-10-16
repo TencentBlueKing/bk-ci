@@ -88,9 +88,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -105,9 +103,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -124,15 +120,13 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore,
-                    block = mr.block,
+                    block = mr.blockMr,
                     webhookQueue = mr.webhookQueue,
-                    enableCheck = mr.enableCheck,
+                    enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )
@@ -144,9 +138,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeCrState = review.states,
                     includeCrTypes = review.types,
                     eventType = CodeEventType.REVIEW,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(review.enable)
             )
@@ -157,9 +149,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeGitWebHookTriggerElement(
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(issue.enable)
             )
@@ -178,9 +168,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     },
                     includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.NOTE,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(note.enable)
             )
@@ -189,111 +177,105 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun git2YamlTriggerOn(elements: List<WebHookTriggerElementChanger>, projectId: String): List<TriggerOn> {
-        val fix = elements.groupBy {
-            when (it.repositoryType) {
-                RepositoryType.ID -> it.repositoryHashId ?: ""
-                RepositoryType.NAME -> it.repositoryName ?: ""
+        val res = mutableMapOf<String, TriggerOn>()
+        elements.forEach { git ->
+            val name = when (git.repositoryType) {
+                RepositoryType.ID -> git.repositoryHashId ?: ""
+                RepositoryType.NAME -> git.repositoryName ?: ""
                 else -> ""
             }
-        }
-        val res = mutableMapOf<String, TriggerOn>()
-        fix.forEach { (name, group) ->
-            group.forEach { git ->
-                val nowExist = res.getOrPut(name) {
-                    when (name) {
-                        git.repositoryHashId -> TriggerOn(
-                            repoHashId = name,
-                            repoName = transferCache.getGitRepository(projectId, RepositoryType.ID, name)?.aliasName
-                        )
-
-                        git.repositoryName -> TriggerOn(repoName = name)
-                        else -> TriggerOn()
-                    }
-                }
-                when (git.eventType) {
-                    CodeEventType.PUSH -> nowExist.push = PushRule(
-                        enable = git.enable.nullIfDefault(true),
-                        branches = git.branchName?.disjoin() ?: emptyList(),
-                        branchesIgnore = git.excludeBranchName?.disjoin(),
-                        paths = git.includePaths?.disjoin(),
-                        pathsIgnore = git.excludePaths?.disjoin(),
-                        users = git.includeUsers,
-                        usersIgnore = git.excludeUsers,
-                        pathFilterType = git.pathFilterType?.name,
-                        // todo action
-                        action = null
+            val nowExist = res.getOrPut(name) {
+                when (name) {
+                    git.repositoryHashId -> TriggerOn(
+                        repoName = transferCache.getGitRepository(projectId, RepositoryType.ID, name)?.aliasName
                     )
 
-                    CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
-                        enable = git.enable.nullIfDefault(true),
-                        tags = git.tagName?.disjoin(),
-                        tagsIgnore = git.excludeTagName?.disjoin(),
-                        fromBranches = git.fromBranches?.disjoin(),
-                        users = git.includeUsers,
-                        usersIgnore = git.excludeUsers
-                    )
-
-                    CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
-                        enable = git.enable.nullIfDefault(true),
-                        targetBranches = git.branchName?.disjoin(),
-                        targetBranchesIgnore = git.excludeBranchName?.disjoin(),
-                        sourceBranches = git.includeSourceBranchName?.disjoin(),
-                        sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
-                        paths = git.includePaths?.disjoin(),
-                        pathsIgnore = git.excludePaths?.disjoin(),
-                        users = git.includeUsers,
-                        usersIgnore = git.excludeUsers,
-                        block = git.block,
-                        webhookQueue = git.webhookQueue,
-                        enableCheck = git.enableCheck,
-                        pathFilterType = git.pathFilterType?.name,
-                        // todo action
-                        action = null
-                    )
-
-                    CodeEventType.REVIEW -> nowExist.review = ReviewRule(
-                        enable = git.enable.nullIfDefault(true),
-                        states = git.includeCrState,
-                        types = git.includeCrTypes
-                    )
-
-                    CodeEventType.ISSUES -> nowExist.issue = IssueRule(
-                        enable = git.enable.nullIfDefault(true),
-                        action = git.includeIssueAction
-                    )
-
-                    CodeEventType.NOTE -> nowExist.note = NoteRule(
-                        enable = git.enable.nullIfDefault(true),
-                        types = git.includeNoteTypes?.map {
-                            when (it) {
-                                "Commit" -> "commit"
-                                "Review" -> "merge_request"
-                                "Issue" -> "issue"
-                                else -> it
-                            }
-                        }
-                    )
-
-                    CodeEventType.POST_COMMIT -> nowExist.push = PushRule(
-                        enable = git.enable.nullIfDefault(true),
-                        branches = null,
-                        paths = git.includePaths?.disjoin(),
-                        pathsIgnore = git.excludePaths?.disjoin(),
-                        users = git.includeUsers,
-                        usersIgnore = git.excludeUsers,
-                        pathFilterType = git.pathFilterType?.name
-                    )
-
-                    CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
-                        enable = git.enable.nullIfDefault(true),
-                        branches = null,
-                        branchesIgnore = null,
-                        paths = git.includePaths?.disjoin(),
-                        pathsIgnore = git.excludePaths?.disjoin()
-                    )
+                    git.repositoryName -> TriggerOn(repoName = name)
+                    else -> TriggerOn()
                 }
             }
-//            res[name] = nowExist
+            when (git.eventType) {
+                CodeEventType.PUSH -> nowExist.push = PushRule(
+                    enable = git.enable.nullIfDefault(true),
+                    branches = git.branchName?.disjoin() ?: emptyList(),
+                    branchesIgnore = git.excludeBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    pathFilterType = git.pathFilterType?.name,
+                    // todo action
+                    action = null
+                )
+
+                CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
+                    enable = git.enable.nullIfDefault(true),
+                    tags = git.tagName?.disjoin(),
+                    tagsIgnore = git.excludeTagName?.disjoin(),
+                    fromBranches = git.fromBranches?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers
+                )
+
+                CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
+                    enable = git.enable.nullIfDefault(true),
+                    targetBranches = git.branchName?.disjoin(),
+                    targetBranchesIgnore = git.excludeBranchName?.disjoin(),
+                    sourceBranches = git.includeSourceBranchName?.disjoin(),
+                    sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    blockMr = git.block,
+                    webhookQueue = git.webhookQueue,
+                    reportCommitCheck = git.enableCheck,
+                    pathFilterType = git.pathFilterType?.name,
+                    // todo action
+                    action = null
+                )
+
+                CodeEventType.REVIEW -> nowExist.review = ReviewRule(
+                    enable = git.enable.nullIfDefault(true),
+                    states = git.includeCrState,
+                    types = git.includeCrTypes
+                )
+
+                CodeEventType.ISSUES -> nowExist.issue = IssueRule(
+                    enable = git.enable.nullIfDefault(true),
+                    action = git.includeIssueAction
+                )
+
+                CodeEventType.NOTE -> nowExist.note = NoteRule(
+                    enable = git.enable.nullIfDefault(true),
+                    types = git.includeNoteTypes?.map {
+                        when (it) {
+                            "Commit" -> "commit"
+                            "Review" -> "merge_request"
+                            "Issue" -> "issue"
+                            else -> it
+                        }
+                    }
+                )
+
+                CodeEventType.POST_COMMIT -> nowExist.push = PushRule(
+                    enable = git.enable.nullIfDefault(true),
+                    branches = null,
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    pathFilterType = git.pathFilterType?.name
+                )
+
+                CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
+                    enable = git.enable.nullIfDefault(true),
+                    branches = null,
+                    branchesIgnore = null,
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin()
+                )
+            }
         }
         return res.values.toList()
     }
@@ -314,9 +296,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
                             eventType = CodeEventType.PUSH,
                             // todo action
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -335,9 +315,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includeUsers = tag.users,
                             excludeUsers = tag.usersIgnore,
                             eventType = CodeEventType.TAG_PUSH,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -358,15 +336,13 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                             includeUsers = mr.users,
                             excludeUsers = mr.usersIgnore,
-                            block = mr.block,
+                            block = mr.blockMr,
                             webhookQueue = mr.webhookQueue,
-                            enableCheck = mr.enableCheck,
+                            enableCheck = mr.reportCommitCheck,
                             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                             // todo action
                             eventType = CodeEventType.MERGE_REQUEST,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -382,9 +358,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includeCrState = review.states,
                             includeCrTypes = review.types,
                             eventType = CodeEventType.REVIEW,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -399,9 +373,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         input = CodeTGitWebHookTriggerInput(
                             includeIssueAction = issue.action,
                             eventType = CodeEventType.ISSUES,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -424,9 +396,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             },
                             includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                             eventType = CodeEventType.NOTE,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -449,9 +419,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -466,9 +434,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -486,13 +452,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore.nonEmptyOrNull()?.join(),
                     webhookQueue = mr.webhookQueue,
-                    enableCheck = mr.enableCheck,
+                    enableCheck = mr.reportCommitCheck,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.PULL_REQUEST,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )
@@ -504,9 +468,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeCrState = review.states,
                     includeCrTypes = review.types,
                     eventType = CodeEventType.REVIEW,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(review.enable)
             )
@@ -517,9 +479,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeGithubWebHookTriggerElement(
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(issue.enable)
             )
@@ -538,9 +498,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     },
                     includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.NOTE,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(note.enable)
             )
@@ -558,9 +516,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludeUsers = push.usersIgnore.nonEmptyOrNull(),
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -577,9 +533,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includePaths = push.paths.nonEmptyOrNull()?.join(),
                             excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                             eventType = CodeEventType.CHANGE_COMMIT,
-                            repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                                RepositoryType.NAME else RepositoryType.ID,
-                            repositoryHashId = triggerOn.repoHashId,
+                            repositoryType = RepositoryType.NAME,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -596,7 +550,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     id = "T-1-1-1",
                     canElementSkip = manual.canElementSkip,
                     useLatestParameters = manual.useLatestParameters
-                )
+                ).apply {
+                    this.additionalOptions = ElementAdditionalOptions(enable = manual.enable ?: true)
+                }
             )
         }
 
@@ -641,9 +597,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -657,9 +611,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -676,13 +628,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore,
-                    block = mr.block,
+                    block = mr.blockMr,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = if (triggerOn.repoHashId.isNullOrBlank())
-                        RepositoryType.NAME else RepositoryType.ID,
-                    repositoryHashId = triggerOn.repoHashId,
+                    repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )

@@ -84,7 +84,7 @@ data class PipelineSetting(
     @ApiModelProperty("重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings()
 ) {
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {

@@ -24,23 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.store.service.atom.action.impl
-
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
-
-@Component
-@Priority(Int.MAX_VALUE)
-@Suppress("UNUSED")
-open class FirstAtomDataDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
-
-    override fun type() = AtomDecorateFactory.Kind.DATA
-
-    override fun deserialize(json: String): Map<String, Any> {
-        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
-    }
+data class ApkDefenderTasks(
+    val tasks: List<Task>
+) {
+    data class Task(
+        val id: String,
+        val users: List<String>
+    )
 }

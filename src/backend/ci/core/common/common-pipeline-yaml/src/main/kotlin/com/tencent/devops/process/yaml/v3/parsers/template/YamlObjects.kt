@@ -31,18 +31,19 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.BuildContainerType
+import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
+import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.GitNotices
-import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.ResourcesPools
-import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableDatasource
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
@@ -57,7 +58,6 @@ import com.tencent.devops.process.yaml.v3.models.job.ServiceWith
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
@@ -71,6 +71,8 @@ object YamlObjects {
     fun getVariable(fromPath: TemplatePath, key: String, variable: Map<String, Any>): Variable {
         val va = Variable(
             value = variable["value"]?.toString(),
+            name = variable["name"]?.toString(),
+            valueNotEmpty = getNullValue("value-not-empty", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
             props = if (variable["props"] == null) {
@@ -174,15 +176,15 @@ object YamlObjects {
         )
     }
 
-    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerType? {
+    private fun getVarPropContainerType(fromPath: TemplatePath, containerType: Any?): BuildContainerTypeYaml? {
         if (containerType == null) {
             return null
         }
 
         val map = transValue<Map<String, Any?>>(fromPath, "containerType", containerType)
 
-        return BuildContainerType(
-            buildType = BuildType.valueOf(getNotNullValue("buildType", "containerType", map)),
+        return BuildContainerTypeYaml(
+            buildType = BuildType.valueOf(getNotNullValue("build-type", "containerType", map)),
             os = OS.valueOf(getNotNullValue("os", "containerType", map))
         )
     }
@@ -241,8 +243,7 @@ object YamlObjects {
         return Mutex(
             label = getNotNullValue(key = "label", mapName = "mutex", map = resourceMap),
             queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
-            timeoutMinutes = resourceMap["timeout-minutes"]?.toString(),
-            queueEnable = transNullValue(fromPath, "queue-enable", "queue-enable", resourceMap)
+            timeoutMinutes = resourceMap["timeout-minutes"]?.toString()
         )
     }
 
@@ -477,6 +478,7 @@ fun <T> YamlTemplate<T>.getStage(
     deepTree: TemplateDeepTreeNode
 ): PreStage {
     return PreStage(
+        enable = YamlObjects.getNullValue("enable", stage)?.toBoolean(),
         name = stage["name"]?.toString(),
         label = stage["label"],
         ifField = stage["if"]?.toString(),
@@ -526,6 +528,7 @@ fun <T> YamlTemplate<T>.getStage(
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
 fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
     val preJob = PreJob(
+        enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
         mutex = if (job["mutex"] == null) {
