@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -532,11 +533,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = result.pipelineId
+        // 通过PAC模式创建或保存的流水线均打开PAC
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = result.pipelineId,
-            setting = newResource.setting,
+            setting = newResource.setting.copy(
+                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+            ),
             checkPermission = false
         )
         if (!isDefaultBranch) {
@@ -562,11 +566,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
+        // 通过PAC模式创建或保存的流水线均打开PAC
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = newResource.setting,
+            setting = newResource.setting.copy(
+                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+            ),
             checkPermission = false,
             dispatchPipelineUpdateEvent = false
         )

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -166,7 +167,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 releaseVersionName = releaseVersion?.versionName,
                 baseVersionStatus = baseVersionStatus,
                 baseVersionBranch = baseVersionBranch,
-                pipelineAsCodeSettings = setting.pipelineAsCodeSettings
+                pipelineAsCodeSettings = setting.pipelineAsCodeSettings ?: PipelineAsCodeSettings()
             )
         )
     }
