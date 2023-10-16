@@ -36,6 +36,8 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
+import com.tencent.devops.remotedev.pojo.windows.TimeScope
+import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -145,4 +147,18 @@ interface UserProjectWorkspaceResource {
         @PathParam("projectId")
         projectId: String
     ): Result<ComputerStatusResp>
+
+    @ApiOperation("获取不同时间段在线人数")
+    @GET
+    @Path("/userLoginTime")
+    fun userLoginTime(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "timeScope", required = false)
+        timeScope: TimeScope? = TimeScope.HOUR
+    ): Result<UserLoginTimeResp>
 }
