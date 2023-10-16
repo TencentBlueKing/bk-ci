@@ -51,11 +51,6 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.CodeP4Repository
-import com.tencent.devops.repository.pojo.CodeSvnRepository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
-import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
