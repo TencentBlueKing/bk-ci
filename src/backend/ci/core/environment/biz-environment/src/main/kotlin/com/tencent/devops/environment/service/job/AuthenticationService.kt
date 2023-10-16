@@ -48,14 +48,28 @@ class AuthenticationService {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
-        val localVal0 = ThreadLocal<String>().set("executeScript")
-        val localVal = ThreadLocal<String>().get()
+        val threadLocal = ThreadLocal<String>()
+        logger.debug("[appAuthentication] threadLocal01: $threadLocal")
+        threadLocal.set("executeScript")
+        logger.debug("[appAuthentication] threadLocal02: $threadLocal")
+        val localVal = threadLocal.get()
+        logger.debug("[appAuthentication] localVal: $localVal")
+//        val localVal0 = ThreadLocal<String>().set("executeScript")
+//        val localVal = ThreadLocal<String>().get()
         val localVal2 = ThreadLocal<String>().toString()
-        logger.debug("[appAuthentication] thread local localval.get(): $localVal, operationName: $operationName")
-        logger.debug("[appAuthentication] thread local localval.toString(): $localVal2")
-        logger.debug("[appAuthentication] current thread id: ${Thread.currentThread().id}")
+        logger.debug("[appAuthentication] localVal2: $localVal2")
+        val localVal3 = threadLocal.toString()
+        logger.debug("[appAuthentication] localVal3: $localVal3")
         ThreadLocal<String>().remove()
-        logger.debug("[appAuthentication] thread local localval.remove(): $localVal2")
+        logger.debug("[appAuthentication] localVal11: $localVal")
+        logger.debug("[appAuthentication] threadLocal11: $threadLocal")
+        threadLocal.remove()
+        logger.debug("[appAuthentication] localVal22: $localVal")
+        logger.debug("[appAuthentication] threadLocal22: $threadLocal")
+//        logger.debug("[appAuthentication] thread local localval.get(): $localVal, operationName: $operationName")
+//        logger.debug("[appAuthentication] thread local localval.toString(): $localVal2")
+//        logger.debug("[appAuthentication] current thread id: ${Thread.currentThread().id}")
+//        logger.debug("[appAuthentication] thread local localval.remove(): $localVal2")
         val url = jobCloudProdUrlPrefix + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
