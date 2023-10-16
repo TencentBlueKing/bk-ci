@@ -140,6 +140,7 @@ class PipelinePauseBuildFacadeService(
 
         if (element != null) {
             findAndSaveDiff(
+                userId = userId,
                 element = element,
                 projectId = projectId,
                 buildId = buildId,
@@ -227,6 +228,7 @@ class PipelinePauseBuildFacadeService(
     }
 
     private fun findAndSaveDiff(
+        userId: String,
         element: Element,
         projectId: String,
         buildId: String,
@@ -235,7 +237,7 @@ class PipelinePauseBuildFacadeService(
     ) {
         val newElementStr = ParameterUtils.element2Str(element)
         if (newElementStr.isNullOrBlank()) {
-            logger.warn("executePauseAtom element is too long")
+            logger.warn("[$buildId] executePauseAtom element is too long: $element")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
@@ -249,12 +251,19 @@ class PipelinePauseBuildFacadeService(
             executeCount = taskRecord.executeCount
         )
         if (currPause != null) {
-            logger.warn("executePauseAtom element has been continue")
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
-                params = arrayOf(buildId)
+            logger.warn("[$buildId] executePauseAtom element has been continue")
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "Continue execution repeatedly from [$userId]",
+                tag = taskId,
+                jobId = taskRecord.containerHashId,
+                executeCount = taskRecord.executeCount ?: 1
             )
+//            throw ErrorCodeException(
+//                statusCode = Response.Status.FORBIDDEN.statusCode,
+//                errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
+//                params = arrayOf(buildId)
+//            )
         }
         findDiffValue(
             buildId = buildId,
