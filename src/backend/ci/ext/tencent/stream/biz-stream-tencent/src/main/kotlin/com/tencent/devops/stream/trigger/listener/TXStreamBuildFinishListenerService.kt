@@ -179,6 +179,7 @@ class TXStreamBuildFinishListenerService @Autowired constructor(
             stageId = null
         )
         action.data.context.requestEventId = requestEvent.id
+        action.data.context.extensionAction = requestEvent.extensionAction
 
         // 推送结束构建消息
         sendCommitCheck.sendCommitCheck(action)

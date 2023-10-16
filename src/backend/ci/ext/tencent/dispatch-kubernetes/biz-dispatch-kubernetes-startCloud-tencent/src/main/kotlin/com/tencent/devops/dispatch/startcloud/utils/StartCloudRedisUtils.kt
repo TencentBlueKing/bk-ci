@@ -24,48 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.dispatch.startcloud.utils
 
-package com.tencent.devops.artifactory.service
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+@Component
+class StartCloudRedisUtils @Autowired constructor(
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper
+) {
 
-@SuppressWarnings("LongParameterList")
-interface AppService {
-    fun getExternalDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
+    /*-------------------------*/
+    fun setStartCloudOrder(userId: String, workspaceName: String, orderId: String) {
+        logger.info("User $userId hset(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hset(
+            key = startCloudOrderKey(),
+            hashKey = workspaceName,
+            values = orderId
+        )
+    }
 
-    fun getExternalDownloadUrlDirected(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int
-    ): Url
+    fun getStartCloudOrder(workspaceName: String): String? {
+        return redisOperation.hget(startCloudOrderKey(), workspaceName)
+    }
 
-    fun getExternalPlistDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
+    fun deleteStartCloudOrder(workspaceName: String) {
+        logger.info("hdelete(${startCloudOrderKey()}) $workspaceName")
+        redisOperation.hdelete(startCloudOrderKey(), workspaceName)
+    }
 
-    fun getPlistFile(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false,
-        experienceHashId: String?,
-        organization: String?
-    ): String
+    private fun startCloudOrderKey(): String {
+        return "dispatchkubernetes:startcloud:order"
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartCloudRedisUtils::class.java)
+    }
 }

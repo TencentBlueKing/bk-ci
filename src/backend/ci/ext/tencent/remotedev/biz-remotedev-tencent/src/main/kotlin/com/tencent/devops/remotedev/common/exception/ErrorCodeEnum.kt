@@ -155,6 +155,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132029",
         formatErrorMessage = "delivering failed"
+    ),
+    UPDATE_BKCC_HOST_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132030",
+        formatErrorMessage = "update BkCC fail."
     );
 
     fun getErrorMessage(): String {

@@ -119,6 +119,16 @@ class DispatchWorkspaceDao {
         }
     }
 
+    fun getStartCloudWorkspaceInfo(
+        dslContext: DSLContext
+    ): Result<TDispatchWorkspaceRecord> {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(REGION_ID.notEqual(0))
+                .fetch()
+        }
+    }
+
     fun getNoUseIdleWorkspace(dslContext: DSLContext): Result<TDispatchWorkspaceRecord> {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             return dslContext.selectFrom(this)
