@@ -1051,7 +1051,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkTemplate: Boolean = true,
         versionStatus: VersionStatus? = VersionStatus.RELEASED
     ): DeployPipelineResult {
-        // TODO #8161 模板的草稿如何处理
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,

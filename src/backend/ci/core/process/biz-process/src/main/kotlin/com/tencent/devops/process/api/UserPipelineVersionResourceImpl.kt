@@ -136,7 +136,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             }
             baseVersion?.status?.let { baseVersionStatus = it }
 //            baseVersionBranch = baseVersion.ref
-            canRelease =  pipelineRuntimeService.getBuildInfo(projectId, pipelineId)?.status?.isSuccess() == true
+            draft.debugBuildId?.let {
+                canRelease =  pipelineRuntimeService.getBuildInfo(projectId, it)?.status?.isSuccess() == true
+            }
         }
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
