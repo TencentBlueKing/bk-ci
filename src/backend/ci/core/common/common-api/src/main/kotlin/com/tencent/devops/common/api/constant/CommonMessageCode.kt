@@ -176,6 +176,7 @@ object CommonMessageCode {
     //互转使用
     const val ELEMENT_UPDATE_WRONG_PATH = "2100124" // 更新插件的标注位置有误
     const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100125" // [{0}]该插件不支持转换
+    const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100126" // [{0}]该构建环境不支持转换
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
