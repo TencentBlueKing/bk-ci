@@ -4,7 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.pojo.job.JobCloudResp
+import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.service.job.AuthenticationService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request

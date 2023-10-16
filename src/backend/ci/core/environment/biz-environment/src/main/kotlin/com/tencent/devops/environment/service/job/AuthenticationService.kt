@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service

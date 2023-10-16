@@ -2,8 +2,8 @@ package com.tencent.devops.environment.service.job
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.environment.pojo.job.JobCloudAuthenticationReq
-import com.tencent.devops.environment.pojo.job.JobCloudResp
+import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
+import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.utils.job.NetworkUtil

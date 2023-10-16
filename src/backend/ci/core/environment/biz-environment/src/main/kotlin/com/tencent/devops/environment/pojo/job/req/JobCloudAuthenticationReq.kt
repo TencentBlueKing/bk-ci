@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.pojo.job
+package com.tencent.devops.environment.pojo.job.req
 
 import com.tencent.devops.common.api.annotation.SkipLogField
 import io.swagger.annotations.ApiModelProperty
