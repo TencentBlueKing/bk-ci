@@ -25,22 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.store.service.common.action
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
-import org.springframework.stereotype.Component
+import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.Priority
 
-@Component
-@Priority(Int.MAX_VALUE)
-@Suppress("UNUSED")
-open class FirstAtomPropsDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
+/**
+ * 用于对组件进行修饰工厂类
+ */
+object StoreDecorateFactory {
 
-    override fun type() = AtomDecorateFactory.Kind.PROPS
+    enum class Kind {
+        @Suppress("UNUSED")
+        DATA, // data
 
-    override fun deserialize(json: String): Map<String, Any> {
-        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
+        @Suppress("UNUSED")
+        PROPS, // task.json
+
+        HOST
     }
+
+    private val cache = ConcurrentHashMap<Kind, StoreDecorate<out Any>>()
+
+    fun <S : Any> register(kind: Kind, storeDecorate: StoreDecorate<S>) {
+        @Suppress("UNCHECKED_CAST") // 故障强转，让编码扩展类型不匹配直接在启动时失败，防止带病运行
+        val currentAD = cache[kind] as StoreDecorate<S>?
+        if (currentAD == null) {
+            cache[kind] = storeDecorate
+            return
+        }
+        val currentP = getPriority(currentAD)
+
+        val newP = getPriority(storeDecorate)
+        if (currentP <= newP) {
+            cache[kind] = storeDecorate
+            storeDecorate.setNext(currentAD)
+        } else {
+            var beforeAD = currentAD
+            var ptrAD = currentAD.getNext()
+            while (getPriority(ptrAD) > newP) {
+                beforeAD = ptrAD
+                ptrAD = ptrAD?.getNext()
+            }
+            beforeAD?.setNext(storeDecorate)
+            ptrAD?.let { storeDecorate.setNext(it) }
+        }
+    }
+
+    private fun getPriority(storeDecorate: StoreDecorate<out Any>?) =
+        storeDecorate?.javaClass?.getDeclaredAnnotation(Priority::class.java)?.value ?: 0
+
+    fun get(kind: Kind) = cache[kind]
 }

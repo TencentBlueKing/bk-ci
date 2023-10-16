@@ -23,53 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.store.service.common.action.impl
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
+@Component
+@Priority(Int.MAX_VALUE)
+@Suppress("UNUSED")
+open class FirstStorePropsDecorateImpl : AbstractStoreDecorateImpl<Map<String, Any>>() {
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
+    override fun type() = StoreDecorateFactory.Kind.PROPS
 
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
+    override fun doBus(str: String): Map<String, Any> {
+        return JsonUtil.toOrNull(str, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
     }
 }

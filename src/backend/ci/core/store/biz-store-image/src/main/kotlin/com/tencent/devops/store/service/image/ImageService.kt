@@ -112,6 +112,7 @@ import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.util.ImageUtil
 import java.time.LocalDateTime
 import java.util.Date
@@ -343,6 +344,7 @@ abstract class ImageService @Autowired constructor() {
             )
             val classifyId = it[KEY_CLASSIFY_ID] as String
             val (imageSizeNum, imageSize) = getImageSizeInfoByStr(it.get(KEY_IMAGE_SIZE) as String)
+            val logoUrl = it[KEY_IMAGE_LOGO_URL] as? String
             results.add(
                 MarketImageItem(
                     id = it[KEY_IMAGE_ID] as String,
@@ -353,7 +355,9 @@ abstract class ImageService @Autowired constructor() {
                     imageSize = imageSize,
                     imageSizeNum = imageSizeNum,
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] ?: "" else "",
-                    logoUrl = it[KEY_IMAGE_LOGO_URL] as? String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     version = it[KEY_IMAGE_VERSION] as String,
                     summary = it[KEY_IMAGE_SUMMARY] as? String,
                     score = statistic?.score ?: 0.toDouble(),
@@ -442,6 +446,7 @@ abstract class ImageService @Autowired constructor() {
                 val categories = imageCategoryRelDao.getCategorysByImageId(dslContext, it.id)?.map { categoryRecord ->
                     categoryRecord.get(KEY_CATEGORY_CODE) as String
                 } ?: emptyList()
+                val logoUrl = it.logoUrl
                 MarketItem(
                     id = it.id,
                     name = it.name,
@@ -452,7 +457,9 @@ abstract class ImageService @Autowired constructor() {
                     rdType = it.rdType,
                     classifyCode = it.classifyCode,
                     category = categories.joinToString(","),
-                    logoUrl = it.logoUrl,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     publisher = it.publisher ?: "",
                     os = emptyList(),
                     downloads = it.downloads,
@@ -965,7 +972,9 @@ abstract class ImageService @Autowired constructor() {
             code = imageCode,
             imageName = imageRecord.imageName,
             name = imageRecord.imageName,
-            logoUrl = imageRecord.logoUrl ?: "",
+            logoUrl = imageRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            } ?: "",
             icon = icon ?: "",
             summary = imageRecord.summary ?: "",
             docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
@@ -986,7 +995,9 @@ abstract class ImageService @Autowired constructor() {
             imageSize = imageSize,
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
-            description = imageRecord.description ?: "",
+            description = imageRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            } ?: "",
             dockerFileType = imageRecord.dockerFileType ?: "INPUT",
             dockerFileContent = imageRecord.dockerFileContent ?: "",
             labelList = labelList ?: listOf(),

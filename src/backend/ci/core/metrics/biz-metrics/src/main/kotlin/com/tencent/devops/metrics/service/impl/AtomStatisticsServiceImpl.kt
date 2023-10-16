@@ -106,7 +106,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         endTime = queryAtomTrendInfoDTO.endTime
                     ),
                     errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                    atomCodes = atomCodes ?: emptyList()
+                    atomCodes = atomCodes
                 )
             )
         stopWatch.stop()
@@ -219,7 +219,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                         endTime = queryAtomTrendInfoDTO.endTime
                     ),
                     errorTypes = queryAtomTrendInfoDTO.errorTypes,
-                    atomCodes = atomCodes ?: emptyList()
+                    atomCodes = atomCodes
                 )
             )
         stopWatch.stop()
@@ -321,13 +321,13 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getDefaultAtomCodes(queryAtomStatisticsInfoDTO: QueryAtomStatisticsInfoDTO): List<String>? {
+    private fun getDefaultAtomCodes(queryAtomStatisticsInfoDTO: QueryAtomStatisticsInfoDTO): List<String> {
         val pipelineIds = queryAtomStatisticsInfoDTO.pipelineIds
         val pipelineLabelIds = queryAtomStatisticsInfoDTO.pipelineLabelIds
         val errorTypes = queryAtomStatisticsInfoDTO.errorTypes
         // 未选择查询的插件时读取插件显示配置
         return if (!queryAtomStatisticsInfoDTO.atomCodes.isNullOrEmpty()) {
-            queryAtomStatisticsInfoDTO.atomCodes
+            queryAtomStatisticsInfoDTO.atomCodes!!
         } else {
             if (pipelineIds.isNullOrEmpty() && pipelineLabelIds.isNullOrEmpty() && errorTypes.isNullOrEmpty()) {
                 // 插件配置为空则读取项目下插件
@@ -340,7 +340,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     pageSize = metricsConfig.defaultLimitNum
                 ).map { it.atomCode }
             } else {
-                queryAtomStatisticsInfoDTO.atomCodes
+                queryAtomStatisticsInfoDTO.atomCodes ?: emptyList()
             }
         }
     }

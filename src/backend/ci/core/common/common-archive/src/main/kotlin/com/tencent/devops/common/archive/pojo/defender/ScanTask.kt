@@ -23,53 +23,46 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.auth.service.sample
+data class ScanTask(
+    val name: String?,
+    val taskId: String?,
+    val projectId: String?,
+    val createdBy: String?,
+    val lastModifiedDateTime: String?,
+    val triggerDateTime: String?,
+    val startDateTime: String?,
+    val finishedDateTime: String?,
+    val triggerType: String?,
+    val status: String?,
+    val scanPlan: String?,
+    val rule: Rule?,
+    val total: Int?,
+    val scanning: Int?,
+    val failed: Int?,
+    val scanned: Int?,
+    val passed: Int?,
+    val scanner: String?,
+    val scannerType: String?,
+    val scannerVersion: String?,
+    val force: Boolean?,
+    val metadata: ArrayList<Metadata>?
+) {
+    data class Rules(
+        val field: String?,
+        val value: String?,
+        val operation: String?
+    )
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+    data class Rule(
+        val rules: ArrayList<Rules>?,
+        val relation: String?
+    )
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
+    data class Metadata(
+        val key: String?,
+        val value: String?
+    )
 }
