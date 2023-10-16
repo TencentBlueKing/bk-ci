@@ -59,6 +59,26 @@ class BKCCService @Autowired constructor(
             }
         }
 
+        val (page, filter) = genHostIdFilter(regId, ips)
+
+        val hostIds = listBizHosts(
+            fields = listOf(element = "bk_host_id"),
+            page = page,
+            hostPropertyFilter = filter
+        )?.info?.map { it["bk_host_id"].toString() }?.toSet()
+        if (hostIds.isNullOrEmpty()) {
+            logger.warn("updateHostMonitor|$regId|$workspaceName|$ips hostids is empty")
+            return
+        }
+
+        // 更新主机信息
+        updateHost(hostIds, props)
+    }
+
+    private fun genHostIdFilter(
+        regId: Int,
+        ips: Set<String>
+    ): Pair<ListBizHostsReqPage, ListBizHostsCond> {
         // 通过云区域 id 和 ip 获取 hostId
         val rule1 = if (ips.size == 1) {
             ListBizHostsCondRules(
@@ -89,18 +109,36 @@ class BKCCService @Autowired constructor(
             limit = ips.size + 1,
             sort = "bk_host_id"
         )
+
+        return Pair(page, filter)
+    }
+
+    fun updateHostName(
+        displayName: String,
+        workspaceName: String
+    ) {
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+        if (detail?.regionId == null) {
+            logger.warn("updateHostName get workspace $workspaceName detail is null")
+            return
+        }
+
+        val hostIdSub = detail.environmentIP.split(".")
+        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+        val (page, filter) = genHostIdFilter(detail.regionId, setOf(ip))
+
         val hostIds = listBizHosts(
             fields = listOf(element = "bk_host_id"),
             page = page,
             hostPropertyFilter = filter
         )?.info?.map { it["bk_host_id"].toString() }?.toSet()
         if (hostIds.isNullOrEmpty()) {
-            logger.warn("updateHostMonitor|$regId|$workspaceName|$ips hostids is empty")
+            logger.warn("updateHostName|${detail.regionId}|$workspaceName|${detail.environmentIP} hostids is empty")
             return
         }
 
-        // 更新主机信息
-        updateHost(hostIds, props)
+        updateHost(hostIds, mapOf("bk_host_name" to displayName))
     }
 
     fun updateHost(
@@ -139,10 +177,6 @@ class BKCCService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("updateHost request error", e)
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BKCCService::class.java)
     }
 
     fun listBizHosts(
@@ -190,6 +224,10 @@ class BKCCService @Autowired constructor(
         }
 
         return null
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BKCCService::class.java)
     }
 }
 
