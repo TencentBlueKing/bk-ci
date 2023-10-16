@@ -78,5 +78,4 @@ class AuthenticationService {
             threadLocal.remove()
         }
     }
-
 }

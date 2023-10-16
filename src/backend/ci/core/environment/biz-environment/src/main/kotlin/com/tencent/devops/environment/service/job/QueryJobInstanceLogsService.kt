@@ -31,7 +31,7 @@ class QueryJobInstanceLogsService @Autowired constructor(
                 httpType = "post",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()
+                jobCloudReq = jobCloudQueryJobInstanceLogsReq
             )
 
         var jsonData = ""

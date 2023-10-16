@@ -35,7 +35,7 @@ class QueryJobInstanceStatusService @Autowired constructor(
                     returnIpResult
                 ),
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = mapOf<String, Any>()
+                jobCloudReq = null
             )
 
         var jsonData = ""

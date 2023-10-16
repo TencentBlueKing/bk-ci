@@ -15,11 +15,11 @@ object NetworkUtil {
     private const val LOG_OUTPUT_MAX_LENGTH = 4000
     val logger = LoggerFactory.getLogger(NetworkUtil::class.java)
 
-    fun <U : Any> executeHttpRequest(
+    fun <T, U : Any> executeHttpRequest(
         httpType: String,
         url: String,
         bkAuthorization: String,
-        jobCloudReq: Map<String, Any>?
+        jobCloudReq: T?
     ): JobCloudResp<U> {
         when (httpType) {
             "post" -> {
@@ -39,7 +39,7 @@ object NetworkUtil {
         }
     }
 
-    private fun createPostRequest(url: String, bkAuthorization: String, jobCloudReq: Map<String, Any>?): Request {
+    private fun <T> createPostRequest(url: String, bkAuthorization: String, jobCloudReq: T?): Request {
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloudReq)
         val requestBody = RequestBody.create(
             "application/json;charset=utf-8".toMediaTypeOrNull(),

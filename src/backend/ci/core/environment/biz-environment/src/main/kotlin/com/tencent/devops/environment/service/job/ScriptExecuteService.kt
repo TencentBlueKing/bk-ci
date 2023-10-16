@@ -29,7 +29,7 @@ class ScriptExecuteService @Autowired constructor(
                 httpType = "post",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudScriptExecuteReq.toMap()
+                jobCloudReq = jobCloudScriptExecuteReq
             )
 
         var jsonData = ""

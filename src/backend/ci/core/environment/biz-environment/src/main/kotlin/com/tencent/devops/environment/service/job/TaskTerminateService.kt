@@ -29,7 +29,7 @@ class TaskTerminateService @Autowired constructor(
                 httpType = "post",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudTaskTerminateReq.toMap()
+                jobCloudReq = jobCloudTaskTerminateReq
             )
 
         var jsonData = ""

@@ -29,7 +29,7 @@ class FileDistributeService @Autowired constructor(
                 httpType = "post",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudFileDistributeReq.toMap()
+                jobCloudReq = jobCloudFileDistributeReq
             )
 
         var jsonData = ""
