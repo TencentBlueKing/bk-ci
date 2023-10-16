@@ -117,7 +117,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 status = WorkspaceStatus.MAKING_IMAGE
             )
 
-            val imageId = "img_${RandomStringUtils.random(8)}"
+            val imageId = "img_${RandomStringUtils.randomAlphabetic(8)}"
             // 新增镜像信息
             imageManageDao.createWorkspaceImage(
                 projectId = projectId,
