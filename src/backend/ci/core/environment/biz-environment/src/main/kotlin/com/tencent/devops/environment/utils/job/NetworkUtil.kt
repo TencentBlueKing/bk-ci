@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.JobCloudResp
+import com.tencent.devops.environment.service.job.AuthenticationService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -16,7 +17,6 @@ object NetworkUtil {
 
     fun <U : Any> executeHttpRequest(
         httpType: String,
-        operateName: String,
         url: String,
         bkAuthorization: String,
         jobCloudReq: Map<String, Any>?
@@ -24,12 +24,12 @@ object NetworkUtil {
         when (httpType) {
             "post" -> {
                 val request = createPostRequest(url, bkAuthorization, jobCloudReq)
-                return executeHttpRequest(operateName, request)
+                return executeHttpRequest(request)
             }
 
             "get" -> {
                 val request = createGetRequest(url, bkAuthorization)
-                return executeHttpRequest(operateName, request)
+                return executeHttpRequest(request)
             }
 
             else -> {
@@ -62,7 +62,9 @@ object NetworkUtil {
             .build()
     }
 
-    private fun <T> executeHttpRequest(operateName: String, request: Request): JobCloudResp<T> {
+    private fun <T> executeHttpRequest(request: Request): JobCloudResp<T> {
+        val operateName = AuthenticationService.get()
+        logger.debug("[executeHttpRequest] operateName: $operateName")
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()

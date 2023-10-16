@@ -21,17 +21,13 @@ class ScriptExecuteService @Autowired constructor(
         AuthenticationService.set("executeScript")
         logger.debug("[executeScript] AuthenticationService.get(): ${AuthenticationService.get()}")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(
-                operationName = "executeScript",
-                bkUsername = jobCloudScriptExecuteReq.bkUsername
-            )
+            authenticationService.appAuthentication(jobCloudScriptExecuteReq.bkUsername)
         jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val jobCloudResp: JobCloudResp<ScriptExecuteResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "post",
-                operateName = "executeScript",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudScriptExecuteReq.toMap()

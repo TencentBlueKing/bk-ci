@@ -18,18 +18,15 @@ class FileDistributeService @Autowired constructor(
 ) {
     val logger = LoggerFactory.getLogger(FileDistributeService::class.java)
     fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
+        AuthenticationService.set("distributeFile")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(
-                operationName = "distributeFile",
-                bkUsername = jobCloudFileDistributeReq.bkUsername
-            )
+            authenticationService.appAuthentication(jobCloudFileDistributeReq.bkUsername)
         jobCloudFileDistributeReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudFileDistributeReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val jobCloudResp: JobCloudResp<FileDistributeResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "post",
-                operateName = "distributeFile",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudFileDistributeReq.toMap()

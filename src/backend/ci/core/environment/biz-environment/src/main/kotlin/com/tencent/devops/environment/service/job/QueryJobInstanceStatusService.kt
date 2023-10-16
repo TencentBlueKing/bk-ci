@@ -22,16 +22,11 @@ class QueryJobInstanceStatusService @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(
-                operationName = "queryJobInstanceStatus",
-                bkUsername = userId
-            )
-
+        AuthenticationService.set("queryJobInstanceStatus")
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = authenticationService.appAuthentication(userId)
         val jobCloudResp: JobCloudResp<QueryJobInstanceStatusResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "get",
-                operateName = "queryJobInstanceStatus",
                 url = jobCloudAuthenticationReq.url + String.format(
                     QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX,
                     jobCloudAuthenticationReq.bkScopeType,

@@ -20,18 +20,15 @@ class QueryJobInstanceLogsService @Autowired constructor(
     fun queryJobInstanceLogs(
         jobCloudQueryJobInstanceLogsReq: JobCloudQueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
+        AuthenticationService.set("queryJobInstanceLogs")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(
-                operationName = "queryJobInstanceLogs",
-                bkUsername = jobCloudQueryJobInstanceLogsReq.bkUsername
-            )
+            authenticationService.appAuthentication(jobCloudQueryJobInstanceLogsReq.bkUsername)
         jobCloudQueryJobInstanceLogsReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudQueryJobInstanceLogsReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val jobCloudResp: JobCloudResp<QueryJobInstanceLogsResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "post",
-                operateName = "queryJobInstanceLogs",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudQueryJobInstanceLogsReq.toMap()

@@ -39,15 +39,14 @@ class AuthenticationService {
     @Value("\${job.queryJobInstanceLogsPath:#{null}}")
     val queryJobInstanceLogsPath: String? = null
 
-    fun appAuthentication(
-        operationName: String,
-        bkUsername: String
-    ): JobCloudAuthenticationReq {
+    fun appAuthentication(bkUsername: String): JobCloudAuthenticationReq {
         val logger = LoggerFactory.getLogger(AuthenticationService::class.java)
 
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-        logger.debug("[appAuthentication] AuthenticationService.get(): ${get()}")
+
+        val operationName = get()
+        logger.debug("[appAuthentication] operationName: $operationName")
         val url = jobCloudProdUrlPrefix + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath

@@ -18,18 +18,15 @@ class TaskTerminateService @Autowired constructor(
 ) {
     val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
     fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): JobResult<TaskTerminateResult> {
+        AuthenticationService.set("terminateTask")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(
-                operationName = "terminateTask",
-                bkUsername = jobCloudTaskTerminateReq.bkUsername
-            )
+            authenticationService.appAuthentication(jobCloudTaskTerminateReq.bkUsername)
         jobCloudTaskTerminateReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloudTaskTerminateReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
 
         val jobCloudResp: JobCloudResp<TaskTerminateResult> =
             NetworkUtil.executeHttpRequest(
                 httpType = "post",
-                operateName = "terminateTask",
                 url = jobCloudAuthenticationReq.url,
                 bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
                 jobCloudReq = jobCloudTaskTerminateReq.toMap()
