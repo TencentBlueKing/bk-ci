@@ -230,13 +230,13 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices> {
         val res = mutableListOf<PacNotices>()
-        setting.successSubscriptionList?.plus(setting.successSubscription)?.forEach {
+        setting.successSubscriptionList?.ifEmpty { listOf(setting.successSubscription) }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.SUCCESS.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }
-        setting.failSubscriptionList?.plus(setting.failSubscription)?.forEach {
+        setting.failSubscriptionList?.ifEmpty { listOf(setting.failSubscription) }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.FAILURE.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
