@@ -90,10 +90,10 @@
             ]),
             ...mapState('atom', [
                 'pipelineYaml',
+                'pipelineWithoutTrigger',
                 'pipeline'
             ]),
             ...mapGetters({
-                pipelineWithoutTrigger: 'atom/pipelineWithoutTrigger',
                 isCodeMode: 'isCodeMode'
             }),
             pipelineType () {

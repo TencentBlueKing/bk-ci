@@ -35,6 +35,10 @@ import {
 } from './constants'
 Vue.use(Vuex)
 
+const UI_MODE = 'MODEL'
+const CODE_MODE = 'YAML'
+const modeList = [CODE_MODE, UI_MODE]
+const initPipelineMode = localStorage.getItem(BKUI_LS_PIPELINE_MODE)
 export default new Vuex.Store({
     // 模块
     modules: {
@@ -52,7 +56,8 @@ export default new Vuex.Store({
         fetchError: null,
 
         cancelTokenMap: {},
-        pipelineMode: localStorage.getItem(BKUI_LS_PIPELINE_MODE) || 'uiMode'
+        modeList,
+        pipelineMode: modeList.includes(initPipelineMode) ? initPipelineMode : UI_MODE
     },
     // 公共 mutations
     mutations: {
@@ -105,10 +110,10 @@ export default new Vuex.Store({
     // 公共 getters
     getters: {
         isUiMode: state => {
-            return state.pipelineMode === 'uiMode'
+            return state.pipelineMode === UI_MODE
         },
         isCodeMode: state => {
-            return state.pipelineMode === 'codeMode'
+            return state.pipelineMode === CODE_MODE
         }
     }
 })

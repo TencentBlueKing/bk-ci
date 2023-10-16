@@ -177,6 +177,7 @@
                         projectId,
                         pipelineId,
                         baseVersion: pipeline.baseVersion,
+                        storageType: this.isCodeMode ? 'YAML' : 'MODEL',
                         modelAndSetting: {
                             model: {
                                 ...pipeline,

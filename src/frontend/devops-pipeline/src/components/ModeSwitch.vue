@@ -18,22 +18,16 @@
         emit: ['change'],
         computed: {
             ...mapState([
-                'pipelineMode'
+                'pipelineMode',
+                'modeList'
             ]),
             pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
+                return this.modeList.map(mode => ({
+                    label: this.$t(`details.${mode}`),
+                    disabled: true,
+                    id: mode,
+                    cls: this.pipelineMode === mode ? 'is-selected' : ''
+                }))
             }
         },
         methods: {

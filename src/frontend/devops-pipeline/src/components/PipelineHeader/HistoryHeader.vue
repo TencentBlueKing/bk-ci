@@ -2,9 +2,8 @@
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb />
-            <pac-tag v-if="pacEnabled" :info="yamlInfo" />
+            <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
             <badge
-                class="pipeline-latest-exec-badge"
                 :project-id="$route.params.projectId"
                 :pipeline-id="$route.params.pipelineId"
             />
@@ -92,8 +91,8 @@
         display: grid;
         grid-auto-flow: column;
         align-items: center;
-        .pipeline-latest-exec-badge {
-            margin-left: 22px;
+        .pipeline-pac-indicator {
+            margin-right: 22px;
         }
     }
 
