@@ -49,7 +49,12 @@ class AuthenticationService {
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
         val localVal = ThreadLocal<String>().get()
-        logger.debug("[appAuthentication] thread local localval: $localVal, operationName: $operationName")
+        val localVal2 = ThreadLocal<String>().toString()
+        logger.debug("[appAuthentication] thread local localval.get(): $localVal, operationName: $operationName")
+        logger.debug("[appAuthentication] thread local localval.toString(): $localVal2")
+        logger.debug("[appAuthentication] current thread id: ${Thread.currentThread().id}")
+        ThreadLocal<String>().remove()
+        logger.debug("[appAuthentication] thread local localval.remove(): $localVal2")
         val url = jobCloudProdUrlPrefix + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
