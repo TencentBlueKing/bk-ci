@@ -31,16 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitCommitReviewInfo
-import com.tencent.devops.scm.pojo.GitDiff
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.pojo.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -367,4 +358,19 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             crId = crId
         ).data
     }
+
+    override fun getGitSession(
+        type: ScmType,
+        username: String,
+        password: String
+    ): GitSession? {
+        return client.getScm(ServiceScmResource::class).getSession(
+            RepoSessionRequest(
+                type = type,
+                username = username,
+                password = password
+            )
+        ).data
+    }
+
 }

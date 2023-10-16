@@ -40,15 +40,7 @@ import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitCommitReviewInfo
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
@@ -548,6 +540,24 @@ class ScmService @Autowired constructor(
             region = null,
             userName = null
         ).getCommitReviewInfo(crId = crId)
+    }
+
+    fun getSession(
+        type: ScmType,
+        username: String,
+        password: String
+    ): GitSession? {
+        return ScmFactory.getScm(
+            projectName = "",
+            url = "",
+            type = type,
+            branchName = null,
+            privateKey = username,
+            passPhrase = password,
+            token = "",
+            region = null,
+            userName = null
+        ).getGitSession()
     }
 
     companion object {
