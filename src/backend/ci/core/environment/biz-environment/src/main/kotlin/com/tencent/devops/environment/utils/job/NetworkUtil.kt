@@ -64,7 +64,8 @@ object NetworkUtil {
 
     private fun <T> executeHttpRequest(request: Request): JobCloudResp<T> {
         val operateName = AuthenticationService.get()
-        logger.debug("[executeHttpRequest] operateName: $operateName")
+        if (logger.isDebugEnabled) logger.debug("[executeHttpRequest] operateName: $operateName")
+        AuthenticationService.remove()
         OkhttpUtils.doHttp(request).use { response ->
             try {
                 val responseBody = response.body?.string()
@@ -79,8 +80,10 @@ object NetworkUtil {
                             responseBody.toString().substring(0, LOG_OUTPUT_MAX_LENGTH)
                         else
                             responseBody.toString()
-                    logger.debug("[$operateName] request method/url/headers: $requestLog")
-                    logger.debug("[$operateName] response body(origin): $responseLog")
+                    if (logger.isDebugEnabled) {
+                        logger.debug("[$operateName] request method/url/headers: $requestLog")
+                        logger.debug("[$operateName] response body(origin): $responseLog")
+                    }
                 }
 
                 val deserializedRespBody = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
