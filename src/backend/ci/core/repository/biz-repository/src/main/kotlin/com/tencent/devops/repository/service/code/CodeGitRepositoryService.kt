@@ -283,6 +283,7 @@ class CodeGitRepositoryService @Autowired constructor(
         if (repository.authType != RepoAuthType.OAUTH) {
             // 授权凭证信息
             if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
                 repoCredentialInfo.token = scmService.getGitSession(
                     type = ScmType.CODE_GIT,
                     username = repoCredentialInfo.username,

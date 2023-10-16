@@ -669,7 +669,7 @@ open class GitApi {
     ): GitSession? {
         val body = JsonUtil.toJson(
             mapOf(
-                "username" to username,
+                "login" to username,
                 "password" to password
             ),
             false
