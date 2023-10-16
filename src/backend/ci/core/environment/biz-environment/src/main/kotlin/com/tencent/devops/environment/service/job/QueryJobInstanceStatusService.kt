@@ -15,7 +15,11 @@ import org.springframework.stereotype.Service
 class QueryJobInstanceStatusService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
+        private const val QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX =
+            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s"
+    }
     fun queryJobInstanceStatus(
         userId: String,
         projectId: String,
@@ -58,10 +62,5 @@ class QueryJobInstanceStatusService @Autowired constructor(
             jobRequestId = jobCloudResp.jobRequestId,
             data = queryJobInstanceStatusResult
         )
-    }
-
-    companion object {
-        private const val QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX =
-            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s"
     }
 }

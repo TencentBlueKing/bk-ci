@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service
 class ScriptExecuteService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    val logger = LoggerFactory.getLogger(ScriptExecuteService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScriptExecuteService::class.java)
+    }
     fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): JobResult<ScriptExecuteResult> {
         AuthenticationService.set("executeScript")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =

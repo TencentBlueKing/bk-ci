@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 
 object NetworkUtil {
     private const val LOG_OUTPUT_MAX_LENGTH = 4000
-    val logger = LoggerFactory.getLogger(NetworkUtil::class.java)
+    private val logger = LoggerFactory.getLogger(NetworkUtil::class.java)
 
     fun <T, U : Any> executeHttpRequest(
         httpType: String,

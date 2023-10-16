@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service
 class QueryJobInstanceLogsService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    val logger = LoggerFactory.getLogger(QueryJobInstanceLogsService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(QueryJobInstanceLogsService::class.java)
+    }
     fun queryJobInstanceLogs(
         jobCloudQueryJobInstanceLogsReq: JobCloudQueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {

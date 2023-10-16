@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service
 class FileDistributeService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    val logger = LoggerFactory.getLogger(FileDistributeService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(FileDistributeService::class.java)
+    }
     fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
         AuthenticationService.set("distributeFile")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =

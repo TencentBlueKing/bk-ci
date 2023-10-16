@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service
 class TaskTerminateService @Autowired constructor(
     private val authenticationService: AuthenticationService
 ) {
-    val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(QueryJobInstanceStatusService::class.java)
+    }
     fun terminateTask(jobCloudTaskTerminateReq: JobCloudTaskTerminateReq): JobResult<TaskTerminateResult> {
         AuthenticationService.set("terminateTask")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
