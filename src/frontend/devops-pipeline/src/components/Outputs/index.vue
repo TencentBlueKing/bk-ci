@@ -244,7 +244,8 @@
                             let url = `${urlPrefix}/generic?repoName=${repoName}&path=${encodeURIComponent(fileName)}/default`
                             
                             if (this.activeOutput.isImageOutput) {
-                                url = `${urlPrefix}/docker/package?repoName=${repoName}&packageKey=${encodeURIComponent(`docker://${this.activeOutput.fullName}`)}`
+                                const imageVerion = this.activeOutput.fullName.slice(this.activeOutput.fullName.lastIndexOf(':') + 1)
+                                url = `${urlPrefix}/docker/package?repoName=${repoName}&packageKey=${encodeURIComponent(`docker://${this.activeOutput.name}`)}&version=${imageVerion}`
                             }
                             window.open(url, '_blank')
                         }
