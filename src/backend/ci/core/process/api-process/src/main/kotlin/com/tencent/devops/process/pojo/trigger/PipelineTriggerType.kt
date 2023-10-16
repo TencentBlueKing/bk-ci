@@ -70,6 +70,8 @@ enum class PipelineTriggerType {
     REMOTE;
 
     companion object {
+        // 通用触发类型
+        private val commonTriggerTypes = listOf(MANUAL, TIME_TRIGGER, REMOTE)
 
         fun toMap(
             scmType: ScmType?,
@@ -77,7 +79,7 @@ enum class PipelineTriggerType {
         ): List<IdValue> {
             return PipelineTriggerType.values().filter {
                 scmType == null || scmType.name == it.name
-            }.map {
+            }.plus(commonTriggerTypes).map {
                 IdValue(
                     id = it.name,
                     value = I18nUtil.getCodeLanMessage(

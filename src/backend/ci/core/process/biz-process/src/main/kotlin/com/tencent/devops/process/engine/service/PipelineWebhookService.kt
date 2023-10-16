@@ -656,8 +656,8 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("PipelineWebhookService:begin updateWebhookEventInfo threadPoolExecutor")
             try {
                 updateWebhookEventInfoTask()
-            } catch (e: Exception) {
-                logger.warn("PipelineWebhookService：updateWebhookEventInfo failed | $e ")
+            } catch (ignored: Exception) {
+                logger.warn("PipelineWebhookService：updateWebhookEventInfo failed", ignored)
             } finally {
                 threadPoolExecutor.shutdown()
                 logger.info("updateWebhookEventInfo finish cost: ${System.currentTimeMillis() - startTime}")
@@ -684,7 +684,7 @@ class PipelineWebhookService @Autowired constructor(
                     val repositoryConfig = RepositoryConfig(
                         repositoryHashId = it.repoHashId,
                         repositoryName = it.repoName,
-                        repositoryType = RepositoryType.valueOf(it.repositoryType)
+                        repositoryType = RepositoryType.valueOf(it.repoType)
                     )
                     val repository = repoCache.get("${it.projectId}_${repositoryConfig.getRepositoryId()}") {
                         try {
