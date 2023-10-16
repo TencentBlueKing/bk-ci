@@ -595,7 +595,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-        checkRepositoryUrl(record, repository, userId)
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -606,6 +605,15 @@ class RepositoryService @Autowired constructor(
             )
         }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
+        if (codeRepositoryService.diffRepoUrl(record, repository)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         codeRepositoryService.edit(
             userId = userId,
             projectId = projectId,
@@ -1093,53 +1101,6 @@ class RepositoryService @Autowired constructor(
             token = token,
             tokenType = finalTokenType
         )
-    }
-
-    fun checkRepositoryUrl(
-        sourceRepo: TRepositoryRecord,
-        targetRepo: Repository,
-        userId: String
-    ) {
-        val sourceRepoUrl = sourceRepo.url
-        val targetRepoUrl = targetRepo.url
-        val result = when (targetRepo) {
-            is CodeSvnRepository -> {
-                val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
-                val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
-                val targetSubPath = targetRepoUrl.substring(
-                    targetRepoUrl.indexOf(targetRepoUrl) +
-                        targetRepoUrl.length
-                )
-                val sourceSubPath = targetRepoUrl.substring(
-                    targetRepoUrl.indexOf(targetRepoUrl) +
-                        targetRepoUrl.length
-                )
-                sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
-            }
-
-            is CodeTGitRepository, is CodeGitRepository, is CodeGitlabRepository, is GithubRepository -> {
-                val sourceRepoInfo = GitUtils.getDomainAndRepoName(sourceRepoUrl)
-                val targetRepoInfo = GitUtils.getDomainAndRepoName(targetRepoUrl)
-                sourceRepoInfo.first != targetRepoInfo.first || sourceRepoInfo.second != targetRepoInfo.second
-            }
-
-            is CodeP4Repository -> {
-                sourceRepoUrl != targetRepoUrl
-            }
-
-            else -> {
-                logger.warn("unknown repository type")
-                false
-            }
-        }
-        if (result) {
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
-                    I18nUtil.getLanguage(userId)
-                )
-            )
-        }
     }
 
     companion object {

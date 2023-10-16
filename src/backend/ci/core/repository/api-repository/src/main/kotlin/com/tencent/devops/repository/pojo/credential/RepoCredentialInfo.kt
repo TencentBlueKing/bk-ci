@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("仓库授权信息")
 data class RepoCredentialInfo(
     @ApiModelProperty("授权Token")
-    val token: String = "",
+    var token: String = "",
     @ApiModelProperty("授权私钥")
     val privateKey: String = "",
     @ApiModelProperty("私钥密码")

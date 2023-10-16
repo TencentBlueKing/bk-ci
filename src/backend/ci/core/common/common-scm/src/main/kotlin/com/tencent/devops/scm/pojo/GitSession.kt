@@ -24,41 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.service.code
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface CodeRepositoryService<T> {
-
-    /**
-     * 代码库类型
-     */
-    fun repositoryType(): String
-
-    /**
-     * 创建代码库
-     */
-    fun create(projectId: String, userId: String, repository: T): Long
-
-    /**
-     * 编辑代码库
-     */
-    fun edit(userId: String, projectId: String, repositoryHashId: String, repository: T, record: TRepositoryRecord)
-
-    /**
-     * 代码库组成
-     */
-    fun compose(repository: TRepositoryRecord): Repository
-
-    /**
-     * 获取授权信息
-     */
-    fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
-
-    /**
-     * 检查代码库url不一致
-     */
-    fun diffRepoUrl(sourceRepo: TRepositoryRecord, targetRepo: T): Boolean
-}
+@ApiModel("工蜂会话信息")
+data class GitSession(
+    val id: String,
+    @ApiModelProperty("邮箱地址")
+    val email: String,
+    @ApiModelProperty("用户名")
+    val username: String,
+    @JsonProperty("private_token")
+    val privateToken: String
+)

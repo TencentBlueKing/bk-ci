@@ -28,37 +28,20 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 
-interface CodeRepositoryService<T> {
-
-    /**
-     * 代码库类型
-     */
-    fun repositoryType(): String
+abstract class CommonGitRepositoryService<T : Repository> : CodeRepositoryService<T> {
 
     /**
-     * 创建代码库
+     * 校验代码库url
      */
-    fun create(projectId: String, userId: String, repository: T): Long
-
-    /**
-     * 编辑代码库
-     */
-    fun edit(userId: String, projectId: String, repositoryHashId: String, repository: T, record: TRepositoryRecord)
-
-    /**
-     * 代码库组成
-     */
-    fun compose(repository: TRepositoryRecord): Repository
-
-    /**
-     * 获取授权信息
-     */
-    fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
-
-    /**
-     * 检查代码库url不一致
-     */
-    fun diffRepoUrl(sourceRepo: TRepositoryRecord, targetRepo: T): Boolean
+    override fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: T
+    ): Boolean {
+        val sourceRepoInfo = GitUtils.getDomainAndRepoName(sourceRepo.url)
+        val targetRepoInfo = GitUtils.getDomainAndRepoName(targetRepo.url)
+        return sourceRepoInfo.first != targetRepoInfo.first ||
+                sourceRepoInfo.second != targetRepoInfo.second
+    }
 }

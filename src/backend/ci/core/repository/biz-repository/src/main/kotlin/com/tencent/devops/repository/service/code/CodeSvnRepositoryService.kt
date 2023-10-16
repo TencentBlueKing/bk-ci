@@ -246,6 +246,25 @@ class CodeSvnRepositoryService @Autowired constructor(
         )
     }
 
+    override fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: CodeSvnRepository
+    ): Boolean {
+        val sourceRepoUrl = sourceRepo.url
+        val targetRepoUrl = targetRepo.url
+        val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
+        val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
+        val targetSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        val sourceSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        return sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
     }
