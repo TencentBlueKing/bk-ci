@@ -34,7 +34,7 @@ const fetchGroupPermissionDetailMap = async () => {
         });
       }
     }).catch(() => {
-      groupPermissionDetailMap.value = [];
+      groupPermissionDetailMap.value = {};
     });
     isLoading.value = false;
   }
@@ -50,7 +50,8 @@ watch(() => props.isShow, (val) => {
   if (val) {
     fetchGroupPermissionDetailMap();
   } else {
-    showPermFlagMap.value = [true, false]
+    showPermFlagMap.value = [true, false];
+    groupPermissionDetailMap.value = {};
   }
 }, { 
   immediate: true,
@@ -109,6 +110,9 @@ const handleHidden = () => {
                                   </span>
                                   <span v-else-if="data.relatedResourceInfo?.instances.type.includes('project')">
                                       {{ t('共N个XX', [1, data.relatedResourceInfo?.instances.name]) }}
+                                  </span>
+                                  <span v-else-if="data.relatedResourceInfo?.instances.type.includes('space')">
+                                    {{ t('共N个监控平台空间', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.instances.name]) }}
                                   </span>
                                   <span v-else>
                                       {{ t('共N个XX', [data.relatedResourceInfo?.instances?.path.length, data.relatedResourceInfo?.name]) }}
