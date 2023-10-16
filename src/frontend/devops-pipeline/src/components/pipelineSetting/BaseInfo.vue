@@ -2,7 +2,7 @@
     <div v-if="pipelineSetting" class="bkdevops-base-info-setting-tab">
         <bk-form>
             <bk-form-item :label="$t('pipelineName')" :required="true">
-                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="'required|max:40'" max-length="40" :handle-change="handleBaseInfoChange" />
+                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="'required|max:128'" max-length="128" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
             <bk-form-item :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">

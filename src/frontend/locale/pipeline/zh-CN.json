@@ -91,7 +91,7 @@
   "buildNum": "构建号",
   "propertyBar": "属性栏",
   "pipelineNameTips": "请输入流水线名称",
-  "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
+  "pipelineNameInputTips": "请输入流水线名称,不超过128个字符",
   "pipelineDescInputTips": "请输入100字符以内的描述内容",
   "pipelineDynamicMatchPlaceholder": "将根据流水线的名称、标签等属性自动匹配",
   "buildDescInputTips": "${{DATE:\"yyyyMMdd\"}}.${{BUILD_NO_OF_DAY}}",
