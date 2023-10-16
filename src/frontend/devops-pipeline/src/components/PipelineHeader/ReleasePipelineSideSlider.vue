@@ -152,7 +152,7 @@
                 </p>
             </div>
         </section>
-        <footer v-if="hasOauth" slot="footer" class="release-pipeline-pac-footer">
+        <footer v-if="!releaseParams.enablePac || hasOauth" slot="footer" class="release-pipeline-pac-footer">
             <bk-button
                 theme="primary"
                 @click="releasePipeline"
