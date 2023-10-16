@@ -47,32 +47,7 @@ class AuthenticationService {
 
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-
-        val localVal = ThreadLocal<String>().set("executeScript")
-        logger.debug("[appAuthentication] ThreadLocal<String>().get(): ${ThreadLocal<String>().get()}")
-//        val threadLocal = ThreadLocal<String>()
-//        logger.debug("[appAuthentication] threadLocal01: $threadLocal")//java.lang.ThreadLocal@292670ca
-//        threadLocal.set("executeScript")
-//        logger.debug("[appAuthentication] threadLocal02: $threadLocal")//java.lang.ThreadLocal@292670ca
-//        val localVal = threadLocal.get()
-//        logger.debug("[appAuthentication] localVal: $localVal")//executeScript
-//        val localVal2 = ThreadLocal<String>().toString()
-//        logger.debug("[appAuthentication] localVal2: $localVal2")//java.lang.ThreadLocal@4d61cfde
-//        val localVal3 = threadLocal.toString()
-//        logger.debug("[appAuthentication] localVal3: $localVal3")//java.lang.ThreadLocal@292670ca
-//        ThreadLocal<String>().remove()
-//        logger.debug("[appAuthentication] localVal11: $localVal")//executeScript
-//        logger.debug("[appAuthentication] threadLocal11: $threadLocal")//java.lang.ThreadLocal@292670ca
-//        threadLocal.remove()
-//        logger.debug("[appAuthentication] localVal22: $localVal")//executeScript
-//        logger.debug("[appAuthentication] threadLocal22: $threadLocal")//java.lang.ThreadLocal@292670ca
-
-//        val localVal0 = ThreadLocal<String>().set("executeScript")
-//        val localVal = ThreadLocal<String>().get()
-//        logger.debug("[appAuthentication] thread local localval.get(): $localVal, operationName: $operationName")
-//        logger.debug("[appAuthentication] thread local localval.toString(): $localVal2")
-//        logger.debug("[appAuthentication] current thread id: ${Thread.currentThread().id}")
-//        logger.debug("[appAuthentication] thread local localval.remove(): $localVal2")
+        logger.debug("[appAuthentication] AuthenticationService.get(): ${get()}")
         val url = jobCloudProdUrlPrefix + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
@@ -89,4 +64,18 @@ class AuthenticationService {
             bkScopeId = bkScopeId ?: ""
         )
     }
+
+    companion object {
+        private val threadLocal = ThreadLocal<String>()
+        fun set(value: String) {
+            threadLocal.set(value)
+        }
+        fun get(): String? {
+            return threadLocal.get()
+        }
+        fun remove() {
+            threadLocal.remove()
+        }
+    }
+
 }
