@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("创建VM镜像请求报文")
-data class MakeVmImageReq(
+data class MakeWorkspaceImageReq(
     @ApiModelProperty("imageName")
     val imageName: String
 )

@@ -30,13 +30,11 @@ data class VmCreateResp(
 )
 
 data class Image(
-    @JsonProperty("cos_file")
     val cosFile: String,
     val scene: String,
-    @JsonProperty("source_env")
     val sourceEnv: String,
-    @JsonProperty("source_cgsid")
     val sourceCgsId: String,
-    @JsonProperty("source_type")
-    val sourceType: String
+    val sourceType: String,
+    val size: String,
+    val zoneId: String
 )

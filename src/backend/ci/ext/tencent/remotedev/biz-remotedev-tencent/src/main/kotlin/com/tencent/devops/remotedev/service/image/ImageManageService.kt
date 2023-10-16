@@ -58,10 +58,12 @@ class ImageManageService @Autowired constructor(
                     id = it.id,
                     projectId = it.projectId,
                     imageName = it.imageName,
-                    version = it.version,
-                    path = it.path,
+                    imageId = it.imageId,
+                    imageCosFile = it.imageCosFile,
                     size = it.size,
-                    zone = it.zone,
+                    sourceCgsId = it.sourceCgsId,
+                    sourceCgsType = it.sourceCgsType,
+                    sourceCgsZone = it.sourceCgsZone,
                     creator = it.creator,
                     status = ImageStatus.values()[it.status]
                 )

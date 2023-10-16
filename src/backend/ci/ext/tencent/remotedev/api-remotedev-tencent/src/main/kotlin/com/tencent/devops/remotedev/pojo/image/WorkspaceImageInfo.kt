@@ -27,31 +27,11 @@
 
 package com.tencent.devops.remotedev.pojo.image
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("工作空间模板配置")
-data class ProjectImage(
-    @ApiModelProperty("ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("镜像ID")
+data class WorkspaceImageInfo(
     val imageId: String,
-    @ApiModelProperty("镜像名称")
-    val imageName: String,
-    @ApiModelProperty("路径")
     val imageCosFile: String,
-    @ApiModelProperty("size")
     val size: String,
-    @ApiModelProperty("镜像关联cgsId")
     val sourceCgsId: String,
-    @ApiModelProperty("镜像关联cgsType")
     val sourceCgsType: String,
-    @ApiModelProperty("区域")
-    val sourceCgsZone: String,
-    @ApiModelProperty("状态")
-    val status: ImageStatus,
-    @ApiModelProperty("创建人")
-    val creator: String
+    val sourceCgsZone: String
 )

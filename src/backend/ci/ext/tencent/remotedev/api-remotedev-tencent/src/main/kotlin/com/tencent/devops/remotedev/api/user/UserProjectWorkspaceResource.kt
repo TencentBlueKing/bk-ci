@@ -36,7 +36,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
-import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -206,6 +206,6 @@ interface UserProjectWorkspaceResource {
         @PathParam("workspaceName")
         workspaceName: String,
         @ApiParam("请求报文", required = true)
-        makeImageReq: MakeVmImageReq
+        makeImageReq: MakeWorkspaceImageReq
     ): Result<Boolean>
 }

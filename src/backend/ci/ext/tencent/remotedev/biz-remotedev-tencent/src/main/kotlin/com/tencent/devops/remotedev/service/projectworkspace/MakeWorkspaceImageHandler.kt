@@ -33,27 +33,22 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
-import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
-import com.tencent.devops.remotedev.pojo.WorkspaceAction
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceResponse
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.*
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.image.MakeVmImageReq
+import com.tencent.devops.remotedev.pojo.image.ImageStatus
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -63,7 +58,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class MakeImageHandler @Autowired constructor(
+class MakeWorkspaceImageHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -73,19 +68,20 @@ class MakeImageHandler @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val imageManageDao: ImageManageDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MakeImageHandler::class.java)
+        private val logger = LoggerFactory.getLogger(MakeWorkspaceImageHandler::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
-    fun makeImageByVm(
+    fun makeWorkspaceImage(
         userId: String,
         projectId: String,
         workspaceName: String,
-        makeImageReq: MakeVmImageReq
+        makeImageReq: MakeWorkspaceImageReq
     ): WorkspaceResponse {
         logger.info("$userId make image ${makeImageReq.imageName} workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
@@ -121,7 +117,15 @@ class MakeImageHandler @Autowired constructor(
                 status = WorkspaceStatus.MAKING_IMAGE
             )
 
-            val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp  ?: ""
+            val imageId = "img_${RandomStringUtils.random(8)}"
+            // 新增镜像信息
+            imageManageDao.createWorkspaceImage(
+                projectId = projectId,
+                imageId = imageId,
+                imageName = makeImageReq.imageName,
+                imageStatus = ImageStatus.BUILDING,
+                dslContext = dslContext
+            )
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -137,7 +141,8 @@ class MakeImageHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
-                    cgsId = cgsId,
+                    cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp  ?: "",
+                    imageId = imageId,
                     mountType = WorkspaceMountType.START
                 )
             )
@@ -165,14 +170,15 @@ class MakeImageHandler @Autowired constructor(
         }
     }
 
-    fun makeImageByVmCallback(event: RemoteDevUpdateEvent) {
+    fun makeWorkspaceImageCallback(event: RemoteDevUpdateEvent) {
         val workspace = workspaceDao.fetchAnyWorkspace(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(event.workspaceName)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(event.workspaceName)
+        )
+
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -186,17 +192,25 @@ class MakeImageHandler @Autowired constructor(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
                     operator = event.userId,
-                    action = WorkspaceAction.START,
+                    action = WorkspaceAction.MAKE_IMAGE,
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.RUNNING.name
+                        WorkspaceStatus.STOPPED.name
                     )
+                )
+
+                // 更新镜像信息
+                imageManageDao.updateWorkspaceImage(
+                    projectId = workspace.projectId,
+                    workspaceImageInfo = event.workspaceImageInfo!!,
+                    imageStatus = ImageStatus.SUCCESS,
+                    dslContext = transactionContext
                 )
             }
         } else {
             // 启动失败,记录为EXCEPTION
-            logger.warn("stop workspace ${event.workspaceName} failed")
+            logger.warn("Make workspaceImage ${event.workspaceName} failed")
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
                 status = WorkspaceStatus.EXCEPTION,
@@ -214,7 +228,17 @@ class MakeImageHandler @Autowired constructor(
                     WorkspaceStatus.EXCEPTION.name
                 )
             )
+
+            // 更新镜像信息
+            imageManageDao.updateWorkspaceImage(
+                projectId = workspace.projectId,
+                workspaceImageInfo = event.workspaceImageInfo!!,
+                imageStatus = ImageStatus.FAILURE,
+                dslContext = dslContext
+            )
         }
+
+
 
         // 分发到WS
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -222,7 +246,7 @@ class MakeImageHandler @Autowired constructor(
             workspaceName = event.workspaceName,
             workspaceHost = "",
             errorMsg = event.errorMsg,
-            type = WebSocketActionType.WORKSPACE_STOP,
+            type = WebSocketActionType.WORKSPACE_MAKE_IMAGE,
             status = event.status,
             action = WorkspaceAction.STOP,
             systemType = workspace.workspaceSystemType,

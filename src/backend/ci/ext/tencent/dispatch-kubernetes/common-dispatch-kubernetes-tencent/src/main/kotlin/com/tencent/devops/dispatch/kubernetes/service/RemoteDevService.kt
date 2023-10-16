@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -268,7 +269,7 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun makeWorkspaceImage(event: WorkspaceOperateEvent): String {
+    fun makeWorkspaceImage(event: WorkspaceOperateEvent): WorkspaceImageInfo {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
@@ -284,7 +285,14 @@ class RemoteDevService @Autowired constructor(
                 dslContext = dslContext
             )
 
-            return image?.cosFile ?: ""
+            return WorkspaceImageInfo(
+                imageId = event.imageId ?: "",
+                imageCosFile = image?.cosFile ?: "",
+                size = image?.size ?: "",
+                sourceCgsId = image?.sourceCgsId ?: "",
+                sourceCgsType = image?.sourceType ?: "",
+                sourceCgsZone = image?.zoneId ?: ""
+            )
         } else {
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,

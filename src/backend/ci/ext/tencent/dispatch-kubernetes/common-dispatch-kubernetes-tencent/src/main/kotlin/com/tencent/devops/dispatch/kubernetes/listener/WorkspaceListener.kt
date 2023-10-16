@@ -113,7 +113,7 @@ class WorkspaceListener @Autowired constructor(
                     remoteDevService.restartWorkspace(event)
                 }
                 UpdateEventType.MAKE_IMAGE -> {
-                    backEvent.imageCosFile = remoteDevService.makeWorkspaceImage(event)
+                    backEvent.workspaceImageInfo = remoteDevService.makeWorkspaceImage(event)
                 }
                 else -> {
                 }
