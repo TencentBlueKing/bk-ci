@@ -49,6 +49,7 @@ class AuthenticationService {
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
         val localVal = ThreadLocal<String>().set("executeScript")
+        logger.debug("[appAuthentication] ThreadLocal<String>().get(): ${ThreadLocal<String>().get()}")
 //        val threadLocal = ThreadLocal<String>()
 //        logger.debug("[appAuthentication] threadLocal01: $threadLocal")//java.lang.ThreadLocal@292670ca
 //        threadLocal.set("executeScript")
