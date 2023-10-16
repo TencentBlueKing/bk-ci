@@ -62,13 +62,8 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_CREATE_SUFFIX,
             method = POST_METHOD,
-            body = monitorSpaceCreateInfo
-        ).data?.let { monitorSpaceDetailData ->
-            val monitorSpaceDetail = generateMonitorSpaceDetail(monitorSpaceDetailData)
-                ?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                    defaultMessage = "The monitoring space(${monitorSpaceCreateInfo.spaceId}) does not exist "
-                )
+            body = objectMapper.writeValueAsString(monitorSpaceCreateInfo)
+        ).data?.let { monitorSpaceDetail ->
             authMonitorSpaceDao.create(
                 dslContext = dslContext,
                 projectCode = monitorSpaceDetail.spaceId!!,
@@ -82,24 +77,6 @@ class RbacPermissionAuthMonitorSpaceService constructor(
             errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
             defaultMessage = "Failed to create the monitoring space(${monitorSpaceCreateInfo.spaceId})"
         )
-    }
-
-    private fun generateMonitorSpaceDetail(monitorSpaceDetailData: Any?): MonitorSpaceDetailVO? {
-        if (monitorSpaceDetailData == null)
-            return null
-        val monitorSpaceDetailMap = monitorSpaceDetailData as Map<*, *>
-        val monitorSpaceDetailVO =
-            MonitorSpaceDetailVO(
-                id = monitorSpaceDetailMap["id"]?.toString()?.toLong(),
-                spaceName = monitorSpaceDetailMap["space_name"] as String?,
-                spaceTypeId = monitorSpaceDetailMap["space_type_id"] as String?,
-                spaceId = monitorSpaceDetailMap["space_id"] as String?,
-                spaceUid = monitorSpaceDetailMap["space_uid"] as String?,
-                status = monitorSpaceDetailMap["status"] as String?,
-                creator = monitorSpaceDetailMap["creator"] as String?
-            )
-        logger.info("generateMonitorSpaceDetail:monitorSpaceDetailVO($monitorSpaceDetailVO)")
-        return monitorSpaceDetailVO
     }
 
     override fun getOrCreateMonitorSpace(
@@ -175,13 +152,8 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
             method = POST_METHOD,
-            body = monitorSpaceUpdateInfo
-        ).data?.let { monitorSpaceDetailData ->
-            val monitorSpaceDetail = generateMonitorSpaceDetail(monitorSpaceDetailData)
-                ?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_MONITOR_SPACE_NOT_EXIST,
-                    defaultMessage = "The monitoring space(${monitorSpaceUpdateInfo.spaceName}) does not exist "
-                )
+            body = objectMapper.writeValueAsString(monitorSpaceUpdateInfo),
+        ).data?.let { monitorSpaceDetail ->
             if (needCreateDbRecord) {
                 authMonitorSpaceDao.create(
                     dslContext = dslContext,
@@ -213,16 +185,20 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         )
         if (monitorSpaceDetailResp.code == MONITOR_SPACE_NOT_EXIST_CODE)
             return null
-        return generateMonitorSpaceDetail(monitorSpaceDetailResp.data)
+        return monitorSpaceDetailResp.data
     }
 
-    private fun executeHttpRequest(urlSuffix: String, method: String, body: Any? = null): ResponseDTO {
+    private fun executeHttpRequest(
+        urlSuffix: String,
+        method: String,
+        body: String? = null,
+    ): ResponseDTO<MonitorSpaceDetailVO> {
         val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
         val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
         val url = monitorUrlPrefix + urlSuffix
 
         val requestBody = body?.let {
-            objectMapper.writeValueAsString(it).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+            body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         }
 
         val requestBuilder = Request.Builder()
@@ -241,7 +217,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
             logger.info("executeHttpRequest:${it.body!!}")
             val responseStr = it.body!!.string()
             logger.info("executeHttpRequest:$responseStr")
-            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
+            val responseDTO = objectMapper.readValue<ResponseDTO<MonitorSpaceDetailVO>>(responseStr)
             if (responseDTO.code != REQUEST_SUCCESS_CODE && responseDTO.code != MONITOR_SPACE_NOT_EXIST_CODE) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response :($it)")
