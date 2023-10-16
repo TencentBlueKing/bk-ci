@@ -69,8 +69,6 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import java.time.LocalDateTime
 import java.util.Base64
 import javax.ws.rs.NotFoundException
