@@ -191,7 +191,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
     private fun executeHttpRequest(
         urlSuffix: String,
         method: String,
-        body: String? = null,
+        body: String? = null
     ): ResponseDTO<MonitorSpaceDetailVO> {
         val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
         val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
