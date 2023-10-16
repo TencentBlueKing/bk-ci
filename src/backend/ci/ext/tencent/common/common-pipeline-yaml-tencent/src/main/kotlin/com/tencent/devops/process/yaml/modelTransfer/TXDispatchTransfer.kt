@@ -139,9 +139,14 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     JsonUtil.toJson(job.runsOn.container!!),
                     Container::class.java
                 )
+                val imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
                 val cImage = container.image.split(":")
+                val imageCode = cImage.getOrElse(0) { "" }
                 containerPool = Pool(
-                    container = container.image,
+                    container = when (imageType) {
+                        ImageType.THIRD -> container.image
+                        else -> imageCode
+                    },
                     credential = Credential(
                         user = container.credentials?.username,
                         password = container.credentials?.password
@@ -151,9 +156,9 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     env = job.env,
                     buildType = buildType,
                     image = PoolImage(
-                        imageCode = cImage.getOrElse(0) { "" },
+                        imageCode = imageCode,
                         imageVersion = cImage.getOrElse(1) { "" },
-                        imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
+                        imageType = imageType
                     )
                 )
             } catch (e: Exception) {
@@ -161,8 +166,14 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     JsonUtil.toJson(job.runsOn.container!!),
                     Container2::class.java
                 )
+                val imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
                 val cImage = container.image.split(":")
+                val imageCode = cImage.getOrElse(0) { "" }
                 containerPool = Pool(
+                    container = when (imageType) {
+                        ImageType.THIRD -> container.image
+                        else -> imageCode
+                    },
                     credential = Credential(
                         user = "",
                         password = "",
@@ -178,9 +189,9 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     env = job.env,
                     buildType = buildType,
                     image = PoolImage(
-                        imageCode = cImage.getOrElse(0) { "" },
+                        imageCode = imageCode,
                         imageVersion = cImage.getOrElse(1) { "" },
-                        imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
+                        imageType = imageType
                     )
                 )
             }

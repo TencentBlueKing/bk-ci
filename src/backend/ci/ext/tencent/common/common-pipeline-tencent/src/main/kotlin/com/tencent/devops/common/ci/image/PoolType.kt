@@ -107,11 +107,18 @@ enum class PoolType {
                     poolName = JobRunsOnType.DOCKER.type,
                     poolType = null,
                     container = when (dispatcher.imageType) {
-                        ImageType.BKSTORE, ImageType.THIRD -> Container2(
-                            image = "${dispatcher.dockerBuildVersion}:${dispatcher.imageVersion}",
+                        ImageType.BKSTORE -> Container2(
+                            image = "${dispatcher.value}:${dispatcher.imageVersion}",
                             credentials = dispatcher.credentialId?.ifBlank { null },
                             imageType = dispatcher.imageType!!.name
                         )
+
+                        ImageType.THIRD -> Container2(
+                            image = dispatcher.value,
+                            credentials = dispatcher.credentialId?.ifBlank { null },
+                            imageType = dispatcher.imageType!!.name
+                        )
+
                         else -> null
                     }
                 )
