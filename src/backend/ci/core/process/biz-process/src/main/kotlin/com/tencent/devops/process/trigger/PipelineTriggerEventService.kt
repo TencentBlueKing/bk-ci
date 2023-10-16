@@ -108,6 +108,7 @@ class PipelineTriggerEventService @Autowired constructor(
     }
 
     fun listTriggerEvent(
+        userId: String,
         projectId: String,
         pipelineId: String,
         eventType: String?,
@@ -142,7 +143,15 @@ class PipelineTriggerEventService @Autowired constructor(
             endTime = endTime,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )
+        ).map {
+            it.eventDesc = try {
+                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(I18nUtil.getLanguage(userId))
+            } catch (ignored: Exception) {
+                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
+                it.eventDesc
+            }
+            it
+        }
         return SQLPage(count = count, records = records)
     }
 

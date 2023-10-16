@@ -89,6 +89,7 @@ class UserPipelineTriggerEventResourceImpl(
     ): Result<SQLPage<PipelineTriggerEventVo>> {
         return Result(
             pipelineTriggerEventService.listTriggerEvent(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 eventType = eventType,
