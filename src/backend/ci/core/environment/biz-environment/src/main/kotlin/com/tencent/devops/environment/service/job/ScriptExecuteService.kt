@@ -19,7 +19,6 @@ class ScriptExecuteService @Autowired constructor(
     val logger = LoggerFactory.getLogger(ScriptExecuteService::class.java)
     fun executeScript(jobCloudScriptExecuteReq: JobCloudScriptExecuteReq): JobResult<ScriptExecuteResult> {
         AuthenticationService.set("executeScript")
-        logger.debug("[executeScript] AuthenticationService.get(): ${AuthenticationService.get()}")
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
             authenticationService.appAuthentication(jobCloudScriptExecuteReq.bkUsername)
         jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType

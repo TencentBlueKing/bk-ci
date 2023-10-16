@@ -46,7 +46,7 @@ class AuthenticationService {
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
         val operationName = get()
-        logger.debug("[appAuthentication] operationName: $operationName")
+        if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
         val url = jobCloudProdUrlPrefix + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
@@ -55,7 +55,7 @@ class AuthenticationService {
             "queryJobInstanceLogs" -> queryJobInstanceLogsPath
             else -> ""
         }
-        logger.debug("[appAuthentication] url: $url")
+        if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
         return JobCloudAuthenticationReq(
             url = url,
             bkAuthorization = bkAuthorization,
@@ -69,9 +69,11 @@ class AuthenticationService {
         fun set(value: String) {
             threadLocal.set(value)
         }
+
         fun get(): String? {
             return threadLocal.get()
         }
+
         fun remove() {
             threadLocal.remove()
         }
