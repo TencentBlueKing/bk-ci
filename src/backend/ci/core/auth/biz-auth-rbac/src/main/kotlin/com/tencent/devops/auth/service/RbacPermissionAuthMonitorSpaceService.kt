@@ -152,7 +152,7 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         executeHttpRequest(
             urlSuffix = MONITOR_SPACE_UPDATE_SUFFIX,
             method = POST_METHOD,
-            body = objectMapper.writeValueAsString(monitorSpaceUpdateInfo),
+            body = objectMapper.writeValueAsString(monitorSpaceUpdateInfo)
         ).data?.let { monitorSpaceDetail ->
             if (needCreateDbRecord) {
                 authMonitorSpaceDao.create(
