@@ -25,50 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.image
+package com.tencent.devops.remotedev.resources.user
 
-import com.tencent.devops.remotedev.dao.ImageManageDao
-import com.tencent.devops.remotedev.pojo.image.ImageStatus
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import org.jooq.DSLContext
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class ImageManageService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val imageManageDao: ImageManageDao
-) {
+@RestResource
+@Suppress("ALL")
+class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
+    private val projectImageManageService: ImageManageService
 
+) : UserProjectWorkspaceImageResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(ImageManageService::class.java)
+        val logger = LoggerFactory.getLogger(UserProjectWorkspaceImageResourceImpl::class.java)!!
     }
 
-    // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
-        logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
-        val result = mutableListOf<ProjectImage>()
-        imageManageDao.queryImageList(
-            projectId = projectId,
-            dslContext = dslContext
-        ).forEach {
-            result.add(
-                ProjectImage(
-                    id = it.id,
-                    projectId = it.projectId,
-                    imageName = it.imageName,
-                    imageId = it.imageId,
-                    imageCosFile = it.imageCosFile,
-                    size = it.size,
-                    sourceCgsId = it.sourceCgsId,
-                    sourceCgsType = it.sourceCgsType,
-                    sourceCgsZone = it.sourceCgsZone,
-                    creator = it.creator,
-                    status = ImageStatus.values()[it.status]
-                )
-            )
-        }
-        return result
+    override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
+        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
+        return Result(projectImageManageService.getProjectImageList(projectId))
+    }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        return Result(projectImageManageService.deleteProjectImage(userId, projectId, imageId))
     }
 }

@@ -73,4 +73,17 @@ class ImageManageDao {
                 .execute()
         }
     }
+
+    fun deleteWorkspaceImage(
+        projectId: String,
+        imageId: String,
+        dslContext: DSLContext
+    ) {
+        with(TProjectImages.T_PROJECT_IMAGES) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IMAGE_ID.eq(imageId))
+                .execute()
+        }
+    }
 }

@@ -35,18 +35,20 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_IMAGE_MANAGE"], description = "用户-镜像管理")
-@Path("/user/image")
+@Path("/user/project_workspaces/{projectId}/image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserImageManageResource {
+interface UserProjectWorkspaceImageResource {
 
     @ApiOperation("获取镜像列表")
     @GET
@@ -59,4 +61,19 @@ interface UserImageManageResource {
         @QueryParam("project_id")
         projectId: String
     ): Result<List<ProjectImage>>
+
+    @ApiOperation("删除工作空间镜像")
+    @DELETE
+    @Path("/{imageId}/delete")
+    fun deleteProjectImage(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("镜像ID", required = true)
+        @PathParam("imageId")
+        imageId: String
+    ): Result<Boolean>
 }
