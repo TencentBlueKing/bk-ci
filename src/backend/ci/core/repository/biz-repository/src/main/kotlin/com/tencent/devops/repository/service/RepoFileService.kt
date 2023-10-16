@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.TGitTokenDao
@@ -59,8 +60,10 @@ import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -477,6 +480,23 @@ class RepoFileService @Autowired constructor(
                 partAPrivateKey = pair.privateKey
             )
         )
+
+        // username+password 关联的git代码库
+        if ((repository is CodeGitRepository) && (credential.credentialType == CredentialType.USERNAME_PASSWORD)) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getSession(
+                RepoSessionRequest(
+                    type = ScmType.CODE_GIT,
+                    username = privateKey,
+                    password = passPhrase
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

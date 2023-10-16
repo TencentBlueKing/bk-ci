@@ -24,23 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.pojo.credential
+package com.tencent.devops.scm.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("仓库授权信息")
-data class RepoCredentialInfo(
-    @ApiModelProperty("授权Token")
-    var token: String = "",
-    @ApiModelProperty("授权私钥")
-    val privateKey: String = "",
-    @ApiModelProperty("私钥密码")
-    val passPhrase: String? = "",
+@ApiModel("工蜂会话信息")
+data class GitSession(
+    val id: String,
+    @ApiModelProperty("邮箱地址")
+    val email: String,
     @ApiModelProperty("用户名")
-    val username: String = "",
-    @ApiModelProperty("密码")
-    val password: String = "",
-    @ApiModelProperty("凭证类型")
-    val credentialType: String = ""
+    val username: String,
+    @JsonProperty("private_token")
+    val privateToken: String
 )

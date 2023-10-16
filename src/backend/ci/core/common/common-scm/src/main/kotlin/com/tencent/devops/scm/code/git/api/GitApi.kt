@@ -43,17 +43,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
-import com.tencent.devops.scm.pojo.ChangeFileInfo
-import com.tencent.devops.scm.pojo.GitCodeGroup
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitCommitReviewInfo
-import com.tencent.devops.scm.pojo.GitDiff
-import com.tencent.devops.scm.pojo.GitMember
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.TapdWorkItem
+import com.tencent.devops.scm.pojo.*
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
@@ -658,5 +648,29 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun getGitSession(
+        host: String,
+        url: String,
+        username: String,
+        password: String
+    ): GitSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "username" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", url, body)
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_SESSION_INFO),
+            request
+        ).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 }
