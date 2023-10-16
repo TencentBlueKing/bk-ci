@@ -71,6 +71,9 @@
             }
         },
         computed: {
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapState('atom', [
                 'pipeline',
                 'saveStatus',
@@ -177,7 +180,7 @@
                         projectId,
                         pipelineId,
                         baseVersion: pipeline.baseVersion,
-                        storageType: this.isCodeMode ? 'YAML' : 'MODEL',
+                        storageType: this.pipelineMode,
                         modelAndSetting: {
                             model: {
                                 ...pipeline,
