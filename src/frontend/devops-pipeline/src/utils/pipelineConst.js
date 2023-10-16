@@ -123,7 +123,8 @@ export const repoTypeMap = {
 }
 export const repoTypeNameMap = {
     CUSTOM_DIR: 'custom',
-    PIPELINE: 'pipeline'
+    PIPELINE: 'pipeline',
+    IMAGE: 'image'
 }
 export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],
