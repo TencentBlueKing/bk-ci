@@ -59,7 +59,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT"], description = "项目列表接口")
-@Path("/user/projects")
+@Path("/{apiType:user|desktop}/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
@@ -290,6 +290,21 @@ interface UserProjectResource {
         @ApiParam("权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/users/{userId}/verify")
+    @ApiOperation(" 校验用户是否项目成员")
+    fun verifyUserProjectPermission(
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null,
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<Boolean>
 
     @ApiOperation("取消创建项目")

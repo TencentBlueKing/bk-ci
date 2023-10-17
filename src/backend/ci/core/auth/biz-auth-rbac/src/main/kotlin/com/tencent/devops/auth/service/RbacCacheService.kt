@@ -164,7 +164,7 @@ class RbacCacheService constructor(
         return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedByDescending { it.id }
     }
 
-    private fun validateUserProjectPermission(
+    fun validateUserProjectPermission(
         userId: String,
         projectCode: String,
         permission: AuthPermission
