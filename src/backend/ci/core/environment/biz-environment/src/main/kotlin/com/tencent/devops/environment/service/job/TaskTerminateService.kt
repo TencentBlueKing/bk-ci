@@ -49,7 +49,7 @@ class TaskTerminateService @Autowired constructor(
         }
 
         return JobResult(
-            status = jobCloudResp.code,
+            code = jobCloudResp.code,
             result = jobCloudResp.result,
             jobRequestId = jobCloudResp.jobRequestId,
             data = taskTerminateResult

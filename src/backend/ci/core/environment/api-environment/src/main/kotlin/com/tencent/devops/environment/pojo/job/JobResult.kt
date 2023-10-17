@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("Job数据返回包装模型")
 data class JobResult<out T>(
     @ApiModelProperty("状态码", required = true)
-    val status: Int,
+    val code: Int,
     @ApiModelProperty("结果bool值")
     val result: Boolean? = null,
     @ApiModelProperty("请求ID", required = true)

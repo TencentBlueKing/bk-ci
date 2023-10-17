@@ -12,7 +12,7 @@ data class CreateAccountResult(
     val type: Int,
     @ApiModelProperty(value = "账号用途", notes = "1：系统账号", required = true)
     val category: Int,
-    @ApiModelProperty(value = "系统账号密码", notes = "账号用途为系统账号 且 账号类型为Windows时,必传")
+    @ApiModelProperty(value = "系统账号密码", notes = "账号用途为系统账号 且 账号类型为Windows时，必传。")
     val password: String,
     @ApiModelProperty(value = "账号别名", notes = "不传则以账号名称作为别名")
     val alias: String?,
@@ -20,15 +20,15 @@ data class CreateAccountResult(
     val os: String?,
     @ApiModelProperty(value = "帐号描述")
     val description: String?,
-    @ApiModelProperty(value = "创建人")
+    @ApiModelProperty(value = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty(value = "创建时间", notes = "Unix时间戳，单位ms")
+    @ApiModelProperty(value = "创建时间", notes = "Unix时间戳，单位ms", required = true)
     @JsonProperty("create_time")
     val createTime: Long,
-    @ApiModelProperty(value = "最近一次修改人")
+    @ApiModelProperty(value = "最近一次修改人", required = true)
     @JsonProperty("last_modify_user")
     val lastModifyUser: String,
-    @ApiModelProperty(value = "最近一次修改时间", notes = "Unix时间戳，单位ms")
+    @ApiModelProperty(value = "最近一次修改时间", notes = "Unix时间戳，单位ms", required = true)
     @JsonProperty("last_modify_time")
     val lastModifyTime: Long
 ) {

@@ -21,6 +21,9 @@ class AuthenticationService {
     @Value("\${job.bkScopeId:#{null}}")
     val bkScopeId: String? = null
 
+    @Value("\${job.bkScopeIdStag:#{null}}")
+    val bkScopeIdStag: String? = null
+
     @Value("\${job.jobCloudProdUrlPrefix:#{null}}")
     val jobCloudProdUrlPrefix: String? = null
 
@@ -75,7 +78,17 @@ class AuthenticationService {
             url = url,
             bkAuthorization = bkAuthorization,
             bkScopeType = bkScopeType ?: "",
-            bkScopeId = bkScopeId ?: ""
+            bkScopeId = when (operationName) {
+                "executeScript" -> bkScopeId
+                "distributeFile" -> bkScopeId
+                "terminateTask" -> bkScopeId
+                "queryJobInstanceStatus" -> bkScopeId
+                "queryJobInstanceLogs" -> bkScopeId
+                "createAccount" -> bkScopeIdStag
+                "deleteAccount" -> bkScopeIdStag
+                "getAccountList" -> bkScopeIdStag
+                else -> ""
+            } ?: ""
         )
     }
 
