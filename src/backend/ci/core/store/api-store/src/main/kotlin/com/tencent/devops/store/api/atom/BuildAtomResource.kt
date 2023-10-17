@@ -42,6 +42,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
@@ -80,8 +81,9 @@ interface BuildAtomResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件ID", required = true)
-        atomId: String
+        @ApiParam("插件分支", required = true)
+        @QueryParam("branch")
+        branch: String
     ): Result<Boolean>
 
     @ApiOperation("根据插件版本ID获取插件版本进度")
