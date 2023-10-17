@@ -117,6 +117,14 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
+    @Path("/migrateMonitorResource")
+    @ApiOperation("迁移监控空间权限资源")
+    fun migrateMonitorResource(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
     @Path("/fitSecToRbacAuth/")
     @ApiOperation("fitSec升级到rbac权限")
     fun fitSecToRbacAuth(

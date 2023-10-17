@@ -225,14 +225,18 @@ class RbacPermissionProjectService(
             resourceCode = projectCode,
             groupCode = BkAuthGroup.MANAGER.value
         )!!.relationId.toInt()
+
+        val remotedevManager = projectInfo.properties?.remotedevManager?.split(",")
+        val members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+
         val owners = projectGroupAndUserList
             .find { it.roleId == managerGroupRelationId }?.userIdList ?: emptyList()
         return ProjectPermissionInfoVO(
             projectCode = projectCode,
             projectName = projectInfo.projectName,
             creator = projectInfo.creator!!,
-            owners = owners,
-            members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+            owners = remotedevManager?.plus(owners)?.distinct() ?: owners,
+            members = remotedevManager?.plus(members)?.distinct() ?: members
         )
     }
 }

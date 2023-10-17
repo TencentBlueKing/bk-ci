@@ -384,7 +384,7 @@ class WorkspaceDao {
             t2 = "\$.hostIP",
             lower = false,
             removeDoubleQuotes = true
-        ).like("%${ips.first()}%") as Condition
+        ).like("%${ips.first()}") as Condition
         ips.drop(1).forEach { ip ->
             ipsCond = ipsCond.or(
                 JooqUtils.jsonExtract(
@@ -392,7 +392,7 @@ class WorkspaceDao {
                     t2 = "\$.hostIP",
                     lower = false,
                     removeDoubleQuotes = true
-                ).like("%$ip%")
+                ).like("%$ip")
             )
         }
         conditions.add(ipsCond)
