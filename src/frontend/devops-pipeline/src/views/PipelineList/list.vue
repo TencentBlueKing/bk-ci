@@ -26,7 +26,7 @@
         },
         data () {
             return {
-                initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 400
+                initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
             }
         },
         mounted () {
@@ -64,6 +64,7 @@
             flex: 1;
             padding: 24px;
             overflow: hidden;
+            height: 100%;
 
             .current-pipeline-group-name {
                 display: flex;
