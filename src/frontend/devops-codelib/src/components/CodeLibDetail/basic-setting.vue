@@ -37,19 +37,36 @@
             <div class="content">
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
-                    <span>
-                        {{ repoInfo.authType || curRepo.authType }}@
-                    </span>
-                    <a
-                        v-if="repoInfo.authType && !['OAUTH'].includes(repoInfo.authType)"
-                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
-                        target="_blank"
-                    >
-                        {{ repoInfo.credentialId }}
-                    </a>
-                    <span v-else>
-                        {{ repoInfo.userName || curRepo.userName }}
-                    </span>
+                    <template v-if="repoInfo.svnType">
+                        <span>
+                            {{ repoInfo.svnType || curRepo.svnType }}@
+                        </span>
+                        <a
+                            v-if="(repoInfo.svnType) && !['OAUTH'].includes(repoInfo.svnType)"
+                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            target="_blank"
+                        >
+                            {{ repoInfo.credentialId }}
+                        </a>
+                        <span v-else>
+                            {{ repoInfo.userName || curRepo.userName }}
+                        </span>
+                    </template>
+                    <template v-else>
+                        <span>
+                            {{ repoInfo.authType || curRepo.authType }}@
+                        </span>
+                        <a
+                            v-if="(repoInfo.authType) && !['OAUTH'].includes(repoInfo.authType)"
+                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            target="_blank"
+                        >
+                            {{ repoInfo.credentialId }}
+                        </a>
+                        <span v-else>
+                            {{ repoInfo.userName || curRepo.userName }}
+                        </span>
+                    </template>
                     <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
             </div>
@@ -729,6 +746,7 @@
         }
         .history-item {
             display: inline-flex;
+            line-height: 16px;
             min-width: 230px;
             max-width: 300px;
             margin-right: 200px;
@@ -736,6 +754,7 @@
             .label {
                 width: 120px;
                 font-size: 12px;
+                font-weight: 400;
                 color: #979BA5;
             }
             .content {

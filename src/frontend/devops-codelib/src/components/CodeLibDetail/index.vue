@@ -392,7 +392,7 @@
             }
             span {
                 display: inline-block;
-                max-width: 500px;
+                max-width: 400px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;

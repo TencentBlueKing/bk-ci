@@ -9,6 +9,7 @@
                 :options="{
                     disabledDate: time => time.getTime() > Date.now()
                 }"
+                :key="repoId"
             >
             </bk-date-picker>
             <bk-search-select
@@ -18,6 +19,7 @@
                 clearable
                 :show-condition="false"
                 :placeholder="$t('codelib.触发器类型/事件类型/触发人/流水线名称')"
+                :key="repoId"
             >
             </bk-search-select>
         </header>
@@ -39,7 +41,7 @@
                     </div>
                 </li>
             </ul>
-            <div class="timeline-footer" v-bkloading="{ isLoading: isLoadingMore }">
+            <div class="timeline-footer" v-if="!showEnd" v-bkloading="{ isLoading: isLoadingMore }">
                 <a v-if="!hasLoadEnd" @click="getListData">{{ $t('codelib.加载更多') }}</a>
                 <span v-else class="load-end">{{ $t('codelib.到底啦') }}</span>
             </div>
@@ -133,8 +135,10 @@
             async repoId (id) {
                 await this.getEventTypeList()
                 await this.getTriggerTypeList()
-                await this.resetFilter()
+                await this.triggerRepo()
+                await this.setDefaultDaterange()
                 this.catchRepoId = id
+                this.isInitTime = true
             },
             daterange (newVal, oldVal) {
                 if (oldVal[0]) this.isInitTime = false
@@ -161,10 +165,7 @@
             this.catchRepoId = this.repoId
             this.getEventTypeList()
             this.getTriggerTypeList()
-            const endTime = new Date()
-            const startTime = new Date()
-            startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
-            this.daterange = [startTime, endTime]
+            this.setDefaultDaterange()
         },
         methods: {
             ...mapActions('codelib', [
@@ -172,6 +173,12 @@
                 'fetchEventType',
                 'fetchTriggerType'
             ]),
+            setDefaultDaterange () {
+                const endTime = new Date()
+                const startTime = new Date()
+                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
+                this.daterange = [startTime, endTime]
+            },
             getEventTypeList () {
                 this.fetchEventType({
                     scmType: this.triggerType
@@ -240,9 +247,8 @@
                         
                         this.timelineMap[dateKey].push(item)
                     })
-
+                    this.showEnd = res.count <= this.pageSize
                     this.hasLoadEnd = res.count === this.eventList.length
-                    console.log(this.hasLoadEnd, 'hasLoadEnd')
                     this.page += 1
                 }).finally(() => {
                     this.pageLoading = false
@@ -252,6 +258,15 @@
             resetFilter () {
                 this.catchRepoId = ''
                 this.daterange = []
+                this.searchValue = []
+                this.page = 1
+                this.hasLoadEnd = false
+                this.eventList = []
+                this.timelineMap = {}
+                this.getListData()
+            },
+            triggerRepo () {
+                this.catchRepoId = ''
                 this.searchValue = []
                 this.page = 1
                 this.hasLoadEnd = false
@@ -278,6 +293,7 @@
         .timeline-warpper {
             height: calc(100% - 32px);
             padding-top: 20px;
+            margin-top: 8px;
             overflow-y: scroll;
             &::-webkit-scrollbar {
                 background-color: #fff;
@@ -287,7 +303,7 @@
         }
     }
     .trigger-timeline {
-        padding: 8px;
+        padding: 0 8px;
         .timeline-dot {
             border-left: 1px solid #d8d8d8;
             font-size: 0;

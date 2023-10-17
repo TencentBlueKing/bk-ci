@@ -520,6 +520,7 @@
                     })
                     this.fetchRepoDetail(this.newRepoInfo.repositoryHashId)
                     this.$emit('updateList')
+                    this.isShow = false
                 }).catch((e) => {
                     this.$bkMessage({
                         theme: 'error',
@@ -527,7 +528,6 @@
                     })
                 }).finally(() => {
                     this.isSaveLoading = false
-                    this.isShow = false
                 })
             },
             handleConfirm () {

@@ -72,7 +72,7 @@
 }
 
 .status-gray {
-    background: rgba(45, 203, 86, 0.16);
+    background: rgba(151, 155, 165, 0.16);
     i {
         background: rgb(151, 155, 165);
     }

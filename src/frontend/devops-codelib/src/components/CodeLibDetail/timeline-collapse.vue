@@ -30,7 +30,7 @@
                             <a
                                 v-if="activeIndex === index"
                                 class="one-click-trigger"
-                                @click.stop="handleReplayAll(item.eventId)"
+                                @click.stop="handleReplayAll(eventId)"
                             >
                                 {{ $t('codelib.一键重新触发') }}
                             </a>
@@ -39,10 +39,7 @@
                                     'right-shape': true,
                                     'right-down': activeIndex === index
                                 }"
-                                svg
                                 type="angle-right"
-                                width="24"
-                                height="24"
                             />
                         </div>
                         
@@ -77,7 +74,7 @@
                                     </td>
                                     <td width="15%">
                                         <div class="cell">
-                                            <a class="click-trigger" @click="handleReplay(detail.detailId)">{{ $t('codelib.重新触发') }}</a>
+                                            <a class="click-trigger" @click="handleReplay(detail)">{{ $t('codelib.重新触发') }}</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -86,6 +83,8 @@
                         <bk-pagination
                             class="trigger-table-pagination"
                             show-total-count
+                            type="compact"
+                            size="small"
                             v-bind="pagination"
                             @change="handleChangePage"
                             @limit-change="handleChangeLimit">
@@ -143,14 +142,14 @@
             /**
              * 一键重新触发
              */
-            handleReplayAll (id) {
+            handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.请确认是否一键重新触发？'),
+                    title: this.$t('codelib.确认重放此事件吗？'),
                     confirmLoading: true,
                     confirmFn: async () => {
                         this.replayAllEvent({
                             projectId: this.projectId,
-                            eventId: id
+                            eventId
                         }).then(() => {
                             this.$bkMessage({
                                 theme: 'success',
@@ -164,14 +163,17 @@
             /**
              * 重新触发
              */
-            handleReplay (id) {
+            handleReplay (payload) {
+                const { detailId, pipelineName } = payload
                 this.$bkInfo({
-                    title: this.$t('codelib.请确认是否重新触发？'),
+                    extCls: 'replay-dialog',
+                    width: 400,
+                    title: this.$t('codelib.确认以此事件重新触发流水线 X 吗？', [pipelineName]),
                     confirmLoading: true,
                     confirmFn: async () => {
                         this.replayEvent({
                             projectId: this.projectId,
-                            detailId: id
+                            detailId
                         }).then(() => {
                             this.$bkMessage({
                                 theme: 'success',
@@ -260,7 +262,7 @@
             margin-bottom: 8px;
             cursor: pointer;
             &.active {
-                background-color: #E1ECFF;
+                background-color: #F0F5FF;
             }
             .title {
                 display: flex;
@@ -288,6 +290,8 @@
             }
         }
         .right-shape {
+            font-size: 24px !important;
+            color: #C4C6CC;
             transition: 200ms transform;
             &.right-down {
                 transform: rotate(90deg);
@@ -331,11 +335,19 @@
             }
         }
         .trigger-table-pagination {
-            height: 63px;
-            padding: 14px 20px 0;
+            height: 43px;
+            padding: 5px 20px 0;
         }
         .is-show-table {
             animation: fade-in 1s ease-in-out;
+        }
+    }
+    
+</style>
+<style lang="scss">
+    .replay-dialog {
+        .bk-dialog-header-inner {
+            white-space: pre-wrap !important;
         }
     }
 </style>
