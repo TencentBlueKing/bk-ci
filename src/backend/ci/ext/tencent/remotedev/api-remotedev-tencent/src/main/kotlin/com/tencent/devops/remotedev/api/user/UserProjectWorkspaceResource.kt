@@ -159,6 +159,7 @@ interface UserProjectWorkspaceResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "timeScope", required = false)
+        @QueryParam("timeScope")
         timeScope: TimeScope? = TimeScope.HOUR
     ): Result<UserLoginTimeResp>
 }
