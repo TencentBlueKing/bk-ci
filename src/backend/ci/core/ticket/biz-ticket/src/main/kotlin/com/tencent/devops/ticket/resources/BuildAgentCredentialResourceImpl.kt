@@ -42,7 +42,6 @@ class BuildAgentCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildAgentCredentialResource {
 
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     override fun get(
         projectId: String,
         buildId: String,
