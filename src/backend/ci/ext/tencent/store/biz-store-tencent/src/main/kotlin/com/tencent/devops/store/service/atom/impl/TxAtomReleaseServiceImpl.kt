@@ -90,6 +90,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBE
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
@@ -103,6 +104,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
+import com.tencent.devops.store.pojo.common.BRANCH_TEST_VERSION
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
@@ -994,6 +996,19 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String> {
         val atomCode = marketAtomUpdateRequest.atomCode
+        // 判断用户是否有权限(插件成员可以操作)
+        if (!(storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            ))
+        ) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_IS_STORE_MEMBE,
+                params = arrayOf(userId)
+            )
+        }
         var version = marketAtomUpdateRequest.version
         val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
@@ -1136,11 +1151,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             val value = redisOperation.hget(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = "branch-test-version"
+                hashKey = BRANCH_TEST_VERSION
             )?.toInt() ?: 0
             redisOperation.hset(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = "branch-test-version",
+                hashKey = BRANCH_TEST_VERSION,
                 values = "${value + 1}"
             )
             // 更新红线标识
@@ -1162,39 +1177,55 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(atomId)
     }
 
-    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> {
-        logger.info("endBranchVersionTest, atomId=$atomId")
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
-        val atomCode = record.atomCode
-        val status = AtomStatusEnum.TESTED.status.toByte()
-        marketAtomDao.setAtomStatusById(
-            dslContext = dslContext,
-            atomId = atomId,
-            atomStatus = status,
-            userId = userId,
-            msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
-        )
-        val value = redisOperation.hget(
-            key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-            hashKey = "branch-test-version"
-        )?.toInt()
-        value?.let {
-            if (it > 0) {
-                redisOperation.hset(
-                    key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                    hashKey = "branch-test-version",
-                    values = "${value - 1}"
-                )
-            }
+    override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
+        logger.info("endBranchVersionTest,userId:$userId | atomCode:$atomCode | branch=$branch")
+        // 判断用户是否有权限(插件成员可以操作)
+        if (!(storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            ))
+        ) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_IS_STORE_MEMBE,
+                params = arrayOf(userId)
+            )
         }
-        doCancelReleaseBus(userId, atomId)
+        val versionPrefix = "$TEST-$branch-"
+        val records = marketAtomDao.getAtomRecordByVersionPrefix(dslContext, atomCode, versionPrefix)
+        records.forEach { record ->
+            val atomId = record.id
+            val status = AtomStatusEnum.TESTED.status.toByte()
+            marketAtomDao.setAtomStatusById(
+                dslContext = dslContext,
+                atomId = atomId,
+                atomStatus = status,
+                userId = userId,
+                msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
+            )
+            val value = redisOperation.hget(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = BRANCH_TEST_VERSION
+            )?.toInt()
+            value?.let {
+                if (it > 0) {
+                    redisOperation.hset(
+                        key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                        hashKey = BRANCH_TEST_VERSION,
+                        values = "${value - 1}"
+                    )
+                }
+            }
+            doCancelReleaseBus(userId, atomId)
+        }
         // 删除质量红线相关数据
         client.get(ServiceQualityIndicatorMarketResource::class)
-            .deleteTestIndicator("$atomCode-${record.branch}")
+            .deleteTestIndicator("$atomCode-$branch")
         client.get(ServiceQualityMetadataMarketResource::class)
-            .deleteTestMetadata("$atomCode-${record.branch}")
+            .deleteTestMetadata("$atomCode-$branch")
         client.get(ServiceQualityControlPointMarketResource::class)
-            .deleteTestControlPoint("$atomCode-${record.branch}")
+            .deleteTestControlPoint("$atomCode-$branch")
         return Result(true)
     }
 }
