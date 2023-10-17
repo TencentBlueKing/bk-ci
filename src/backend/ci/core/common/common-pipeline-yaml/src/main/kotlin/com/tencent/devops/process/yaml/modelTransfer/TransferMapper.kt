@@ -677,7 +677,7 @@ object TransferMapper {
                 key = ITemplateFilter::finally.name,
                 next = indexInJob(
                     positionResponse,
-                    preYaml.finally!!,
+                    preYaml.finally!!
                 ) { steps ->
                     nodeIndexInStep(type, steps, positionResponse, preStep)
                 }

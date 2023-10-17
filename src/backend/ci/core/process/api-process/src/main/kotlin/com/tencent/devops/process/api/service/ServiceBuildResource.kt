@@ -227,7 +227,7 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null,
+        version: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")

@@ -191,7 +191,6 @@ class StageTransfer @Autowired(required = false) constructor(
             enable = stageEnable
         )
 
-
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
             id = stageId,

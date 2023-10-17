@@ -161,7 +161,7 @@ class VariableTransfer @Autowired constructor() {
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
-                    name= variable.name,
+                    name = variable.name,
                     required = variable.allowModifyAtStartup ?: true,
                     type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                         ?: BuildFormPropertyType.STRING,

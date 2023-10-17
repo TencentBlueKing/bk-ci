@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -525,7 +524,7 @@ class PipelineViewService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipelineName: String,
-        creator: String,
+        creator: String
     ): Boolean {
         val filters = getFilters(
             filterByName = pipelineView.filterByPipeineName,

@@ -172,7 +172,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        version: Int?,
+        version: Int?
     ): Result<BuildId> {
         return manualStartupNew(
             userId = userId,
