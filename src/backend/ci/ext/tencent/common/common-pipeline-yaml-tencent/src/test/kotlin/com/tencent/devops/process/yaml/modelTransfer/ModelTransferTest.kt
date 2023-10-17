@@ -187,6 +187,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
         }.returns(emptyMap())
         every {
+            transferCache.getAtomDefaultValue(any())
+        }.returns(emptyMap())
+        every {
             transferCache.getAtomDefaultValue("checkout@1.*")
         }.returns("""{
     "repositoryType" : "ID",
