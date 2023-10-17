@@ -32,9 +32,12 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.CreateAccountResult
+import com.tencent.devops.environment.pojo.job.DeleteAccountReq
+import com.tencent.devops.environment.pojo.job.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
@@ -51,9 +54,12 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsR
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudCreateAccountReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudDeleteAccountReq
 import com.tencent.devops.environment.service.job.CreateAccountService
+import com.tencent.devops.environment.service.job.DeleteAccountService
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
+import com.tencent.devops.environment.service.job.GetAccountListService
 import com.tencent.devops.environment.service.job.ParseHashListService
 import com.tencent.devops.environment.service.job.TaskTerminateService
 import com.tencent.devops.environment.service.job.QueryJobInstanceStatusService
@@ -68,6 +74,8 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
     private val queryJobInstanceLogsService: QueryJobInstanceLogsService,
     private val createAccountService: CreateAccountService,
+    private val deleteAccountService: DeleteAccountService,
+    private val getAccountListService: GetAccountListService,
     private val parseHashListService: ParseHashListService
 ) : ServiceJobResource {
     override fun executeScript(
@@ -213,5 +221,33 @@ class ServiceJobResourceImpl @Autowired constructor(
             bkUsername = userId
         )
         return createAccountService.createAccount(jobCloudCreateAccountReq)
+    }
+
+    override fun deleteAccount(
+        userId: String,
+        projectId: String,
+        deleteAccountReq: DeleteAccountReq
+    ): JobResult<DeleteAccountResult> {
+        checkParam(userId, projectId)
+        val jobCloudDeleteAccountReq = JobCloudDeleteAccountReq(
+            id = deleteAccountReq.id,
+            bkUsername = userId
+        )
+        return deleteAccountService.deleteAccount(jobCloudDeleteAccountReq)
+    }
+
+    override fun getAccountList(
+        userId: String,
+        projectId: String,
+        account: String?,
+        alias: String?,
+        category: Int?,
+        start: Int?,
+        length: Int?
+    ): JobResult<GetAccountListResult> {
+        checkParam(userId, projectId)
+        return getAccountListService.getAccountList(
+            userId, projectId, account, alias, category, start, length
+        )
     }
 }

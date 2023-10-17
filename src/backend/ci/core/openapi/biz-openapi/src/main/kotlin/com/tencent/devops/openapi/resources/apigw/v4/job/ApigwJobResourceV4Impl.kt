@@ -5,8 +5,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.CreateAccountResult
+import com.tencent.devops.environment.pojo.job.DeleteAccountReq
+import com.tencent.devops.environment.pojo.job.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
@@ -84,5 +87,31 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult> {
         return client.get(ServiceJobResource::class).createAccount(userId, projectId, createAccountReq)
+    }
+
+    override fun deleteAccount(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        deleteAccountReq: DeleteAccountReq
+    ): JobResult<DeleteAccountResult> {
+        return client.get(ServiceJobResource::class).deleteAccount(userId, projectId, deleteAccountReq)
+    }
+
+    override fun getAccountList(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        account: String?,
+        alias: String?,
+        category: Int?,
+        start: Int?,
+        length: Int?
+    ): JobResult<GetAccountListResult> {
+        return client.get(ServiceJobResource::class).getAccountList(
+            userId, projectId, account, alias, category, start, length
+        )
     }
 }

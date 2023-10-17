@@ -31,9 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.CreateAccountResult
+import com.tencent.devops.environment.pojo.job.DeleteAccountReq
+import com.tencent.devops.environment.pojo.job.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
@@ -146,4 +149,45 @@ interface ServiceJobResource {
         @ApiParam(value = "执行脚本的信息", required = true)
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult>
+
+    @ApiOperation("删除帐号的Job接口")
+    @POST
+    @Path("/{projectId}/delete_account")
+    fun deleteAccount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "执行脚本的信息", required = true)
+        deleteAccountReq: DeleteAccountReq
+    ): JobResult<DeleteAccountResult>
+
+    @ApiOperation("请求上云版job - 查询有权限账号列表的Job接口")
+    @GET
+    @Path("/{projectId}/get_account_list")
+    fun getAccountList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "账号名称")
+        @QueryParam("account")
+        account: String?,
+        @ApiParam(value = "账号别名")
+        @QueryParam("alias")
+        alias: String?,
+        @ApiParam(value = "账号用途(1：系统账号, 2：DB账号, 不传则不区分)")
+        @QueryParam("category")
+        category: Int?,
+        @ApiParam(value = "分页记录起始位置(不传默认0)")
+        @QueryParam("start")
+        start: Int?,
+        @ApiParam(value = "单次返回最大记录数(最大1000，不传默认20)")
+        @QueryParam("length")
+        length: Int?
+        ): JobResult<GetAccountListResult>
 }
