@@ -613,7 +613,7 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomRecordByversionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+    fun getAtomRecordByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
