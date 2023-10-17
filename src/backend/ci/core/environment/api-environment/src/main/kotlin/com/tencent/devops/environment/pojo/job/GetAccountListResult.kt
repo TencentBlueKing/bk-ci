@@ -6,8 +6,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询有权限账号列表")
 data class GetAccountListResult(
-    @ApiModelProperty(value = "帐号ID")
-    val authorizedAccount: List<AuthorizedAccount>?,
+    @ApiModelProperty(value = "有权限账号列表")
+    val data: List<AuthorizedAccount>?,
     @ApiModelProperty(value = "分页记录起始位置", notes = "不传默认0", required = true)
     val start: Int,
     @ApiModelProperty(value = "查询结果总量", required = true)
