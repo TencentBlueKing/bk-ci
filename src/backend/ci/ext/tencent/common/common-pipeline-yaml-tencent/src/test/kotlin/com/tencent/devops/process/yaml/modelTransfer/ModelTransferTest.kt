@@ -132,6 +132,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @BeforeEach
     fun setUp() {
         every {
+            transferCache.getAtomDefaultValue(any())
+        }.returns(emptyMap())
+        every {
             transferCache.getAtomDefaultValue("CodeccCheckAtomDebug@4.*")
         }.returns("""{
     "beAutoLang" : "false",
@@ -185,9 +188,6 @@ internal class ModelTransferTest : BkCiAbstractTest() {
   }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
         every {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
-        }.returns(emptyMap())
-        every {
-            transferCache.getAtomDefaultValue(any())
         }.returns(emptyMap())
         every {
             transferCache.getAtomDefaultValue("checkout@1.*")
