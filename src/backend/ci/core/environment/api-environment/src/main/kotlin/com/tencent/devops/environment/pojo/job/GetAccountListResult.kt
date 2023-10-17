@@ -31,7 +31,16 @@ data class GetAccountListResult(
     val lastModifyTime: Long,
     @ApiModelProperty(value = "数据库账号对应的系统账号ID", notes = "账号用途为数据库账号时该字段生效")
     @JsonProperty("db_system_account_id")
-    val dbSystemAccountId: Long?
+    val dbSystemAccountId: Long?,
+    @ApiModelProperty(value = "业务ID")
+    @JsonProperty("bk_biz_id")
+    val bkBizId: Long?,
+    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集")
+    @JsonProperty("bk_scope_type")
+    var bkScopeType: String?,
+    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID")
+    @JsonProperty("bk_scope_id")
+    var bkScopeId: String?
 ) {
-    constructor() : this(-1L, "", -1, -1, "", "", "", -1L, "", -1L, -1L)
+    constructor() : this(-1L, "", -1, -1, "", "", "", -1L, "", -1L, -1L, -1L, "", "")
 }
