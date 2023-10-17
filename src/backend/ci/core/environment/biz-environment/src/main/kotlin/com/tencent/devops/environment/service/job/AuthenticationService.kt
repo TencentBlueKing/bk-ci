@@ -39,6 +39,15 @@ class AuthenticationService {
     @Value("\${job.queryJobInstanceLogsPath:#{null}}")
     val queryJobInstanceLogsPath: String? = null
 
+    @Value("\${job.createAccountPath:#{null}}")
+    val createAccountPath: String? = null
+
+    @Value("\${job.deleteAccountPath:#{null}}")
+    val deleteAccountPath: String? = null
+
+    @Value("\${job.getAccountListPath:#{null}}")
+    val getAccountListPath: String? = null
+
     fun appAuthentication(bkUsername: String): JobCloudAuthenticationReq {
         val logger = LoggerFactory.getLogger(AuthenticationService::class.java)
 
@@ -53,6 +62,9 @@ class AuthenticationService {
             "terminateTask" -> terminateTaskPath
             "queryJobInstanceStatus" -> queryJobInstanceStatusPath
             "queryJobInstanceLogs" -> queryJobInstanceLogsPath
+            "createAccount" -> createAccountPath
+            "deleteAccount" -> deleteAccountPath
+            "getAccountList" -> getAccountListPath
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
