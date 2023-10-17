@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace.image
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
