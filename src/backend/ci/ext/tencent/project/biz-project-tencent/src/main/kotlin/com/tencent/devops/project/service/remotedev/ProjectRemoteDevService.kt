@@ -50,6 +50,7 @@ class ProjectRemoteDevService @Autowired constructor(
             val data = client.get(ServiceMonitorSpaceResource::class)
                 .getMonitorSpaceBizId(userId, projectCode).data
             if (data.isNullOrBlank()) {
+                logger.warn("enableRemoteDev getMonitorSpaceBizId null or blank")
                 null
             } else {
                 data.toLong()
@@ -133,7 +134,7 @@ class ProjectRemoteDevService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+            logger.error("createLsyncGeneric request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
