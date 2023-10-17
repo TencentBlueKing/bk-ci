@@ -24,48 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.archive.pojo.defender
 
-package com.tencent.devops.artifactory.service
-
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-
-@SuppressWarnings("LongParameterList")
-interface AppService {
-    fun getExternalDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
-
-    fun getExternalDownloadUrlDirected(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int
-    ): Url
-
-    fun getExternalPlistDownloadUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): Url
-
-    fun getPlistFile(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false,
-        experienceHashId: String?,
-        organization: String?
-    ): String
-}
+data class ApkDefenderRequest(
+    val projectId: String,
+    val repoName: String,
+    val fullPath: String,
+    val scanner: String,
+    val users: Collection<String>,
+    val batchSize: Int
+)

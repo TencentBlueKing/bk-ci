@@ -1159,16 +1159,6 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(version.toString())
             )
-            val latestSetting = pipelineSettingVersionDao.getSettingVersion(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = latestVersion.settingVersion ?: latestVersion.version
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(version.toString())
-            )
 
             // 获取目标的版本用于更新草稿
             val targetVersion = pipelineResourceVersionDao.getVersionResource(

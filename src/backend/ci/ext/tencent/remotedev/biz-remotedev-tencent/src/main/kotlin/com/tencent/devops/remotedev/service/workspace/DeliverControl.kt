@@ -32,7 +32,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -55,7 +54,6 @@ import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -108,7 +106,6 @@ class DeliverControl @Autowired constructor(
                         action = WorkspaceAction.START,
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.SAFE_INITIALIZATION)
                     )
-                    val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     // todo job接口执行
                     val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                         ?: throw ErrorCodeException(
@@ -237,7 +234,7 @@ class DeliverControl @Autowired constructor(
         updateWorkspaceStatus(workspaceName) { workspace ->
             when (workspace.status) {
                 // 交付中安装IOA后
-                WorkspaceStatus.DELIVERING -> {
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.DELIVERING_FAILED -> {
                     if (type == "SYSTEM") {
                         checkSafeInitSuccess(softwareList, workspace)
                         workspaceCommon.updateStatusAndCreateHistory(

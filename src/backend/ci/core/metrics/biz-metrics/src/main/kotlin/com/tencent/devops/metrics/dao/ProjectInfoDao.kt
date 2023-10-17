@@ -56,7 +56,7 @@ class ProjectInfoDao {
         pageSize: Int,
         keyWord: String? = null
     ): List<AtomBaseInfoDO> {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {
@@ -65,8 +65,7 @@ class ProjectInfoDao {
             return dslContext.select(ATOM_CODE, ATOM_NAME)
                 .from(this)
                 .where(conditions)
-                .groupBy(ATOM_CODE)
-                .orderBy(TOTAL_EXECUTE_COUNT.desc())
+                .orderBy(ATOM_CODE, ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(AtomBaseInfoDO::class.java)
         }
@@ -77,7 +76,7 @@ class ProjectInfoDao {
         projectId: String,
         keyWord: String? = null
     ): Long {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TProjectAtom.T_PROJECT_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             if (!keyWord.isNullOrBlank()) {

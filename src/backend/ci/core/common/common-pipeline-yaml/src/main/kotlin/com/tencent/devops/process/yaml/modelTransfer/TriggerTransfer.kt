@@ -550,7 +550,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     id = "T-1-1-1",
                     canElementSkip = manual.canElementSkip,
                     useLatestParameters = manual.useLatestParameters
-                )
+                ).apply {
+                    this.additionalOptions = ElementAdditionalOptions(enable = manual.enable ?: true)
+                }
             )
         }
 

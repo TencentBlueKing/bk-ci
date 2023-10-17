@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.StoreTemplateDao
 import com.tencent.devops.store.pojo.common.Classify
@@ -45,12 +46,12 @@ import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.template.OpTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import com.tencent.devops.store.service.template.TemplateNotifyService
 import com.tencent.devops.store.service.template.TemplateReleaseService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -100,33 +101,40 @@ class OpTemplateServiceImpl @Autowired constructor(
         }
 
         val ret = mutableListOf<OpTemplateItem>()
+        val tTemplate = TTemplate.T_TEMPLATE
         templates?.forEach {
-            val status = it["TEMPLATE_STATUS"] as Byte
-            val type = it["TEMPLATE_TYPE"] as Byte
-            val templateId = it["ID"] as String
-            val classifyId = it["CLASSIFY_ID"] as String
-            val createTime = it["CREATE_TIME"] as? LocalDateTime
-            val updateTime = it["UPDATE_TIME"] as? LocalDateTime
+            val status = it[tTemplate.TEMPLATE_STATUS] as Byte
+            val type = it[tTemplate.TEMPLATE_TYPE] as Byte
+            val templateId = it[tTemplate.ID] as String
+            val classifyId = it[tTemplate.CLASSIFY_ID] as String
+            val createTime = it[tTemplate.CREATE_TIME]
+            val updateTime = it[tTemplate.UPDATE_TIME]
+            val logoUrl = it[tTemplate.LOGO_URL]
+            val description = it[tTemplate.DESCRIPTION]
             ret.add(OpTemplateItem(
                 templateId = templateId,
-                templateName = it["TEMPLATE_NAME"] as String,
-                templateCode = it["TEMPLATE_CODE"] as String,
-                logoUrl = if (it["LOGO_URL"] != null) it["LOGO_URL"] as String else "",
+                templateName = it[tTemplate.TEMPLATE_NAME] as String,
+                templateCode = it[tTemplate.TEMPLATE_CODE] as String,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 classifyId = classifyId,
                 classifyCode = classifyMap[classifyId]?.classifyCode,
                 classifyName = classifyMap[classifyId]?.classifyName,
-                summary = if (it["SUMMARY"] != null) it["SUMMARY"] as String else "",
+                summary = it[tTemplate.SUMMARY],
                 templateStatus = TemplateStatusEnum.getTemplateStatus(status.toInt()),
-                description = if (it["DESCRIPTION"] != null) it["DESCRIPTION"] as String else "",
-                version = if (it["VERSION"] != null) it["VERSION"] as String else "",
+                description = description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                },
+                version = it[tTemplate.VERSION],
                 templateType = TemplateTypeEnum.getTemplateType(type.toInt()),
                 categoryList = templateCategoryService.getCategorysByTemplateId(templateId).data,
                 labelList = templateLabelService.getLabelsByTemplateId(templateId).data,
-                latestFlag = it["LATEST_FLAG"] as Boolean,
-                publisher = if (it["PUBLISHER"] != null) it["PUBLISHER"] as String else "",
-                pubDescription = if (it["PUB_DESCRIPTION"] != null) it["PUB_DESCRIPTION"] as String else "",
-                creator = if (it["CREATOR"] != null) it["CREATOR"] as String else "",
-                modifier = if (it["MODIFIER"] != null) it["MODIFIER"] as String else "",
+                latestFlag = it[tTemplate.LATEST_FLAG] as Boolean,
+                publisher = it[tTemplate.PUBLISHER],
+                pubDescription = it[tTemplate.PUB_DESCRIPTION],
+                creator = it[tTemplate.CREATOR],
+                modifier = it[tTemplate.MODIFIER],
                 createTime = if (createTime != null) DateTimeUtil.toDateTime(createTime) else "",
                 updateTime = if (updateTime != null) DateTimeUtil.toDateTime(updateTime) else ""
             ))

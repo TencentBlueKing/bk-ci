@@ -135,7 +135,8 @@ class VariableTransfer @Autowired constructor() {
                 else -> null
             }
             result[it.id] = Variable(
-                it.defaultValue.toString(),
+                value = it.defaultValue.toString(),
+                name = it.name,
                 readonly = it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = it.required.nullIfDefault(true),
                 valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
@@ -160,6 +161,7 @@ class VariableTransfer @Autowired constructor() {
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
+                    name= variable.name,
                     required = variable.allowModifyAtStartup ?: true,
                     type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                         ?: BuildFormPropertyType.STRING,

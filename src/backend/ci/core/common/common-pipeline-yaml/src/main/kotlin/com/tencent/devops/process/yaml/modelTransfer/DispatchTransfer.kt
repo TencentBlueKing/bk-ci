@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
@@ -114,13 +113,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
             logger.warn("job.dispatchType can not be null")
             return null
         }
-        val runsOn = dispatch2RunsOn(dispatchType) ?: RunsOn(
-            selfHosted = null,
-            poolName = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
-            ),
-            container = null,
-            agentSelector = null
+        val runsOn = dispatch2RunsOn(dispatchType) ?: throw PipelineTransferException(
+            CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+            arrayOf(dispatchType.buildType().name)
         )
         if (dispatchType is ThirdPartyAgentEnvDispatchType || dispatchType is ThirdPartyAgentIDDispatchType) {
             runsOn.agentSelector = when (job.baseOS) {

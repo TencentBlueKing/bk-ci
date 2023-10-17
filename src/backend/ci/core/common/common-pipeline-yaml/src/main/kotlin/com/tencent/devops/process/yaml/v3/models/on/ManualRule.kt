@@ -35,17 +35,19 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ManualRule(
+    val enable: Boolean? = true,
     @ApiModelProperty("手动触发执行时可跳过插件 ", name = "can-element-skip", required = false)
     @JsonProperty("can-element-skip")
     var canElementSkip: Boolean? = true,
     @ApiModelProperty("手动触发执行时使用最近一次构建参数值 ", name = "use-latest-parameters", required = false)
     @JsonProperty("use-latest-parameters")
-    var useLatestParameters: Boolean? = false
+    var useLatestParameters: Boolean? = false,
 ) {
     override fun equals(other: Any?): Boolean {
         if (other is ManualRule) {
-            return (other.canElementSkip == canElementSkip || other.canElementSkip == null) &&
-                (other.useLatestParameters == useLatestParameters || other.useLatestParameters == null)
+            return other.canElementSkip == canElementSkip &&
+                other.useLatestParameters == useLatestParameters &&
+                other.enable == enable
         }
         return super.equals(other)
     }

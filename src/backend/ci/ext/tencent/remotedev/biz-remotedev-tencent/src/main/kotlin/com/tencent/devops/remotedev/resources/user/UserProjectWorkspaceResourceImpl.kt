@@ -34,7 +34,9 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -48,7 +50,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService,
     private val createControl: CreateControl,
     private val deliverControl: DeliverControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val startWorkspaceService: StartWorkspaceService
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -63,7 +66,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             cgsId = null,
             autoAssign = false,
             workspaceCreate = workspace
-            )
+        )
         return Result(true)
     }
 
@@ -109,5 +112,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
                 return Result(false)
             }
         )
+    }
+
+    override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
+        return Result(startWorkspaceService.computerStatus(userId, projectId))
     }
 }

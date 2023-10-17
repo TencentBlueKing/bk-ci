@@ -272,8 +272,12 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         addDownloadRecord(experienceRecord, userId)
-        return client.get(ServiceArtifactoryResource::class)
+        var url = client.get(ServiceArtifactoryResource::class)
             .downloadUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
+        if (!url.contains("userId=")) {
+            url += "&userId=$userId"
+        }
+        return url
     }
 
     fun getQrCodeUrl(experienceHashId: String): String {

@@ -56,5 +56,55 @@
   "updateUser" : "admin",
   "createTime" : "2019-04-10T11:01:34",
   "updateTime" : "2019-04-10T11:43:06",
+  "enable" : false
+}, {
+  "id" : 7,
+  "name" : "C++推荐",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 8,
+  "name" : "Java推荐",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 9,
+  "name" : "Go推荐",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 10,
+  "name" : "Python推荐",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 11,
+  "name" : "JS推荐",
+  "type" : "INDICATOR_SET",
+  "desc" : "",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
   "enable" : true
 } ]

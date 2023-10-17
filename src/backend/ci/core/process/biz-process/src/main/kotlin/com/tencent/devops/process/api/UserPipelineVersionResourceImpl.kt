@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
@@ -165,7 +167,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 releaseVersionName = releaseVersion?.versionName,
                 baseVersionStatus = baseVersionStatus,
                 baseVersionBranch = baseVersionBranch,
-                pipelineAsCodeSettings = setting.pipelineAsCodeSettings
+                pipelineAsCodeSettings = setting.pipelineAsCodeSettings ?: PipelineAsCodeSettings()
             )
         )
     }
@@ -395,27 +397,43 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        val baseVersion = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = modelAndYaml.baseVersion,
-            includeDraft = true
-        )
-        val transferResult = transferService.transfer(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            actionType = TransferActionType.FULL_YAML2MODEL,
-            data = TransferBody(
-                modelAndSetting = modelAndYaml.modelAndSetting,
-                oldYaml = baseVersion?.yaml ?: ""
+
+        val (model, setting, newYaml) = if (modelAndYaml.storageType == PipelineStorageType.YAML) {
+            val transferResult = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = TransferActionType.FULL_YAML2MODEL,
+                data = TransferBody(
+                    modelAndSetting = modelAndYaml.modelAndSetting,
+                    oldYaml = modelAndYaml.yaml ?: ""
+                )
             )
-        )
+            Triple(transferResult.modelAndSetting?.model, transferResult.modelAndSetting?.setting, modelAndYaml.yaml)
+        } else {
+            val baseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = modelAndYaml.baseVersion,
+                includeDraft = true
+            )
+            val transferResult = transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = TransferActionType.FULL_MODEL2YAML,
+                data = TransferBody(
+                    modelAndSetting = modelAndYaml.modelAndSetting,
+                    oldYaml = baseVersion?.yaml ?: ""
+                )
+            )
+            Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, transferResult.newYaml)
+        }
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = transferResult.modelAndSetting?.setting ?: modelAndYaml.modelAndSetting.setting,
+            setting = setting ?: modelAndYaml.modelAndSetting.setting,
             checkPermission = false,
             dispatchPipelineUpdateEvent = false
         )
@@ -423,13 +441,13 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            model = transferResult.modelAndSetting?.model ?: modelAndYaml.modelAndSetting.model,
+            model = model ?: modelAndYaml.modelAndSetting.model,
             channelCode = ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false,
             versionStatus = VersionStatus.COMMITTING,
             description = modelAndYaml.description,
-            yaml = transferResult.newYaml,
+            yaml = newYaml,
             savedSetting = savedSetting
         )
         auditService.createAudit(

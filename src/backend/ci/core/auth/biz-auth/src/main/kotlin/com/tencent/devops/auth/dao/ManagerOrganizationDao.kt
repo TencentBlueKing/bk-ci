@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.ManagerOrganizationInfo
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthManager
 import com.tencent.devops.model.auth.tables.records.TAuthManagerRecord
 import org.jooq.DSLContext
@@ -39,7 +40,8 @@ class ManagerOrganizationDao {
 
     fun create(dslContext: DSLContext, userId: String, managerOrganization: ManagerOrganizationInfo): Int {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 NAME,
                 ORGANIZATION_ID,
                 LEVEL,
@@ -84,50 +86,52 @@ class ManagerOrganizationDao {
 
     fun get(dslContext: DSLContext, id: Int): TAuthManagerRecord? {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(ID.eq(id).and(IS_DELETE.eq(0))).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(id).and(IS_DELETE.eq(0))).skipCheck().fetchOne()
         }
     }
 
     fun getById(dslContext: DSLContext, id: Int): TAuthManagerRecord? {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(id)).skipCheck().fetchOne()
         }
     }
 
     fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
-                .where(ORGANIZATION_ID.eq(organizationId)
-                    .and(STRATEGYID.eq(strategyId))
-                    .and(IS_DELETE.eq(0))
-                ).fetch() ?: null
+                .where(
+                    ORGANIZATION_ID.eq(organizationId)
+                        .and(STRATEGYID.eq(strategyId))
+                        .and(IS_DELETE.eq(0))
+                ).skipCheck().fetch()
         }
     }
 
     fun getByStrategyId(dslContext: DSLContext, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
-                .where(STRATEGYID.eq(strategyId)
-                    .and(IS_DELETE.eq(0))
-                ).fetch()
+                .where(
+                    STRATEGYID.eq(strategyId)
+                        .and(IS_DELETE.eq(0))
+                ).skipCheck().fetch()
         }
     }
 
     fun list(dslContext: DSLContext): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).orderBy(CREATE_TIME.desc()).skipCheck().fetch()
         }
     }
 
     fun count(dslContext: DSLContext): Int {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).count()
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).skipCheck().count()
         }
     }
 
     fun countByOrg(dslContext: DSLContext, orgId: Int): Int {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(IS_DELETE.eq(0).and(ORGANIZATION_ID.eq(orgId))).count()
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0).and(ORGANIZATION_ID.eq(orgId))).skipCheck().count()
         }
     }
 }

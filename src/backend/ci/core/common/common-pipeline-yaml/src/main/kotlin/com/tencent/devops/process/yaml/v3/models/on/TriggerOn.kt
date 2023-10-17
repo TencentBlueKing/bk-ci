@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MANUAL_RULE
-import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.PreTriggerOnV3Properties
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
@@ -97,13 +96,15 @@ data class TriggerOn(
         note = note,
         // todo
         repoHook = null,
-        manual = manual?.nullIfDefault(DEFAULT_MANUAL_RULE),
+        manual = simpleManual(),
         openapi = openapi,
         remote = remote
-    ).apply {
-        if (PreTriggerOnV3Properties.all { it.get(receiver = this) == null }) {
-            manual = EnableType.TRUE.value
-        }
+    )
+
+    private fun simpleManual() = when {
+        manual?.nullIfDefault(DEFAULT_MANUAL_RULE) == null -> EnableType.TRUE.value
+        manual!!.enable == false -> EnableType.FALSE.value
+        else -> manual?.copy(enable = null)
     }
 }
 
