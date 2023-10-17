@@ -302,7 +302,6 @@ class PathRegexFilterTest {
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
     }
 
-
     @Test
     @SuppressWarnings("LongMethod")
     fun buildFinalIncludePath() {
@@ -363,7 +362,7 @@ class PathRegexFilterTest {
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnPath = listOf("trunk/bin/dd.txt","trunk/bin/lobby/loterry/aa.txt"),
+            triggerOnPath = listOf("trunk/bin/dd.txt", "trunk/bin/lobby/loterry/aa.txt"),
             includedPaths = listOf("*/bin/**/*"),
             excludedPaths = emptyList(),
             caseSensitive = true
@@ -418,7 +417,7 @@ class PathRegexFilterTest {
 
         pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnPath = listOf("trunk.txt","hello.txt","readme.txt","trunk/doc/readme.md"),
+            triggerOnPath = listOf("trunk.txt", "hello.txt", "readme.txt", "trunk/doc/readme.md"),
             includedPaths = listOf("*"),
             excludedPaths = emptyList(),
             caseSensitive = true
@@ -481,7 +480,6 @@ class PathRegexFilterTest {
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
         response.getParam()[MATCH_PATHS]?.let {
-            println("it = ${it}")
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
