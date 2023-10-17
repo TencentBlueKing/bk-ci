@@ -627,8 +627,6 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-
-
     fun getAtomById(dslContext: DSLContext, atomId: String): Record? {
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
