@@ -228,7 +228,7 @@ data class GithubRepository(
 //    @JsonProperty("hooks_url")
 //    val hooksUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/hooks
     @JsonProperty("html_url")
-    override val htmlUrl: String, // https://github.com/yongyiduan/webhook-test
+    override val htmlUrl: String?, // https://github.com/yongyiduan/webhook-test
     @JsonProperty("id")
     override val id: Long, // 505743915
     @JsonProperty("is_template")

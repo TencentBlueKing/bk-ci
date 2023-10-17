@@ -39,6 +39,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCommentEvent
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
@@ -56,7 +57,9 @@ import com.tencent.devops.repository.pojo.Repository
 @Suppress("TooManyFunctions")
 interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTriggerHandler<T> {
     override fun getUrl(event: T): String {
-        return event.repository.htmlUrl
+        return with(event) {
+            repository.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}"
+        }
     }
 
     override fun getUsername(event: T): String {

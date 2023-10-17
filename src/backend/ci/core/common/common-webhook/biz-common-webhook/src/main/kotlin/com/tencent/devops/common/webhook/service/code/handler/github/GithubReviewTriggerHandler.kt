@@ -39,6 +39,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewState
 import com.tencent.devops.common.webhook.service.code.EventCacheService
@@ -63,7 +64,9 @@ class GithubReviewTriggerHandler @Autowired constructor(
     }
 
     override fun getUrl(event: GithubReviewEvent): String {
-        return event.repository.htmlUrl
+        return with(event) {
+            repository.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}"
+        }
     }
 
     override fun getUsername(event: GithubReviewEvent): String {

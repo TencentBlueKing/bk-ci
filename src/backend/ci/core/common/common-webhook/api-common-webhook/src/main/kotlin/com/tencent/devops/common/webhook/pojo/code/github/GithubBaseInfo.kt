@@ -46,4 +46,9 @@ open class GithubBaseInfo(
     open val createdAt: String? = "", // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
     open val updatedAt: String? = ""
-)
+) {
+    companion object {
+        // github主页地址
+        const val GITHUB_HOME_PAGE_URL = "https://github.com"
+    }
+}
