@@ -27,10 +27,8 @@
 
 package com.tencent.devops.ticket.resources
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.BuildAgentCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
