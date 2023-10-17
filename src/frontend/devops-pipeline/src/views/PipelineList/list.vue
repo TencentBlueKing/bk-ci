@@ -1,16 +1,46 @@
 <template>
-    <section class="pipeline-group-section">
-        <pipeline-group-aside />
-        <router-view />
-    </section>
+    <bk-resize-layout
+        ref="resizeLayout"
+        class="pipeline-group-section"
+        collapsible
+        :min="220"
+        :max="400"
+        :initial-divide="initialDivide"
+        @collapse-change="handleCollapseChange"
+        @after-resize="afterResize">
+        <pipeline-group-aside slot="aside" />
+        <router-view slot="main" />
+    </bk-resize-layout>
 </template>
 
 <script>
     import PipelineGroupAside from './PipelineGroupAside'
+    import {
+        PIPELINE_GROUP_ASIDE_WIDTH_CACHE,
+        PIPELINE_ASIDE_PANEL_TOGGLE
+    } from '@/store/constants'
 
     export default {
         components: {
             PipelineGroupAside
+        },
+        data () {
+            return {
+                initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 400
+            }
+        },
+        mounted () {
+            if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
+                this.$refs.resizeLayout.setCollapse(true)
+            }
+        },
+        methods: {
+            handleCollapseChange (val) {
+                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
+            },
+            afterResize (width) {
+                localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+            }
         }
     }
 </script>
