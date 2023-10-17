@@ -23,57 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
+@RestResource
+class ServiceMonitorSpaceResourceImpl @Autowired constructor(
+    val monitorSpaceService: AuthMonitorSpaceService
+) : ServiceMonitorSpaceResource {
+    override fun getMonitorSpaceBizId(userId: String, projectCode: String): Result<String> {
+        return Result(monitorSpaceService.getMonitorSpaceBizId(projectCode))
     }
 }

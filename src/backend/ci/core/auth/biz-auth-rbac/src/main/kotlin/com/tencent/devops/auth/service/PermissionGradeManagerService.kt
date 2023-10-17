@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
@@ -44,6 +45,7 @@ import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT
 import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REVISE_BKCI_PROJECT_APPLICATION
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
@@ -53,6 +55,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS
@@ -75,13 +78,15 @@ class PermissionGradeManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
-    private val itsmService: ItsmService
+    private val itsmService: ItsmService,
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService
 ) {
 
     companion object {
@@ -129,7 +134,7 @@ class PermissionGradeManagerService @Autowired constructor(
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
         val description = manageGroupConfig.description
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -143,8 +148,19 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
+
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             logger.info("create grade manager|$name|$userId")
+            // 若为不需要审批的项目，直接注册监控权限
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = BkAuthGroup.GRADE_ADMIN.value,
+                userId = userId
+            )
+            authorizationScopes = authorizationScopes.plus(monitorAuthorizationScopes)
+
+            logger.info("PermissionGradeManagerService|createGradeManager|$authorizationScopes")
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -225,7 +241,9 @@ class PermissionGradeManagerService @Autowired constructor(
     fun modifyGradeManager(
         gradeManagerId: String,
         projectCode: String,
-        projectName: String
+        projectName: String,
+        /*该字段主要用于当创建项目审批回调时，需要修改分级管理员并注册监控权限资源，此时不走审批流程*/
+        registerMonitorPermission: Boolean = false
     ): Boolean {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
             ?: throw ErrorCodeException(
@@ -245,13 +263,14 @@ class PermissionGradeManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
         )
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
-            authorizationScopesStr = groupConfig.authorizationScopes,
+        val authorizationScopes = generateAuthorizationScopes(
             projectCode = projectCode,
             projectName = projectName,
-            iamResourceCode = projectCode,
-            resourceName = projectName
+            creator = projectApprovalInfo.creator!!,
+            bkciManagerGroupConfig = groupConfig.authorizationScopes,
+            registerMonitorPermission = registerMonitorPermission
         )
+        logger.info("PermissionGradeManagerService|modifyGradeManager|$authorizationScopes")
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
@@ -259,7 +278,9 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
+        // 创建项目审批通过后，会调用更新分级管理员接口去修改项目的授权范围，此时不走审批流程
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status ||
+            registerMonitorPermission) {
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
@@ -333,6 +354,38 @@ class PermissionGradeManagerService @Autowired constructor(
         }
     }
 
+    private fun generateAuthorizationScopes(
+        projectCode: String,
+        projectName: String,
+        creator: String,
+        bkciManagerGroupConfig: String,
+        registerMonitorPermission: Boolean
+    ): List<AuthorizationScopes> {
+        val bkciAuthorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
+            authorizationScopesStr = bkciManagerGroupConfig,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = projectCode,
+            resourceName = projectName
+        )
+        val monitorSpaceInfo = authMonitorSpaceDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode
+        )
+        // 对于正常修改项目流程时，仅对项目的分级管理员已具有监控的授权范围，才需要加上监控授权范围；否则，只需要蓝盾的授权范围。
+        return if (monitorSpaceInfo != null || registerMonitorPermission) {
+            val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
+                projectName = projectName,
+                projectCode = projectCode,
+                groupCode = BkAuthGroup.GRADE_ADMIN.value,
+                userId = creator
+            )
+            bkciAuthorizationScopes.plus(monitorAuthorizationScopes)
+        } else {
+            bkciAuthorizationScopes
+        }
+    }
+
     /**
      * 创建分级管理员默认组
      */
@@ -383,6 +436,8 @@ class PermissionGradeManagerService @Autowired constructor(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,
+                resourceType = groupConfig.resourceType,
+                groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
                 resourceName = projectName,
                 iamGroupId = iamGroupId
@@ -540,6 +595,15 @@ class PermissionGradeManagerService @Autowired constructor(
             .approveResult(true).build()
         val gradeManagerId =
             iamV2ManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO).roleId
+
+        // 审批通过后，需要修改分级管理员，注册监控中心权限资源
+        modifyGradeManager(
+            gradeManagerId = gradeManagerId.toString(),
+            projectCode = projectCode,
+            projectName = projectName,
+            registerMonitorPermission = true
+        )
+
         authResourceService.create(
             userId = userId,
             projectCode = projectCode,
