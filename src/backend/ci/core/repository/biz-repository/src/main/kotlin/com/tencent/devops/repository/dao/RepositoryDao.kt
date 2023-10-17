@@ -119,6 +119,7 @@ class RepositoryDao {
         projectIds: Collection<String>,
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
+        repoKeyWordRef: String? = null,
         repositoryIds: Set<Long>?
     ): Long {
         with(TRepository.T_REPOSITORY) {
@@ -129,7 +130,14 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
-            if (!aliasName.isNullOrBlank()) {
+            // 关键字搜索
+            if (!repoKeyWordRef.isNullOrBlank()) {
+                step.and(
+                    ALIAS_NAME.like("%$repoKeyWordRef%")
+                        .or(REPOSITORY_HASH_ID.eq(repoKeyWordRef))
+                )
+            }
+            if (!aliasName.isNullOrBlank() && repoKeyWordRef.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
             return when (repositoryTypes) {
@@ -241,6 +249,7 @@ class RepositoryDao {
         projectId: String,
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
+        repoKeyWordRef: String? = null,
         repositoryIds: Set<Long>?,
         offset: Int,
         limit: Int,
@@ -254,11 +263,16 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
-
-            if (!aliasName.isNullOrBlank()) {
+            // 关键字搜索
+            if (!repoKeyWordRef.isNullOrBlank()) {
+                step.and(
+                    ALIAS_NAME.like("%$repoKeyWordRef%")
+                        .or(REPOSITORY_HASH_ID.eq(repoKeyWordRef))
+                )
+            }
+            if (!aliasName.isNullOrBlank() && repoKeyWordRef.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
-
             when (repositoryTypes) {
                 null -> {
                 }
