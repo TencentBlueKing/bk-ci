@@ -123,6 +123,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
-        return Result(bkBaseService.fetchOnlineUserMin(timeScope) ?: UserLoginTimeResp(0, emptyList()))
+        return Result(
+            bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
+        )
     }
 }
