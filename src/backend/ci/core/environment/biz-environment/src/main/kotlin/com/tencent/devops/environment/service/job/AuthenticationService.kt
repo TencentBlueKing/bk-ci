@@ -24,6 +24,9 @@ class AuthenticationService {
     @Value("\${job.jobCloudProdUrlPrefix:#{null}}")
     val jobCloudProdUrlPrefix: String? = null
 
+    @Value("\${job.jobCloudStagUrlPrefix:#{null}}")
+    val jobCloudStagUrlPrefix: String? = null
+
     @Value("\${job.executeScriptPath:#{null}}")
     val executeScriptPath: String? = null
 
@@ -56,15 +59,15 @@ class AuthenticationService {
 
         val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
-        val url = jobCloudProdUrlPrefix + when (operationName) {
-            "executeScript" -> executeScriptPath
-            "distributeFile" -> distributeFilePath
-            "terminateTask" -> terminateTaskPath
-            "queryJobInstanceStatus" -> queryJobInstanceStatusPath
-            "queryJobInstanceLogs" -> queryJobInstanceLogsPath
-            "createAccount" -> createAccountPath
-            "deleteAccount" -> deleteAccountPath
-            "getAccountList" -> getAccountListPath
+        val url = when (operationName) {
+            "executeScript" -> jobCloudProdUrlPrefix + executeScriptPath
+            "distributeFile" -> jobCloudProdUrlPrefix + distributeFilePath
+            "terminateTask" -> jobCloudProdUrlPrefix + terminateTaskPath
+            "queryJobInstanceStatus" -> jobCloudProdUrlPrefix + queryJobInstanceStatusPath
+            "queryJobInstanceLogs" -> jobCloudProdUrlPrefix + queryJobInstanceLogsPath
+            "createAccount" -> jobCloudStagUrlPrefix + createAccountPath
+            "deleteAccount" -> jobCloudStagUrlPrefix + deleteAccountPath
+            "getAccountList" -> jobCloudStagUrlPrefix + getAccountListPath
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")

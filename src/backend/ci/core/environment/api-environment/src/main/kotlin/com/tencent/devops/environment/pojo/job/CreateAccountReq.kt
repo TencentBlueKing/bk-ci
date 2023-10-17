@@ -9,10 +9,10 @@ data class CreateAccountReq(
     val type: Int,
     @ApiModelProperty(value = "账号用途", notes = "1：系统账号", required = true)
     val category: Int,
-    @ApiModelProperty(value = "系统账号密码", notes = "账号用途为系统账号 且 账号类型为Windows时,必传")
+    @ApiModelProperty(value = "系统账号密码", notes = "账号用途为系统账号 且 账号类型为Windows时，必传。")
     val password: String?,
-    @ApiModelProperty(value = "别名", notes = "不传则以账号名称作为别名")
+    @ApiModelProperty(value = "账号别名", notes = "不传则以账号名称作为别名。")
     val alias: String?,
-    @ApiModelProperty(value = "描述")
+    @ApiModelProperty(value = "账号描述")
     val description: String?
 )
