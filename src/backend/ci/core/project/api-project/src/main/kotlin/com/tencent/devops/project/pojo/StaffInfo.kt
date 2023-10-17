@@ -25,21 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.project.pojo.DeptInfo
-import com.tencent.devops.project.pojo.OrgInfo
-import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.StaffInfo
-import com.tencent.devops.project.pojo.enums.OrganizationType
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectOrganizationService {
-    fun getDeptInfo(userId: String?, id: Int): DeptInfo
-
-    fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo>
-
-    fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo>
-
-    fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean
-    fun getDeptStaffsWithLevel(deptId: String, level: Int): List<StaffInfo>
-}
+@ApiModel("用户信息")
+data class StaffInfo(
+    @ApiModelProperty("登录名")
+    @JsonProperty("LoginName")
+    val loginName: String,
+    @ApiModelProperty("部门名称")
+    @JsonProperty("DepartmentName")
+    val departmentName: String,
+    @ApiModelProperty("英文全名")
+    @JsonProperty("FullName")
+    val fullName: String,
+    @ApiModelProperty("中文名")
+    @JsonProperty("ChineseName")
+    val chineseName: String,
+    @ApiModelProperty("组ID")
+    @JsonProperty("GroupId")
+    val groupId: String,
+    @ApiModelProperty("组名称")
+    @JsonProperty("GroupName")
+    val groupName: String,
+    @ApiModelProperty("当前状态")
+    @JsonProperty("StatusId")
+    val statusId: String
+)
