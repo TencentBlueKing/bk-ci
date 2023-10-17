@@ -40,7 +40,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
                 "SELECT minute2, SUM(user_id_num) AS unum " +
-                        "FROM 100656_tob_online_user_min.hdfs " +
+                        "FROM 100656_BKCI_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                         "AND game_id = '$projectId' " +
                         "GROUP BY minute2 " +
@@ -51,7 +51,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
                 "SELECT minute10, SUM(user_id_num) AS unum " +
-                        "FROM 100656_tob_online_user_min.hdfs " +
+                        "FROM 100656_BKCI_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                         "AND game_id = '$projectId' " +
                         "GROUP BY minute10 " +
@@ -62,7 +62,7 @@ class BKBaseService @Autowired constructor(
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
                 "SELECT user_id_num, dtEventTime " +
-                        "FROM 100656_tob_online_user_min.hdfs " +
+                        "FROM 100656_BKCI_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                         "AND game_id = '$projectId' " +
                         "ORDER BY dtEventTime " +
