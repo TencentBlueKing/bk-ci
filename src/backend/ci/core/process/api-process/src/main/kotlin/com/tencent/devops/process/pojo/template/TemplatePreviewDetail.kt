@@ -10,6 +10,8 @@ data class TemplatePreviewDetail(
     val template: Model,
     @ApiModelProperty("模板Yaml")
     val templateYaml: String?,
+    @ApiModelProperty("是否有操作权限", required = false)
+    var hasPermission: Boolean,
     @ApiModelProperty("预览流水线设置")
     val setting: PipelineSetting?,
     @ApiModelProperty("高亮位置，可能多个")

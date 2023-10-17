@@ -47,4 +47,5 @@ data class PipelineSettingVersion(
     var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
     @ApiModelProperty("版本", required = false)
     var version: Int = 0
+    // TODO #8161 将所有计算配置加到VERSION对象
 )

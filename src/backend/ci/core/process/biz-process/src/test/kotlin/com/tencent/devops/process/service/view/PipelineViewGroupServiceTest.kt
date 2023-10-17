@@ -420,7 +420,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every {
                 pipelineViewDao.list(anyDslContext(), any() as String, any() as Int)
             } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
             Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineCreate("test", "test", "test") }
         }
@@ -435,11 +435,11 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every {
                 pipelineViewDao.list(anyDslContext(), any() as String, any() as Int)
             } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             every { pipelineViewGroupDao.listByPipelineId(anyDslContext(), any(), any()) } returns listOf(pvg)
             justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any(), any()) }
-            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineUpdate("test", "p-test", "test") }
+            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineUpdate("test", "p-test", "test", "user00", "user00") }
         }
     }
 
@@ -490,7 +490,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         fun test_2() {
             every { redisOperation.setIfAbsent(any(), any(), any(), any()) } returns true
             every { self["allPipelineInfos"](any() as String, any() as Boolean) } returns listOf(pi)
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             every { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) } returns Unit
             self.invokePrivate<List<String>>("initDynamicViewGroup", pv, "test", dslContext).let {
                 Assertions.assertEquals(it!!.size, 1)
@@ -557,7 +557,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                     any() as Boolean
                 )
             } returns listOf(pi)
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             self.preview("test", "test", pipelineViewFormCopy).let {
                 Assertions.assertTrue(it.addedPipelineInfos.size == 1)
                 Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
@@ -576,7 +576,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                     any() as Boolean
                 )
             } returns listOf(pi)
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             self.preview("test", "test", pipelineViewFormCopy).let {
                 Assertions.assertTrue(it.addedPipelineInfos.size == 1)
                 Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
@@ -595,7 +595,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                 )
             } returns listOf(pi)
             every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             self.preview("test", "test", pipelineViewFormCopy).let {
                 Assertions.assertTrue(it.addedPipelineInfos.size == 1)
                 Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
@@ -615,7 +615,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                 )
             } returns listOf(pi)
             every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
-            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewService.matchView(any(), any(), any(), any(), any()) } returns true
             self.preview("test", "test", pipelineViewFormCopy).let {
                 Assertions.assertTrue(it.addedPipelineInfos.size == 1)
                 Assertions.assertTrue(it.removedPipelineInfos.isEmpty())

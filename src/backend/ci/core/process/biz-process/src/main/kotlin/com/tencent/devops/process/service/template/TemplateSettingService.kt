@@ -120,14 +120,12 @@ class TemplateSettingService @Autowired constructor(
                 errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
-        val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
         val labels = ArrayList<String>()
         groups.forEach {
             labels.addAll(it.labels)
         }
         setting.labels = labels
-        setting.hasPermission = hasPermission
         return setting
     }
 

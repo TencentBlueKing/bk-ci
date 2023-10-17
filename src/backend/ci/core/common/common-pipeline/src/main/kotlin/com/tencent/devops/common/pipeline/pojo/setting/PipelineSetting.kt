@@ -48,20 +48,27 @@ data class PipelineSetting(
     var pipelineName: String = "",
     @ApiModelProperty("描述", required = false)
     val desc: String = "",
-    @ApiModelProperty("Lock 类型", required = false)
-    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    @ApiModelProperty("标签列表", required = false)
+    var labels: List<String> = emptyList(),
+    @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
+    @ApiModelProperty("构建号生成规则", required = false)
+    val buildNumRule: String? = null, // 构建号生成规则
+
+    // 通知订阅相关配置
     @Deprecated("被successSubscriptionList取代")
     @ApiModelProperty("订阅成功相关", required = false)
     var successSubscription: Subscription = Subscription(),
     @Deprecated("被failSubscriptionList取代")
     @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅成功相关", required = false)
+    @ApiModelProperty("订阅成功通知组", required = false)
     var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("订阅失败相关", required = false)
+    @ApiModelProperty("订阅失败通知组", required = false)
     var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
-    @ApiModelProperty("标签列表", required = false)
-    var labels: List<String> = emptyList(),
+
+    // 运行控制、流水线禁用相关配置
+    @ApiModelProperty("Lock 类型", required = false)
+    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
     @ApiModelProperty("最大排队时长", required = false)
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     @ApiModelProperty("最大排队数量", required = false)
@@ -70,21 +77,20 @@ data class PipelineSetting(
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean = false,
-    @ApiModelProperty("是否有操作权限", required = false)
-    var hasPermission: Boolean? = null,
-    @ApiModelProperty("保存流水线编排的最大个数", required = false)
-    val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @ApiModelProperty("并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
-    @ApiModelProperty("版本", required = false)
-    var version: Int = 1,
-    @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
-    @ApiModelProperty("构建号生成规则", required = false)
-    val buildNumRule: String? = null, // 构建号生成规则
+
+    // 平台系统控制相关配置
+    @ApiModelProperty("保存流水线编排的最大个数", required = false)
+    val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @ApiModelProperty("重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings()
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings(),
+
+    // 流水线设置的入库版本号
+    @ApiModelProperty("版本", required = false)
+    var version: Int = 1
 ) {
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {
