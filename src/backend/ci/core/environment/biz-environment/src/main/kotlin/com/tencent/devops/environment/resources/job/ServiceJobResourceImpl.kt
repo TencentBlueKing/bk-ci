@@ -196,15 +196,6 @@ class ServiceJobResourceImpl @Autowired constructor(
         return queryJobInstanceLogsService.queryJobInstanceLogs(jobCloudQueryJobInstanceLogsReq)
     }
 
-    private fun checkParam(userId: String, projectId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("userId is blank.")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("projectId is blank.")
-        }
-    }
-
     override fun createAccount(
         userId: String,
         projectId: String,
@@ -249,5 +240,14 @@ class ServiceJobResourceImpl @Autowired constructor(
         return getAccountListService.getAccountList(
             userId, projectId, account, alias, category, start, length
         )
+    }
+
+    private fun checkParam(userId: String, projectId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("userId is blank.")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("projectId is blank.")
+        }
     }
 }

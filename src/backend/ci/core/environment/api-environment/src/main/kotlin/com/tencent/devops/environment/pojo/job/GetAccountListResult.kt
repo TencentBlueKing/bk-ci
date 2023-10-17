@@ -8,8 +8,12 @@ import io.swagger.annotations.ApiModelProperty
 data class GetAccountListResult(
     @ApiModelProperty(value = "帐号ID")
     val authorizedAccount: List<AuthorizedAccount>?,
+    @ApiModelProperty(value = "分页记录起始位置", notes = "不传默认0", required = true)
+    val start: Int,
+    @ApiModelProperty(value = "查询结果总量", required = true)
+    val total: Int,
     @ApiModelProperty(value = "单次返回最大记录数。最大1000，不传默认为20。", required = true)
     val length: Int
 ) {
-    constructor() : this(null, 0)
+    constructor() : this(null, 0, 0, 0)
 }
