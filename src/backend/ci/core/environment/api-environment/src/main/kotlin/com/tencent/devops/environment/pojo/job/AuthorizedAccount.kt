@@ -18,6 +18,8 @@ data class AuthorizedAccount(
     val alias: String,
     @ApiModelProperty(value = "帐号对应OS", notes = "账号用途为系统账号时该字段生效")
     val os: String?,
+    @ApiModelProperty(value = "帐号描述")
+    val description: String?,
     @ApiModelProperty(value = "创建人", required = true)
     val creator: String,
     @ApiModelProperty(value = "创建时间", notes = "Unix时间戳，单位ms", required = true)
