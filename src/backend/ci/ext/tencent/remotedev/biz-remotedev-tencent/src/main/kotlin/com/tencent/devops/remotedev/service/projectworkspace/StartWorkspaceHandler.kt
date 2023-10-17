@@ -143,7 +143,8 @@ class StartWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STARTING,
                 systemType = WorkspaceSystemType.WINDOWS_GPU,
                 workspaceMountType = WorkspaceMountType.START,
-                ownerType = WorkspaceOwnerType.PROJECT
+                ownerType = WorkspaceOwnerType.PROJECT,
+                projectId = projectId
             )
 
             return WorkspaceResponse(
@@ -238,7 +239,8 @@ class StartWorkspaceHandler @Autowired constructor(
             action = WorkspaceAction.START,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 }

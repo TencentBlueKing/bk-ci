@@ -307,7 +307,8 @@ class DeliverControl @Autowired constructor(
                         action = WorkspaceAction.START,
                         systemType = workspace.workspaceSystemType,
                         workspaceMountType = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
                     )
                 }
 

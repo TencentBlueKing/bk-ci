@@ -31,4 +31,8 @@ object WorkspacePageBuild {
     fun buildPage(workspaceName: String): String {
         return "/remotedev/workspace/$workspaceName"
     }
+
+    fun instanceManage(projectId: String): String {
+        return "/remotedev/workspaces/$projectId"
+    }
 }

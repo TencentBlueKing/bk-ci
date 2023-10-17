@@ -242,7 +242,8 @@ class CreateControl @Autowired constructor(
             status = true,
             action = WorkspaceAction.PREPARING,
             systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = projectId
         )
 
         return WorkspaceResponse(
@@ -377,7 +378,8 @@ class CreateControl @Autowired constructor(
             action = WorkspaceAction.START,
             systemType = ws.workspaceSystemType,
             workspaceMountType = ws.workspaceMountType,
-            ownerType = ws.ownerType
+            ownerType = ws.ownerType,
+            projectId = ws.projectId
         )
     }
 

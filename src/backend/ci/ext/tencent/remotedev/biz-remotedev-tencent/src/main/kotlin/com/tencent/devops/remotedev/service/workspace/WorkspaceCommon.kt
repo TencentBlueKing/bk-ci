@@ -124,7 +124,8 @@ class WorkspaceCommon @Autowired constructor(
         action: WorkspaceAction,
         systemType: WorkspaceSystemType? = null,
         workspaceMountType: WorkspaceMountType? = null,
-        ownerType: WorkspaceOwnerType? = null
+        ownerType: WorkspaceOwnerType? = null,
+        projectId: String = ""
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -139,7 +140,7 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceMountType = workspaceMountType,
                     ownerType = ownerType
                 ),
-                projectId = "",
+                projectId = projectId,
                 userIds = getWebSocketUsers(userId, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
