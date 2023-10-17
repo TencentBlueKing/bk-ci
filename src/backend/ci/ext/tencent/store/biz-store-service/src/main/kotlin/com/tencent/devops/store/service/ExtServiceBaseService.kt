@@ -128,6 +128,7 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
 import java.util.regex.Pattern
@@ -623,6 +624,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 }
             }
             logger.info("the getMyService serviceId is :$serviceId, itemName is :${JsonUtil.toJson(itemNameList)}")
+            val logoUrl = it["logoUrl"] as String?
             myService.add(
                 ExtServiceRespItem(
                     serviceId = serviceId,
@@ -630,7 +632,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceCode = serviceCode,
                     version = it["version"] as String,
                     category = it["category"] as String,
-                    logoUrl = it["logoUrl"] as String?,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["serviceStatus"] as Byte).toInt()),
                     publisher = it["publisher"] as String,
                     publishTime = DateTimeUtil.toDateTime(it["pubTime"] as LocalDateTime),
@@ -1159,9 +1163,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceId = serviceId,
                     serviceCode = serviceCode,
                     serviceName = record.serviceName,
-                    logoUrl = record.logoUrl,
+                    logoUrl = record.logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     summary = record.summary ?: "",
-                    description = record.description ?: "",
+                    description = record.description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     version = record.version,
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((record.serviceStatus).toInt()),
                     language = serviceEnv!!.language,

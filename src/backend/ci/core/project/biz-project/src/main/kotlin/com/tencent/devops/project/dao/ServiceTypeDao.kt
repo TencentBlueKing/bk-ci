@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TServiceType
 import com.tencent.devops.model.project.tables.records.TServiceTypeRecord
 import com.tencent.devops.project.pojo.service.ServiceType
@@ -43,6 +44,7 @@ class ServiceTypeDao {
         with(TServiceType.T_SERVICE_TYPE) {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -52,6 +54,7 @@ class ServiceTypeDao {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
                 .orderBy(WEIGHT.asc())
+                .skipCheck()
                 .fetch {
                     ServiceType(
                         it.id, it.title, it.weight ?: 0, it.createdUser,
@@ -105,6 +108,7 @@ class ServiceTypeDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .and(DELETED.eq(false))
+                .skipCheck()
                 .fetchOne {
                     ServiceType(
                         it!!.id, it.title, it.weight ?: 0, it.createdUser,

@@ -702,7 +702,11 @@
     "pipelineErrorCode": "错误码",
     "pipelineErrorPos": "错误位置",
     "pipelineErrorInfo": "错误信息",
-    "Errors": "Errors"
+    "Errors": "Errors",
+    "directoryName": "目录名称",
+    "directoryPath": "目录路径",
+    "include": "包含",
+    "fileAndFolder": "{0} 个文件，{1} 个目录"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
@@ -1182,5 +1186,10 @@
   "exitFullscreen": "退出全屏",
   "skipSuc": "已跳过失败的步骤，继续运行",
   "skipFail": "跳过失败",
-  "nonManual": "非手动"
+  "runs": "次",
+  "nonManual": "非手动",
+  "needSignTips": "{0} 为内部测试版本，正在准备下载，请稍等",
+  "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟",
+  "apkSignSuccess": "{0} 已经准备完成，开始下载",
+  "downloadLater": "稍后再下载"
 }

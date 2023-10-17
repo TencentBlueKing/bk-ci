@@ -97,7 +97,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
 
         val requestAgentId = agentStatusRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
-            logger.warn("getAgentStatus|$projectId|$agentId| request too frequently")
             return Result(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentStatusRequestLock_$agentId"
@@ -105,7 +104,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentStatusRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getAgentStatus|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -131,7 +129,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("agentHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -157,7 +154,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("newHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -170,7 +166,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
 
         val requestAgentId = agentPipelineRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
-            logger.warn("getPipelines|$projectId|$agentId| request too frequently")
             return Result(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentPipelineRequestLock_$agentId"
@@ -178,7 +173,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentPipelineRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getPipelines|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }

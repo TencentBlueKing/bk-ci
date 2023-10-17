@@ -1,6 +1,0 @@
-spring.application.name: repository
-server.port: 25901
-
-repository:
-  deletedNodeReserveDays: 14
-  listCountLimit: 100000

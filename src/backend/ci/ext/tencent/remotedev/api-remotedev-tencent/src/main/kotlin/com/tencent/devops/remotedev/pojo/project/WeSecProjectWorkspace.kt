@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,12 +40,19 @@ data class WeSecProjectWorkspace(
     @ApiModelProperty("项目ID")
     @JsonProperty("project_id")
     val projectId: String,
-    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @ApiModelProperty("工作空间创建人")
     val creator: String,
+    @ApiModelProperty("工作空间拥有者")
+    val owner: String? = null,
+    @ApiModelProperty("工作空间创建时间")
+    @JsonProperty("create_time")
+    val createTime: String? = null,
     @ApiModelProperty("region_id")
     @JsonProperty("region_id")
     val regionId: String,
     @ApiModelProperty("inner_ip")
     @JsonProperty("inner_ip")
-    val innerIp: String?
+    val innerIp: String?,
+    @ApiModelProperty("状态")
+    val status: WorkspaceStatus?
 )

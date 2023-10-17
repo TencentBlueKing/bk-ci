@@ -55,7 +55,9 @@ data class ProjectWorkspace(
     @ApiModelProperty("操作系统类型")
     val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("windows 资源配置")
-    val winConfig: WindowsResourceConfig? = null,
+    val winConfig: WindowsResourceTypeConfig? = null,
+    @ApiModelProperty("windows 地域配置")
+    val zoneConfig: WindowsResourceZoneConfig? = null,
     @ApiModelProperty("拥有者")
     val owner: String? = null,
     @ApiModelProperty("查看者")

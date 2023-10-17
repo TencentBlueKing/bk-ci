@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TActivity
 import com.tencent.devops.model.project.tables.records.TActivityRecord
 import com.tencent.devops.project.pojo.ActivityInfo
@@ -82,6 +83,7 @@ class ActivityDao {
             return dslContext.selectFrom(this)
                 .where(TYPE.eq(type.name))
                 .orderBy(CREATE_TIME.desc())
+                .skipCheck()
                 .fetch()
         }
     }

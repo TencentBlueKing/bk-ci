@@ -14,7 +14,6 @@ object RedisKeys {
     const val REDIS_REMOTEDEV_PROD_VERSION = "remotedev:prod:version"
     const val REDIS_REMOTEDEV_INACTIVE_TIME = "remotedev:inactiveTime"
     const val REDIS_WHITELIST_PERIOD = "remotedev:whitelistPeriod"
-    const val REDIS_WHITE_LIST_GPU_KEY = "remotedev:whiteListGPU" // 云桌面创建限制
     const val REDIS_RUNS_ON_OS_KEY = "remotedev:runsOnOS" // 云桌面创建限制
     const val REDIS_NOTICE_AHEAD_OF_TIME = "remotedev:noticeAheadOfTime" // 云桌面过期通知提前时间 默认60分钟
     const val REDIS_DEFAULT_AVAILABLE_TIME = "remotedev:defaultAvailableTime" // 云桌面默认可用时间 默认24h
@@ -24,7 +23,6 @@ object RedisKeys {
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
     const val REDIS_CHECKOUT_TEMPLATE_ID = "remotedev:checkoutTID" // 拉代码流水线模板id
-    const val REDIS_WHITE_LIST_KEY = "remotedev:whiteList"
     const val REDIS_IP_LIST_KEY = "remotedev:ipSubnets"
     const val REDIS_DEFAULT_IMAGES_KEY = "remotedev:defaultImages"
 }

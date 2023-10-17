@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -84,7 +85,8 @@ class DeleteControl @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -281,6 +283,7 @@ class DeleteControl @Autowired constructor(
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
+        logger.debug("afterDeleteWorkspace|RemoteDevUpdateEvent{}|", event)
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
@@ -293,14 +296,13 @@ class DeleteControl @Autowired constructor(
                 )
             }
         }
-        doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
+        doDeleteWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
     fun doDeleteWS(
         status: Boolean,
         operator: String,
         workspaceName: String,
-        nodeIp: String?,
         errorMsg: String? = null
     ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -309,15 +311,18 @@ class DeleteControl @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         if (workspace.status.checkDeleted()) return
+
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+
+        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
         if (status) {
             // 删除环境管理第三方构建机记录
-            val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
                     .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -373,6 +378,22 @@ class DeleteControl @Autowired constructor(
                 computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
             )
         }
+
+        // 删除时给 cmdb 去掉字段方便监控检索
+        val hostIdSub = detail?.environmentIP?.split(".")
+        if (!hostIdSub.isNullOrEmpty() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            bkccService.updateHostMonitor(
+                regionId = null,
+                workspaceName = workspaceName,
+                ips = setOf(ip),
+                props = mapOf("devx_meta" to "")
+            )
+
+            // 删除 cmdb 的机器别名
+            bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
+        }
+
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,

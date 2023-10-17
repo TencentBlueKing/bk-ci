@@ -16,7 +16,8 @@ data class EnvironmentResourceData(
     @JsonProperty("status")
     val status: Int,
     @JsonProperty("userInstanceList")
-    val userInstanceList: List<Instance>? = null
+    val userInstanceList: List<Instance>? = null,
+    var locked: Boolean? = false
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

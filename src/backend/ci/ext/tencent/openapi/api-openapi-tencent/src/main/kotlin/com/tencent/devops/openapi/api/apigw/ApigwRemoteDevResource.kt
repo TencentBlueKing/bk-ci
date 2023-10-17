@@ -57,7 +57,10 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @ApiParam("项目ID", required = false)
         @QueryParam("project_id")
-        projectId: String?
+        projectId: String?,
+        @ApiParam("ip", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list", "v4_user_remotedev_project_list"])

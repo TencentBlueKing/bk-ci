@@ -65,16 +65,6 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun list(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<List<FileInfo>> {
-        checkParameters(userId, projectId, path)
-        return Result(bkRepoService.list(userId, projectId, artifactoryType, path))
-    }
-
     override fun getOwnFileList(
         userId: String,
         projectId: String,
@@ -159,7 +149,15 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByUser(
+                userId,
+                projectId,
+                artifactoryType,
+                path,
+                fullUrl = false
+            )
+        )
     }
 
     override fun ioaUrl(
@@ -169,7 +167,15 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, fullUrl = false))
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByUser(
+                userId,
+                projectId,
+                artifactoryType,
+                path,
+                fullUrl = false
+            )
+        )
     }
 
     override fun shareUrl(
@@ -187,7 +193,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         if (downloadUsers.isBlank()) {
             throw InvalidParamException("Invalid downloadUsers")
         }
-        bkRepoDownloadService.shareUrl(userId, projectId, artifactoryType, path, ttl, downloadUsers)
+        bkRepoDownloadService.sendNotifyWithInnerUrl(userId, projectId, artifactoryType, path, ttl, downloadUsers)
         return Result(true)
     }
 
@@ -202,7 +208,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoDownloadService.getExternalUrl(
+            bkRepoDownloadService.outerHtmlUrl4Download(
                 userId = userId,
                 projectId = projectId,
                 artifactoryType = artifactoryType,
