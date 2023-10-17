@@ -29,6 +29,9 @@ data class CreateAccountResult(
     @ApiModelProperty(value = "最近一次修改时间", notes = "Unix时间戳，单位ms", required = true)
     @JsonProperty("last_modify_time")
     val lastModifyTime: Long,
+    @ApiModelProperty(value = "数据库账号对应的系统账号ID", notes = "账号用途为数据库账号时该字段生效", required = true)
+    @JsonProperty("db_system_account_id")
+    val dbSystemAccountId: Long,
     @ApiModelProperty(value = "业务ID")
     @JsonProperty("bk_biz_id")
     val bkBizId: Long?,
@@ -39,5 +42,5 @@ data class CreateAccountResult(
     @JsonProperty("bk_scope_id")
     var bkScopeId: String?
 ) {
-    constructor() : this(-1L, "", -1, -1, "", "", "", "", -1L, "", -1L, -1L, "", "")
+    constructor() : this(-1L, "", -1, -1, "", "", "", "", -1L, "", -1L, -1L, -1L, "", "")
 }
