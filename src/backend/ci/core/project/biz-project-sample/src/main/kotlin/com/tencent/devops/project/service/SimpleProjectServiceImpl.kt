@@ -110,7 +110,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
                 file = logoFile,
                 fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
                 language = I18nUtil.getLanguage(userId),
-                storeStatic = true
+                staticFlag = true
             )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")

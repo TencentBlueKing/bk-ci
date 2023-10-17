@@ -27,8 +27,8 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -41,23 +41,22 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("ALL")
 class SampleStoreFileServiceImpl : StoreFileService() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SampleStoreFileServiceImpl::class.java)
     }
+
+    @Suppress("NestedBlockDepth")
     override fun uploadFileToPath(
         userId: String,
-        pathList: List<String>,
         client: Client,
-        fileDirPath: String,
-        storeStatic: Boolean,
         result: MutableMap<String, String>,
-        fileType: FileTypeEnum?
+        localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String> {
-        pathList.forEach { path ->
-            val file = File("$fileDirPath${fileSeparator}$path")
+        val fileDirPath = localDirectoryInfo.fileDirPath
+        localDirectoryInfo.pathList.forEach { pathInfo ->
+            val file = File("$fileDirPath${fileSeparator}${pathInfo.relativePath}")
             try {
                 if (file.exists()) {
                     val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
@@ -65,12 +64,11 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                         userId = userId,
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file,
-                        storeStatic = storeStatic,
+                        staticFlag = pathInfo.staticFlag,
                         fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        fileType = fileType?.name
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ).data
-                    fileUrl?.let { result[path] = fileUrl }
+                    fileUrl?.let { result[pathInfo.relativePath] = fileUrl }
                 } else {
                     logger.warn("Resource file does not exist:${file.path}")
                 }

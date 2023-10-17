@@ -73,7 +73,6 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
@@ -386,10 +385,10 @@ interface ServiceGitResource {
 
     @ApiOperation("下载git仓库文件")
     @GET
-    @Path("repoIds/{repoId}/downloadTGitRepoFile")
+    @Path("/downloadGitRepoFile")
     fun downloadGitRepoFile(
         @ApiParam(value = "仓库id")
-        @PathParam("repoId")
+        @QueryParam("repoId")
         repoId: String,
         @ApiParam("代码库请求类型", required = true)
         @QueryParam("repositoryType")
