@@ -1,7 +1,6 @@
 <template>
     <bk-tag-input
         allow-create
-        trigger="focus"
         :value="value"
         :disabled="disabled || isLoading"
         :placeholder="placeholder"
