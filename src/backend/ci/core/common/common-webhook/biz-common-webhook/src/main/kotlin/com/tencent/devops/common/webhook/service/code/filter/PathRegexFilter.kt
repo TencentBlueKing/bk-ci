@@ -71,23 +71,21 @@ class PathRegexFilter(
                 userPath == "**"
 
     private fun getShortPath(userPath: String, eventPath: String): String {
-        return if (patternIsMatchDir(userPath)) {
-            if (eventPath.contains("/")) {
-                var targetShortPath = eventPath
-                var shortPath = eventPath.substring(0, eventPath.lastIndexOf("/"))
-                while (matcher.match(userPath, shortPath)) {
-                    targetShortPath = shortPath
-                    if (!shortPath.contains("/")) {
-                        break
-                    }
-                    shortPath = shortPath.substring(0, shortPath.lastIndexOf("/"))
-                }
-                targetShortPath
-            } else {
-                eventPath
-            }
-        } else {
-            eventPath
+        if (!patternIsMatchDir(userPath)) {
+            return eventPath
         }
+        if (!eventPath.contains("/")) {
+            return eventPath
+        }
+        var targetShortPath = eventPath
+        var shortPath = eventPath.substring(0, eventPath.lastIndexOf("/"))
+        while (matcher.match(userPath, shortPath)) {
+            targetShortPath = shortPath
+            if (!shortPath.contains("/")) {
+                break
+            }
+            shortPath = shortPath.substring(0, shortPath.lastIndexOf("/"))
+        }
+        return targetShortPath
     }
 }
