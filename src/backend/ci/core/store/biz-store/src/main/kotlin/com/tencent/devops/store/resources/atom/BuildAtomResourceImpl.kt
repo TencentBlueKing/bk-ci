@@ -53,8 +53,8 @@ class BuildAtomResourceImpl @Autowired constructor(
         return atomReleaseService.creatAtomBranchTestVersion(userId, marketAtomUpdateRequest)
     }
 
-    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> {
-        return atomReleaseService.endBranchVersionTest(userId, atomId)
+    override fun endBranchVersionTest(userId: String, branch: String): Result<Boolean> {
+        return atomReleaseService.endBranchVersionTest(userId, branch)
     }
 
     override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {

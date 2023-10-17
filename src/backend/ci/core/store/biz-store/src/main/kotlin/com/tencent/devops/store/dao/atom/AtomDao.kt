@@ -341,6 +341,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
+        conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }

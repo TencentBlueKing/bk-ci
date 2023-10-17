@@ -225,5 +225,5 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String> = Result("")
 
-    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> = Result(true)
+    override fun endBranchVersionTest(userId: String, branch: String): Result<Boolean> = Result(true)
 }

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -114,7 +115,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
-import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreHonorService
@@ -122,6 +122,7 @@ import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import java.math.BigDecimal
@@ -713,7 +714,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
-            if (tmpVersionPrefix != versionPrefix) {
+            if (tmpVersionPrefix != versionPrefix && !atomVersion.contains(TEST)) {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
