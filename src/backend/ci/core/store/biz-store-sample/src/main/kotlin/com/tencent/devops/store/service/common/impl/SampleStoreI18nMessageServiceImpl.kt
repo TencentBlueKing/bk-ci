@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
@@ -94,39 +95,35 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         ).data
     }
 
-    override fun descriptionAnalysis(
+    override fun textReferenceFileAnalysis(
         userId: String,
         projectCode: String,
-        description: String,
-        fileDir: String,
-        language: String,
-        repositoryHashId: String?,
-        branch: String?
+        request: TextReferenceFileParseRequest
     ): String {
         val separator = File.separator
         val fileNameList = getFileNames(
             projectCode = projectCode,
-            fileDir = "$fileDir${separator}file"
+            fileDir = "${request.fileDir}${separator}file"
         )
         if (fileNameList.isNullOrEmpty()) {
             logger.info("descriptionAnalysis get fileNameList fail")
-            return description
+            return request.content
         }
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
-            atomDir = fileDir
+            atomDir = request.fileDir
         )
         fileNameList.forEach {
             downloadFile(
-                "$projectCode$separator$fileDir${separator}file$separator$it",
+                "$projectCode$separator${request.fileDir}${separator}file$separator$it",
                 File("$fileDirPath${separator}file", it)
             )
         }
 
-        return storeFileService.descriptionAnalysis(
+        return storeFileService.textReferenceFileAnalysis(
             fileDirPath = "$fileDirPath${separator}file",
             userId = userId,
-            description = description,
+            content = request.content,
             client = client
         )
     }

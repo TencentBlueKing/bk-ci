@@ -307,15 +307,15 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             return if (ips.isNullOrEmpty()) {
                 (
-                    genFetchProjectWorkspaceCond(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    workspaceName = workspaceName,
-                    systemType = systemType,
-                    queryType = queryType,
-                    ips = ips
-                ) as SelectConditionStep<TWorkspaceRecord>
-                ).orderBy(CREATE_TIME.desc(), ID.desc())
+                        genFetchProjectWorkspaceCond(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            workspaceName = workspaceName,
+                            systemType = systemType,
+                            queryType = queryType,
+                            ips = ips
+                        ) as SelectConditionStep<TWorkspaceRecord>
+                        ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(workspaceMapper)
             } else {
@@ -895,6 +895,31 @@ class WorkspaceDao {
                 workSpaceDetail = record["DETAIL"] as String
             )
         }
+    }
+
+    fun fetchWinWorkspaceIpAndRegId(
+        dslContext: DSLContext
+    ): List<Triple<String, String?, Int?>> {
+        return dslContext.select(
+            TWorkspace.T_WORKSPACE.PROJECT_ID,
+            JooqUtils.jsonExtract(
+                t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+                t2 = "\$.hostIP",
+                lower = false,
+                removeDoubleQuotes = true
+            ).`as`("IP"),
+            JooqUtils.jsonExtract(
+                t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+                t2 = "\$.regionId",
+                lower = false,
+                removeDoubleQuotes = true
+            ).`as`("REG_ID")
+        ).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+            .and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .fetch()
+            .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, (it["REG_ID"] as String?)?.toInt()) }
     }
 
     companion object {

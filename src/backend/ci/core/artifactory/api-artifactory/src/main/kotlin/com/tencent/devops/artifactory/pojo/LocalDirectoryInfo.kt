@@ -25,31 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.utils.StoreUtils
-import java.io.File
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
-
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
-            userId = userId,
-            serviceUrlPrefix = serviceUrlPrefix,
-            file = file,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
-        ).data
-        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
-        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
-    }
-}
+@ApiModel("本地文件目录信息")
+data class LocalDirectoryInfo(
+    @ApiModelProperty("目录路径", required = true)
+    val fileDirPath: String,
+    @ApiModelProperty("文件所在相对路径列表", required = true)
+    val pathList: List<LocalFileInfo>
+)

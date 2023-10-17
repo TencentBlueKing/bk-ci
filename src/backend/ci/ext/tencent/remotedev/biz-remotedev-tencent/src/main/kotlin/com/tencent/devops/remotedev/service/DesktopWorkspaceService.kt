@@ -7,17 +7,25 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataAction
+import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataScope
+import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class DesktopWorkspaceService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val bkccService: BKCCService,
+    private val workspaceCommon: WorkspaceCommon
 ) {
 
     fun fetchOwnerAndAdmin(
@@ -50,9 +58,84 @@ class DesktopWorkspaceService @Autowired constructor(
 
             val projectId = it["PROJECT_ID"] as String
 
+            if (owner.isBlank()) {
+                return@forEach
+            }
+
             res[projectId]?.owner?.add(owner)
         }
 
         return res
+    }
+
+    fun updateCCHost(
+        data: OpUpdateCCHostData
+    ): Boolean {
+        when (data.scope) {
+            OpOpUpdateCCHostDataScope.ALL -> {
+                val projectAndRegIdAndIps = mutableMapOf<String, MutableMap<Int, MutableSet<String>>>()
+                val records = workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext)
+                records.forEach { (projectId, hostIp, regId) ->
+                    if (regId == null) {
+                        return@forEach
+                    }
+                    if (hostIp.isNullOrEmpty()) {
+                        return@forEach
+                    }
+
+                    val hostIdSub = hostIp.split(".")
+                    val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+                    if (projectAndRegIdAndIps[projectId] == null) {
+                        projectAndRegIdAndIps[projectId] = mutableMapOf(regId to mutableSetOf(ip))
+                    } else if (projectAndRegIdAndIps[projectId]!![regId] == null) {
+                        projectAndRegIdAndIps[projectId]!![regId] = mutableSetOf(ip)
+                    } else {
+                        projectAndRegIdAndIps[projectId]!![regId]!!.add(ip)
+                    }
+                }
+
+                logger.debug("updateCCHost projectAndRegIdAndIps {}", projectAndRegIdAndIps)
+
+                projectAndRegIdAndIps.forEach { (projectId, regAndIps) ->
+                    try {
+                        regAndIps.forEach { (regId, ips) ->
+                            if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                                bkccService.updateHostMonitor(regId, null, ips, mapOf("devx_meta" to ""))
+                            } else {
+                                bkccService.updateHostMonitor(
+                                    regionId = regId,
+                                    workspaceName = null,
+                                    ips = ips,
+                                    props = workspaceCommon.genWorkspaceCCInfo(projectId)
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("updateCCHost {} {} request cc api error", projectId, regAndIps, e)
+                    }
+                }
+
+                return true
+            }
+
+            OpOpUpdateCCHostDataScope.PART -> {
+                if (data.host.isNullOrEmpty() || data.projectId.isNullOrBlank()) {
+                    return false
+                }
+
+                if (data.action == OpOpUpdateCCHostDataAction.DELETE) {
+                    bkccService.updateHost(data.host!!, mapOf("devx_meta" to ""))
+                } else {
+                    bkccService.updateHost(data.host!!, workspaceCommon.genWorkspaceCCInfo(data.projectId!!))
+                }
+
+                return true
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DesktopWorkspaceService::class.java)
     }
 }

@@ -45,8 +45,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -137,14 +135,14 @@ import org.springframework.util.StringUtils
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
-    private val sampleProjectGitFileService: SampleProjectGitFileService,
-    private val redisOperation: RedisOperation
+    private val sampleProjectGitFileService: SampleProjectGitFileService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
+        private const val SLEEP_MILLS_FOR_RETRY = 2000L
     }
 
     @Value("\${gitCI.clientId}")
@@ -1743,16 +1741,12 @@ class GitService @Autowired constructor(
         url.append("&is_project_path_wrapped=$isProjectPathWrapped")
         response.contentType = "application/$format"
         response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
-        val redisLock =
-            RedisLock(redisOperation, "downloadGitRepoFile:$repoName:lock:key", 20)
-        try {
-            redisLock.lock()
-            // 避免限流，增加2秒休眠时间
-            OkhttpUtils.downloadFile(url.toString(), response)
-            Thread.sleep(2 * 1100)
-        } finally {
-            redisLock.unlock()
-        }
+        com.tencent.devops.common.service.utils.RetryUtils.execute(
+            action = object : com.tencent.devops.common.service.utils.RetryUtils.Action<Unit> {
+            override fun execute() {
+                OkhttpUtils.downloadFile(url.toString(), response)
+            }
+        }, retryTime = 3, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
