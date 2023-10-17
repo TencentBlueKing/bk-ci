@@ -34,10 +34,10 @@ class ProjectRemoteDevService @Autowired constructor(
     @Value("\${remoteDev.bkMonitorUrl:}")
     val bkMonitorUrl = ""
 
-    @Value("\${bkrepo.bkrepoDevxUrl:}")
+    @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
 
-    @Value("\${bkrepo.bkrepoDevxHeaderUserAuth:}")
+    @Value("\${remoteDev.bkrepoDevxHeaderUserAuth:}")
     val bkrepoDevxHeaderUserAuth = ""
 
     // 开启 remotedev 相关逻辑
