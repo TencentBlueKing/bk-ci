@@ -32,7 +32,8 @@ class BKBaseService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
     fun fetchOnlineUserMin(
-        timeScope: TimeScope?
+        timeScope: TimeScope?,
+        projectId: String
     ): UserLoginTimeResp? {
         val gal = Calendar.getInstance()
         val sql = when (timeScope) {
@@ -41,6 +42,7 @@ class BKBaseService @Autowired constructor(
                 "SELECT minute2, SUM(user_id_num) AS unum " +
                         "FROM 100656_tob_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                        "AND game_id = '$projectId' " +
                         "GROUP BY minute2 " +
                         "ORDER BY minute2 " +
                         "LIMIT 721"
@@ -51,6 +53,7 @@ class BKBaseService @Autowired constructor(
                 "SELECT minute10, SUM(user_id_num) AS unum " +
                         "FROM 100656_tob_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                        "AND game_id = '$projectId' " +
                         "GROUP BY minute10 " +
                         "ORDER BY minute10 " +
                         "LIMIT 1009"
@@ -61,6 +64,7 @@ class BKBaseService @Autowired constructor(
                 "SELECT user_id_num, dtEventTime " +
                         "FROM 100656_tob_online_user_min.hdfs " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
+                        "AND game_id = '$projectId' " +
                         "ORDER BY dtEventTime " +
                         "LIMIT 61"
             }
