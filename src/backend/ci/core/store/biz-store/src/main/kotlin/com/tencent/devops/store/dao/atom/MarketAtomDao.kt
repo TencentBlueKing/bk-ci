@@ -620,12 +620,12 @@ class MarketAtomDao : AtomBaseDao() {
     ): Result<TAtomRecord> {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
+                .where(ATOM_CODE.eq(atomCode))
+                .and(VERSION.startsWith(versionPrefix))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.TESTING.status.toByte()))
                 .fetch()
         }
     }
-
-
 
     fun getAtomById(dslContext: DSLContext, atomId: String): Record? {
         val tAtom = TAtom.T_ATOM
