@@ -25,36 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.resources
 
+import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.project.pojo.DeptInfo
-import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.StaffInfo
-import com.tencent.devops.project.pojo.enums.OrganizationType
-import com.tencent.devops.project.service.ProjectOrganizationService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectOrganizationResourceImpl @Autowired constructor(
-    private val projectOrganizationService: ProjectOrganizationService
-) : ServiceProjectOrganizationResource {
-
-    override fun getDeptInfo(userId: String?, id: Int): Result<DeptInfo> {
-        return Result(projectOrganizationService.getDeptInfo(userId, id))
-    }
-
-    override fun getOrganizations(userId: String, type: OrganizationType, id: Int): Result<List<OrganizationInfo>> {
-        return Result(projectOrganizationService.getOrganizations(userId, type, id))
-    }
-
-    override fun getParentDeptInfos(deptId: String, level: Int): Result<List<DeptInfo>> {
-        return Result(projectOrganizationService.getParentDeptInfos(deptId, level))
-    }
-
-    override fun getDeptStaffsWithLevel(deptId: String, level: Int): Result<List<StaffInfo>> {
-        return Result(projectOrganizationService.getDeptStaffsWithLevel(deptId, level))
+class ServiceMonitorSpaceResourceImpl @Autowired constructor(
+    val monitorSpaceService: AuthMonitorSpaceService
+) : ServiceMonitorSpaceResource {
+    override fun getMonitorSpaceBizId(userId: String, projectCode: String): Result<String> {
+        return Result(monitorSpaceService.getMonitorSpaceBizId(projectCode))
     }
 }
