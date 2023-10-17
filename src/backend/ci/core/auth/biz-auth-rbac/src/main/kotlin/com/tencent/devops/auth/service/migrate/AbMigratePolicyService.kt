@@ -191,7 +191,7 @@ abstract class AbMigratePolicyService(
             )
             page++
             totalCount = taskDataResp.count
-        } while (taskDataResp.results.size == pageSize)
+        } while (taskDataResp.count > page * pageSize)
         return totalCount
     }
 
@@ -582,6 +582,8 @@ abstract class AbMigratePolicyService(
             authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
+            resourceType = groupConfig.resourceType,
+            groupCode = groupConfig.groupCode,
             iamResourceCode = projectCode,
             resourceName = projectName,
             iamGroupId = iamGroupId
