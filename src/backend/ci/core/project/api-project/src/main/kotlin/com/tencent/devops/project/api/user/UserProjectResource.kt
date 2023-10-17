@@ -59,7 +59,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT"], description = "项目列表接口")
-@Path("/user/projects")
+@Path("/{user|desktop}/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
