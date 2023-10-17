@@ -74,13 +74,16 @@ interface BuildAtomResource {
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String>
 
-    @ApiOperation("结束分支测试版本测试")
+    @ApiOperation("结束插件分支测试版本测试")
     @POST
-    @Path("/end/test/version")
+    @Path("/end/atom/{atomCode}/test/version")
     fun endBranchVersionTest(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("插件分支", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
         @ApiParam("插件分支", required = true)
         @QueryParam("branch")
         branch: String

@@ -49,6 +49,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -57,8 +59,6 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -612,6 +612,16 @@ class MarketAtomDao : AtomBaseDao() {
                 .fetchOne()
         }
     }
+
+    fun getAtomRecordByversionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
+                .fetchOne()
+        }
+    }
+
+
 
     fun getAtomById(dslContext: DSLContext, atomId: String): Record? {
         val tAtom = TAtom.T_ATOM
