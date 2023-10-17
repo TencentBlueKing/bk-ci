@@ -28,20 +28,25 @@
 
 package com.tencent.devops.auth.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.HttpClientService
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.bk.sdk.iam.service.TokenService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.SystemServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
@@ -53,8 +58,10 @@ import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionApplyService
+import com.tencent.devops.auth.service.RbacPermissionAuthMonitorSpaceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
+import com.tencent.devops.auth.service.RbacPermissionAuthorizationScopesService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
@@ -279,7 +286,8 @@ class RbacAuthConfiguration {
         client: Client,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
-        itsmService: ItsmService
+        itsmService: ItsmService,
+        monitorSpaceService: AuthMonitorSpaceService
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -291,7 +299,8 @@ class RbacAuthConfiguration {
         client = client,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
-        itsmService = itsmService
+        itsmService = itsmService,
+        monitorSpaceService = monitorSpaceService
     )
 
     @Bean
@@ -318,24 +327,30 @@ class RbacAuthConfiguration {
         rbacPermissionResourceService: RbacPermissionResourceService,
         migrateCreatorFixService: MigrateCreatorFixService,
         authResourceService: AuthResourceService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         tokenApi: AuthTokenApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authResourceGroupDao: AuthResourceGroupDao
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
         rbacPermissionResourceService = rbacPermissionResourceService,
         migrateCreatorFixService = migrateCreatorFixService,
         authResourceService = authResourceService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         tokenApi = tokenApi,
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceGroupDao = authResourceGroupDao
     )
 
     @Bean
@@ -478,5 +493,33 @@ class RbacAuthConfiguration {
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
         dslContext = dslContext
+    )
+
+    @Bean
+    fun systemService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = SystemServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
+
+    @Bean
+    fun rbacPermissionAuthorizationScopesService(
+        authMonitorSpaceService: AuthMonitorSpaceService,
+        iamConfiguration: IamConfiguration
+    ) = RbacPermissionAuthorizationScopesService(
+        authMonitorSpaceService = authMonitorSpaceService,
+        iamConfiguration = iamConfiguration
+    )
+
+    @Bean
+    fun rbacPermissionAuthMonitorSpaceService(
+        authMonitorSpaceDao: AuthMonitorSpaceDao,
+        dslContext: DSLContext,
+        objectMapper: ObjectMapper,
+        systemService: SystemService
+    ) = RbacPermissionAuthMonitorSpaceService(
+        authMonitorSpaceDao = authMonitorSpaceDao,
+        dslContext = dslContext,
+        objectMapper = objectMapper,
+        systemService = systemService
     )
 }

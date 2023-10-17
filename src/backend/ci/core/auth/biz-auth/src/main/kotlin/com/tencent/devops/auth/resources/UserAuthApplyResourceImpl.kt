@@ -57,7 +57,10 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
+    override fun getGroupPermissionDetail(
+        userId: String,
+        groupId: Int
+    ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
             permissionApplyService.getGroupPermissionDetail(
                 userId = userId,
