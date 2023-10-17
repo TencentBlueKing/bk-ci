@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -77,7 +78,7 @@ abstract class AtomBaseDao {
     fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.notContains(TEST)))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
