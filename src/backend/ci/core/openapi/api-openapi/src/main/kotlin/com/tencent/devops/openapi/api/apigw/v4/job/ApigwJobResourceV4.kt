@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.environment.pojo.job.CreateAccountReq
+import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobResult
@@ -138,4 +140,24 @@ interface ApigwJobResourceV4 {
         @ApiParam(value = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
+
+    @ApiOperation("创建帐号的Job接口", tags = ["v4_app_job_create_account"])
+    @POST
+    @Path("/{projectId}/create_account")
+    fun createAccount(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "创建帐号的信息", required = true)
+        createAccountReq: CreateAccountReq
+    ): JobResult<CreateAccountResult>
 }

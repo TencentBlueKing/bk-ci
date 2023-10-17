@@ -30,6 +30,8 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.pojo.job.CreateAccountReq
+import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
@@ -48,6 +50,8 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudHost
 import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
+import com.tencent.devops.environment.pojo.job.req.JobCloudCreateAccountReq
+import com.tencent.devops.environment.service.job.CreateAccountService
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.ParseHashListService
@@ -63,6 +67,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val taskTerminateService: TaskTerminateService,
     private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
     private val queryJobInstanceLogsService: QueryJobInstanceLogsService,
+    private val createAccountService: CreateAccountService,
     private val parseHashListService: ParseHashListService
 ) : ServiceJobResource {
     override fun executeScript(
@@ -190,5 +195,23 @@ class ServiceJobResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("projectId is blank.")
         }
+    }
+
+    override fun createAccount(
+        userId: String,
+        projectId: String,
+        createAccountReq: CreateAccountReq
+    ): JobResult<CreateAccountResult> {
+        checkParam(userId, projectId)
+        val jobCloudCreateAccountReq = JobCloudCreateAccountReq(
+            account = createAccountReq.account,
+            type = createAccountReq.type,
+            category = createAccountReq.category,
+            password = createAccountReq.password,
+            alias = createAccountReq.alias,
+            description = createAccountReq.description,
+            bkUsername = userId
+        )
+        return createAccountService.createAccount(jobCloudCreateAccountReq)
     }
 }

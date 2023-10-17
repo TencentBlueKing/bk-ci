@@ -3,6 +3,8 @@ package com.tencent.devops.openapi.resources.apigw.v4.job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.pojo.job.CreateAccountReq
+import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobResult
@@ -72,5 +74,15 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
         return client.get(ServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
+    }
+
+    override fun createAccount(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        createAccountReq: CreateAccountReq
+    ): JobResult<CreateAccountResult> {
+        return client.get(ServiceJobResource::class).createAccount(userId, projectId, createAccountReq)
     }
 }

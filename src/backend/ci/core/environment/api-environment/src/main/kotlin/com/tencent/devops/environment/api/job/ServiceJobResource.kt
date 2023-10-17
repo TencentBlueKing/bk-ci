@@ -29,6 +29,8 @@ package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.environment.pojo.job.CreateAccountReq
+import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
@@ -130,4 +132,18 @@ interface ServiceJobResource {
         @ApiParam(value = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
+
+    @ApiOperation("创建帐号的Job接口")
+    @POST
+    @Path("/{projectId}/create_account")
+    fun createAccount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "执行脚本的信息", required = true)
+        createAccountReq: CreateAccountReq
+    ): JobResult<CreateAccountResult>
 }
