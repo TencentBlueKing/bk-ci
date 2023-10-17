@@ -47,8 +47,13 @@ class ProjectRemoteDevService @Autowired constructor(
     ) {
         // 从 auth 获取 bizid
         val bizId = try {
-            client.get(ServiceMonitorSpaceResource::class)
-                .getMonitorSpaceBizId(userId, projectCode).data?.toLong()
+            val data = client.get(ServiceMonitorSpaceResource::class)
+                .getMonitorSpaceBizId(userId, projectCode).data
+            if (data.isNullOrBlank()) {
+                null
+            } else {
+                data.toLong()
+            }
         } catch (e: Exception) {
             logger.error("enableRemoteDev getMonitorSpaceBizId error", e)
             null
@@ -123,7 +128,7 @@ class ProjectRemoteDevService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 val responseStr = it.body!!.string()
                 if (!it.isSuccessful) {
-                    logger.warn("quickImportDashboard request failed, uri:($url)|response: ($responseStr)")
+                    logger.warn("createLsyncGeneric request failed, uri:($url)|response: ($responseStr)")
                     return
                 }
             }
