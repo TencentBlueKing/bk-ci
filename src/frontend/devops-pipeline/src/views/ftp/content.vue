@@ -41,9 +41,14 @@
         const iframe = document.getElementById('atom-iframe').contentWindow
         const {
             projectId,
-            pipelineId,
-            buildNo: buildId
+            pipelineId
         } = this.$route.params
+
+        let buildId
+
+        if (this.$route.name === 'ftpPipelinesDetail') {
+            buildId = this.$route.params.buildNo
+        }
 
         const pipelineInfo = buildId ? this.execDetail.model : this.pipeline
         iframe.postMessage({
