@@ -96,7 +96,7 @@ class RestartWorkspaceHandler @Autowired constructor(
             workspaceDao.updateWorkspaceStatus(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.STARTING
+                status = WorkspaceStatus.RESTARTING
             )
 
             workspaceOpHistoryDao.createWorkspaceHistory(
