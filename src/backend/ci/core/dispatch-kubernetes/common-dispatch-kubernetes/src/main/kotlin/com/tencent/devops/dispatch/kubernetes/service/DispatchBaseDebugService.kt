@@ -69,7 +69,7 @@ class DispatchBaseDebugService @Autowired constructor(
     private val dispatchKubernetesBuildHisDao: DispatchKubernetesBuildHisDao,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val DispatchKubernetesRedisUtils: DispatchKubernetesRedisUtils,
+    private val dispatchKubernetesRedisUtils: DispatchKubernetesRedisUtils,
     private val dockerRoutingSdkService: DockerRoutingSdkService
 ) {
 
@@ -186,7 +186,7 @@ class DispatchBaseDebugService @Autowired constructor(
         }
 
         // 设置containerName缓存
-        DispatchKubernetesRedisUtils.setDebugBuilderName(userId, pipelineId, vmSeqId, builderName)
+        dispatchKubernetesRedisUtils.setDebugBuilderName(userId, pipelineId, vmSeqId, builderName)
 
         return DebugResponse(
             websocketUrl = containerServiceFactory.load(projectId).getDebugWebsocketUrl(
@@ -210,7 +210,7 @@ class DispatchBaseDebugService @Autowired constructor(
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
 
         val debugBuilderName = builderName.ifBlank {
-            DispatchKubernetesRedisUtils.getDebugBuilderName(userId, pipelineId, vmSeqId) ?: ""
+            dispatchKubernetesRedisUtils.getDebugBuilderName(userId, pipelineId, vmSeqId) ?: ""
         }
 
         logger.info(

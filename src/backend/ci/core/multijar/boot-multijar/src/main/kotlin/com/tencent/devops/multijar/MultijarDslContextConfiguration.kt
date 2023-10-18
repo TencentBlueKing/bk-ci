@@ -75,13 +75,13 @@ class MultijarDslContextConfiguration {
         val configurationName = if (packageName.contains(".misc")) {
             val matchResult = miscServiceRegex.find(packageName)
             "${matchResult?.groupValues?.get(1) ?: "default"}JooqConfiguration"
-        } else if (packageName.contains(".store")){
+        } else if (packageName.contains(".store")) {
             "storeJooqConfiguration"
-        }else {
+        } else {
             serviceName.plus("JooqConfiguration")
         }
 
-        val configuration: org.jooq.Configuration = configurationMap[configurationName]
+        val configuration = configurationMap[configurationName]
             ?: throw NoSuchBeanDefinitionException("no $configurationName")
 
         return DSL.using(configuration)

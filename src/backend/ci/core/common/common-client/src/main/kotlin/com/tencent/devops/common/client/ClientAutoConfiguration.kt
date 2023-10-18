@@ -54,7 +54,6 @@ import org.springframework.core.Ordered
 @PropertySource("classpath:/common-client.properties")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureAfter(ServiceAutoConfiguration::class, LoadBalancerAutoConfiguration::class)
-@EnableConfigurationProperties(MutilJarServiceMapConfiguration::class)
 class ClientAutoConfiguration {
 
     @Value("\${spring.cloud.consul.discovery.tags:prod}")
@@ -79,10 +78,9 @@ class ClientAutoConfiguration {
         clientErrorDecoder: ClientErrorDecoder,
         commonConfig: CommonConfig,
         bkTag: BkTag,
-        mutilJarServiceMapConfiguration: MutilJarServiceMapConfiguration,
         objectMapper: ObjectMapper,
         @Autowired(required = false) compositeDiscoveryClient: CompositeDiscoveryClient?
-    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, mutilJarServiceMapConfiguration, objectMapper)
+    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
 
     @Bean
     fun consulFilter(bkTag: BkTag) = ConsulFilter(bkTag)

@@ -29,19 +29,18 @@ import java.util.Properties
 tasks.register("replacePlaceholders") {
     doLast {
         val destDir = joinPath(projectDir.absolutePath, "src", "main", "resources")
+        // 每次启动时，首先清空application文件，再根据模板文件重新渲染
         deleteFiles(destDir)
 
         val rootDirPath = rootDir.absolutePath.replace(
             "${File.separator}src${File.separator}backend${File.separator}ci",
             ""
         )
-
         // 基础变量
         val baseBkEnvPath = joinPath(rootDirPath, "scripts", "bkenv.properties")
         val bkEnvProperties = loadProperties(baseBkEnvPath)
         val bkEnvFileContent = renderTemplate(baseBkEnvPath, bkEnvProperties)
         bkEnvProperties.load(bkEnvFileContent.byteInputStream())
-
         // 自定义变量
         val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
         file(bkEnvPath).let {
@@ -49,7 +48,6 @@ tasks.register("replacePlaceholders") {
                 bkEnvProperties.load(it.inputStream())
             }
         }
-
         // 渲染模板
         val templatesDir = joinPath(rootDirPath, "support-files", "templates")
         generateFiles(templatesDir, destDir, bkEnvProperties)

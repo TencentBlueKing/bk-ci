@@ -49,7 +49,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:+PrintTenuringDistribution",
         "-XX:+PrintGCDetails",
         "-XX:+PrintGCDateStamps",
-        "-XX:MaxGCPauseMillis=100",
+        "-XX:MaxGCPauseMillis=200",
         "-XX:+UseG1GC",
         "-XX:NativeMemoryTracking=summary",
         "-XX:+HeapDumpOnOutOfMemoryError",

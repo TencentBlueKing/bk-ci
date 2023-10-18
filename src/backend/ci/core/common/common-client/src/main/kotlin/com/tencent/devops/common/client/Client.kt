@@ -76,7 +76,6 @@ class Client @Autowired constructor(
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
     private val bkTag: BkTag,
-    private val mutilJarServiceMapConfiguration: MutilJarServiceMapConfiguration,
     objectMapper: ObjectMapper
 ) {
 

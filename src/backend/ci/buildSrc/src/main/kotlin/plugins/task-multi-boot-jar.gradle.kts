@@ -26,13 +26,12 @@
  */
 tasks.register("multiBootJar") {
     val finalServices = System.getProperty("devops.multi.from") ?: localRunMultiServices
-    finalServices.let { multiModuleStr ->
-        val multiModuleList = multiModuleStr.split(",").toMutableList()
-        rootProject.subprojects.filter {
-            isSpecifiedModulePath(it.path, multiModuleList)
-        }.forEach { subProject -> addDependencies(subProject.path) }
-        dependsOn("copyToRelease")
-    }
+    val finalServiceList = finalServices.split(",").toMutableList()
+    rootProject.subprojects.filter {
+        isSpecifiedModulePath(it.path, finalServiceList)
+    }.forEach { subProject -> addDependencies(subProject.path) }
+    dependsOn("copyToRelease")
+
 }
 
 fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
