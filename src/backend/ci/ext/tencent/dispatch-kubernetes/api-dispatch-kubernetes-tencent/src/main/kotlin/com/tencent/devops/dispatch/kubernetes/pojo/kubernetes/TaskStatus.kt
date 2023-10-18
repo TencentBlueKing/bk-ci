@@ -1,7 +1,5 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class TaskStatus(
     val uid: String,
     val createdAt: String? = null,

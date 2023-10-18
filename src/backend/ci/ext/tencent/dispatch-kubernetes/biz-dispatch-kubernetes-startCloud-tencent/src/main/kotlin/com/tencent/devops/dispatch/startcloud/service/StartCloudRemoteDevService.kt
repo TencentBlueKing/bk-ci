@@ -269,7 +269,7 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
-        private const val START_CREATE_TIMEOUT = 20 * 60 * 1000  // start生成资源最长轮训时间
+        private const val START_CREATE_TIMEOUT = 20 * 60 * 1000 // start生成资源最长轮训时间
         private const val START_CREATE_LOOP_INTERVAL = 1000L
     }
 }

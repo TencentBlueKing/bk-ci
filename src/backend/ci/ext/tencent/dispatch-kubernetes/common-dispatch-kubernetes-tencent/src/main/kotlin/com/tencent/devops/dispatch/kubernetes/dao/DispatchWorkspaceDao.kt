@@ -98,11 +98,11 @@ class DispatchWorkspaceDao {
     }
 
     fun updateWorkspace(
-            workspaceName: String,
-            envId: String,
-            regionId: Int,
-            status: EnvStatusEnum,
-            dslContext: DSLContext
+        workspaceName: String,
+        envId: String,
+        regionId: Int,
+        status: EnvStatusEnum,
+        dslContext: DSLContext
     ) {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.update(this)

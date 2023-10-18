@@ -35,6 +35,6 @@ enum class WebSocketActionType {
     WORKSPACE_SLEEP, // 休眠workspace
     WORKSPACE_DELETE, // 销毁workspace
     WORKSPACE_NEED_RENEWAL, // 需要续期workspace
-    WORKSPACE_MAKE_IMAGE,  // 根据当前工作空间制作镜像
+    WORKSPACE_MAKE_IMAGE, // 根据当前工作空间制作镜像
     WORKSPACE_DETAIL; // workspace 信息
 }

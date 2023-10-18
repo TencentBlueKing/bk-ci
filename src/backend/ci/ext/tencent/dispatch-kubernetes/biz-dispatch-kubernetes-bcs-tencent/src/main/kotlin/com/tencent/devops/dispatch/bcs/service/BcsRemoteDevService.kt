@@ -53,7 +53,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext

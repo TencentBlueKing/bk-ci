@@ -38,7 +38,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.VmCreateResp
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
