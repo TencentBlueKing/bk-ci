@@ -75,8 +75,8 @@ interface BuildAtomResource {
     ): Result<String>
 
     @ApiOperation("结束插件分支测试版本测试")
-    @POST
-    @Path("/end/atom/{atomCode}/test/version")
+    @GET
+    @Path("/end/atoms/{atomCode}/test/version")
     fun endBranchVersionTest(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
