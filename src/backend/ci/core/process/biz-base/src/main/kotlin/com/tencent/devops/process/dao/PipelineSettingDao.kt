@@ -49,6 +49,7 @@ import org.jooq.Record1
 import org.jooq.Record4
 import org.jooq.RecordMapper
 import org.jooq.Result
+import org.jooq.types.UInteger
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -123,7 +124,7 @@ class PipelineSettingDao {
                     failNotifyTypes,
                     successSubscription.content,
                     failSubscription.content,
-                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
+                    UInteger.valueOf(DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT)),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
                     maxPipelineResNum,
@@ -238,7 +239,7 @@ class PipelineSettingDao {
                 .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
                 .set(SUCCESS_CONTENT, setting.successSubscription.content)
                 .set(FAIL_CONTENT, setting.failSubscription.content)
-                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(WAIT_QUEUE_TIME_SECOND, UInteger.valueOf(DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute)))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
@@ -478,7 +479,7 @@ class PipelineSettingDao {
                     successSubscriptionList = successSubscriptionList,
                     failSubscriptionList = failSubscriptionList,
                     labels = emptyList(),
-                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
                     maxQueueSize = t.maxQueueSize,
                     maxPipelineResNum = t.maxPipelineResNum,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,

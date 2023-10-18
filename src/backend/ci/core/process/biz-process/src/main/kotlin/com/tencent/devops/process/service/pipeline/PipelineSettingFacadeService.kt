@@ -260,8 +260,6 @@ class PipelineSettingFacadeService @Autowired constructor(
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
             val ve = pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)
-            settingInfo.successSubscription = ve.successSubscription
-            settingInfo.failSubscription = ve.failSubscription
             settingInfo.successSubscriptionList = ve.successSubscriptionList
             settingInfo.failSubscriptionList = ve.failSubscriptionList
         }

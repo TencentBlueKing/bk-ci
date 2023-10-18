@@ -28,8 +28,11 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
@@ -64,14 +67,6 @@ class PipelineSettingVersionDao {
                 PROJECT_ID,
                 PIPELINE_ID,
                 NAME,
-                SUCCESS_RECEIVER,
-                FAIL_RECEIVER,
-                SUCCESS_GROUP,
-                FAIL_GROUP,
-                SUCCESS_TYPE,
-                FAIL_TYPE,
-                SUCCESS_CONTENT,
-                FAIL_CONTENT,
                 IS_TEMPLATE,
                 VERSION,
                 ID
@@ -80,14 +75,6 @@ class PipelineSettingVersionDao {
                     projectId,
                     pipelineId,
                     pipelineName,
-                    "\${$PIPELINE_START_USER_NAME}",
-                    "\${$PIPELINE_START_USER_NAME}",
-                    "",
-                    "",
-                    successNotifyTypes,
-                    failNotifyTypes,
-                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
-                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
                     isTemplate,
                     settingVersion,
                     id
@@ -111,20 +98,6 @@ class PipelineSettingVersionDao {
                 PROJECT_ID,
                 PIPELINE_ID,
                 NAME,
-                SUCCESS_RECEIVER,
-                FAIL_RECEIVER,
-                SUCCESS_GROUP,
-                FAIL_GROUP,
-                SUCCESS_TYPE,
-                FAIL_TYPE,
-                FAIL_WECHAT_GROUP_FLAG,
-                FAIL_WECHAT_GROUP,
-                SUCCESS_WECHAT_GROUP_FLAG,
-                SUCCESS_WECHAT_GROUP,
-                SUCCESS_DETAIL_FLAG,
-                FAIL_DETAIL_FLAG,
-                SUCCESS_CONTENT,
-                FAIL_CONTENT,
                 IS_TEMPLATE,
                 VERSION,
                 ID,
@@ -134,20 +107,6 @@ class PipelineSettingVersionDao {
                 setting.projectId,
                 setting.pipelineId,
                 setting.pipelineName,
-                setting.successSubscription.users,
-                setting.failSubscription.users,
-                setting.successSubscription.groups.joinToString(","),
-                setting.failSubscription.groups.joinToString(","),
-                setting.successSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.wechatGroupFlag,
-                setting.failSubscription.wechatGroup,
-                setting.successSubscription.wechatGroupFlag,
-                setting.successSubscription.wechatGroup,
-                setting.successSubscription.detailFlag,
-                setting.failSubscription.detailFlag,
-                setting.successSubscription.content,
-                setting.failSubscription.content,
                 isTemplate,
                 version,
                 id,
@@ -242,43 +201,28 @@ class PipelineSettingVersionDao {
     class PipelineSettingVersionJooqMapper : RecordMapper<TPipelineSettingVersionRecord, PipelineSettingVersion> {
         override fun map(record: TPipelineSettingVersionRecord?): PipelineSettingVersion? {
             return record?.let { t ->
-                val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-                val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-                val oldSuccessSubscription = Subscription(
-                    types = successType,
-                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.successReceiver ?: "",
-                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
-                    wechatGroup = t.successWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                    detailFlag = t.successDetailFlag,
-                    content = t.successContent ?: ""
-                )
-                val oldFailSubscription = Subscription(
-                    types = failType,
-                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.failReceiver ?: "",
-                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
-                    wechatGroup = t.failWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                    detailFlag = t.failDetailFlag,
-                    content = t.failContent ?: ""
-                )
                 val successSubscriptionList = t.successSubscription?.let {
                     JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldSuccessSubscription)
+                }
                 val failSubscriptionList = t.failureSubscription?.let {
                     JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldFailSubscription)
+                }
                 PipelineSettingVersion(
                     projectId = t.projectId,
                     pipelineId = t.pipelineId,
-                    successSubscription = oldSuccessSubscription,
-                    failSubscription = oldFailSubscription,
-                    successSubscriptionList = successSubscriptionList,
-                    failSubscriptionList = failSubscriptionList
+                    pipelineName = t.name,
+                    desc = t.desc,
+                    runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                    failSubscriptionList = failSubscriptionList,
+                    labels = emptyList(),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
+                    maxQueueSize = t.maxQueueSize,
+                    buildNumRule = t.buildNumRule,
+                    concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencyGroup = t.concurrencyGroup,
+                    pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                    }
                 )
             }
         }

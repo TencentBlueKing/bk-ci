@@ -44,8 +44,12 @@ data class PipelineSetting(
     var projectId: String = "",
     @ApiModelProperty("流水线id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var pipelineId: String = "",
+
+    // 流水线基础配置
     @ApiModelProperty("流水线名称", required = false)
     var pipelineName: String = "",
+    @ApiModelProperty("版本", required = false)
+    var version: Int = 1,
     @ApiModelProperty("描述", required = false)
     val desc: String = "",
     @ApiModelProperty("标签列表", required = false)
@@ -77,21 +81,18 @@ data class PipelineSetting(
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean = false,
+
+    // 平台系统控制相关配置 —— 不作为生成版本的配置
     @ApiModelProperty("并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
-
-    // 平台系统控制相关配置
     @ApiModelProperty("保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     @ApiModelProperty("重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings(),
-
-    // 流水线设置的入库版本号
-    @ApiModelProperty("版本", required = false)
-    var version: Int = 1
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings()
 ) {
+
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置
     fun notifySettingIsNull(): Boolean {
         var res = true
