@@ -18,10 +18,10 @@
  */
 
 import axios from 'axios'
+import cookie from 'js-cookie'
 import Vue from 'vue'
 import { bus } from './bus'
-import { isAbsoluteURL } from './util'
-import cookie from 'js-cookie'
+import { isAbsoluteURL, randomString } from './util'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,
@@ -101,6 +101,35 @@ const getCurrentPid = () => {
     } catch (e) {
         return undefined
     }
+}
+
+request.jsonp = (url, data, {
+    useCache = true,
+    cache = false,
+    cacheKey = ''
+}) => {
+    if (window.cacheKey && useCache) {
+        return Promise.resolve(window.cacheKey)
+    }
+    const callback = 'CALLBACK' + randomString(12)
+    const JSONP = document.createElement('script')
+    JSONP.setAttribute('type', 'text/javascript')
+
+    const headEle = document.getElementsByTagName('head')[0]
+
+    const query = new URLSearchParams(data).toString()
+    JSONP.src = `${url}?callback=${callback}${query ? `&${query}` : ''}`
+    return new Promise((resolve, reject) => {
+        window[callback] = r => {
+            if (cache && cacheKey) {
+                window.cacheKey = r
+            }
+            resolve(r)
+            headEle.removeChild(JSONP)
+            delete window[callback]
+        }
+        headEle.appendChild(JSONP)
+    })
 }
 
 Vue.prototype.$ajax = request
