@@ -113,6 +113,6 @@ class PathRegexFilter(
 }
 
 data class TriggerPathDepth(
-    val path: String,// 路径信息
-    val depth: Int = path.split("/").size// 深度信息
+    val path: String, // 路径信息
+    val depth: Int = path.split("/").size // 深度信息
 )
