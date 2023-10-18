@@ -501,15 +501,15 @@ class OpAtomServiceImpl @Autowired constructor(
             if (file.exists()) {
                 val archiveAtomResult = storeFileService.serviceArchiveAtomFile(
                     userId = userId,
+                    client = client,
+                    file = file,
                     archiveAtomRequest = ArchiveAtomRequest(
                         projectCode = releaseInfo.projectId,
                         atomCode = atomCode,
                         version = versionInfo.version,
                         releaseType = versionInfo.releaseType,
                         os = JsonUtil.toJson(releaseInfo.os)
-                    ),
-                    client = client,
-                    file = file,
+                    )
                 )
                 if (archiveAtomResult.isNotOk()) {
                     return Result(
