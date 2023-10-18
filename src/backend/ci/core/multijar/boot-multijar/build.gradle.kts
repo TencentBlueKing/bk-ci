@@ -38,8 +38,4 @@ plugins {
     `task-multi-boot-run`
 }
 
-tasks.named<BootJar>("bootJar") {
-    val finalModuleName = System.getProperty("devops.multi.to")
-    archiveBaseName.set("boot-$finalModuleName")
-}
 tasks.getByName("multiBootRun").dependsOn("replacePlaceholders")

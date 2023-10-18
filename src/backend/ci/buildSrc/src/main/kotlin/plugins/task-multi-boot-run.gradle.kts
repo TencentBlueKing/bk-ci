@@ -29,7 +29,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 
 tasks.register<BootRun>("multiBootRun") {
     doFirst {
-        systemProperty("devops.multi.from", System.getProperty("devops.multi.from"))
+        systemProperty("devops.multi.from", localRunMultiServices)
         systemProperty("spring.main.allow-circular-references", "true")
         systemProperty("spring.cloud.config.enabled", "false")
         systemProperty("spring.cloud.config.fail-fast", "true")
@@ -53,3 +53,7 @@ tasks.register<BootRun>("multiBootRun") {
  */
 fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
 tasks.getByName("compileKotlin").dependsOn("replacePlaceholders")
+
+val localRunMultiServices = "process,auth,image,environment,repository,ticket,project," +
+    "notify,openapi,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
+    "monitoring,plugin,websocket,worker,misc,store,log"

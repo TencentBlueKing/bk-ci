@@ -25,7 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 tasks.register("multiBootJar") {
-    System.getProperty("devops.multi.from")?.let { multiModuleStr ->
+    val finalServices = System.getProperty("devops.multi.from") ?: localRunMultiServices
+    finalServices.let { multiModuleStr ->
         val multiModuleList = multiModuleStr.split(",").toMutableList()
         rootProject.subprojects.filter {
             isSpecifiedModulePath(it.path, multiModuleList)
@@ -50,3 +51,7 @@ fun addDependencies(path: String) {
         add("implementation", project(path))
     }
 }
+
+val localRunMultiServices = "process,auth,image,environment,repository,ticket,project," +
+    "notify,openapi,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
+    "monitoring,plugin,websocket,worker,misc,store,log"
