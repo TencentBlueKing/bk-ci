@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 
-interface DataSourceService {
+interface ProjectDataSourceService {
 
     fun addDataSource(userId: String, dataSource: DataSource): Boolean
 

@@ -36,7 +36,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class DataSourceDao {
+class MiscDataSourceDao {
 
     fun listByModule(
         dslContext: DSLContext,

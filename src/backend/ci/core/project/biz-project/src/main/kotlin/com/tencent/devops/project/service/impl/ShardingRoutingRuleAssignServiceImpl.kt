@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.dao.ProjectDataSourceDao
 import com.tencent.devops.project.pojo.TableShardingConfig
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -49,7 +49,7 @@ import org.springframework.stereotype.Service
 @Service
 class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val dataSourceDao: DataSourceDao,
+    private val projectDataSourceDao: ProjectDataSourceDao,
     private val shardingRoutingRuleService: ShardingRoutingRuleService,
     private val tableShardingConfigService: TableShardingConfigService
 ) : ShardingRoutingRuleAssignService {
@@ -110,7 +110,7 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         var validDataSourceName = DEFAULT_DATA_SOURCE_NAME
         // 根据模块查找还有空余容量的数据源
         val dataTagModules = dataTagModulesConfig.split(",")
-        val dataSourceNames = dataSourceDao.listByModule(
+        val dataSourceNames = projectDataSourceDao.listByModule(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,

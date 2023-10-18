@@ -33,28 +33,28 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPDataSourceResource
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
-import com.tencent.devops.project.service.DataSourceService
+import com.tencent.devops.project.service.ProjectDataSourceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OPDataSourceResourceImpl @Autowired constructor(
-    private val dataSourceService: DataSourceService
+    private val projectDataSourceService: ProjectDataSourceService
 ) : OPDataSourceResource {
 
     override fun addDataSource(userId: String, dataSource: DataSource): Result<Boolean> {
-        return Result(dataSourceService.addDataSource(userId, dataSource))
+        return Result(projectDataSourceService.addDataSource(userId, dataSource))
     }
 
     override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Result<Boolean> {
-        return Result(dataSourceService.updateDataSource(userId, id, dataSource))
+        return Result(projectDataSourceService.updateDataSource(userId, id, dataSource))
     }
 
     override fun getDataSourceById(id: String): Result<DataSource?> {
-        return Result(dataSourceService.getDataSourceById(id))
+        return Result(projectDataSourceService.getDataSourceById(id))
     }
 
     override fun deleteDataSourceById(userId: String, id: String): Result<Boolean> {
-        return Result(dataSourceService.deleteDataSource(userId, id))
+        return Result(projectDataSourceService.deleteDataSource(userId, id))
     }
 
     override fun getDataBasePiecewiseById(
@@ -64,7 +64,7 @@ class OPDataSourceResourceImpl @Autowired constructor(
         ruleType: ShardingRuleTypeEnum,
         tableName: String?
     ): Result<DataBasePiecewiseInfo?> {
-        return Result(dataSourceService.getDataBasePiecewiseById(
+        return Result(projectDataSourceService.getDataBasePiecewiseById(
             projectId = projectId,
             moduleCode = moduleCode,
             clusterName = clusterName,

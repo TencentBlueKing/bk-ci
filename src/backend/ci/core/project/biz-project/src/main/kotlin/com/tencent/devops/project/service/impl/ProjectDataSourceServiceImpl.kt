@@ -31,27 +31,27 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.dao.ProjectDataSourceDao
 import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
-import com.tencent.devops.project.service.DataSourceService
+import com.tencent.devops.project.service.ProjectDataSourceService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class DataSourceServiceImpl @Autowired constructor(
+class ProjectDataSourceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
-    private val dataSourceDao: DataSourceDao
-) : DataSourceService {
+    private val projectDataSourceDao: ProjectDataSourceDao
+) : ProjectDataSourceService {
 
     override fun addDataSource(userId: String, dataSource: DataSource): Boolean {
         val clusterName = dataSource.clusterName
         val dataSourceName = dataSource.dataSourceName
         val moduleCode = dataSource.moduleCode.name
-        val nameCount = dataSourceDao.countByName(
+        val nameCount = projectDataSourceDao.countByName(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
@@ -64,12 +64,12 @@ class DataSourceServiceImpl @Autowired constructor(
                 params = arrayOf("[$clusterName-$moduleCode]$dataSourceName")
             )
         }
-        dataSourceDao.add(dslContext, userId, dataSource)
+        projectDataSourceDao.add(dslContext, userId, dataSource)
         return true
     }
 
     override fun deleteDataSource(userId: String, id: String): Boolean {
-        dataSourceDao.delete(dslContext, id)
+        projectDataSourceDao.delete(dslContext, id)
         return true
     }
 
@@ -77,7 +77,7 @@ class DataSourceServiceImpl @Autowired constructor(
         val clusterName = dataSource.clusterName
         val dataSourceName = dataSource.dataSourceName
         val moduleCode = dataSource.moduleCode.name
-        val nameCount = dataSourceDao.countByName(
+        val nameCount = projectDataSourceDao.countByName(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
@@ -85,7 +85,7 @@ class DataSourceServiceImpl @Autowired constructor(
         )
         if (nameCount > 0) {
             // 判断更新的名称是否属于自已
-            val obj = dataSourceDao.getById(dslContext, id)
+            val obj = projectDataSourceDao.getById(dslContext, id)
             if (null != obj && moduleCode != obj.moduleCode && dataSourceName != obj.dataSourceName) {
                 // 抛出错误提示
                 throw ErrorCodeException(
@@ -94,12 +94,12 @@ class DataSourceServiceImpl @Autowired constructor(
                 )
             }
         }
-        dataSourceDao.update(dslContext, id, dataSource)
+        projectDataSourceDao.update(dslContext, id, dataSource)
         return true
     }
 
     override fun getDataSourceById(id: String): DataSource? {
-        val record = dataSourceDao.getById(dslContext, id)
+        val record = projectDataSourceDao.getById(dslContext, id)
         return if (record != null) {
             DataSource(
                 clusterName = record.clusterName,
@@ -129,7 +129,7 @@ class DataSourceServiceImpl @Autowired constructor(
             tableName = tableName
         )
         if (routingRuleRecord != null) {
-            val dataSource = dataSourceDao.getDataBasePiecewiseById(
+            val dataSource = projectDataSourceDao.getDataBasePiecewiseById(
                 dslContext = dslContext,
                 moduleCode = moduleCode,
                 clusterName = clusterName,

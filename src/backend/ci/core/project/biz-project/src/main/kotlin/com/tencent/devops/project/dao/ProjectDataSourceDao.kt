@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class DataSourceDao {
+class ProjectDataSourceDao {
 
     fun add(dslContext: DSLContext, userId: String, dataSource: DataSource) {
         with(TDataSource.T_DATA_SOURCE) {
