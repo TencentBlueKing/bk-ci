@@ -10,21 +10,7 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateRsp
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDefaltRsp
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentLockedVmRsp
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperateRsp
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentResourceDataRsp
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShareRep
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.dispatch.startcloud.pojo.Page
-import java.net.SocketTimeoutException
+import com.tencent.devops.dispatch.startcloud.pojo.*
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -35,6 +21,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -98,14 +85,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data
-
-                    OK == environmentRsp.code && environmentRsp.data != null
-                    -> throw BuildFailureException(
-                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorType,
-                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.errorCode,
-                        ErrorCodeEnum.CLOUD_DESKTOP_EXIST.formatErrorMessage,
-                        environmentRsp.data.taskUid
-                    )
 
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
                     -> throw BuildFailureException(
@@ -402,65 +381,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun operateWorkspace(
-        userId: String,
-        action: EnvironmentAction,
-        workspaceName: String,
-        environmentOperate: EnvironmentOperate
-    ): EnvironmentOperateRsp.EnvironmentOperateRspData {
-        val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
-        val body = JsonUtil.toJson(environmentOperate, false)
-        logger.info("$userId ${action.action} workspace url: $url, body: $body")
-        val request = Request.Builder()
-            .url(url)
-            .headers(makeBcsHeaders().toHeaders())
-            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
-            .build()
-
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body!!.string()
-                if (!response.isSuccessful) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "${response.code}"
-                    )
-                }
-                logger.info("$userId ${action.action} workspace response: $responseContent")
-                val environmentOpRsp: EnvironmentOperateRsp = jacksonObjectMapper().readValue(responseContent)
-                if (OK == environmentOpRsp.code) {
-                    // 记录操作历史
-                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        environmentUid = environmentOperate.uid,
-                        operator = userId,
-                        action = EnvironmentAction.START
-                    )
-
-                    return environmentOpRsp.data!!
-                } else {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "${environmentOpRsp.code}-${environmentOpRsp.message}"
-                    )
-                }
-            }
-        } catch (e: SocketTimeoutException) {
-            logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = " 接口超时, url: $url"
-            )
-        }
-    }
-
-    fun makeImageByVm(
         userId: String,
         action: EnvironmentAction,
         workspaceName: String,
