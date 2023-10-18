@@ -17,7 +17,6 @@ import org.springframework.core.env.Environment
 
 class BkServiceInstanceApplicationRunner constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
-    private val propertyUtil: PropertyUtil,
     private val bkTag: BkTag,
     private val redisOperation: RedisOperation,
     private val rabbitAdmin: RabbitAdmin
@@ -31,7 +30,7 @@ class BkServiceInstanceApplicationRunner constructor(
     @Suppress("SpreadOperator")
     override fun run(args: ApplicationArguments) {
         // 当本地运行时为单体服务，不需要存储各服务的实例ip
-        if (!propertyUtil.isLocalRun()) {
+        if (!PropertyUtil.isLocalRun()) {
             object : Thread() {
                 override fun run() {
                     val serviceName = BkServiceUtil.findServiceName()
