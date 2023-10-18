@@ -303,7 +303,7 @@ class PathRegexFilterTest {
     }
 
     @Test
-    @SuppressWarnings("LongMethod")
+    @SuppressWarnings("LongMethod", "ComplexMethod")
     fun buildFinalIncludePath() {
         var pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
