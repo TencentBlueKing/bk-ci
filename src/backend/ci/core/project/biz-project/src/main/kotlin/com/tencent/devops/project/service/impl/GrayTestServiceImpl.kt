@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.project.dao.GrayTestDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.pojo.service.GrayTestInfo
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GrayTestServiceImpl @Autowired constructor(
+    private val profile: Profile,
     private val dslContext: DSLContext,
     private val grayTestDao: GrayTestDao,
     private val serviceDao: ServiceDao
@@ -74,9 +76,12 @@ class GrayTestServiceImpl @Autowired constructor(
         val notNullStatus = statusList.filterNot { it == "" }
 
         val grayList =
-                grayTestDao.listByCondition(dslContext, notNullUsers, notNullIds, notNullStatus, pageSize, pageNum)
+            grayTestDao.listByCondition(dslContext, notNullUsers, notNullIds, notNullStatus, pageSize, pageNum)
         val totalRecord = grayTestDao.getSum(dslContext)
-        val serviceList = serviceDao.getServiceList(dslContext)
+        val serviceList = serviceDao.getServiceList(
+            dslContext = dslContext,
+            clusterType = if (profile.isDevx()) "devx" else ""
+        )
         return grayList.map {
             val server = serviceList.filter { it2 -> it.server_id == it2.id }[0]
             GrayTestListInfo(it.id, it.server_id, server.name, it.userName, it.status, totalRecord)

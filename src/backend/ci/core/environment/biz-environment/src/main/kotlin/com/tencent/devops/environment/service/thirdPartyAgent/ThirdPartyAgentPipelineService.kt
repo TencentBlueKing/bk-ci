@@ -64,7 +64,6 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         agentId: String,
         secretKey: String
     ): ThirdPartyAgentPipeline? {
-        logger.info("Trying to get the agent pipelines of agent $agentId and project $projectId")
         val id = HashUtil.decodeIdToLong(agentId)
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id) ?: return null
         authAgent(agentRecord, secretKey)

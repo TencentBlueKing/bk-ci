@@ -81,6 +81,7 @@ import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import com.tencent.devops.store.utils.VersionUtils
@@ -115,13 +116,11 @@ class ImageProjectService @Autowired constructor(
      * 校验权限
      */
     private fun checkPermission(
-        accessToken: String,
         userId: String,
         projectCode: String
     ) {
         val result =
             client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -134,7 +133,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取可用镜像列表（公共+已安装）
      */
     fun getJobImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum?,
@@ -144,7 +142,7 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?
     ): Page<JobImageItem>? {
         // 校验用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         val totalSize: Long
         val jobImageItemList = mutableListOf<JobImageItem>()
         if (agentType != null) {
@@ -356,7 +354,9 @@ class ImageProjectService @Autowired constructor(
             classifyId = dbClassifyId,
             classifyCode = classifyCode,
             classifyName = classifyLanName,
-            logoUrl = logoUrl,
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            },
             icon = icon,
             summary = summary,
             docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
@@ -400,7 +400,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -455,7 +455,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取商店镜像列表
      */
     fun getJobMarketImagesByProjectCode(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -465,7 +464,6 @@ class ImageProjectService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
         return searchJobMarketImages(
-            accessToken = accessToken,
             userId = userId,
             projectCode = projectCode,
             agentType = agentType,
@@ -481,7 +479,6 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun searchJobMarketImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -499,7 +496,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -976,7 +973,9 @@ class ImageProjectService @Autowired constructor(
             rdType = rdType,
             agentTypeScope = agentTypeScope,
             availableFlag = availableFlag,
-            logoUrl = logoUrl ?: "",
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            } ?: "",
             icon = icon ?: "",
             summary = summary ?: "",
             docsLink = docsLink,

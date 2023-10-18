@@ -25,22 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.misc.pojo.project
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-@Priority(Int.MAX_VALUE)
-@Suppress("UNUSED")
-open class FirstAtomDataDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
-
-    override fun type() = AtomDecorateFactory.Kind.DATA
-
-    override fun deserialize(json: String): Map<String, Any> {
-        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
-    }
-}
+@ApiModel("查询项目数据迁移历史记录参数")
+data class ProjectDataMigrateHistoryQueryParam(
+    @ApiModelProperty("项目Id", required = true)
+    val projectId: String,
+    @ApiModelProperty("模块标识", required = true)
+    val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("迁移集群名称", required = true)
+    val targetClusterName: String,
+    @ApiModelProperty("迁移数据源名称", required = true)
+    val targetDataSourceName: String
+)
