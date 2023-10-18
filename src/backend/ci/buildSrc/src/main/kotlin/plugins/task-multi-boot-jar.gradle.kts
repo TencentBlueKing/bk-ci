@@ -35,6 +35,8 @@ tasks.register("multiBootJar") {
 }
 
 fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
+    if (!path.contains("core"))
+        return false
     // store服务存在子模块 biz-store-image，该模块会单独在打包image服务时，误打包
     return if (path.contains("biz") && path.contains("image") && path.contains("store")) {
         multiModuleList.contains("store")
