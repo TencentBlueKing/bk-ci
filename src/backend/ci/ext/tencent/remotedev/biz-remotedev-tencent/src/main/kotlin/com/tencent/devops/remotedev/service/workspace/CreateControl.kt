@@ -205,10 +205,10 @@ class CreateControl @Autowired constructor(
                     settingEnvs = emptyMap(),
                     projectId = projectId,
                     mountType = mountType,
-                    ownerType = ws.ownerType
+                    ownerType = ws.ownerType,
+                    delayMills = i * 2000
                 )
             )
-            Thread.sleep(5000)
         }
     }
 
