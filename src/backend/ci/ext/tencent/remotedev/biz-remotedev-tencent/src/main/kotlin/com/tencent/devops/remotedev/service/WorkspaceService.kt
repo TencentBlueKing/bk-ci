@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -447,7 +448,8 @@ class WorkspaceService @Autowired constructor(
         status: WorkspaceStatus,
         assignType: WorkspaceShared.AssignType,
         winConfigId: Int?,
-        owner: String?
+        owner: String?,
+        winConfig: WindowsResourceTypeConfig? = null
     ) = Workspace(
         workspaceId = it.workspaceId,
         workspaceName = it.workspaceName,
@@ -475,6 +477,7 @@ class WorkspaceService @Autowired constructor(
         ownerType = it.ownerType,
         assignType = assignType,
         winConfigId = winConfigId,
+        winConfig = winConfig,
         gpu = it.gpu,
         cpu = it.cpu,
         memory = it.memory,
@@ -495,6 +498,7 @@ class WorkspaceService @Autowired constructor(
         val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
             workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
         }?.groupBy { it.workspaceName } ?: emptyMap()
+        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
             dslContext,
@@ -527,7 +531,8 @@ class WorkspaceService @Autowired constructor(
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                         shared.type == WorkspaceShared.AssignType.OWNER
-                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
+                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null,
+                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] }
                 )
             }
         )
