@@ -548,6 +548,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: overlay;
         }
         .pipeline-group-aside-header {
             border-bottom: 1px solid #DCDEE5;
