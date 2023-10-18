@@ -71,6 +71,7 @@ abstract class BasePathFilter(
                     }
                 }
             }
+            // 如最终匹配路径Map非空，则以此Map为准
             if (matchPathsMap.isNotEmpty()) {
                 matchUserPaths.clear()
                 matchPathsMap.forEach {

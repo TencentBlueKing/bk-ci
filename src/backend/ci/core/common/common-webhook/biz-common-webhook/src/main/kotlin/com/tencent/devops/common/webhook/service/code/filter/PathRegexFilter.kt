@@ -54,15 +54,31 @@ class PathRegexFilter(
         userPath: String,
         matchPathsMap: MutableMap<String, MutableSet<String>>
     ) {
-        if (matchPathsMap[userPath] == null) {
-            matchPathsMap[userPath] = mutableSetOf()
+        val targetSet = if (matchPathsMap[userPath] == null) {
+            mutableSetOf()
+        } else {
+            matchPathsMap[userPath]!!.map {
+                TriggerPathDepth(
+                    path = it
+                )
+            }.toMutableSet()
         }
         var targetEventPath = getShortPath(userPath, eventPath)
-        if (userPath.endsWith("/*") && !userPath.endsWith("/**/*") && targetEventPath.contains("/")) {
-            targetEventPath = targetEventPath.substring(0, targetEventPath.lastIndexOf("/"))
+        // 匹配最后一层目录时，可忽略具体文件
+        if (userPath.endsWith("/*") &&
+            !userPath.endsWith("/**/*") &&
+            targetEventPath.path.contains("/")
+        ) {
+            targetEventPath = TriggerPathDepth(
+                path = targetEventPath.path.substring(0, targetEventPath.path.lastIndexOf("/"))
+            )
         }
-        println("targetEventPath = $targetEventPath")
-        matchPathsMap[userPath]!!.add(targetEventPath)
+        targetSet.add(targetEventPath)
+        // 按深度进行分组
+        val group = targetSet.groupBy { it.depth }
+        // 最浅深度
+        val shortDepthPathKey = group.keys.toList().sorted()[0]
+        matchPathsMap[userPath] = group[shortDepthPathKey]?.map { it.path }?.toMutableSet() ?: mutableSetOf()
     }
 
     private fun patternIsMatchDir(userPath: String) =
@@ -70,12 +86,16 @@ class PathRegexFilter(
                 userPath.endsWith("/**") ||
                 userPath == "**"
 
-    private fun getShortPath(userPath: String, eventPath: String): String {
+    private fun getShortPath(userPath: String, eventPath: String): TriggerPathDepth {
         if (!patternIsMatchDir(userPath)) {
-            return eventPath
+            return TriggerPathDepth(
+                path = eventPath
+            )
         }
         if (!eventPath.contains("/")) {
-            return eventPath
+            return TriggerPathDepth(
+                path = eventPath
+            )
         }
         var targetShortPath = eventPath
         var shortPath = eventPath.substring(0, eventPath.lastIndexOf("/"))
@@ -86,6 +106,13 @@ class PathRegexFilter(
             }
             shortPath = shortPath.substring(0, shortPath.lastIndexOf("/"))
         }
-        return targetShortPath
+        return TriggerPathDepth(
+            path = targetShortPath
+        )
     }
 }
+
+data class TriggerPathDepth(
+    val path: String,// 路径信息
+    val depth: Int = path.split("/").size// 深度信息
+)

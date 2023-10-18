@@ -483,8 +483,29 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "svn/branch/version_1/doc",
+                        "svn/trunk/doc/install/service/doc",
                         "svn/branch/doc"
+                    )
+                )
+            )
+        }
+
+        pathRegexFilter = PathRegexFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf(
+                "branches/doc/dir_a/dir_a_1/dir_a_1_readme.md",
+                "branches/doc/doc_depth_1/doc_depth_2/dir_a/dir_a_1"
+            ),
+            includedPaths = listOf("**/dir_a_1/*"),
+            excludedPaths = emptyList(),
+            caseSensitive = true
+        )
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
+        response.getParam()[MATCH_PATHS]?.let {
+            Assertions.assertTrue(
+                it.split(",").toSet().containsAll(
+                    setOf(
+                        "branches/doc/dir_a/dir_a_1"
                     )
                 )
             )
