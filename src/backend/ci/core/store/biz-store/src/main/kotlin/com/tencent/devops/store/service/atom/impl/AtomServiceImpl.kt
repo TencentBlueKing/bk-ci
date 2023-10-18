@@ -562,7 +562,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (!atomRunInfoJson.isNullOrBlank()) {
                 val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
                 if (atomRunInfo.atomStatus == null) {
-                   val atomRunInfoFromDb = getAtomRunInfo(
+                    val atomRunInfoFromDb = getAtomRunInfo(
                         atomCode = it.atomCode,
                         version = it.version,
                         dslContext = dslContext
