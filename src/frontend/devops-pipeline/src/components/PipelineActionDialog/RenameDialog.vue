@@ -15,7 +15,7 @@
                 <bk-input
                     v-model="renamePipelineModel.name"
                     :placeholder="$t('pipelineNameInputTips')"
-                    :maxlength="40"
+                    :maxlength="128"
                 />
             </bk-form-item>
         </bk-form>

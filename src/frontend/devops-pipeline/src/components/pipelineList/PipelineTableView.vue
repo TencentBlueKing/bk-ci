@@ -261,13 +261,14 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
         RECENT_USED_VIEW_ID,
-        TABLE_COLUMN_CACHE
+        PIPELINE_TABLE_COLUMN_CACHE,
+        PIPELINE_TABLE_LIMIT_CACHE
     } from '@/store/constants'
     import {
         PROJECT_RESOURCE_ACTION,
@@ -285,7 +286,7 @@
             PipelineStatusIcon,
             PipelineListEmpty
         },
-        mixins: [piplineActionMixin],
+        mixins: [pipelineActionMixin],
         props: {
             isPatchView: Boolean,
             filterParams: {
@@ -300,7 +301,7 @@
                 selectionLength: 0,
                 pagination: {
                     current: parseInt(this.$route.query.page ?? 1),
-                    limit: parseInt(this.$route.query.pageSize ?? 50),
+                    limit: 50,
                     count: 0
                 },
                 visibleTagCountList: {},
@@ -407,6 +408,9 @@
             }
         },
         mounted () {
+            const { pageSize } = this.$route.query
+            const tableLimit = JSON.parse(localStorage.getItem(PIPELINE_TABLE_LIMIT_CACHE)) || 50
+            pageSize ? this.pagination.limit = parseInt(pageSize) : this.pagination.limit = tableLimit
             this.tableColumn = [
                 {
                     id: 'pipelineName',
@@ -443,7 +447,7 @@
                     disabled: true
                 }
             ]
-            const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
+            const columnsCache = JSON.parse(localStorage.getItem(PIPELINE_TABLE_COLUMN_CACHE))
             if (columnsCache) {
                 this.selectedTableColumn = columnsCache.columns
                 this.tableSize = columnsCache.size
@@ -512,6 +516,7 @@
                 }
             },
             handlePageLimitChange (limit) {
+                localStorage.setItem(PIPELINE_TABLE_LIMIT_CACHE, JSON.stringify(limit))
                 this.pagination.limit = limit
                 this.$nextTick(this.requestList)
             },
@@ -631,7 +636,7 @@
             handleSettingChange ({ fields, size }) {
                 this.selectedTableColumn = fields
                 this.tableSize = size
-                localStorage.setItem(TABLE_COLUMN_CACHE, JSON.stringify({
+                localStorage.setItem(PIPELINE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
                     size
                 }))
