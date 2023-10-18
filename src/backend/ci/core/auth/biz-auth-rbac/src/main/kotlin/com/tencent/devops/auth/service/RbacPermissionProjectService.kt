@@ -28,8 +28,6 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -56,7 +54,6 @@ class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
-    private val iamConfiguration: IamConfiguration,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
@@ -135,14 +132,11 @@ class RbacPermissionProjectService(
             if (managerPermission || checkCiManager) {
                 return managerPermission
             }
-            val instanceDTO = InstanceDTO()
-            instanceDTO.system = iamConfiguration.systemId
-            instanceDTO.id = projectCode
-            instanceDTO.type = AuthResourceType.PROJECT.value
-            return authHelper.isAllowed(
-                userId,
-                RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
-                instanceDTO
+
+            return rbacCacheService.validateUserProjectPermission(
+                userId = userId,
+                projectCode = projectCode,
+                permission = AuthPermission.VISIT
             )
         } finally {
             logger.info(
@@ -225,14 +219,18 @@ class RbacPermissionProjectService(
             resourceCode = projectCode,
             groupCode = BkAuthGroup.MANAGER.value
         )!!.relationId.toInt()
+
+        val remotedevManager = projectInfo.properties?.remotedevManager?.split(",")
+        val members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+
         val owners = projectGroupAndUserList
             .find { it.roleId == managerGroupRelationId }?.userIdList ?: emptyList()
         return ProjectPermissionInfoVO(
             projectCode = projectCode,
             projectName = projectInfo.projectName,
             creator = projectInfo.creator!!,
-            owners = owners,
-            members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+            owners = remotedevManager?.plus(owners)?.distinct() ?: owners,
+            members = remotedevManager?.plus(members)?.distinct() ?: members
         )
     }
 }
