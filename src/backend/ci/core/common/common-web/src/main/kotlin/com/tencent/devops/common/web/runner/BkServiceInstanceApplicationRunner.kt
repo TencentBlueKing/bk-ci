@@ -1,6 +1,7 @@
 package com.tencent.devops.common.web.runner
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.BkServiceUtil
@@ -16,6 +17,7 @@ import org.springframework.core.env.Environment
 
 class BkServiceInstanceApplicationRunner constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
+    private val propertyUtil: PropertyUtil,
     private val bkTag: BkTag,
     private val redisOperation: RedisOperation,
     private val rabbitAdmin: RabbitAdmin
@@ -28,9 +30,8 @@ class BkServiceInstanceApplicationRunner constructor(
 
     @Suppress("SpreadOperator")
     override fun run(args: ApplicationArguments) {
-        val isLocalRun = System.getProperty("local.run") == "true"
         // 当本地运行时为单体服务，不需要存储各服务的实例ip
-        if (!isLocalRun) {
+        if (!propertyUtil.isLocalRun()) {
             object : Thread() {
                 override fun run() {
                     val serviceName = BkServiceUtil.findServiceName()
