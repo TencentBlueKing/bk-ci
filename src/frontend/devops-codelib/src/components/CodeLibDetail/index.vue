@@ -147,7 +147,7 @@
                 oldAliasName: '',
                 panels: [
                     { name: 'basic', label: this.$t('codelib.basicSetting') },
-                    // { name: 'trigger', label: this.$t('codelib.trigger') },
+                    { name: 'trigger', label: this.$t('codelib.trigger') },
                     { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
                 active: 'basic',

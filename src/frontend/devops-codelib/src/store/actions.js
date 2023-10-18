@@ -19,6 +19,7 @@
 
 import Vue from 'vue'
 import {
+    STORE_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
     TICKET_API_URL_PREFIX,
@@ -493,6 +494,26 @@ const actions = {
 
     fetchTriggerType ({ commit }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType`)
+    },
+
+    fetchTriggerData ({ commit }, {
+        projectId,
+        repositoryHashId,
+        page,
+        pageSize,
+        triggerType,
+        eventType
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listTriggerRef?page=${page}&pageSize=${pageSize}&eventType=${eventType}&triggerType=${triggerType}`)
+    },
+    
+    fetchAtomModal ({ commit }, {
+        projectCode,
+        atomCode,
+        version,
+        queryOfflineFlag = false
+    }) {
+        return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     }
 }
 

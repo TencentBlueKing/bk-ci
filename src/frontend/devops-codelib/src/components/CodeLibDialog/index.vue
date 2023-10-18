@@ -351,7 +351,7 @@
     }
     .bk-option-content {
         display: flex;
-        span {
+        .name {
             display: inline-block;
             width: 92%;
             overflow: hidden;

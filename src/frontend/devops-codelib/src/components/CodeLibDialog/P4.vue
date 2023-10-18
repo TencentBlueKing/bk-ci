@@ -53,7 +53,7 @@
                     :key="option.credentialId"
                     :id="option.credentialId"
                     :name="option.credentialId">
-                    <span :title="option.credentialId">
+                    <span class="name" :title="option.credentialId">
                         {{option.credentialId}}
                     </span>
                     <i

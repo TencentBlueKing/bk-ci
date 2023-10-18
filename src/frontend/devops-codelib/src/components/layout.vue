@@ -91,10 +91,12 @@
         display: flex;
 
         &.is-flod {
-            .bk-table-row {
-                cursor: pointer;
-                &.active {
-                    background: #eff5ff;
+            .devops-codelib-table {
+                .bk-table-row {
+                    cursor: pointer;
+                    &.active {
+                        background: #eff5ff;
+                    }
                 }
             }
         }

@@ -11,29 +11,36 @@
         </bk-search-select>
         <bk-table
             v-bkloading="{ isLoading }"
+            class="trigger-table"
             :data="triggerData"
             :pagination="pagination"
+            max-height="615"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
         >
-            <bk-table-column :label="$t('codelib.触发器类型')" prop="triggerType">
+            <bk-table-column :label="$t('codelib.事件')" prop="eventType">
                 <template slot-scope="{ row }">
-                    {{ row.triggerType }}
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('codelib.事件类型')" prop="eventType">
-                <template slot-scope="{ row }">
+                    <img style="width: 18px; height: 18px;" :src="`https:${row.atomLogo}`" alt="">
                     {{ row.eventType }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('codelib.事件')" prop="event">
+            <bk-table-column :label="$t('codelib.触发条件')" prop="eventType" show-overflow-tooltip>
                 <template slot-scope="{ row }">
-                    {{ row.event }}
+                    <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
+                        - {{ triggerConditionKeyMap[row.eventType][key] }}:
+                        <template v-if="Array.isArray(item)">
+                            <span v-for="(i, itemIndex) in item" :key="i">
+                                {{ triggerConditionValueMap[i] }}
+                                <span v-if="itemIndex + 1 !== item.length">{{ $t('codelib.,') }}</span>
+                            </span>
+                        </template>
+                        <span v-else>{{ triggerConditionValueMap[item] || item }}</span>
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.流水线数量')" prop="pipelineCount">
                 <template slot-scope="{ row }">
-                    <a>{{ row.pipelineCount }}</a>
+                    <a :href="`/console/pipeline/${projectId}/list`" target="_blank">{{ row.pipelineRefCount }}</a>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.操作')" width="150">
@@ -46,17 +53,13 @@
                     >
                         {{ $t('codelib.详情') }}
                     </bk-button>
-                    <bk-button
-                        class="mr10"
-                        theme="primary"
-                        text
-                        @click="handelShowDetail(props.row)"
-                    >
-                        {{ $t('codelib.关联流水线') }}
-                    </bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
+        <atom-detail
+            ref="atomDetailRef"
+            :atom="curAtom">
+        </atom-detail>
     </div>
 </template>
 
@@ -64,7 +67,17 @@
     import {
         mapActions
     } from 'vuex'
+    import atomDetail from '../atom-detail.vue'
     export default {
+        components: {
+            atomDetail
+        },
+        props: {
+            curRepo: {
+                type: Object,
+                default: () => {}
+            }
+        },
         data () {
             return {
                 isLoading: false,
@@ -76,7 +89,10 @@
                     current: 1,
                     count: 0,
                     limit: 20
-                }
+                },
+                eventType: '',
+                triggerType: '',
+                curAtom: {}
             }
         },
         computed: {
@@ -85,6 +101,9 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            scmType () {
+                return this.curRepo.type || ''
             },
             searchList () {
                 const list = [
@@ -102,18 +121,109 @@
                 return list.filter((data) => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            triggerConditionKeyMap () {
+                let obj = {}
+                if (['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(this.scmType)) {
+                    obj = {
+                        PUSH: {
+                            branchName: this.$t('codelib.分支'),
+                            excludeBranchName: this.$t('codelib.排除分支'),
+                            includePaths: this.$t('codelib.路径'),
+                            excludePaths: this.$t('codelib.排除路径'),
+                            includeUsers: this.$t('codelib.人员'),
+                            excludeUsers: this.$t('codelib.排除人员')
+                        },
+                        MERGE_REQUEST: {
+                            branchName: this.$t('codelib.分支'),
+                            excludeBranchName: this.$t('codelib.排除的目标分支'),
+                            includeSourceBranchName: this.$t('codelib.源分支'),
+                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
+                            includePaths: this.$t('codelib.路径'),
+                            excludePaths: this.$t('codelib.排除路径'),
+                            includeUsers: this.$t('codelib.人员'),
+                            excludeUsers: this.$t('codelib.排除人员')
+                        },
+                        MERGE_REQUEST_ACCEPT: {
+                            branchName: this.$t('codelib.分支'),
+                            excludeBranchName: this.$t('codelib.排除的目标分支'),
+                            includeSourceBranchName: this.$t('codelib.源分支'),
+                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
+                            includePaths: this.$t('codelib.路径'),
+                            excludePaths: this.$t('codelib.排除路径'),
+                            includeUsers: this.$t('codelib.人员'),
+                            excludeUsers: this.$t('codelib.排除人员')
+                        },
+                        TAG_PUSH: {
+                            tagName: 'Tag',
+                            excludeTagName: this.$t('codelib.排除Tag'),
+                            fromBranches: this.$t('codelib.来源分支')
+                        },
+                        NOTE: {
+                            includeNoteComment: this.$t('codelib.评论内容'),
+                            includeNoteTypes: this.$t('codelib.评论类型')
+                        },
+                        REVIEW: {
+                            includeCrState: this.$t('codelib.CR状态')
+                        },
+                        ISSUES: {
+                            includeIssueAction: this.$t('codelib.动作')
+                        }
+                    }
+                } else if (this.scmType === 'CODE_SVN') {
+                    obj = {
+                        relativePath: this.$t('codelib.相对路径'),
+                        excludePaths: this.$t('codelib.排除路径'),
+                        includeUsers: this.$t('codelib.人员'),
+                        excludeUsers: this.$t('codelib.排除人员')
+                    }
+                } else if (this.scmType === 'CODE_P4') {
+                    obj = {
+                        includePaths: this.$t('codelib.路径'),
+                        excludePaths: this.$t('codelib.排除路径')
+                    }
+                }
+                return obj
+            },
+            triggerConditionValueMap () {
+                return {
+                    approving: this.$t('codelib.评审中'),
+                    approved: this.$t('codelib.评审通过'),
+                    change_denied: this.$t('codelib.评审被拒绝'),
+                    change_required: this.$t('codelib.代码要求修改'),
+                    Commit: this.$t('codelib.对提交进行评论'),
+                    Review: this.$t('codelib.对评审进行评论'),
+                    Issue: this.$t('codelib.对缺陷进行评论'),
+                    open: this.$t('codelib.创建'),
+                    close: this.$t('codelib.关闭'),
+                    reopen: this.$t('codelib.重新打开'),
+                    update: this.$t('codelib.更新')
+                }
             }
         },
         watch: {
             repoId (val) {
                 this.pagination.current = 1
-                this.fetchTriggerData()
+                this.getTriggerData()
+            },
+            searchValue (val) {
+                const paramsMap = {}
+                val.forEach(item => {
+                    const id = item.id
+                    const value = item.values[0].id
+
+                    paramsMap[id] = value
+                })
+                this.pagination.current = 1
+                this.triggerType = paramsMap.triggerType || ''
+                this.eventType = paramsMap.eventType || ''
+                this.getTriggerData()
             }
         },
         created () {
             this.getEventTypeList()
             this.getTriggerTypeList()
-            this.fetchTriggerData()
+            this.getTriggerData()
         },
         methods: {
             ...mapActions('codelib', [
@@ -126,8 +236,17 @@
              */
             async getTriggerData () {
                 this.isLoading = true
-                await this.fetchTriggerData().then(res => {
-                    this.triggerData = res
+                await this.fetchTriggerData({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoId,
+                    page: this.pagination.current,
+                    pageSize: this.pagination.limit,
+                    triggerType: this.triggerType,
+                    eventType: this.eventType
+                }).then(res => {
+                    this.pagination.count = res.count
+                    this.triggerData = res.records
+                    console.log(this.triggerData, 12)
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -136,7 +255,9 @@
              * 获取事件类型
              */
             getEventTypeList () {
-                this.fetchEventType().then(res => {
+                this.fetchEventType({
+                    scmType: this.scmType
+                }).then(res => {
                     this.eventTypeList = res.map(i => {
                         return {
                             ...i,
@@ -161,10 +282,17 @@
 
             handlePageChange (page) {
                 this.pagination.current = page
+                this.getTriggerData()
             },
 
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
+                this.getTriggerData()
+            },
+
+            handelShowDetail (row) {
+                this.curAtom = row
+                this.$refs.atomDetailRef.isShow = true
             }
         }
     }
@@ -174,6 +302,16 @@
     .trigger-wrapper {
         .search-select {
             margin-bottom: 16px;
+        }
+        .trigger-table {
+            ::v-deep .cell {
+                max-height: 300px !important;
+                -webkit-line-clamp: 300 !important;
+                padding: 10px 15px !important;
+            }
+            .condition-item {
+                line-height: 20px;
+            }
         }
     }
 </style>
