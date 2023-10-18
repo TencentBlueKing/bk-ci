@@ -76,6 +76,7 @@ import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
@@ -1172,29 +1173,27 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "download_git_repo_file"], value = "bk_tgit_api_time")
     override fun downloadGitRepoFile(
-        repoName: String,
-        sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
-        filePath: String?,
-        format: String?,
-        isProjectPathWrapped: Boolean?,
+        request: DownloadGitRepoFileRequest,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile  repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        logger.info(
+            "downloadGitRepoFile  repoName is:${request.repoName},sha is:${request.sha},tokenType is:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(request.repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
-        if (!sha.isNullOrBlank()) {
-            url.append("&sha=$sha")
+        if (!request.sha.isNullOrBlank()) {
+            url.append("&sha=${request.sha}")
         }
-        if (!filePath.isNullOrBlank()) {
-            url.append("&file_paths=$filePath")
+        if (!request.filePath.isNullOrBlank()) {
+            url.append("&file_paths=${request.filePath}")
         }
-        if (!format.isNullOrBlank()) {
-            url.append("&format=$format")
+        if (!request.format.isNullOrBlank()) {
+            url.append("&format=${request.format}")
         }
-        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        url.append("&is_project_path_wrapped=${request.isProjectPathWrapped}")
         RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
             override fun execute() {
                 OkhttpUtils.downloadFile(url.toString(), response)
