@@ -58,7 +58,7 @@ interface UserProjectWorkspaceImageResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @QueryParam("project_id")
+        @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectImage>>
 
