@@ -28,8 +28,7 @@ class BkServiceInstanceApplicationRunner constructor(
 
     @Suppress("SpreadOperator")
     override fun run(args: ApplicationArguments) {
-        val localRunProperty = System.getProperty("local.run")
-        val isLocalRun = !localRunProperty.isNullOrBlank() && localRunProperty.toBoolean()
+        val isLocalRun = System.getProperty("local.run") == "true"
         // 当本地运行时为单体服务，不需要存储各服务的实例ip
         if (!isLocalRun) {
             object : Thread() {
