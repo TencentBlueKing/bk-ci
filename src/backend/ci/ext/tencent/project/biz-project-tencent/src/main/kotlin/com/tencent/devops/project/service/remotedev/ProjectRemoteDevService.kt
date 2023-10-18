@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -66,6 +67,9 @@ class ProjectRemoteDevService @Autowired constructor(
         }
 
         // 创建 lsync generic类型的仓库，做单向同步盘
+        if (existRepoProject(projectCode) != true) {
+            createRepoProject(projectCode)
+        }
         createLsyncGeneric(projectCode)
     }
 
@@ -122,7 +126,7 @@ class ProjectRemoteDevService @Autowired constructor(
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(url)
-            .headers(getBkrepoCommonHeaders("admin").toHeaders())
+            .headers(getBkrepoCommonHeaders().toHeaders())
             .post(requestBody)
             .build()
         try {
@@ -138,15 +142,67 @@ class ProjectRemoteDevService @Autowired constructor(
         }
     }
 
-    private fun getBkrepoCommonHeaders(userId: String): MutableMap<String, String> {
+    private fun existRepoProject(projectId: String): Boolean? {
+        val url = "$bkrepoDevxUrl/repository/api/project/exist/$projectId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getBkrepoCommonHeaders().toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("existRepoProject request failed, uri:($url)|response: ($responseStr)")
+                    return false
+                }
+                val resp = objectMapper.readValue<Response<Boolean?>>(responseStr)
+                return resp.data
+            }
+        } catch (e: Exception) {
+            logger.error("existRepoProject request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+
+        return false
+    }
+
+    private fun createRepoProject(projectId: String) {
+        val requestData = CreateProjectData(
+            name = projectId,
+            displayName = projectId,
+            description = ""
+        )
+        val url = "$bkrepoDevxUrl/repository/api/project/create"
+        val requestBody = objectMapper.writeValueAsString(requestData)
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(url)
+            .headers(getBkrepoCommonHeaders().toHeaders())
+            .post(requestBody)
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("createRepoProject request failed, uri:($url)|response: ($responseStr)")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("createRepoProject request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+    }
+
+    private fun getBkrepoCommonHeaders(): MutableMap<String, String> {
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = bkrepoDevxHeaderUserAuth
-        headers["X-BKREPO-UID"] = userId
+        headers["X-BKREPO-UID"] = BKREPO_ROOT_USERID
         return headers
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectRemoteDevService::class.java)
+        private const val BKREPO_ROOT_USERID = "admin"
     }
 }
 
@@ -173,4 +229,10 @@ data class CreateRepoData(
     val description: String?,
     val configuration: Any?,
     val storageCredentialsKey: Any?
+)
+
+data class CreateProjectData(
+    val name: String,
+    val displayName: String,
+    val description: String
 )
