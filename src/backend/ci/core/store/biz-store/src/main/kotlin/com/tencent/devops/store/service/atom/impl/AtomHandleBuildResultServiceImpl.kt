@@ -37,7 +37,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.service.atom.AtomReleaseService
-import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.utils.VersionUtils
@@ -53,8 +52,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val marketAtomDao: MarketAtomDao,
     private val marketAtomService: MarketAtomService,
-    private val atomReleaseService: AtomReleaseService,
-    private val marketAtomCommonService: MarketAtomCommonService
+    private val atomReleaseService: AtomReleaseService
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(AtomHandleBuildResultServiceImpl::class.java)
@@ -84,12 +82,6 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             userId = storeBuildResultRequest.userId,
             atomStatus = atomStatus,
             msg = null
-        )
-        marketAtomCommonService.handleAtomCache(
-            atomId = atomId,
-            atomCode = atomCode,
-            version = version,
-            releaseFlag = false
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
             // 插件errorCodes.json文件数据入库

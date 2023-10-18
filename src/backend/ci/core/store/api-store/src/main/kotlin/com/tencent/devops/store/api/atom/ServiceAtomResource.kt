@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
-import com.tencent.devops.store.pojo.atom.AtomStatusInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import io.swagger.annotations.Api
@@ -85,7 +85,7 @@ interface ServiceAtomResource {
     fun getAtomInfos(
         @ApiParam("插件代码版本集合", required = true)
         codeVersions: Set<AtomCodeVersionReqItem>
-    ): Result<List<AtomStatusInfo>>
+    ): Result<List<AtomRunInfo>>
 
     @ApiOperation("获取插件真实版本号")
     @GET

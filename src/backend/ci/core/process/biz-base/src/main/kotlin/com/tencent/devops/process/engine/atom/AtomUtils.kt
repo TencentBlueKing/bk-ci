@@ -212,12 +212,12 @@ object AtomUtils {
             AtomStatusEnum.UNDERCARRIAGED.name
         )
         atomStatusInfos.forEach {
-            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus.toInt())
+            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
             if (atomStatus in atomStatusList) {
                 throw ErrorCodeException(
                     errorCode = TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
-                        it.name,
+                        it.atomName,
                         AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
                     )
                 )

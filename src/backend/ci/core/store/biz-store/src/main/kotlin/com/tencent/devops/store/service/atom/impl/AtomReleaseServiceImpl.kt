@@ -1314,7 +1314,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason
+                reason = reason,
+                version = version
             )
         }
     }
@@ -1324,7 +1325,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?
+        reason: String?,
+        version: String
     ) {
         // 查找插件最近二个已经发布的版本
         val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
@@ -1339,16 +1341,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     latestFlag = false
                 )
             )
-            val tAtomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
             // 处理插件缓存
-            if (null != tAtomRecord) {
-                marketAtomCommonService.handleAtomCache(
-                    atomId = atomId,
-                    atomCode = atomCode,
-                    version = tAtomRecord.version,
-                    releaseFlag = false
-                )
-            }
+            marketAtomCommonService.handleAtomCache(
+                atomId = atomId,
+                atomCode = atomCode,
+                version = version,
+                releaseFlag = false
+            )
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {
                 var tmpAtomId: String? = null

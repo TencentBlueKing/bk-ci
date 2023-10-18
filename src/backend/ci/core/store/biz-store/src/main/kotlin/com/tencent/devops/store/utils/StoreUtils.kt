@@ -33,7 +33,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.STORE_STATUS_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
@@ -88,9 +87,9 @@ object StoreUtils {
      * @param typeName 类型名称
      * @param storeCode 组件代码
      */
-    fun getStoreStatusKey(typeName: String, storeCode: String): String {
+    /*fun getStoreStatusKey(typeName: String, storeCode: String): String {
         return "$STORE_STATUS_INFO_KEY_PREFIX:$typeName:$storeCode"
-    }
+    }*/
 
     /**
      * 判断当前版本号是否比待比较版本号大

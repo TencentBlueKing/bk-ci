@@ -1096,8 +1096,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             // 清空插件运行时信息缓存
             redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
-            // 清空插件状态缓存信息
-            redisOperation.delete(StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode))
         }
         return Result(true)
     }

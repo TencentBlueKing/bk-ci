@@ -285,7 +285,7 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomInfos(
+    /*fun getAtomInfos(
         dslContext: DSLContext,
         atomCode: String,
         version: String
@@ -308,7 +308,7 @@ class AtomDao : AtomBaseDao() {
                     params = arrayOf(atomCode, version)
                 )
         }
-    }
+    }*/
 
     fun getPipelineAtom(
         dslContext: DSLContext,

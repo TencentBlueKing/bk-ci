@@ -73,13 +73,14 @@ import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
-import com.tencent.devops.store.pojo.atom.AtomStatusInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -553,28 +554,67 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      */
     override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
-    ): Result<List<AtomStatusInfo>> {
-        val atomStatusInfos = mutableListOf<AtomStatusInfo>()
+    ): Result<List<AtomRunInfo>> {
+        val atomRunInfos = mutableListOf<AtomRunInfo>()
         codeVersions.forEach {
-            val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, it.atomCode)
-            val atomStatusInfoJson = redisOperation.hget(atomStatusInfoKey, it.version)
-            if (!atomStatusInfoJson.isNullOrBlank()) {
-                val atomStatusInfo = JsonUtil.to(atomStatusInfoJson, AtomStatusInfo::class.java)
-                atomStatusInfos.add(atomStatusInfo)
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
+            if (!atomRunInfoJson.isNullOrBlank()) {
+                val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                if (atomRunInfo.atomStatus == null) {
+                   val atomRunInfoFromDb = getAtomRunInfo(
+                        atomCode = it.atomCode,
+                        version = it.version,
+                        dslContext = dslContext
+                    )
+                    atomRunInfos.add(atomRunInfoFromDb)
+                    // 将db中的环境信息写入缓存
+                    redisOperation.hset(atomRunInfoKey, it.version, JsonUtil.toJson(atomRunInfoFromDb))
+                }
+                atomRunInfos.add(atomRunInfo)
             } else {
-                val atomStatusInfo = atomDao.getAtomInfos(
-                    dslContext = dslContext,
+                val atomRunInfoFromDb = getAtomRunInfo(
                     atomCode = it.atomCode,
-                    version = it.version
+                    version = it.version,
+                    dslContext = dslContext
                 )
-                atomStatusInfos.add(atomStatusInfo)
+                atomRunInfos.add(atomRunInfoFromDb)
                 // 将db中的环境信息写入缓存
-                redisOperation.hset(atomStatusInfoKey, it.version, JsonUtil.toJson(atomStatusInfo))
+                redisOperation.hset(atomRunInfoKey, it.version, JsonUtil.toJson(atomRunInfoFromDb))
             }
         }
-        return Result(atomStatusInfos)
+        return Result(atomRunInfos)
     }
 
+    fun getAtomRunInfo(
+        atomCode: String,
+        version: String,
+        dslContext: DSLContext
+    ): AtomRunInfo {
+        val tAtomRecord = atomDao.getPipelineAtom(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$atomCode:$version")
+        )
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        ) ?: ""
+        return AtomRunInfo(
+            atomCode = atomCode,
+            atomName = tAtomRecord.name,
+            version = version,
+            initProjectCode = initProjectCode,
+            jobType = if (tAtomRecord.jobType == null) null else JobTypeEnum.valueOf(tAtomRecord.jobType),
+            buildLessRunFlag = tAtomRecord.buildLessRunFlag,
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(tAtomRecord.props),
+            atomStatus = tAtomRecord.atomStatus.toString()
+        )
+    }
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */

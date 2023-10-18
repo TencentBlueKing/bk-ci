@@ -151,7 +151,8 @@ class DefaultModelCheckPluginTest : TestBase() {
                         initProjectCode = projectId,
                         jobType = JobTypeEnum.AGENT,
                         buildLessRunFlag = false,
-                        inputTypeInfos = null
+                        inputTypeInfos = null,
+                        atomStatus = ""
                     )
                 )
             )

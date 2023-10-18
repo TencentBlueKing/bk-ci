@@ -32,7 +32,7 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomProp
-import com.tencent.devops.store.pojo.atom.AtomStatusInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.service.atom.AtomPropService
@@ -59,7 +59,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
-    ): Result<List<AtomStatusInfo>> {
+    ): Result<List<AtomRunInfo>> {
         return atomService.getAtomInfos(codeVersions = codeVersions)
     }
 

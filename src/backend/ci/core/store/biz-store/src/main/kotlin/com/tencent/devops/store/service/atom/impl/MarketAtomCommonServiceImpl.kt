@@ -555,7 +555,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             ATOM_POST_CONDITION to postCondition
         )
         val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-        val atomStatusInfoKey = StoreUtils.getStoreStatusKey(StoreTypeEnum.ATOM.name, atomCode)
         val jobType = atom.jobType
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
@@ -569,23 +568,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             initProjectCode = initProjectCode,
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag,
-            inputTypeInfos = generateInputTypeInfos(atom.props)
-        )
-        val atomStatusInfo = atomDao.getAtomInfos(
-            dslContext = dslContext,
-            atomCode = atomCode,
-            version = version
+            inputTypeInfos = generateInputTypeInfos(atom.props),
+            atomStatus = atom.atomStatus.toString()
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
             key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
             hashKey = version,
             values = JsonUtil.toJson(atomPostMap)
-        )
-        redisOperation.hset(
-            key = atomStatusInfoKey,
-            hashKey = version,
-            values = JsonUtil.toJson(atomStatusInfo)
         )
         redisOperation.hset(
             key = atomRunInfoKey,
@@ -602,11 +592,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             key = atomRunInfoKey,
             hashKey = VersionUtils.convertLatestVersion(version),
             values = JsonUtil.toJson(atomRunInfo)
-        )
-        redisOperation.hset(
-            key = atomStatusInfoKey,
-            hashKey = VersionUtils.convertLatestVersion(version),
-            values = JsonUtil.toJson(atomStatusInfo)
         )
         if (releaseFlag) {
             // 更新插件当前大版本内是否有测试版本标识

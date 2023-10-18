@@ -34,7 +34,7 @@ import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
-import com.tencent.devops.store.pojo.atom.AtomStatusInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -133,7 +133,7 @@ interface AtomService {
      * 根据插件代码和版本号集合批量获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomStatusInfo>>
+    fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomRunInfo>>
 
     /**
      * 添加插件信息
