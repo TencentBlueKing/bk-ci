@@ -110,7 +110,7 @@
                     }, {})
                     
                     const res = await Promise.all(value.map(item => {
-                        if (currentValueMap[item]) {
+                        if (currentValueMap[item] || item.isBkVar()) {
                             return true
                         }
                         return this.detectIsInProject(item)
