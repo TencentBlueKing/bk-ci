@@ -93,7 +93,7 @@
 
         function setProjectIdCookie() {
             try {
-                var pathProjectId = location.pathname.match(/^\/pipeline\/zhiyan\/([\w\-]+)?/)?.[1]
+                var pathProjectId = location.pathname.match(/^\/pipeline\/(zhiyan|ftp)\/([\w\-]+)?/)?.[2]
                 var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
                 if (pathProjectId && cookiePid !== pathProjectId) {
                     var subDomains = getSubDomain()
