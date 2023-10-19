@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.service.BKGPTService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -55,7 +56,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val permissionService: PermissionService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -133,5 +135,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             }
         }
         return Result(res)
+    }
+
+    override fun onePassword(userId: String, workspaceName: String): Result<String> {
+        return Result(permissionService.init1Password(userId, workspaceName))
     }
 }

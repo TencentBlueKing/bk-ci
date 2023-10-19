@@ -5,17 +5,17 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import com.tencent.devops.remotedev.service.BkTicketService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 
 @RestResource
 @Suppress("ALL")
 class ServiceRemoteDevResourceImpl(
-    private val bkTicketService: BkTicketService,
+    private val permissionService: PermissionService,
     private val workspaceService: WorkspaceService
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
-        return Result(bkTicketService.validateUserTicket(userId, isOffshore, ticket))
+        return Result(permissionService.checkAndGetUser1Password(ticket).userId == userId)
     }
 
     override fun getProjectWorkspace(projectId: String?, ip: String?): Result<List<WeSecProjectWorkspace>> {
