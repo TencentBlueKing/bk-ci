@@ -73,7 +73,7 @@ class RemoteDevService @Autowired constructor(
             userId = userId,
             event = event,
             environmentUid = result.enviromentUid,
-            regionId = 0,
+            regionId = result.regionId,
             taskId = result.taskId,
             status = EnvStatusEnum.running,
             dslContext = dslContext
@@ -84,7 +84,11 @@ class RemoteDevService @Autowired constructor(
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
-            val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
+            val vmCreateResp = if (mountType == WorkspaceMountType.START) {
+                JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
+            } else {
+                null
+            }
 
             // 检验workspace状态
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
@@ -118,12 +122,22 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            return WorkspaceResponse(
-                environmentUid = vmCreateResp?.envId ?: "",
-                environmentHost = vmCreateResp?.cgsIp ?: "",
-                environmentIp = vmCreateResp?.cgsIp ?: "",
-                resourceId = vmCreateResp?.resourceId
-            )
+            return if (mountType == WorkspaceMountType.START) {
+                WorkspaceResponse(
+                    environmentUid = vmCreateResp?.envId ?: "",
+                    environmentHost = vmCreateResp?.cgsIp ?: "",
+                    environmentIp = vmCreateResp?.cgsIp ?: "",
+                    resourceId = vmCreateResp?.resourceId
+                )
+            } else {
+                WorkspaceResponse(
+                    environmentUid = result.enviromentUid,
+                    environmentHost = workspaceInfo.environmentHost,
+                    environmentIp = workspaceInfo.environmentIP,
+                    resourceId = result.resourceId
+                )
+            }
+
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
