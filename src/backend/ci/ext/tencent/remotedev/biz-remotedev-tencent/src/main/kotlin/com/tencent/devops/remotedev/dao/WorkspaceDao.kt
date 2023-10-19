@@ -61,6 +61,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class WorkspaceDao {
 
