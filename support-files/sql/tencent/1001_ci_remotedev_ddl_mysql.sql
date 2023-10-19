@@ -270,19 +270,21 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
 -- Table structure for T_PROJECT_IMAGES 项目下镜像信息
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_PROJECT_IMAGES` (
-    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-    `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '蓝盾项目ID',
-    `IMAGE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '镜像名称',
-    `VERSION` varchar(32) NOT NULL DEFAULT '' COMMENT '版本',
-    `PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '路径',
-    `SIZE` varchar(32) NOT NULL DEFAULT '' COMMENT '镜像大小，单位G',
-    `ZONE` varchar(32) NOT NULL DEFAULT '' COMMENT '区域：深圳等',
-    `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '镜像状态,0-building,1-success,2-failure',
-    `CREATOR` varchar(32) NOT NULL DEFAULT '' COMMENT '创建人',
-    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`ID`),
-    UNIQUE `ukey`(`PROJECT_ID`,`IMAGE_NAME`,`VERSION`)
-    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='项目下镜像信息';
+    `ID` bigint(11) auto_increment comment 'ID',
+    `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
+    `PROJECT_ID` varchar(64) default '' not null comment '蓝盾项目ID',
+    `IMAGE_NAME` varchar(128) default '' not null comment '镜像名称',
+    `IMAGE_COS_FILE` varchar(256) default '' not null comment '惊喜地址',
+    `SIZE` varchar(32) default '' not null comment '镜像大小，单位G',
+    `SOURCE_CGS_ID` varchar(32) default '' not null comment '镜像关联的cgsId',
+    `SOURCE_CGS_TYPE` varchar(32) default '' not null comment '镜像关联的cgsType',
+    `SOURCE_CGS_ZONE` varchar(32) default '' not null comment '区域：深圳等',
+    `STATUS` int(11) default 0 not null comment '镜像状态,0-building,1-success,2-failure',
+    `CREATOR` varchar(32) default '' not null comment '创建人',
+    `CREATE_TIME` timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    UNIQUE KEY `uni_1` (`PROJECT_ID`,`IMAGE_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '控制台项目镜像模板信息';
 
 -- ----------------------------
 -- Table structure for T_PROJECT_SOFTWARES 项目下软件管理信息

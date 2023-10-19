@@ -151,7 +151,8 @@ class DeleteControl @Autowired constructor(
                 action = WorkspaceAction.DELETING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -276,7 +277,8 @@ class DeleteControl @Autowired constructor(
                 action = WorkspaceAction.DELETING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -404,7 +406,8 @@ class DeleteControl @Autowired constructor(
             action = WorkspaceAction.DELETE,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 

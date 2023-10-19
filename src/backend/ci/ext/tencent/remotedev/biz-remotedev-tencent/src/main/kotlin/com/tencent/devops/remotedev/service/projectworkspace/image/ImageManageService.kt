@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.image
+package com.tencent.devops.remotedev.service.projectworkspace.image
 
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -58,15 +58,23 @@ class ImageManageService @Autowired constructor(
                     id = it.id,
                     projectId = it.projectId,
                     imageName = it.imageName,
-                    version = it.version,
-                    path = it.path,
+                    imageId = it.imageId,
+                    imageCosFile = it.imageCosFile,
                     size = it.size,
-                    zone = it.zone,
+                    sourceCgsId = it.sourceCgsId,
+                    sourceCgsType = it.sourceCgsType,
+                    sourceCgsZone = it.sourceCgsZone,
                     creator = it.creator,
                     status = ImageStatus.values()[it.status]
                 )
             )
         }
         return result
+    }
+
+    fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
+        logger.info("$userId delete projectImage: $imageId")
+        imageManageDao.deleteWorkspaceImage(projectId, imageId, dslContext)
+        return true
     }
 }
