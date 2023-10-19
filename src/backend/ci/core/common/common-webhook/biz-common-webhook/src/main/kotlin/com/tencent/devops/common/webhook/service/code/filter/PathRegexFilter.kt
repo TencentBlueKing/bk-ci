@@ -87,12 +87,7 @@ class PathRegexFilter(
                 userPath == "**"
 
     private fun getShortPath(userPath: String, eventPath: String): TriggerPathDepth {
-        if (!patternIsMatchDir(userPath)) {
-            return TriggerPathDepth(
-                path = eventPath
-            )
-        }
-        if (!eventPath.contains("/")) {
+        if (!patternIsMatchDir(userPath) || !eventPath.contains("/")) {
             return TriggerPathDepth(
                 path = eventPath
             )
@@ -109,6 +104,25 @@ class PathRegexFilter(
         return TriggerPathDepth(
             path = targetShortPath
         )
+    }
+
+    override fun getFinalPath(
+        matchPathsMap: MutableMap<String, MutableSet<String>>
+    ): Set<String> = when {
+        matchPathsMap.isEmpty() -> {
+            setOf()
+        }
+        // 存在**时匹配所有文件，无视其他路径规则
+        matchPathsMap.containsKey("**") -> {
+            matchPathsMap["**"] ?: setOf()
+        }
+        // 合并所有匹配路径
+        else -> {
+            val paths = matchPathsMap.map { it.value }
+            val targetPath = mutableSetOf<String>()
+            paths.forEach { targetPath.addAll(it) }
+            targetPath.toSet()
+        }
     }
 }
 

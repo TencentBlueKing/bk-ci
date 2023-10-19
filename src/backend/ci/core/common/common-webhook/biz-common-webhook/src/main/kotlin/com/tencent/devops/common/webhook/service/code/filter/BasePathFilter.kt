@@ -58,28 +58,20 @@ abstract class BasePathFilter(
     private fun hashPathSpecs(response: WebhookFilterResponse): Boolean {
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
-            val matchUserPaths = mutableSetOf<String>()
             val matchPathsMap = mutableMapOf<String, MutableSet<String>>()
             triggerOnPath.forEach eventPath@{ eventPath ->
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
-                        matchUserPaths.add(userPath)
                         // 构建最终匹配路径
                         buildFinalIncludePath(eventPath, userPath, matchPathsMap)
                         return@eventPath
                     }
                 }
             }
-            // 如最终匹配路径Map非空，则以此Map为准
-            if (matchPathsMap.isNotEmpty()) {
-                matchUserPaths.clear()
-                matchPathsMap.forEach {
-                    matchUserPaths.addAll(it.value)
-                }
-            }
-            if (matchUserPaths.isNotEmpty()) {
-                response.addParam(MATCH_PATHS, matchUserPaths.joinToString(","))
+            val finalPaths = getFinalPath(matchPathsMap)
+            if (finalPaths.isNotEmpty()) {
+                response.addParam(MATCH_PATHS, finalPaths.joinToString(","))
             }
         } else {
             matchIncludePaths.addAll(triggerOnPath)
@@ -112,5 +104,19 @@ abstract class BasePathFilter(
         eventPath: String,
         userPath: String,
         matchPathsMap: MutableMap<String, MutableSet<String>>
-    ) = Unit
+    ) {
+        val targetSet = if (matchPathsMap[userPath] == null) {
+            mutableSetOf()
+        } else {
+            matchPathsMap[userPath]!!
+        }
+        targetSet.add(userPath)
+        matchPathsMap[userPath] = targetSet
+    }
+
+    open fun getFinalPath(
+        matchPathsMap: MutableMap<String, MutableSet<String>>
+    ): Set<String> {
+        return matchPathsMap.keys.toSet()
+    }
 }
