@@ -110,7 +110,8 @@ class RepositoryDao {
         projectIds: Collection<String>,
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
-        repositoryIds: Set<Long>?
+        repositoryIds: Set<Long>?,
+        enablePac: Boolean? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -122,6 +123,9 @@ class RepositoryDao {
             }
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -236,7 +240,8 @@ class RepositoryDao {
         offset: Int,
         limit: Int,
         sortBy: String? = null,
-        sortType: String? = null
+        sortType: String? = null,
+        enablePac: Boolean? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -248,6 +253,9 @@ class RepositoryDao {
 
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
             }
 
             when (repositoryTypes) {

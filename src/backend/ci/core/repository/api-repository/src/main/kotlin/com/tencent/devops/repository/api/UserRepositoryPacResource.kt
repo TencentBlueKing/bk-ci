@@ -140,4 +140,9 @@ interface UserRepositoryPacResource {
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<List<RepoPacSyncFileInfo>>
+
+    @ApiOperation("获取支持的pac代码库类型")
+    @GET
+    @Path("supportScmType")
+    fun supportScmType(): Result<List<String>>
 }

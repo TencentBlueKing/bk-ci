@@ -50,11 +50,13 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -63,6 +65,7 @@ import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistr
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
@@ -87,6 +90,7 @@ class RepositoryService @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val gitService: IGitService,
     private val scmService: IScmService,
+    private val tGitOAuthService: TGitOAuthService,
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService
 ) {
@@ -723,7 +727,8 @@ class RepositoryService @Autowired constructor(
         authPermission: AuthPermission,
         offset: Int,
         limit: Int,
-        aliasName: String? = null
+        aliasName: String? = null,
+        enablePac: Boolean? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
         val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
@@ -733,7 +738,8 @@ class RepositoryService @Autowired constructor(
             projectIds = setOf(projectId),
             repositoryTypes = repositoryTypes,
             aliasName = aliasName,
-            repositoryIds = hasPermissionList.toSet()
+            repositoryIds = hasPermissionList.toSet(),
+            enablePac = enablePac
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -742,6 +748,7 @@ class RepositoryService @Autowired constructor(
                 repositoryTypes = repositoryTypes,
                 aliasName = aliasName,
                 repositoryIds = hasPermissionList.toSet(),
+                enablePac = enablePac,
                 offset = offset,
                 limit = limit
             )
@@ -1087,6 +1094,31 @@ class RepositoryService @Autowired constructor(
             token = token,
             tokenType = finalTokenType
         )
+    }
+
+    fun isOAuth(
+        userId: String,
+        projectId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        repositoryType: ScmType?
+    ): AuthorizeResult {
+        return when (repositoryType) {
+            ScmType.CODE_GIT -> gitOauthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl
+            )
+
+            ScmType.CODE_TGIT -> tGitOAuthService.isOAuth(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl
+            )
+
+            else ->
+                AuthorizeResult(200, "")
+        }
     }
 
     companion object {

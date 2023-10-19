@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -45,6 +46,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.RepositoryService
@@ -174,7 +176,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         permission: Permission,
         page: Int?,
         pageSize: Int?,
-        aliasName: String?
+        aliasName: String?,
+        enablePac: Boolean?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -200,7 +203,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             authPermission = bkAuthPermission,
             offset = limit.offset,
             limit = limit.limit,
-            aliasName = aliasName
+            aliasName = aliasName,
+            enablePac = enablePac
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -290,5 +294,23 @@ class UserRepositoryResourceImpl @Autowired constructor(
         }
         repositoryService.userUnLock(userId, projectId, repositoryHashId)
         return Result(true)
+    }
+
+    override fun isOAuth(
+        userId: String,
+        projectId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        repositoryType: ScmType
+    ): Result<AuthorizeResult> {
+        return Result(
+            repositoryService.isOAuth(
+                userId = userId,
+                projectId = projectId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                repositoryType = repositoryType
+            )
+        )
     }
 }

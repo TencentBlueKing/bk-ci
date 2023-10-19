@@ -35,11 +35,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.enums.YamlFilePushType
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlUrl
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
+import com.tencent.devops.process.trigger.actions.pacActions.data.PacUploadYamlFileEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlEnableEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlTriggerEvent
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -61,7 +64,8 @@ class PacYamlFacadeService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pacYamlSyncService: PacYamlSyncService,
     private val webhookEventFactory: WebhookEventFactory,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pacYamlResourceService: PacYamlResourceService
 ) {
 
     companion object {
@@ -215,5 +219,51 @@ class PacYamlFacadeService @Autowired constructor(
 
     fun disablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
         logger.info("disable pac|$userId|$projectId|$repoHashId|$scmType")
+    }
+
+    fun pushYamlFile(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        scmType: ScmType,
+        filePath: String,
+        content: String,
+        commitMessage: String,
+        yamlFilePushType: YamlFilePushType
+    ) {
+        logger.info("upload yaml file|$userId|$projectId|$repoHashId|$scmType")
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: return
+        val setting = PacRepoSetting(repository = repository)
+        val event = PacUploadYamlFileEvent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+        val action = eventActionFactory.loadPushYamlFileEvent(setting = setting, event = event)
+        action.pushYamlFile(
+            pipelineId = pipelineId,
+            filePath = filePath,
+            content = content,
+            commitMessage = commitMessage,
+            yamlFilePushType = yamlFilePushType
+        )
+    }
+
+    fun getPipelineYamlUrl(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineYamlUrl? {
+        return pacYamlResourceService.getPipelineYamlUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
     }
 }

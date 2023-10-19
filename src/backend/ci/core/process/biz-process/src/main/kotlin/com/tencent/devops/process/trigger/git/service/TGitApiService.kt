@@ -28,7 +28,9 @@
 package com.tencent.devops.process.trigger.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.enums.YamlFilePushType
 import com.tencent.devops.process.trigger.common.exception.ErrorCodeEnum
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
@@ -45,6 +47,9 @@ import com.tencent.devops.process.trigger.git.pojo.tgit.TGitMrChangeInfo
 import com.tencent.devops.process.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.process.trigger.git.pojo.tgit.TGitProjectInfo
 import com.tencent.devops.process.trigger.git.pojo.tgit.TGitTreeFileInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -249,8 +254,88 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
+    override fun pushYamlFile(
+        cred: PacGitCred,
+        gitProjectId: String,
+        branchName: String,
+        defaultBranch: String,
+        filePath: String,
+        content: String,
+        commitMessage: String,
+        title: String,
+        yamlFilePushType: YamlFilePushType
+    ) {
+        val token = cred.toToken()
+        // 1. 判断分支是否存在
+        val branchExists = client.get(ServiceGitResource::class).getBranch(
+            accessToken = token,
+            userId = "",
+            repository = gitProjectId,
+            page = PageUtil.DEFAULT_PAGE,
+            pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+            search = branchName
+        ).data?.any { it.name == branchName } ?: false
+        // 分支不存在,则需要创建
+        if (!branchExists) {
+            client.get(ServiceGitResource::class).createBranch(
+                token = token,
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                gitCreateBranch = GitCreateBranch(
+                    branchName = branchName,
+                    ref = defaultBranch
+                )
+            ).data
+        }
+        // 2. 判断文件是否存在
+        val fileExists = try {
+            client.get(ServiceGitResource::class).getGitFileInfo(
+                gitProjectId = gitProjectId,
+                filePath = filePath,
+                token = token,
+                ref = branchName,
+                tokenType = cred.toTokenType()
+            ).data
+            true
+        } catch (ignored: Exception) {
+            false
+        }
+        val gitOperationFile = GitOperationFile(
+            filePath = filePath,
+            branch = branchName,
+            content = content,
+            commitMessage = commitMessage
+        )
+        if (fileExists) {
+            client.get(ServiceGitResource::class).gitUpdateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitOperationFile = gitOperationFile,
+                tokenType = cred.toTokenType()
+            )
+        } else {
+            client.get(ServiceGitResource::class).gitCreateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitOperationFile = gitOperationFile,
+                tokenType = cred.toTokenType()
+            )
+        }
+        if (yamlFilePushType == YamlFilePushType.MERGE) {
+            client.get(ServiceGitResource::class).createMergeRequest(
+                token = token,
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                gitCreateMergeRequest = GitCreateMergeRequest(
+                    sourceBranch = branchName,
+                    targetBranch = defaultBranch,
+                    title = title
+                )
+            ).data
+        }
+    }
 
-    protected fun PacGitCred.toToken(): String {
+    private fun PacGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
             return this.accessToken
@@ -262,7 +347,7 @@ class TGitApiService @Autowired constructor(
             )
     }
 
-    protected fun PacGitCred.toTokenType(): TokenTypeEnum {
+    private fun PacGitCred.toTokenType(): TokenTypeEnum {
         this as TGitCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH

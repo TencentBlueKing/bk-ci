@@ -23,42 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.yaml.v2.enums
+package com.tencent.devops.scm.pojo
 
-enum class StreamTriggerAction
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class StreamObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    PULL_REQUEST("pull_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule"),
-    DELETE("delete"),
-    OPENAPI("openApi"),
-    ISSUE("issue"),
-    REVIEW("review"),
-    NOTE("note"),
-
-    // pac特有操作
-    ENABLE("enable"),
-    DISABLE("disable"),
-    UPLOAD("upload");
-}
-
-fun StreamObjectKind.needInput() = this == StreamObjectKind.MANUAL || this == StreamObjectKind.OPENAPI
-
-enum class StreamPushActionType(val value: String) {
-    NEW_BRANCH("new-branch"),
-    PUSH_FILE("push-file");
-}
-
-enum class StreamMrEventAction(val value: String) {
-    OPEN("open"),
-    CLOSE("close"),
-    REOPEN("reopen"),
-    PUSH_UPDATE("push-update"),
-    MERGE("merge");
-}
+@ApiModel("创建合并请求")
+data class GitCreateMergeRequest(
+    @ApiModelProperty("源分支")
+    @JsonProperty("source_branch")
+    val sourceBranch: String,
+    @ApiModelProperty("目标分支")
+    @JsonProperty("target_branch")
+    val targetBranch: String,
+    @ApiModelProperty("合并请求的标题")
+    val title: String
+)

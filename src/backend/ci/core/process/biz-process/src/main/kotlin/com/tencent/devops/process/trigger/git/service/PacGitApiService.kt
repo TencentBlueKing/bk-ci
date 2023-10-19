@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.trigger.git.service
 
+import com.tencent.devops.process.enums.YamlFilePushType
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
 import com.tencent.devops.process.trigger.git.pojo.PacGitFileInfo
@@ -121,4 +122,23 @@ interface PacGitApiService {
         ref: String?,
         retry: ApiRequestRetryInfo
     ): PacGitFileInfo?
+
+    /**
+     * 提交yaml文件
+     *
+     * @param branchName 提交的分支名,可能不存在,需要创建
+     * @param defaultBranch 默认分支
+     * @param title mr标题
+     */
+    fun pushYamlFile(
+        cred: PacGitCred,
+        gitProjectId: String,
+        branchName: String,
+        defaultBranch: String,
+        filePath: String,
+        content: String,
+        commitMessage: String,
+        title: String,
+        yamlFilePushType: YamlFilePushType
+    )
 }

@@ -47,6 +47,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -658,5 +659,29 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun createMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): GitMrInfo {
+        val body = JsonUtil.getObjectMapper().writeValueAsString(gitCreateMergeRequest)
+        val url = "projects/${urlEncode(projectName)}/merge_requests/"
+        logger.info("create mr for project($projectName): url($url), $body")
+        val request = post(host, token, url, body)
+        try {
+            return callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR_COMMENT),
+                request = request,
+                classOfT = GitMrInfo::class.java
+            )
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_COMMENTS_FAIL))
+            }
+            throw t
+        }
     }
 }

@@ -113,4 +113,8 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun supportScmType(): Result<List<String>> {
+        return Result(listOf(ScmType.CODE_GIT.name))
+    }
 }

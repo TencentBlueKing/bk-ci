@@ -38,6 +38,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -567,6 +569,20 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun gitUpdateFile(
+        gitProjectId: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.gitUpdateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitOperationFile = gitOperationFile,
+            tokenType = tokenType
+        )
+    }
+
     override fun getUserInfoByToken(
         token: String,
         tokenType: TokenTypeEnum
@@ -642,6 +658,34 @@ class ServiceGitResourceImpl @Autowired constructor(
             sha = sha,
             path = path,
             ignoreWhiteSpace = ignoreWhiteSpace
+        )
+    }
+
+    override fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        return gitService.createBranch(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateBranch = gitCreateBranch
+        )
+    }
+
+    override fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        return gitService.createMergeRequest(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateMergeRequest = gitCreateMergeRequest
         )
     }
 }
