@@ -32,7 +32,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
@@ -57,9 +56,19 @@ interface RemoteDevInterface {
     fun stopWorkspace(userId: String, workspaceName: String): String
 
     /**
+     * 重启远程工作空间
+     */
+    fun restartWorkspace(userId: String, workspaceName: String): String
+
+    /**
      * 删除远程工作空间
      */
-    fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String
+    fun deleteWorkspace(userId: String, workspaceName: String): String
+
+    /**
+     * 删除远程工作空间
+     */
+    fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String
 
     /**
      * 获取工作空间web端链接

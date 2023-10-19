@@ -25,28 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.remotedev.pojo.image
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserImageManageResource
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import com.tencent.devops.remotedev.service.image.ImageManageService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-@Suppress("ALL")
-class UserImageManageResourceImpl @Autowired constructor(
-    private val projectImageManageService: ImageManageService
-
-) : UserImageManageResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserImageManageResourceImpl::class.java)!!
-    }
-
-    override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
-        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
-        return Result(projectImageManageService.getProjectImageList(projectId))
-    }
-}
+@ApiModel("创建VM镜像请求报文")
+data class MakeWorkspaceImageReq(
+    @ApiModelProperty("imageName")
+    val imageName: String
+)

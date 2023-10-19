@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
@@ -43,6 +44,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -77,12 +79,12 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(mountType)
+        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .waitTaskFinish(userId, result.taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
-
+            // 检验workspace状态
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
 
@@ -95,29 +97,59 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                dispatchWorkspaceDao.updateWorkspaceStatus(
-                    workspaceName = event.workspaceName,
-                    status = EnvStatusEnum.running,
-                    dslContext = context
-                )
+            if (mountType == WorkspaceMountType.START) {
+                val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
 
-                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                    dslContext = context,
-                    workspaceName = event.workspaceName,
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    dispatchWorkspaceDao.updateWorkspace(
+                        workspaceName = event.workspaceName,
+                        status = EnvStatusEnum.running,
+                        envId = vmCreateResp?.envId ?: "",
+                        regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
+                        dslContext = context
+                    )
+
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = context,
+                        workspaceName = event.workspaceName,
+                        environmentUid = vmCreateResp?.envId ?: "",
+                        operator = userId,
+                        action = EnvironmentAction.CREATE
+                    )
+                }
+
+                return WorkspaceResponse(
+                    environmentUid = vmCreateResp?.envId ?: "",
+                    environmentHost = vmCreateResp?.cgsIp ?: "",
+                    environmentIp = vmCreateResp?.cgsIp ?: "",
+                    resourceId = vmCreateResp?.resourceId
+                )
+            } else {
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    dispatchWorkspaceDao.updateWorkspaceStatus(
+                        workspaceName = event.workspaceName,
+                        status = EnvStatusEnum.running,
+                        dslContext = context
+                    )
+
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = context,
+                        workspaceName = event.workspaceName,
+                        environmentUid = result.enviromentUid,
+                        operator = userId,
+                        action = EnvironmentAction.CREATE
+                    )
+                }
+
+                return WorkspaceResponse(
                     environmentUid = result.enviromentUid,
-                    operator = "admin",
-                    action = EnvironmentAction.CREATE
+                    environmentHost = workspaceInfo.environmentHost,
+                    environmentIp = workspaceInfo.environmentIP,
+                    resourceId = result.resourceId
                 )
             }
-
-            return WorkspaceResponse(
-                environmentUid = result.enviromentUid,
-                environmentHost = workspaceInfo.environmentHost,
-                environmentIp = workspaceInfo.environmentIP,
-                resourceId = result.resourceId
-            )
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -133,7 +165,7 @@ class RemoteDevService @Autowired constructor(
                     environmentUid = result.enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE,
-                    actionMsg = failedMsg ?: ""
+                    actionMsg = taskMessage ?: ""
                 )
             }
 
@@ -141,7 +173,7 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
                 ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                "errorMessage:$failedMsg"
+                "errorMessage:$taskMessage"
             )
         }
     }
@@ -212,9 +244,34 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
+    fun restartWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .restartWorkspace(event.userId, event.workspaceName)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .waitTaskFinish(event.userId, taskId)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = event.workspaceName,
+                status = EnvStatusEnum.running,
+                dslContext = dslContext
+            )
+
+            return true
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
+            )
+        }
+    }
+
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .deleteWorkspace(event.userId, event)
+            .deleteWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
@@ -233,6 +290,40 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
                 "errorMessage:$failedMsg"
+            )
+        }
+    }
+
+    fun makeWorkspaceImage(event: WorkspaceOperateEvent): WorkspaceImageInfo {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
+        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .waitTaskFinish(event.userId, taskId)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
+            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = event.workspaceName,
+                status = EnvStatusEnum.stopped,
+                dslContext = dslContext
+            )
+
+            return WorkspaceImageInfo(
+                imageId = event.imageId ?: "",
+                imageCosFile = image?.cosFile ?: "",
+                size = image?.size ?: "",
+                sourceCgsId = image?.sourceCgsId ?: "",
+                sourceCgsType = image?.sourceType ?: "",
+                sourceCgsZone = image?.zoneId ?: ""
+            )
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$taskMessage"
             )
         }
     }

@@ -27,7 +27,7 @@ class WorkspaceWindowsDao {
         }
     }
 
-    fun batchFetchWorkspaceSharedInfo(
+    fun batchFetchWorkspaceWindowsInfo(
         dslContext: DSLContext,
         workspaceNames: List<String>
     ): Result<TWorkspaceWindowsRecord> {
@@ -36,7 +36,7 @@ class WorkspaceWindowsDao {
         }
     }
 
-    fun fetchAnyWorkspaceSharedInfo(
+    fun fetchAnyWorkspaceWindowsInfo(
         dslContext: DSLContext,
         workspaceName: String
     ): TWorkspaceWindowsRecord? {
