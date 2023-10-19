@@ -515,7 +515,7 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf(
                 "branches/dir_a_1/a.kt",
-                "branches/dir_a_1/a_1/b.kt",
+                "branches/dir_a_1/a_1/b.kt"
             ),
             includedPaths = listOf("**", "**/dir_a_1/a_1/**", "**/dir_a_1/*.kt"),
             excludedPaths = emptyList(),
