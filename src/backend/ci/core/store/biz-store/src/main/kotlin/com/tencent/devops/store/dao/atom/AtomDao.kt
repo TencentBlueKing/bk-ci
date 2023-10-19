@@ -100,7 +100,6 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
-
 @Suppress("ALL")
 @Repository
 class AtomDao : AtomBaseDao() {
