@@ -122,9 +122,9 @@ object YamlObjects {
             description = getNullValue("description", propsMap),
             multiple = getNullValue("multiple", propsMap)?.toBoolean(),
             required = getNullValue("required", propsMap)?.toBoolean(),
-            repoHashId = getNullValue("repoHashId", propsMap),
-            scmType = getNullValue("scmType", propsMap),
-            containerType = getVarPropContainerType(fromPath, propsMap["containerType"]),
+            repoHashId = getNullValue("repo-id", propsMap),
+            scmType = getNullValue("scm-type", propsMap),
+            containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
             glob = getNullValue("glob", propsMap),
             properties = transNullValue<Map<String, String>>(
                 file = fromPath,
