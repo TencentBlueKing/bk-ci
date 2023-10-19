@@ -72,15 +72,15 @@ class ApigwJobCloudApi {
         private val logger = LoggerFactory.getLogger(ApigwJobCloudApi::class.java)
 
         private val threadLocal = ThreadLocal<String>()
-        fun setThreadLocal(value: String) {
+        fun set(value: String) {
             threadLocal.set(value)
         }
 
-        fun getThreadLocal(): String? {
+        fun get(): String? {
             return threadLocal.get()
         }
 
-        fun removeThreadLocal() {
+        fun remove() {
             threadLocal.remove()
         }
     }
@@ -146,7 +146,7 @@ class ApigwJobCloudApi {
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
             logger.debug(
-                "[${getThreadLocal()}] " +
+                "[${get()}] " +
                     "headers: ${logWithLengthLimit(headers.toString())}, " +
                     "url: ${jobCloudAuthenticationReq.url}, " +
                     "body: ${logWithLengthLimit(requestContent.toString())}"
@@ -157,7 +157,7 @@ class ApigwJobCloudApi {
     fun <T : Any, U> executeGetRequest(bkUsername: String, vararg args: U): JobResult<T> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
-        val suffix = when (getThreadLocal()) {
+        val suffix = when (get()) {
             "queryJobInstanceStatus" -> QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX
             "getAccountList" -> GET_ACCOUNT_LIST_URL_SUFFIX
             else -> ""
@@ -166,14 +166,14 @@ class ApigwJobCloudApi {
             suffix, jobCloudAuthenticationReq.bkScopeType, jobCloudAuthenticationReq.bkScopeId, *args
         )
         if (logger.isDebugEnabled)
-            logger.debug("[${getThreadLocal()}] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
+            logger.debug("[${get()}] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
         return getResultFromRes(OkhttpUtils.doGet(url, headers))
     }
 
     private fun <T> getResultFromRes(response: Response): JobResult<T> {
-        val operationName = getThreadLocal()
+        val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
-        removeThreadLocal()
+        remove()
         try {
             val responseBody = response.body?.string()
             if (logger.isDebugEnabled) {

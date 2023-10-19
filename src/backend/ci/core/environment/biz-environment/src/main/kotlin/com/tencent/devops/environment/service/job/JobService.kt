@@ -56,7 +56,7 @@ class JobService {
             ),
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("executeScript")
+        ApigwJobCloudApi.set(::executeScript.name)
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)
     }
 
@@ -96,7 +96,7 @@ class JobService {
             timeout = fileDistributeReq.timeout,
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("distributeFile")
+        ApigwJobCloudApi.set("distributeFile")
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudFileDistributeReq)
     }
 
@@ -106,7 +106,7 @@ class JobService {
             operationCode = taskTerminateReq.operationCode,
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("terminateTask")
+        ApigwJobCloudApi.set("terminateTask")
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudTaskTerminateReq)
     }
 
@@ -126,7 +126,7 @@ class JobService {
             },
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("queryJobInstanceLogs")
+        ApigwJobCloudApi.set("queryJobInstanceLogs")
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)
     }
 
@@ -140,7 +140,7 @@ class JobService {
             description = createAccountReq.description,
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("createAccount")
+        ApigwJobCloudApi.set("createAccount")
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudCreateAccountReq)
     }
 
@@ -149,7 +149,7 @@ class JobService {
             id = deleteAccountReq.id,
             bkUsername = userId
         )
-        ApigwJobCloudApi.setThreadLocal("deleteAccount")
+        ApigwJobCloudApi.set("deleteAccount")
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudDeleteAccountReq)
     }
 
@@ -159,7 +159,7 @@ class JobService {
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        ApigwJobCloudApi.setThreadLocal("queryJobInstanceStatus")
+        ApigwJobCloudApi.set("queryJobInstanceStatus")
         return ApigwJobCloudApi().executeGetRequest(userId, jobInstanceId, returnIpResult)
     }
 
@@ -172,7 +172,8 @@ class JobService {
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        ApigwJobCloudApi.setThreadLocal("getAccountList")
+        ApigwJobCloudApi.set("getAccountList")
+        logger.debug("aaaaaahbdhudhfhiua"+ApigwJobCloudApi.get())
         return ApigwJobCloudApi().executeGetRequest(userId, account, alias, category, start, length)
     }
 }
