@@ -94,6 +94,8 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
@@ -2510,5 +2512,55 @@ class GitService @Autowired constructor(
                 iid = iid
             )
         )
+    }
+
+    fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createBranch(
+                host = gitConfig.gitUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        } else {
+            GitApi().createBranch(
+                host = gitConfig.gitUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        }
+        return Result(true)
+    }
+
+    fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        val mrInfo = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createMergeRequest(
+                host = gitConfig.gitUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        } else {
+            GitApi().createMergeRequest(
+                host = gitConfig.gitUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        }
+        return Result(mrInfo)
     }
 }

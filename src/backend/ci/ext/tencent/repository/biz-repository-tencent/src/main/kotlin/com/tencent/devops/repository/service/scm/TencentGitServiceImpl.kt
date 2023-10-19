@@ -54,6 +54,8 @@ import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
@@ -650,6 +652,21 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
+    override fun gitUpdateFile(
+        gitProjectId: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).tGitUpdateFile(
+            repoUrl = null,
+            repoName = gitProjectId,
+            token = token,
+            gitOperationFile = gitOperationFile,
+            tokenType = tokenType
+        )
+    }
+
     override fun tGitUpdateFile(
         repoUrl: String?,
         repoName: String,
@@ -720,6 +737,34 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             sha = sha,
             path = path,
             ignoreWhiteSpace = ignoreWhiteSpace
+        )
+    }
+
+    override fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).createBranch(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateBranch = gitCreateBranch
+        )
+    }
+
+    override fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        return client.getScm(ServiceGitResource::class).createMergeRequest(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitCreateMergeRequest = gitCreateMergeRequest
         )
     }
 }

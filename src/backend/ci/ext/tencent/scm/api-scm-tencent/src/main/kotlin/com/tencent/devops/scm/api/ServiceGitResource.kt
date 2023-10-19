@@ -57,6 +57,8 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
@@ -1142,4 +1144,36 @@ interface ServiceGitResource {
         @QueryParam("ignore_white_space")
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>
+
+    @ApiOperation("创建分支")
+    @POST
+    @Path("/createBranch")
+    fun createBranch(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean>
+
+    @ApiOperation("创建合并请求")
+    @POST
+    @Path("/createMergeRequest")
+    fun createMergeRequest(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo>
 }
