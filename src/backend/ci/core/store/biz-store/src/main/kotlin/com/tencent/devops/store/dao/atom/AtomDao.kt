@@ -263,7 +263,7 @@ class AtomDao : AtomBaseDao() {
     fun getAtomTestVersion(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$versionPrefix-%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
