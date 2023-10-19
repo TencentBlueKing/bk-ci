@@ -7,10 +7,10 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudScriptExecuteReq(
     @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
     @JsonProperty("bk_scope_type")
-    var bkScopeType: String? = "",
+    override var bkScopeType: String? = "",
     @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
     @JsonProperty("bk_scope_id")
-    var bkScopeId: String? = "",
+    override var bkScopeId: String? = "",
     @ApiModelProperty(value = "脚本内容Base64", required = true)
     @JsonProperty("script_content")
     val scriptContent: String,
@@ -44,4 +44,4 @@ data class JobCloudScriptExecuteReq(
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkAppCode, bkAppSecret, bkUsername)
+) : JobCloudPermission(bkScopeType, bkScopeId, bkAppCode, bkAppSecret, bkUsername)

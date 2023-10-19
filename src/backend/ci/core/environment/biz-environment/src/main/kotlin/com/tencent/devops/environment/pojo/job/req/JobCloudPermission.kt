@@ -5,6 +5,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @Suppress("ALL")
 abstract class JobCloudPermission(
+    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集")
+    @JsonProperty("bk_scope_type")
+    open var bkScopeType: String? = "",
+    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID")
+    @JsonProperty("bk_scope_id")
+    open var bkScopeId: String? = "",
     @ApiModelProperty(value = "应用ID")
     @JsonProperty("bk_app_code")
     open var bkAppCode: String? = "",

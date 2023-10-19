@@ -60,6 +60,7 @@ import com.tencent.devops.environment.service.job.DeleteAccountService
 import com.tencent.devops.environment.service.job.ScriptExecuteService
 import com.tencent.devops.environment.service.job.FileDistributeService
 import com.tencent.devops.environment.service.job.GetAccountListService
+import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.ParseHashListService
 import com.tencent.devops.environment.service.job.TaskTerminateService
 import com.tencent.devops.environment.service.job.QueryJobInstanceStatusService
@@ -76,7 +77,8 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val createAccountService: CreateAccountService,
     private val deleteAccountService: DeleteAccountService,
     private val getAccountListService: GetAccountListService,
-    private val parseHashListService: ParseHashListService
+    private val parseHashListService: ParseHashListService,
+    private val jobService: JobService
 ) : ServiceJobResource {
     override fun executeScript(
         userId: String,
@@ -84,27 +86,27 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         checkParam(userId, projectId)
-        val dynamicGroupList: List<JobCloudHost> = emptyList()
-        val topoNodeList: List<JobCloudHost> = emptyList()
-        val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
-            scriptContent = scriptExecuteReq.scriptContent,
-            scriptParam = scriptExecuteReq.scriptParam,
-            timeout = scriptExecuteReq.timeout,
-            accountAlias = scriptExecuteReq.account,
-            isParamSensitive = scriptExecuteReq.isSensiveParam,
-            scriptLanguage = scriptExecuteReq.scriptLanguage,
-            targetServer = JobCloudExecuteTarget(
-                hostList = scriptExecuteReq.executeTarget.hostList.map {
-                    JobCloudHost(
-                        bkHostId = it.bkHostId,
-                        bkCloudId = it.bkCloudId,
-                        ip = it.ip
-                    )
-                }
-            ),
-            bkUsername = userId
-        )
-        return scriptExecuteService.executeScript(jobCloudScriptExecuteReq)
+//        val dynamicGroupList: List<JobCloudHost> = emptyList()
+//        val topoNodeList: List<JobCloudHost> = emptyList()
+//        val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
+//            scriptContent = scriptExecuteReq.scriptContent,
+//            scriptParam = scriptExecuteReq.scriptParam,
+//            timeout = scriptExecuteReq.timeout,
+//            accountAlias = scriptExecuteReq.account,
+//            isParamSensitive = scriptExecuteReq.isSensiveParam,
+//            scriptLanguage = scriptExecuteReq.scriptLanguage,
+//            targetServer = JobCloudExecuteTarget(
+//                hostList = scriptExecuteReq.executeTarget.hostList.map {
+//                    JobCloudHost(
+//                        bkHostId = it.bkHostId,
+//                        bkCloudId = it.bkCloudId,
+//                        ip = it.ip
+//                    )
+//                }
+//            ),
+//            bkUsername = userId
+//        )
+        return jobService.executeScript(userId, scriptExecuteReq)
     }
 
     override fun distributeFile(
