@@ -203,17 +203,13 @@ object AtomUtils {
         userId: String,
         client: Client
     ) {
-        val atomStatusInfos = client.get(ServiceAtomResource::class)
+        val atomInfos = client.get(ServiceAtomResource::class)
             .getAtomInfos(
                 codeVersions = codeVersions
             ).data!!
-        val atomStatusList = listOf(
-            AtomStatusEnum.TESTING.name,
-            AtomStatusEnum.UNDERCARRIAGED.name
-        )
-        atomStatusInfos.forEach {
+        atomInfos.forEach {
             val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
-            if (atomStatus in atomStatusList) {
+            if (atomStatus != AtomStatusEnum.RELEASED.name) {
                 throw ErrorCodeException(
                     errorCode = TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
