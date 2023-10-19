@@ -2,15 +2,30 @@ package com.tencent.devops.environment.service.job
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.environment.pojo.job.CreateAccountReq
+import com.tencent.devops.environment.pojo.job.CreateAccountResult
+import com.tencent.devops.environment.pojo.job.DeleteAccountReq
+import com.tencent.devops.environment.pojo.job.DeleteAccountResult
+import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.JobResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
+import com.tencent.devops.environment.pojo.job.TaskTerminateReq
+import com.tencent.devops.environment.pojo.job.TaskTerminateResult
+import com.tencent.devops.environment.pojo.job.req.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudCreateAccountReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudDeleteAccountReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.req.JobCloudFileDistributeReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudFileSource
 import com.tencent.devops.environment.pojo.job.req.JobCloudHost
+import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
+import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import com.tencent.devops.environment.utils.job.NetworkUtil
@@ -25,7 +40,6 @@ class JobService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(JobService::class.java)
     }
-
     fun executeScript(userId: String, scriptExecuteReq: ScriptExecuteReq): JobResult<ScriptExecuteResult> {
         val dynamicGroupList: List<JobCloudHost> = emptyList()
         val topoNodeList: List<JobCloudHost> = emptyList()
@@ -47,80 +61,97 @@ class JobService @Autowired constructor(
             ),
             bkUsername = userId
         )
-
         ApigwJobCloudApi.set(::executeScript.name)
-
-//        val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-//            authenticationService.appAuthentication(jobCloudScriptExecuteReq.bkUsername)
-//        jobCloudScriptExecuteReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
-//        jobCloudScriptExecuteReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
-//
-//        val jobCloudResp: JobCloudResp<ScriptExecuteResult> =
-//            NetworkUtil.executeHttpRequest(
-//                httpType = "post",
-//                url = jobCloudAuthenticationReq.url,
-//                bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-//                jobCloudReq = jobCloudScriptExecuteReq
-//            )
-//
-//        var jsonData = ""
-//        val scriptExecuteResult: ScriptExecuteResult =
-//            if (null != jobCloudResp.data) {
-//                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-//                jacksonObjectMapper().readValue(jsonData)
-//            } else {
-//                ScriptExecuteResult()
-//            }
-//        if (logger.isDebugEnabled) {
-//            logger.debug("[executeScript] jobCloudResp.data: ${jobCloudResp.data}")
-//            logger.debug("[executeScript] serialized jsonData: $jsonData")
-//            logger.debug("[executeScript] scriptExecuteResult: $scriptExecuteResult")
-//        }
-//
-//        return JobResult(
-//            code = jobCloudResp.code,
-//            result = jobCloudResp.result,
-//            jobRequestId = jobCloudResp.jobRequestId,
-//            data = scriptExecuteResult
-//        )
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)!!
-
     }
 
-    fun distributeFile(jobCloudFileDistributeReq: JobCloudFileDistributeReq): JobResult<FileDistributeResult> {
-        ApigwJobCloudApi.set("distributeFile")
-        val jobCloudAuthenticationReq: JobCloudAuthenticationReq =
-            authenticationService.appAuthentication(jobCloudFileDistributeReq.bkUsername)
-        jobCloudFileDistributeReq.bkScopeType = jobCloudAuthenticationReq.bkScopeType
-        jobCloudFileDistributeReq.bkScopeId = jobCloudAuthenticationReq.bkScopeId
-
-        val jobCloudResp: JobCloudResp<FileDistributeResult> =
-            NetworkUtil.executeHttpRequest(
-                httpType = "post",
-                url = jobCloudAuthenticationReq.url,
-                bkAuthorization = jobCloudAuthenticationReq.bkAuthorization,
-                jobCloudReq = jobCloudFileDistributeReq
-            )
-
-        var jsonData = ""
-        val fileDistributeResult: FileDistributeResult =
-            if (null != jobCloudResp.data) {
-                jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-                jacksonObjectMapper().readValue(jsonData)
-            } else {
-                FileDistributeResult()
-            }
-        if (logger.isDebugEnabled) {
-            logger.debug("[distributeFile] jobCloudResp.data: ${jobCloudResp.data}")
-            logger.debug("[distributeFile] serialized jsonData: $jsonData")
-            logger.debug("[distributeFile] fileDistributeResult: $fileDistributeResult")
-        }
-
-        return JobResult(
-            code = jobCloudResp.code,
-            result = jobCloudResp.result,
-            jobRequestId = jobCloudResp.jobRequestId,
-            data = fileDistributeResult
+    fun distributeFile(userId: String, fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
+        val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
+            fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
+                JobCloudFileSource(
+                    fileList = fileSource.fileList.toList(),
+                    server = JobCloudExecuteTarget(
+                        hostList = fileSource.sourceFileServer.hostList.map {
+                            JobCloudHost(
+                                bkHostId = it.bkHostId,
+                                bkCloudId = it.bkCloudId,
+                                ip = it.ip
+                            )
+                        }
+                    ),
+                    account = JobCloudAccount(
+                        id = fileSource.account.id,
+                        alias = fileSource.account.alias
+                    )
+                )
+            },
+            fileTargetPath = fileDistributeReq.fileTargetPath,
+            transferMode = fileDistributeReq.transferMode,
+            executeTarget = JobCloudExecuteTarget(
+                hostList = fileDistributeReq.executeTarget.hostList.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
+                    )
+                }
+            ),
+            accountAlias = fileDistributeReq.accountAlias,
+            accountId = fileDistributeReq.accountId,
+            timeout = fileDistributeReq.timeout,
+            bkUsername = userId
         )
+        ApigwJobCloudApi.set(::distributeFile.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudFileDistributeReq)!!
+    }
+
+    fun terminateTask(userId: String, taskTerminateReq: TaskTerminateReq): JobResult<TaskTerminateResult>{
+        val jobCloudTaskTerminateReq = JobCloudTaskTerminateReq(
+            jobInstanceId = taskTerminateReq.jobInstanceId,
+            operationCode = taskTerminateReq.operationCode,
+            bkUsername = userId
+        )
+        ApigwJobCloudApi.set(::terminateTask.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudTaskTerminateReq)!!
+    }
+
+    fun queryJobInstanceLogs(userId: String, queryJobInstanceLogsReq: QueryJobInstanceLogsReq): JobResult<QueryJobInstanceLogsResult>{
+        val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
+            jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
+            stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
+            hostList = queryJobInstanceLogsReq.hostList?.map {
+                JobCloudHost(
+                    bkHostId = it.bkHostId,
+                    bkCloudId = it.bkCloudId,
+                    ip = it.ip
+                )
+            },
+            bkUsername = userId
+        )
+        ApigwJobCloudApi.set(::queryJobInstanceLogs.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)!!
+    }
+
+    fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult>{
+        val jobCloudCreateAccountReq = JobCloudCreateAccountReq(
+            account = createAccountReq.account,
+            type = createAccountReq.type,
+            category = createAccountReq.category,
+            password = createAccountReq.password,
+            alias = createAccountReq.alias,
+            description = createAccountReq.description,
+            bkUsername = userId
+        )
+        ApigwJobCloudApi.set(::createAccount.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudCreateAccountReq)!!
+    }
+
+    fun deleteAccount(userId: String, deleteAccountReq: DeleteAccountReq): JobResult<DeleteAccountResult>{
+        val jobCloudDeleteAccountReq = JobCloudDeleteAccountReq(
+            id = deleteAccountReq.id,
+            bkUsername = userId
+        )
+        ApigwJobCloudApi.set(::deleteAccount.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudDeleteAccountReq)!!
     }
 }
