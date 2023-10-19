@@ -183,7 +183,7 @@ class RestartWorkspaceHandler @Autowired constructor(
             }
         } else {
             // 启动失败,记录为EXCEPTION
-            logger.warn("start workspace ${event.workspaceName} failed")
+            logger.warn("restart workspace ${event.workspaceName} failed")
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
                 status = WorkspaceStatus.EXCEPTION,
