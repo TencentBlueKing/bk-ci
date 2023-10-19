@@ -184,7 +184,6 @@ class SoftwareManageService @Autowired constructor(
         return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
     }
 
-
     /** 云桌面创建完成后安全初始化：安装ioa
      * ioa安装的脚步严格安装以下格式字符串，转base64后传入。
      * base64(-project_id "cmk-tke" -creator "raylzhang" -region_id "555" -inner_ip "SZ3.11.171.77.15")
