@@ -52,6 +52,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     count = 1
                 )
             )
+            Thread.sleep(1000)
         }
         return Result(true)
     }
