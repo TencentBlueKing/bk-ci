@@ -1,22 +1,21 @@
 package com.tencent.devops.environment.service.job
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
+import com.tencent.devops.environment.pojo.job.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
+import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAccount
-import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudCreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudDeleteAccountReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudExecuteTarget
@@ -26,20 +25,16 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudHost
 import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
-import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
-import com.tencent.devops.environment.utils.job.NetworkUtil
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("JobService")
-class JobService @Autowired constructor(
-    private val authenticationService: AuthenticationService
-) {
+class JobService {
     companion object {
         private val logger = LoggerFactory.getLogger(JobService::class.java)
     }
+
     fun executeScript(userId: String, scriptExecuteReq: ScriptExecuteReq): JobResult<ScriptExecuteResult> {
         val dynamicGroupList: List<JobCloudHost> = emptyList()
         val topoNodeList: List<JobCloudHost> = emptyList()
@@ -61,8 +56,8 @@ class JobService @Autowired constructor(
             ),
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::executeScript.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)!!
+        ApigwJobCloudApi.setThreadLocal(::executeScript.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)
     }
 
     fun distributeFile(userId: String, fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
@@ -101,21 +96,24 @@ class JobService @Autowired constructor(
             timeout = fileDistributeReq.timeout,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::distributeFile.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudFileDistributeReq)!!
+        ApigwJobCloudApi.setThreadLocal(::distributeFile.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudFileDistributeReq)
     }
 
-    fun terminateTask(userId: String, taskTerminateReq: TaskTerminateReq): JobResult<TaskTerminateResult>{
+    fun terminateTask(userId: String, taskTerminateReq: TaskTerminateReq): JobResult<TaskTerminateResult> {
         val jobCloudTaskTerminateReq = JobCloudTaskTerminateReq(
             jobInstanceId = taskTerminateReq.jobInstanceId,
             operationCode = taskTerminateReq.operationCode,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::terminateTask.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudTaskTerminateReq)!!
+        ApigwJobCloudApi.setThreadLocal(::terminateTask.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudTaskTerminateReq)
     }
 
-    fun queryJobInstanceLogs(userId: String, queryJobInstanceLogsReq: QueryJobInstanceLogsReq): JobResult<QueryJobInstanceLogsResult>{
+    fun queryJobInstanceLogs(
+        userId: String,
+        queryJobInstanceLogsReq: QueryJobInstanceLogsReq
+    ): JobResult<QueryJobInstanceLogsResult> {
         val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
             jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
             stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
@@ -128,11 +126,11 @@ class JobService @Autowired constructor(
             },
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::queryJobInstanceLogs.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)!!
+        ApigwJobCloudApi.setThreadLocal(::queryJobInstanceLogs.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)
     }
 
-    fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult>{
+    fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult> {
         val jobCloudCreateAccountReq = JobCloudCreateAccountReq(
             account = createAccountReq.account,
             type = createAccountReq.type,
@@ -142,16 +140,39 @@ class JobService @Autowired constructor(
             description = createAccountReq.description,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::createAccount.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudCreateAccountReq)!!
+        ApigwJobCloudApi.setThreadLocal(::createAccount.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudCreateAccountReq)
     }
 
-    fun deleteAccount(userId: String, deleteAccountReq: DeleteAccountReq): JobResult<DeleteAccountResult>{
+    fun deleteAccount(userId: String, deleteAccountReq: DeleteAccountReq): JobResult<DeleteAccountResult> {
         val jobCloudDeleteAccountReq = JobCloudDeleteAccountReq(
             id = deleteAccountReq.id,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::deleteAccount.name)
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudDeleteAccountReq)!!
+        ApigwJobCloudApi.setThreadLocal(::deleteAccount.name)
+        return ApigwJobCloudApi().executePostRequest(userId, jobCloudDeleteAccountReq)
+    }
+
+    fun queryJobInstanceStatus(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        returnIpResult: Boolean?
+    ): JobResult<QueryJobInstanceStatusResult> {
+        ApigwJobCloudApi.setThreadLocal(::queryJobInstanceStatus.name)
+        return ApigwJobCloudApi().executeGetRequest(userId, jobInstanceId, returnIpResult)
+    }
+
+    fun getAccountList(
+        userId: String,
+        projectId: String,
+        account: String?,
+        alias: String?,
+        category: Int?,
+        start: Int?,
+        length: Int?
+    ): JobResult<GetAccountListResult> {
+        ApigwJobCloudApi.setThreadLocal(::getAccountList.name)
+        return ApigwJobCloudApi().executeGetRequest(userId, account, alias, category, start, length)
     }
 }

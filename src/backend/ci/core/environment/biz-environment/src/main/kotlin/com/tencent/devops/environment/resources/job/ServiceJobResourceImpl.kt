@@ -34,43 +34,23 @@ import com.tencent.devops.environment.pojo.job.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.DeleteAccountResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudAccount
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.GetAccountListResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudFileDistributeReq
-import com.tencent.devops.environment.pojo.job.req.JobCloudFileSource
-import com.tencent.devops.environment.pojo.job.req.JobCloudHost
-import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
-import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.JobResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudCreateAccountReq
-import com.tencent.devops.environment.pojo.job.req.JobCloudDeleteAccountReq
-import com.tencent.devops.environment.service.job.CreateAccountService
-import com.tencent.devops.environment.service.job.DeleteAccountService
-import com.tencent.devops.environment.service.job.ScriptExecuteService
-import com.tencent.devops.environment.service.job.FileDistributeService
-import com.tencent.devops.environment.service.job.GetAccountListService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.ParseHashListService
-import com.tencent.devops.environment.service.job.TaskTerminateService
-import com.tencent.devops.environment.service.job.QueryJobInstanceStatusService
-import com.tencent.devops.environment.service.job.QueryJobInstanceLogsService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceJobResourceImpl @Autowired constructor(
-    private val queryJobInstanceStatusService: QueryJobInstanceStatusService,
-    private val getAccountListService: GetAccountListService,
     private val parseHashListService: ParseHashListService,
     private val jobService: JobService
 ) : ServiceJobResource {
@@ -90,42 +70,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<FileDistributeResult> {
         checkParam(userId, projectId)
         return jobService.distributeFile(userId, fileDistributeReq)
-//        val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
-//            fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
-//                JobCloudFileSource(
-//                    fileList = fileSource.fileList.toList(),
-//                    server = JobCloudExecuteTarget(
-//                        hostList = fileSource.sourceFileServer.hostList.map {
-//                            JobCloudHost(
-//                                bkHostId = it.bkHostId,
-//                                bkCloudId = it.bkCloudId,
-//                                ip = it.ip
-//                            )
-//                        }
-//                    ),
-//                    account = JobCloudAccount(
-//                        id = fileSource.account.id,
-//                        alias = fileSource.account.alias
-//                    )
-//                )
-//            },
-//            fileTargetPath = fileDistributeReq.fileTargetPath,
-//            transferMode = fileDistributeReq.transferMode,
-//            executeTarget = JobCloudExecuteTarget(
-//                hostList = fileDistributeReq.executeTarget.hostList.map {
-//                    JobCloudHost(
-//                        bkHostId = it.bkHostId,
-//                        bkCloudId = it.bkCloudId,
-//                        ip = it.ip
-//                    )
-//                }
-//            ),
-//            accountAlias = fileDistributeReq.accountAlias,
-//            accountId = fileDistributeReq.accountId,
-//            timeout = fileDistributeReq.timeout,
-//            bkUsername = userId
-//        )
-//        return fileDistributeService.distributeFile(jobCloudFileDistributeReq)
     }
 
     override fun terminateTask(
@@ -135,12 +79,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<TaskTerminateResult> {
         checkParam(userId, projectId)
         return jobService.terminateTask(userId, taskTerminateReq)
-//        val jobCloudTaskTerminateReq = JobCloudTaskTerminateReq(
-//            jobInstanceId = taskTerminateReq.jobInstanceId,
-//            operationCode = taskTerminateReq.operationCode,
-//            bkUsername = userId
-//        )
-//        return taskTerminateService.terminateTask(jobCloudTaskTerminateReq)
     }
 
     override fun queryJobInstanceStatus(
@@ -150,7 +88,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
         checkParam(userId, projectId)
-        return queryJobInstanceStatusService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
+        return jobService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
     }
 
     override fun queryJobInstanceLogs(
@@ -160,19 +98,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceLogsResult> {
         checkParam(userId, projectId)
         return jobService.queryJobInstanceLogs(userId, queryJobInstanceLogsReq)
-//        val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
-//            jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
-//            stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
-//            hostList = queryJobInstanceLogsReq.hostList?.map {
-//                JobCloudHost(
-//                    bkHostId = it.bkHostId,
-//                    bkCloudId = it.bkCloudId,
-//                    ip = it.ip
-//                )
-//            },
-//            bkUsername = userId
-//        )
-//        return queryJobInstanceLogsService.queryJobInstanceLogs(jobCloudQueryJobInstanceLogsReq)
     }
 
     override fun createAccount(
@@ -182,16 +107,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<CreateAccountResult> {
         checkParam(userId, projectId)
         return jobService.createAccount(userId, createAccountReq)
-//        val jobCloudCreateAccountReq = JobCloudCreateAccountReq(
-//            account = createAccountReq.account,
-//            type = createAccountReq.type,
-//            category = createAccountReq.category,
-//            password = createAccountReq.password,
-//            alias = createAccountReq.alias,
-//            description = createAccountReq.description,
-//            bkUsername = userId
-//        )
-//        return createAccountService.createAccount(jobCloudCreateAccountReq)
     }
 
     override fun deleteAccount(
@@ -201,11 +116,6 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<DeleteAccountResult> {
         checkParam(userId, projectId)
         return jobService.deleteAccount(userId, deleteAccountReq)
-//        val jobCloudDeleteAccountReq = JobCloudDeleteAccountReq(
-//            id = deleteAccountReq.id,
-//            bkUsername = userId
-//        )
-//        return deleteAccountService.deleteAccount(jobCloudDeleteAccountReq)
     }
 
     override fun getAccountList(
@@ -218,9 +128,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         length: Int?
     ): JobResult<GetAccountListResult> {
         checkParam(userId, projectId)
-        return getAccountListService.getAccountList(
-            userId, projectId, account, alias, category, start, length
-        )
+        return jobService.getAccountList(userId, projectId, account, alias, category, start, length)
     }
 
     private fun checkParam(userId: String, projectId: String) {
