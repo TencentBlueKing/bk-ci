@@ -304,9 +304,14 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             } else {
                 // 生成数据库表的分片规则
+                val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+                    ShardingRuleTypeEnum.ARCHIVE_DB
+                } else {
+                    ShardingRuleTypeEnum.DB
+                }
                 val dbShardingRoutingRule = getShardingRoutingRuleByName(
                     moduleCode = moduleCode,
-                    ruleType = ShardingRuleTypeEnum.DB,
+                    ruleType = dbRuleType,
                     routingName = routingName
                 )
                 dbShardingRoutingRule?.let {
