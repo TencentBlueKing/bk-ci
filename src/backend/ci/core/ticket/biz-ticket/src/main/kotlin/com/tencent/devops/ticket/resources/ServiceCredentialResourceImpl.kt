@@ -72,7 +72,6 @@ class ServiceCredentialResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "get"])
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")

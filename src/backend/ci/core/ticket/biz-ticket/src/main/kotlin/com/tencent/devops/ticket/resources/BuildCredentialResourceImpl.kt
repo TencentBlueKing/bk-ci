@@ -47,7 +47,6 @@ class BuildCredentialResourceImpl @Autowired constructor(
 
     @SensitiveApiPermission("get_credential")
     @BkTimed(extraTags = ["operate", "get"])
-    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
     override fun get(
         projectId: String,
         buildId: String,
