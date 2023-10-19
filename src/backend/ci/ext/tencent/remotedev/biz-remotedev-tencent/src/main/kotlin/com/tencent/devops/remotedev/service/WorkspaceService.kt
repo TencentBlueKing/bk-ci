@@ -256,7 +256,8 @@ class WorkspaceService @Autowired constructor(
             workspaceName = null,
             systemType = null,
             queryType = QueryType.WEB,
-            ips = null
+            ips = null,
+            owner = null
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -265,7 +266,8 @@ class WorkspaceService @Autowired constructor(
             systemType = null,
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = null
+            ips = null,
+            owner = null
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -277,7 +279,8 @@ class WorkspaceService @Autowired constructor(
         systemType: WorkspaceSystemType?,
         ips: List<String>?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        owner: String?
     ): Page<ProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
         val pageNotNull = page ?: 1
@@ -288,7 +291,8 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             systemType = systemType,
             queryType = QueryType.OP,
-            ips = ips
+            ips = ips,
+            owner = owner
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -297,7 +301,8 @@ class WorkspaceService @Autowired constructor(
             systemType = systemType,
             queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = ips
+            ips = ips,
+            owner = owner
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
