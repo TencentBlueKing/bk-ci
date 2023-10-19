@@ -25,28 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserImageManageResource
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import com.tencent.devops.remotedev.service.image.ImageManageService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-@Suppress("ALL")
-class UserImageManageResourceImpl @Autowired constructor(
-    private val projectImageManageService: ImageManageService
-
-) : UserImageManageResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserImageManageResourceImpl::class.java)!!
-    }
-
-    override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
-        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
-        return Result(projectImageManageService.getProjectImageList(projectId))
-    }
+@Api(tags = ["AUTH_MONITOR_SPACE"], description = "监控空间接口")
+@Path("/user/auth/monitor/space")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserMonitorSpaceResource {
+    @ApiOperation("获取监控空间业务id")
+    @GET
+    @Path("/")
+    fun getMonitorSpaceBizId(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectCode")
+        @ApiParam("项目ID", required = false)
+        projectCode: String
+    ): Result<String>
 }

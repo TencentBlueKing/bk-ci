@@ -36,16 +36,20 @@ data class ProjectImage(
     val id: Long,
     @ApiModelProperty("项目ID")
     val projectId: String,
+    @ApiModelProperty("镜像ID")
+    val imageId: String,
     @ApiModelProperty("镜像名称")
     val imageName: String,
-    @ApiModelProperty("版本")
-    val version: String,
     @ApiModelProperty("路径")
-    val path: String,
+    val imageCosFile: String,
     @ApiModelProperty("size")
     val size: String,
+    @ApiModelProperty("镜像关联cgsId")
+    val sourceCgsId: String,
+    @ApiModelProperty("镜像关联cgsType")
+    val sourceCgsType: String,
     @ApiModelProperty("区域")
-    val zone: String,
+    val sourceCgsZone: String,
     @ApiModelProperty("状态")
     val status: ImageStatus,
     @ApiModelProperty("创建人")

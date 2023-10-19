@@ -25,48 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.image
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.remotedev.dao.ImageManageDao
-import com.tencent.devops.remotedev.pojo.image.ImageStatus
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
+import com.tencent.devops.auth.api.user.UserMonitorSpaceResource
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class ImageManageService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val imageManageDao: ImageManageDao
-) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ImageManageService::class.java)
-    }
-
-    // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
-        logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
-        val result = mutableListOf<ProjectImage>()
-        imageManageDao.queryImageList(
-            projectId = projectId,
-            dslContext = dslContext
-        ).forEach {
-            result.add(
-                ProjectImage(
-                    id = it.id,
-                    projectId = it.projectId,
-                    imageName = it.imageName,
-                    version = it.version,
-                    path = it.path,
-                    size = it.size,
-                    zone = it.zone,
-                    creator = it.creator,
-                    status = ImageStatus.values()[it.status]
-                )
-            )
-        }
-        return result
+@RestResource
+class UserMonitorSpaceResourceImpl @Autowired constructor(
+    val monitorSpaceService: AuthMonitorSpaceService
+) : UserMonitorSpaceResource {
+    override fun getMonitorSpaceBizId(userId: String, projectCode: String): Result<String> {
+        return Result(monitorSpaceService.getMonitorSpaceBizId(projectCode))
     }
 }

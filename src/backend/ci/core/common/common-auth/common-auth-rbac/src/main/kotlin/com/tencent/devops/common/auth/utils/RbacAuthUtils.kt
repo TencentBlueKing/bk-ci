@@ -4,8 +4,11 @@ import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.slf4j.LoggerFactory
 
 object RbacAuthUtils {
+    private val logger = LoggerFactory.getLogger(RbacAuthUtils::class.java)
+
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
         return "${extResourceType(authResourceType)}_${authPermission.value}"
     }

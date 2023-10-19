@@ -96,9 +96,9 @@ interface ServiceStartCloudResource {
         @ApiParam("operator", required = true)
         @QueryParam("operator")
         operator: String,
-        @ApiParam("workspaceName", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
+        @ApiParam("cgsId", required = false)
+        @QueryParam("cgsId")
+        cgsId: String,
         receivers: List<String>
     ): Result<String>
 

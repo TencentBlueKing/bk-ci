@@ -33,11 +33,16 @@ enum class WorkspaceAction {
     SLEEP, // 2
     DELETE, // 3
     SHARE, // 4
+    STOP,
+    RESTART,
     PREPARING,
     STARTING,
     SLEEPING,
     DELETING,
     COMPLETE_PULL_CODE, // 异步拉取代码完成，由proxy通知
     NEED_RENEWAL,
-    SYSTEM_CHANGES
+    SYSTEM_CHANGES,
+    STOPPING,
+    RESTARTING,
+    MAKE_IMAGE
 }

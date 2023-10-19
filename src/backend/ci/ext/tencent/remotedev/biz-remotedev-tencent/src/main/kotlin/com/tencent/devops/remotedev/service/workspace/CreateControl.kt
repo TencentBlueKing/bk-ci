@@ -205,10 +205,10 @@ class CreateControl @Autowired constructor(
                     settingEnvs = emptyMap(),
                     projectId = projectId,
                     mountType = mountType,
-                    ownerType = ws.ownerType
+                    ownerType = ws.ownerType,
+                    delayMills = i * 2000
                 )
             )
-            Thread.sleep(100)
         }
     }
 
@@ -242,7 +242,8 @@ class CreateControl @Autowired constructor(
             status = true,
             action = WorkspaceAction.PREPARING,
             systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = projectId
         )
 
         return WorkspaceResponse(
@@ -317,7 +318,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
+            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType, event)
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -344,7 +345,7 @@ class CreateControl @Autowired constructor(
 
             // 创建成功时给 cmdb 添加字段方便监控检索
             val hostIdSub = event.environmentIp?.split(".")
-            if (!hostIdSub.isNullOrEmpty()) {
+            if (!hostIdSub.isNullOrEmpty() && ws.workspaceSystemType.checkWindows()) {
                 val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
@@ -377,7 +378,8 @@ class CreateControl @Autowired constructor(
             action = WorkspaceAction.START,
             systemType = ws.workspaceSystemType,
             workspaceMountType = ws.workspaceMountType,
-            ownerType = ws.ownerType
+            ownerType = ws.ownerType,
+            projectId = ws.projectId
         )
     }
 

@@ -25,38 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.user
+package com.tencent.devops.remotedev.resources.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["USER_IMAGE_MANAGE"], description = "用户-镜像管理")
-@Path("/user/image")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserImageManageResource {
+@RestResource
+@Suppress("ALL")
+class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
+    private val projectImageManageService: ImageManageService
 
-    @ApiOperation("获取镜像列表")
-    @GET
-    @Path("/list")
-    fun getProjectImageList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("project_id")
-        projectId: String
-    ): Result<List<ProjectImage>>
+) : UserProjectWorkspaceImageResource {
+    companion object {
+        val logger = LoggerFactory.getLogger(UserProjectWorkspaceImageResourceImpl::class.java)!!
+    }
+
+    override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
+        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
+        return Result(projectImageManageService.getProjectImageList(projectId))
+    }
+
+    override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
+        return Result(projectImageManageService.deleteProjectImage(userId, projectId, imageId))
+    }
 }
