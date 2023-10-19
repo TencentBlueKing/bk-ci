@@ -158,14 +158,18 @@ class VariableTransfer @Autowired constructor() {
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         variables.forEach { (key, variable) ->
+            val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
+                ?: BuildFormPropertyType.STRING
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.name,
                     required = variable.allowModifyAtStartup ?: true,
-                    type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
-                        ?: BuildFormPropertyType.STRING,
-                    defaultValue = variable.value ?: "",
+                    type = type,
+                    defaultValue = when (type) {
+                        BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
+                        else -> variable.value ?: ""
+                    },
                     options = variable.props?.options?.map {
                         BuildFormValue(
                             key = it.label ?: it.id.toString(),
@@ -185,7 +189,7 @@ class VariableTransfer @Autowired constructor() {
                     },
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
-                    readOnly = variable.readonly,
+                    readOnly = variable.readonly ?: false,
                     valueNotEmpty = variable.valueNotEmpty
                 )
             )

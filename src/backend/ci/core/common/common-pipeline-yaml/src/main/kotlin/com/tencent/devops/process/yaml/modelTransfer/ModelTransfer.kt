@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
@@ -78,7 +79,7 @@ class ModelTransfer @Autowired constructor(
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
             pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
             desc = yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
-            concurrencyGroup = yaml.concurrency?.group,
+            concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
             runLockType = when {
