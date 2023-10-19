@@ -6,6 +6,9 @@ import com.tencent.bk.audit.constants.UserIdentifyTypeEnum
 import com.tencent.bk.audit.exception.AuditException
 import com.tencent.bk.audit.model.AuditHttpRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
+import com.tencent.devops.common.api.constant.REQUEST_IP
+import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -16,7 +19,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
         private const val HEADER_USERNAME = AUTH_HEADER_USER_ID
         private const val HEADER_USER_IDENTIFY_TENANT_ID = "X-User-Identify-Tenant-Id"
         private const val HEADER_USER_IDENTIFY_TYPE = "X-User-Identify-Type"
-        private const val HEADER_ACCESS_TYPE = "USER-AGENT"
+        private const val HEADER_ACCESS_TYPE = REQUEST_CHANNEL
         private const val HEADER_REQUEST_ID = "X-DEVOPS-RID"
         private val logger = LoggerFactory.getLogger(BkAuditRequestProvider::class.java)
     }
@@ -54,10 +57,10 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getAccessType(): AccessTypeEnum {
         val httpServletRequest = getHttpServletRequest()
-        val accessTypeHeader = httpServletRequest.getHeader(HEADER_ACCESS_TYPE)
-        return when {
-            accessTypeHeader.contains("Mozilla") -> AccessTypeEnum.WEB
-            accessTypeHeader.contains("API") -> AccessTypeEnum.API
+        return when (httpServletRequest.getHeader(HEADER_ACCESS_TYPE)) {
+            RequestChannelTypeEnum.USER.name,
+            RequestChannelTypeEnum.OP.name -> AccessTypeEnum.WEB
+            RequestChannelTypeEnum.OPEN.name -> AccessTypeEnum.API
             else -> AccessTypeEnum.OTHER
         }
     }
@@ -69,7 +72,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getClientIp(): String? {
         val request = getHttpServletRequest()
-        val xff = request.getHeader("X-Forwarded-For")
+        val xff = request.getHeader(REQUEST_IP)
         return if (xff == null) {
             request.remoteAddr
         } else {

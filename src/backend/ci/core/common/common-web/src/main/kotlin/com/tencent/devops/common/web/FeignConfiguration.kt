@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
+import com.tencent.devops.common.api.constant.REQUEST_IP
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
@@ -69,7 +70,7 @@ class FeignConfiguration @Autowired constructor(
             requestTemplate.decodeSlash(false)
 
             if (!requestTemplate.headers().containsKey(AUTH_HEADER_PROJECT_ID)) {
-            // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
+                // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
                 val tag = bkTag.getFinalTag()
                 requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
                 logger.debug("gateway tag is : $tag")
@@ -128,6 +129,12 @@ class FeignConfiguration @Autowired constructor(
             if (!requestChannel.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_CHANNEL, requestChannel)
             }
+            // 设置请求IP
+            val requestIp = request.getHeader(REQUEST_IP)
+            if (!requestIp.isNullOrBlank()) {
+                requestTemplate.header(REQUEST_IP, requestIp)
+            }
+            logger.info("FeignConfiguration:requestIp($requestIp)")
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()
