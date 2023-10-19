@@ -16,10 +16,8 @@ import javax.servlet.http.HttpServletRequest
 
 class BkAuditRequestProvider : AuditRequestProvider {
     companion object {
-        private const val HEADER_USERNAME = AUTH_HEADER_USER_ID
         private const val HEADER_USER_IDENTIFY_TENANT_ID = "X-User-Identify-Tenant-Id"
         private const val HEADER_USER_IDENTIFY_TYPE = "X-User-Identify-Type"
-        private const val HEADER_ACCESS_TYPE = REQUEST_CHANNEL
         private const val HEADER_REQUEST_ID = "X-DEVOPS-RID"
         private val logger = LoggerFactory.getLogger(BkAuditRequestProvider::class.java)
     }
@@ -40,7 +38,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getUsername(): String? {
         val httpServletRequest = getHttpServletRequest()
-        return httpServletRequest.getHeader(HEADER_USERNAME)
+        return httpServletRequest.getHeader(AUTH_HEADER_USER_ID)
     }
 
     override fun getUserIdentifyType(): UserIdentifyTypeEnum? {
