@@ -84,12 +84,6 @@ class RemoteDevService @Autowired constructor(
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
-            val vmCreateResp = if (mountType == WorkspaceMountType.START) {
-                JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
-            } else {
-                null
-            }
-
             // 检验workspace状态
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
@@ -103,34 +97,53 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                dispatchWorkspaceDao.updateWorkspace(
-                    workspaceName = event.workspaceName,
-                    status = EnvStatusEnum.running,
-                    envId = vmCreateResp?.envId ?: "",
-                    regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
-                    dslContext = context
-                )
+            if (mountType == WorkspaceMountType.START) {
+                val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
 
-                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                    dslContext = context,
-                    workspaceName = event.workspaceName,
-                    environmentUid = result.enviromentUid,
-                    operator = userId,
-                    action = EnvironmentAction.CREATE
-                )
-            }
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    dispatchWorkspaceDao.updateWorkspace(
+                        workspaceName = event.workspaceName,
+                        status = EnvStatusEnum.running,
+                        envId = vmCreateResp?.envId ?: "",
+                        regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
+                        dslContext = context
+                    )
 
-            return if (mountType == WorkspaceMountType.START) {
-                WorkspaceResponse(
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = context,
+                        workspaceName = event.workspaceName,
+                        environmentUid = vmCreateResp?.envId ?: "",
+                        operator = userId,
+                        action = EnvironmentAction.CREATE
+                    )
+                }
+
+                return WorkspaceResponse(
                     environmentUid = vmCreateResp?.envId ?: "",
                     environmentHost = vmCreateResp?.cgsIp ?: "",
                     environmentIp = vmCreateResp?.cgsIp ?: "",
                     resourceId = vmCreateResp?.resourceId
                 )
             } else {
-                WorkspaceResponse(
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    dispatchWorkspaceDao.updateWorkspaceStatus(
+                        workspaceName = event.workspaceName,
+                        status = EnvStatusEnum.running,
+                        dslContext = context
+                    )
+
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = context,
+                        workspaceName = event.workspaceName,
+                        environmentUid = result.enviromentUid,
+                        operator = userId,
+                        action = EnvironmentAction.CREATE
+                    )
+                }
+
+                return WorkspaceResponse(
                     environmentUid = result.enviromentUid,
                     environmentHost = workspaceInfo.environmentHost,
                     environmentIp = workspaceInfo.environmentIP,
