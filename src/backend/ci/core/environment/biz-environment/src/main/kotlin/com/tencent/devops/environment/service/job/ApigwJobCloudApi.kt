@@ -147,9 +147,9 @@ class ApigwJobCloudApi {
         if (logger.isDebugEnabled)
             logger.debug(
                 "[${get()}] " +
-                    "headers: ${logWithLengthLimit(headers.toString())}, " +
+                    "headers: $headers, " +
                     "url: ${jobCloudAuthenticationReq.url}, " +
-                    "body: ${logWithLengthLimit(requestContent.toString())}"
+                    "body: $requestContent"
             )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers))
     }
@@ -173,7 +173,7 @@ class ApigwJobCloudApi {
     private fun <T> getResultFromRes(response: Response): JobResult<T> {
         val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
-        remove()
+//        remove()
         try {
             val responseBody = response.body?.string()
             if (logger.isDebugEnabled) {
