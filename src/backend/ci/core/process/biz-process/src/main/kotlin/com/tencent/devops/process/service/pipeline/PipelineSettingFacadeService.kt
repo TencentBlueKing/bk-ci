@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -127,10 +129,19 @@ class PipelineSettingFacadeService @Autowired constructor(
                 currVersion = latest.version,
                 originSetting = latest,
                 newSetting = PipelineSettingVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    successSubscriptionList = setting.successSubscriptionList,
-                    failSubscriptionList = setting.failSubscriptionList
+                    projectId = setting.projectId,
+                    pipelineId = setting.pipelineId,
+                    pipelineName = setting.pipelineName,
+                    desc = setting.desc,
+                    runLockType = setting.runLockType,
+                    failSubscriptionList = setting.failSubscriptionList,
+                    labels = setting.labels,
+                    waitQueueTimeMinute = setting.waitQueueTimeMinute,
+                    maxQueueSize = setting.maxQueueSize,
+                    buildNumRule = setting.buildNumRule,
+                    concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    concurrencyGroup = setting.concurrencyGroup,
+                    pipelineAsCodeSettings = setting.pipelineAsCodeSettings
                 )
             )
         } ?: 1

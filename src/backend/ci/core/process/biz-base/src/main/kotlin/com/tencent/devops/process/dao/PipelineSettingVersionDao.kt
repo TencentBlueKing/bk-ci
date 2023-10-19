@@ -35,12 +35,9 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository

@@ -478,7 +478,7 @@ class PipelineSettingDao {
                     failSubscription = oldFailSubscription,
                     successSubscriptionList = successSubscriptionList,
                     failSubscriptionList = failSubscriptionList,
-                    labels = emptyList(),
+                    labels = emptyList(), // 标签不在本表保存，在写入和查询时需要通过 PipelineGroupService.kt
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
                     maxQueueSize = t.maxQueueSize,
                     maxPipelineResNum = t.maxPipelineResNum,

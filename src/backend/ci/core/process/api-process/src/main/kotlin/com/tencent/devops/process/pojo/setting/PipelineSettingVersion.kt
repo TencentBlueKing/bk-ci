@@ -45,7 +45,6 @@ data class PipelineSettingVersion(
     @ApiModelProperty("流水线id", required = false)
     val pipelineId: String = "",
 
-
     // 流水线基础配置
     @ApiModelProperty("流水线名称", required = false)
     var pipelineName: String = "",
