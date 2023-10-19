@@ -7,6 +7,7 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
@@ -15,7 +16,9 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceService: WorkspaceService
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
-        return Result(permissionService.checkAndGetUser1Password(ticket).userId == userId)
+        return Result(
+            permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8")).userId == userId
+        )
     }
 
     override fun getProjectWorkspace(projectId: String?, ip: String?): Result<List<WeSecProjectWorkspace>> {
