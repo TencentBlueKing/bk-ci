@@ -57,7 +57,10 @@ class BkAuditRequestProvider : AuditRequestProvider {
 
     override fun getAccessType(): AccessTypeEnum {
         val httpServletRequest = getHttpServletRequest()
-        return when (httpServletRequest.getHeader(HEADER_ACCESS_TYPE)) {
+        val requestChannel = (httpServletRequest.getAttribute(REQUEST_CHANNEL)
+            ?: httpServletRequest.getHeader(REQUEST_CHANNEL))?.toString()
+        logger.debug("get request channel :$requestChannel")
+        return when (requestChannel) {
             RequestChannelTypeEnum.USER.name,
             RequestChannelTypeEnum.OP.name -> AccessTypeEnum.WEB
             RequestChannelTypeEnum.OPEN.name -> AccessTypeEnum.API

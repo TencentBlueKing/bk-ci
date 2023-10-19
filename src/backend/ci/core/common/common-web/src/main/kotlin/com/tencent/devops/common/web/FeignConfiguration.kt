@@ -129,12 +129,12 @@ class FeignConfiguration @Autowired constructor(
             if (!requestChannel.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_CHANNEL, requestChannel)
             }
-            // 设置请求IP
+            // 设置客户端的原始IP地址
             val requestIp = request.getHeader(REQUEST_IP)
             if (!requestIp.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_IP, requestIp)
             }
-            logger.info("FeignConfiguration:requestIp($requestIp)")
+            logger.debug("FeignConfiguration:requestIp($requestIp)")
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()
