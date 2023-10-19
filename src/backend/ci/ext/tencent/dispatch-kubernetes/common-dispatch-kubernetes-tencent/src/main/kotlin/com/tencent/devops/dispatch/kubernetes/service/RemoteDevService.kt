@@ -137,7 +137,6 @@ class RemoteDevService @Autowired constructor(
                     resourceId = result.resourceId
                 )
             }
-
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
