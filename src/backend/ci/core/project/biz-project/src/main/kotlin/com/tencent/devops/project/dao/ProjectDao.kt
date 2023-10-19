@@ -576,8 +576,13 @@ class ProjectDao {
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
-                .let { it.takeIf { projectName != null }?.and(PROJECT_NAME.like("%${projectName!!.trim()}%")) ?: it }
+                .let {
+                    it.takeIf { projectName != null }?.and(
+                        PROJECT_NAME.like("%${projectName!!.trim()}%")
+                    ) ?: it
+                }
                 .let { it.takeIf { projectId != null }?.and(ENGLISH_NAME.eq(projectId)) ?: it }
+                .and(CHANNEL.eq("BS"))
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)

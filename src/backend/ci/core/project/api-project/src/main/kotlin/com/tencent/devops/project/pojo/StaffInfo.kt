@@ -23,57 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-}
+@ApiModel("用户信息")
+data class StaffInfo(
+    @ApiModelProperty("登录名")
+    @JsonProperty("LoginName")
+    val loginName: String,
+    @ApiModelProperty("部门名称")
+    @JsonProperty("DepartmentName")
+    val departmentName: String,
+    @ApiModelProperty("英文全名")
+    @JsonProperty("FullName")
+    val fullName: String,
+    @ApiModelProperty("中文名")
+    @JsonProperty("ChineseName")
+    val chineseName: String,
+    @ApiModelProperty("组ID")
+    @JsonProperty("GroupId")
+    val groupId: String,
+    @ApiModelProperty("组名称")
+    @JsonProperty("GroupName")
+    val groupName: String,
+    @ApiModelProperty("当前状态")
+    @JsonProperty("StatusId")
+    val statusId: String
+)
