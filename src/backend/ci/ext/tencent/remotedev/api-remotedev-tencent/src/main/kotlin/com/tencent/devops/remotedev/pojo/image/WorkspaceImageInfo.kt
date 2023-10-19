@@ -25,14 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.websocket.page
+package com.tencent.devops.remotedev.pojo.image
 
-object WorkspacePageBuild {
-    fun buildPage(workspaceName: String): String {
-        return "/remotedev/workspace/$workspaceName"
-    }
-
-    fun instanceManage(projectId: String): String {
-        return "/remotedev/workspaces/$projectId"
-    }
-}
+data class WorkspaceImageInfo(
+    val imageId: String,
+    val imageCosFile: String,
+    val size: String,
+    val sourceCgsId: String,
+    val sourceCgsType: String,
+    val sourceCgsZone: String
+)

@@ -28,8 +28,13 @@
 package com.tencent.devops.remotedev.listener
 
 import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
@@ -44,17 +49,34 @@ class RemoteDevUpdateListener @Autowired constructor(
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val startWorkspaceHandler: StartWorkspaceHandler,
+    private val stopWorkspaceHandler: StopWorkspaceHandler,
+    private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
 ) : Listener<RemoteDevUpdateEvent> {
 
     override fun execute(event: RemoteDevUpdateEvent) {
         logger.info("A message is received from dispatch k8s $event")
         kotlin.runCatching {
+            if (event.mountType == WorkspaceMountType.START) {
+                when (event.type) {
+                    UpdateEventType.CREATE -> createControl.afterCreateWorkspace(event)
+                    UpdateEventType.START -> startWorkspaceHandler.startWorkspaceCallback(event)
+                    UpdateEventType.STOP -> stopWorkspaceHandler.stopWorkspaceCallback(event)
+                    UpdateEventType.RESTART -> restartWorkspaceHandler.restartWorkspaceCallback(event)
+                    UpdateEventType.DELETE -> deleteControl.afterDeleteWorkspace(event)
+                    UpdateEventType.MAKE_IMAGE -> makeWorkspaceImageHandler.makeWorkspaceImageCallback(event)
+                    else -> {}
+                }
+                return
+            }
             when (event.type) {
                 UpdateEventType.CREATE -> createControl.afterCreateWorkspace(event)
                 UpdateEventType.START -> startControl.afterStartWorkspace(event)
                 UpdateEventType.STOP -> sleepControl.afterStopWorkspace(event)
                 UpdateEventType.DELETE -> deleteControl.afterDeleteWorkspace(event)
+                else -> {}
             }
         }.onFailure {
             logger.warn("RemoteDevUpdateEvent call back error", it)

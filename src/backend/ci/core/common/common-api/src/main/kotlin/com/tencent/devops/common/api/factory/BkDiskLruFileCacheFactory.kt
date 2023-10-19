@@ -25,14 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.websocket.page
+package com.tencent.devops.common.api.factory
 
-object WorkspacePageBuild {
-    fun buildPage(workspaceName: String): String {
-        return "/remotedev/workspace/$workspaceName"
-    }
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 
-    fun instanceManage(projectId: String): String {
-        return "/remotedev/workspaces/$projectId"
+object BkDiskLruFileCacheFactory {
+
+    fun getDiskLruFileCache(
+        cacheDir: String,
+        cacheSize: Long
+    ): BkDiskLruFileCache {
+        return BkDiskLruFileCache(cacheDir, cacheSize)
     }
 }

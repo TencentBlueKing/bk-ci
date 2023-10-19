@@ -53,7 +53,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -215,18 +214,22 @@ class BcsRemoteDevService @Autowired constructor(
             return resp.taskUid
         }
 
-        override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-            val environmentUid = getEnvironmentUid(event.workspaceName)
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+            val environmentUid = getEnvironmentUid(workspaceName)
             val resp = workspaceBcsClient.operatorWorkspace(
                 userId = userId,
                 environmentUid = environmentUid,
-                workspaceName = event.workspaceName,
+                workspaceName = workspaceName,
                 environmentAction = EnvironmentAction.DELETE
             )
 
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
+                workspaceName = workspaceName,
                 status = EnvStatusEnum.deleted,
                 dslContext = dslContext
             )
@@ -234,7 +237,11 @@ class BcsRemoteDevService @Autowired constructor(
             return resp.taskUid
         }
 
-        override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
             TODO("Not yet implemented")
         }
 
@@ -336,7 +343,7 @@ class BcsRemoteDevService @Autowired constructor(
         private fun getEnvironmentUid(workspaceName: String): String {
             val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
             return workspaceRecord?.environmentUid
-                ?: throw RuntimeException("No devcloud environment with $workspaceName")
+                ?: throw RuntimeException("No bcs environment with $workspaceName")
         }
 
         private fun getWorkspaceEnvPatchStr(
