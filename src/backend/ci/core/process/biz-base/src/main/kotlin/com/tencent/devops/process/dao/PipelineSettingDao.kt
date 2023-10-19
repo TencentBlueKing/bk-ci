@@ -124,7 +124,7 @@ class PipelineSettingDao {
                     failNotifyTypes,
                     successSubscription.content,
                     failSubscription.content,
-                    UInteger.valueOf(DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT)),
+                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
                     maxPipelineResNum,
@@ -239,7 +239,7 @@ class PipelineSettingDao {
                 .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
                 .set(SUCCESS_CONTENT, setting.successSubscription.content)
                 .set(FAIL_CONTENT, setting.failSubscription.content)
-                .set(WAIT_QUEUE_TIME_SECOND, UInteger.valueOf(DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute)))
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
                 .set(BUILD_NUM_RULE, setting.buildNumRule)

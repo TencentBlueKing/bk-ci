@@ -198,21 +198,20 @@ class PipelineSettingVersionDao {
     class PipelineSettingVersionJooqMapper : RecordMapper<TPipelineSettingVersionRecord, PipelineSettingVersion> {
         override fun map(record: TPipelineSettingVersionRecord?): PipelineSettingVersion? {
             return record?.let { t ->
-                val successSubscriptionList = t.successSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                }
-                val failSubscriptionList = t.failureSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                }
                 PipelineSettingVersion(
                     projectId = t.projectId,
                     pipelineId = t.pipelineId,
                     pipelineName = t.name,
                     desc = t.desc,
                     runLockType = PipelineRunLockType.valueOf(t.runLockType),
-                    failSubscriptionList = failSubscriptionList,
+                    successSubscriptionList = t.successSubscription?.let {
+                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    },
+                    failSubscriptionList = t.failureSubscription?.let {
+                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    },
                     labels = emptyList(),
-                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
