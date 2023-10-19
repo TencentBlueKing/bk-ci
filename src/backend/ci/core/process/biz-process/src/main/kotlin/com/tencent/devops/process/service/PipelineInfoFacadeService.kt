@@ -49,7 +49,9 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -455,13 +457,26 @@ class PipelineInfoFacadeService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    val beforeDeleteParam = BeforeDeleteParam(
-                        userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode
+                    modelCheckPlugin.afterCreateElementInExistsModel(
+                        existModel = model,
+                        sourceModel = null,
+                        param = AfterCreateParam(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = pipelineId ?: "",
+                            channelCode = channelCode
+                        )
                     )
+
                     modelCheckPlugin.beforeDeleteElementInExistsModel(
                         existModel = model,
                         sourceModel = null,
-                        param = beforeDeleteParam
+                        param = BeforeDeleteParam(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = pipelineId ?: "",
+                            channelCode = channelCode
+                        )
                     )
                 }
             }
@@ -719,13 +734,22 @@ class PipelineInfoFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
             // 对已经存在的模型做处理
-            val param = BeforeDeleteParam(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode
+            modelCheckPlugin.beforeDeleteElementInExistsModel(
+                existModel, model, BeforeDeleteParam(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
+                )
             )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
+            modelCheckPlugin.beforeUpdateElementInExistsModel(
+                existModel, model, BeforeUpdateParam(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
+                )
+            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,

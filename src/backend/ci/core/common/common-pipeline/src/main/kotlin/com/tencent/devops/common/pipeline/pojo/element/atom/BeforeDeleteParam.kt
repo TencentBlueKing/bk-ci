@@ -27,11 +27,25 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
+import com.tencent.devops.common.pipeline.enums.AtomChangeAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("删除插件时的前置操作参数")
 data class BeforeDeleteParam(
-    val userId: String,
-    val projectId: String,
-    val pipelineId: String,
-    val channelCode: ChannelCode = ChannelCode.BS
-)
+    @ApiModelProperty("用户名")
+    override val userId: String,
+    @ApiModelProperty("项目ID")
+    override val projectId: String,
+    @ApiModelProperty("流水线Id")
+    override val pipelineId: String,
+    @ApiModelProperty("渠道")
+    override val channelCode: ChannelCode = ChannelCode.BS,
+    @ApiModelProperty("动作")
+    override val action: AtomChangeAction = AtomChangeAction.DELETE,
+    @ApiModelProperty("插件配置")
+    var element: Element = EmptyElement()
+) : AtomChangeEventParam

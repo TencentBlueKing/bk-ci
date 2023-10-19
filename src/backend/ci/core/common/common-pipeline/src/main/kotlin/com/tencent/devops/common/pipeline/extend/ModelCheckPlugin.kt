@@ -32,7 +32,9 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 
 /**
  * 对流水线模型中的设置的agent进行检查的扩展点
@@ -84,4 +86,27 @@ interface ModelCheckPlugin {
      */
     @Throws(ErrorCodeException::class)
     fun checkJobCondition(container: Container, finallyStage: Boolean, contextMap: Map<String, String>)
+
+    /**
+     * 在修改element前做的一些处理
+     * 对比sourceModel，并清理model中与之不同的Element
+     * @param existModel 目标Model（要修改的Model)
+     * @param sourceModel 源要比较的Model
+     */
+    fun beforeUpdateElementInExistsModel(
+        existModel: Model,
+        sourceModel: Model? = null,
+        param: BeforeUpdateParam
+    )
+
+    /**
+     * 在添加element后做的一些处理
+     * @param existModel 目标Model（要修改的Model)
+     * @param sourceModel 源要比较的Model
+     */
+    fun afterCreateElementInExistsModel(
+        existModel: Model,
+        sourceModel: Model? = null,
+        param: AfterCreateParam
+    )
 }

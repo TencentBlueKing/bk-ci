@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -298,13 +299,15 @@ class PipelineRepositoryService constructor(
             distIds.add(e.id!!)
             ElementBizRegistrar.getPlugin(e)?.afterCreate(
                 element = e,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = model.name,
-                userId = userId,
-                channelCode = channelCode,
-                create = create,
-                container = c
+                param = AfterCreateParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    userId = userId,
+                    channelCode = channelCode,
+                    create = create,
+                    container = c
+                )
             )
 
             modelTasks.add(
@@ -415,13 +418,15 @@ class PipelineRepositoryService constructor(
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 ElementBizRegistrar.getPlugin(e)?.afterCreate(
                     element = e,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = model.name,
-                    userId = userId,
-                    channelCode = channelCode,
-                    create = create,
-                    container = c
+                    param = AfterCreateParam(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        userId = userId,
+                        channelCode = channelCode,
+                        create = create,
+                        container = c
+                    )
                 )
 
                 modelTasks.add(

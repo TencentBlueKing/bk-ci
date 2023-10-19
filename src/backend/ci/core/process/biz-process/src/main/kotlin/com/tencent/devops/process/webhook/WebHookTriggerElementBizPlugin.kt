@@ -30,9 +30,10 @@ package com.tencent.devops.process.webhook
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -48,16 +49,7 @@ import com.tencent.devops.process.plugin.annotation.ElementBiz
 abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constructor(
     private val pipelineWebhookService: PipelineWebhookService
 ) : ElementBizPlugin<T> {
-    override fun afterCreate(
-        element: T,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
-    ) = Unit
+    override fun afterCreate(element: T, param: AfterCreateParam) = Unit
 
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
@@ -71,6 +63,8 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     }
 
     override fun check(element: T, appearedCnt: Int) = Unit
+
+    override fun beforeUpdate(element: T, param: BeforeUpdateParam) = Unit
 }
 
 @ElementBiz
@@ -144,16 +138,10 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
 
     override fun afterCreate(
         element: CodeGitGenericWebHookTriggerElement,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
+        param: AfterCreateParam
     ) {
         // 只支持codecc才能自定义hookUrl
-        if (channelCode != ChannelCode.CODECC && !element.data.input.hookUrl.isNullOrBlank()) {
+        if (param.channelCode != ChannelCode.CODECC && !element.data.input.hookUrl.isNullOrBlank()) {
             element.data.input.hookUrl = null
         }
     }

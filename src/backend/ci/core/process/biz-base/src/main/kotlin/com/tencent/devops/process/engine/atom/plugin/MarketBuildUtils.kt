@@ -29,11 +29,13 @@ package com.tencent.devops.process.engine.atom.plugin
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.AtomChangeEventParam
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.pipeline.enums.AtomChangeAction
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import okhttp3.Request
@@ -46,9 +48,18 @@ import javax.ws.rs.HttpMethod
 
 object MarketBuildUtils {
     private const val INPUT_PARAM = "input"
-    private const val BK_ATOM_HOOK_URL = "bk_atom_del_hook_url"
-    private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
-    private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
+    // 插件删除
+    private const val BK_ATOM_DEL_HOOK_URL = "bk_atom_del_hook_url"
+    private const val BK_ATOM_DEL_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
+    private const val BK_ATOM_DEL_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
+    // 插件添加
+    private const val BK_ATOM_CREATE_HOOK_URL = "bk_atom_add_hook_url"
+    private const val BK_ATOM_CREATE_HOOK_URL_METHOD = "bk_atom_add_hook_url_method"
+    private const val BK_ATOM_CREATE_HOOK_URL_BODY = "bk_atom_add_hook_url_body"
+    // 插件修改
+    private const val BK_ATOM_UPDATE_HOOK_URL = "bk_atom_update_hook_url"
+    private const val BK_ATOM_UPDATE_HOOK_URL_METHOD = "bk_atom_update_hook_url_method"
+    private const val BK_ATOM_UPDATE_HOOK_URL_BODY = "bk_atom_update_hook_url_body"
 
     private const val PROJECT_ID = "projectId"
     private const val PIPELINE_ID = "pipelineId"
@@ -80,26 +91,46 @@ object MarketBuildUtils {
         ArrayBlockingQueue(16000)
     )
 
-    fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, atomVersion: String, param: BeforeDeleteParam) {
+    fun changeAction(
+        inputMap: Map<String, Any>,
+        atomCode: String,
+        atomVersion: String,
+        param: AtomChangeEventParam,
+        action: AtomChangeAction
+    ) {
         marketBuildExecutorService.execute {
-            logger.info("start to do before delete: $atomCode, $atomVersion, $param")
+            logger.info("start to do [$action]: $atomCode, $atomVersion, $param")
             val bkAtomHookUrl = inputMap.getOrDefault(
-                BK_ATOM_HOOK_URL,
-                getDefaultHookUrl(atomCode = atomCode, atomVersion = atomVersion, channelCode = param.channelCode)
+                getHookUrl(action),
+                getDefaultHookUrl(
+                    atomCode = atomCode,
+                    atomVersion = atomVersion,
+                    channelCode = param.channelCode,
+                    hookUrlParamKey = getHookUrl(action)
+                )
             ) as String
 
             if (bkAtomHookUrl.isBlank()) {
                 logger.info("bk atom hook url is blank: $atomCode, $atomVersion")
                 return@execute
             }
-
+            // hook方法
             val bkAtomHookUrlMethod = inputMap.getOrDefault(
-                key = BK_ATOM_HOOK_URL_METHOD,
-                defaultValue = getDefaultHookMethod(atomCode, atomVersion)
+                key = getHookMethod(action),
+                defaultValue = getDefaultHookMethod(
+                    atomCode = atomCode,
+                    atomVersion = atomVersion,
+                    hookUrlMethodParamKey = getHookMethod(action)
+                )
             ) as String
+            // 请求体
             val bkAtomHookBody = inputMap.getOrDefault(
-                BK_ATOM_HOOK_URL_BODY,
-                getDefaultHookBody(atomCode, atomVersion)
+                getHookBody(action),
+                getDefaultHookBody(
+                    atomCode = atomCode,
+                    atomVersion = atomVersion,
+                    hookUrlMethodBodyKey = getHookBody(action)
+                )
             ) as String
 
             doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param, inputMap)
@@ -110,7 +141,7 @@ object MarketBuildUtils {
         bkAtomHookUrl: String,
         bkAtomHookUrlMethod: String,
         bkAtomHookBody: String,
-        param: BeforeDeleteParam,
+        param: AtomChangeEventParam,
         inputMap: Map<String, Any>
     ) {
         val url = resolveParam(bkAtomHookUrl, param, inputMap)
@@ -118,17 +149,21 @@ object MarketBuildUtils {
             .url(url)
 
         logger.info("start to market build atom http: $url, $bkAtomHookUrlMethod, $bkAtomHookBody")
-
+        // 没有配置hookBody时，增加默认接口入参
+        val requestBody = if (bkAtomHookBody.isBlank()) {
+            logger.info("the atom hook body config is empty|atomParam[$param]")
+            JsonUtil.toJson(param,false)
+        }else{
+            resolveParam(bkAtomHookBody, param, inputMap)
+        }
         when (bkAtomHookUrlMethod) {
             HttpMethod.GET -> {
                 request = request.get()
             }
             HttpMethod.POST -> {
-                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.PUT -> {
-                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.DELETE -> {
@@ -143,44 +178,53 @@ object MarketBuildUtils {
     }
 
     @Suppress("ALL")
-    private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
+    private fun getDefaultHookUrl(
+        atomCode: String,
+        atomVersion: String,
+        channelCode: ChannelCode,
+        hookUrlParamKey: String
+    ): String {
         if (channelCode != ChannelCode.BS) return ""
         val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }
-        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL]
+        val bkAtomHookUrlItem = inputMap[hookUrlParamKey]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
             return bkAtomHookUrlItem["default"]?.toString() ?: ""
         }
         return ""
     }
 
-    private fun getDefaultHookMethod(atomCode: String, atomVersion: String): String {
+    private fun getDefaultHookMethod(
+        atomCode: String,
+        atomVersion: String,
+        hookUrlMethodParamKey: String
+    ): String {
         val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }
-        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_METHOD]
+        val bkAtomHookUrlItem = inputMap[hookUrlMethodParamKey]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
-            return bkAtomHookUrlItem["default"]?.toString() ?: "GET"
+            return bkAtomHookUrlItem["default"]?.toString() ?: "POST"
         }
-        return "GET"
+        return "POST"
     }
 
-    private fun getDefaultHookBody(atomCode: String, atomVersion: String): String {
+    private fun getDefaultHookBody(atomCode: String, atomVersion: String, hookUrlMethodBodyKey: String): String {
         val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }
-        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_BODY]
+        val bkAtomHookUrlItem = inputMap[hookUrlMethodBodyKey]
         if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
             return bkAtomHookUrlItem["default"]?.toString() ?: ""
         }
         return ""
     }
 
-    private fun resolveParam(str: String, param: BeforeDeleteParam, inputMap: Map<String, Any>): String {
+    private fun resolveParam(str: String, param: AtomChangeEventParam, inputMap: Map<String, Any>): String {
         var result = str.replace("{$PROJECT_ID}", param.projectId)
             .replace("{$PIPELINE_ID}", param.pipelineId)
             .replace("{$USER_ID}", param.userId)
@@ -196,5 +240,22 @@ object MarketBuildUtils {
         // 没有变量值的变量默认置空
         return result.replace(Regex("\\{.*}"), "")
             .replace(Regex("%7B.*%7D"), "")
+    }
+    private fun getHookUrl(pluginChangeAction: AtomChangeAction) = when (pluginChangeAction) {
+        AtomChangeAction.DELETE -> BK_ATOM_DEL_HOOK_URL
+        AtomChangeAction.UPDATE -> BK_ATOM_UPDATE_HOOK_URL
+        AtomChangeAction.CREATE -> BK_ATOM_CREATE_HOOK_URL
+    }
+
+    private fun getHookMethod(pluginChangeAction: AtomChangeAction) = when (pluginChangeAction) {
+        AtomChangeAction.DELETE -> BK_ATOM_DEL_HOOK_URL_METHOD
+        AtomChangeAction.UPDATE -> BK_ATOM_UPDATE_HOOK_URL_METHOD
+        AtomChangeAction.CREATE -> BK_ATOM_CREATE_HOOK_URL_METHOD
+    }
+
+    private fun getHookBody(pluginChangeAction: AtomChangeAction) = when (pluginChangeAction) {
+        AtomChangeAction.DELETE -> BK_ATOM_DEL_HOOK_URL_BODY
+        AtomChangeAction.UPDATE -> BK_ATOM_UPDATE_HOOK_URL_BODY
+        AtomChangeAction.CREATE -> BK_ATOM_CREATE_HOOK_URL_BODY
     }
 }

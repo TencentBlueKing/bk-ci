@@ -27,10 +27,11 @@
 
 package com.tencent.devops.process.engine.atom.plugin
 
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.enums.AtomChangeAction
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 
@@ -43,18 +44,38 @@ class MarketBuildAtomElementBizPlugin : ElementBizPlugin<MarketBuildAtomElement>
 
     override fun afterCreate(
         element: MarketBuildAtomElement,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
-    ) = Unit
+        param: AfterCreateParam
+    ) {
+        val inputMap = element.data["input"] as Map<String, Any>
+        MarketBuildUtils.changeAction(
+            inputMap = inputMap,
+            atomCode = element.getAtomCode(),
+            atomVersion = element.version,
+            param = param,
+            action = AtomChangeAction.CREATE
+        )
+    }
 
     override fun beforeDelete(element: MarketBuildAtomElement, param: BeforeDeleteParam) {
         val inputMap = element.data["input"] as Map<String, Any>
-        MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), element.version, param)
+        MarketBuildUtils.changeAction(
+            inputMap = inputMap,
+            atomCode = element.getAtomCode(),
+            atomVersion = element.version,
+            param = param,
+            action = AtomChangeAction.DELETE
+        )
+    }
+
+    override fun beforeUpdate(element: MarketBuildAtomElement, param: BeforeUpdateParam) {
+        val inputMap = element.data["input"] as Map<String, Any>
+        MarketBuildUtils.changeAction(
+            inputMap = inputMap,
+            atomCode = element.getAtomCode(),
+            atomVersion = element.version,
+            param = param,
+            action = AtomChangeAction.UPDATE
+        )
     }
 
     override fun check(element: MarketBuildAtomElement, appearedCnt: Int) = Unit

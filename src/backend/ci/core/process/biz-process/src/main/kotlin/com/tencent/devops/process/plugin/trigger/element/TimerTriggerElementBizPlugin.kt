@@ -28,10 +28,10 @@
 package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -54,59 +54,55 @@ class TimerTriggerElementBizPlugin constructor(
 
     override fun afterCreate(
         element: TimerTriggerElement,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
+        param: AfterCreateParam
     ) {
-        val crontabExpressions = mutableSetOf<String>()
-        val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
-        logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
-        if (element.isElementEnable()) {
+        with(param) {
+            val crontabExpressions = mutableSetOf<String>()
+            val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
+            logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
+            if (element.isElementEnable()) {
 
-            val eConvertExpressions = element.convertExpressions(params = params)
-            if (eConvertExpressions.isEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
-                )
-            }
-            eConvertExpressions.forEach { cron ->
-                if (!CronExpression.isValidExpression(cron)) {
+                val eConvertExpressions = element.convertExpressions(params = params)
+                if (eConvertExpressions.isEmpty()) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                        params = arrayOf(cron)
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                     )
                 }
-                if (!CronExpressionUtils.isValidTimeInterval(cron)) {
+                eConvertExpressions.forEach { cron ->
+                    if (!CronExpression.isValidExpression(cron)) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                            params = arrayOf(cron)
+                        )
+                    }
+                    if (!CronExpressionUtils.isValidTimeInterval(cron)) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
+                            params = arrayOf(cron)
+                        )
+                    }
+                    crontabExpressions.add(cron)
+                }
+            }
+
+            if (crontabExpressions.isNotEmpty()) {
+                val result = pipelineTimerService.saveTimer(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    crontabExpressions = crontabExpressions,
+                    channelCode = channelCode
+                )
+                logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
+                if (result.isNotOk()) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
-                        params = arrayOf(cron)
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                     )
                 }
-                crontabExpressions.add(cron)
+            } else {
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
+                logger.info("[$pipelineId]|$userId| Delete pipeline timer")
             }
-        }
-
-        if (crontabExpressions.isNotEmpty()) {
-            val result = pipelineTimerService.saveTimer(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                crontabExpressions = crontabExpressions,
-                channelCode = channelCode
-            )
-            logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
-            if (result.isNotOk()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
-                )
-            }
-        } else {
-            pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
-            logger.info("[$pipelineId]|$userId| Delete pipeline timer")
         }
     }
 
@@ -115,6 +111,8 @@ class TimerTriggerElementBizPlugin constructor(
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
         }
     }
+
+    override fun beforeUpdate(element: TimerTriggerElement, param: BeforeUpdateParam) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(TimerTriggerElementBizPlugin::class.java)

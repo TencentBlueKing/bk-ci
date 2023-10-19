@@ -25,43 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.plugin
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 流水线的Element的编排插件处理器
- */
-@Suppress("ALL")
-interface ElementBizPlugin<T : Element> {
+@ApiModel("插件修改动作枚举")
+enum class AtomChangeAction {
+    @ApiModelProperty("创建")
+    CREATE,
 
-    /**
-     * 取当前泛型Element的类
-     */
-    fun elementClass(): Class<T>
+    @ApiModelProperty("修改")
+    UPDATE,
 
-    /**
-     * 创建插件[element]后,根据项目ID[projectId]，流水线ID[pipelineId]
-     * 流水线名称[pipelineName],操作人[userId],还有渠道[channelCode]，和是否初次新建[create]标识
-     * 进行创建后的处理
-     */
-    fun afterCreate(element: T, param: AfterCreateParam)
-
-    /**
-     * 在删除[element]插件之前，根据[param]参数调用删除前的预处理
-     */
-    fun beforeDelete(element: T, param: BeforeDeleteParam)
-
-    /**
-     * 在修改[element]插件之前，根据[param]参数调用修改前的预处理
-     */
-    fun beforeUpdate(element: T, param: BeforeUpdateParam)
-
-    /**
-     * 检查[element]插件以及出现的次数[appearedCnt]是否符合要求
-     */
-    fun check(element: T, appearedCnt: Int)
+    @ApiModelProperty("删除")
+    DELETE
 }
