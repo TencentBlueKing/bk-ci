@@ -308,8 +308,9 @@ class WorkspaceDao {
         owner: String?
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
-            return if (ips.isNullOrEmpty()) {
-                (
+            // 没 ip 没 owner
+            if (ips.isNullOrEmpty() && owner == null) {
+                return (
                         genFetchProjectWorkspaceCond(
                             dslContext = dslContext,
                             projectId = projectId,
@@ -318,11 +319,13 @@ class WorkspaceDao {
                             queryType = queryType,
                             ips = ips,
                             owner = owner
-                        ) as SelectConditionStep<TWorkspaceRecord>
-                        ).orderBy(CREATE_TIME.desc(), ID.desc())
+                        ) as SelectConditionStep<TWorkspaceRecord>).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(workspaceMapper)
-            } else {
+            }
+
+            // 只有owner
+            if (ips.isNullOrEmpty() && owner != null) {
                 genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -333,8 +336,21 @@ class WorkspaceDao {
                     owner = owner
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
-                    .fetch(workspaceWithDetailMapper)
+                    .fetch(workspaceFieldMapper)
             }
+
+            // 剩下的都带 ip 所以都有 detail
+            return genFetchProjectWorkspaceCond(
+                dslContext = dslContext,
+                projectId = projectId,
+                workspaceName = workspaceName,
+                systemType = systemType,
+                queryType = queryType,
+                ips = ips,
+                owner = owner
+            ).orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit.limit).offset(limit.offset)
+                .fetch(workspaceWithDetailMapper)
         }
     }
 
@@ -444,7 +460,8 @@ class WorkspaceDao {
 
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
         fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
-        return dslContext.select(fields).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
+        return dslContext.select(fields)
+            .from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL, TWorkspaceShared.T_WORKSPACE_SHARED)
             .where(conditions)
     }
 
@@ -899,6 +916,50 @@ class WorkspaceDao {
         }
     }
 
+    class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
+        override fun map(record: Record?): WorkspaceRecord? {
+
+            if (record == null) {
+                return null
+            }
+            return WorkspaceRecord(
+                workspaceId = record["ID"] as Long,
+                projectId = record["PROJECT_ID"] as String,
+                workspaceName = record["NAME"] as String,
+                displayName = record["DISPLAY_NAME"] as String,
+                templateId = record["TEMPLATE_ID"] as Int?,
+                repositoryUrl = record["URL"] as String?,
+                branch = record["BRANCH"] as String?,
+                yaml = record["YAML"] as String?,
+                devFilePath = record["YAML_PATH"] as String?,
+                dockerFile = record["DOCKERFILE"] as String,
+                imagePath = record["IMAGE_PATH"] as String,
+                workPath = record["WORK_PATH"] as String?,
+                workspaceFolder = record["WORKSPACE_FOLDER"] as String?,
+                hostName = record["HOST_NAME"] as String,
+                gpu = record["GPU"] as Int,
+                cpu = record["CPU"] as Int,
+                memory = record["MEMORY"] as Int,
+                usageTime = record["USAGE_TIME"] as Int,
+                sleepingTime = record["SLEEPING_TIME"] as Int,
+                disk = record["DISK"] as Int,
+                createUserId = record["CREATOR"] as String,
+                creatorBgName = record["CREATOR_BG_NAME"] as String,
+                creatorDeptName = record["CREATOR_DEPT_NAME"] as String,
+                creatorCenterName = record["CREATOR_CENTER_NAME"] as String,
+                creatorGroupName = record["CREATOR_GROUP_NAME"] as String,
+                status = WorkspaceStatus.values()[record["STATUS"] as Int],
+                createTime = record["CREATE_TIME"] as LocalDateTime,
+                updateTime = record["UPDATE_TIME"] as LocalDateTime,
+                lastStatusUpdateTime = record["LAST_STATUS_UPDATE_TIME"] as LocalDateTime?,
+                preciAgentId = record["PRECI_AGENT_ID"] as String?,
+                workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
+                workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
+                ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String)
+            )
+        }
+    }
+
     class TWorkspaceRecordWithDetailJooqMapper : RecordMapper<Record, WorkspaceRecordWithDetail> {
         override fun map(record: Record?): WorkspaceRecordWithDetail? {
 
@@ -977,6 +1038,7 @@ class WorkspaceDao {
 
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
+        val workspaceFieldMapper = TWorkspaceFieldJooqMapper()
         val workspaceWithDetailMapper = TWorkspaceRecordWithDetailJooqMapper()
     }
 }
