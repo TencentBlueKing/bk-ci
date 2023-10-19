@@ -429,7 +429,7 @@ class WorkspaceDao {
         if (ips.isNullOrEmpty() && owner != null) {
             conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
             conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-            conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(owner))
+            conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
             return dslContext.select(TWorkspace.T_WORKSPACE.fields().toMutableList())
                 .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED).where(conditions)
         }
@@ -438,7 +438,7 @@ class WorkspaceDao {
         conditions.add(0, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
         conditions.add(1, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
         conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-        conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(owner))
+        conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
 
         var ipsCond = JooqUtils.jsonExtract(
             t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
