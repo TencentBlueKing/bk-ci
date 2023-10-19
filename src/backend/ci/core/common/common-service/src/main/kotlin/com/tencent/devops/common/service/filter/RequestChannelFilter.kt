@@ -51,16 +51,13 @@ class RequestChannelFilter : Filter {
         val httpServletRequest = request as HttpServletRequest
         val requestUrl = httpServletRequest.requestURI
         // 根据接口路径设置请求渠道信息
-        val channel = if (requestUrl.contains("/api/build/")) {
-            RequestChannelTypeEnum.BUILD.name
-        } else if (requestUrl.contains("/api/user/")) {
-            RequestChannelTypeEnum.USER.name
-        } else if (requestUrl.contains("/api/op/")) {
-            RequestChannelTypeEnum.OP.name
-        } else if (requestUrl.contains("/api/open/")) {
-            RequestChannelTypeEnum.OPEN.name
-        } else {
-            null
+        val channel = when {
+            requestUrl.contains("/api/build/") -> RequestChannelTypeEnum.BUILD.name
+            requestUrl.contains("/api/user/") -> RequestChannelTypeEnum.USER.name
+            requestUrl.contains("/api/op/") -> RequestChannelTypeEnum.OP.name
+            requestUrl.contains("/api/open/") -> RequestChannelTypeEnum.OPEN.name
+            requestUrl.contains("/api/apigw") -> RequestChannelTypeEnum.API.name
+            else -> null
         }
         channel?.let { request.setAttribute(REQUEST_CHANNEL, channel) }
         chain.doFilter(request, response)

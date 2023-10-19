@@ -63,7 +63,7 @@ class BkAuditRequestProvider : AuditRequestProvider {
         return when (requestChannel) {
             RequestChannelTypeEnum.USER.name,
             RequestChannelTypeEnum.OP.name -> AccessTypeEnum.WEB
-            RequestChannelTypeEnum.OPEN.name -> AccessTypeEnum.API
+            RequestChannelTypeEnum.API.name -> AccessTypeEnum.API
             else -> AccessTypeEnum.OTHER
         }
     }
