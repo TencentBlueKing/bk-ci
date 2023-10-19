@@ -203,7 +203,8 @@ class DeliverControl @Autowired constructor(
                 }
             }
         }
-        val em = alreadyExist.map { m -> m.sharedUser }
+        val em = alreadyExist.asSequence()
+            .filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
             workspaceCommon.shareWorkspace(

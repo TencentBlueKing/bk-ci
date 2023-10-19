@@ -55,7 +55,7 @@ class GitproxyBkRepoClient @Autowired constructor(
             },
             category = "PROXY",
             public = false,
-            description = desc ?: "",
+            description = desc,
             configuration = RepoConfig(
                 type = "proxy",
                 proxy = CreateRepoDataConfigProxy(

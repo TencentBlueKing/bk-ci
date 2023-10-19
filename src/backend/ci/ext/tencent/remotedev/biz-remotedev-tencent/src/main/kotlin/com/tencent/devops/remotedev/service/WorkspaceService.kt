@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -119,7 +120,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -133,7 +135,14 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
-        permissionService.checkViewerPermission(userId, workspaceName)
+
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
+        permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -142,6 +151,12 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
+
+        // 同步修改 cc 主机名称
+        if (ws.workspaceSystemType.checkWindows()) {
+            bkccService.updateHostName(displayName, workspaceName)
+        }
+
         return true
     }
 
@@ -311,6 +326,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val zoneConfg = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -340,6 +356,7 @@ class WorkspaceService @Autowired constructor(
                             workspaceMountType = it.workspaceMountType,
                             workspaceSystemType = it.workspaceSystemType,
                             winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                            zoneConfig = detail?.hostIP?.let { ip -> zoneConfg[ip.replace(Regex("[\\d\\.]+"), "")] },
                             owner = owners[it.workspaceName],
                             viewers = viewers[it.workspaceName],
                             gpu = it.gpu,
@@ -431,7 +448,8 @@ class WorkspaceService @Autowired constructor(
         status: WorkspaceStatus,
         assignType: WorkspaceShared.AssignType,
         winConfigId: Int?,
-        owner: String?
+        owner: String?,
+        winConfig: WindowsResourceTypeConfig? = null
     ) = Workspace(
         workspaceId = it.workspaceId,
         workspaceName = it.workspaceName,
@@ -459,6 +477,7 @@ class WorkspaceService @Autowired constructor(
         ownerType = it.ownerType,
         assignType = assignType,
         winConfigId = winConfigId,
+        winConfig = winConfig,
         gpu = it.gpu,
         cpu = it.cpu,
         memory = it.memory,
@@ -479,6 +498,7 @@ class WorkspaceService @Autowired constructor(
         val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
             workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
         }?.groupBy { it.workspaceName } ?: emptyMap()
+        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -511,7 +531,8 @@ class WorkspaceService @Autowired constructor(
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                         shared.type == WorkspaceShared.AssignType.OWNER
-                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
+                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null,
+                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] }
                 )
             }
         )
@@ -602,11 +623,11 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
         if (checkPermission) {
-            permissionService.checkViewerPermission(userId, workspaceName)
+            permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         }
         val now = LocalDateTime.now()
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
 
@@ -655,12 +676,12 @@ class WorkspaceService @Autowired constructor(
 
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
-        permissionService.checkViewerPermission(userId, workspaceName)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType, workspace.ownerType)
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !workspace.status.checkRunning()) {
@@ -684,7 +705,9 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspaceName,
                 assignType = WorkspaceShared.AssignType.OWNER
             ).firstOrNull()?.sharedUser
-        } else workspace.createUserId
+        } else {
+            workspace.createUserId
+        }
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
@@ -704,7 +727,12 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         logger.info("$userId get workspace time line from id $workspaceName")
-        permissionService.checkViewerPermission(userId, workspaceName)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
