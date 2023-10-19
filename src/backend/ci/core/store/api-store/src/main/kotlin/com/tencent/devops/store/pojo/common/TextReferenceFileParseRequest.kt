@@ -39,7 +39,5 @@ data class TextReferenceFileParseRequest(
     @ApiModelProperty("分支", required = false)
     val branch: String? = null,
     @ApiModelProperty("文本内容", required = true)
-    val content: String,
-    @ApiModelProperty("国际化语言信息", required = true)
-    val language: String
+    val content: String
 )

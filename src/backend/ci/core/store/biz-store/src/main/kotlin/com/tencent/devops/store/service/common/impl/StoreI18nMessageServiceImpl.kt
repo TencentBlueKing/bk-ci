@@ -245,8 +245,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             request = TextReferenceFileParseRequest(
                                 fileDir = fileDir,
                                 repositoryHashId = repositoryHashId,
-                                content = value,
-                                language = language
+                                content = value
                             )
                         )
                         fileProperties["$it"] = value
@@ -369,7 +368,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 request = TextReferenceFileParseRequest(
                     content = fileStr,
                     fileDir = request.fileDir,
-                    language = request.language,
                     repositoryHashId = request.repositoryHashId
                 )
             )
