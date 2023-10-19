@@ -212,7 +212,7 @@ class PipelineSettingVersionDao {
                     runLockType = PipelineRunLockType.valueOf(t.runLockType),
                     failSubscriptionList = failSubscriptionList,
                     labels = emptyList(),
-                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
