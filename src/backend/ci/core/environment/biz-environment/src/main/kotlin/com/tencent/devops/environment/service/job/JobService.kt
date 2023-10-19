@@ -57,6 +57,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set(::executeScript.name)
+        logger.debug("aaaaaahbdhudhfhiua"+ApigwJobCloudApi.get())
         return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)
     }
 
@@ -173,7 +174,6 @@ class JobService {
         length: Int?
     ): JobResult<GetAccountListResult> {
         ApigwJobCloudApi.set("getAccountList")
-        logger.debug("aaaaaahbdhudhfhiua"+ApigwJobCloudApi.get())
         return ApigwJobCloudApi().executeGetRequest(userId, account, alias, category, start, length)
     }
 }

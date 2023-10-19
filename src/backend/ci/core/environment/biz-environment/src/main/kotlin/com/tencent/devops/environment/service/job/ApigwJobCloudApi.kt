@@ -73,10 +73,12 @@ class ApigwJobCloudApi {
 
         private val threadLocal = ThreadLocal<String>()
         fun set(value: String) {
+            logger.debug("-----setThreadLocal------: $value")
             threadLocal.set(value)
         }
 
         fun get(): String? {
+            logger.debug("-----getThreadLocal------: ${threadLocal.get()}")
             return threadLocal.get()
         }
 
