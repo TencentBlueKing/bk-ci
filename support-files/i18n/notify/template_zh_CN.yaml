@@ -763,11 +763,11 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
-    body: "构建状态为stage sucess，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+    body: "构建状态为stage success，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
-    body: "构建状态为stage sucess，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
+    body: "构建状态为stage success，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
   creator: "system"
   modifior: "system"
 - index: 37
