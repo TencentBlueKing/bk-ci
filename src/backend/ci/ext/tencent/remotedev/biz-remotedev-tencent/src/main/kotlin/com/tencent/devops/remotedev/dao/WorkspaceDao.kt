@@ -326,7 +326,7 @@ class WorkspaceDao {
 
             // 只有owner
             if (ips.isNullOrEmpty() && owner != null) {
-                genFetchProjectWorkspaceCond(
+                return genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     projectId = projectId,
                     workspaceName = workspaceName,
@@ -918,7 +918,6 @@ class WorkspaceDao {
 
     class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
         override fun map(record: Record?): WorkspaceRecord? {
-
             if (record == null) {
                 return null
             }
