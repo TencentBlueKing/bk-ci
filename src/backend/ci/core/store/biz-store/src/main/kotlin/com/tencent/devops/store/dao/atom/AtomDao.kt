@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -98,6 +99,7 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+
 
 @Suppress("ALL")
 @Repository
@@ -523,14 +525,22 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
+        val field = DSL.`when`((t.field(KEY_VERSION) as Field<String>).startsWith(TEST), 1)
+            .otherwise(0) as Field<Int>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
-            thirdVersion
+            thirdVersion,
+            field
         ).from(t)
-            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .orderBy(
+                field,
+                firstVersion.plus(0).desc(),
+                secondVersion.plus(0).desc(),
+                thirdVersion.plus(0).desc()
+            )
         limitNum?.let { queryStep.limit(it) }
         return queryStep.skipCheck().fetch()
     }
