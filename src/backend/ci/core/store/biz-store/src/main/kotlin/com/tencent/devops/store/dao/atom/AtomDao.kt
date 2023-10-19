@@ -535,7 +535,7 @@ class AtomDao : AtomBaseDao() {
             field
         ).from(t)
             .orderBy(
-                field,
+                field.desc(),
                 firstVersion.plus(0).desc(),
                 secondVersion.plus(0).desc(),
                 thirdVersion.plus(0).desc()
