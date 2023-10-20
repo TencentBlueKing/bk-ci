@@ -101,7 +101,7 @@ class ApigwJobCloudApi {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
-        val operationName = AuthenticationService.get()
+        val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
         val url = when (operationName) {
             "executeScript" -> jobCloudProdUrlPrefix + executeScriptPath
