@@ -60,7 +60,6 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set(::executeScript.name)
-        logger.debug("aaaaaahbdhudhfhiua"+ApigwJobCloudApi.get())
         return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq)
     }
 

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-@Component
+@Component("ApigwJobCloudApi")
 class ApigwJobCloudApi {
     // @Value("\${auth.appCode:}")
     @Value("\${job.bkAppCode:}")
@@ -74,12 +74,10 @@ class ApigwJobCloudApi {
 
         private val threadLocal = ThreadLocal<String>()
         fun set(value: String) {
-            logger.debug("-----setThreadLocal------: $value")
             threadLocal.set(value)
         }
 
         fun get(): String? {
-            logger.debug("-----getThreadLocal------: ${threadLocal.get()}")
             return threadLocal.get()
         }
 
@@ -133,7 +131,7 @@ class ApigwJobCloudApi {
     }
 
     fun logWithLengthLimit(logOrigin: String): String {
-        if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
+        return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
             logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
         else
             logOrigin
@@ -150,7 +148,7 @@ class ApigwJobCloudApi {
             logger.debug(
                 "[${operationName}] " +
                     "headers: $headers, " +
-                    "jianingzhaotest1020-url: ${jobCloudAuthenticationReq.url}, " +
+                    "url: ${jobCloudAuthenticationReq.url}, " +
                     "body: $requestContent"
             )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers))
@@ -185,8 +183,10 @@ class ApigwJobCloudApi {
 
             val jobCloudResp = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
             if (logger.isDebugEnabled)
-                logger.debug("[$operationName] response body(deserialized JobCloudResp<T>): " +
-                                 "${logWithLengthLimit(jobCloudResp.toString())}")
+                logger.debug(
+                    "[$operationName] response body(deserialized JobCloudResp<T>): " +
+                        logWithLengthLimit(jobCloudResp.toString())
+                )
             if (!jobCloudResp.result) {
                 logger.error(
                     "[$operationName] Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
@@ -208,11 +208,15 @@ class ApigwJobCloudApi {
                         null
                     }
                 if (logger.isDebugEnabled) {
-                    logger.debug("[$operationName] jobCloudResp.data: " +
-                                     "${logWithLengthLimit(jobCloudResp.data.toString())}")
+                    logger.debug(
+                        "[$operationName] jobCloudResp.data: " +
+                            logWithLengthLimit(jobCloudResp.data.toString())
+                    )
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-                    logger.debug("[$operationName] {$operationName}Result: " +
-                                     "${logWithLengthLimit(operationResult.toString())}")
+                    logger.debug(
+                        "[$operationName] {$operationName}Result: " +
+                            logWithLengthLimit(operationResult.toString())
+                    )
                 }
                 return JobResult(
                     code = jobCloudResp.code,
