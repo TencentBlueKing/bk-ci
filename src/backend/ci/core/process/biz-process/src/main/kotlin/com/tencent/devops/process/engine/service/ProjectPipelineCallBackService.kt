@@ -27,14 +27,19 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -58,9 +63,6 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -68,6 +70,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Suppress("ALL")
 @Service
@@ -469,6 +474,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        content = ActionAuditContent.PIPELINE_EDIT_BIND_PIPELINE_CALLBACK_CONTENT
+    )
     fun bindPipelineCallBack(
         userId: String,
         projectId: String,

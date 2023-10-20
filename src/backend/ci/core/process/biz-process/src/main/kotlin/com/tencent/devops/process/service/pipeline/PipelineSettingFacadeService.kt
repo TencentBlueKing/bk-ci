@@ -27,13 +27,18 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -81,6 +86,15 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#setting?.pipelineId",
+            instanceNames = "#setting?.pipelineName"
+        ),
+        content = ActionAuditContent.PIPELINE_EDIT_SAVE_SETTING_CONTENT
+    )
     fun saveSetting(
         userId: String,
         setting: PipelineSetting,
@@ -282,6 +296,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        content = ActionAuditContent.PIPELINE_EDIT_CONTENT
+    )
     fun updatePipelineModel(
         userId: String,
         updatePipelineModelRequest: UpdatePipelineModelRequest,

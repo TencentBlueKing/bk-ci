@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -1129,6 +1130,13 @@ class PipelineRepositoryService constructor(
             val lock = PipelineModelLock(redisOperation, pipelineModelVersion.pipelineId)
             try {
                 lock.lock()
+                // 审计
+                ActionAuditContext.current().addInstanceInfo(
+                    pipelineModelVersion.pipelineId,
+                    pipelineModelVersion.pipelineId,
+                    null,
+                    pipelineModelVersion.model
+                )
                 pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
             } finally {
                 lock.unlock()
