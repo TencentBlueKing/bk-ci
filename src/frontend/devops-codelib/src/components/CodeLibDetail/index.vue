@@ -91,6 +91,7 @@
                     :type="repoInfo['@type']"
                     :fetch-repo-detail="fetchRepoDetail"
                     :refresh-codelib-list="refreshCodelibList"
+                    @updateList="updateList"
                 >
                 </component>
             </bk-tab-panel>
@@ -138,6 +139,10 @@
             },
             refreshCodelibList: {
                 type: Function
+            },
+            switchPage: {
+                type: Function,
+                required: true
             }
         },
         data () {
@@ -244,7 +249,7 @@
                         message: this.$t('codelib.保存成功'),
                         theme: 'success'
                     })
-                    this.$emit('updateList')
+                    this.updateList()
                 }).catch(e => {
                     this.$bkMessage({
                         message: e.message || e,
@@ -255,6 +260,10 @@
                 }).finally(() => {
                     this.isEditing = false
                 })
+            },
+
+            updateList () {
+                this.switchPage(1, this.$route.query.limit)
             },
 
             /**
@@ -383,7 +392,7 @@
             }
             span {
                 display: inline-block;
-                max-width: 500px;
+                max-width: 400px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;

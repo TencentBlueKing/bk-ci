@@ -492,8 +492,8 @@ const actions = {
      * 获取事件类型
      */
 
-    fetchTriggerType ({ commit }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType`)
+    fetchTriggerType ({ commit }, { scmType }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/listTriggerType?scmType=${scmType}`)
     },
 
     fetchTriggerData ({ commit }, {
@@ -510,10 +510,10 @@ const actions = {
     fetchAtomModal ({ commit }, {
         projectCode,
         atomCode,
-        version,
+        version = '1.*',
         queryOfflineFlag = false
     }) {
-        return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
+        return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${'codeGithubWebHookTrigger'}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     }
 }
 

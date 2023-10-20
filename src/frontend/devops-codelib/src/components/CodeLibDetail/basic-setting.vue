@@ -37,19 +37,36 @@
             <div class="content">
                 <div class="auth">
                     <Icon name="check-circle" size="14" class="icon-success" />
-                    <span>
-                        {{ curRepo.authType }}@
-                    </span>
-                    <a
-                        v-if="!['OAUTH'].includes(curRepo.authType)"
-                        :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
-                        target="_blank"
-                    >
-                        {{ repoInfo.credentialId }}
-                    </a>
-                    <span v-else>
-                        {{ repoInfo.userName }}
-                    </span>
+                    <template v-if="repoInfo.svnType">
+                        <span>
+                            {{ repoInfo.svnType || curRepo.svnType }}@
+                        </span>
+                        <a
+                            v-if="(repoInfo.svnType) && !['OAUTH'].includes(repoInfo.svnType)"
+                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            target="_blank"
+                        >
+                            {{ repoInfo.credentialId }}
+                        </a>
+                        <span v-else>
+                            {{ repoInfo.userName || curRepo.userName }}
+                        </span>
+                    </template>
+                    <template v-else>
+                        <span>
+                            {{ repoInfo.authType || curRepo.authType }}@
+                        </span>
+                        <a
+                            v-if="(repoInfo.authType) && !['OAUTH'].includes(repoInfo.authType)"
+                            :href="`/console/ticket/${repoInfo.projectId}/editCredential/${repoInfo.credentialId}`"
+                            target="_blank"
+                        >
+                            {{ repoInfo.credentialId }}
+                        </a>
+                        <span v-else>
+                            {{ repoInfo.userName || curRepo.userName }}
+                        </span>
+                    </template>
                     <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
                 </div>
             </div>
@@ -241,6 +258,7 @@
             :is-git="isGit"
             :is-github="isGithub"
             :fetch-repo-detail="fetchRepoDetail"
+            @updateList="updateList"
         />
     </section>
 </template>
@@ -261,7 +279,7 @@
         prettyDateTimeFormat
     } from '@/utils/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
-
+ 
     export default {
         name: 'basicSetting',
         components: {
@@ -415,7 +433,6 @@
              * 校验仓库是否已经在其他项目开启了PAC
              */
             handleCheckPacProject (repoUrl) {
-                console.log(this.repositoryType, 'this.repositoryType')
                 if (this.isGit && repoUrl) {
                     this.checkPacProject({
                         repoUrl,
@@ -603,6 +620,10 @@
 
             async openValidate () {
                 window.location.href = this[`${this.codelibTypeConstants}OAuth`].url
+            },
+
+            updateList () {
+                this.$emit('updateList')
             }
         }
     }
@@ -725,6 +746,7 @@
         }
         .history-item {
             display: inline-flex;
+            line-height: 16px;
             min-width: 230px;
             max-width: 300px;
             margin-right: 200px;
@@ -732,6 +754,7 @@
             .label {
                 width: 120px;
                 font-size: 12px;
+                font-weight: 400;
                 color: #979BA5;
             }
             .content {

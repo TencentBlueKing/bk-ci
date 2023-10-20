@@ -30,7 +30,7 @@
                 <bk-radio
                     value="HTTP"
                 >
-                    {{ $t('codelib.用户名密码+个人token') }}
+                    {{ $t('codelib.用户名+密码') }}
                 </bk-radio>
             </bk-radio-group>
 

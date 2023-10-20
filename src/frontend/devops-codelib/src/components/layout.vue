@@ -125,7 +125,7 @@
             border-radius: 2px;
             transition: all 0.15s;
             flex: 1;
-
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,.15);
             .right-wraper {
                 opacity: 0%;
                 height: 100%;

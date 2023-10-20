@@ -1,11 +1,12 @@
 <template>
     <div>
         <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
-            <Icon
+            <bk-icon type="angle-double-right" class="angle-double-right-icon" />
+            <!-- <Icon
                 name="angle-double-right"
                 class="angle-double-right-icon"
                 size="16"
-            />
+            /> -->
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -563,7 +564,7 @@
     z-index: 100;
     height: 42px;
     line-height: 42px;
-    left: 320px;
+    left: 310px;
     font-size: 10px;
     color: #3A84FF;
     cursor: pointer;
@@ -571,6 +572,7 @@
     .angle-double-right-icon {
         position: relative;
         top: 3px;
+        font-size: 24px !important;
     }
 }
 .devops-codelib-table {

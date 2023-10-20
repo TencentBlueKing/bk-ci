@@ -26,16 +26,29 @@
             </bk-table-column>
             <bk-table-column :label="$t('codelib.触发条件')" prop="eventType" show-overflow-tooltip>
                 <template slot-scope="{ row }">
-                    <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
-                        - {{ triggerConditionKeyMap[row.eventType][key] }}:
-                        <template v-if="Array.isArray(item)">
-                            <span v-for="(i, itemIndex) in item" :key="i">
-                                {{ triggerConditionValueMap[i] }}
-                                <span v-if="itemIndex + 1 !== item.length">{{ $t('codelib.,') }}</span>
-                            </span>
-                        </template>
-                        <span v-else>{{ triggerConditionValueMap[item] || item }}</span>
+                    <div v-if="Object.keys(row.triggerCondition).length">
+                        <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
+                            - {{ triggerConditionKeyMap[row.eventType][key] }}:
+                            <template v-if="Array.isArray(item)">
+                                <span v-for="(i, itemIndex) in item" :key="i">
+                                    {{ triggerConditionValueMap[i] || i }}
+                                    <span v-if="itemIndex + 1 !== item.length">{{ $t('codelib.,') }}</span>
+                                </span>
+                            </template>
+                            <template v-else-if="key.includes('Paths') && item">
+                                <!-- 路径 -->
+                                <div
+                                    v-for="path in item.split(',')"
+                                    :key="path"
+                                    style="margin-left: 20px;"
+                                >
+                                    - {{ path }}
+                                </div>
+                            </template>
+                            <span v-else>{{ triggerConditionValueMap[item] || item }}</span>
+                        </div>
                     </div>
+                    <div v-else>--</div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.流水线数量')" prop="pipelineCount">
@@ -246,7 +259,6 @@
                 }).then(res => {
                     this.pagination.count = res.count
                     this.triggerData = res.records
-                    console.log(this.triggerData, 12)
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -270,7 +282,9 @@
              * 获取触发器类型
              */
             getTriggerTypeList () {
-                this.fetchTriggerType().then(res => {
+                this.fetchTriggerType({
+                    scmType: this.scmType
+                }).then(res => {
                     this.triggerTypeList = res.map(i => {
                         return {
                             ...i,
@@ -292,6 +306,7 @@
 
             handelShowDetail (row) {
                 this.curAtom = row
+                console.log(row, 123)
                 this.$refs.atomDetailRef.isShow = true
             }
         }

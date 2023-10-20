@@ -53,6 +53,7 @@
                             :cur-repo-id.sync="curRepoId"
                             :codelib-list="codelibList"
                             :refresh-codelib-list="refreshCodelibList"
+                            :switch-page="switchPage"
                             @updateList="handleUpdateRepoList"
                         />
                     </template>
@@ -206,8 +207,8 @@
             ]),
 
             init () {
-                const query = this.$route.query
-                const cachae = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
+                // const query = this.$route.query
+                const cache = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
                 const { top } = getOffset(document.getElementById('codelib-list-content'))
                 const windowHeight = window.innerHeight
                 const tableHeadHeight = 42
@@ -216,12 +217,12 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
 
-                const id = (cachae && cachae.id) || ''
-                const page = (cachae && cachae.page) || 1
-                const limit = (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
+                const id = (cache && cache.id) || ''
+                const page = (cache && cache.page) || 1
+                const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
-                if (query.id) {
+                if (id) {
                     this.isListFlod = true
                     this.curRepoId = id
                     this.$router.push({
@@ -341,6 +342,7 @@
 .codelib-content {
     min-height: 100%;
     padding: 20px 30px 0;
+    background-color: #F5F7FA;
     .codelib-search {
         width: 480px;
     }
