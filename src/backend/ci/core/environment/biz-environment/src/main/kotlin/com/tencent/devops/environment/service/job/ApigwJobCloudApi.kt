@@ -214,16 +214,29 @@ class ApigwJobCloudApi {
                     )
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
                     logger.debug(
-                        "[$operationName] {$operationName}Result: " +
+                        "[$operationName] ${operationName}Result: " +
                             logWithLengthLimit(operationResult.toString())
                     )
                 }
-                return JobResult(
+                val jobResult1 = JobResult(
+                    code = jobCloudResp.code,
+                    result = jobCloudResp.result,
+                    jobRequestId = jobCloudResp.jobRequestId,
+                    data = operationResult
+                )
+                if (logger.isDebugEnabled)
+                    logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult1.toString()))
+                logger.debug("[$operationName] jobResult1 type: " + jobResult1::class.simpleName)
+                val jobResult2 = JobResult(
                     code = jobCloudResp.code,
                     result = jobCloudResp.result,
                     jobRequestId = jobCloudResp.jobRequestId,
                     data = operationResult
                 ) as JobResult<T>
+                if (logger.isDebugEnabled)
+                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
+                    logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
+                return jobResult2
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
