@@ -56,8 +56,8 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/checkWorkspaceProject")
     fun checkWorkspaceProject(
-        @ApiParam("project_id", required = true)
-        @QueryParam("project_id")
+        @ApiParam("projectId", required = true)
+        @QueryParam("projectId")
         projectId: String,
         @ApiParam("ip", required = true)
         @QueryParam("ip")
