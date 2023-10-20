@@ -93,7 +93,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -131,7 +131,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -240,7 +240,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -274,7 +274,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -332,7 +332,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -366,7 +366,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
@@ -420,7 +420,7 @@ open class BkRepoDownloadService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
+            resourceType = ResourceTypeId.PIPELINE
         ),
         content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
     )
