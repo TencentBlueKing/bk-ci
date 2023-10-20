@@ -27,10 +27,13 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("JobService")
-class JobService {
+class JobService @Autowired constructor(
+    private val apigwJobCloudApi: ApigwJobCloudApi
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(JobService::class.java)
     }
@@ -58,7 +61,7 @@ class JobService {
         )
         ApigwJobCloudApi.set(::executeScript.name)
         logger.debug("aaaaaahbdhudhfhiua"+ApigwJobCloudApi.get())
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudScriptExecuteReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq)
     }
 
     fun distributeFile(userId: String, fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
@@ -98,7 +101,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set("distributeFile")
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudFileDistributeReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudFileDistributeReq)
     }
 
     fun terminateTask(userId: String, taskTerminateReq: TaskTerminateReq): JobResult<TaskTerminateResult> {
@@ -108,7 +111,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set("terminateTask")
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudTaskTerminateReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudTaskTerminateReq)
     }
 
     fun queryJobInstanceLogs(
@@ -128,7 +131,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set("queryJobInstanceLogs")
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)
     }
 
     fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult> {
@@ -142,7 +145,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set("createAccount")
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudCreateAccountReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudCreateAccountReq)
     }
 
     fun deleteAccount(userId: String, deleteAccountReq: DeleteAccountReq): JobResult<DeleteAccountResult> {
@@ -151,7 +154,7 @@ class JobService {
             bkUsername = userId
         )
         ApigwJobCloudApi.set("deleteAccount")
-        return ApigwJobCloudApi().executePostRequest(userId, jobCloudDeleteAccountReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudDeleteAccountReq)
     }
 
     fun queryJobInstanceStatus(
@@ -161,7 +164,7 @@ class JobService {
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
         ApigwJobCloudApi.set("queryJobInstanceStatus")
-        return ApigwJobCloudApi().executeGetRequest(userId, jobInstanceId, returnIpResult)
+        return apigwJobCloudApi.executeGetRequest(userId, jobInstanceId, returnIpResult)
     }
 
     fun getAccountList(
@@ -174,6 +177,6 @@ class JobService {
         length: Int?
     ): JobResult<GetAccountListResult> {
         ApigwJobCloudApi.set("getAccountList")
-        return ApigwJobCloudApi().executeGetRequest(userId, account, alias, category, start, length)
+        return apigwJobCloudApi.executeGetRequest(userId, account, alias, category, start, length)
     }
 }

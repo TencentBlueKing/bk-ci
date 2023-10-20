@@ -8,11 +8,12 @@ import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
-import com.tencent.devops.environment.service.job.AuthenticationService
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
+@Component
 class ApigwJobCloudApi {
     // @Value("\${auth.appCode:}")
     @Value("\${job.bkAppCode:}")
@@ -96,8 +97,6 @@ class ApigwJobCloudApi {
     }
 
     fun getJobCloudAuthReq(bkUsername: String): JobCloudAuthenticationReq {
-        val logger = LoggerFactory.getLogger(AuthenticationService::class.java)
-
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
 
