@@ -186,10 +186,7 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = when (ws.ownerType) {
-                    WorkspaceOwnerType.PROJECT -> projectInfo.projectName
-                    WorkspaceOwnerType.PERSONAL -> projectInfo.projectId
-                }
+                projectName = projectInfo.projectName
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
