@@ -6,13 +6,15 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.BkTicketService
+import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
 
 @RestResource
 @Suppress("ALL")
 class ServiceRemoteDevResourceImpl(
     private val bkTicketService: BkTicketService,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val desktopWorkspaceService: DesktopWorkspaceService
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(bkTicketService.validateUserTicket(userId, isOffshore, ticket))
@@ -24,5 +26,9 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
         return Result(workspaceService.getWorkspaceProject())
+    }
+
+    override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
+        return Result(desktopWorkspaceService.checkWorkspaceProject(projectId, ip))
     }
 }

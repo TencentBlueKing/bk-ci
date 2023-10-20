@@ -51,4 +51,16 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/list")
     fun getRemotedevProjects(): Result<List<RemotedevProject>>
+
+    @ApiOperation("校验是否是当前项目下的云桌面")
+    @GET
+    @Path("checkWorkspaceProject")
+    fun checkWorkspaceProject(
+        @ApiParam("project_id", required = true)
+        @QueryParam("project_id")
+        projectId: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }
