@@ -189,5 +189,5 @@ interface ServiceJobResource {
         @ApiParam(value = "单次返回最大记录数(最大1000，不传默认20)")
         @QueryParam("length")
         length: Int?
-        ): JobResult<GetAccountListResult>
+    ): JobResult<GetAccountListResult>
 }

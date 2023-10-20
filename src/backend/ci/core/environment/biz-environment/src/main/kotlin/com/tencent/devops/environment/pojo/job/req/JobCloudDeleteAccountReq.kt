@@ -3,7 +3,7 @@ package com.tencent.devops.environment.pojo.job.req
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class JobCloudDeleteAccountReq (
+data class JobCloudDeleteAccountReq(
     @ApiModelProperty(value = "帐号ID", required = true)
     val id: String,
     @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
