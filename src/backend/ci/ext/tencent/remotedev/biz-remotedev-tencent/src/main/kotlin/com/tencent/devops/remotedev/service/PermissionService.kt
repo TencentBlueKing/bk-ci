@@ -178,7 +178,7 @@ class PermissionService @Autowired constructor(
                 userId, workspaceName
             )
         )
-        logger.info("start init1Password|$userId|$workspaceName")
+        logger.info("start init1Password|$userId|$workspaceName|$key")
         return URLEncoder.encode(key, "UTF-8")
     }
 
