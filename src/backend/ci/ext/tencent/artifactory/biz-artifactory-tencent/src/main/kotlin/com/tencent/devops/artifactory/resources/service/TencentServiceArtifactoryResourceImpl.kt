@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.service
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
@@ -47,6 +48,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
@@ -99,6 +101,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -124,6 +127,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun appDownloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -140,6 +144,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrlForOpenApi(
         userId: String,
         projectId: String,
@@ -150,6 +155,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -249,7 +255,7 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
     ): Result<String> {
         val url =
             "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/" +
-                    "$projectId/$pipelineId/$buildId/$taskId"
+                "$projectId/$pipelineId/$buildId/$taskId"
         return Result(url)
     }
 

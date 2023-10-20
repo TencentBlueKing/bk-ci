@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.app
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
@@ -54,6 +55,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -256,6 +258,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun externalUrl(
         userId: String,
         projectId: String,
@@ -278,6 +281,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun getFilePlist(
         userId: String,
         projectId: String,
@@ -302,6 +306,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         userId: String,
         projectId: String,
