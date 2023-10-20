@@ -71,7 +71,8 @@ class WorkspaceDao {
         deptName: String?,
         centerName: String?,
         groupName: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        projectName: String
     ): Long {
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
@@ -116,7 +117,8 @@ class WorkspaceDao {
                 CREATOR_GROUP_NAME,
                 WORKSPACE_MOUNT_TYPE,
                 SYSTEM_TYPE,
-                OWNER_TYPE
+                OWNER_TYPE,
+                PROJECT_NAME
             )
                 .values(
                     workspace.projectId,
@@ -144,7 +146,8 @@ class WorkspaceDao {
                     groupName ?: "",
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
-                    workspace.ownerType.name
+                    workspace.ownerType.name,
+                    projectName
                 )
                 .returning(ID)
                 .fetchOne()!!.id

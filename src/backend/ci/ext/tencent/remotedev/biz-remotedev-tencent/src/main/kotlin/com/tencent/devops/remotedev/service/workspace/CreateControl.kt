@@ -185,7 +185,11 @@ class CreateControl @Autowired constructor(
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
                 groupName = null,
-                dslContext = dslContext
+                dslContext = dslContext,
+                projectName = when (ws.ownerType) {
+                    WorkspaceOwnerType.PROJECT -> projectInfo.projectName
+                    WorkspaceOwnerType.PERSONAL -> projectInfo.projectId
+                }
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -680,7 +684,8 @@ class CreateControl @Autowired constructor(
             deptName = userInfo?.deptName,
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
-            dslContext = dslContext
+            dslContext = dslContext,
+            projectName = workspace.projectId ?: ""
         )
     }
 
