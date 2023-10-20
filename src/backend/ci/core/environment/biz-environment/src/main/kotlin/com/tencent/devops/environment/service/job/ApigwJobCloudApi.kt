@@ -116,14 +116,10 @@ class ApigwJobCloudApi {
             bkAuthorization = bkAuthorization,
             bkScopeType = bkScopeType ?: "",
             bkScopeId = when (operationName) {
-                "executeScript" -> bkScopeId
-                "distributeFile" -> bkScopeId
-                "terminateTask" -> bkScopeId
-                "queryJobInstanceStatus" -> bkScopeId
-                "queryJobInstanceLogs" -> bkScopeId
-                "createAccount" -> bkScopeIdStag
-                "deleteAccount" -> bkScopeIdStag
-                "getAccountList" -> bkScopeIdStag
+                "executeScript", "distributeFile", "terminateTask",
+                "queryJobInstanceStatus", "queryJobInstanceLogs" -> bkScopeId
+
+                "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
                 else -> ""
             } ?: ""
         )
