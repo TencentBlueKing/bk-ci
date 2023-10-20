@@ -714,7 +714,7 @@ class RepositoryService @Autowired constructor(
                 authType = repoDetailInfo?.authType ?: RepoAuthType.HTTP.name,
                 svnType = repoDetailInfo?.svnType,
                 authIdentity = repoDetailInfo?.credentialId?.ifBlank { it.userId },
-                enablePac = repoDetailInfo?.enablePac
+                enablePac = it.enablePac
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)

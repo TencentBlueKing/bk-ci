@@ -39,7 +39,5 @@ data class RepositoryDetailInfo(
     @ApiModelProperty("授权凭证ID", required = true)
     val credentialId: String,
     @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = StringUtils.EMPTY,
-    @ApiModelProperty("是否启用pac", required = true)
-    val enablePac: Boolean? = false
+    val svnType: String? = StringUtils.EMPTY
 )
