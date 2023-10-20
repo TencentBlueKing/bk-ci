@@ -784,27 +784,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
-            val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, it.workspaceName, it.workspaceMountType).data!!
-            val cache = WorkSpaceCacheInfo(
-                sshKey,
-                workspaceInfo.environmentHost,
-                workspaceInfo.hostIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.namespace,
-                workspaceInfo.curLaunchId,
-                workspaceInfo.regionId
-            )
-
-            workspaceDao.saveOrUpdateWorkspaceDetail(
-                dslContext = dslContext,
-                workspaceName = it.workspaceName,
-                detail = JsonUtil.toJson(cache)
-            )
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
         }
     }
 
