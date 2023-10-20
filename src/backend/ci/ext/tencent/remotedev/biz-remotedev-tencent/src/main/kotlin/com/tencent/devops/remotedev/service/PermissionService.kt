@@ -173,12 +173,12 @@ class PermissionService @Autowired constructor(
     }
 
     fun init1Password(userId: String, workspaceName: String): String {
-        logger.info("start init1Password|$userId|$workspaceName")
         val key = initRedisUser(
             UserOnePassword(
                 userId, workspaceName
             )
         )
+        logger.info("start init1Password|$userId|$workspaceName")
         return URLEncoder.encode(key, "UTF-8")
     }
 
