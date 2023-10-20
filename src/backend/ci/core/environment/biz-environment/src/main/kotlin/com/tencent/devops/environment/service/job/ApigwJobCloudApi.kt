@@ -8,7 +8,6 @@ import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
-import jdk.internal.org.objectweb.asm.TypeReference
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -74,15 +73,15 @@ class ApigwJobCloudApi {
         private val logger = LoggerFactory.getLogger(ApigwJobCloudApi::class.java)
 
         private val threadLocal = ThreadLocal<String>()
-        fun set(value: String) {
+        fun setThreadLocal(value: String) {
             threadLocal.set(value)
         }
 
-        fun get(): String? {
+        fun getThreadLocal(): String? {
             return threadLocal.get()
         }
 
-        fun remove() {
+        fun removeThreadLocal() {
             threadLocal.remove()
         }
     }
@@ -98,8 +97,7 @@ class ApigwJobCloudApi {
     fun getJobCloudAuthReq(bkUsername: String): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
-
-        val operationName = get()
+        val operationName = getThreadLocal()
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
         val url = when (operationName) {
             "executeScript" -> jobCloudProdUrlPrefix + executeScriptPath
@@ -143,26 +141,21 @@ class ApigwJobCloudApi {
         jobCloud: T,
         classOfU: Class<U>
     ): JobResult<U> {
-        val operationName = get()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
-            logger.debug(
-                "[${operationName}] " +
-                    "headers: $headers, " +
-                    "url: ${jobCloudAuthenticationReq.url}, " +
-                    "body: $requestContent"
-            )
+            logger.debug("[${getThreadLocal()}] headers: $headers, url: ${jobCloudAuthenticationReq.url}, body: $requestContent")
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
     fun <T, U> executeGetRequest(bkUsername: String, classOfT: Class<T>, vararg args: U): JobResult<T> {
+        val operationName = getThreadLocal()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
-        val suffix = when (get()) {
+        val suffix = when (operationName) {
             "queryJobInstanceStatus" -> QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX
             "getAccountList" -> GET_ACCOUNT_LIST_URL_SUFFIX
             else -> ""
@@ -171,19 +164,18 @@ class ApigwJobCloudApi {
             suffix, jobCloudAuthenticationReq.bkScopeType, jobCloudAuthenticationReq.bkScopeId, *args
         )
         if (logger.isDebugEnabled)
-            logger.debug("[${get()}] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
+            logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
         return getResultFromRes(OkhttpUtils.doGet(url, headers), classOfT)
     }
 
     private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): JobResult<T> {
-        val operationName = get()
-        if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
-        remove()
+        val operationName = getThreadLocal()
+        removeThreadLocal()
         try {
             val responseBody = response.body?.string()
             if (logger.isDebugEnabled) {
                 val responseLog = logWithLengthLimit(responseBody.toString())
-                if (logger.isDebugEnabled) logger.debug("[$operationName] response body(origin): $responseLog")
+                logger.debug("[$operationName] response body(origin): $responseLog")
             }
 
             val jobCloudResp = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
@@ -213,10 +205,6 @@ class ApigwJobCloudApi {
                         null
                     }
                 if (logger.isDebugEnabled) {
-                    logger.debug(
-                        "[$operationName] jobCloudResp.data: " +
-                            logWithLengthLimit(jobCloudResp.data.toString())
-                    )
                     logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
                     logger.debug(
@@ -224,16 +212,15 @@ class ApigwJobCloudApi {
                             logWithLengthLimit(operationResult.toString())
                     )
                 }
-                val jobResult1 = JobResult(
+                val jobResult = JobResult(
                     code = jobCloudResp.code,
                     result = jobCloudResp.result,
                     jobRequestId = jobCloudResp.jobRequestId,
                     data = operationResult
                 )
                 if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult1.toString()))
-                logger.debug("[$operationName] jobResult1 type: " + jobResult1::class.simpleName)
-                return jobResult1
+                    logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult.toString()))
+                return jobResult
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)

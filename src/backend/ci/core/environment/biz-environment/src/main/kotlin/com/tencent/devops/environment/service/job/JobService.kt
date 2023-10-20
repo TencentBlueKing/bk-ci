@@ -25,9 +25,7 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudHost
 import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
-import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -35,10 +33,6 @@ import org.springframework.stereotype.Service
 class JobService @Autowired constructor(
     private val apigwJobCloudApi: ApigwJobCloudApi
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(JobService::class.java)
-    }
-
     fun executeScript(userId: String, scriptExecuteReq: ScriptExecuteReq): JobResult<ScriptExecuteResult> {
         val dynamicGroupList: List<JobCloudHost> = emptyList()
         val topoNodeList: List<JobCloudHost> = emptyList()
@@ -60,7 +54,7 @@ class JobService @Autowired constructor(
             ),
             bkUsername = userId
         )
-        ApigwJobCloudApi.set(::executeScript.name)
+        ApigwJobCloudApi.setThreadLocal(::executeScript.name)
         return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq, ScriptExecuteResult::class.java)
     }
 
@@ -100,7 +94,7 @@ class JobService @Autowired constructor(
             timeout = fileDistributeReq.timeout,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set("distributeFile")
+        ApigwJobCloudApi.setThreadLocal(::distributeFile.name)
         return apigwJobCloudApi.executePostRequest(userId, jobCloudFileDistributeReq, FileDistributeResult::class.java)
     }
 
@@ -110,7 +104,7 @@ class JobService @Autowired constructor(
             operationCode = taskTerminateReq.operationCode,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set("terminateTask")
+        ApigwJobCloudApi.setThreadLocal(::terminateTask.name)
         return apigwJobCloudApi.executePostRequest(userId, jobCloudTaskTerminateReq, TaskTerminateResult::class.java)
     }
 
@@ -130,8 +124,10 @@ class JobService @Autowired constructor(
             },
             bkUsername = userId
         )
-        ApigwJobCloudApi.set("queryJobInstanceLogs")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudQueryJobInstanceLogsReq, QueryJobInstanceLogsResult::class.java)
+        ApigwJobCloudApi.setThreadLocal(::queryJobInstanceLogs.name)
+        return apigwJobCloudApi.executePostRequest(
+            userId, jobCloudQueryJobInstanceLogsReq, QueryJobInstanceLogsResult::class.java
+        )
     }
 
     fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult> {
@@ -144,7 +140,7 @@ class JobService @Autowired constructor(
             description = createAccountReq.description,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set("createAccount")
+        ApigwJobCloudApi.setThreadLocal(::createAccount.name)
         return apigwJobCloudApi.executePostRequest(userId, jobCloudCreateAccountReq, CreateAccountResult::class.java)
     }
 
@@ -153,7 +149,7 @@ class JobService @Autowired constructor(
             id = deleteAccountReq.id,
             bkUsername = userId
         )
-        ApigwJobCloudApi.set("deleteAccount")
+        ApigwJobCloudApi.setThreadLocal(::deleteAccount.name)
         return apigwJobCloudApi.executePostRequest(userId, jobCloudDeleteAccountReq, DeleteAccountResult::class.java)
     }
 
@@ -163,7 +159,7 @@ class JobService @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        ApigwJobCloudApi.set("queryJobInstanceStatus")
+        ApigwJobCloudApi.setThreadLocal("queryJobInstanceStatus")
         return apigwJobCloudApi.executeGetRequest(
             userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult
         )
@@ -178,7 +174,7 @@ class JobService @Autowired constructor(
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        ApigwJobCloudApi.set("getAccountList")
+        ApigwJobCloudApi.setThreadLocal("getAccountList")
         return apigwJobCloudApi.executeGetRequest(
             userId, GetAccountListResult::class.java, account, alias, category, start, length
         )
