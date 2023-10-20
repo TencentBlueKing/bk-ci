@@ -138,7 +138,8 @@ class CodeGithubRepositoryService @Autowired constructor(
             projectName = record.projectName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId.toLong()
+            gitProjectId = record.gitProjectId.toLong(),
+            enablePac = repository.enablePac
         )
     }
 
