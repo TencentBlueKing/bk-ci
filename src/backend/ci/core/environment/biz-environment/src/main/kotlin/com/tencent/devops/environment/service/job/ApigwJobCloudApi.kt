@@ -141,6 +141,7 @@ class ApigwJobCloudApi {
     }
 
     fun <T : JobCloudPermission, U : Any> executePostRequest(bkUsername: String, jobCloud: T): JobResult<U> {
+        val operationName = get()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
@@ -148,9 +149,9 @@ class ApigwJobCloudApi {
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
             logger.debug(
-                "[${get()}] " +
+                "[${operationName}] " +
                     "headers: $headers, " +
-                    "url: ${jobCloudAuthenticationReq.url}, " +
+                    "jianingzhaotest1020-url: ${jobCloudAuthenticationReq.url}, " +
                     "body: $requestContent"
             )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers))
