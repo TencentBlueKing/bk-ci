@@ -24,13 +24,13 @@ class ApigwJobCloudApi {
     private val bkAppSecret = ""
 
     @Value("\${job.bkScopeType:#{null}}")
-    val bkScopeType: String? = null
+    val bkScopeType: String = ""
 
     @Value("\${job.bkScopeId:#{null}}")
-    val bkScopeId: String? = null
+    val bkScopeId: String = ""
 
     @Value("\${job.bkScopeIdStag:#{null}}")
-    val bkScopeIdStag: String? = null
+    val bkScopeIdStag: String = ""
 
     @Value("\${job.jobCloudProdUrlPrefix:#{null}}")
     val jobCloudProdUrlPrefix: String? = null
@@ -111,17 +111,18 @@ class ApigwJobCloudApi {
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
+        val bkScopeId = when (operationName) {
+            "executeScript", "distributeFile", "terminateTask",
+            "queryJobInstanceStatus", "queryJobInstanceLogs" -> bkScopeId
+
+            "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
+            else -> ""
+        }
         return JobCloudAuthenticationReq(
             url = url,
             bkAuthorization = bkAuthorization,
-            bkScopeType = bkScopeType ?: "",
-            bkScopeId = when (operationName) {
-                "executeScript", "distributeFile", "terminateTask",
-                "queryJobInstanceStatus", "queryJobInstanceLogs" -> bkScopeId
-
-                "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
-                else -> ""
-            } ?: ""
+            bkScopeType = bkScopeType,
+            bkScopeId = bkScopeId
         )
     }
 
