@@ -30,7 +30,7 @@ package com.tencent.devops.process.trigger.git.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.enums.YamlFilePushType
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.process.trigger.common.exception.ErrorCodeEnum
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
@@ -263,7 +263,7 @@ class TGitApiService @Autowired constructor(
         content: String,
         commitMessage: String,
         title: String,
-        yamlFilePushType: YamlFilePushType
+        targetAction: CodeTargetAction
     ) {
         val token = cred.toToken()
         // 1. 判断分支是否存在
@@ -321,7 +321,7 @@ class TGitApiService @Autowired constructor(
                 tokenType = cred.toTokenType()
             )
         }
-        if (yamlFilePushType == YamlFilePushType.MERGE) {
+        if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
             client.get(ServiceGitResource::class).createMergeRequest(
                 token = token,
                 tokenType = cred.toTokenType(),

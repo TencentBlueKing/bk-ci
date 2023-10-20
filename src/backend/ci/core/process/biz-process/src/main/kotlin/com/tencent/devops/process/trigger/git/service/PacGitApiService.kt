@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.trigger.git.service
 
-import com.tencent.devops.process.enums.YamlFilePushType
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.process.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.trigger.git.pojo.PacGitCred
 import com.tencent.devops.process.trigger.git.pojo.PacGitFileInfo
@@ -139,6 +139,6 @@ interface PacGitApiService {
         content: String,
         commitMessage: String,
         title: String,
-        yamlFilePushType: YamlFilePushType
+        targetAction: CodeTargetAction
     )
 }

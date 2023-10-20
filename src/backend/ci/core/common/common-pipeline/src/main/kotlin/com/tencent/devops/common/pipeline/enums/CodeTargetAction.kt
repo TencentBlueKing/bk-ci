@@ -23,17 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.enums
+package com.tencent.devops.common.pipeline.enums
 
-/**
- * 推送yaml文件类型
- */
-enum class YamlFilePushType {
-    // 直接推送到主干
-    PUSH,
-    // 新建分支并创建MR
-    MERGE;
+enum class CodeTargetAction(val desc: String) {
+    COMMIT_TO_MASTER("提交到主干"),
+    CHECKOUT_BRANCH_AND_REQUEST_MERGE("新建分支创建MR"),
+    PUSH_BRANCH_AND_REQUEST_MERGE("在原始版本分支创建MR");
+
+    companion object {
+        fun getActionType(type: String): String {
+            return when (type) {
+                "COMMIT_TO_MASTER" -> COMMIT_TO_MASTER.name
+                "CHECKOUT_BRANCH_AND_REQUEST_MERGE" -> CHECKOUT_BRANCH_AND_REQUEST_MERGE.name
+                "PUSH_BRANCH_AND_REQUEST_MERGE" -> PUSH_BRANCH_AND_REQUEST_MERGE.name
+                else -> COMMIT_TO_MASTER.name
+            }
+        }
+    }
 }

@@ -29,9 +29,9 @@
 package com.tencent.devops.process.trigger.actions.pacActions
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.enums.YamlFilePushType
 import com.tencent.devops.process.trigger.actions.BaseAction
 import com.tencent.devops.process.trigger.actions.GitActionCommon
 import com.tencent.devops.process.trigger.actions.data.ActionData
@@ -128,9 +128,9 @@ class PacPushYamlFileAction : BaseAction {
         filePath: String,
         content: String,
         commitMessage: String,
-        yamlFilePushType: YamlFilePushType
+        targetAction: CodeTargetAction
     ) {
-        val branchName = if (yamlFilePushType == YamlFilePushType.PUSH) {
+        val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             data.eventCommon.branch
         } else {
             "${PAC_BRANCH_PREFIX}${pipelineId}"
@@ -148,7 +148,7 @@ class PacPushYamlFileAction : BaseAction {
                 params = arrayOf(pipelineId),
                 language = I18nUtil.getDefaultLocaleLanguage()
             ),
-            yamlFilePushType = yamlFilePushType
+            targetAction = targetAction
         )
     }
 }

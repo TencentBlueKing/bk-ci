@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.enums.YamlFilePushType
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlUrl
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.actions.EventActionFactory
@@ -230,7 +230,7 @@ class PacYamlFacadeService @Autowired constructor(
         filePath: String,
         content: String,
         commitMessage: String,
-        yamlFilePushType: YamlFilePushType
+        targetAction: CodeTargetAction
     ) {
         logger.info("upload yaml file|$userId|$projectId|$repoHashId|$scmType")
         val repository = client.get(ServiceRepositoryResource::class).get(
@@ -251,7 +251,7 @@ class PacYamlFacadeService @Autowired constructor(
             filePath = filePath,
             content = content,
             commitMessage = commitMessage,
-            yamlFilePushType = yamlFilePushType
+            targetAction = targetAction
         )
     }
 
