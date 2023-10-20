@@ -134,7 +134,6 @@ class FeignConfiguration @Autowired constructor(
             if (!requestIp.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_IP, requestIp)
             }
-            logger.debug("FeignConfiguration:requestIp($requestIp)")
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()

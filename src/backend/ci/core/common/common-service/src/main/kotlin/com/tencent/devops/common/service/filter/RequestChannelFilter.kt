@@ -55,9 +55,6 @@ class RequestChannelFilter : Filter {
         }
         val httpServletRequest = request as HttpServletRequest
         val requestUrl = httpServletRequest.requestURI
-        logger.debug(
-            "Request Channel Filter:URL($requestUrl)"
-        )
         // 根据接口路径设置请求渠道信息
         val channel = when {
             requestUrl.contains("/api/build/") -> RequestChannelTypeEnum.BUILD.name
