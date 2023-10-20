@@ -49,7 +49,6 @@ import org.jooq.Record1
 import org.jooq.Record4
 import org.jooq.RecordMapper
 import org.jooq.Result
-import org.jooq.types.UInteger
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -68,7 +67,7 @@ class PipelineSettingDao {
         maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
         pipelineAsCodeSettings: PipelineAsCodeSettings?,
         settingVersion: Int
-    ): Int {
+    ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val successType = successNotifyTypes.split(",").filter { i -> i.isNotBlank() }
                 .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
@@ -86,7 +85,7 @@ class PipelineSettingDao {
                 users = "\${$PIPELINE_START_USER_NAME}",
                 content = NotifyTemplateUtils.getCommonShutdownFailureContent()
             )
-            return dslContext.insertInto(
+            val result = dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
@@ -109,33 +108,32 @@ class PipelineSettingDao {
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 VERSION
-            )
-                .values(
-                    projectId,
-                    pipelineId,
-                    pipelineName,
-                    PipelineRunLockType.toValue(PipelineRunLockType.MULTIPLE),
-                    "",
-                    successSubscription.users,
-                    failSubscription.users,
-                    "",
-                    "",
-                    successNotifyTypes,
-                    failNotifyTypes,
-                    successSubscription.content,
-                    failSubscription.content,
-                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
-                    PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-                    isTemplate,
-                    maxPipelineResNum,
-                    pipelineAsCodeSettings?.let { self ->
-                        JsonUtil.toJson(self, false)
-                    },
-                    JsonUtil.toJson(listOf(successSubscription), false),
-                    JsonUtil.toJson(listOf(failSubscription), false),
-                    settingVersion
-                )
-                .execute()
+            ).values(
+                projectId,
+                pipelineId,
+                pipelineName,
+                PipelineRunLockType.toValue(PipelineRunLockType.MULTIPLE),
+                "",
+                successSubscription.users,
+                failSubscription.users,
+                "",
+                "",
+                successNotifyTypes,
+                failNotifyTypes,
+                successSubscription.content,
+                failSubscription.content,
+                DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
+                PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+                isTemplate,
+                maxPipelineResNum,
+                pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.toJson(self, false)
+                },
+                JsonUtil.toJson(listOf(successSubscription), false),
+                JsonUtil.toJson(listOf(failSubscription), false),
+                settingVersion
+            ).returning().fetchOne()
+            return mapper.map(result)
         }
     }
 
@@ -180,7 +178,6 @@ class PipelineSettingDao {
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
                 CLEAN_VARIABLES_WHEN_RETRY,
-                PIPELINE_AS_CODE_SETTINGS,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 VERSION
@@ -215,7 +212,6 @@ class PipelineSettingDao {
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
                 setting.cleanVariablesWhenRetry,
-                setting.pipelineAsCodeSettings?.let { self -> JsonUtil.toJson(self, false) },
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.version

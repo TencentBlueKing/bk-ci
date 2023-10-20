@@ -689,17 +689,15 @@ class PipelineRepositoryService constructor(
                                     null
                                 },
                                 settingVersion = settingVersion
-                            )
-                            pipelineSettingVersionDao.insertNewSetting(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                pipelineName = model.name,
-                                failNotifyTypes = notifyTypes,
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                settingVersion = settingVersion
-                            )
+                            )?.let { setting ->
+                                pipelineSettingVersionDao.saveSetting(
+                                    dslContext = transactionContext,
+                                    setting = setting,
+                                    id = client.get(ServiceAllocIdResource::class)
+                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                    version = settingVersion
+                                )
+                            }
                         }
                     } else {
                         pipelineSettingDao.updateSetting(

@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
@@ -77,4 +78,8 @@ data class PipelineSettingVersion(
     var concurrencyCancelInProgress: Boolean = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings()
-)
+) {
+    companion object {
+        fun convertFromSetting(setting: PipelineSetting) = PipelineSettingVersion()
+    }
+}
