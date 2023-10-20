@@ -154,7 +154,7 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers))
     }
 
-    fun <T : Any, U> executeGetRequest(bkUsername: String, vararg args: U): JobResult<T> {
+    fun <T, U> executeGetRequest(bkUsername: String, vararg args: U): JobResult<T> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val suffix = when (get()) {
@@ -170,7 +170,7 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doGet(url, headers))
     }
 
-    private fun <T : Any?> getResultFromRes(response: Response): JobResult<T> {
+    private fun <T> getResultFromRes(response: Response): JobResult<T> {
         val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
         remove()
@@ -200,14 +200,14 @@ class ApigwJobCloudApi {
                 )
             } else {
                 var jsonData = ""
-//                val operationResult: Any? =
+//                val operationResult: T? =
 //                    if (null != jobCloudResp.data) {
 //                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
 //                        jacksonObjectMapper().readValue(jsonData)
 //                    } else {
 //                        null
 //                    }
-                val operationResult = jobCloudResp.data
+                val operationResult: T? = jobCloudResp.data
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "[$operationName] jobCloudResp.data: " +
