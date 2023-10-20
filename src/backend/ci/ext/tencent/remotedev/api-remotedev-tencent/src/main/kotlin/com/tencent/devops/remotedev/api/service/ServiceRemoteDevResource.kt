@@ -54,7 +54,7 @@ interface ServiceRemoteDevResource {
 
     @ApiOperation("校验是否是当前项目下的云桌面")
     @GET
-    @Path("checkWorkspaceProject")
+    @Path("/checkWorkspaceProject")
     fun checkWorkspaceProject(
         @ApiParam("project_id", required = true)
         @QueryParam("project_id")
