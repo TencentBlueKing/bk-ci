@@ -170,7 +170,7 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doGet(url, headers))
     }
 
-    private fun <T : Any> getResultFromRes(response: Response): JobResult<T> {
+    private fun <T : Any?> getResultFromRes(response: Response): JobResult<T> {
         val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
         remove()
@@ -199,26 +199,25 @@ class ApigwJobCloudApi {
                         "Error msg: ${jobCloudResp.message}"
                 )
             } else {
-//                var jsonData = ""
-//                val operationResult: Class<T>? =
-//                    if (null != jobCloudResp.data) {
-//                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-//                        jacksonObjectMapper().readValue(jsonData)
-//                    } else {
-//                        null
-//                    }
-                val operationResult = jobCloudResp.data
+                var jsonData = ""
+                val operationResult: Any? =
+                    if (null != jobCloudResp.data) {
+                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                        jacksonObjectMapper().readValue(jsonData)
+                    } else {
+                        null
+                    }
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "[$operationName] jobCloudResp.data: " +
                             logWithLengthLimit(jobCloudResp.data.toString())
                     )
-                logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
-//                    logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-//                    logger.debug(
-//                        "[$operationName] ${operationName}Result: " +
-//                            logWithLengthLimit(operationResult.toString())
-//                    )
+                    logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
+                    logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
+                    logger.debug(
+                        "[$operationName] ${operationName}Result: " +
+                            logWithLengthLimit(operationResult.toString())
+                    )
                 }
                 val jobResult1 = JobResult(
                     code = jobCloudResp.code,
@@ -229,16 +228,17 @@ class ApigwJobCloudApi {
                 if (logger.isDebugEnabled)
                     logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult1.toString()))
                 logger.debug("[$operationName] jobResult1 type: " + jobResult1::class.simpleName)
-//                val jobResult2 = JobResult(
-//                    code = jobCloudResp.code,
-//                    result = jobCloudResp.result,
-//                    jobRequestId = jobCloudResp.jobRequestId,
-//                    data = operationResult
-//                )
-//                if (logger.isDebugEnabled)
-//                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
-//                logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
-                return jobResult1
+
+                val jobResult2: JobResult<T> = JobResult(
+                    code = jobCloudResp.code,
+                    result = jobCloudResp.result,
+                    jobRequestId = jobCloudResp.jobRequestId,
+                    data = operationResult as T
+                )
+                if (logger.isDebugEnabled)
+                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
+                logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
+                return jobResult2
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
