@@ -200,13 +200,14 @@ class ApigwJobCloudApi {
                 )
             } else {
                 var jsonData = ""
-                val operationResult: Any? =
-                    if (null != jobCloudResp.data) {
-                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-                        jacksonObjectMapper().readValue(jsonData)
-                    } else {
-                        null
-                    }
+//                val operationResult: Any? =
+//                    if (null != jobCloudResp.data) {
+//                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+//                        jacksonObjectMapper().readValue(jsonData)
+//                    } else {
+//                        null
+//                    }
+                val operationResult = jobCloudResp.data
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "[$operationName] jobCloudResp.data: " +
@@ -229,16 +230,16 @@ class ApigwJobCloudApi {
                     logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult1.toString()))
                 logger.debug("[$operationName] jobResult1 type: " + jobResult1::class.simpleName)
 
-                val jobResult2: JobResult<T> = JobResult(
-                    code = jobCloudResp.code,
-                    result = jobCloudResp.result,
-                    jobRequestId = jobCloudResp.jobRequestId,
-                    data = operationResult as T
-                )
-                if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
-                logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
-                return jobResult2
+//                val jobResult2: JobResult<T> = JobResult(
+//                    code = jobCloudResp.code,
+//                    result = jobCloudResp.result,
+//                    jobRequestId = jobCloudResp.jobRequestId,
+//                    data = operationResult
+//                )
+//                if (logger.isDebugEnabled)
+//                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
+//                logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
+                return jobResult1
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
