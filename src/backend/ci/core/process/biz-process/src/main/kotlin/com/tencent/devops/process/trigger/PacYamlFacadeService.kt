@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlUrl
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
@@ -255,12 +255,12 @@ class PacYamlFacadeService @Autowired constructor(
         )
     }
 
-    fun getPipelineYamlUrl(
+    fun getPipelineYamlInfo(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineYamlUrl? {
-        return pacYamlResourceService.getPipelineYamlUrl(
+    ): PipelineYamlVo? {
+        return pacYamlResourceService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version

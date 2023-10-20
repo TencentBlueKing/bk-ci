@@ -28,17 +28,22 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线yaml url信息")
-data class PipelineYamlUrl(
-    @ApiModelProperty("仓库名")
-    val repoName: String,
-    @ApiModelProperty("仓库名")
-    val repoUrl: String,
-    @ApiModelProperty("yaml文件路径")
+@ApiModel("流水线yaml展示信息")
+data class PipelineYamlVo(
+    @ApiModelProperty("代码库hashId", required = true)
+    val repoHashId: String,
+    @ApiModelProperty("代码库类型", required = true)
+    val scmType: ScmType,
+    @ApiModelProperty("yaml文件路径", required = true)
     val filePath: String,
-    @ApiModelProperty("yaml文件url")
-    val fileUrl: String
+    @ApiModelProperty("代码库项目路径", required = false)
+    val pathWithNamespace: String? = null,
+    @ApiModelProperty("仓库网页url", required = false)
+    val webUrl: String? = null,
+    @ApiModelProperty("yaml文件url", required = false)
+    val fileUrl: String? = null
 )

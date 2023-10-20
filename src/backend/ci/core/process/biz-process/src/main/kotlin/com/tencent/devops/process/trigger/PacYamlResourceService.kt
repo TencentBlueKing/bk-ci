@@ -29,11 +29,12 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlUrl
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.trigger.actions.BaseAction
 import com.tencent.devops.process.trigger.pojo.PacTriggerLock
@@ -213,11 +214,11 @@ class PacYamlResourceService @Autowired constructor(
         )
     }
 
-    fun getPipelineYamlUrl(
+    fun getPipelineYamlInfo(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineYamlUrl? {
+    ): PipelineYamlVo? {
         val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
             dslContext = dslContext,
             projectId = projectId,
@@ -238,9 +239,11 @@ class PacYamlResourceService @Autowired constructor(
                 is CodeGitRepository -> {
                     val homePage =
                         repository.url.replace("git@", "https://").removeSuffix(".git")
-                    PipelineYamlUrl(
-                        repoName = repository.projectName,
-                        repoUrl = homePage,
+                    PipelineYamlVo(
+                        repoHashId = repoHashId,
+                        scmType = ScmType.CODE_GIT,
+                        pathWithNamespace = repository.projectName,
+                        webUrl = homePage,
                         filePath = filePath,
                         fileUrl = "$homePage/blob/master/$filePath"
                     )
