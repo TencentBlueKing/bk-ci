@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PacYamlSyncService @Autowired constructor(
+class PipelineYamlSyncService @Autowired constructor(
     private val client: Client
 ) {
 

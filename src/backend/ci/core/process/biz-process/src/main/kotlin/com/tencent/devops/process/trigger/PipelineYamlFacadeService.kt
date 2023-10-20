@@ -42,7 +42,7 @@ import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
 import com.tencent.devops.process.trigger.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.trigger.actions.pacActions.data.PacUploadYamlFileEvent
+import com.tencent.devops.process.trigger.actions.pacActions.data.PacPushYamlFileEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlEnableEvent
 import com.tencent.devops.process.trigger.mq.pacTrigger.PacYamlTriggerEvent
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -55,21 +55,21 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class PacYamlFacadeService @Autowired constructor(
+class PipelineYamlFacadeService @Autowired constructor(
     private val client: Client,
     private val eventActionFactory: EventActionFactory,
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val objectMapper: ObjectMapper,
-    private val pacYamlSyncService: PacYamlSyncService,
+    private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val webhookEventFactory: WebhookEventFactory,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pacYamlResourceService: PacYamlResourceService
+    private val pipelineYamlResourceService: PipelineYamlResourceService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PacYamlFacadeService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineYamlFacadeService::class.java)
     }
 
     fun enablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
@@ -90,7 +90,7 @@ class PacYamlFacadeService @Autowired constructor(
 
         val ciDirId = action.getCiDirId()
         val yamlPathList = action.getYamlPathList()
-        pacYamlSyncService.initPacSyncDetail(
+        pipelineYamlSyncService.initPacSyncDetail(
             projectId = projectId,
             repoHashId = repoHashId,
             ciDirId = ciDirId!!,
@@ -239,7 +239,7 @@ class PacYamlFacadeService @Autowired constructor(
             repositoryType = RepositoryType.ID
         ).data ?: return
         val setting = PacRepoSetting(repository = repository)
-        val event = PacUploadYamlFileEvent(
+        val event = PacPushYamlFileEvent(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
@@ -260,7 +260,7 @@ class PacYamlFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PipelineYamlVo? {
-        return pacYamlResourceService.getPipelineYamlInfo(
+        return pipelineYamlResourceService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version

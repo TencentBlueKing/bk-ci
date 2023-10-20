@@ -30,15 +30,15 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.trigger.PacYamlFacadeService
+import com.tencent.devops.process.trigger.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pacYamlFacadeService: PacYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : ServicePipelinePacResource {
     override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pacYamlFacadeService.enablePac(
+        pipelineYamlFacadeService.enablePac(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
@@ -47,7 +47,7 @@ class ServicePipelinePacResourceImpl @Autowired constructor(
     }
 
     override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pacYamlFacadeService.disablePac(
+        pipelineYamlFacadeService.disablePac(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,

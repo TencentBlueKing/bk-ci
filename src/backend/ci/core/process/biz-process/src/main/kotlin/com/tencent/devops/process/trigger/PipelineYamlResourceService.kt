@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PacYamlResourceService @Autowired constructor(
+class PipelineYamlResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
@@ -58,7 +58,7 @@ class PacYamlResourceService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PacYamlResourceService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineYamlResourceService::class.java)
     }
 
     fun syncYamlPipeline(

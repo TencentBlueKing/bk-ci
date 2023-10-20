@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PacYamlBuildService @Autowired constructor(
+class PipelineYamlBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val webhookEventFactory: WebhookEventFactory,
@@ -48,7 +48,7 @@ class PacYamlBuildService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(PacYamlBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineYamlBuildService::class.java)
     }
 
     fun start(

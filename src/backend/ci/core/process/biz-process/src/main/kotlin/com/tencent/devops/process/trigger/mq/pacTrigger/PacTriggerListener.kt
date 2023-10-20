@@ -30,9 +30,9 @@ package com.tencent.devops.process.trigger.mq.pacTrigger
 
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
-import com.tencent.devops.process.trigger.PacYamlBuildService
-import com.tencent.devops.process.trigger.PacYamlResourceService
-import com.tencent.devops.process.trigger.PacYamlSyncService
+import com.tencent.devops.process.trigger.PipelineYamlBuildService
+import com.tencent.devops.process.trigger.PipelineYamlResourceService
+import com.tencent.devops.process.trigger.PipelineYamlSyncService
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.exception.PacTriggerExceptionHandler
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,9 +42,9 @@ import org.springframework.stereotype.Service
 class PacTriggerListener @Autowired constructor(
     traceEventDispatcher: TraceEventDispatcher,
     private val actionFactory: EventActionFactory,
-    private val pacYamlResourceService: PacYamlResourceService,
-    private val pacYamlSyncService: PacYamlSyncService,
-    private val pacYamlBuildService: PacYamlBuildService,
+    private val pipelineYamlResourceService: PipelineYamlResourceService,
+    private val pipelineYamlSyncService: PipelineYamlSyncService,
+    private val pipelineYamlBuildService: PipelineYamlBuildService,
     private val exceptionHandler: PacTriggerExceptionHandler
 ) : BaseTraceListener<BasePacYamlEvent>(
     traceEventDispatcher = traceEventDispatcher
@@ -84,11 +84,11 @@ class PacTriggerListener @Autowired constructor(
             return
         }
         exceptionHandler.handle(action = action) {
-            pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
+            pipelineYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
             val ciDirId = action.data.context.ciDirId!!
             val repoHashId = action.data.setting.repoHashId
             val filePath = action.data.context.yamlFile!!.yamlPath
-            pacYamlSyncService.syncSuccess(
+            pipelineYamlSyncService.syncSuccess(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 ciDirId = ciDirId,
@@ -116,8 +116,8 @@ class PacTriggerListener @Autowired constructor(
             return
         }
         exceptionHandler.handle(action = action) {
-            pacYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
-            pacYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
+            pipelineYamlResourceService.syncYamlPipeline(projectId = projectId, action = action)
+            pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
         }
     }
 }

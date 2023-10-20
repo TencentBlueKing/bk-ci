@@ -44,7 +44,7 @@ import com.tencent.devops.process.trigger.actions.data.context.PacTriggerContext
 import com.tencent.devops.process.trigger.actions.pacActions.PacEnableAction
 import com.tencent.devops.process.trigger.actions.pacActions.PacPushYamlFileAction
 import com.tencent.devops.process.trigger.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.trigger.actions.pacActions.data.PacUploadYamlFileEvent
+import com.tencent.devops.process.trigger.actions.pacActions.data.PacPushYamlFileEvent
 import com.tencent.devops.process.trigger.actions.tgit.TGitIssueActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitNoteActionGit
 import com.tencent.devops.process.trigger.actions.tgit.TGitPushActionGit
@@ -149,7 +149,7 @@ class EventActionFactory @Autowired constructor(
 
     fun loadPushYamlFileEvent(
         setting: PacRepoSetting,
-        event: PacUploadYamlFileEvent
+        event: PacPushYamlFileEvent
     ): PacPushYamlFileAction {
         val pacPushYamlFileAction = PacPushYamlFileAction()
         pacPushYamlFileAction.data = ActionData(event, PacTriggerContext())

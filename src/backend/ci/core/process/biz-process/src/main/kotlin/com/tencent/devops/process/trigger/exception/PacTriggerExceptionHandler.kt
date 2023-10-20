@@ -28,7 +28,7 @@
 
 package com.tencent.devops.process.trigger.exception
 
-import com.tencent.devops.process.trigger.PacYamlSyncService
+import com.tencent.devops.process.trigger.PipelineYamlSyncService
 import com.tencent.devops.process.trigger.actions.BaseAction
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PacTriggerExceptionHandler(
-    private val pacYamlSyncService: PacYamlSyncService
+    private val pipelineYamlSyncService: PipelineYamlSyncService
 ) {
 
     companion object {

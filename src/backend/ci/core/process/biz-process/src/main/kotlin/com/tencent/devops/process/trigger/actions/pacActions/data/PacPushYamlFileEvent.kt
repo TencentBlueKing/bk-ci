@@ -34,7 +34,7 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 /**
  * pac push文件事件
  */
-data class PacUploadYamlFileEvent(
+data class PacPushYamlFileEvent(
     val userId: String,
     val projectId: String,
     val repoHashId: String,
