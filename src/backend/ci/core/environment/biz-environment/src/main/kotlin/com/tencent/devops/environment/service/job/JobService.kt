@@ -25,6 +25,7 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudHost
 import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
+import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,7 +61,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set(::executeScript.name)
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq, ScriptExecuteResult::class.java)
     }
 
     fun distributeFile(userId: String, fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
@@ -100,7 +101,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set("distributeFile")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudFileDistributeReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudFileDistributeReq, FileDistributeResult::class.java)
     }
 
     fun terminateTask(userId: String, taskTerminateReq: TaskTerminateReq): JobResult<TaskTerminateResult> {
@@ -110,7 +111,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set("terminateTask")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudTaskTerminateReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudTaskTerminateReq, TaskTerminateResult::class.java)
     }
 
     fun queryJobInstanceLogs(
@@ -130,7 +131,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set("queryJobInstanceLogs")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudQueryJobInstanceLogsReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudQueryJobInstanceLogsReq, QueryJobInstanceLogsResult::class.java)
     }
 
     fun createAccount(userId: String, createAccountReq: CreateAccountReq): JobResult<CreateAccountResult> {
@@ -144,7 +145,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set("createAccount")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudCreateAccountReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudCreateAccountReq, CreateAccountResult::class.java)
     }
 
     fun deleteAccount(userId: String, deleteAccountReq: DeleteAccountReq): JobResult<DeleteAccountResult> {
@@ -153,7 +154,7 @@ class JobService @Autowired constructor(
             bkUsername = userId
         )
         ApigwJobCloudApi.set("deleteAccount")
-        return apigwJobCloudApi.executePostRequest(userId, jobCloudDeleteAccountReq)
+        return apigwJobCloudApi.executePostRequest(userId, jobCloudDeleteAccountReq, DeleteAccountResult::class.java)
     }
 
     fun queryJobInstanceStatus(
@@ -163,7 +164,9 @@ class JobService @Autowired constructor(
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
         ApigwJobCloudApi.set("queryJobInstanceStatus")
-        return apigwJobCloudApi.executeGetRequest(userId, jobInstanceId, returnIpResult)
+        return apigwJobCloudApi.executeGetRequest(
+            userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult
+        )
     }
 
     fun getAccountList(
@@ -176,6 +179,8 @@ class JobService @Autowired constructor(
         length: Int?
     ): JobResult<GetAccountListResult> {
         ApigwJobCloudApi.set("getAccountList")
-        return apigwJobCloudApi.executeGetRequest(userId, account, alias, category, start, length)
+        return apigwJobCloudApi.executeGetRequest(
+            userId, GetAccountListResult::class.java, account, alias, category, start, length
+        )
     }
 }

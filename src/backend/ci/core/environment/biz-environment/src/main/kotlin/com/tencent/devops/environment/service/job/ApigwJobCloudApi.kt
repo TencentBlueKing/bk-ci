@@ -8,6 +8,7 @@ import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
+import jdk.internal.org.objectweb.asm.TypeReference
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -137,7 +138,11 @@ class ApigwJobCloudApi {
             logOrigin
     }
 
-    fun <T : JobCloudPermission, U : Any> executePostRequest(bkUsername: String, jobCloud: T): JobResult<U> {
+    fun <T : JobCloudPermission, U : Any> executePostRequest(
+        bkUsername: String,
+        jobCloud: T,
+        classOfU: Class<U>
+    ): JobResult<U> {
         val operationName = get()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
@@ -151,10 +156,10 @@ class ApigwJobCloudApi {
                     "url: ${jobCloudAuthenticationReq.url}, " +
                     "body: $requestContent"
             )
-        return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers))
+        return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
-    fun <T, U> executeGetRequest(bkUsername: String, vararg args: U): JobResult<T> {
+    fun <T, U> executeGetRequest(bkUsername: String, classOfT: Class<T>, vararg args: U): JobResult<T> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val suffix = when (get()) {
@@ -167,10 +172,10 @@ class ApigwJobCloudApi {
         )
         if (logger.isDebugEnabled)
             logger.debug("[${get()}] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
-        return getResultFromRes(OkhttpUtils.doGet(url, headers))
+        return getResultFromRes(OkhttpUtils.doGet(url, headers), classOfT)
     }
 
-    private fun <T> getResultFromRes(response: Response): JobResult<T> {
+    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): JobResult<T> {
         val operationName = get()
         if (logger.isDebugEnabled) logger.debug("[getResultFromRes] operateName: $operationName")
         remove()
@@ -200,14 +205,13 @@ class ApigwJobCloudApi {
                 )
             } else {
                 var jsonData = ""
-//                val operationResult: T? =
-//                    if (null != jobCloudResp.data) {
-//                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-//                        jacksonObjectMapper().readValue(jsonData)
-//                    } else {
-//                        null
-//                    }
-                val operationResult: T? = jobCloudResp.data
+                val operationResult: T? =
+                    if (null != jobCloudResp.data) {
+                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
+                        jacksonObjectMapper().readValue(jsonData, classOfT)
+                    } else {
+                        null
+                    }
                 if (logger.isDebugEnabled) {
                     logger.debug(
                         "[$operationName] jobCloudResp.data: " +
@@ -229,16 +233,6 @@ class ApigwJobCloudApi {
                 if (logger.isDebugEnabled)
                     logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult1.toString()))
                 logger.debug("[$operationName] jobResult1 type: " + jobResult1::class.simpleName)
-
-//                val jobResult2: JobResult<T> = JobResult(
-//                    code = jobCloudResp.code,
-//                    result = jobCloudResp.result,
-//                    jobRequestId = jobCloudResp.jobRequestId,
-//                    data = operationResult
-//                )
-//                if (logger.isDebugEnabled)
-//                    logger.debug("[$operationName] jobResult2: " + logWithLengthLimit(jobResult2.toString()))
-//                logger.debug("[$operationName] jobResult2 type: " + jobResult2::class.simpleName)
                 return jobResult1
             }
         } catch (exception: Exception) {
