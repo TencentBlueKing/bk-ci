@@ -115,8 +115,8 @@ class ApigwJobCloudApi {
             "executeScript", "distributeFile", "terminateTask",
             "queryJobInstanceStatus", "queryJobInstanceLogs" -> bkScopeId
 
-            "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
-            else -> ""
+//          "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
+            else -> bkScopeIdStag
         }
         return JobCloudAuthenticationReq(
             url = url,
