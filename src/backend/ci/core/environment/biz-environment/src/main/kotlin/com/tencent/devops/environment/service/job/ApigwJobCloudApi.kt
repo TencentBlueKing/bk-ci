@@ -132,7 +132,7 @@ class ApigwJobCloudApi {
         )
     }
 
-    fun logWithLengthLimit(logOrigin: String) {
+    fun logWithLengthLimit(logOrigin: String): String {
         if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
             logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
         else
