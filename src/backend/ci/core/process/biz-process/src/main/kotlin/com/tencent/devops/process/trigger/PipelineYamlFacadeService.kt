@@ -36,7 +36,6 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.actions.EventActionFactory
 import com.tencent.devops.process.trigger.actions.data.PacRepoSetting
@@ -64,8 +63,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val webhookEventFactory: WebhookEventFactory,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineYamlResourceService: PipelineYamlResourceService
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     companion object {
@@ -252,18 +250,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             content = content,
             commitMessage = commitMessage,
             targetAction = targetAction
-        )
-    }
-
-    fun getPipelineYamlInfo(
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVo? {
-        return pipelineYamlResourceService.getPipelineYamlInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
         )
     }
 }
