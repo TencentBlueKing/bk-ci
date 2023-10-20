@@ -147,7 +147,9 @@ class ApigwJobCloudApi {
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
-            logger.debug("[${getThreadLocal()}] headers: $headers, url: ${jobCloudAuthenticationReq.url}, body: $requestContent")
+            logger.debug(
+                "[${getThreadLocal()}] headers: $headers, url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
+            )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 

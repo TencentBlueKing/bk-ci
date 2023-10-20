@@ -176,7 +176,7 @@ class JobService @Autowired constructor(
     ): JobResult<GetAccountListResult> {
         ApigwJobCloudApi.setThreadLocal("getAccountList")
         return apigwJobCloudApi.executeGetRequest(
-            userId, GetAccountListResult::class.java, account, alias, category, start, length
+            userId, GetAccountListResult::class.java, category, account, alias, start, length
         )
     }
 }
