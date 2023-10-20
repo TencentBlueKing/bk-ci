@@ -44,7 +44,8 @@ class ProjectRemoteDevService @Autowired constructor(
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
         userId: String,
-        projectCode: String
+        projectCode: String,
+        projectName: String
     ) {
         // 从 auth 获取 bizid
         val bizId = try {
@@ -68,7 +69,7 @@ class ProjectRemoteDevService @Autowired constructor(
 
         // 创建 lsync generic类型的仓库，做单向同步盘
         if (existRepoProject(projectCode) != true) {
-            createRepoProject(projectCode)
+            createRepoProject(projectCode, projectName)
         }
         createLsyncGeneric(projectCode)
     }
@@ -166,10 +167,10 @@ class ProjectRemoteDevService @Autowired constructor(
         return false
     }
 
-    private fun createRepoProject(projectId: String) {
+    private fun createRepoProject(projectId: String, projectName: String) {
         val requestData = CreateProjectData(
             name = projectId,
-            displayName = projectId,
+            displayName = projectName,
             description = ""
         )
         val url = "$bkrepoDevxUrl/repository/api/project/create"
