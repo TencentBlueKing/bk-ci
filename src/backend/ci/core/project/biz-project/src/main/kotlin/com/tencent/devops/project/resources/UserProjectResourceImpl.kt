@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -51,7 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val projectPermissionService: ProjectPermissionService
 ) : UserProjectResource {
 
     override fun list(
@@ -194,6 +196,20 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 permission = permission
+            )
+        )
+    }
+
+    override fun verifyUserProjectPermission(
+        accessToken: String?,
+        projectCode: String,
+        userId: String
+    ): Result<Boolean> {
+        return Result(
+            projectPermissionService.verifyUserProjectPermission(
+                accessToken = accessToken,
+                projectCode = projectCode,
+                userId = userId
             )
         )
     }
