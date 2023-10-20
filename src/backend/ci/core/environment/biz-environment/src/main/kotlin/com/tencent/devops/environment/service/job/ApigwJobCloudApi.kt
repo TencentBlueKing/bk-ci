@@ -213,6 +213,7 @@ class ApigwJobCloudApi {
                         "[$operationName] jobCloudResp.data: " +
                             logWithLengthLimit(jobCloudResp.data.toString())
                     )
+                logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
 //                    logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
 //                    logger.debug(
 //                        "[$operationName] ${operationName}Result: " +
