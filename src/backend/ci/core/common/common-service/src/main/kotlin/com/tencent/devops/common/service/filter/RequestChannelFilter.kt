@@ -29,6 +29,7 @@ package com.tencent.devops.common.service.filter
 
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
@@ -44,12 +45,19 @@ import javax.servlet.http.HttpServletRequest
 class RequestChannelFilter : Filter {
     override fun destroy() = Unit
 
+    companion object {
+        val logger = LoggerFactory.getLogger(RequestChannelFilter::class.java)
+    }
+
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         if (request == null || chain == null) {
             return
         }
         val httpServletRequest = request as HttpServletRequest
         val requestUrl = httpServletRequest.requestURI
+        logger.debug(
+            "Request Channel Filter:URL($requestUrl)"
+        )
         // 根据接口路径设置请求渠道信息
         val channel = when {
             requestUrl.contains("/api/build/") -> RequestChannelTypeEnum.BUILD.name
