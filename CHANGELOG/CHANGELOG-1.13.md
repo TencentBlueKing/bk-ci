@@ -1,7 +1,9 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+
 - [v1.13.0-rc.4](#v1130-rc4)
    - [Changelog since v1.13.0-rc.3](#changelog-since-v1130-rc3)
-
+- [v1.13.0-rc.3](#v1130-rc3)
+   - [Changelog since v1.13.0-rc.2](#changelog-since-v1130-rc2)
 - [v1.13.0-rc.2](#v1130-rc2)
    - [Changelog since v1.12.0-rc.8](#changelog-since-v1120-rc8)
 
@@ -10,6 +12,7 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+
 # v1.13.0-rc.4
 ## Changelog since v1.13.0-rc.3
 #### 新增
@@ -35,6 +38,29 @@
 - [修复] 查看研发商店的模版时，若插件可见范围符合要求，不应该提示项目xxx不允许使用插件xxx [链接](http://github.com/TencentBlueKing/bk-ci/issues/9531)
 - [修复] 增加开源版插件的task.json的packagePath字段的非空校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9509)
 - [修复] 删除流水线后，未删除制品库中流水线的资源 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9491)
+
+# v1.13.0-rc.3
+## Changelog since v1.13.0-rc.2
+#### 新增
+- [新增] yaml 方式下，mr 触发器支持配置是否阻塞 mr 合并 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9412)
+- [新增] auth服务异常信息规范 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9455)
+- [新增] 研发商店插件的质量红线指标支持占位符 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9506)
+- [新增] 日志组件文件名错误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9502)
+- [新增] 蓝盾权限-支持查询某单一资源的用户组人员名单 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9116)
+- [新增] 修改日志请求地址 & 支持 devx 跳转路径 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9495)
+- [新增] [stream] 构建结束默认消息通知内容有误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9485)
+- [新增] project的op接口支持查询remotedev类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9472)
+- [新增] 人工审核插件参数支持变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9373)
+- [新增] 对接RBAC权限优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9149)
+
+#### 优化
+- [优化] 支持将分区库里的项目的数据迁移至指定数据库优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9494)
+
+#### 修复
+- [修复] 申请加入组bug修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9512)
+- [修复] 调用权限中心接口增加重试 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9477)
+- [修复] 共享凭据不需要依赖插件敏感接口权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9398)
+
 # v1.13.0-rc.2
 ## Changelog since v1.12.0-rc.8
 #### 新增
