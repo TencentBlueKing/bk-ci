@@ -191,7 +191,7 @@ class PipelineWebhookService @Autowired constructor(
                 version = version
             )
             if (repository != null) {
-                pipelineWebhook.eventSource = repository.repoHashId
+                pipelineWebhook.repositoryHashId = repository.repoHashId
                 pipelineWebhook.eventType = codeEventType?.name ?: ""
                 pipelineWebhook.externalId = getExternalId(repository)
                 pipelineWebhook.projectName = getProjectName(repository.projectName)
@@ -743,7 +743,7 @@ class PipelineWebhookService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             taskId = webhook.taskId!!,
-                            eventSource = repository?.repoHashId
+                            repositoryHashId = repository?.repoHashId
                         )
                     } catch (ignored: Exception) {
                         logger.info("update webhook event info error|${webhook}", ignored)
