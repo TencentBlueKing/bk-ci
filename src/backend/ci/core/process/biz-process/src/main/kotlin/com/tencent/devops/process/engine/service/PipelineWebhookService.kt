@@ -671,64 +671,79 @@ class PipelineWebhookService @Autowired constructor(
         val repoCache = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .build<String, Repository>()
+        // 上一个更新的项目ID
+        var preProjectId: String? = null
         do {
-            val webhookList = pipelineWebhookDao.listWebhook(
+            val pipelines = pipelineWebhookDao.listPipelines(
                 dslContext = dslContext,
-                repositoryType = null,
                 limit = limit,
                 offset = offset
             )
-            val repoSize = webhookList.size
-            webhookList.forEach {
-                with(it) {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = it.repoHashId,
-                        repositoryName = it.repoName,
-                        repositoryType = RepositoryType.valueOf(it.repoType)
-                    )
-                    val repository = repoCache.get("${it.projectId}_${repositoryConfig.getRepositoryId()}") {
+            pipelines.forEach { (projectId, pipelineId) ->
+                // 更改项目,清空代码库缓存
+                if (preProjectId != null && preProjectId != projectId) {
+                    repoCache.cleanUp()
+                }
+                preProjectId = projectId
+                val model = getModel(projectId, pipelineId)
+                if (model == null) {
+                    logger.info("$projectId|$pipelineId|model is null")
+                    return@forEach
+                }
+                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val params = triggerContainer.params.associate { param ->
+                    param.id to param.defaultValue.toString()
+                }
+                val elementMap =
+                    triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
+                val pipelineWebhooks = pipelineWebhookDao.listWebhook(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    limit = limit,
+                    offset = 0
+                )
+                pipelineWebhooks?.forEach webhook@{ webhook ->
+                    if (webhook.taskId.isNullOrBlank()) return@webhook
+                    val element = elementMap[webhook.taskId] ?: return@webhook
+                    val webhookElementParams = getElementRepositoryConfig(element, variable = params)
+                        ?: return@webhook
+                    val elementRepositoryConfig = webhookElementParams.repositoryConfig
+                    val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
+                    if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
+                        logger.info(
+                            "webhook repository config different from element repository config|" +
+                                    "webhook:${webhookRepositoryConfig}|element:${elementRepositoryConfig}"
+                        )
+                        return@webhook
+                    }
+                    val repository = repoCache.get("${projectId}_${elementRepositoryConfig.getRepositoryId()}") {
                         try {
-                            scmProxyService.getRepo(projectId = it.projectId, repositoryConfig = repositoryConfig)
+                            scmProxyService.getRepo(projectId = projectId, repositoryConfig = elementRepositoryConfig)
                         } catch (ignored: Exception) {
                             logger.warn("fail to get repository info", ignored)
                             null
                         }
                     }
-                    if (repository != null && it.projectName != repository.projectName) {
+                    if (repository != null && webhook.projectName != repository.projectName) {
                         logger.info(
                             "webhook projectName different from repo projectName|" +
-                                    "webhook:${it.projectName}|repo:${repository.projectName}"
+                                    "webhook:${webhook.projectName}|repo:${repository.projectName}"
                         )
                     }
-                    val model = getModel(it.projectId, it.pipelineId)
-                    if (model == null) {
-                        logger.info("$projectId|$pipelineId|model is null")
-                        return@forEach
-                    }
-                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                    val params = triggerContainer.params.associate { param ->
-                        param.id to param.defaultValue.toString()
-                    }
-                    val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
-                    elements.forEach elements@{ element ->
-                        run {
-                            val webhookElementParams = getElementRepositoryConfig(element, variable = params)
-                                ?: return@elements
-                            pipelineWebhookDao.updateWebhookEventInfo(
-                                dslContext = dslContext,
-                                eventType = webhookElementParams.eventType?.name ?: "",
-                                externalId = getExternalId(repository),
-                                projectId = it.projectId,
-                                pipelineId = it.pipelineId,
-                                taskId = it.taskId,
-                                eventSource = repository?.repoHashId
-                            )
-                        }
-                    }
+                    pipelineWebhookDao.updateWebhookEventInfo(
+                        dslContext = dslContext,
+                        eventType = webhookElementParams.eventType?.name ?: "",
+                        externalId = getExternalId(repository),
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = webhook.taskId!!,
+                        eventSource = repository?.repoHashId
+                    )
                 }
             }
             offset += limit
-        } while (repoSize == 1000)
+        } while (pipelines.size == 1000)
     }
 
     private fun getExternalId(repository: Repository?) = when (repository) {

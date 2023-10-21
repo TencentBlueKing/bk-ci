@@ -234,24 +234,21 @@ class PipelineWebhookDao {
         }?.map { convert(it) }
     }
 
-    fun listWebhook(
+    fun listPipelines(
         dslContext: DSLContext,
-        repositoryType: String?,
         offset: Int,
         limit: Int
-    ): Result<TPipelineWebhookRecord> {
+    ): List<PipelineWebhookSubscriber> {
         return with(T_PIPELINE_WEBHOOK) {
-            val conditions = mutableListOf(
-                DELETE.eq(false)
-            )
-            if (!repositoryType.isNullOrBlank()) {
-                conditions.add(REPOSITORY_TYPE.eq(repositoryType))
-            }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(PROJECT_ID.desc())
+            dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
+                .where(DELETE.eq(false))
                 .limit(offset, limit)
-                .fetch()
+                .fetch().map {
+                    PipelineWebhookSubscriber(
+                        projectId = it.value1(),
+                        pipelineId = it.value2()
+                    )
+                }
         }
     }
 
