@@ -63,6 +63,8 @@ data class CodeGithubWebHookTriggerElement(
 
     override fun getClassType() = classType
 
+    override fun getTaskAtom() = taskAtom
+
     override fun findFirstTaskIdByStartType(startType: StartType): String {
         return if (startType.name == StartType.WEB_HOOK.name) {
             this.id!!
