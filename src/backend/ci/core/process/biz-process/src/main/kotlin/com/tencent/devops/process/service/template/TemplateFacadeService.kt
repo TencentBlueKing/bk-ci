@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -87,8 +86,8 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
@@ -123,6 +122,12 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -133,12 +138,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 
 @Suppress("ALL")
 @Service
@@ -969,19 +968,6 @@ class TemplateFacadeService @Autowired constructor(
         }
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        if (!latestTemplate.storeFlag || latestTemplate.srcTemplateId.isNullOrBlank()) {
-            try {
-                checkTemplate(templateResult, projectId)
-            } catch (ignored: ErrorCodeException) {
-                // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageUtil.getMessageByLocale(
-                    messageCode = ignored.errorCode,
-                    params = ignored.params,
-                    language = I18nUtil.getLanguage(userId)
-                )
-                templateResult.tips = message
-            }
-        }
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,
             versionName = latestTemplate.versionName,
@@ -2070,22 +2056,20 @@ class TemplateFacadeService @Autowired constructor(
 
     fun addMarketTemplate(
         userId: String,
-        addMarketTemplateRequest: AddMarketTemplateRequest
+        projectId: String,
+        addMarketTemplateRequest: MarketTemplateRequest
     ): com.tencent.devops.common.api.pojo.Result<Map<String, String>> {
         logger.info("the userId is:$userId,addMarketTemplateRequest is:$addMarketTemplateRequest")
         val templateCode = addMarketTemplateRequest.templateCode
         val publicFlag = addMarketTemplateRequest.publicFlag // 是否为公共模板
         val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>(), false)
-        val projectCodeList = addMarketTemplateRequest.projectCodeList
         // 校验安装的模板是否合法
         if (!publicFlag && redisOperation.get("checkInstallTemplateModelSwitch")?.toBoolean() != false) {
             val templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
             val modelStr = templateRecord.template
             if (modelStr != null) {
                 val model = JsonUtil.to(modelStr, Model::class.java)
-                projectCodeList.forEach {
-                    checkTemplate(model, it)
-                }
+                checkTemplate(model, projectId)
             }
         }
         val projectTemplateMap = mutableMapOf<String, String>()
@@ -2097,50 +2081,49 @@ class TemplateFacadeService @Autowired constructor(
         val templateName = addMarketTemplateRequest.templateName
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            projectCodeList.forEach {
-                // 判断模板名称是否已经关联过
-                val pipelineSettingRecord = pipelineSettingDao.getSetting(
-                    dslContext = context,
-                    projectId = it,
-                    name = templateName,
-                    isTemplate = true
-                )
-                if (pipelineSettingRecord.size > 0) {
-                    return@forEach
-                }
-                val templateId = UUIDUtil.generate()
-                templateDao.createTemplate(
-                    dslContext = context,
-                    projectId = it,
-                    templateId = templateId,
-                    templateName = templateName,
-                    versionName = versionName,
-                    userId = userId,
-                    template = null,
-                    type = TemplateType.CONSTRAINT.name,
-                    category = category,
-                    logoUrl = addMarketTemplateRequest.logoUrl,
-                    srcTemplateId = templateCode,
-                    storeFlag = true,
-                    weight = 0,
-                    version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
-                )
-                insertTemplateSetting(
-                    context = context,
-                    projectId = it,
-                    templateId = templateId,
-                    isTemplate = true,
-                    pipelineName = templateName
-                )
-                projectTemplateMap[it] = templateId
+            // 判断模板名称是否已经关联过
+            val pipelineSettingRecord = pipelineSettingDao.getSetting(
+                dslContext = context,
+                projectId = projectId,
+                name = templateName,
+                isTemplate = true
+            )
+            if (pipelineSettingRecord.size > 0) {
+                return@transaction
             }
+            val templateId = UUIDUtil.generate()
+            templateDao.createTemplate(
+                dslContext = context,
+                projectId = projectId,
+                templateId = templateId,
+                templateName = templateName,
+                versionName = versionName,
+                userId = userId,
+                template = null,
+                type = TemplateType.CONSTRAINT.name,
+                category = category,
+                logoUrl = addMarketTemplateRequest.logoUrl,
+                srcTemplateId = templateCode,
+                storeFlag = true,
+                weight = 0,
+                version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+            )
+            insertTemplateSetting(
+                context = context,
+                projectId = projectId,
+                templateId = templateId,
+                isTemplate = true,
+                pipelineName = templateName
+            )
+            projectTemplateMap[projectId] = templateId
         }
         return com.tencent.devops.common.api.pojo.Result(projectTemplateMap)
     }
 
     fun updateMarketTemplateReference(
         userId: String,
-        updateMarketTemplateRequest: AddMarketTemplateRequest
+        projectId: String,
+        updateMarketTemplateRequest: MarketTemplateRequest
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         logger.info("the userId is:$userId,updateMarketTemplateReference Request is:$updateMarketTemplateRequest")
         val templateCode = updateMarketTemplateRequest.templateCode
@@ -2161,10 +2144,17 @@ class TemplateFacadeService @Autowired constructor(
 
     fun updateTemplateStoreFlag(
         userId: String,
+        projectId: String,
         templateId: String,
         storeFlag: Boolean
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
-        templateDao.updateStoreFlag(dslContext, userId, templateId, storeFlag)
+        templateDao.updateStoreFlag(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            storeFlag = storeFlag
+        )
         return com.tencent.devops.common.api.pojo.Result(true)
     }
 

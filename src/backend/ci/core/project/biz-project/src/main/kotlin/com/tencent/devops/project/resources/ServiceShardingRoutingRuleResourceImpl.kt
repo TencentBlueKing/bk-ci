@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import com.tencent.devops.project.service.ShardingRoutingRuleFacadeService
+import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleFacadeService: ShardingRoutingRuleFacadeService
+    private val shardingRoutingRuleFacadeService: ShardingRoutingRuleFacadeService,
+    private val shardingRoutingRuleService: ShardingRoutingRuleService
 ) : ServiceShardingRoutingRuleResource {
 
     override fun getShardingRoutingRuleByName(
@@ -53,6 +55,15 @@ class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
                 routingName = routingName,
                 tableName = tableName
             )
+        )
+    }
+
+    override fun updateShardingRoutingRule(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Result<Boolean> {
+        return Result(
+            shardingRoutingRuleService.updateShardingRoutingRule(userId, shardingRoutingRule)
         )
     }
 }

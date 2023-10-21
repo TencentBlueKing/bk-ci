@@ -688,14 +688,18 @@
     "name": "Name",
     "filePath": "Path",
     "size": "Size",
-    "created": "Created",
-    "lastModified": "Last Modified",
+    "created": "Created at",
+    "lastModified": "Last Modified at",
     "pipelineErrorGuide": "Troubleshooting Guide",
     "pipelineErrorType": "Error Type",
     "pipelineErrorCode": "Error Code",
     "pipelineErrorPos": "Error Position",
     "pipelineErrorInfo": "Error Message",
-    "Errors": "Errors"
+    "Errors": "Errors",
+    "directoryName": "Folder Name",
+    "directoryPath": "Folder Path",
+    "include": "Include",
+    "fileAndFolder": "{0} files, {1} folders"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",
