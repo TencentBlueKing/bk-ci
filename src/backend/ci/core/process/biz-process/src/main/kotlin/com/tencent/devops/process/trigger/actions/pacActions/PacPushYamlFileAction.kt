@@ -123,6 +123,8 @@ class PacPushYamlFileAction : BaseAction {
 
     override fun getChangeSet(): Set<String>? = null
 
+    override fun getRemoveFiles(): Set<String>? = null
+
     fun pushYamlFile(
         pipelineId: String,
         filePath: String,

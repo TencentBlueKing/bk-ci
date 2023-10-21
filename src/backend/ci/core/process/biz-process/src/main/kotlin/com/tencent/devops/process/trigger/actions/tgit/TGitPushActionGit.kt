@@ -74,6 +74,14 @@ class TGitPushActionGit(
         return this
     }
 
+    override fun initCacheData() {
+        val defaultBranch = apiService.getGitProjectInfo(
+            cred = this.getGitCred(),
+            gitProjectId = event().project_id.toString(),
+            retry = ApiRequestRetryInfo(true)
+        )!!.defaultBranch!!
+        data.context.defaultBranch = defaultBranch
+    }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
@@ -123,5 +131,15 @@ class TGitPushActionGit(
             }
         }
         return changeFileList
+    }
+
+    override fun getRemoveFiles(): Set<String>? {
+        return event().commits?.flatMap {
+            if (it.removed != null) {
+                it.removed!!.asIterable()
+            } else {
+                emptyList()
+            }
+        }?.filter { GitActionCommon.isCiFile(it) }?.toSet()
     }
 }

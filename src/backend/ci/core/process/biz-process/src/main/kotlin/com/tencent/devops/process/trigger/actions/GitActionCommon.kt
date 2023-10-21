@@ -121,4 +121,12 @@ object GitActionCommon {
             sdf.format(time.toDate())
         }
     }
+
+    fun isCiFile(name: String): Boolean {
+        if (name == Constansts.ciFileName) {
+            return true
+        }
+        return name.startsWith(Constansts.ciFileDirectoryName) &&
+                (name.endsWith(Constansts.ciFileExtensionYml) || name.endsWith(Constansts.ciFileExtensionYaml))
+    }
 }

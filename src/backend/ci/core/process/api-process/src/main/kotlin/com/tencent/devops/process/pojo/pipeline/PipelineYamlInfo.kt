@@ -42,5 +42,7 @@ data class PipelineYamlInfo(
     @ApiModelProperty("流水线ID")
     val pipelineId: String,
     @ApiModelProperty("流水线创建者")
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("流水线是否删除")
+    val delete: Boolean
 )

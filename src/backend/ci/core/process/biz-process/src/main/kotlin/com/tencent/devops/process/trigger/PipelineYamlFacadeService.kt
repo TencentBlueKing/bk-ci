@@ -107,7 +107,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = it.repoHashId,
                 filePath = it.filePath,
                 pipelineId = it.pipelineId,
-                userId = userId
+                userId = userId,
+                delete = it.delete
             )
         }
         yamlPathList.forEach {
@@ -116,7 +117,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = it.yamlPath,
                 pipelineId = "",
-                userId = userId
+                userId = userId,
+                delete = false
             )
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
@@ -165,6 +167,19 @@ class PipelineYamlFacadeService @Autowired constructor(
             logger.warn("pac yaml trigger not found ci yaml from git|$projectId|$repoHashId")
             return
         }
+        val removeFiles = action.getRemoveFiles()
+        // 在默认分支上删除文件需要删除文件
+        if (action.data.context.defaultBranch == action.data.eventCommon.branch && !removeFiles.isNullOrEmpty()) {
+            removeFiles.forEach { removeFile ->
+                pipelineYamlInfoDao.delete(
+                    dslContext = dslContext,
+                    userId = action.data.getUserId(),
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = removeFile
+                )
+            }
+        }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
         val eventId = pipelineTriggerEventService.getEventId()
         val triggerEvent = PipelineTriggerEvent(
@@ -187,7 +202,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = it.repoHashId,
                 filePath = it.filePath,
                 pipelineId = it.pipelineId,
-                userId = it.creator
+                userId = it.creator,
+                delete = it.delete
             )
         }
         yamlPathList.forEach {
@@ -196,8 +212,12 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = it.yamlPath,
                 pipelineId = "",
-                userId = action.data.getUserId()
+                userId = action.data.getUserId(),
+                delete = false
             )
+            if (triggerPipeline.delete) {
+                return@forEach
+            }
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
             action.data.context.eventId = eventId

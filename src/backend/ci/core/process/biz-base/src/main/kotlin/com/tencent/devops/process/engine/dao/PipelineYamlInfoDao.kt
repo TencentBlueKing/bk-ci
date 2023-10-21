@@ -106,6 +106,25 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun delete(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        filePath: String
+    ) {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.update(this)
+                .set(DELETE, true)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .execute()
+        }
+    }
+
     fun convert(record: TPipelineYamlInfoRecord): PipelineYamlInfo {
         return with(record) {
             PipelineYamlInfo(
@@ -113,7 +132,8 @@ class PipelineYamlInfoDao {
                 repoHashId = repoHashId,
                 filePath = filePath,
                 pipelineId = pipelineId,
-                creator = creator
+                creator = creator,
+                delete = delete
             )
         }
     }

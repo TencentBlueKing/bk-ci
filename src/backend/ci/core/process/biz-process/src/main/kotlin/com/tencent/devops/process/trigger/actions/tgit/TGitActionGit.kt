@@ -35,4 +35,5 @@ abstract class TGitActionGit(
 
     override fun getChangeSet(): Set<String>? = null
 
+    override fun getRemoveFiles(): Set<String>? = null
 }

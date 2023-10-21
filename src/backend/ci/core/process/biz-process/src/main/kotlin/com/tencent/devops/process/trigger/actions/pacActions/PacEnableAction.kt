@@ -124,4 +124,6 @@ class PacEnableAction : BaseAction {
     }
 
     override fun getChangeSet(): Set<String>? = null
+
+    override fun getRemoveFiles(): Set<String>? = null
 }
