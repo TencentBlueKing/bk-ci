@@ -33,6 +33,34 @@ BEGIN
         ADD CONSTRAINT TASK_EXECUTE_COUNT UNIQUE (`PROJECT_ID`,`BUILD_ID`,`TASK_ID`,`EXECUTE_COUNT`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EVENT_TYPE') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EVENT_TYPE` varchar(32) DEFAULT null COMMENT '事件类型';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EXTERNAL_ID') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EXTERNAL_ID` varchar(32) DEFAULT null COMMENT 'webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'REPOSITORY_HASH_ID') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `REPOSITORY_HASH_ID` varchar(64) null comment '代码库hashId';
+    END IF;
+
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

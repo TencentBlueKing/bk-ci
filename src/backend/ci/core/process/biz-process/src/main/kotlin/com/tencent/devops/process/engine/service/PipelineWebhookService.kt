@@ -704,42 +704,50 @@ class PipelineWebhookService @Autowired constructor(
                     offset = 0
                 )
                 pipelineWebhooks?.forEach webhook@{ webhook ->
-                    if (webhook.taskId.isNullOrBlank()) return@webhook
-                    val element = elementMap[webhook.taskId] ?: return@webhook
-                    val webhookElementParams = getElementRepositoryConfig(element, variable = params)
-                        ?: return@webhook
-                    val elementRepositoryConfig = webhookElementParams.repositoryConfig
-                    val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
-                    if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
-                        logger.info(
-                            "webhook repository config different from element repository config|" +
-                                    "webhook:${webhookRepositoryConfig}|element:${elementRepositoryConfig}"
-                        )
-                        return@webhook
-                    }
-                    val repository = repoCache.get("${projectId}_${elementRepositoryConfig.getRepositoryId()}") {
-                        try {
-                            scmProxyService.getRepo(projectId = projectId, repositoryConfig = elementRepositoryConfig)
-                        } catch (ignored: Exception) {
-                            logger.warn("fail to get repository info", ignored)
-                            null
+                    try {
+                        if (webhook.taskId.isNullOrBlank()) return@webhook
+                        val element = elementMap[webhook.taskId] ?: return@webhook
+                        val webhookElementParams = getElementRepositoryConfig(element, variable = params)
+                            ?: return@webhook
+                        val elementRepositoryConfig = webhookElementParams.repositoryConfig
+                        val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
+                        if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
+                            logger.info(
+                                "webhook repository config different from element repository config|" +
+                                        "webhook:${webhookRepositoryConfig}|element:${elementRepositoryConfig}"
+                            )
+                            return@webhook
                         }
-                    }
-                    if (repository != null && webhook.projectName != repository.projectName) {
-                        logger.info(
-                            "webhook projectName different from repo projectName|" +
-                                    "webhook:${webhook.projectName}|repo:${repository.projectName}"
+                        val repository =
+                            repoCache.get("${projectId}_${elementRepositoryConfig.getRepositoryId()}") {
+                                try {
+                                    scmProxyService.getRepo(
+                                        projectId = projectId,
+                                        repositoryConfig = elementRepositoryConfig
+                                    )
+                                } catch (ignored: Exception) {
+                                    logger.warn("fail to get repository info", ignored)
+                                    null
+                                }
+                            }
+                        if (repository != null && webhook.projectName != repository.projectName) {
+                            logger.info(
+                                "webhook projectName different from repo projectName|" +
+                                        "webhook:${webhook.projectName}|repo:${repository.projectName}"
+                            )
+                        }
+                        pipelineWebhookDao.updateWebhookEventInfo(
+                            dslContext = dslContext,
+                            eventType = webhookElementParams.eventType?.name ?: "",
+                            externalId = getExternalId(repository),
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            taskId = webhook.taskId!!,
+                            eventSource = repository?.repoHashId
                         )
+                    } catch (ignored: Exception) {
+                        logger.info("update webhook event info error|${webhook}", ignored)
                     }
-                    pipelineWebhookDao.updateWebhookEventInfo(
-                        dslContext = dslContext,
-                        eventType = webhookElementParams.eventType?.name ?: "",
-                        externalId = getExternalId(repository),
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        taskId = webhook.taskId!!,
-                        eventSource = repository?.repoHashId
-                    )
                 }
             }
             offset += limit
