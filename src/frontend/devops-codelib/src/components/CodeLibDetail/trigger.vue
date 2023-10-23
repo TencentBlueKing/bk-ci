@@ -306,7 +306,6 @@
 
             handelShowDetail (row) {
                 this.curAtom = row
-                console.log(row, 123)
                 this.$refs.atomDetailRef.isShow = true
             }
         }
