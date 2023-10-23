@@ -37,4 +37,3 @@ interface AtomChangeEventParam {
     val channelCode: ChannelCode
     val action: AtomChangeAction
 }
-

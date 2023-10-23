@@ -152,20 +152,23 @@ object MarketBuildUtils {
         // 没有配置hookBody时，增加默认接口入参
         val requestBody = if (bkAtomHookBody.isBlank()) {
             logger.info("the atom hook body config is empty|atomParam[$param]")
-            JsonUtil.toJson(param,false)
-        }else{
+            JsonUtil.toJson(param, false)
+        } else {
             resolveParam(bkAtomHookBody, param, inputMap)
         }
         when (bkAtomHookUrlMethod) {
             HttpMethod.GET -> {
                 request = request.get()
             }
+
             HttpMethod.POST -> {
                 request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
+
             HttpMethod.PUT -> {
                 request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
+
             HttpMethod.DELETE -> {
                 request = request.delete()
             }

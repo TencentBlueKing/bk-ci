@@ -395,7 +395,7 @@ open class DefaultModelCheckPlugin constructor(
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
-        recursiveElement(existModel){
+        recursiveElement(existModel) {
             deletePrepare(sourceModel, it, param)
         }
     }
@@ -554,7 +554,7 @@ open class DefaultModelCheckPlugin constructor(
             param.element = originElement
             logger.info("The element(${originElement.name}/${originElement.id}) is create")
             ElementBizRegistrar.getPlugin(originElement)?.afterCreate(originElement, param)
-        }else {
+        } else {
             logger.info("The element(${originElement.name}/${originElement.id}) is not create")
         }
     }
