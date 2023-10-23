@@ -42,9 +42,9 @@ import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
-object CommonUtils {
+object DispatchDockerCommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
+    private val logger = LoggerFactory.getLogger(DispatchDockerCommonUtils::class.java)
 
     fun getCredential(
         client: Client,

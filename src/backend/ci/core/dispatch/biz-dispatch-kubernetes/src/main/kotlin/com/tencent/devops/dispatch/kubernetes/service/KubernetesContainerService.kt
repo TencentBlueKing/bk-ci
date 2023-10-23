@@ -83,7 +83,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isStarting
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.DispatchKubernetesCommonUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -205,7 +205,7 @@ class KubernetesContainerService @Autowired constructor(
         disk: String
     ): Pair<String, String> {
         with(dispatchMessages) {
-            val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
+            val (host, name, tag) = DispatchKubernetesCommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
             val registry = if (host.isBlank() || userName.isNullOrBlank() || password.isNullOrBlank()) {

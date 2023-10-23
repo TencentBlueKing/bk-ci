@@ -49,7 +49,7 @@ import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.service.debug.DebugInterface
 import com.tencent.devops.dispatch.docker.utils.DockerHostDebugLock
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -69,7 +69,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
-    private val redisUtils: RedisUtils,
+    private val dispatchDockerRedisUtils: DispatchDockerRedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val dockerHostProxyService: DockerHostProxyService,
@@ -252,7 +252,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (null == debugTask) {
             LOG.warn("The debug task not exists, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
-            val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
+            val msg = dispatchDockerRedisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
                 message = I18nUtil.getCodeLanMessage(
@@ -320,7 +320,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
 
     fun cleanIp(projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
         LOG.info("clean pipeline docker build ip, projectId:$projectId, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
-        redisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
+        dispatchDockerRedisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
         return Result(0, "success")
     }
 

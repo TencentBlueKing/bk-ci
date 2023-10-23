@@ -51,7 +51,7 @@ import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
@@ -76,7 +76,7 @@ class DockerHostClient @Autowired constructor(
     private val defaultImageConfig: DefaultImageConfig,
     private val dockerHostProxyService: DockerHostProxyService,
     private val dockerHostQpcService: DockerHostQpcService,
-    private val redisUtils: RedisUtils,
+    private val dispatchDockerRedisUtils: DispatchDockerRedisUtils,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -386,7 +386,7 @@ class DockerHostClient @Autowired constructor(
     }
 
     fun getSpecialProjectList(): String? {
-        return redisUtils.getSpecialProjectListKey()
+        return dispatchDockerRedisUtils.getSpecialProjectListKey()
     }
 
     private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {

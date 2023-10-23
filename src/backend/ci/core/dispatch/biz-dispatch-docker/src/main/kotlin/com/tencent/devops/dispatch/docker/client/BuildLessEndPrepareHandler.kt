@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.client
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 @Service
 class BuildLessEndPrepareHandler @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils,
+    private val dispatchDockerRedisUtils: DispatchDockerRedisUtils,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val buildLessEndHandler: BuildLessEndHandler
 ) : Handler<BuildLessEndHandlerContext>() {
@@ -99,7 +99,7 @@ class BuildLessEndPrepareHandler @Autowired constructor(
             // 无编译环境清除redisAuth
             val decryptSecretKey = SecurityUtil.decrypt(record.secretKey)
             logger.info("${record.buildId}|${record.vmSeqId} delete dockerBuildKey ${record.id}|$decryptSecretKey")
-            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            dispatchDockerRedisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         }
     }
 }
