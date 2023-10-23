@@ -490,7 +490,8 @@ class RepoFileService @Autowired constructor(
                 RepoSessionRequest(
                     type = RepositoryUtils.getRepoScmType(repository),
                     username = privateKey,
-                    password = passPhrase
+                    password = passPhrase,
+                    url = repository.url
                 )
             ).data
             return Credential(

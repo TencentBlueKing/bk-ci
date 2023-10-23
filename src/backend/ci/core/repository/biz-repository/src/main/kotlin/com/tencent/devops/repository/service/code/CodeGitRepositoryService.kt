@@ -299,7 +299,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 repoCredentialInfo.token = scmService.getGitSession(
                     type = ScmType.CODE_GIT,
                     username = repoCredentialInfo.username,
-                    password = repoCredentialInfo.password
+                    password = repoCredentialInfo.password,
+                    url = repository.url
                 )?.privateToken ?: ""
             }
             val checkResult = checkToken(

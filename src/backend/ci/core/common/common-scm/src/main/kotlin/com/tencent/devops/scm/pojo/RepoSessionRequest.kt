@@ -36,5 +36,7 @@ data class RepoSessionRequest(
     @ApiParam("username", required = true)
     val username: String,
     @ApiParam("password", required = true)
-    val password: String
+    val password: String,
+    @ApiParam("url", required = true)
+    val url: String
 )

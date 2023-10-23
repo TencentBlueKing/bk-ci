@@ -81,7 +81,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMrReviewInfo(
@@ -121,7 +122,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMrInfo(
@@ -161,7 +163,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
@@ -201,7 +204,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             for (i in 1..10) {
                 // 反向进行三点比较可以比较出rebase的真实提交
@@ -246,7 +250,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             val serviceGitResource = client.get(ServiceGitResource::class)
             val defaultBranch = serviceGitResource.getProjectInfo(
@@ -282,7 +287,8 @@ class GitScmService @Autowired constructor(
             credentialId = repo.credentialId,
             userName = repo.userName,
             authType = tokenType,
-            scmType = RepositoryUtils.getRepoScmType(repo)
+            scmType = RepositoryUtils.getRepoScmType(repo),
+            repoUrl = repo.url
         )
         if (type.first == RepoAuthType.OAUTH) {
             return client.get(ServiceScmOauthResource::class).getMrCommitList(
@@ -319,7 +325,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             client.get(ServiceGitResource::class).getUserInfoByToken(
                 token = token,
@@ -336,19 +343,21 @@ class GitScmService @Autowired constructor(
         credentialId: String,
         userName: String,
         authType: TokenTypeEnum,
-        scmType: ScmType
+        scmType: ScmType,
+        repoUrl: String = ""
     ): String {
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
         } else {
-            getCredential(projectId, credentialId, scmType = scmType)
+            getCredential(projectId, credentialId, scmType = scmType, repoUrl = repoUrl)
         }
     }
 
     fun getCredential(
         projectId: String,
         credentialId: String,
-        scmType: ScmType? = null
+        scmType: ScmType? = null,
+        repoUrl: String = ""
     ): String {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
@@ -386,7 +395,8 @@ class GitScmService @Autowired constructor(
             return getSession(
                 scmType = scmType,
                 username = privateKey,
-                password = password
+                password = password,
+                url = repoUrl
             )?.privateToken ?: ""
         }
         return privateKey
@@ -423,7 +433,8 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo)
+                scmType = RepositoryUtils.getRepoScmType(repo),
+                repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
                 client.get(ServiceScmOauthResource::class).getCommitReviewInfo(
@@ -451,13 +462,15 @@ class GitScmService @Autowired constructor(
     fun getSession(
         scmType: ScmType,
         username: String,
-        password: String
+        password: String,
+        url: String
     ): GitSession? {
         return client.get(ServiceScmResource::class).getSession(
             RepoSessionRequest(
                 type = scmType,
                 username = username,
-                password = password
+                password = password,
+                url = url
             )
         ).data
     }

@@ -608,11 +608,12 @@ class ScmService @Autowired constructor(
     override fun getGitSession(
         type: ScmType,
         username: String,
-        password: String
+        password: String,
+        url: String
     ): GitSession? {
         return ScmFactory.getScm(
             projectName = "",
-            url = "",
+            url = url,
             type = type,
             branchName = null,
             privateKey = username,

@@ -705,7 +705,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 RepoSessionRequest(
                     type = RepositoryUtils.getRepoScmType(repository),
                     username = privateKey,
-                    password = passPhrase
+                    password = passPhrase,
+                    url = repository.url
                 )
             ).data
             return Credential(
