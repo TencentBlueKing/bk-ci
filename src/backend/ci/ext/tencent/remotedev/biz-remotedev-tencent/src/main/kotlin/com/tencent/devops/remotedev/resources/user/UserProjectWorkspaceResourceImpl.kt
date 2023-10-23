@@ -36,6 +36,9 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.windows.TimeScope
+import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -60,7 +63,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
-    private val startWorkspaceService: StartWorkspaceService
+    private val startWorkspaceService: StartWorkspaceService,
+    private val bkBaseService: BKBaseService
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -150,5 +154,11 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
         return Result(startWorkspaceService.computerStatus(userId, projectId))
+    }
+
+    override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
+        return Result(
+            bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
+        )
     }
 }

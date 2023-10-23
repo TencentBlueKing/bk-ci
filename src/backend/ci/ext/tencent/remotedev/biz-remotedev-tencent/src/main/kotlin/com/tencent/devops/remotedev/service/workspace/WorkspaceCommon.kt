@@ -66,6 +66,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -178,6 +179,14 @@ class WorkspaceCommon @Autowired constructor(
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         logger.info("$workspaceName update workspaceDetail, $event")
+        // START非create时不更新detail
+        if (mountType == WorkspaceMountType.START && (event == null || event.type != UpdateEventType.CREATE)) {
+            return JsonUtil.to(
+                workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail ?: "",
+                WorkSpaceCacheInfo::class.java
+            )
+        }
+
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
@@ -211,8 +220,6 @@ class WorkspaceCommon @Autowired constructor(
                 regionId = workspaceInfo.regionId
             )
         }
-
-        logger.info("$workspaceName update workspaceDetail $cache")
 
         workspaceDao.saveOrUpdateWorkspaceDetail(
             dslContext = dslContext,

@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -294,6 +295,7 @@ class WorkspaceDao {
                 .let {
                     if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
                 }
+                .skipCheck()
                 .fetch(workspaceMapper)
         }
     }
