@@ -28,7 +28,7 @@
                 <template slot-scope="{ row }">
                     <div v-if="Object.keys(row.triggerCondition).length">
                         <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
-                            - {{ triggerConditionKeyMap[row.eventType][key] }}:
+                            - {{ triggerConditionKeyMap[row.eventType][key] || triggerConditionKeyMap['default'][key] }}:
                             <template v-if="Array.isArray(item)">
                                 <span v-for="(i, itemIndex) in item" :key="i">
                                     {{ triggerConditionValueMap[i] || i }}
@@ -139,6 +139,12 @@
                 let obj = {}
                 if (['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(this.scmType)) {
                     obj = {
+                        default: {
+                            realtivePath: this.$t('codelib.相对路径'),
+                            excludePaths: this.$t('codelib.排除路径'),
+                            includeUsers: this.$t('codelib.人员'),
+                            excludeUsers: this.$t('codelib.排除人员')
+                        },
                         PUSH: {
                             branchName: this.$t('codelib.分支'),
                             excludeBranchName: this.$t('codelib.排除分支'),
