@@ -714,7 +714,7 @@ class PipelineWebhookService @Autowired constructor(
                         if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
                             logger.info(
                                 "webhook repository config different from element repository config|" +
-                                        "webhook:${webhookRepositoryConfig}|element:${elementRepositoryConfig}"
+                                        "webhook:$webhookRepositoryConfig|element:$elementRepositoryConfig"
                             )
                             return@webhook
                         }
@@ -746,7 +746,7 @@ class PipelineWebhookService @Autowired constructor(
                             repositoryHashId = repository?.repoHashId
                         )
                     } catch (ignored: Exception) {
-                        logger.info("update webhook event info error|${webhook}", ignored)
+                        logger.info("update webhook event info error|$webhook", ignored)
                     }
                 }
             }
