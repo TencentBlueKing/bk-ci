@@ -76,7 +76,7 @@ class DefaultDeptServiceImpl : DeptService {
 
     override fun getUserInfoAndWaterMark(userId: String): UserAndDeptInfoVo? = UserAndDeptInfoVo(
         id = 0,
-        name = name,
+        name = userId,
         type = ManagerScopesEnum.USER
     )
 }
