@@ -77,7 +77,7 @@ class ProjectRemoteDevService @Autowired constructor(
     private fun quickImportDashboard(
         bizId: Long
     ) {
-        val url = "$bkMonitorUrl/stage/quick_import_dashboard/"
+        val url = "$bkMonitorUrl/prod/quick_import_dashboard/"
         val headerStr = objectMapper.writeValueAsString(
             mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
         ).replace("\\s".toRegex(), "")
