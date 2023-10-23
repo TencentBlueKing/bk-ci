@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
@@ -118,6 +120,16 @@ class CodeGitRepositoryService @Autowired constructor(
                 )
             )
         }
+        // 不得切换代码库
+        if (diffRepoUrl(record, repository)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -127,7 +139,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId: Long? = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
             logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +

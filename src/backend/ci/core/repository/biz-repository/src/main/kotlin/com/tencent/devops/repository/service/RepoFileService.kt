@@ -482,11 +482,13 @@ class RepoFileService @Autowired constructor(
         )
 
         // username+password 关联的git代码库
-        if ((repository is CodeGitRepository) && (credential.credentialType == CredentialType.USERNAME_PASSWORD)) {
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
             // USERNAME_PASSWORD v1 = username, v2 = password
             val session = client.get(ServiceScmResource::class).getSession(
                 RepoSessionRequest(
-                    type = ScmType.CODE_GIT,
+                    type = RepositoryUtils.getRepoScmType(repository),
                     username = privateKey,
                     password = passPhrase
                 )

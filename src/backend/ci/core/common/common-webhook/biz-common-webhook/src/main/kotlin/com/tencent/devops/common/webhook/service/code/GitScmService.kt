@@ -374,7 +374,7 @@ class GitScmService @Autowired constructor(
             )
         )
         if (credential.credentialType == CredentialType.USERNAME_PASSWORD &&
-            scmType == ScmType.CODE_GIT
+            (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT)
         ) {
             val password = String(
                 DHUtil.decrypt(

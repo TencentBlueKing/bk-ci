@@ -598,15 +598,6 @@ class RepositoryService @Autowired constructor(
             )
         }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
-        if (codeRepositoryService.diffRepoUrl(record, repository)) {
-            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
-                    I18nUtil.getLanguage(userId)
-                )
-            )
-        }
         codeRepositoryService.edit(
             userId = userId,
             projectId = projectId,
