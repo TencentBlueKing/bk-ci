@@ -382,7 +382,7 @@ class WorkspaceDao {
             t2 = "\$.hostIP",
             lower = false,
             removeDoubleQuotes = true
-        ).like("%${ips.first()}%") as Condition
+        ).like("%${ips.first()}") as Condition
         ips.drop(1).forEach { ip ->
             ipsCond = ipsCond.or(
                 JooqUtils.jsonExtract(
@@ -390,7 +390,7 @@ class WorkspaceDao {
                     t2 = "\$.hostIP",
                     lower = false,
                     removeDoubleQuotes = true
-                ).like("%$ip%")
+                ).like("%$ip")
             )
         }
         conditions.add(ipsCond)
@@ -898,9 +898,10 @@ class WorkspaceDao {
     }
 
     fun fetchWinWorkspaceIpAndRegId(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        projectId: String?
     ): List<Triple<String, String?, Int?>> {
-        return dslContext.select(
+        val sql = dslContext.select(
             TWorkspace.T_WORKSPACE.PROJECT_ID,
             JooqUtils.jsonExtract(
                 t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
@@ -916,7 +917,12 @@ class WorkspaceDao {
             ).`as`("REG_ID")
         ).from(TWorkspace.T_WORKSPACE, TWorkspaceDetail.T_WORKSPACE_DETAIL)
             .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-            .and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+
+        if (!projectId.isNullOrBlank()) {
+            sql.and(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+        }
+
+        return sql.and(TWorkspace.T_WORKSPACE.SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
             .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             .fetch()
             .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, (it["REG_ID"] as String?)?.toInt()) }

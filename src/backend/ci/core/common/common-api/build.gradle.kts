@@ -52,4 +52,5 @@ dependencies {
     api("org.apache.commons:commons-csv")
     api("com.github.ben-manes.caffeine:caffeine")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    api("com.jakewharton:disklrucache")
 }

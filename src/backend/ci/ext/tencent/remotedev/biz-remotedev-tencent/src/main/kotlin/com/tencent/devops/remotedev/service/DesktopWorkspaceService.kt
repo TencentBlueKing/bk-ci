@@ -74,7 +74,7 @@ class DesktopWorkspaceService @Autowired constructor(
         when (data.scope) {
             OpOpUpdateCCHostDataScope.ALL -> {
                 val projectAndRegIdAndIps = mutableMapOf<String, MutableMap<Int, MutableSet<String>>>()
-                val records = workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext)
+                val records = workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext, null)
                 records.forEach { (projectId, hostIp, regId) ->
                     if (regId == null) {
                         return@forEach

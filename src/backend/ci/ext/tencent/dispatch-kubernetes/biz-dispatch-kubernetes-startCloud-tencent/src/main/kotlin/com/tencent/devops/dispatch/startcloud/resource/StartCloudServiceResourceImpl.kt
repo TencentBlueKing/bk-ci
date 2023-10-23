@@ -65,8 +65,12 @@ class StartCloudServiceResourceImpl @Autowired constructor(
         return Result(startCloudInterfaceService.getCgsConfig())
     }
 
-    override fun shareWorkspace(operator: String, workspaceName: String, receivers: List<String>): Result<String> {
-        return Result(startCloudInterfaceService.shareWorkspace(operator, workspaceName, receivers))
+    override fun shareWorkspace(
+        operator: String,
+        cgsId: String,
+        receivers: List<String>
+    ): Result<String> {
+        return Result(startCloudInterfaceService.shareWorkspace(operator, cgsId, receivers))
     }
 
     override fun unShareWorkspace(operator: String, resourceId: String, receivers: List<String>): Result<Boolean> {

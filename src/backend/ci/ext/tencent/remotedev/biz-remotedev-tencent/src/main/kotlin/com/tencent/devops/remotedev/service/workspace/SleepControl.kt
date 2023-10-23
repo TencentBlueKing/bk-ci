@@ -139,7 +139,8 @@ class SleepControl @Autowired constructor(
                 action = WorkspaceAction.SLEEPING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -254,7 +255,8 @@ class SleepControl @Autowired constructor(
                 action = WorkspaceAction.SLEEPING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -349,7 +351,8 @@ class SleepControl @Autowired constructor(
             action = WorkspaceAction.SLEEP,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 }
