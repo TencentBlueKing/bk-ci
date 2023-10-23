@@ -20,9 +20,8 @@ class ApigwUserManagementResourceV4Impl @Autowired constructor(
         userId: String
     ): Result<UserAndDeptInfoVo?> {
         logger.info("OPENAPI_GET_USER_INFO_V4|$appCode|$userId")
-        return client.get(ServiceDeptResource::class).getUserInfo(
-            userId = userId,
-            name = userId
+        return client.get(ServiceDeptResource::class).getUserInfoAndWaterMark(
+            userId = userId
         )
     }
 

@@ -19,5 +19,7 @@ data class UserAndDeptInfoVo(
     @ApiModelProperty("用户部门详细信息")
     val deptInfo: List<BkUserDeptInfo>? = null,
     @ApiModelProperty("用户额外详细信息")
-    val extras: BkUserExtras? = null
+    val extras: BkUserExtras? = null,
+    @ApiModelProperty("水印信息")
+    val waterMark: String? = null
 )
