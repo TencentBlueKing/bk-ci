@@ -31,6 +31,7 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
 import io.swagger.annotations.Api
@@ -144,5 +145,5 @@ interface UserRepositoryPacResource {
     @ApiOperation("获取支持的pac代码库类型")
     @GET
     @Path("supportScmType")
-    fun supportScmType(): Result<List<String>>
+    fun supportScmType(): Result<List<IdValue>>
 }

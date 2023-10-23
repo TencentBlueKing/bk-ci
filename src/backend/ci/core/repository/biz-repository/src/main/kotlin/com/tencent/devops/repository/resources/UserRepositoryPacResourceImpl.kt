@@ -29,8 +29,10 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryPacResource
 import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
 import com.tencent.devops.repository.service.RepositoryPacService
@@ -114,7 +116,15 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         )
     }
 
-    override fun supportScmType(): Result<List<String>> {
-        return Result(listOf(ScmType.CODE_GIT.name))
+    override fun supportScmType(): Result<List<IdValue>> {
+        return Result(listOf(ScmType.CODE_GIT).map {
+            IdValue(
+                id = it.name,
+                value = I18nUtil.getCodeLanMessage(
+                    messageCode = "TRIGGER_TYPE_${it.name}",
+                    defaultMessage = it.name
+                )
+            )
+        })
     }
 }
