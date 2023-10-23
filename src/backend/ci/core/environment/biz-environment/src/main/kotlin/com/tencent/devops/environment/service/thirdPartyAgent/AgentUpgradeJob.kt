@@ -30,7 +30,7 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -46,7 +46,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("UNUSED")
+@Suppress("UNUSED", "LongParameterList", "ReturnCount")
 class AgentUpgradeJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val agentPropsScope: AgentPropsScope,
@@ -67,18 +67,18 @@ class AgentUpgradeJob @Autowired constructor(
     @Scheduled(initialDelay = SECONDS_10, fixedDelay = SECONDS_30)
     fun updateCanUpgradeAgentList() {
         val watcher = Watcher("updateCanUpgradeAgentList")
-        logger.info("updateCanUpgradeAgentList start")
+        logger.debug("updateCanUpgradeAgentList start")
         watcher.start("try lock")
         val lock = RedisLock(redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = MINUTES_10)
         try {
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.debug("get lock failed, skip")
                 return
             }
             watcher.start("get maxParallelCount")
             val maxParallelCount = agentPropsScope.getMaxParallelUpgradeCount()
             if (maxParallelCount < 1) {
-                logger.warn("parallel count set to zero")
+                logger.debug("parallel count set to zero")
                 agentScope.setCanUpgradeAgents(listOf())
                 return
             }

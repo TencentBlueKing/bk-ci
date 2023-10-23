@@ -33,6 +33,58 @@ BEGIN
         ADD CONSTRAINT TASK_EXECUTE_COUNT UNIQUE (`PROJECT_ID`,`BUILD_ID`,`TASK_ID`,`EXECUTE_COUNT`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_AUDIT_RESOURCE'
+                     AND INDEX_NAME = 'IDX_TAR_USER_ID') THEN
+    ALTER TABLE `T_AUDIT_RESOURCE`
+        ADD INDEX `IDX_TAR_USER_ID`(`PROJECT_ID`,`RESOURCE_TYPE`,`USER_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_AUDIT_RESOURCE'
+                     AND INDEX_NAME = 'IDX_TAR_RESOURCE_ID') THEN
+    ALTER TABLE `T_AUDIT_RESOURCE`
+        ADD INDEX `IDX_TAR_RESOURCE_ID`(`PROJECT_ID`,`RESOURCE_TYPE`,`RESOURCE_ID`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_AUDIT_RESOURCE'
+                   AND INDEX_NAME = 'IDX_SEARCH') THEN
+    ALTER TABLE `T_AUDIT_RESOURCE` DROP INDEX `IDX_SEARCH`;
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_AUDIT_RESOURCE'
+                   AND INDEX_NAME = 'IDX_SEARCH_ID') THEN
+    ALTER TABLE `T_AUDIT_RESOURCE` DROP INDEX `IDX_SEARCH_ID`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PIPELINE_VIEW_USER_LAST_VIEW'
+                     AND INDEX_NAME = 'IDX_TPVULV_PROJECT_ID') THEN
+    ALTER TABLE `T_PIPELINE_VIEW_USER_LAST_VIEW`
+        ADD INDEX `IDX_TPVULV_PROJECT_ID`(`PROJECT_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PIPELINE_VIEW_USER_SETTINGS'
+                     AND INDEX_NAME = 'IDX_TPVUS_PROJECT_ID') THEN
+    ALTER TABLE `T_PIPELINE_VIEW_USER_SETTINGS`
+        ADD INDEX `IDX_TPVUS_PROJECT_ID`(`PROJECT_ID`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

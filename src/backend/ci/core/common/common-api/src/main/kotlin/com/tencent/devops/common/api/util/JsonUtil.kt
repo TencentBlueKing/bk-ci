@@ -224,11 +224,11 @@ object JsonUtil {
      * 将对象转不可修改的Map
      * 注意：会忽略掉值为null的属性, 不会忽略空串和空数组/列表对象
      */
-    fun toMutableMap(bean: Any): MutableMap<String, Any> {
+    fun toMutableMap(bean: Any, skipEmpty: Boolean = false): MutableMap<String, Any> {
         return when {
             ReflectUtil.isNativeType(bean) -> mutableMapOf()
             bean is String -> to(bean)
-            else -> to(getObjectMapper().writeValueAsString(bean))
+            else -> to((if (skipEmpty) skipEmptyObjectMapper else getObjectMapper()).writeValueAsString(bean))
         }
     }
 

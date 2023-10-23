@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import io.swagger.annotations.Api
@@ -120,4 +121,40 @@ interface ServiceP4Resource {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<P4ServerInfo>
+
+    @ApiOperation("获取p4文件变更列表(含提交信息)")
+    @GET
+    @Path("/{projectId}/{repositoryId}/getChangelist")
+    fun getChangelist(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID或代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<P4ChangeList>
+
+    @ApiOperation("获取p4 shelve文件变更列表(含提交信息)")
+    @GET
+    @Path("/{projectId}/{repositoryId}/getShelvedChangeList")
+    fun getShelvedChangeList(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID或代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("p4 版本号", required = true)
+        @QueryParam("change")
+        change: Int
+    ): Result<P4ChangeList>
 }

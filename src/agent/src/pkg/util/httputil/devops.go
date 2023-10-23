@@ -31,7 +31,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -122,7 +121,7 @@ func DownloadAgentInstallScript(url string, headers map[string]string, filepath 
 	}
 
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logs.Error("download agent install script failed, status: " + resp.Status + ", responseBody: " + string(body))
 		return errors.New("download agent install script failed")
 	}
@@ -173,7 +172,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		if resp.StatusCode == http.StatusNotModified {
 			return oldFileMd5, nil
 		}
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		logs.Error("download upgrade file failed, status: " + resp.Status + ", responseBody: " + string(body))
 		return "", errors.New("download upgrade file failed")
 	}
@@ -216,7 +215,7 @@ func writeToFile(file string, content io.Reader) error {
 }
 
 func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
-	tempFile, err := ioutil.TempFile(filepath.Split(filename))
+	tempFile, err := os.CreateTemp(filepath.Split(filename))
 	if err != nil {
 		return err
 	}

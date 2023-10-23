@@ -142,7 +142,7 @@ class TGitMrTriggerHandler(
     }
 
     override fun getMessage(event: GitMergeRequestEvent): String {
-        return event.object_attributes.last_commit.message
+        return event.object_attributes.title
     }
 
     override fun getHookSourceUrl(event: GitMergeRequestEvent): String {

@@ -115,20 +115,7 @@
             .pipeline-operation-cell {
                 display: flex;
                 align-items: center;
-                .pipeline-exec-btn,
-                .pipeline-collect-btn {
-                    line-height: 1;
-                    height: auto;
-                    width: 30px;
-                    font-size: 16px;
-                    text-align: left;
-                    &.pipeline-exec-btn:not(.is-disabled):hover {
-                        color: $primaryColor;
-                    }
-                    .exec-btn-span {
-                        display: flex;
-                    }
-                }
+                text-wrap: nowrap;
                 .more-action-menu {
                     font-size: 0;
                     cursor: pointer;

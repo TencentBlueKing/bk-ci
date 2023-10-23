@@ -119,26 +119,53 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
-        if (event.reviewableType == "merge_request" &&
-            event.reviewableId != null &&
-            projectId != null &&
-            repository != null
-        ) {
-            // MR提交人
-            val mrInfo = eventCacheService.getMergeRequestInfo(projectId, event.reviewableId, repository)
-            val reviewInfo =
-                eventCacheService.getMergeRequestReviewersInfo(projectId, event.reviewableId, repository)
-
-            startParams.putAll(
-                WebhookUtils.mrStartParam(
-                    mrInfo = mrInfo,
-                    reviewInfo = reviewInfo,
-                    mrRequestId = event.reviewableId!!,
-                    homepage = event.repository.homepage
-                )
-            )
+        if (projectId != null && repository != null) {
+            when (event.reviewableType) {
+                // MR Review
+                "merge_request" -> {
+                    // MR提交人
+                    val mrInfo = eventCacheService.getMergeRequestInfo(
+                        projectId = projectId,
+                        mrId = event.reviewableId,
+                        repo = repository
+                    )
+                    val reviewInfo =
+                        eventCacheService.getMergeRequestReviewersInfo(
+                            projectId = projectId,
+                            mrId = event.reviewableId,
+                            repo = repository
+                        )
+                    startParams.putAll(
+                        WebhookUtils.mrStartParam(
+                            mrInfo = mrInfo,
+                            reviewInfo = reviewInfo,
+                            mrRequestId = event.reviewableId!!,
+                            homepage = event.repository.homepage
+                        )
+                    )
+                    startParams.putAll(
+                        WebhookUtils.crStartParam(
+                            gitCommitReviewInfo = null,
+                            gitMrInfo = mrInfo
+                        )
+                    )
+                }
+                // Commit Review
+                "comparison" -> {
+                    val commitReviewInfo = eventCacheService.getCommitReviewInfo(
+                        projectId = projectId,
+                        commitReviewId = event.id.toLongOrNull(),
+                        repo = repository
+                    )
+                    startParams.putAll(
+                        WebhookUtils.crStartParam(
+                            gitCommitReviewInfo = commitReviewInfo,
+                            gitMrInfo = null
+                        )
+                    )
+                }
+            }
         }
-
         // 兼容stream变量
         startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
         startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url

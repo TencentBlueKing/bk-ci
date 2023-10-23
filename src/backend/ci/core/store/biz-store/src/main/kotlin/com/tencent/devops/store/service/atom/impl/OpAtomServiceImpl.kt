@@ -77,7 +77,7 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
@@ -225,7 +225,9 @@ class OpAtomServiceImpl @Autowired constructor(
             name = atomRecord.name,
             atomCode = atomRecord.atomCode,
             classType = atomRecord.classType,
-            logoUrl = atomRecord.logoUrl,
+            logoUrl = atomRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             icon = atomRecord.icon,
             summary = atomRecord.summary,
             serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
@@ -238,7 +240,9 @@ class OpAtomServiceImpl @Autowired constructor(
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
-            description = atomRecord.description,
+            description = atomRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             version = atomRecord.version,
             creator = atomRecord.creator,
             createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
@@ -258,11 +262,11 @@ class OpAtomServiceImpl @Autowired constructor(
                         version = atomRecord.version
                     )
                 )
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
                     ?.decorate(propJsonStr) as Map<String, Any>?
             },
             data = atomRecord.data?.let {
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
                     ?.decorate(atomRecord.data) as Map<String, Any>?
             },
             recommendFlag = atomFeature?.recommendFlag,
@@ -364,7 +368,10 @@ class OpAtomServiceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        publisher: String?,
+        releaseType: ReleaseTypeEnum?,
+        version: String?
     ): Result<Boolean> {
         // 解压插件包到临时目录
         val fileName = disposition.fileName
@@ -401,7 +408,25 @@ class OpAtomServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        if (releaseInfo.versionInfo.releaseType == ReleaseTypeEnum.NEW) {
+        val versionInfo = releaseInfo.versionInfo
+        if (!publisher.isNullOrBlank()) {
+            // 如果接口query参数的发布者不为空，发布者以接口query参数的发布者为准
+            versionInfo.publisher = publisher
+        }
+        releaseType?.let {
+            // 如果接口query参数的发布类型不为空，发布类型以接口query参数的发布类型为准
+            versionInfo.releaseType = releaseType
+        }
+        if (!version.isNullOrBlank()) {
+            // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
+            versionInfo.version = version
+        }
+        if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = INIT_VERSION
+            ) == null
+        ) {
             // 新增插件
             val addMarketAtomResult = atomReleaseService.addMarketAtom(
                 userId,
@@ -479,9 +504,9 @@ class OpAtomServiceImpl @Autowired constructor(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
                     atomCode = atomCode,
-                    version = releaseInfo.versionInfo.version,
+                    version = versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
-                    releaseType = releaseInfo.versionInfo.releaseType.name,
+                    releaseType = versionInfo.releaseType.name,
                     file = file,
                     os = JsonUtil.toJson(releaseInfo.os)
                 )
@@ -518,10 +543,10 @@ class OpAtomServiceImpl @Autowired constructor(
                 os = releaseInfo.os,
                 summary = releaseInfo.summary,
                 description = releaseInfo.description,
-                version = releaseInfo.versionInfo.version,
-                releaseType = releaseInfo.versionInfo.releaseType,
-                versionContent = releaseInfo.versionInfo.versionContent,
-                publisher = releaseInfo.versionInfo.publisher,
+                version = versionInfo.version,
+                releaseType = versionInfo.releaseType,
+                versionContent = versionInfo.versionContent,
+                publisher = versionInfo.publisher,
                 labelIdList = labelIds,
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,

@@ -44,7 +44,6 @@ interface StoreProjectService {
      * 根据商店组件标识获取已安装的项目列表
      */
     fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum

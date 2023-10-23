@@ -69,7 +69,8 @@ data class StreamTriggerContext(
     // 缓存
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null,
-    var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null
+    var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
+    var extensionAction: String? = null
 )
 
 /**
