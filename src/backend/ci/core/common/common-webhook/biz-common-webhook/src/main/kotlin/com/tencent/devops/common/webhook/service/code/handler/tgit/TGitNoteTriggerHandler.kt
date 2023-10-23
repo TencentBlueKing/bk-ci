@@ -80,6 +80,7 @@ import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -164,13 +165,18 @@ class TGitNoteTriggerHandler(
         return event.objectAttributes.note
     }
 
-    override fun getEventDesc(event: GitNoteEvent): String {
+    override fun getEventDesc(event: GitNoteEvent, replayInfo: PipelineEventReplayInfo?): String {
+        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
+            replayInfo,
+            getUsername(event),
+            WebhookI18nConstants.TGIT_NOTE_EVENT_DESC
+        )
         return I18Variable(
-            code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
+            code = i18Code,
             params = listOf(
                 event.objectAttributes.url,
                 event.objectAttributes.id.toString(),
-                getUsername(event)
+                username
             )
         ).toJsonStr()
     }

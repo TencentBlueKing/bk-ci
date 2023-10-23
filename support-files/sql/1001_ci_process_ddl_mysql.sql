@@ -642,6 +642,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK` (
   `DELETE` BIT(1) DEFAULT 0 COMMENT '是否删除',
   `EVENT_TYPE` varchar(32) DEFAULT NULL COMMENT '事件类型',
   `EXTERNAL_ID` varchar(32) DEFAULT NULL COMMENT 'webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port',
+  `REPOSITORY_HASH_ID` varchar(64) null comment '代码库hashId';
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNI_INX_TPW_PROJECT_PIPELINE_TASK` (`PROJECT_ID`, `PIPELINE_ID`,`TASK_ID`),
   KEY `IDX_PROJECT_NAME_REPOSITORY_TYPE` (`PROJECT_NAME`, `REPOSITORY_TYPE`)
@@ -1176,7 +1177,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
     `EVENT_ID`       bigint(20)  NOT NULL COMMENT '事件ID',
     `STATUS`         varchar(100)         DEFAULT NULL COMMENT '状态(success or failure)',
     `PIPELINE_ID`    varchar(100)         DEFAULT NULL COMMENT '流水线ID',
-    `PIPELINE_NAME`  varchar(100)         DEFAULT NULL COMMENT '流水线名称',
+    `PIPELINE_NAME`  varchar(255)         DEFAULT NULL COMMENT '流水线名称',
     `VERSION`        int                  DEFAULT NULL COMMENT '流水线版本号',
     `BUILD_ID`       varchar(100)         DEFAULT NULL COMMENT '构建ID',
     `BUILD_NUM`      varchar(100)         DEFAULT NULL COMMENT '构建编号',

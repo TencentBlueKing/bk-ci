@@ -31,6 +31,7 @@ package com.tencent.devops.process.trigger
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
@@ -92,8 +93,8 @@ class WebhookTriggerService(
             val triggerEvent = PipelineTriggerEvent(
                 triggerType = scmType.name,
                 eventType = matcher.getEventType().name,
-                triggerUser = matcher.getUsername(),
-                eventDesc = matcher.getEventDesc(),
+                triggerUser = userId,
+                eventDesc = matcher.getEventDesc(PipelineEventReplayInfo(userId)),
                 hookRequestId = hookRequestId,
                 eventTime = eventTime
             )

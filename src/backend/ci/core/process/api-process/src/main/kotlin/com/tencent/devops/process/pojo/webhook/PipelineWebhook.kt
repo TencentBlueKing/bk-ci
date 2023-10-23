@@ -42,7 +42,7 @@ data class PipelineWebhook(
     val repositoryType: ScmType,
     @ApiModelProperty("代码库标识类型， ID 代码库HashId / NAME 别名", required = false)
     val repoType: RepositoryType?,
-    @ApiModelProperty("代码库HashId，repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
+    @ApiModelProperty("插件配置的代码库HashId，repoHashId与repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
     var repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
     @ApiModelProperty("代码库别名", required = false)
     val repoName: String?,
@@ -54,8 +54,8 @@ data class PipelineWebhook(
     val taskId: String? = null,
     @ApiModelProperty("事件类型", required = false)
     var eventType: String? = null,
-    @ApiModelProperty("事件源,代码库hashId", required = false)
-    var eventSource: String? = null,
+    @ApiModelProperty("代码库hashId,插件配置解析后的代码库ID", required = false)
+    var repositoryHashId: String? = null,
     @ApiModelProperty("事件源外联Id", required = false)
     var externalId: String? = null
 )

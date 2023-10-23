@@ -44,6 +44,7 @@ import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 
 @CodeWebhookHandler
@@ -81,12 +82,17 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         return event.log
     }
 
-    override fun getEventDesc(event: SvnCommitEvent): String {
+    override fun getEventDesc(event: SvnCommitEvent, replayInfo: PipelineEventReplayInfo?): String {
+        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
+            replayInfo,
+            getUsername(event),
+            WebhookI18nConstants.SVN_COMMIT_EVENT_DESC
+        )
         return I18Variable(
-            code = WebhookI18nConstants.SVN_COMMIT_EVENT_DESC,
+            code = i18Code,
             params = listOf(
                 getRevision(event),
-                getUsername(event)
+                username
             )
         ).toJsonStr()
     }
