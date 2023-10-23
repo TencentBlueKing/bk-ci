@@ -82,9 +82,8 @@
                         </table>
                         <bk-pagination
                             class="trigger-table-pagination"
-                            show-total-count
                             type="compact"
-                            size="small"
+                            small
                             v-bind="pagination"
                             @change="handleChangePage"
                             @limit-change="handleChangeLimit">
