@@ -85,6 +85,14 @@ BEGIN
         ADD INDEX `IDX_TPVUS_PROJECT_ID`(`PROJECT_ID`);
     END IF;
 
+    IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_MODEL_TASK'
+                    AND COLUMN_NAME = 'ATOM_VERSION') THEN
+        ALTER TABLE T_PIPELINE_MODEL_TASK MODIFY COLUMN ATOM_VERSION varchar(30) NULL;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -17,7 +17,7 @@ BEGIN
                 WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ATOM'
                     AND COLUMN_NAME = 'VERSION') THEN
-        ALTER TABLE T_ATOM MODIFY COLUMN VERSION varchar(30) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '版本号';
+        ALTER TABLE T_ATOM MODIFY COLUMN VERSION varchar(30) NOT NULL;
     END IF;
 
     COMMIT;

@@ -691,7 +691,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         branch: String? = null
     ): GetAtomQualityConfigResult {
         try {
-            val testVersionFlag = branch?.let { it != MASTER } ?: false
             val qualityJsonStr = getFileStr(
                 projectCode = projectCode,
                 atomCode = atomCode,
@@ -723,8 +722,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 // 先注册基础数据
                 val metadataResultMap = registerMetadata(
                     userId = userId,
-                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
-                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
+                    atomCode = atomCode,
+                    atomName = atomCode,
                     indicators = indicators
                 )
 
@@ -732,8 +731,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 registerIndicator(
                     userId = userId,
                     projectId = projectCode,
-                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
-                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
+                    atomCode = atomCode,
+                    atomName = atomCode,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     metadataResultMap = metadataResultMap,
@@ -743,8 +742,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 // 最后注册控制点
                 registerControlPoint(
                     userId = userId,
-                    atomCode = if (testVersionFlag) "$atomCode-$branch" else atomCode,
-                    atomName = if (testVersionFlag) "$atomName-$branch" else atomName,
+                    atomCode = atomCode,
+                    atomName = atomCode,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     projectId = projectCode
@@ -753,12 +752,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
                 try {
-                    client.get(ServiceQualityIndicatorMarketResource::class)
-                        .deleteTestIndicator(if (testVersionFlag) "$atomCode-$branch" else atomCode)
-                    client.get(ServiceQualityMetadataMarketResource::class)
-                        .deleteTestMetadata(if (testVersionFlag) "$atomCode-$branch" else atomCode)
-                    client.get(ServiceQualityControlPointMarketResource::class)
-                        .deleteTestControlPoint(if (testVersionFlag) "$atomCode-$branch" else atomCode)
+                    client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
+                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
+                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
                 } catch (ignored: Throwable) {
                     logger.warn("clear atom:$atomCode test quality data fail", ignored)
                 }
