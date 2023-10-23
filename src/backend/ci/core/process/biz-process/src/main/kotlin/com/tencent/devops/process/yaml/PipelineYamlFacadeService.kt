@@ -243,7 +243,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         logger.info("disable pac|$userId|$projectId|$repoHashId|$scmType")
     }
 
-    fun getPipelineYamlVo(
+    fun getPipelineYamlInfo(
         projectId: String,
         pipelineId: String,
         version: Int
