@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecord
@@ -127,6 +128,7 @@ class RemoteDevSettingDao {
             return dslContext.selectFrom(this)
                 .where(condition)
                 .limit(limit.limit).offset(limit.offset)
+                .skipCheck()
                 .fetch()
         }
     }
@@ -142,6 +144,7 @@ class RemoteDevSettingDao {
             }
             return dslContext.selectCount().from(this)
                 .where(condition)
+                .skipCheck()
                 .fetchOne(0, Long::class.java)!!
         }
     }

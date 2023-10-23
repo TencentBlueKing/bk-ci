@@ -180,14 +180,14 @@
 </template>
 
 <script lang='ts'>
+    import {
+        RESOURCE_ACTION,
+        handleProjectNoPermission
+    } from '@/utils/permission'
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
-    import {
-        handleProjectNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
 
     @Component
     export default class ProjectDialog extends Vue {
@@ -389,7 +389,7 @@
                         projectName,
                         routerTag
                     } = data.data || {}
-                    const url = /rbac/.test(routerTag)
+                    const url = /rbac|devx/.test(routerTag)
                         ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_create&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
                         : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(
@@ -438,7 +438,7 @@
                         projectName,
                         routerTag
                     } = data.data || {}
-                    const url = /rbac/.test(routerTag)
+                    const url = /rbac|devx/.test(routerTag)
                         ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
                         : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(

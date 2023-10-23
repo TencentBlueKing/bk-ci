@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -51,5 +52,7 @@ data class WeSecProjectWorkspace(
     val regionId: String,
     @ApiModelProperty("inner_ip")
     @JsonProperty("inner_ip")
-    val innerIp: String?
+    val innerIp: String?,
+    @ApiModelProperty("状态")
+    val status: WorkspaceStatus?
 )

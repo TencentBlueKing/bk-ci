@@ -40,7 +40,7 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
@@ -59,18 +59,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
 class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
-    private val bkRepoAppService: BkRepoAppService,
+    private val bkRepoDownloadService: BkRepoDownloadService,
     private val pipelineService: PipelineService,
     private val client: Client
 ) : AppArtifactoryResource {
@@ -129,9 +129,11 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                     it.name.endsWith(topType) -> {
                         topSet.add(it)
                     }
+
                     it.name.endsWith(secondType) -> {
                         secondSet.add(it)
                     }
+
                     else -> {
                         otherSet.add(it)
                     }
@@ -261,13 +263,19 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-
-        val result = if (path.endsWith(".ipa")) {
-            bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
+        return if (path.endsWith(".ipa")) {
+            Result(
+                bkRepoDownloadService.outerPlistUrl(
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    argPath = path,
+                    ttl = 24 * 3600
+                )
+            )
         } else {
-            bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
+            downloadUrl(userId, projectId, artifactoryType, path)
         }
-        return Result(result)
     }
 
     override fun getFilePlist(
@@ -283,13 +291,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
-        return bkRepoAppService.getPlistFile(
+        return bkRepoDownloadService.outerPlistContent(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
             argPath = path,
             ttl = ttl ?: (24 * 3600),
-            directed = false,
             experienceHashId = experienceHashId,
             organization = organization
         )
@@ -306,9 +313,13 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return Result(
-            bkRepoAppService.getExternalDownloadUrl(
-                userId, projectId, artifactoryType, path, 24 * 3600,
-                true
+            bkRepoDownloadService.outerDownloadUrlByToken(
+                creatorId = userId,
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path,
+                ttl = 24 * 3600
             )
         )
     }

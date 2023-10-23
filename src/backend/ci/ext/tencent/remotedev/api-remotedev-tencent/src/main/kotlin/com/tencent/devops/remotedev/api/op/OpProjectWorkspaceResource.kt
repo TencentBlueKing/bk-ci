@@ -32,17 +32,19 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
+import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
+import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
+import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
@@ -58,38 +60,40 @@ interface OpProjectWorkspaceResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam(value = "拥有者", required = true)
-        @QueryParam("owner")
-        owner: String? = null,
-        @ApiParam(value = "云桌面ID", required = true)
-        @QueryParam("cgsId")
-        cgsId: String
+        @ApiParam(value = "分配数据")
+        data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
     @ApiOperation("获取项目下空间列表实例列表")
-    @GET
+    @POST
     @Path("/list")
     fun getProjectWorkspaceList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = false)
-        @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam(value = "workspaceName", required = false)
-        @QueryParam("workspaceName")
-        workspaceName: String?,
-        @ApiParam(value = "systemType", required = false)
-        @QueryParam("systemType")
-        systemType: WorkspaceSystemType?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "6666")
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
+
+    @ApiOperation("批量获取指定项目的云桌面的云研发管理员和拥有者")
+    @POST
+    @Path("/fetchOwnerAndAdmin")
+    fun fetchOwnerAndAdmin(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("获取数据")
+        data: FetchOwnerAndAdminData
+    ): Result<Map<String, FetchOwnerAndAdminItem>>
+
+    @ApiOperation("修改云研发机器在 CMDB 的属性")
+    @POST
+    @Path("/updateCCHost")
+    fun updateCCHost(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("修改数据")
+        data: OpUpdateCCHostData
+    ): Result<Boolean>
 }
