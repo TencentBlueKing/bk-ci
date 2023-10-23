@@ -391,7 +391,7 @@ export function convertFileSize (size, unit) {
             return convertFileSize(calcSize, next)
         }
     } else {
-        return `${calcSize.toFixed(2)}${next || unit}`
+        return `${calcSize.toFixed(2)} ${next || unit}`
     }
 }
 

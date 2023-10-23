@@ -340,6 +340,46 @@ class AuthResourceDao {
         }
     }
 
+    fun updateCreator(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        creator: String
+    ): Int {
+        val now = LocalDateTime.now()
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.update(this)
+                .set(CREATE_USER, creator)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .execute()
+        }
+    }
+
+    fun listByCreator(
+        dslContext: DSLContext,
+        resourceType: String,
+        projectCode: String?,
+        creator: String,
+        offset: Int,
+        limit: Int
+    ): Result<TAuthResourceRecord> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where()
+                .let { if (projectCode == null) it else it.and(PROJECT_CODE.eq(projectCode)) }
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(CREATE_USER.eq(creator))
+                .orderBy(CREATE_TIME)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
     fun convert(recode: TAuthResourceRecord): AuthResourceInfo {
         with(recode) {
             return AuthResourceInfo(

@@ -53,6 +53,8 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
+import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -134,14 +136,22 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomEnvRequests = atomConfigResult.atomEnvRequests!!
             packageFileInfos = mutableListOf()
             atomEnvRequests.forEach { atomEnvRequest ->
-                if (atomEnvRequest.pkgLocalPath.isNullOrBlank()) {
+                val pkgLocalPath = atomEnvRequest.pkgLocalPath
+                if (atomEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
+                    // 上传的是内置插件的zip包，无需处理执行包相关逻辑
                     return@forEach
                 }
+                if (pkgLocalPath.isNullOrBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                        params = arrayOf("[$TASK_JSON_NAME]:$KEY_PACKAGE_PATH")
+                    )
+                }
                 val packageFilePathPrefix = buildAtomArchivePath(projectCode, atomCode, version)
-                val packageFile = File("$packageFilePathPrefix/${atomEnvRequest.pkgLocalPath}")
+                val packageFile = File("$packageFilePathPrefix/$pkgLocalPath")
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFile.name,
-                    packageFilePath = "$BK_CI_ATOM_DIR/${atomEnvRequest.pkgLocalPath}",
+                    packageFilePath = "$BK_CI_ATOM_DIR/$pkgLocalPath",
                     packageFileSize = packageFile.length(),
                     shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
@@ -164,20 +174,28 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             // 普通发布类型会重新生成一条插件版本记录
             UUIDUtil.generate()
         }
-        val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .updateAtomPkgInfo(
-                userId = userId,
-                atomId = finalAtomId,
-                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequests, taskDataMap)
+        if (!archiveAtomRequest.reUploadFlag) {
+            val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
+                .updateAtomPkgInfo(
+                    userId = userId,
+                    atomId = finalAtomId,
+                    projectCode = projectCode,
+                    atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(
+                        atomCode = atomCode,
+                        version = version,
+                        atomEnvRequests = atomEnvRequests,
+                        taskDataMap = taskDataMap
+                    )
+                )
+            if (updateAtomInfoResult.isNotOk()) {
+                return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
+            }
+            redisOperation.set(
+                key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
+                value = finalAtomId,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(1)
             )
-        if (updateAtomInfoResult.isNotOk()) {
-            return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
         }
-        redisOperation.set(
-            key = "$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version",
-            value = finalAtomId,
-            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
-        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             packageFileInfos.forEach { packageFileInfo ->
@@ -229,7 +247,8 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomCode = atomCode,
             version = version,
             releaseType = null,
-            os = null
+            os = null,
+            reUploadFlag = true
         )
         val atomId = reArchiveAtomRequest.atomId
         val archiveAtomResult = archiveAtom(
@@ -248,7 +267,14 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             .updateAtomPkgInfo(
                 userId = userId,
                 atomId = atomId,
-                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequests, taskDataMap)
+                projectCode = reArchiveAtomRequest.projectCode,
+                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(
+                    atomCode = atomCode,
+                    version = version,
+                    atomEnvRequests = atomEnvRequests,
+                    taskDataMap = taskDataMap,
+                    reUploadFlag = true
+                )
             )
         if (updateAtomInfoResult.isNotOk()) {
             return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)

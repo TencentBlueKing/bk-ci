@@ -28,9 +28,14 @@
 package com.tencent.devops.common.db.config
 
 import com.mysql.cj.jdbc.Driver
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.db.pojo.BindingTableGroupConfig
 import com.tencent.devops.common.db.pojo.DATA_SOURCE_NAME_PREFIX
+import com.tencent.devops.common.db.pojo.DataSourceConfig
 import com.tencent.devops.common.db.pojo.DataSourceProperties
 import com.tencent.devops.common.db.pojo.DatabaseShardingStrategyEnum
+import com.tencent.devops.common.db.pojo.MIGRATING_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.TableRuleConfig
 import com.tencent.devops.common.db.pojo.TableShardingStrategyEnum
 import com.zaxxer.hikari.HikariDataSource
@@ -46,6 +51,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -56,7 +62,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.util.Properties
 import javax.sql.DataSource
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ComplexMethod")
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(DataSourceAutoConfiguration::class, JooqAutoConfiguration::class)
@@ -80,11 +86,17 @@ class BkShardingDataSourceConfiguration {
     @Value("\${sharding.databaseShardingStrategy.algorithmClassName:#{null}}")
     private val databaseAlgorithmClassName: String? = null
 
+    @Value("\${sharding.databaseShardingStrategy.migratingAlgorithmClassName:#{null}}")
+    private val migratingDatabaseAlgorithmClassName: String? = null
+
     @Value("\${sharding.databaseShardingStrategy.shardingField:#{null}}")
     private val databaseShardingField: String? = null
 
     @Value("\${sharding.tableShardingStrategy.algorithmClassName:#{null}}")
     private val tableAlgorithmClassName: String? = null
+
+    @Value("\${sharding.tableShardingStrategy.migratingAlgorithmClassName:#{null}}")
+    private val migratingTableAlgorithmClassName: String? = null
 
     @Value("\${sharding.tableShardingStrategy.shardingField:#{null}}")
     private val tableShardingField: String? = null
@@ -98,12 +110,15 @@ class BkShardingDataSourceConfiguration {
     @Value("\${spring.datasource.idleTimeout:#{60000}}")
     private val datasourceIdleTimeout: Long = 60000
 
-    private fun dataSourceMap(config: DataSourceProperties, registry: MeterRegistry): Map<String, DataSource> {
+    private fun dataSourceMap(
+        dataSourcePrefixName: String,
+        dataSourceConfigs: List<DataSourceConfig>,
+        registry: MeterRegistry
+    ): Map<String, DataSource> {
         val dataSourceMap: MutableMap<String, DataSource> = mutableMapOf()
-        val dataSourceConfigs = config.dataSourceConfigs
         // 根据配置文件中的数据源配置项列表动态生成数据源集合
         dataSourceConfigs.forEach { dataSourceConfig ->
-            val dataSourceName = "$DATA_SOURCE_NAME_PREFIX${dataSourceConfig.index}"
+            val dataSourceName = "$dataSourcePrefixName${dataSourceConfig.index}"
             dataSourceMap[dataSourceName] = createHikariDataSource(
                 datasourcePoolName = dataSourceName,
                 datasourceUrl = dataSourceConfig.url,
@@ -143,27 +158,75 @@ class BkShardingDataSourceConfiguration {
 
     @Bean
     fun shardingDataSource(config: DataSourceProperties, registry: MeterRegistry): DataSource {
+        return createShardingDataSource(
+            dataSourcePrefixName = DATA_SOURCE_NAME_PREFIX,
+            databaseAlgorithmClassName = databaseAlgorithmClassName,
+            tableAlgorithmClassName = tableAlgorithmClassName,
+            dataSourceConfigs = config.dataSourceConfigs,
+            tableRuleConfigs = config.tableRuleConfigs,
+            bindingTableGroupConfigs = config.bindingTableGroupConfigs,
+            registry = registry
+        )
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "sharding", name = ["migrationFlag"], havingValue = "Y")
+    fun migratingShardingDataSource(config: DataSourceProperties, registry: MeterRegistry): DataSource {
+        val migratingDataSourceConfigs = config.migratingDataSourceConfigs
+        val migratingTableRuleConfigs = config.migratingTableRuleConfigs
+        if (migratingDataSourceConfigs == null) {
+            logger.warn("migratingDataSourceConfigs can not be empty")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "migratingDataSourceConfigs can not be empty"
+            )
+        }
+        return createShardingDataSource(
+            dataSourcePrefixName = MIGRATING_DATA_SOURCE_NAME_PREFIX,
+            databaseAlgorithmClassName = migratingDatabaseAlgorithmClassName,
+            tableAlgorithmClassName = migratingTableAlgorithmClassName,
+            dataSourceConfigs = migratingDataSourceConfigs,
+            tableRuleConfigs = migratingTableRuleConfigs ?: config.tableRuleConfigs,
+            bindingTableGroupConfigs = config.migratingBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
+            registry = registry
+        )
+    }
+
+    fun createShardingDataSource(
+        dataSourcePrefixName: String,
+        databaseAlgorithmClassName: String? = null,
+        tableAlgorithmClassName: String? = null,
+        dataSourceConfigs: List<DataSourceConfig>,
+        tableRuleConfigs: List<TableRuleConfig>? = null,
+        bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null,
+        registry: MeterRegistry
+    ): DataSource {
         val shardingRuleConfig = ShardingRuleConfiguration()
         // 设置分片表的路由规则
-        val dataSourceSize = config.dataSourceConfigs.size
-        val tableRuleConfigs = shardingRuleConfig.tables
-        val shardingTableRuleConfigs = config.tableRuleConfigs.filter { it.broadcastFlag != true }
-        if (shardingTableRuleConfigs.isNotEmpty()) {
+        val dataSourceSize = dataSourceConfigs.size
+        val bkTableRuleConfigs = shardingRuleConfig.tables
+        val shardingTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag != true }
+        if (!shardingTableRuleConfigs.isNullOrEmpty()) {
             shardingTableRuleConfigs.forEach { shardingTableRuleConfig ->
-                tableRuleConfigs.add(getTableRuleConfiguration(dataSourceSize, shardingTableRuleConfig))
+                bkTableRuleConfigs.add(
+                    getTableRuleConfiguration(
+                        dataSourcePrefixName = dataSourcePrefixName,
+                        dataSourceSize = dataSourceSize,
+                        tableRuleConfig = shardingTableRuleConfig
+                    )
+                )
             }
         }
         // 设置广播表的路由规则
         val broadcastTables = shardingRuleConfig.broadcastTables
-        val broadcastTableRuleConfigs = config.tableRuleConfigs.filter { it.broadcastFlag == true }
-        if (broadcastTableRuleConfigs.isNotEmpty()) {
+        val broadcastTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag == true }
+        if (!broadcastTableRuleConfigs.isNullOrEmpty()) {
             broadcastTableRuleConfigs.forEach { broadcastTableRuleConfig ->
                 broadcastTables.add(broadcastTableRuleConfig.name)
             }
         }
         // 	设置绑定表规则
         val bindingTableGroups = shardingRuleConfig.bindingTableGroups
-        val bindingTableGroupConfigs = config.bindingTableGroupConfigs
         if (!bindingTableGroupConfigs.isNullOrEmpty()) {
             bindingTableGroupConfigs.forEach { bindingTableGroupConfig ->
                 bindingTableGroups.add(bindingTableGroupConfig.rule)
@@ -189,7 +252,7 @@ class BkShardingDataSourceConfiguration {
         // 是否打印SQL解析和改写日志
         dataSourceProperties.setProperty("sql-show", shardingLogSwitch.toString())
         return ShardingSphereDataSourceFactory.createDataSource(
-            dataSourceMap(config, registry),
+            dataSourceMap(dataSourcePrefixName, dataSourceConfigs, registry),
             listOf(shardingRuleConfig),
             dataSourceProperties
         )
@@ -197,11 +260,13 @@ class BkShardingDataSourceConfiguration {
 
     /**
      * 获取分片表规则配置
+     * @param dataSourcePrefixName 数据源数量大小
      * @param dataSourceSize 数据源数量大小
      * @param tableRuleConfig 数据库表规则配置
      * @return 分片表规则配置
      */
     fun getTableRuleConfiguration(
+        dataSourcePrefixName: String,
         dataSourceSize: Int,
         tableRuleConfig: TableRuleConfig
     ): ShardingTableRuleConfiguration? {
@@ -216,22 +281,22 @@ class BkShardingDataSourceConfiguration {
         ) {
             // 生成分库分表场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${DATA_SOURCE_NAME_PREFIX}0.${tableName}_\${0..$lastTableIndex}"
+                "${dataSourcePrefixName}0.${tableName}_\${0..$lastTableIndex}"
             } else {
-                "$DATA_SOURCE_NAME_PREFIX\${0..$lastDsIndex}.${tableName}_\${0..$lastTableIndex}"
+                "$dataSourcePrefixName\${0..$lastDsIndex}.${tableName}_\${0..$lastTableIndex}"
             }
         } else if (databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
             // 生成分库场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
+                "${dataSourcePrefixName}0.$tableName"
             } else {
-                "$DATA_SOURCE_NAME_PREFIX\${0..$lastDsIndex}.$tableName"
+                "$dataSourcePrefixName\${0..$lastDsIndex}.$tableName"
             }
         } else if (databaseShardingStrategy == null && tableShardingStrategy == TableShardingStrategyEnum.SHARDING) {
             // 生成分表场景下的节点规则
-            "${DATA_SOURCE_NAME_PREFIX}0.${tableName}_\${0..$lastTableIndex}"
+            "${dataSourcePrefixName}0.${tableName}_\${0..$lastTableIndex}"
         } else {
-            "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
+            "${dataSourcePrefixName}0.$tableName"
         }
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         logger.info(
