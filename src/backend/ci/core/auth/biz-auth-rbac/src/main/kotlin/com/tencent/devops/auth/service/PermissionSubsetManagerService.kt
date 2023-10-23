@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class PermissionSubsetManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
@@ -88,7 +89,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
         val description = managerGroupConfig.description
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        val authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -140,7 +141,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName
         )
 
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+        val authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = managerGroupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
@@ -257,6 +258,8 @@ class PermissionSubsetManagerService @Autowired constructor(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,
+                resourceType = groupConfig.resourceType,
+                groupCode = groupConfig.groupCode,
                 iamResourceCode = iamResourceCode,
                 resourceName = resourceName,
                 iamGroupId = iamGroupId

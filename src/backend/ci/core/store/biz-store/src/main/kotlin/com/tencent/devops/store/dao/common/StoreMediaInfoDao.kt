@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.records.TStoreMediaInfoRecord
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -110,7 +111,9 @@ class StoreMediaInfoDao {
             return StoreMediaInfo(
                 id = id,
                 storeCode = storeCode,
-                mediaUrl = mediaUrl,
+                mediaUrl = mediaUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                } ?: "",
                 mediaType = mediaType,
                 create = creator,
                 modifier = modifier,
