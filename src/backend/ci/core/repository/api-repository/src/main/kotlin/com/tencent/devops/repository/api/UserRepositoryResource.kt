@@ -280,13 +280,13 @@ interface UserRepositoryResource {
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
     @GET
-    @Path("/isOauth")
+    @Path("/{projectId}/isOauth")
     fun isOAuth(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目", required = true)
-        @QueryParam("projectId")
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam("重定向url类型", required = false)
         @QueryParam("redirectUrlType")
