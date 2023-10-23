@@ -60,7 +60,7 @@ class GitCIBkRepoDownloadService @Autowired constructor(
     @Value("\${gitci.v2GitUrl:#{null}}")
     private val v2GitUrl: String? = null
 
-    override fun getDownloadUrl(
+    override fun innerDownloadUrlByUser(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,

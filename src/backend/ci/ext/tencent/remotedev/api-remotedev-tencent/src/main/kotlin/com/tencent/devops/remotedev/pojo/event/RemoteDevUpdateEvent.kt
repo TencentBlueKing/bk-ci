@@ -6,6 +6,7 @@ import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.slf4j.MDC
 
 @Event(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, ROUTE_WORKSPACE_UPDATE_FROM_K8S)
@@ -19,7 +20,9 @@ data class RemoteDevUpdateEvent(
     var environmentUid: String? = null,
     var environmentHost: String? = null,
     var environmentIp: String? = null,
+    var resourceId: String? = null,
     var errorMsg: String? = null,
+    var workspaceImageInfo: WorkspaceImageInfo? = null,
     val bkTicket: String? = null,
     val autoAssign: Boolean? = false,
     override var delayMills: Int = 0,

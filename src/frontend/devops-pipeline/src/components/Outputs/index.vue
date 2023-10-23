@@ -37,10 +37,13 @@
                                 v-if="output.isApp"
                                 :output="output"
                             />
-                            <i
+                            <artifact-download-button
                                 v-if="output.downloadable"
-                                class="devops-icon icon-download"
-                                @click.stop="downloadArtifact(output)"
+                                icon
+                                :has-permission="hasPermission"
+                                :path="output.fullPath"
+                                :name="output.name"
+                                :artifactory-type="output.artifactoryType"
                             />
                             <i
                                 v-if="output.isReportOutput"
@@ -76,6 +79,13 @@
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
+                            <artifact-download-button
+                                v-if="activeOutput.downloadable"
+                                :has-permission="hasPermission"
+                                :path="activeOutput.fullPath"
+                                :name="activeOutput.name"
+                                :artifactory-type="activeOutput.artifactoryType"
+                            />
                             <bk-button
                                 text
                                 theme="primary"
@@ -90,7 +100,7 @@
                                 v-if="activeOutputDetail.isApp"
                             />
 
-                            <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
+                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
                         </p>
                     </div>
                     <div class="pipeline-exec-output-artifact">
@@ -131,6 +141,7 @@
 </template>
 
 <script>
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
@@ -148,7 +159,8 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
-            OutputQrcode
+            OutputQrcode,
+            ArtifactDownloadButton
         },
         props: {
             currentTab: {
@@ -221,7 +233,7 @@
                 return this.activeOutput?.reportType === 'INTERNAL'
             },
             btns () {
-                const defaultBtns = [
+                return [
                     {
                         text: this.$t('details.goRepo'),
                         handler: () => {
@@ -239,17 +251,6 @@
                         }
                     }
                 ]
-                if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
-                    switch (true) {
-                        case this.activeOutput.artifactoryType !== 'IMAGE':
-                            defaultBtns.unshift({
-                                text: this.$t('download'),
-                                handler: () => window.open(this.activeOutputDetail.url, '_blank')
-                            })
-                            break
-                    }
-                }
-                return defaultBtns
             },
             artifactMoreActions () {
                 return [
@@ -260,6 +261,16 @@
                 ]
             },
             infoBlocks () {
+                if (this.activeOutputDetail.folder) {
+                    return [
+                        {
+                            key: 'baseInfo',
+                            title: this.$t('settings.baseInfo'),
+                            block: this.baseInfoRows,
+                            value: this.activeOutputDetail
+                        }
+                    ]
+                }
                 return [
                     {
                         key: 'baseInfo',
@@ -278,17 +289,25 @@
                         block: this.checkSumRows,
                         value: this.activeOutputDetail.checksums
                     }
-                    
                 ]
             },
             baseInfoRows () {
-                return [
-                    { key: 'name', name: this.$t('details.name') },
-                    { key: 'fullName', name: this.$t('details.filePath') },
-                    { key: 'size', name: this.$t('details.size') },
-                    { key: 'createdTime', name: this.$t('details.created') },
-                    { key: 'modifiedTime', name: this.$t('details.lastModified') }
-                ]
+                return this.activeOutputDetail.folder
+                    ? [
+                        { key: 'name', name: this.$t('details.directoryName') },
+                        { key: 'fullName', name: this.$t('details.directoryPath') },
+                        { key: 'size', name: this.$t('details.size') },
+                        { key: 'include', name: this.$t('details.include') },
+                        { key: 'createdTime', name: this.$t('details.created') },
+                        { key: 'modifiedTime', name: this.$t('details.lastModified') }
+                    ]
+                    : [
+                        { key: 'name', name: this.$t('details.name') },
+                        { key: 'fullName', name: this.$t('details.filePath') },
+                        { key: 'size', name: this.$t('details.size') },
+                        { key: 'createdTime', name: this.$t('details.created') },
+                        { key: 'modifiedTime', name: this.$t('details.lastModified') }
+                    ]
             },
             checkSumRows () {
                 return [
@@ -317,9 +336,7 @@
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
-                'requestExecPipPermission',
-                'requestExternalUrl',
-                'requestDownloadUrl'
+                'requestExecPipPermission'
             ]),
             
             async init () {
@@ -338,7 +355,7 @@
 
                     this.outputs = res.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
-                        const icon = isReportOutput ? 'order' : extForFile(item.name)
+                        const icon = isReportOutput ? 'order' : item.folder ? 'folder' : extForFile(item.name)
                         const id = isReportOutput ? item.createTime : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
@@ -393,10 +410,11 @@
                         ...output,
                         ...res,
                         artifactoryTypeTxt: repoTypeMap[output.artifactoryType] ?? '--',
-                        size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
+                        size: output.folder ? convertFileSize(this.getFolderSize(output), 'B') : res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: extForFile(res.name)
+                        icon: !output.folder ? extForFile(res.name) : 'folder',
+                        include: this.getInclude(output)
                     }
                     this.isLoading = false
                 } catch (err) {
@@ -408,6 +426,23 @@
                             projectId: projectId
                         }
                     ])
+                }
+            },
+            getFolderSize (payload) {
+                if (!payload.folder) return '0'
+                return this.getValuesByKey(payload.properties, 'size')
+            },
+            getInclude (payload) {
+                if (!payload.folder) return '--'
+                const fileCount = this.getValuesByKey(payload.properties, 'fileCount')
+                const folderCount = this.getValuesByKey(payload.properties, 'folderCount')
+                return this.$t('details.fileAndFolder', [fileCount, folderCount])
+            },
+            getValuesByKey (data, key) {
+                for (const item of data) {
+                    if (key.includes(item.key)) {
+                        return item.value
+                    }
                 }
             },
             setActiveOutput (output) {
@@ -426,19 +461,6 @@
             },
             isThirdReport (reportType) {
                 return ['THIRDPARTY'].includes(reportType)
-            },
-            async downloadArtifact (output) {
-                try {
-                    const res = await this.requestDownloadUrl({
-                        projectId: this.$route.params.projectId,
-                        artifactoryType: output.artifactoryType,
-                        path: output.fullPath
-                    })
-
-                    window.open(res.url2, '_blank')
-                } catch (error) {
-                    console.error(error)
-                }
             },
             fullScreenViewReport (output) {
                 this.setActiveOutput(output)
@@ -534,6 +556,7 @@
         }
         &.active,
         &:hover {
+            color: $iconPrimaryColor;
             background: #f5f7fa;
         }
       }
@@ -592,7 +615,7 @@
             color: #979ba5;
             text-align: right;
             @include ellipsis();
-            width: 100px;
+            width: 110px;
             flex-shrink: 0;
           }
           .pipeline-exec-output-block-row-value {

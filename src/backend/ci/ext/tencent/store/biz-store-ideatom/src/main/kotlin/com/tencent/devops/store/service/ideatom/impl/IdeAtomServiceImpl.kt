@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.ideatom.IdeAtom
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import com.tencent.devops.store.service.ideatom.IdeAtomService
@@ -87,9 +88,13 @@ class IdeAtomServiceImpl @Autowired constructor(
                 releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionLogRecord.releaseType.toInt())!!,
                 versionContent = atomVersionLogRecord.content,
                 codeSrc = atomFeatureRecord.codeSrc,
-                logoUrl = atomRecord.logoUrl,
+                logoUrl = atomRecord.logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
                 summary = atomRecord.summary,
-                description = atomRecord.description,
+                description = atomRecord.description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
                 publisher = atomRecord.publisher,
                 pubTime = if (null != atomRecord.pubTime) DateTimeUtil.toDateTime(atomRecord.pubTime) else null,
                 latestFlag = atomRecord.latestFlag,

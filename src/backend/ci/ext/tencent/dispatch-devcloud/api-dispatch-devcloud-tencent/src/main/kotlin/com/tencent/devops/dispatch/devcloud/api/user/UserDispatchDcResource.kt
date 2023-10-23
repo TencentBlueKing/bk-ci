@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
-import com.tencent.devops.dispatch.devcloud.pojo.Result
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

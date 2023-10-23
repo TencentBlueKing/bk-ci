@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
@@ -56,9 +55,6 @@ interface UserExtServiceProjectResource {
     @POST
     @Path("/install")
     fun installImage(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -70,9 +66,6 @@ interface UserExtServiceProjectResource {
     @GET
     @Path("/installedProjects/{serviceCode}")
     fun getInstalledProjects(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -85,9 +78,6 @@ interface UserExtServiceProjectResource {
     @GET
     @Path("/{projectCode}/installed/service")
     fun getServiceByInstalledProject(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -100,9 +90,6 @@ interface UserExtServiceProjectResource {
     @PUT
     @Path("{projectCode}/serviceCodes/{serviceCode}/uninstalled/")
     fun unInstallService(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

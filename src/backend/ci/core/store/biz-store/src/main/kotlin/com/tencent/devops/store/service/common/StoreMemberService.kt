@@ -86,7 +86,6 @@ interface StoreMemberService {
      * 更改store组件成员的调试项目
      */
     fun changeMemberTestProjectCode(
-        accessToken: String,
         userId: String,
         storeMember: String,
         projectCode: String,

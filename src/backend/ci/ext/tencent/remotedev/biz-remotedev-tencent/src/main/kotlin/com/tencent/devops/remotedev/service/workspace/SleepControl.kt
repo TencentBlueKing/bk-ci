@@ -35,7 +35,6 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
@@ -44,8 +43,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
@@ -56,13 +55,13 @@ import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -124,8 +123,8 @@ class SleepControl @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name,
-                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    workspaceName = workspace.workspaceName,
+                    mountType = workspace.workspaceMountType
                 )
             )
 
@@ -138,49 +137,47 @@ class SleepControl @Autowired constructor(
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
                 action = WorkspaceAction.SLEEPING,
-                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+                systemType = workspace.workspaceSystemType,
+                workspaceMountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
     }
 
-    private fun checkWorkspaceStatus(workspace: TWorkspaceRecord, userId: String) {
-        val status = WorkspaceStatus.values()[workspace.status]
+    private fun checkWorkspaceStatus(workspace: WorkspaceRecord, userId: String) {
 
-        if (status.checkSleeping()) {
-            logger.info("${workspace.name} has been stopped, return error.")
+        if (workspace.status.checkSleeping()) {
+            logger.info("${workspace.workspaceName} has been stopped, return error.")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                params = arrayOf(workspace.name, "status is already $status, can't stop again")
+                params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
             )
         }
 
         if (workspaceCommon.notOk2doNextAction(workspace)) {
-            logger.info("${workspace.name} is $status, return error.")
+            logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                params = arrayOf(workspace.name, "status is already $status, can't stop now")
+                params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop now")
             )
         }
 
         // 处理异常的情况
         workspaceCommon.checkAndFixExceptionWS(
-            status,
-            userId,
-            workspace.name,
-            WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            status = workspace.status,
+            userId = userId,
+            workspaceName = workspace.workspaceName,
+            mountType = workspace.workspaceMountType
         )
     }
 
-    private fun createOperationHistoryRecord(workspace: TWorkspaceRecord, userId: String) {
-        val name = workspace.name
-        val status = WorkspaceStatus.values()[workspace.status]
+    private fun createOperationHistoryRecord(workspace: WorkspaceRecord, userId: String) {
 
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,
-            workspaceName = name,
+            workspaceName = workspace.workspaceName,
             operator = userId,
             action = WorkspaceAction.SLEEP,
             actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
@@ -188,12 +185,12 @@ class SleepControl @Autowired constructor(
 
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,
-            workspaceName = name,
+            workspaceName = workspace.workspaceName,
             operator = userId,
             action = WorkspaceAction.SLEEP,
             actionMessage = String.format(
                 workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                status.name,
+                workspace.status.name,
                 WorkspaceStatus.SLEEPING.name
             )
         )
@@ -207,25 +204,29 @@ class SleepControl @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         // 校验状态
-        val status = WorkspaceStatus.values()[workspace.status]
-        if (status.checkSleeping()) {
+        if (workspace.status.checkSleeping()) {
             logger.info("$workspace has been stopped, return error.")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                params = arrayOf(workspace.name, "status is already $status, can't stop again")
+                params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
             )
         }
 
-        if (!workspaceCommon.checkProjectRouter(workspace.creator, workspaceName)) return false
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.createUserId,
+                workspaceName = workspaceName,
+                workspaceOwnerType = workspace.ownerType
+            )
+        ) return false
 
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.id}",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.workspaceId}",
             expiredTimeInSeconds
         ).tryLock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
-                workspaceName = workspace.name,
+                workspaceName = workspace.workspaceName,
                 operator = Constansts.ADMIN_NAME,
                 action = WorkspaceAction.SLEEP,
                 actionMessage = workspaceCommon.getOpHistory(opHistory)
@@ -235,11 +236,11 @@ class SleepControl @Autowired constructor(
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = workspaceCommon.getSystemOperator(workspace.creator, workspace.workspaceMountType),
+                    userId = workspaceCommon.getSystemOperator(workspace.createUserId, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name,
-                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                    workspaceName = workspace.workspaceName,
+                    mountType = workspace.workspaceMountType
                 )
             )
 
@@ -252,9 +253,10 @@ class SleepControl @Autowired constructor(
                 type = WebSocketActionType.WORKSPACE_SLEEP,
                 status = true,
                 action = WorkspaceAction.SLEEPING,
-                systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-                workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-                ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+                systemType = workspace.workspaceSystemType,
+                workspaceMountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -282,8 +284,7 @@ class SleepControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        val oldStatus = WorkspaceStatus.values()[workspace.status]
-        if (oldStatus.checkSleeping()) return
+        if (workspace.status.checkSleeping()) return
         if (status) {
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
@@ -301,7 +302,7 @@ class SleepControl @Autowired constructor(
                     action = WorkspaceAction.SLEEP,
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                        oldStatus.name,
+                        workspace.status.name,
                         WorkspaceStatus.SLEEP.name
                     )
                 )
@@ -320,14 +321,14 @@ class SleepControl @Autowired constructor(
                 action = WorkspaceAction.SLEEP,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    oldStatus.name,
+                    workspace.status.name,
                     WorkspaceStatus.EXCEPTION.name
                 )
             )
         }
 
-        if (workspace.systemType == WorkspaceSystemType.WINDOWS_GPU.name) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.creator)
+        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
         }
 
         dslContext.transaction { configuration ->
@@ -336,7 +337,8 @@ class SleepControl @Autowired constructor(
             remoteDevBillingDao.endBilling(
                 dslContext = transactionContext,
                 workspaceName = workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL.name)
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
+            )
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -347,9 +349,10 @@ class SleepControl @Autowired constructor(
             type = WebSocketActionType.WORKSPACE_SLEEP,
             status = status,
             action = WorkspaceAction.SLEEP,
-            systemType = WorkspaceSystemType.valueOf(workspace.systemType),
-            workspaceMountType = WorkspaceMountType.valueOf(workspace.workspaceMountType),
-            ownerType = WorkspaceOwnerType.valueOf(workspace.ownerType)
+            systemType = workspace.workspaceSystemType,
+            workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 }

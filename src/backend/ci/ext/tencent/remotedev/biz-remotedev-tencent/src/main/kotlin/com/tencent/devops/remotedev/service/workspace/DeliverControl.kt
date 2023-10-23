@@ -28,42 +28,53 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
-import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
 class DeliverControl @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val softwareManageService: SoftwareManageService,
-    private val redisCache: RedisCacheService
+    private val softwareManageService: SoftwareManageService
 ) {
+
+    @Value("\${notice.wework:#{null}}")
+    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeliverControl::class.java)
@@ -88,9 +99,8 @@ class DeliverControl @Autowired constructor(
                     params = arrayOf(workspaceName)
                 )
             // 校验状态
-            val status = WorkspaceStatus.values()[workspace.status]
-            when (status) {
-                WorkspaceStatus.DELIVERING -> {
+            when (workspace.status) {
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.PREPARING -> {
                     workspaceOpHistoryDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
@@ -98,7 +108,6 @@ class DeliverControl @Autowired constructor(
                         action = WorkspaceAction.START,
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.SAFE_INITIALIZATION)
                     )
-                    val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
                     // todo job接口执行
                     val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
                         ?: throw ErrorCodeException(
@@ -117,7 +126,7 @@ class DeliverControl @Autowired constructor(
                 }
 
                 else -> {
-                    logger.info("${workspace.name} is $status, return error.")
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 }
             }
         }
@@ -134,121 +143,88 @@ class DeliverControl @Autowired constructor(
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
-        if (assign2Owner != null && assign2Owner.userId != existOwner?.sharedUser) {
-            if (existOwner != null) {
-                logger.warn("PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER|$userId|$projectId|$workspaceName")
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.PROJECT_WORKSPACE_ALREADY_ASSIGN_OWNER.errorCode,
-                    params = arrayOf(workspaceName)
+
+        when {
+            existOwner == null && assign2Owner != null -> {
+                val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                    ?: throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                        params = arrayOf(workspaceName)
+                    )
+                if (!workspace.status.checkDistributing()) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                        params = arrayOf(
+                            workspace.workspaceName,
+                            "status is ${workspace.status}, can't assign user now"
+                        )
+                    )
+                }
+                val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+                    ?: throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                        params = arrayOf(workspaceName)
+                    )
+                logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
+                workspaceCommon.shareWorkspace(
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    assigns = listOf(assign2Owner),
+                    mountType = WorkspaceMountType.START)
+                softwareManageService.installUserSoftwares(
+                    projectId = projectId,
+                    userId = assign2Owner.userId,
+                    ip = detail.environmentIP,
+                    workspaceName = workspaceName
+                )
+                // 异步发起用户软件安装，更新为运行中
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    status = WorkspaceStatus.RUNNING
                 )
             }
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
+
+            existOwner != null && assign2Owner?.userId != existOwner.sharedUser -> {
+                workspaceCommon.unShareWorkspace(
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    sharedUsers = listOf(existOwner.sharedUser),
+                    mountType = WorkspaceMountType.START,
+                    assignType = WorkspaceShared.AssignType.OWNER
                 )
-            val status = WorkspaceStatus.values()[workspace.status]
-            if (!status.checkDistributing()) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                    params = arrayOf(workspace.name, "status is $status, can't assign user now")
-                )
+                if (assign2Owner != null) {
+                    workspaceCommon.shareWorkspace(
+                        workspaceName = workspaceName,
+                        operator = userId,
+                        assigns = listOf(ProjectWorkspaceAssign(assign2Owner.userId, WorkspaceShared.AssignType.OWNER)),
+                        mountType = WorkspaceMountType.START
+                    )
+                }
             }
-            val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                    params = arrayOf(workspaceName)
-                )
-            logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-            sharedDao.batchCreate(dslContext, workspaceName, userId, listOf(assign2Owner))
-            softwareManageService.installUserSoftwares(
-                projectId = projectId,
-                userId = assign2Owner.userId,
-                ip = detail.environmentIP,
-                workspaceName = workspaceName
-            )
-            // 异步发起用户软件安装，更新为运行中
-            workspaceDao.updateWorkspaceStatus(
-                dslContext = dslContext,
-                workspaceName = workspace.name,
-                status = WorkspaceStatus.RUNNING
-            )
         }
-        val em = alreadyExist.map { m -> m.sharedUser }
+        val em = alreadyExist.asSequence()
+            .filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
-            sharedDao.batchCreate(dslContext, workspaceName, userId, add)
+            workspaceCommon.shareWorkspace(
+                workspaceName = workspaceName,
+                operator = userId,
+                assigns = add,
+                mountType = WorkspaceMountType.START
+            )
         }
 
         val am = assigns.map { m -> m.userId }
         val reduce = alreadyExist.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.sharedUser !in am }
         if (reduce.isNotEmpty()) {
-            sharedDao.batchDelete(
-                dslContext = dslContext,
+            workspaceCommon.unShareWorkspace(
                 workspaceName = workspaceName,
+                operator = userId,
                 sharedUsers = reduce.map { it.sharedUser },
-                assignType = WorkspaceShared.AssignType.VIEWER
+                mountType = WorkspaceMountType.START
             )
         }
-    }
-
-    fun jobCallback(workspaceName: String) {
-        logger.info("jobCallBack $workspaceName")
-        updateWorkspaceStatus(workspaceName) { workspace ->
-            when (val status = WorkspaceStatus.values()[workspace.status]) {
-                WorkspaceStatus.DELIVERING -> {
-                    workspaceDao.updateWorkspaceStatus(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        status = WorkspaceStatus.DISTRIBUTING
-                    )
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        operator = workspace.creator,
-                        action = WorkspaceAction.CREATE,
-                        actionMessage = String.format(
-                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.DISTRIBUTING.name
-                        )
-                    )
-                }
-                else -> {
-                    logger.info("${workspace.name} is $status, return error.")
-                }
-            }
-        }
-    }
-    fun updateStatusAndCreateHistory(
-        type: String,
-        workspace: TWorkspaceRecord,
-        newStatus: WorkspaceStatus,
-        softwareList: SoftwareCallbackRes,
-        action: WorkspaceAction
-    ) {
-        val oldStatus = WorkspaceStatus.values()[workspace.status]
-        workspaceDao.updateWorkspaceStatus(
-            dslContext = dslContext,
-            workspaceName = workspace.name,
-            status = newStatus
-        )
-        workspaceOpHistoryDao.createWorkspaceHistory(
-            dslContext = dslContext,
-            workspaceName = workspace.name,
-            operator = workspace.creator,
-            action = action,
-            actionMessage = String.format(
-                workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                oldStatus.name,
-                newStatus.name
-            )
-        )
-        // 添加软件安装历史
-        softwareManageService.updateSoftwareInstalledRecords(
-            type = type,
-            softwareList = softwareList
-        )
     }
 
     fun softwareInstallationCompleteCallback(
@@ -259,16 +235,24 @@ class DeliverControl @Autowired constructor(
         autoAssign: Boolean?,
         softwareList: SoftwareCallbackRes
     ) {
-        logger.info("softwareInstallationCompleteCallback|workspaceName|$workspaceName|softwareList|$softwareList")
+        logger.info(
+            "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
+                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+        )
+        // 添加软件安装历史
+        softwareManageService.updateSoftwareInstalledRecords(
+            type = type,
+            softwareList = softwareList
+        )
         updateWorkspaceStatus(workspaceName) { workspace ->
-            when (WorkspaceStatus.values()[workspace.status]) {
-                WorkspaceStatus.DELIVERING -> {
+            when (workspace.status) {
+                // 交付中安装IOA后
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.DELIVERING_FAILED -> {
                     if (type == "SYSTEM") {
-                        updateStatusAndCreateHistory(
-                            type = type,
+                        checkSafeInitSuccess(softwareList, workspace)
+                        workspaceCommon.updateStatusAndCreateHistory(
                             workspace = workspace,
                             newStatus = WorkspaceStatus.DISTRIBUTING,
-                            softwareList = softwareList,
                             action = WorkspaceAction.CREATE
                         )
                         if (autoAssign == true) {
@@ -282,30 +266,94 @@ class DeliverControl @Autowired constructor(
                                         type = WorkspaceShared.AssignType.OWNER
                                     )
                                 )
-
                             )
                         }
                     }
                 }
-                WorkspaceStatus.DISTRIBUTING -> {
+
+                WorkspaceStatus.RUNNING -> {
                     if (type != "SYSTEM") {
-                        updateStatusAndCreateHistory(
-                            type = type,
+                        workspaceCommon.updateStatusAndCreateHistory(
                             workspace = workspace,
                             newStatus = WorkspaceStatus.RUNNING,
-                            softwareList = softwareList,
                             action = WorkspaceAction.CREATE
                         )
                     }
                 }
+                // 个人云桌面
+                WorkspaceStatus.PREPARING -> {
+                    checkSafeInitSuccess(softwareList, workspace)
+                    workspaceDao.updateWorkspaceStatus(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        status = WorkspaceStatus.RUNNING
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        operator = workspace.createUserId,
+                        action = WorkspaceAction.CREATE,
+                        actionMessage = String.format(
+                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            workspace.status.name,
+                            WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    workspaceCommon.dispatchWebsocketPushEvent(
+                        userId = workspace.createUserId,
+                        workspaceName = workspace.workspaceName,
+                        workspaceHost = workspace.hostName,
+                        type = WebSocketActionType.WORKSPACE_CREATE,
+                        status = true,
+                        action = WorkspaceAction.START,
+                        systemType = workspace.workspaceSystemType,
+                        workspaceMountType = workspace.workspaceMountType,
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
+                    )
+                }
+
                 else -> {
-                    logger.info("${workspace.name} is ${WorkspaceStatus.values()[workspace.status]}, return error.")
+                    logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
                 }
             }
         }
     }
 
-    private fun updateWorkspaceStatus(workspaceName: String, update: (ws: TWorkspaceRecord) -> Unit) {
+    private fun checkSafeInitSuccess(
+        softwareList: SoftwareCallbackRes,
+        ws: WorkspaceRecord
+    ) {
+        if (softwareList.taskStatus == TaskStatusEnum.FAILED) {
+            workspaceCommon.updateStatusAndCreateHistory(
+                workspace = ws,
+                newStatus = WorkspaceStatus.DELIVERING_FAILED,
+                action = WorkspaceAction.CREATE
+            )
+            // 通知
+            if (!weworkId.isNullOrBlank()) {
+                val request = SendNotifyMessageTemplateRequest(
+                    templateCode = "WINDOWS_GPU_SAFE_INIT_FAILED",
+                    bodyParams = mapOf(
+                        WorkspaceRecord::workspaceName.name to ws.workspaceName,
+                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                    ),
+                    notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+                    markdownContent = false
+                )
+                kotlin.runCatching {
+                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                }.onFailure {
+                    logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+                }
+            }
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DELIVERING_FAILED.errorCode
+            )
+        }
+    }
+
+    private fun updateWorkspaceStatus(workspaceName: String, update: (ws: WorkspaceRecord) -> Unit) {
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

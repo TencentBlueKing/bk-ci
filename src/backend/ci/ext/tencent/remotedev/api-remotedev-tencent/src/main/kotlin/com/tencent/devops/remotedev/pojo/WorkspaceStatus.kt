@@ -31,17 +31,21 @@ package com.tencent.devops.remotedev.pojo
  * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
  */
 enum class WorkspaceStatus {
-    PREPARING,
-    RUNNING,
-    STOPPED,
-    SLEEP,
-    DELETED,
-    EXCEPTION,
-    STARTING,
-    SLEEPING,
-    DELETING,
-    DELIVERING, // 交付中
-    DISTRIBUTING; // 待分配
+    PREPARING, // 0
+    RUNNING, // 1
+    STOPPED, // 2
+    SLEEP, // 3
+    DELETED, // 4
+    EXCEPTION, // 5
+    STARTING, // 6
+    SLEEPING, // 7
+    DELETING, // 8
+    DELIVERING, // 9 交付中
+    DISTRIBUTING, // 10 待分配
+    DELIVERING_FAILED, // 11 交付失败
+    STOPPING,
+    RESTARTING,
+    MAKING_IMAGE;
 
     fun checkRunning() = this == RUNNING
 
@@ -51,13 +55,18 @@ enum class WorkspaceStatus {
 
     fun checkException() = this == EXCEPTION
 
-    fun checkDelivering() = this == DELIVERING
+    fun checkDelivering() = this == DELIVERING || this == DELIVERING_FAILED
 
     fun checkDistributing() = this == DISTRIBUTING
 
     fun workspaceInitializing() = checkDelivering() || checkDistributing()
+
+    fun checkInUse() = !checkDeleted() && !checkException()
+
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction() = this == PREPARING || this == STARTING || this == SLEEPING || this == DELETING
+    fun notOk2doNextAction(ws: WorkspaceRecord) =
+        (this == PREPARING && ws.workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
+                this == STARTING || this == SLEEPING || this == DELETING
 }

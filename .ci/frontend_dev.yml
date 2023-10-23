@@ -18,12 +18,12 @@ stages:
         name: "构建环境-LINUX"
         runs-on: docker
         steps:
-          - checkout: "http://git.code.oa.com/bkdevops/bk-ci.git"
+          - checkout: "http://git.woa.com/bkdevops/bk-ci.git"
             name: Checkout
             with:
-              refName: develop
+              refName: integration
           - name: "拉取前端占位符"
-            checkout: "http://git.code.oa.com/bkdevops/devops-config.git"
+            checkout: "http://git.woa.com/bkdevops/devops-config.git"
             with:
               pullType: "BRANCH"
               refName: "integration"
@@ -95,9 +95,7 @@ stages:
                 fi
 
                 mkdir -p /data/bkee/ci/$f_path
-                mkdir -p /data/bkee/ci/frontend-rbac
                 cp -rf /data/tmp/frontend/* /data/bkee/ci/$f_path
-                cp -rf /data/tmp/frontend/* /data/bkee/ci/frontend-rbac
 
               account: "root"
               targetIpList: ${{ variables.ips }}

@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreDockingPlatform
 import com.tencent.devops.model.store.tables.TStoreDockingPlatformErrorCode
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformErrorCodeRecord
@@ -152,6 +153,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
                 .where(PLATFORM_NAME.eq(platformName))
+                .skipCheck()
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -160,6 +162,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
                 .where(ERROR_CODE_PREFIX.eq(errorCodePrefix))
+                .skipCheck()
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -168,6 +171,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
                 .where(PLATFORM_CODE.eq(platformCode))
+                .skipCheck()
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -176,6 +180,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .skipCheck()
                 .fetchOne()
         }
     }
@@ -184,6 +189,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectFrom(this)
                 .where(ERROR_CODE_PREFIX.eq(prefix))
+                .skipCheck()
                 .fetchOne()
         }
     }
@@ -193,6 +199,7 @@ class StoreDockingPlatformDao {
             return dslContext.select(ID)
                 .from(this)
                 .where(PLATFORM_CODE.eq(platformCode))
+                .skipCheck()
                 .fetchOne(0, String::class.java)
         }
     }
@@ -219,6 +226,7 @@ class StoreDockingPlatformDao {
                 .selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc())
                 .offset((page - 1) * pageSize).limit(pageSize)
+                .skipCheck()
                 .fetch()
             return generateStoreDockingPlatformInfos(storeDockingPlatformRecords)
         }
@@ -232,6 +240,7 @@ class StoreDockingPlatformDao {
             val storeDockingPlatformRecords = dslContext
                 .selectFrom(this)
                 .where(PLATFORM_CODE.`in`(platformCodes))
+                .skipCheck()
                 .fetch()
             return generateStoreDockingPlatformInfos(storeDockingPlatformRecords)
         }
@@ -302,7 +311,7 @@ class StoreDockingPlatformDao {
 
     fun isPlatformCodeRegistered(dslContext: DSLContext, platformCode: String): Boolean {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            return dslContext.selectFrom(this).where(PLATFORM_CODE.eq(platformCode)).fetchOne() != null
+            return dslContext.selectFrom(this).where(PLATFORM_CODE.eq(platformCode)).skipCheck().fetchOne() != null
         }
     }
 
@@ -315,6 +324,7 @@ class StoreDockingPlatformDao {
             return dslContext.selectFrom(this)
                 .where(PLATFORM_CODE.eq(platformCode))
                 .and(ERROR_CODE.eq(errorCode))
+                .skipCheck()
                 .fetchOne()
         }
     }

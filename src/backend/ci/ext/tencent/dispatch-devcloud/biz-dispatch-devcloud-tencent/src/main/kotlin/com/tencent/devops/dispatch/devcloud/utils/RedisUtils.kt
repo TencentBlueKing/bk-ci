@@ -126,6 +126,14 @@ class RedisUtils @Autowired constructor(
         return redisOperation.get(debugContainerNameKey(userId, pipelineId, vmSeqId))
     }
 
+    fun deleteDebugContainerName(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ) {
+        redisOperation.delete(debugContainerNameKey(userId, pipelineId, vmSeqId))
+    }
+
     private fun dockerBuildKey(id: Long, secretKey: String) =
         "docker_build_key_${HashUtil.encodeLongId(id)}_$secretKey"
 

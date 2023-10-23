@@ -29,16 +29,21 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -55,7 +60,9 @@ class PermissionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisCache: RedisCacheService
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val redisCache: RedisCacheService,
+    private val checkTokenService: ClientTokenService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
@@ -71,7 +78,12 @@ class PermissionService @Autowired constructor(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    return listOf(ws.creator)
+                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                        return listOf(ws.createUserId)
+                    } else {
+                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
+                            .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
+                    }
                 }
             }
         )
@@ -98,10 +110,10 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun checkViewerPermission(userId: String, workspaceName: String) {
+    fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserManager(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -109,19 +121,26 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun checkUserManager(userId: String, projectId: String) {
+    fun checkUserManager(userId: String, projectId: String): Boolean {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
             .getOrElse { null }?.data ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
-        if (projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
+        val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+                token = checkTokenService.getSystemToken(null)!!,
+                userId = userId,
+                projectCode = projectId
+            ).data ?: false
+
+        if (!checkProjectManager && projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
             )
         }
+        return true
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {
@@ -139,7 +158,7 @@ class PermissionService @Autowired constructor(
         if (!runningOnly) {
             val maxHavingCount = setting.second ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT)
                 ?.toInt() ?: 3
-            workspaceDao.countUserWorkspace(dslContext, userId, unionShared = false).let {
+            workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId, unionShared = false).let {
                 if (it >= maxHavingCount) {
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_MAX_HAVING.errorCode,
@@ -149,8 +168,8 @@ class PermissionService @Autowired constructor(
             }
         }
         workspaceDao.countUserWorkspace(
-            dslContext,
-            userId,
+            dslContext = dslContext,
+            userId = userId,
             unionShared = false,
             status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
         ).let {

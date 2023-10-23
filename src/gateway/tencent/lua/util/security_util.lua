@@ -43,33 +43,30 @@ function _M:isSafe()
     local host = ngx.var.host
     local header_clb = ngx.var.http_x_clb_lbid
     if string.find(host, "bkdevops.qq.com") ~= nil or header_clb ~= nil then -- bkdevops.qq.com 相关域名或者传了lb的ID
-        if string.find(path, "^/([%w-_]+)/api/app/") == nil -- app 路径
-        and string.find(path, "^/ms/([%w-_]+)/api/app/") == nil -- app 路径
-        and string.find(path, "^/([%w-_]+)/api/desktop/") == nil -- 离岸开发 路径
-        and string.find(path, "^/ms/([%w-_]+)/api/desktop/") == nil -- 离岸开发 路径
-        and string.find(path, "^/websocket/ws/desktop") == nil -- 离岸开发 ws
-        and string.find(path, "^/ms/websocket/ws/desktop") == nil -- 离岸开发 ws
-        and string.find(path, "^/([%w-_]+)/api/open/") == nil -- open路径
-        and string.find(path, "^/ms/([%w-_]+)/api/open/") == nil -- open路径
-        and string.find(path, "^/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
-        and string.find(path, "^/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
-        and string.find(path, "^/process/api/external/scm/codetgit/commit") == nil -- TGit回调
-        and string.find(path, "^/ms/process/api/external/scm/codetgit/commit") == nil -- TGit回调
-        and string.find(path, "^/repository/api/external/github") == nil -- Github回调
-        and string.find(path, "^/ms/repository/api/external/github") == nil -- Github回调
-        and string.find(path, "^/external/api/external/github") == nil -- Github回调
-        and string.find(path, "^/ms/external/api/external/github") == nil -- Github回调
-        and string.find(path, "^/process/api/external/scm/p4/commit") == nil -- p4回调
-        and string.find(path, "^/ms/process/api/external/scm/p4/commit") == nil -- p4回调
-        and string.find(path, "^/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
-        and string.find(path, "^/ms/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
-        and string.find(path, "^/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
-        and string.find(path, "^/ms/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
-        and string.find(path, "^/ms/artifactory/api/external/url/visit") == nil -- 短链接
-        then
+        local security_paths = {
+            "/([%w-_]+)/api/app/", -- app 路径
+            "/([%w-_]+)/api/desktop/", -- 离岸开发 路径
+            "/websocket/ws/desktop", -- 离岸开发 ws
+            "/experience/api/open/experiences/appstore/redirect", -- 跳转到AppStore
+            "/experience/api/open/experiences/outerLogin", -- 外部用户登录
+            "/process/api/external/scm/codetgit/commit", -- 仓库的external/generic路径
+            "/repository/api/external/github", -- Github回调
+            "/process/api/external/scm/p4/commit", -- p4回调
+            "/process/api/external/pipelines/projects/.+/.+/badge", -- 勋章
+            "/artifactory/api/external/url/visit", -- 短链接
+            "/bkrepo/bkci%-desktop" -- 蓝盾桌面端
+        }
+        local is_secure = false
+        for _, item in ipairs(security_paths) do
+            if string.find(path, "^" .. item) ~= nil or string.find(path, "^/ms" .. item) ~= nil then
+                is_secure = true
+            end
+        end
+        if not is_secure then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end
+
         -- 防止spring actuator被调用
         if string.find(path, "^/actuator/") ~= nil or string.find(path, "^/management/") ~= nil then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)

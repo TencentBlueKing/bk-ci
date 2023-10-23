@@ -70,6 +70,8 @@ data class OPPServiceVO(
     val logoUrl: String?,
     @ApiModelProperty("支持webSocket的页面")
     val webSocket: String?,
+    @ApiModelProperty("权重")
+    val weight: Int? = null,
     @ApiModelProperty("创建人")
     val createdUser: String,
     @ApiModelProperty("创建时间")
@@ -77,6 +79,7 @@ data class OPPServiceVO(
     @ApiModelProperty("修改人修改时间")
     val updatedUser: String,
     @ApiModelProperty("修改时间")
-    val updatedTime: String
-
+    val updatedTime: String,
+    @ApiModelProperty("集群类型")
+    val clusterType: String = ""
 )

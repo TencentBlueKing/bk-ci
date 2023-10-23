@@ -60,7 +60,6 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
     }
 
     override fun listAllPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,
@@ -77,7 +76,6 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
         return atomService.getPipelineAtoms(
-            accessToken = accessToken,
             userId = userId,
             serviceScope = serviceScope,
             jobType = jobType,

@@ -50,7 +50,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
@@ -96,6 +96,7 @@ import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
@@ -290,6 +291,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 )
                 val installed = installedTemplateCodes?.contains(code)
                 val classifyId = it[tTemplate.CLASSIFY_ID] as String
+                val logoUrl = it[tTemplate.LOGO_URL]
                 val marketItem = MarketItem(
                     id = it[tTemplate.ID] as String,
                     name = it[tTemplate.TEMPLATE_NAME] as String,
@@ -298,7 +300,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     type = "",
                     rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    logoUrl = it[tTemplate.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     publisher = it[tTemplate.PUBLISHER] as String,
                     os = listOf(),
                     downloads = statistic?.downloads
@@ -539,14 +543,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             templateId = templateRecord.id,
             templateCode = templateCode,
             templateName = templateRecord.templateName,
-            logoUrl = templateRecord.logoUrl,
+            logoUrl = templateRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             classifyCode = templateClassify?.classifyCode,
             classifyName = templateClassify?.classifyName,
             downloads = storeStatistic.downloads,
             score = storeStatistic.score,
             summary = templateRecord.summary,
             templateStatus = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
-            description = templateRecord.description,
+            description = templateRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             version = templateRecord.version,
             templateRdType = TemplateRdTypeEnum.getTemplateRdType(templateRecord.templateRdType.toInt()),
             categoryList = categoryList,
@@ -596,11 +604,19 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 language = I18nUtil.getLanguage(userId)
             )
         }
-
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+        ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         dslContext.transaction { t ->
             val context = DSL.using(t)
-
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, false)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(
+                userId = userId,
+                projectId = initProjectCode,
+                templateId = templateCode,
+                storeFlag = false
+            )
             storeCommonService.deleteStoreInfo(context, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
             templateCategoryRelDao.deleteByTemplateCode(context, templateCode)
             templateLabelRelDao.deleteByTemplateCode(context, templateCode)
@@ -652,7 +668,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         categoryRecords?.forEach {
             categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
         }
-        val addMarketTemplateRequest = AddMarketTemplateRequest(
+        val addMarketTemplateRequest = MarketTemplateRequest(
             projectCodeList = projectCodeList,
             templateCode = templateCode,
             templateName = template.templateName,
@@ -661,18 +677,36 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             publisher = template.publisher
         )
-        val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
-            .addMarketTemplate(userId = userId, addMarketTemplateRequest = addMarketTemplateRequest)
-        logger.info("addMarketTemplateResult is $addMarketTemplateResult")
-        if (addMarketTemplateResult.isNotOk()) {
-            // 抛出错误提示
-            return Result(addMarketTemplateResult.status, addMarketTemplateResult.message ?: "")
+        val addMarketTemplateResultKeys = mutableSetOf<String>()
+        val projectTemplateMap = mutableMapOf<String, String>()
+        projectCodeList.forEach { projectCode ->
+            val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
+                .addMarketTemplate(
+                    userId = userId,
+                    projectId = projectCode,
+                    addMarketTemplateRequest = addMarketTemplateRequest
+                )
+            logger.info("addMarketTemplateResult is $addMarketTemplateResult")
+            if (addMarketTemplateResult.isNotOk()) {
+                // 抛出错误提示
+                return Result(addMarketTemplateResult.status, addMarketTemplateResult.message ?: "")
+            }
+            addMarketTemplateResult.data?.keys?.let {
+                addMarketTemplateResultKeys.addAll(it)
+            }
+            addMarketTemplateResult.data?.let {
+                projectTemplateMap.putAll(it)
+            }
         }
 
-        val addMarketTemplateResultKeys = addMarketTemplateResult.data?.keys ?: emptySet()
         projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
-        copyQualityRule(userId, templateCode, addMarketTemplateResultKeys, addMarketTemplateResult.data ?: mapOf())
+        copyQualityRule(
+            userId = userId,
+            templateCode = templateCode,
+            projectCodeList = addMarketTemplateResultKeys,
+            projectTemplateMap = projectTemplateMap
+        )
         val installStoreComponentResult = storeProjectService.installStoreComponent(
             userId = userId,
             projectCodeList = ArrayList(addMarketTemplateResultKeys),
@@ -997,12 +1031,15 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 releaseFlag = true
             }
             val templateStatus = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt())
+            val logoUrl = it[tTemplate.LOGO_URL]
             templateList.add(
                 MyTemplateItem(
                     templateId = it[tTemplate.ID] as String,
                     templateCode = templateCode,
                     templateName = it[tTemplate.TEMPLATE_NAME] as String,
-                    logoUrl = it[tTemplate.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     version = it[tTemplate.VERSION] as String,
                     templateStatus = templateStatus,
                     projectCode = it[KEY_PROJECT_CODE] as String,

@@ -34,26 +34,33 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 @Suppress("LongParameterList")
 interface RepoDownloadService {
 
-    fun serviceGetExternalDownloadUrl(
+    /**
+     * 外网BKRepo下载地址(鉴权根据token)
+     */
+    fun outerDownloadUrlByToken(
         creatorId: String?,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        argPath: String,
-        ttl: Int,
-        directed: Boolean = false
+        path: String,
+        ttl: Int
     ): Url
 
-    fun serviceGetInnerDownloadUrl(
+    /**
+     * 外网BKRepo下载地址(鉴权根据token)
+     */
+    fun innerDownloadUrlByToken(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int,
-        directed: Boolean = false
+        ttl: Int
     ): Url
 
-    fun getDownloadUrl(
+    /**
+     * 内网下载地址(鉴权根据用户态)
+     */
+    fun innerDownloadUrlByUser(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -62,14 +69,20 @@ interface RepoDownloadService {
         fullUrl: Boolean = true /*是否返回全路径（包含域名）*/
     ): Url
 
-    fun getExternalUrl(
+    /**
+     * 外网Html地址(可跳转到下载链接)
+     */
+    fun outerHtmlUrl4Download(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String
     ): Url
 
-    fun shareUrl(
+    /**
+     * 发送内部下载地址给相关人员
+     */
+    fun sendNotifyWithInnerUrl(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -78,7 +91,10 @@ interface RepoDownloadService {
         downloadUsers: String
     )
 
-    fun getThirdPartyDownloadUrl(
+    /**
+     * 内部跨项目下载
+     */
+    fun innerCrossDownloadUrl(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -91,4 +107,28 @@ interface RepoDownloadService {
         region: String? = null,
         userId: String? = null
     ): List<String>
+
+    /**
+     * 外网使用的IPA的Plist的内容
+     */
+    fun outerPlistContent(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int,
+        experienceHashId: String?,
+        organization: String?
+    ): String
+
+    /**
+     * 外网使用的IPA的Plist的地址
+     */
+    fun outerPlistUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int
+    ): Url
 }

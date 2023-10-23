@@ -61,7 +61,7 @@ class ServiceIptResourceImpl @Autowired constructor(
             } else {
                 it.path
             }
-            it.downloadUrl = repoDownloadService.getThirdPartyDownloadUrl(
+            it.downloadUrl = repoDownloadService.innerCrossDownloadUrl(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

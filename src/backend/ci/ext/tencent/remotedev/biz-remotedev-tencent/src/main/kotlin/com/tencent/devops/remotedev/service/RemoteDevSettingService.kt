@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -62,7 +63,8 @@ class RemoteDevSettingService @Autowired constructor(
     private val gitTransferService: GitTransferService,
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
-    private val redisCacheService: RedisCacheService
+    private val redisCacheService: RedisCacheService,
+    private val whiteListService: WhiteListService
 ) {
 
     companion object {
@@ -135,6 +137,7 @@ class RemoteDevSettingService @Autowired constructor(
                     userId = userId,
                     md5 = computeMd5
                 )
+
                 it.md5 != computeMd5 -> remoteDevFileDao.updateFile(
                     dslContext = dslContext, file = it, md5 = computeMd5, userId = userId
                 )
@@ -145,8 +148,27 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
-        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data.userId, data)
-        computeWinUsageTime(data.userId)
+        data.userIds.forEach { userId ->
+            remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
+            // 根据OPUserSetting中设置是否开启客户端白名单 + START白名单，分别做处理
+            data.clientWhiteList?.let { isEnabled ->
+                if (isEnabled) {
+                    whiteListService.addWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                } else {
+                    whiteListService.removeWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                }
+            }
+
+            data.startWhiteList?.let { isEnabled ->
+                if (isEnabled) {
+                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                } else {
+                    whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                }
+            }
+
+            computeWinUsageTime(userId)
+        }
     }
 
     fun getUserSetting(userId: String): RemoteDevUserSettings {
@@ -175,6 +197,9 @@ class RemoteDevSettingService @Autowired constructor(
             .mapNotNull {
                 JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.apply {
                     userId = it.userId
+                    remainExperienceDuration = it.winUsageRemainingTime
+                    clientWhiteList = whiteListService.checkInWhiteList(it.userId)
+                    startWhiteList = whiteListService.checkInGPUWhiteList(it.userId)
                 }
             }
         logger.info("getAllUserSetting4Op|result|$settings")

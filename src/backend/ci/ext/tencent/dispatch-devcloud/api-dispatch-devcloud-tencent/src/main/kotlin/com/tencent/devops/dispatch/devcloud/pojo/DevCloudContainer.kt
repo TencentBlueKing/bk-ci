@@ -74,3 +74,11 @@ enum class TaskAction {
     DELETE,
     BUILD_IMAGE
 }
+
+enum class OriginContainerStatus {
+    stopped,
+    stop,
+    deleted,
+    running,
+    exception
+}

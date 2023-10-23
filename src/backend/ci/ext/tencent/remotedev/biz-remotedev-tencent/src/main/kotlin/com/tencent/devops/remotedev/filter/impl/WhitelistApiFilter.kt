@@ -8,13 +8,12 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
-import org.slf4j.LoggerFactory
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.slf4j.LoggerFactory
 
 @Provider
 @PreMatching
@@ -66,10 +65,10 @@ class WhitelistApiFilter constructor(
             return true
         }
         // 获取用户的信息，根据 bg 名称加白,先判断人名是否在白名单，不在的话再判断bg名称是否。
-        val whiteList = cacheService.getSetMembers(REDIS_WHITE_LIST_KEY) ?: emptySet()
-        if (userId !in whiteList && runCatching { client.get(ServiceTxUserResource::class).get(userId) }
-                .onFailure { logger.warn("get $userId info error|${it.message}") }
-                .getOrNull()?.data?.bgName !in whiteList) {
+        if (!cacheService.checkApiWhiteList(userId) && runCatching {
+                client.get(ServiceTxUserResource::class).get(userId)
+            }.onFailure { logger.warn("get $userId info error|${it.message}") }
+                .getOrNull()?.data?.bgName?.let { cacheService.checkApiWhiteList(it) } != true) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }

@@ -61,12 +61,14 @@ class SoftwareManageDao {
     // 获取用户安装的软件列表
     fun getUserInstalledSoftwareList(
         dslContext: DSLContext,
-        user: String
+        user: String,
+        projectId: String?
     ): Result<out Record>? {
         val t1 = TUserInstalledSoftwares.T_USER_INSTALLED_SOFTWARES.`as`("t1")
         val t2 = TProjectSoftwares.T_PROJECT_SOFTWARES.`as`("t2")
         val conditions = mutableListOf<Condition>()
         conditions.add(t1.CREATOR.eq(user))
+        projectId?.let { conditions.add(t2.PROJECT_ID.eq(projectId)) }
         return dslContext.select(t2.NAME, t2.VERSION)
             .from(t1).leftJoin(t2).on(t1.SOFTWARE_ID.eq(t2.ID))
             .where(conditions)
@@ -151,7 +153,7 @@ class SoftwareManageDao {
         statusList.forEach { (t, u) ->
             with(TSystemInstalledRecords.T_SYSTEM_INSTALLED_RECORDS) {
                 dslContext.update(this)
-                    .set(STATUS, SoftwareInstallStatus.valueOf(u).ordinal)
+                    .set(STATUS, SoftwareInstallStatus.valueOf(u ?: "FAILED").ordinal)
                     .where(TASK_ID.eq(taskId))
                     .and(SOFTWARE_NAME.eq(t))
                     .execute()
@@ -225,7 +227,7 @@ class SoftwareManageDao {
         statusList.forEach { (t, u) ->
             with(TUserInstalledRecords.T_USER_INSTALLED_RECORDS) {
                 dslContext.update(this)
-                    .set(STATUS, SoftwareInstallStatus.valueOf(u).ordinal)
+                    .set(STATUS, SoftwareInstallStatus.valueOf(u ?: "FAILED").ordinal)
                     .where(TASK_ID.eq(taskId))
                     .and(SOFTWARE_NAME.eq(t))
                     .execute()

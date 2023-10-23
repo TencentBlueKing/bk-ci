@@ -29,9 +29,11 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
@@ -47,6 +49,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BK_CI_APP_STAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -113,6 +116,7 @@ import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import kotlin.math.ceil
 
 @Service
 @SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
@@ -390,7 +394,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                    "artifactoryType:$artifactoryType , path:${experience.path}"
+                        "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -482,7 +486,15 @@ class ExperienceService @Autowired constructor(
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
 
-        // 加上权限
+        // IAM权限
+        experiencePermissionService.createTaskResource(
+            userId,
+            projectId,
+            experienceId,
+            "${experience.name}（$appVersion）"
+        )
+
+        // 体验权限
         experienceGroups.forEach {
             experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
         }
@@ -493,8 +505,8 @@ class ExperienceService @Autowired constructor(
             experienceOuterDao.create(dslContext, experienceId, it)
         }
 
-        // 公开体验表
-        if (isPublic) {
+        var delayNotify = false
+        if (isPublic) { // 公开体验
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
@@ -508,16 +520,14 @@ class ExperienceService @Autowired constructor(
                 scheme = scheme,
                 version = appVersion
             )
+        } else { // 内部体验
+            if (propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE] == "Alpha") {
+                apkDefend(userId, projectId, artifactoryType, experienceId, experience.path)
+                delayNotify = true
+            }
         }
 
-        experiencePermissionService.createTaskResource(
-            userId,
-            projectId,
-            experienceId,
-            "${experience.name}（$appVersion）"
-        )
-
-        if (experience.sendNotification) {
+        if (experience.sendNotification && !delayNotify) {
             sendNotification(experienceId)
         }
 
@@ -818,7 +828,16 @@ class ExperienceService @Autowired constructor(
     @SuppressWarnings("ComplexMethod")
     fun batchNotification(projectId: String, req: ExperienceNotificationReq) {
         threadPool.submit {
-            val experienceIds = req.experienceIds.map { HashUtil.decodeIdToLong(it) }
+            val apkDefenderEIds = redisOperation
+                .listRange(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, 0, -1)
+                .map { it.toLong() }
+            val experienceIds = req.experienceIds
+                .map { HashUtil.decodeIdToLong(it) }
+                .filterNot { apkDefenderEIds.contains(it) }
+            if (experienceIds.isEmpty()) {
+                logger.warn("batchNotification , experiences [$experienceIds] are empty")
+                return@submit
+            }
             val experienceRecords =
                 experienceDao.list(dslContext, experienceIds).filterNot { DateUtil.isExpired(it.endDate) }
             if (experienceRecords.isEmpty()) {
@@ -957,7 +976,7 @@ class ExperienceService @Autowired constructor(
     }
 
     @SuppressWarnings("ComplexCondition")
-    private fun sendNotification(experienceId: Long) {
+    fun sendNotification(experienceId: Long) {
         threadPool.submit {
             val experienceRecord = experienceDao.get(dslContext, experienceId)
             if (DateUtil.isExpired(experienceRecord.endDate)) {
@@ -993,7 +1012,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
-                    "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
+                        "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
                 deptUsers.isEmpty()
@@ -1172,14 +1191,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
@@ -1273,6 +1292,48 @@ class ExperienceService @Autowired constructor(
                 experienceId = encodeLongId
             )
         }
+    }
+
+    /**
+     * 对APK进行安全加固
+     */
+    private fun apkDefend(
+        userId: String,
+        projectId: String,
+        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
+        experienceId: Long,
+        fullPath: String
+    ) {
+        val userIdsForDefend = mutableSetOf<String>()
+        // 临时内部
+        experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
+        // 临时外部
+        experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).forEach { userIdsForDefend.add(it.value1()) }
+        // 体验组
+        val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
+        userIdsForDefend.addAll(experienceBaseService.getDeptUserReceivers(groupIds))
+        userIdsForDefend.addAll(experienceBaseService.getGroupIdToInnerUserIds(groupIds).values.flatten())
+        userIdsForDefend.addAll(experienceBaseService.getGroupIdToOuters(groupIds).values.flatten())
+
+        // 保存加固任务
+        val taskNum = 100.0
+        val tasksResult = client.get(ServiceArtifactoryDownLoadResource::class).apkDefender(
+            userId = userId,
+            request = ApkDefenderRequest(
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                fullPath = fullPath,
+                userIds = userIdsForDefend,
+                batchSize = ceil(userIdsForDefend.size / taskNum).toInt()
+            )
+        )
+        val taskIds = tasksResult.data!!.tasks.map { it.id }
+        logger.info("apkDefend , experienceId: $experienceId , taskIds: $taskIds")
+
+        redisOperation.leftPush(ExperienceConstant.APK_DEFENDER_EXPERIENCE_IDS, "$experienceId")
+        val apkDefendersKey = ExperienceConstant.apkDefendersKey(experienceId)
+        redisOperation.sadd(apkDefendersKey, *taskIds.toTypedArray())
+        redisOperation.expire(apkDefendersKey, 3700) // 多100秒缓冲
     }
 
     companion object {

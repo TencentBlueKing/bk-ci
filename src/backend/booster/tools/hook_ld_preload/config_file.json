@@ -1,7 +1,0 @@
-{
-	"preload":"/data/gopath4tomtian/mytest/c/test_ld_preload/hook.so",
-	"hooks":[
-		{"src_command":"/usr/bin/g++","target_command":"/data/gopath4tomtian/mytest/c/test_ptrace/make_hook.sh"},
-		{"src_command":"/usr/bin/gcc","target_command":"/data/gopath4tomtian/mytest/c/test_ptrace/make_hook.sh"}
-	]
-}

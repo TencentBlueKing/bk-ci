@@ -97,6 +97,24 @@ class DispatchWorkspaceDao {
         }
     }
 
+    fun updateWorkspace(
+        workspaceName: String,
+        envId: String,
+        regionId: Int,
+        status: EnvStatusEnum,
+        dslContext: DSLContext
+    ) {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
+                .set(ENVIRONMENT_UID, envId)
+                .set(REGION_ID, regionId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
     fun deleteWorkspace(
         workspaceName: String,
         dslContext: DSLContext
@@ -116,6 +134,16 @@ class DispatchWorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .fetchOne()
+        }
+    }
+
+    fun getStartCloudWorkspaceInfo(
+        dslContext: DSLContext
+    ): Result<TDispatchWorkspaceRecord> {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(REGION_ID.notEqual(0))
+                .fetch()
         }
     }
 

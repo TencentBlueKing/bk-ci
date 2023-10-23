@@ -123,6 +123,9 @@ interface ServiceMarketAtomArchiveResource {
         @ApiParam("插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
+        @ApiParam("项目代码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
         @ApiParam("插件执行包相关信息修改请求报文体", required = true)
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
