@@ -82,7 +82,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import com.tencent.devops.dispatch.kubernetes.utils.DispatchKubernetesCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -192,7 +192,7 @@ class BcsContainerService @Autowired constructor(
         disk: String
     ): Pair<String, String> {
         with(dispatchMessages) {
-            val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
+            val (host, name, tag) = DispatchKubernetesCommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
 

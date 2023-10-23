@@ -32,7 +32,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerRedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerHostZoneRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,7 +44,7 @@ class DockerHostZoneTaskService @Autowired constructor(
     private val dockerHostZoneDao: PipelineDockerHostZoneDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils
+    private val dispatchDockerRedisUtils: DispatchDockerRedisUtils
 ) {
 
     companion object {
@@ -107,10 +107,10 @@ class DockerHostZoneTaskService @Autowired constructor(
                     )
                 }
                 if (specialDockerHostVO.nfsShare != null && specialDockerHostVO.nfsShare!!) {
-                    redisUtils.getSpecialProjectListKey().let {
+                    dispatchDockerRedisUtils.getSpecialProjectListKey().let {
                         val projectIdList = it?.split(",") ?: emptyList()
                         if (!projectIdList.contains(specialDockerHostVO.projectId)) {
-                            redisUtils.setSpecialProjectList(it + "," + specialDockerHostVO.projectId)
+                            dispatchDockerRedisUtils.setSpecialProjectList(it + "," + specialDockerHostVO.projectId)
                         }
                     }
                 }

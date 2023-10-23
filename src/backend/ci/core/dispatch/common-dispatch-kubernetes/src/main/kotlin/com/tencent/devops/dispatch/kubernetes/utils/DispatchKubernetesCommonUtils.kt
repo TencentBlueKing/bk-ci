@@ -33,9 +33,9 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import org.slf4j.LoggerFactory
 
-object CommonUtils {
+object DispatchKubernetesCommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
+    private val logger = LoggerFactory.getLogger(DispatchKubernetesCommonUtils::class.java)
 
     private const val dockerHubUrl = ""
 

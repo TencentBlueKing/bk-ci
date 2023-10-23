@@ -36,7 +36,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
 import com.tencent.devops.dispatch.docker.pojo.HostDriftLoad
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.dispatch.docker.utils.CommonUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerCommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -95,7 +95,7 @@ class DispatchDockerService @Autowired constructor(
     fun create(userId: String, dockerIpInfoVOs: List<DockerIpInfoVO>): Boolean {
         logger.info("$userId create docker IP $dockerIpInfoVOs")
         dockerIpInfoVOs.forEach {
-            if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
+            if (!DispatchDockerCommonUtils.verifyIp(it.dockerIp.trim())) {
                 logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
                 throw BadRequestException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
             }

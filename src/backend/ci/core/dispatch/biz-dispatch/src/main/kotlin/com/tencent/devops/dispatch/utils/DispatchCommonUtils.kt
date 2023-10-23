@@ -36,9 +36,9 @@ import org.slf4j.LoggerFactory
 import java.util.Base64
 
 @Suppress("ALL")
-object CommonUtils {
+object DispatchCommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
+    private val logger = LoggerFactory.getLogger(DispatchCommonUtils::class.java)
 
     fun getCredential(
         client: Client,

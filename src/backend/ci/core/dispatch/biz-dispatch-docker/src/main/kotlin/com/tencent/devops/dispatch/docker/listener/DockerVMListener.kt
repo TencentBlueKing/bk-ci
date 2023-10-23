@@ -52,7 +52,7 @@ import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.utils.CommonUtils
+import com.tencent.devops.dispatch.docker.utils.DispatchDockerCommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -157,7 +157,7 @@ class DockerVMListener @Autowired constructor(
                 } else {
                     dispatchType.credentialProject!!
                 }
-                val ticketsMap = CommonUtils.getCredential(
+                val ticketsMap = DispatchDockerCommonUtils.getCredential(
                     client = client,
                     projectId = projectId,
                     credentialId = dispatchType.credentialId!!,

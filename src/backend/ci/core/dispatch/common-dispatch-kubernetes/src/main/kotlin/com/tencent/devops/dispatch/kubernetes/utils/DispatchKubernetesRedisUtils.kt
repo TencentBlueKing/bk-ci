@@ -24,52 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.dispatch.docker.utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.HashUtil
+package com.tencent.devops.dispatch.kubernetes.utils
+
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 @Component
-class RedisUtils @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+class DispatchKubernetesRedisUtils @Autowired constructor(
+    private val redisOperation: RedisOperation
 ) {
-    fun setDockerBuild(id: Long, secretKey: String, redisBuild: RedisBuild) =
+    fun setDebugBuilderName(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        builderName: String
+    ) {
         redisOperation.set(
-            key = dockerBuildKey(id, secretKey),
-            value = objectMapper.writeValueAsString(redisBuild),
-            expiredInSecond = TimeUnit.DAYS.toSeconds(7)
+            debugContainerNameKey(userId, pipelineId, vmSeqId),
+            builderName,
+            3600 * 6,
+            true
         )
-
-    fun deleteDockerBuildLastHost(pipelineId: String, vmSeqId: String) {
-        redisOperation.delete(dockerBuildLastHostKey(pipelineId, vmSeqId))
     }
 
-    fun deleteDockerBuild(id: Long, secretKey: String) {
-        redisOperation.delete(dockerBuildKey(id, secretKey))
+    fun getDebugBuilderName(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): String? {
+        return redisOperation.get(debugContainerNameKey(userId, pipelineId, vmSeqId))
     }
 
-    // 专机集群项目管理白名单
-    fun getSpecialProjectListKey(): String? {
-        return redisOperation.get("dispatchdocker:special_project_list_key")
-    }
-
-    fun setSpecialProjectList(projectList: String) {
-        redisOperation.set("dispatchdocker:special_project_list_key", projectList)
-    }
-
-    private fun dockerBuildKey(id: Long, secretKey: String) =
-        "docker_build_key_${HashUtil.encodeLongId(id)}_$secretKey"
-
-    private fun dockerBuildLastHostKey(pipelineId: String, vmSeqId: String) =
-        "dispatch_docker_build_last_host_key_${pipelineId}_$vmSeqId"
-
-    fun getRedisDebugMsg(pipelineId: String, vmSeqId: String): String? {
-        return redisOperation.get("docker_debug_msg_key_${pipelineId}_$vmSeqId")
+    private fun debugContainerNameKey(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): String {
+        return "dispatchkubernetes:debug:$userId-$pipelineId-$vmSeqId"
     }
 }
