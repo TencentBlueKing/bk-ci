@@ -35,7 +35,7 @@ abstract class CommonGitRepositoryService<T : Repository> : CodeRepositoryServic
     /**
      * 校验代码库url
      */
-    override fun diffRepoUrl(
+    fun diffRepoUrl(
         sourceRepo: TRepositoryRecord,
         targetRepo: T
     ): Boolean {

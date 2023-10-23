@@ -343,7 +343,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 scmService.getGitSession(
                     type = type,
                     username = username,
-                    password = password
+                    password = password,
+                    url = url
                 )
             )
         }

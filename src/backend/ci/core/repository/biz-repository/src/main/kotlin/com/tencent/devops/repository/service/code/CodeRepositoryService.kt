@@ -56,9 +56,4 @@ interface CodeRepositoryService<T> {
      * 获取授权信息
      */
     fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
-
-    /**
-     * 检查代码库url不一致
-     */
-    fun diffRepoUrl(sourceRepo: TRepositoryRecord, targetRepo: T): Boolean
 }

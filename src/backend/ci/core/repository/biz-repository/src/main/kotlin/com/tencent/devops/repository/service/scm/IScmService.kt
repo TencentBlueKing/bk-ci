@@ -246,6 +246,7 @@ interface IScmService {
     fun getGitSession(
         type: ScmType,
         username: String,
-        password: String
+        password: String,
+        url: String
     ): GitSession?
 }
