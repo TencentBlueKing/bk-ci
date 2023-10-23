@@ -127,4 +127,7 @@ object AuthMessageCode {
     const val ERROR_MONITOR_SPACE_NOT_EXIST = "2121077" // 监控空间不存在
     const val ERROR_MONITOR_READ_ONLY_ACTIONS_NOT_EXIST = "2121078" // 业务只读组不存在
     const val ERROR_MONITOR_OPS_ACTIONS_NOT_EXIST = "2121079" // 业务运维组不存在
+
+    const val ERROR_WATER_MARK_NOT_EXIST = "2121080" // 水印信息不存在
+    const val ERROR_USER_NOT_EXIST = "2121081" // 用户不存在
 }
