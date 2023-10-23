@@ -258,7 +258,8 @@ class SoftwareManageService @Autowired constructor(
                     name = record["NAME"] as String,
                     version = record["VERSION"] as String,
                     commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
-                ))
+                )
+            )
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
                 "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +

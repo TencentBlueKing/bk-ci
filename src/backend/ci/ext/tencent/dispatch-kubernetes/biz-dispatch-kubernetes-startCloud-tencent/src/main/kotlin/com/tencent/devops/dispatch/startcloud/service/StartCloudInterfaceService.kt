@@ -71,22 +71,21 @@ class StartCloudInterfaceService @Autowired constructor(
         return true
     }
 
-    fun shareWorkspace(userId: String, workspaceName: String, receivers: List<String>): String {
-        val workspaceInfo = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
-            ?: throw BuildFailureException(
-                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
-                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
-                ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
-            )
+    fun shareWorkspace(
+        userId: String,
+        cgsId: String,
+        receivers: List<String>
+    ): String {
         receivers.forEach {
             createStartCloudUser(it)
         }
         return workspaceClient.shareWorkspace(
             userId,
             EnvironmentShare(
-                cgsId = workspaceInfo.environmentUid, expireTime = 0,
-                receivers = receivers, sharer = userId
+                cgsId = cgsId,
+                expireTime = 0,
+                receivers = receivers,
+                sharer = userId
             )
         )
     }

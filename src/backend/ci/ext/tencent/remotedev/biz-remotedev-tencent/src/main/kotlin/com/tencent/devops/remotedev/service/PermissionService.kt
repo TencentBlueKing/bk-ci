@@ -110,10 +110,10 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun checkViewerPermission(userId: String, workspaceName: String) {
+    fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserManager(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -121,7 +121,7 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun checkUserManager(userId: String, projectId: String) {
+    fun checkUserManager(userId: String, projectId: String): Boolean {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
@@ -140,6 +140,7 @@ class PermissionService @Autowired constructor(
                 params = arrayOf("You need permission to access project $projectId")
             )
         }
+        return true
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {

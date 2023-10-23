@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
@@ -26,7 +27,8 @@ class GitProxyService @Autowired constructor(
             projectId = data.projectId,
             repoName = data.repoName,
             url = data.url,
-            desc = data.desc
+            desc = data.desc,
+            gitType = data.gitType
         )
         return true
     }
@@ -46,16 +48,19 @@ class GitProxyService @Autowired constructor(
         userId: String,
         projectId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        gitType: ScmType?
     ): Page<FetchRepoResp> {
-        val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize)
+        val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize, gitType)
         val resp = repos.records.map { record ->
             FetchRepoResp(
                 url = record.configuration.proxy.url,
                 proxyUrl = record.configuration.url,
                 creator = record.createdBy,
                 createdDate = record.createdDate,
-                repoName = record.name
+                repoName = record.name,
+                type = record.type,
+                desc = record.description
             )
         }
         return Page(

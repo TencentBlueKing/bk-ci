@@ -184,7 +184,8 @@ class StartControl @Autowired constructor(
                         action = WorkspaceAction.STARTING,
                         systemType = workspace.workspaceSystemType,
                         workspaceMountType = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
                     )
                     return WorkspaceResponse(
                         workspaceName = workspace.workspaceName,
@@ -344,7 +345,8 @@ class StartControl @Autowired constructor(
             action = WorkspaceAction.START,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 }

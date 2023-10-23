@@ -109,6 +109,12 @@ class WorkspaceListener @Autowired constructor(
                 UpdateEventType.DELETE -> {
                     remoteDevService.deleteWorkspace(event)
                 }
+                UpdateEventType.RESTART -> {
+                    remoteDevService.restartWorkspace(event)
+                }
+                UpdateEventType.MAKE_IMAGE -> {
+                    backEvent.workspaceImageInfo = remoteDevService.makeWorkspaceImage(event)
+                }
                 else -> {
                 }
             }
