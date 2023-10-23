@@ -42,7 +42,6 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.AtomChangeEventParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -551,10 +550,12 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun createPrepare(sourceModel: Model?, originElement: Element, param: AfterCreateParam) {
-        if (sourceModel == null) {
+        if (sourceModel == null || !sourceModel.elementExist(originElement)) {
             param.element = originElement
             logger.info("The element(${originElement.name}/${originElement.id}) is create")
             ElementBizRegistrar.getPlugin(originElement)?.afterCreate(originElement, param)
+        }else {
+            logger.info("The element(${originElement.name}/${originElement.id}) is not create")
         }
     }
 

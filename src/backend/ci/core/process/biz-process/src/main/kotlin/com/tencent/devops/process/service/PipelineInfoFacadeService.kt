@@ -214,6 +214,16 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = true,
             dispatchPipelineUpdateEvent = false
         )
+        modelCheckPlugin.afterCreateElementInExistsModel(
+            existModel = model,
+            sourceModel = null,
+            param = AfterCreateParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = newPipelineId ?: "",
+                channelCode = ChannelCode.BS
+            )
+        )
         return newPipelineId
     }
 
@@ -497,6 +507,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode
     ): DeployPipelineResult {
         val watcher = Watcher(id = "restorePipeline|$pipelineId|$userId")
+        var model: Model? = null
         try {
             watcher.start("isProjectManager")
             // 判断用户是否为项目管理员
@@ -516,7 +527,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
 
             watcher.start("restorePipeline")
-            val model = pipelineRepositoryService.restorePipeline(
+            model = pipelineRepositoryService.restorePipeline(
                 projectId = projectId, pipelineId = pipelineId, userId = userId,
                 channelCode = channelCode, days = deletedPipelineStoreDays.toLong()
             )
@@ -529,6 +540,18 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
             return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
+            if (model != null) {
+                modelCheckPlugin.afterCreateElementInExistsModel(
+                    existModel = model,
+                    sourceModel = null,
+                    param = AfterCreateParam(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        channelCode = channelCode
+                    )
+                )
+            }
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
@@ -552,6 +575,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
+        // 新流水线Id
+        var newPipelineId: String? = null
+        // 新流水线Model
+        var newModel: Model? = null
         if (checkPermission) {
             val permission = AuthPermission.EDIT
             pipelinePermissionService.validPipelinePermission(
@@ -612,15 +639,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         try {
-            val copyMode = Model(
+            newModel = Model(
                 name = pipelineCopy.name,
                 desc = pipelineCopy.desc ?: model.desc,
                 stages = model.stages,
                 staticViews = pipelineCopy.staticViews,
                 labels = pipelineCopy.labels
             )
-            modelCheckPlugin.clearUpModel(copyMode)
-            val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
+            modelCheckPlugin.clearUpModel(newModel)
+            newPipelineId = createPipeline(userId, projectId, newModel, channelCode)
             val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
             if (settingInfo != null) {
                 // setting pipeline需替换成新流水线的
@@ -658,6 +685,19 @@ class PipelineInfoFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
                 params = arrayOf(e.message ?: "")
             )
+        } finally {
+            if (newPipelineId.isNullOrBlank() && newModel != null) {
+                modelCheckPlugin.afterCreateElementInExistsModel(
+                    existModel = newModel,
+                    sourceModel = null,
+                    param = AfterCreateParam(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = newPipelineId!!,
+                        channelCode = channelCode
+                    )
+                )
+            }
         }
     }
 
@@ -744,6 +784,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
             modelCheckPlugin.beforeUpdateElementInExistsModel(
                 existModel, model, BeforeUpdateParam(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
+                )
+            )
+            modelCheckPlugin.afterCreateElementInExistsModel(
+                existModel, model, AfterCreateParam(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
