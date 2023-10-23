@@ -6,7 +6,6 @@
         :title="$t('codelib.触发器详情')"
     >
         <div slot="content">
-            123
             <div
                 v-if="atom && Object.keys(atomPropsModel).length"
                 :is="AtomComponent"
@@ -70,7 +69,7 @@
                     projectCode: this.projectId,
                     atomCode: this.atomCode
                 }).then(res => {
-                    this.atomPropsModel = res.props || res.props.input
+                    this.atomPropsModel = res.props.input || res.props
                 })
             }
         }

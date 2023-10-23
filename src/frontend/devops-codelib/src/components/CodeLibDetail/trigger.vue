@@ -28,11 +28,16 @@
                 <template slot-scope="{ row }">
                     <div v-if="Object.keys(row.triggerCondition).length">
                         <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
-                            - {{ triggerConditionKeyMap[row.eventType][key] || triggerConditionKeyMap['default'][key] }}:
+                            <span v-if="['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(scmType)">
+                                - {{ triggerConditionKeyMap[row.eventType][key] }}:
+                            </span>
+                            <span v-else>
+                                - {{ triggerConditionKeyMap[key] }}:
+                            </span>
                             <template v-if="Array.isArray(item)">
                                 <span v-for="(i, itemIndex) in item" :key="i">
                                     {{ triggerConditionValueMap[i] || i }}
-                                    <span v-if="itemIndex + 1 !== item.length">{{ $t('codelib.,') }}</span>
+                                    <span v-if="itemIndex + 1 !== item.length">,</span>
                                 </span>
                             </template>
                             <template v-else-if="key.includes('Paths') && item">
@@ -53,7 +58,8 @@
             </bk-table-column>
             <bk-table-column :label="$t('codelib.流水线数量')" prop="pipelineCount">
                 <template slot-scope="{ row }">
-                    <a :href="`/console/pipeline/${projectId}/list`" target="_blank">{{ row.pipelineRefCount }}</a>
+                    <!-- <a :href="`/console/pipeline/${projectId}/list`" target="_blank">{{ row.pipelineRefCount }}</a> -->
+                    {{ row.pipelineRefCount }}
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.操作')" width="150">
@@ -137,14 +143,9 @@
             },
             triggerConditionKeyMap () {
                 let obj = {}
+                console.log(this.scmType, 'this.scmType')
                 if (['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(this.scmType)) {
                     obj = {
-                        default: {
-                            realtivePath: this.$t('codelib.相对路径'),
-                            excludePaths: this.$t('codelib.排除路径'),
-                            includeUsers: this.$t('codelib.人员'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        },
                         PUSH: {
                             branchName: this.$t('codelib.分支'),
                             excludeBranchName: this.$t('codelib.排除分支'),
@@ -325,7 +326,7 @@
         }
         .trigger-table {
             ::v-deep .cell {
-                max-height: 300px !important;
+                max-height: 500px !important;
                 -webkit-line-clamp: 300 !important;
                 padding: 10px 15px !important;
             }
