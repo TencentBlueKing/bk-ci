@@ -1176,7 +1176,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
     `EVENT_ID`       bigint(20)  NOT NULL COMMENT '事件ID',
     `STATUS`         varchar(100)         DEFAULT NULL COMMENT '状态(success or failure)',
     `PIPELINE_ID`    varchar(100)         DEFAULT NULL COMMENT '流水线ID',
-    `PIPELINE_NAME`  varchar(100)         DEFAULT NULL COMMENT '流水线名称',
+    `PIPELINE_NAME`  varchar(255)         DEFAULT NULL COMMENT '流水线名称',
     `VERSION`        int                  DEFAULT NULL COMMENT '流水线版本号',
     `BUILD_ID`       varchar(100)         DEFAULT NULL COMMENT '构建ID',
     `BUILD_NUM`      varchar(100)         DEFAULT NULL COMMENT '构建编号',

@@ -86,6 +86,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
@@ -130,13 +131,18 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.title
     }
 
-    override fun getEventDesc(event: GithubPullRequestEvent): String {
+    override fun getEventDesc(event: GithubPullRequestEvent, replayInfo: PipelineEventReplayInfo?): String {
+        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
+            replayInfo,
+            getUsername(event),
+            WebhookI18nConstants.GITHUB_PR_EVENT_DESC
+        )
         return I18Variable(
-            code = WebhookI18nConstants.GITHUB_PR_EVENT_DESC,
+            code = i18Code,
             params = listOf(
                 event.pullRequest.htmlUrl,
                 event.pullRequest.number.toString(),
-                getUsername(event),
+                username,
                 event.action
             )
         ).toJsonStr()
