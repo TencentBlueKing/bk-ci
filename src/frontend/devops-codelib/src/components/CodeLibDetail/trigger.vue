@@ -188,6 +188,11 @@
                         },
                         ISSUES: {
                             includeIssueAction: this.$t('codelib.动作')
+                        },
+                        CREATE: {
+                            branchName: this.$t('codelib.要素名'),
+                            excludeBranchName: this.$t('codelib.排除要素名'),
+                            excludeUsers: this.$t('codelib.排除人员')
                         }
                     }
                 } else if (this.scmType === 'CODE_SVN') {

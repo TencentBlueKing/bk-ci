@@ -207,7 +207,7 @@
             ]),
 
             init () {
-                // const query = this.$route.query
+                const query = this.$route.query
                 const cache = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
                 const { top } = getOffset(document.getElementById('codelib-list-content'))
                 const windowHeight = window.innerHeight
@@ -217,7 +217,7 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
 
-                const id = (cache && cache.id) || ''
+                const id = query.id || (cache && cache.id) || ''
                 const page = (cache && cache.page) || 1
                 const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page

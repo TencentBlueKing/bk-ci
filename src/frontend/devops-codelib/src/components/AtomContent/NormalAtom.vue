@@ -11,7 +11,7 @@
                 :label="obj.label">
                 <component
                     :disabled="true"
-                    :is="obj.component"
+                    :is="obj.component || obj.type"
                     :name="key"
                     :value="element[key]"
                     v-bind="obj"
