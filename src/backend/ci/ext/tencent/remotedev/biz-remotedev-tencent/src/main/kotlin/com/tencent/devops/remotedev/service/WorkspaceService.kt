@@ -32,14 +32,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -61,6 +58,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -89,15 +87,14 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -119,7 +116,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -133,7 +131,14 @@ class WorkspaceService @Autowired constructor(
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
-        permissionService.checkViewerPermission(userId, workspaceName)
+
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+
+        permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
@@ -142,6 +147,12 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
+
+        // 同步修改 cc 主机名称
+        if (ws.workspaceSystemType.checkWindows()) {
+            bkccService.updateHostName(displayName, workspaceName)
+        }
+
         return true
     }
 
@@ -208,10 +219,10 @@ class WorkspaceService @Autowired constructor(
             }
 
             workspaceCommon.shareWorkspace(
-                workspaceName,
-                userId,
-                listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
-                workspace.workspaceMountType
+                workspaceName = workspaceName,
+                operator = userId,
+                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
+                mountType = workspace.workspaceMountType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -242,7 +253,8 @@ class WorkspaceService @Autowired constructor(
             workspaceName = null,
             systemType = null,
             queryType = QueryType.WEB,
-            ips = null
+            ips = null,
+            owner = null
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -251,7 +263,8 @@ class WorkspaceService @Autowired constructor(
             systemType = null,
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = null
+            ips = null,
+            owner = null
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -263,7 +276,8 @@ class WorkspaceService @Autowired constructor(
         systemType: WorkspaceSystemType?,
         ips: List<String>?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        owner: String?
     ): Page<ProjectWorkspace> {
         logger.info("op get project $projectId workspace list")
         val pageNotNull = page ?: 1
@@ -274,7 +288,8 @@ class WorkspaceService @Autowired constructor(
             workspaceName = workspaceName,
             systemType = systemType,
             queryType = QueryType.OP,
-            ips = ips
+            ips = ips,
+            owner = owner
         )
         val result = workspaceDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -283,7 +298,8 @@ class WorkspaceService @Autowired constructor(
             systemType = systemType,
             queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = ips
+            ips = ips,
+            owner = owner
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -311,8 +327,9 @@ class WorkspaceService @Autowired constructor(
         }
 
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val zoneConfg = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
 
-        val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
+        val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
@@ -340,6 +357,7 @@ class WorkspaceService @Autowired constructor(
                             workspaceMountType = it.workspaceMountType,
                             workspaceSystemType = it.workspaceSystemType,
                             winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                            zoneConfig = detail?.hostIP?.let { ip -> zoneConfg[ip.replace(Regex("[\\d\\.]+"), "")] },
                             owner = owners[it.workspaceName],
                             viewers = viewers[it.workspaceName],
                             gpu = it.gpu,
@@ -431,7 +449,8 @@ class WorkspaceService @Autowired constructor(
         status: WorkspaceStatus,
         assignType: WorkspaceShared.AssignType,
         winConfigId: Int?,
-        owner: String?
+        owner: String?,
+        winConfig: WindowsResourceTypeConfig? = null
     ) = Workspace(
         workspaceId = it.workspaceId,
         workspaceName = it.workspaceName,
@@ -459,6 +478,7 @@ class WorkspaceService @Autowired constructor(
         ownerType = it.ownerType,
         assignType = assignType,
         winConfigId = winConfigId,
+        winConfig = winConfig,
         gpu = it.gpu,
         cpu = it.cpu,
         memory = it.memory,
@@ -479,8 +499,9 @@ class WorkspaceService @Autowired constructor(
         val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
             workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
         }?.groupBy { it.workspaceName } ?: emptyMap()
+        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
-        val allWindows = workspaceWindowsDao.batchFetchWorkspaceSharedInfo(
+        val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
@@ -511,7 +532,8 @@ class WorkspaceService @Autowired constructor(
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                         shared.type == WorkspaceShared.AssignType.OWNER
-                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
+                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null,
+                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] }
                 )
             }
         )
@@ -602,11 +624,11 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
         if (checkPermission) {
-            permissionService.checkViewerPermission(userId, workspaceName)
+            permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         }
         val now = LocalDateTime.now()
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
 
@@ -655,12 +677,12 @@ class WorkspaceService @Autowired constructor(
 
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
-        permissionService.checkViewerPermission(userId, workspaceName)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType, workspace.ownerType)
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !workspace.status.checkRunning()) {
@@ -676,7 +698,7 @@ class WorkspaceService @Autowired constructor(
                 sharedUsers = listOf(userId)
             ).firstOrNull()?.resourceId
         } else {
-            workspaceWindowsDao.fetchAnyWorkspaceSharedInfo(dslContext, workspaceName)?.resourceId
+            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.resourceId
         }
         val owner = if (workspace.ownerType == WorkspaceOwnerType.PROJECT) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
@@ -684,7 +706,9 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = workspaceName,
                 assignType = WorkspaceShared.AssignType.OWNER
             ).firstOrNull()?.sharedUser
-        } else workspace.createUserId
+        } else {
+            workspace.createUserId
+        }
         return WorkspaceStartCloudDetail(
             ip = detail.environmentIP,
             curLaunchId = detail.curLaunchId!!,
@@ -704,7 +728,12 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         logger.info("$userId get workspace time line from id $workspaceName")
-        permissionService.checkViewerPermission(userId, workspaceName)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
@@ -756,27 +785,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
-            val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, it.workspaceName, it.workspaceMountType).data!!
-            val cache = WorkSpaceCacheInfo(
-                sshKey,
-                workspaceInfo.environmentHost,
-                workspaceInfo.hostIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.namespace,
-                workspaceInfo.curLaunchId,
-                workspaceInfo.regionId
-            )
-
-            workspaceDao.saveOrUpdateWorkspaceDetail(
-                dslContext = dslContext,
-                workspaceName = it.workspaceName,
-                detail = JsonUtil.toJson(cache)
-            )
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
         }
     }
 

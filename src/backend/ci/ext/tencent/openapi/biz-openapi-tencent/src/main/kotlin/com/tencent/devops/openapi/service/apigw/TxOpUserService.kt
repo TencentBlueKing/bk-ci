@@ -14,8 +14,8 @@ class TxOpUserService @Autowired constructor(
 ) : OpAppUserService {
 
     private val userCache = CacheBuilder.newBuilder()
-        .maximumSize(5000)
-        .expireAfterWrite(2, TimeUnit.MINUTES)
+        .maximumSize(20000)
+        .expireAfterWrite(7, TimeUnit.DAYS)
         .build<String, Boolean>()
 
     override fun checkUser(userId: String): Boolean {

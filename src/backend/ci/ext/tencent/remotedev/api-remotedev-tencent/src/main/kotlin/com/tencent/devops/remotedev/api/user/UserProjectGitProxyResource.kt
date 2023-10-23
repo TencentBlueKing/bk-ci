@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -51,7 +52,10 @@ interface UserProjectGitProxyResource {
         page: Int,
         @ApiParam("每页数量", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("gitType")
+        gitType: ScmType?
     ): Result<Page<FetchRepoResp>>
 
     @ApiOperation("删除gitproxy")

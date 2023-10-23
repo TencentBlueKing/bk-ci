@@ -45,6 +45,8 @@ data class WorkspaceOperateEvent(
     @ApiModelProperty("包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
     val bkTicket: String? = null,
+    val cgsId: String? = null,
+    val imageId: String? = null,
     val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     override val workspaceName: String,
     override val delayMills: Int = 0,

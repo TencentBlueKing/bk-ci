@@ -51,6 +51,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -64,6 +65,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -102,7 +105,8 @@ class WorkspaceCommon @Autowired constructor(
     @org.springframework.context.annotation.Lazy
     private val deleteControl: DeleteControl,
     private val objectMapper: ObjectMapper,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
 
     companion object {
@@ -121,7 +125,8 @@ class WorkspaceCommon @Autowired constructor(
         action: WorkspaceAction,
         systemType: WorkspaceSystemType? = null,
         workspaceMountType: WorkspaceMountType? = null,
-        ownerType: WorkspaceOwnerType? = null
+        ownerType: WorkspaceOwnerType? = null,
+        projectId: String = ""
     ) {
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -136,7 +141,7 @@ class WorkspaceCommon @Autowired constructor(
                     workspaceMountType = workspaceMountType,
                     ownerType = ownerType
                 ),
-                projectId = "",
+                projectId = projectId,
                 userIds = getWebSocketUsers(userId, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
@@ -158,31 +163,63 @@ class WorkspaceCommon @Autowired constructor(
             key.default
         } ?: key.default
 
-    fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
+    fun getOrSaveWorkspaceDetail(
+        workspaceName: String,
+        mountType: WorkspaceMountType,
+        event: RemoteDevUpdateEvent? = null
+    ): WorkSpaceCacheInfo {
         return getWorkspaceDetail(workspaceName) ?: run {
-            return updateWorkspaceDetail(workspaceName, mountType)
+            return updateWorkspaceDetail(workspaceName, mountType, event)
         }
     }
 
-    fun updateWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
-        val userSet = workspaceDao.fetchWorkspaceUser(
-            dslContext,
-            workspaceName
-        ).toSet()
-        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-        val workspaceInfo =
-            client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
-        val cache = WorkSpaceCacheInfo(
-            sshKey,
-            workspaceInfo.environmentHost,
-            workspaceInfo.hostIP,
-            workspaceInfo.environmentIP,
-            workspaceInfo.environmentIP,
-            workspaceInfo.namespace,
-            workspaceInfo.curLaunchId,
-            workspaceInfo.regionId
-        )
+    fun updateWorkspaceDetail(
+        workspaceName: String,
+        mountType: WorkspaceMountType,
+        event: RemoteDevUpdateEvent? = null
+    ): WorkSpaceCacheInfo {
+        logger.info("$workspaceName update workspaceDetail, $event")
+        // START非create时不更新detail
+        if (mountType == WorkspaceMountType.START && (event == null || event.type != UpdateEventType.CREATE)) {
+            return JsonUtil.to(
+                workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail ?: "",
+                WorkSpaceCacheInfo::class.java
+            )
+        }
+
+        val cache = if (mountType == WorkspaceMountType.START && event != null) {
+            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
+            WorkSpaceCacheInfo(
+                sshKey = "",
+                environmentHost = event.environmentHost ?: "",
+                hostIP = event.environmentIp ?: "",
+                environmentIP = event.environmentIp ?: "",
+                clusterId = "",
+                namespace = workspaceInfo.namespace,
+                curLaunchId = workspaceInfo.curLaunchId,
+                regionId = workspaceInfo.regionId
+            )
+        } else {
+            val userSet = workspaceDao.fetchWorkspaceUser(
+                dslContext,
+                workspaceName
+            ).toSet()
+            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
+            WorkSpaceCacheInfo(
+                sshKey = sshKey,
+                environmentHost = workspaceInfo.environmentHost,
+                hostIP = workspaceInfo.hostIP,
+                environmentIP = workspaceInfo.environmentIP,
+                clusterId = workspaceInfo.environmentIP,
+                namespace = workspaceInfo.namespace,
+                curLaunchId = workspaceInfo.curLaunchId,
+                regionId = workspaceInfo.regionId
+            )
+        }
 
         workspaceDao.saveOrUpdateWorkspaceDetail(
             dslContext = dslContext,
@@ -437,6 +474,7 @@ class WorkspaceCommon @Autowired constructor(
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
+            logger.warn("$workspaceName get workspaceDetail $result")
             if (result != null) {
                 objectMapper.readValue<WorkSpaceCacheInfo>(result)
             } else {
@@ -491,10 +529,22 @@ class WorkspaceCommon @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>,
         mountType: WorkspaceMountType
     ) {
+        // 获取workspaceName对应的cgsId
+        val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(
+                    workspaceName,
+                    "cgsIp is null"
+                )
+            )
+
         val resourceId = if (mountType == WorkspaceMountType.START) {
             client.get(ServiceStartCloudResource::class)
                 .shareWorkspace(
-                    operator = operator, workspaceName = workspaceName, receivers = assigns.map { it.userId }
+                    operator = operator,
+                    cgsId = cgsId,
+                    receivers = assigns.map { it.userId }
                 ).data!!
         } else {
             ""

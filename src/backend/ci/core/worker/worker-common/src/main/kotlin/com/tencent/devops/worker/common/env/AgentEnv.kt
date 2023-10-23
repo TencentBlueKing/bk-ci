@@ -60,6 +60,8 @@ object AgentEnv {
     const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
     const val BK_TAG = "devops_bk_tag"
+    const val PUBLIC_HOST_MAX_FILE_CACHE_SIZE = "devops.public.host.maxFileCacheSize"
+    const val THIRD_HOST_MAX_FILE_CACHE_SIZE = "devops.public.third.maxFileCacheSize"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -233,7 +235,7 @@ object AgentEnv {
     @Suppress("UNUSED")
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"
 
-    private fun getProperty(prop: String): String? {
+    fun getProperty(prop: String): String? {
         val buildType = BuildEnv.getBuildType()
         if (buildType == BuildType.DOCKER || buildType == BuildType.MACOS || buildType == BuildType.MACOS_NEW) {
             logger.info("buildType is $buildType")

@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.BkApiPermission
-import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.api.service.ServiceSubPipelineResource
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
@@ -110,7 +108,6 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
     override fun getSubPipelineStatus(
         projectId: String,
         pipelineId: String,

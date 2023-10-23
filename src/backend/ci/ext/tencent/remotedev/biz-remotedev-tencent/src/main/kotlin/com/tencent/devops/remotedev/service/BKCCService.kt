@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -20,24 +20,9 @@ import org.springframework.stereotype.Service
 @Service
 class BKCCService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkConfig: BkConfig
 ) {
-
-    @Value("\${bkCC.host:}")
-    val ccHost: String = ""
-
-    @Value("\${bkCC.userName:}")
-    val userName: String = ""
-
-    @Value("\${bkCC.bizId:#{null}}")
-    val bizId: Int? = null
-
-    @Value("\${remoteDev.appCode:}")
-    val appCode = ""
-
-    @Value("\${remoteDev.appToken:}")
-    val appSecret = ""
-
     fun updateHostMonitor(
         regionId: Int?,
         workspaceName: String?,
@@ -59,6 +44,26 @@ class BKCCService @Autowired constructor(
             }
         }
 
+        val (page, filter) = genHostIdFilter(regId, ips)
+
+        val hostIds = listBizHosts(
+            fields = listOf(element = "bk_host_id"),
+            page = page,
+            hostPropertyFilter = filter
+        )?.info?.map { it["bk_host_id"].toString() }?.toSet()
+        if (hostIds.isNullOrEmpty()) {
+            logger.warn("updateHostMonitor|$regId|$workspaceName|$ips hostids is empty")
+            return
+        }
+
+        // 更新主机信息
+        updateHost(hostIds, props)
+    }
+
+    private fun genHostIdFilter(
+        regId: Int,
+        ips: Set<String>
+    ): Pair<ListBizHostsReqPage, ListBizHostsCond> {
         // 通过云区域 id 和 ip 获取 hostId
         val rule1 = if (ips.size == 1) {
             ListBizHostsCondRules(
@@ -89,18 +94,36 @@ class BKCCService @Autowired constructor(
             limit = ips.size + 1,
             sort = "bk_host_id"
         )
+
+        return Pair(page, filter)
+    }
+
+    fun updateHostName(
+        displayName: String,
+        workspaceName: String
+    ) {
+        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
+        if (detail?.regionId == null) {
+            logger.warn("updateHostName get workspace $workspaceName detail is null")
+            return
+        }
+
+        val hostIdSub = detail.environmentIP.split(".")
+        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+
+        val (page, filter) = genHostIdFilter(detail.regionId, setOf(ip))
+
         val hostIds = listBizHosts(
             fields = listOf(element = "bk_host_id"),
             page = page,
             hostPropertyFilter = filter
         )?.info?.map { it["bk_host_id"].toString() }?.toSet()
         if (hostIds.isNullOrEmpty()) {
-            logger.warn("updateHostMonitor|$regId|$workspaceName|$ips hostids is empty")
+            logger.warn("updateHostName|${detail.regionId}|$workspaceName|${detail.environmentIP} hostids is empty")
             return
         }
 
-        // 更新主机信息
-        updateHost(hostIds, props)
+        updateHost(hostIds, mapOf("bk_host_name" to displayName))
     }
 
     fun updateHost(
@@ -108,11 +131,11 @@ class BKCCService @Autowired constructor(
         props: Map<String, Any>
     ) {
         logger.debug("updateHost|hostIds|{}|props|{}", hostIds, props)
-        val url = "$ccHost/update_host/"
+        val url = "${bkConfig.ccHost}/update_host/"
         val body = UpdateHostReqBody(
-            bkAppCode = appCode,
-            bkAppSecret = appSecret,
-            bkUserName = userName,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            bkUserName = bkConfig.ccUserName,
             bkHostId = hostIds.joinToString(separator = ","),
             data = props
         )
@@ -141,25 +164,21 @@ class BKCCService @Autowired constructor(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(BKCCService::class.java)
-    }
-
     fun listBizHosts(
         fields: List<String>,
         page: ListBizHostsReqPage,
         hostPropertyFilter: ListBizHostsCond
     ): ListBizHostResp? {
-        if (bizId == null) {
+        if (bkConfig.ccBizId == null) {
             return null
         }
-        val url = "$ccHost/list_biz_hosts/"
+        val url = "${bkConfig.ccHost}/list_biz_hosts/"
         val body = ListBizHostsReqBody(
-            bkAppCode = appCode,
-            bkAppSecret = appSecret,
-            bkUserName = userName,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            bkUserName = bkConfig.ccUserName,
             page = page,
-            bkBizId = bizId!!,
+            bkBizId = bkConfig.ccBizId!!,
             fields = fields,
             hostPropertyFilter = hostPropertyFilter
         )
@@ -190,6 +209,10 @@ class BKCCService @Autowired constructor(
         }
 
         return null
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BKCCService::class.java)
     }
 }
 
