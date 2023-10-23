@@ -126,21 +126,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             PipelineVersionUtils.getSettingVersion(
                 currVersion = latest.version,
                 originSetting = latest,
-                newSetting = PipelineSettingVersion(
-                    projectId = setting.projectId,
-                    pipelineId = setting.pipelineId,
-                    pipelineName = setting.pipelineName,
-                    desc = setting.desc,
-                    runLockType = setting.runLockType,
-                    failSubscriptionList = setting.failSubscriptionList,
-                    labels = setting.labels,
-                    waitQueueTimeMinute = setting.waitQueueTimeMinute,
-                    maxQueueSize = setting.maxQueueSize,
-                    buildNumRule = setting.buildNumRule,
-                    concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    concurrencyGroup = setting.concurrencyGroup,
-                    pipelineAsCodeSettings = setting.pipelineAsCodeSettings
-                )
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
             )
         } ?: 1
 

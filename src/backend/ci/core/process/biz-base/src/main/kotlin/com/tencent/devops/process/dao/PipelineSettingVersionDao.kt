@@ -201,6 +201,7 @@ class PipelineSettingVersionDao {
                     failSubscriptionList = t.failureSubscription?.let {
                         JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     },
+                    version = t.version,
                     labels = emptyList(),
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                     maxQueueSize = t.maxQueueSize,
