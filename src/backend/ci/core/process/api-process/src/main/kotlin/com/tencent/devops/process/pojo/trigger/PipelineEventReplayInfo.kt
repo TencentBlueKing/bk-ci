@@ -36,8 +36,8 @@ import io.swagger.annotations.ApiModelProperty
 data class PipelineEventReplayInfo(
     @ApiModelProperty("触发人")
     val userId: String
-){
-    companion object{
+) {
+    companion object {
         /**
          * 获取触发信息
          * 若为[重放事件]时，触发人为[回放者],且事件描述采用重放相关文案code
