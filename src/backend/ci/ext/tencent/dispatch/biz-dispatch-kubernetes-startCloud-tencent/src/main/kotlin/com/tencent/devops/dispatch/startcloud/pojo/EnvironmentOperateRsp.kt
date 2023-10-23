@@ -3,14 +3,13 @@ package com.tencent.devops.dispatch.startcloud.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class EnvironmentCreateRsp(
+data class EnvironmentOperateRsp(
     val code: Int,
-    val data: EnvironmentCreateRspData?,
+    val data: EnvironmentOperateRspData?,
     val message: String
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class EnvironmentCreateRspData(
-        val taskUid: String,
-        val environmentUid: String
+    data class EnvironmentOperateRspData(
+        val taskUid: String
     )
 }
