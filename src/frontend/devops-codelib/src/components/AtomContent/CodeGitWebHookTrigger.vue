@@ -6,12 +6,12 @@
                     :is="obj.component"
                     :name="key"
                     :value="element[key]"
-                    :disabled="true"
+                    disabled
                     v-bind="obj">
                 </component>
             </form-field>
         </template>
-        <!-- <form-field v-if="Object.keys(customTriggerControlModel).length">
+        <form-field v-if="Object.keys(customTriggerControlModel).length">
             <accordion show-checkbox :show-content="enableThirdFilter" key="customTriggerControl" :is-version="true">
                 <header class="var-header" style="height: 16px;" slot="header">
                     <span>
@@ -19,9 +19,9 @@
                         <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('editPage.customTriggerControlTips')"></i>
                         <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('editPage.customTriggerLinkDesc') }}</a>
                     </span>
-                    <input class="accordion-checkbox" :disabled="disabled" :checked="enableThirdFilter" type="checkbox" @click.stop />
+                    <input class="accordion-checkbox" disabled :checked="enableThirdFilter" type="checkbox" @click.stop @change="toggleEnableThirdFilter" />
                 </header>
-                <div slot="content" class="bk-form bk-form-vertical" v-if="enableThirdFilter">
+                <div slot="content" class="bk-form bk-form-vertical">
                     <template v-for="(obj, key) in customTriggerControlModel">
                         <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                             <component
@@ -34,7 +34,7 @@
                     </template>
                 </div>
             </accordion>
-        </form-field> -->
+        </form-field>
     </div>
 </template>
 
@@ -52,6 +52,22 @@
                 customTriggerControlModel: {},
                 enableThirdFilter: false,
                 customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
+            }
+        },
+        created () {
+            this.enableThirdFilter = this.element.enableThirdFilter || false
+            this.customTriggerControlModel = {}
+            const { thirdUrl, thirdSecretToken } = this.atomPropsModel
+            if (thirdUrl && thirdSecretToken) {
+                this.customTriggerControlModel.thirdUrl = thirdUrl
+                this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
+                this.atomPropsModel.thirdUrl.hidden = true
+                this.atomPropsModel.thirdSecretToken.hidden = true
+            }
+        },
+        methods: {
+            toggleEnableThirdFilter () {
+                this.enableThirdFilter = !this.enableThirdFilter
             }
         }
     }

@@ -138,7 +138,7 @@
                         if (this.value !== '' && this.list.filter(item => item.id === this.value).length === 0) {
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: `******（${this.$t('codelib.无权限查看')}）`
                             })
                         }
                     } else {
@@ -148,7 +148,7 @@
                             if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: `******（${this.$t('codelib.无权限查看')}）`
                                 })
                             }
                         })

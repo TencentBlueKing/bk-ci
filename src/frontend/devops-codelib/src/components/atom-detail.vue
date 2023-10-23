@@ -50,7 +50,7 @@
                 return this.atom.atomCode
             },
             AtomComponent () {
-                // if (this.atomCode === 'codeGitWebHookTrigger') return CodeGitWebHookTrigger
+                if (this.atomCode === 'codeGitWebHookTrigger') return CodeGitWebHookTrigger
                 return NormalAtom
             }
         },

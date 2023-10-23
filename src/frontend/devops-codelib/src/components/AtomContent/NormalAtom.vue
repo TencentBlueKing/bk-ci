@@ -2,6 +2,7 @@
     <div class="bk-form bk-form-vertical">
         <template v-for="(obj, key) in atomPropsModel">
             <form-field
+                v-if="!obj.hidden && rely(obj, element)"
                 :key="key"
                 :desc="obj.desc"
                 :desc-link="obj.descLink"

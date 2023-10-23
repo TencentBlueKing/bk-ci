@@ -513,7 +513,7 @@ const actions = {
         version = '1.*',
         queryOfflineFlag = false
     }) {
-        return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${'codeGithubWebHookTrigger'}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
+        return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     }
 }
 
