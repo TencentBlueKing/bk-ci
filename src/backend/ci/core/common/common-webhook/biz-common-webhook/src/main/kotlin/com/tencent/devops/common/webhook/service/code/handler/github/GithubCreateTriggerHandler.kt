@@ -40,6 +40,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.time.LocalDateTime
@@ -78,7 +79,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         return event.ref
     }
 
-    override fun getEventDesc(event: GithubCreateEvent): String {
+    override fun getEventDesc(event: GithubCreateEvent, replayInfo: PipelineEventReplayInfo?): String {
         var i18Code = WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC
         val linkUrl = if (event.ref_type == "tag") {
             "https://github.com/${event.repository.fullName}/releases/tag/${event.ref}"
@@ -86,12 +87,14 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
             i18Code = WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC
             "https://github.com/${event.repository.fullName}/tree/${event.ref}"
         }
+        // 事件重放
+        val (username, code) = PipelineEventReplayInfo.getTriggerInfo(replayInfo, getUsername(event), i18Code)
         return I18Variable(
-            code = i18Code,
+            code = code,
             params = listOf(
                 getBranchName(event),
                 linkUrl,
-                getUsername(event),
+                username,
                 DateTimeUtil.formatMilliTime(LocalDateTime.now().timestampmilli())
             )
         ).toJsonStr()

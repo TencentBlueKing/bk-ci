@@ -34,6 +34,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 
@@ -75,7 +76,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
     /**
      * 获取事件说明,根据不同的事件组织事件说明
      */
-    fun getEventDesc(event: T): String = ""
+    fun getEventDesc(event: T, replayInfo: PipelineEventReplayInfo? = null): String = ""
 
     /**
      * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port
