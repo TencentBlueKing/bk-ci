@@ -290,10 +290,10 @@ interface UserRepositoryResource {
         projectId: String,
         @ApiParam("重定向url类型", required = false)
         @QueryParam("redirectUrlType")
-        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrlType: RedirectUrlTypeEnum? = null,
         @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
-        redirectUrl: String?,
+        redirectUrl: String? = null,
         @ApiParam("仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType

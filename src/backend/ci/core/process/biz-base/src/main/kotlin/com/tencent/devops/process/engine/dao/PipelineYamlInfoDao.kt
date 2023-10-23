@@ -75,6 +75,25 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        userId: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.update(this)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectId: String,

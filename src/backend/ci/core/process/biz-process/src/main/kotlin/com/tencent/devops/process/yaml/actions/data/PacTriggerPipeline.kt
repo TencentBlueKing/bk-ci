@@ -26,32 +26,21 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.actions.data
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-}
+/**
+ * pac触发时需要的流水线数据
+ * @param projectId 项目ID
+ * @param repoHashId 代码库hash id
+ * @param filePath 流水线对应的yaml路径
+ * @param pipelineId 流水线ID
+ * @param userId 触发者
+ */
+data class PacTriggerPipeline(
+    val projectId: String,
+    val repoHashId: String,
+    val filePath: String,
+    val pipelineId: String,
+    val userId: String,
+    val delete: Boolean
+)

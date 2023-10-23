@@ -48,7 +48,7 @@ class PipelineYamlVersionDao {
         repoHashId: String,
         filePath: String,
         blobId: String,
-        ref: String,
+        ref: String?,
         pipelineId: String,
         version: Int,
         versionName: String,
@@ -174,6 +174,7 @@ class PipelineYamlVersionDao {
                 repoHashId = repoHashId,
                 filePath = filePath,
                 blobId = blobId,
+                ref = ref,
                 pipelineId = pipelineId,
                 version = version,
                 versionName = versionName

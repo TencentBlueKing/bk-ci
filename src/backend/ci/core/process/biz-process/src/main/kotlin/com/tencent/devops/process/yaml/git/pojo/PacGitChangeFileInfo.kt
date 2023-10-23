@@ -26,32 +26,21 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.git.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+/**
+ * PAC需要的变更文件的信息
+ */
+interface PacGitChangeFileInfo {
+    // 变更前路径
+    val oldPath: String
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // 变更后路径
+    val newPath: String
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // 是否是改名文件
+    val renameFile: Boolean
+
+    // 是否是删除文件
+    val deletedFile: Boolean
 }

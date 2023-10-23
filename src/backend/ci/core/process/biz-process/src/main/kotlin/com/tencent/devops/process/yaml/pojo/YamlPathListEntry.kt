@@ -23,35 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+data class YamlPathListEntry(
+    val yamlPath: String,
+    val checkType: CheckType,
+    val ref: String?,
+    val blobId: String?
+)
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+enum class CheckType {
+    // 需要校验
+    NEED_CHECK,
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // 无需校验
+    NO_NEED_CHECK,
+
+    // 校验有问题，改流水线不触发
+    NO_TRIGGER
 }

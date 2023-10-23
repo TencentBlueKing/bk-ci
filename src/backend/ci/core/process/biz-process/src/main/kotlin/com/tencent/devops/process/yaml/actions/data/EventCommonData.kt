@@ -23,35 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.actions.data
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-}
+/**
+ * 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
+ * @param gitProjectId Git平台项目唯一标识
+ * @param scmType 当前事件 git平台唯一标识
+ * @param branch 当前event的触发branch
+ * @param userId 当前event的触发人
+ * @param projectName Git平台项目全称: namespace/name
+ * @param eventType 当前事件类型 仅在github需要
+ * @param sourceGitProjectId mr触发时的源Git库
+ */
+data class EventCommonData(
+    val gitProjectId: String,
+    val scmType: ScmType?,
+    val branch: String,
+    val userId: String,
+    val projectName: String?,
+    val eventType: String? = null,
+    val sourceGitProjectId: String? = null
+)

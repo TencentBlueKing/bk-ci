@@ -23,35 +23,50 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.git.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+/**
+ * PAC需要的各git平台的项目信息
+ */
+interface PacGitProjectInfo {
+    // 项目唯一标识
+    val gitProjectId: String
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // 默认分支
+    val defaultBranch: String?
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // 项目的http/https的git链接，例 https://github.com/Tencent/bk-ci.git
+    val gitHttpUrl: String
+
+    // 项目名称，例 bk-ci
+    val name: String
+
+    // git ssh链接
+    val gitSshUrl: String?
+
+    // git主页链接
+    val homepage: String?
+
+    // git https链接
+    val gitHttpsUrl: String?
+
+    // git 仓库描述
+    val description: String?
+
+    // git 仓库图片地址
+    val avatarUrl: String?
+
+    // 地址全称  xxx/xx
+    val pathWithNamespace: String?
+
+    // 名称全称
+    val nameWithNamespace: String
+
+    // 触发仓库创建时间字符串 如:2017-08-13T07:37:14+0000
+    val repoCreatedTime: String
+
+    // 触发仓库创建人id， 工蜂侧是数字 id 需要使用时转换为 name
+    val repoCreatorId: String
 }

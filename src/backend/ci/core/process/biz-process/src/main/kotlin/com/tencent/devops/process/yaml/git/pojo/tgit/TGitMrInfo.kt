@@ -23,35 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.git.pojo.tgit
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitMrInfo
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+data class TGitMrInfo(
+    override val mergeStatus: String,
+    val baseCommit: String?,
+    val baseInfo: GitMrInfo? = null
+) : PacGitMrInfo
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+enum class TGitMrStatus(val value: String) {
+    MERGE_STATUS_UNCHECKED("unchecked"),
+    MERGE_STATUS_CAN_BE_MERGED("can_be_merged"),
+    MERGE_STATUS_CAN_NOT_BE_MERGED("cannot_be_merged")
+    // 项目有配置 mr hook，当创建mr后，发送mr hook前，这个状态是hook_intercept,与stream无关
+    // MERGE_STATUS_HOOK_INTERCEPT("hook_intercept")
 }

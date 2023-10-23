@@ -26,32 +26,17 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.actions.pacActions.data
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-}
+/**
+ * pac开启事件
+ */
+data class PacEnableEvent(
+    val userId: String,
+    val projectId: String,
+    val repoHashId: String,
+    val scmType: ScmType
+) : CodeWebhookEvent

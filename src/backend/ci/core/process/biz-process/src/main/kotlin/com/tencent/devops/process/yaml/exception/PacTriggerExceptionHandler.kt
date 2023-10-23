@@ -26,32 +26,40 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.exception
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.yaml.PipelineYamlSyncService
+import com.tencent.devops.process.yaml.actions.BaseAction
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
+/**
+ * pac触发统一异常处理
+ */
+@Service
+class PacTriggerExceptionHandler(
+    private val pipelineYamlSyncService: PipelineYamlSyncService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PacTriggerExceptionHandler::class.java)
     }
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
+    fun <T> handle(
+        action: BaseAction,
+        f: () -> T?
+    ): T? {
+        try {
+            return f()
+        } catch (e: Throwable) {
+            return try {
+                logger.error("PacTriggerExceptionHandler|action|${action.format()}", e)
+                null
+            } catch (e: Throwable) {
+                // 防止Hanlder处理过程中报错，兜底
+                logger.error("BKSystemErrorMonitor|PacTriggerExceptionHandler|action|${action.format()}", e)
+                null
+            }
+        }
     }
 }

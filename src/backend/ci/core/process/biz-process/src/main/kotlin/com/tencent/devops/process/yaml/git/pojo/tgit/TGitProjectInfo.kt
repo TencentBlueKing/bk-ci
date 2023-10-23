@@ -23,35 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.git.pojo.tgit
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitProjectInfo
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+data class TGitProjectInfo(
+    override val gitProjectId: String,
+    override val defaultBranch: String?,
+    override val gitHttpUrl: String,
+    override val name: String,
+    override val gitSshUrl: String?,
+    override val homepage: String?,
+    override val gitHttpsUrl: String?,
+    override val description: String?,
+    override val avatarUrl: String?,
+    override val pathWithNamespace: String?,
+    override val nameWithNamespace: String,
+    override val repoCreatorId: String,
+    override val repoCreatedTime: String
+) : PacGitProjectInfo {
+    constructor(g: GitProjectInfo) : this(
+        gitProjectId = g.id.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.repositoryUrl,
+        name = g.name,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpsUrl,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        pathWithNamespace = g.pathWithNamespace,
+        nameWithNamespace = g.namespaceName,
+        repoCreatorId = g.creatorId ?: "",
+        repoCreatedTime = g.createdAt ?: ""
+    )
 }

@@ -41,6 +41,8 @@ data class PipelineYamlVersion(
     val filePath: String,
     @ApiModelProperty("ci文件blob_id")
     val blobId: String,
+    @ApiModelProperty("ci文件来源分支/tag")
+    val ref: String?,
     @ApiModelProperty("流水线ID")
     val pipelineId: String,
     @ApiModelProperty("流水线版本")

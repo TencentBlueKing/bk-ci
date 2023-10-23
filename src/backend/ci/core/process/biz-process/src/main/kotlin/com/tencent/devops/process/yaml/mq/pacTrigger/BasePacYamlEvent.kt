@@ -26,32 +26,19 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.mq.pacTrigger
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.process.yaml.actions.data.ActionMetaData
+import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
+import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-}
+open class BasePacYamlEvent(
+    open val projectId: String,
+    open val eventStr: String,
+    open val metaData: ActionMetaData,
+    open val actionCommonData: EventCommonData,
+    open val actionContext: PacTriggerContext,
+    open val actionSetting: PacRepoSetting
+) : ITraceEvent()

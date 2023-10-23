@@ -23,35 +23,45 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.actions.data
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.Repository
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+/**
+ * pac绑定的代码库配置信息
+ * @param projectId 项目ID
+ * @param repoHashId 代码库hashId
+ * @param enableUser 开启pac的用户ID
+ * @param gitProjectId git项目ID,只有tgit/gitlab/github才有值
+ * @param projectName 代码平台项目名: namespace/name
+ * @param credentialId 代码库绑定的凭证ID
+ */
+data class PacRepoSetting(
+    val projectId: String,
+    val repoHashId: String,
+    val enableUser: String,
+    val gitProjectId: Long?,
+    val projectName: String,
+    val credentialId: String?
+) {
+    constructor(repository: Repository): this(
+        projectId = repository.projectId!!,
+        repoHashId = repository.repoHashId!!,
+        enableUser = repository.userName,
+        gitProjectId = when (repository) {
+            is CodeGitRepository -> repository.gitProjectId
+            is CodeTGitRepository -> repository.gitProjectId
+            is GithubRepository -> repository.gitProjectId
+            is CodeGitlabRepository -> repository.gitProjectId
+            else -> null
+        },
+        projectName = repository.projectName,
+        credentialId = repository.credentialId
+    )
 }

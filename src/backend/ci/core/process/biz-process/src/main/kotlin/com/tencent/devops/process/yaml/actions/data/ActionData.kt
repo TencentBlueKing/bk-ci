@@ -23,35 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.yaml.actions.data
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+/**
+ * 保存action需要用到的元数据
+ * @param event 各源的事件原文
+ */
+@Suppress("MaxLineLength")
+data class ActionData(
+    val event: CodeWebhookEvent,
+    var context: PacTriggerContext
+) {
+    // 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
+    lateinit var eventCommon: EventCommonData
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+    // pac触发时需要的配置信息
+    lateinit var setting: PacRepoSetting
+    val isSettingInitialized get() = this::setting.isInitialized
+
+    // 方便日志打印
+    fun format() = "${event::class.qualifiedName}|$eventCommon|$setting"
+
+    fun getUserId() = eventCommon.userId
 }
