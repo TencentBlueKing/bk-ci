@@ -374,7 +374,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 scmService.getSession(
                     type = type,
                     username = username,
-                    password = password
+                    password = password,
+                    url = url
                 )
             )
         }

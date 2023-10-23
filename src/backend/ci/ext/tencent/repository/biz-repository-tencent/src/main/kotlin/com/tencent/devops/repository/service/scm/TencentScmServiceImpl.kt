@@ -373,13 +373,15 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
     override fun getGitSession(
         type: ScmType,
         username: String,
-        password: String
+        password: String,
+        url: String
     ): GitSession? {
         return client.getScm(ServiceScmResource::class).getSession(
             RepoSessionRequest(
                 type = type,
                 username = username,
-                password = password
+                password = password,
+                url = url
             )
         ).data
     }
