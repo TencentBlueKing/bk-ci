@@ -39,7 +39,7 @@ class ApigwJobCloudApi {
     val jobCloudStagUrlPrefix: String? = null
 
     @Value("\${job.executeScriptPath:#{null}}")
-    val executeScriptPath: String? = "fast_execute_script"
+    val executeScriptPath: String? = null
 
     @Value("\${job.distributeFilePath:#{null}}")
     val distributeFilePath: String? = null
