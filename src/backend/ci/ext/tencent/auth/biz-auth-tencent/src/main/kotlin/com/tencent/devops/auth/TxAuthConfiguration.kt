@@ -39,6 +39,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.secops.SecOpsService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -108,6 +109,7 @@ class TxAuthConfiguration {
     @Bean
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+        objectMapper: ObjectMapper,
+        secOpsService: SecOpsService
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper, secOpsService)
 }
