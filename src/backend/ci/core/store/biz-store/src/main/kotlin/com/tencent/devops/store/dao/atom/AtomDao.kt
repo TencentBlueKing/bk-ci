@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -263,7 +264,7 @@ class AtomDao : AtomBaseDao() {
     fun getAtomTestVersion(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$versionPrefix-%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -523,14 +524,22 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
+        val field = DSL.`when`((t.field(KEY_VERSION) as Field<String>).startsWith(TEST), 1)
+            .otherwise(0) as Field<Int>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
-            thirdVersion
+            thirdVersion,
+            field
         ).from(t)
-            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .orderBy(
+                field.desc(),
+                firstVersion.plus(0).desc(),
+                secondVersion.plus(0).desc(),
+                thirdVersion.plus(0).desc()
+            )
         limitNum?.let { queryStep.limit(it) }
         return queryStep.skipCheck().fetch()
     }
