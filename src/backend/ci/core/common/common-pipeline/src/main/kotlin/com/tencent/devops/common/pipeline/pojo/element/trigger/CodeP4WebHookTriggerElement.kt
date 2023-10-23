@@ -46,12 +46,9 @@ data class CodeP4WebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeP4WebHookTrigger"
-        const val taskAtom = "codeP4WebHookTriggerTaskAtom"
     }
 
     override fun getClassType() = classType
-
-    override fun getTaskAtom() = taskAtom
 
     override fun findFirstTaskIdByStartType(startType: StartType): String {
         return if (startType.name == StartType.WEB_HOOK.name) {

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -79,6 +78,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Optional
 import java.util.concurrent.Executors
 
 /**
@@ -668,9 +668,7 @@ class PipelineWebhookService @Autowired constructor(
     private fun updateWebhookEventInfoTask() {
         var offset = 0
         val limit = 1000
-        val repoCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build<String, Repository>()
+        val repoCache = mutableMapOf<String, Optional<Repository>>()
         // 上一个更新的项目ID
         var preProjectId: String? = null
         do {
@@ -682,7 +680,7 @@ class PipelineWebhookService @Autowired constructor(
             pipelines.forEach { (projectId, pipelineId) ->
                 // 更改项目,清空代码库缓存
                 if (preProjectId != null && preProjectId != projectId) {
-                    repoCache.cleanUp()
+                    repoCache.clear()
                 }
                 preProjectId = projectId
                 val model = getModel(projectId, pipelineId)
@@ -718,8 +716,8 @@ class PipelineWebhookService @Autowired constructor(
                             )
                             return@webhook
                         }
-                        val repository =
-                            repoCache.get("${projectId}_${elementRepositoryConfig.getRepositoryId()}") {
+                        val repository = repoCache.putIfAbsent(
+                            "${projectId}_${elementRepositoryConfig.getRepositoryId()}", Optional.ofNullable(
                                 try {
                                     scmProxyService.getRepo(
                                         projectId = projectId,
@@ -729,7 +727,8 @@ class PipelineWebhookService @Autowired constructor(
                                     logger.warn("fail to get repository info", ignored)
                                     null
                                 }
-                            }
+                            )
+                        )?.get()
                         if (repository != null && webhook.projectName != repository.projectName) {
                             logger.info(
                                 "webhook projectName different from repo projectName|" +

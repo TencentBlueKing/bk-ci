@@ -58,12 +58,9 @@ data class CodeGithubWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"
-        const val taskAtom = "codeGithubWebHookTriggerTaskAtom"
     }
 
     override fun getClassType() = classType
-
-    override fun getTaskAtom() = taskAtom
 
     override fun findFirstTaskIdByStartType(startType: StartType): String {
         return if (startType.name == StartType.WEB_HOOK.name) {
