@@ -36,8 +36,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 @ComponentScan(
     "com.tencent.devops.plugin",
-    "com.tencent.devops.dispatch",
-    "com.tencent.devops.common.dispatch.sdk"
+    "com.tencent.devops.dispatch"
 )
 class DispatchApplication
 
