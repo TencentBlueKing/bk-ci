@@ -86,6 +86,6 @@ class TxSecOpsServiceImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxSecOpsServiceImpl::class.java)
-        private const val USER_WATER_MARK_GET_SUFFIX = "/api/v2/watermark/"
+        private const val USER_WATER_MARK_GET_SUFFIX = "/web/api/v2/watermark/"
     }
 }
