@@ -119,7 +119,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineBranchVersionService: PipelineBranchVersionService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
@@ -543,15 +542,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             ),
             checkPermission = false
         )
-        if (!isDefaultBranch) {
-            pipelineBranchVersionService.saveBranchVersion(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = result.pipelineId,
-                branchName = branchName,
-                version = result.version
-            )
-        }
         return result
     }
 
@@ -591,15 +581,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 VersionStatus.BRANCH
             }
         )
-        if (!isDefaultBranch) {
-            pipelineBranchVersionService.saveBranchVersion(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = result.pipelineId,
-                branchName = branchName,
-                version = result.version
-            )
-        }
         return result
     }
 
