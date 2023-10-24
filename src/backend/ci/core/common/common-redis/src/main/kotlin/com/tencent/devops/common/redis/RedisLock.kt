@@ -87,14 +87,16 @@ open class RedisLock(
      * 不使用 DEL 命令来释放锁，而是发送一个 Lua 脚本，这个脚本只在客户端传入的值和键的口令串相匹配时，才对键进行删除。
      * 这两个改动可以防止持有过期锁的客户端误删现有锁的情况出现。
      */
-    fun unlock() {
+    fun unlock(): Boolean {
         try {
             if (!unLockRemote()) {
                 logger.warn("remote lock has changed , key: $lockKey , value: $lockValue")
+                return false
             }
+            return true
         } catch (e: Exception) {
             logger.error("unlock error", e)
-            unLockRemote() // try again
+            return unLockRemote() // try again
         }
     }
 
