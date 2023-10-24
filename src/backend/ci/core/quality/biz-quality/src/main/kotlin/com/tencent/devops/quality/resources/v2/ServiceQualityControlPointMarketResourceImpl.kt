@@ -39,7 +39,7 @@ class ServiceQualityControlPointMarketResourceImpl @Autowired constructor(
     private val controlPointService: QualityControlPointService
 ) : ServiceQualityControlPointMarketResource {
 
-    override fun setTestControlPoint(userId: String,  tag: String, controlPoint: QualityControlPoint): Result<Long> {
+    override fun setTestControlPoint(userId: String, tag: String, controlPoint: QualityControlPoint): Result<Long> {
         return Result(controlPointService.setTestControlPoint(userId, tag, controlPoint))
     }
 
