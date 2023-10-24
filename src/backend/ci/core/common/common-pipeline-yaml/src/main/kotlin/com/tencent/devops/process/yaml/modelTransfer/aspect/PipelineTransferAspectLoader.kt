@@ -1,5 +1,6 @@
 package com.tencent.devops.process.yaml.modelTransfer.aspect
 
+import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
 
 import java.util.concurrent.ConcurrentMap
@@ -21,5 +22,22 @@ object PipelineTransferAspectLoader {
             }
         }
         return instance
+    }
+
+    fun initByDefaultTriggerOn(
+        defaultRepo: String,
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ): LinkedList<IPipelineTransferAspect> {
+        aspects.add(
+            object : IPipelineTransferAspectTrigger {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
+                        jp.yamlTriggerOn()!!.repoName = defaultRepo
+                    }
+                    return null
+                }
+            }
+        )
+        return aspects
     }
 }
