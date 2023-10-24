@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -60,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
@@ -92,6 +92,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     fun yaml2Triggers(yamlInput: YamlTransferInput, elements: MutableList<Element>) {
         yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
+            yamlInput.aspectWrapper.setYamlTriggerOn(it.second, PipelineTransferAspectWrapper.AspectType.BEFORE)
             when (it.first) {
                 TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
                 TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
@@ -101,6 +102,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
             }
+            yamlInput.aspectWrapper.setModelElement4Model(
+                elements.last(),
+                PipelineTransferAspectWrapper.AspectType.AFTER
+            )
         }
     }
 
@@ -205,12 +210,14 @@ class ElementTransfer @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
+            yamlInput.aspectWrapper.setYamlStep4Yaml(step, PipelineTransferAspectWrapper.AspectType.BEFORE)
             val element: Element = yaml2element(
                 userId = yamlInput.userId,
                 step = step,
                 agentSelector = job.runsOn.agentSelector?.first(),
                 jobRunsOnType = JobRunsOnType.parse(job.runsOn.poolName)
             )
+            yamlInput.aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.AFTER)
             elementList.add(element)
         }
 
@@ -415,19 +422,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                 val repositoryHashId = input[CheckoutAtomParam::repositoryHashId.name].toString().ifBlank { null }
                 val repositoryName = input[CheckoutAtomParam::repositoryName.name].toString().ifBlank { null }
                 val repositoryUrl = input[CheckoutAtomParam::repositoryUrl.name].toString().ifBlank { null }
-                val checkout = when {
-                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.ID && repositoryHashId != null -> {
-                        transferCache.getGitRepository(projectId, RepositoryType.ID, repositoryHashId)?.url
-                    }
-
-                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.NAME && repositoryName != null -> {
-                        transferCache.getGitRepository(projectId, RepositoryType.NAME, repositoryName)?.url
-                    }
-
-                    repositoryType == CheckoutAtomParam.CheckoutRepositoryType.URL && repositoryUrl != null -> {
-                        repositoryUrl
-                    }
-
+                val checkout = when (repositoryType) {
+                    CheckoutAtomParam.CheckoutRepositoryType.ID -> repositoryHashId
+                    CheckoutAtomParam.CheckoutRepositoryType.NAME -> repositoryName
+                    CheckoutAtomParam.CheckoutRepositoryType.URL -> repositoryUrl
                     else -> null
                 } ?: "self"
                 // todo 等待checkout插件新增self参数
@@ -442,6 +440,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
                         this.remove(CheckoutAtomParam::repositoryName.name)
                         this.remove(CheckoutAtomParam::repositoryUrl.name)
+                        this["type"] = repositoryType?.name ?: CheckoutAtomParam.CheckoutRepositoryType.URL.name
                     }.ifEmpty { null },
                     checkout = checkout
                 )

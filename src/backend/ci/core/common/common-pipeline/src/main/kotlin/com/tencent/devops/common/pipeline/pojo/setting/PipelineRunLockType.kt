@@ -55,7 +55,7 @@ enum class PipelineRunLockType {
             }
         }
 
-        fun valueOf(value: Int): PipelineRunLockType {
+        fun valueOf(value: Int?): PipelineRunLockType {
             return when (value) {
                 1 -> MULTIPLE
                 2 -> SINGLE

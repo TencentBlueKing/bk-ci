@@ -57,7 +57,7 @@ class TemplatePACService @Autowired constructor(
                 )
             }
         }
-
+        val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
         // model
         val model: Model = objectMapper.readValue(template.template)
         model.name = template.templateName
@@ -77,12 +77,12 @@ class TemplatePACService @Autowired constructor(
                 template = model,
                 templateYaml = null,
                 setting = null,
+                hasPermission = hasPermission,
                 highlightMarkList = null
             )
         }
-        val hasPermission = templateCommonService.hasManagerPermission(projectId, userId)
+
         setting.labels = labels
-        setting.hasPermission = hasPermission
 
         // yaml
         val (_, yaml, _) = transferYamlService.transfer(
@@ -130,6 +130,7 @@ class TemplatePACService @Autowired constructor(
             template = model,
             templateYaml = yaml,
             setting = setting,
+            hasPermission = hasPermission,
             highlightMarkList = highlightMarkList
         )
     }

@@ -365,7 +365,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         return Mutex(
             label = resource?.mutexGroupName!!,
             queueLength = if (resource.queueEnable) {
-                resource.queue.nullIfDefault(DEFAULT_MUTEX_QUEUE_LENGTH)
+                resource.queue
             } else {
                 null
             },

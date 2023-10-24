@@ -41,7 +41,7 @@ data class ManualRule(
     var canElementSkip: Boolean? = true,
     @ApiModelProperty("手动触发执行时使用最近一次构建参数值 ", name = "use-latest-parameters", required = false)
     @JsonProperty("use-latest-parameters")
-    var useLatestParameters: Boolean? = false,
+    var useLatestParameters: Boolean? = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (other is ManualRule) {

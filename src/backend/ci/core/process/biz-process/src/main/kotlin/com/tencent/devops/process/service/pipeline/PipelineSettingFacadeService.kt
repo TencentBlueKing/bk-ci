@@ -126,12 +126,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             PipelineVersionUtils.getSettingVersion(
                 currVersion = latest.version,
                 originSetting = latest,
-                newSetting = PipelineSettingVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    successSubscriptionList = setting.successSubscriptionList,
-                    failSubscriptionList = setting.failSubscriptionList
-                )
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
             )
         } ?: 1
 
@@ -260,8 +255,6 @@ class PipelineSettingFacadeService @Autowired constructor(
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
             val ve = pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)
-            settingInfo.successSubscription = ve.successSubscription
-            settingInfo.failSubscription = ve.failSubscription
             settingInfo.successSubscriptionList = ve.successSubscriptionList
             settingInfo.failSubscriptionList = ve.failSubscriptionList
         }

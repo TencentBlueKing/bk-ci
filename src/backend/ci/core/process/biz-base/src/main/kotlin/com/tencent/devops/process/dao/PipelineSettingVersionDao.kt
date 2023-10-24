@@ -28,16 +28,15 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -45,56 +44,6 @@ import org.springframework.stereotype.Repository
 @Suppress("LongParameterList")
 @Repository
 class PipelineSettingVersionDao {
-
-    // 新流水线创建的时候，设置默认的通知配置。
-    fun insertNewSetting(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        settingVersion: Int,
-        isTemplate: Boolean = false,
-        successNotifyTypes: String = "",
-        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
-        id: Long? = null
-    ): Int {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                NAME,
-                SUCCESS_RECEIVER,
-                FAIL_RECEIVER,
-                SUCCESS_GROUP,
-                FAIL_GROUP,
-                SUCCESS_TYPE,
-                FAIL_TYPE,
-                SUCCESS_CONTENT,
-                FAIL_CONTENT,
-                IS_TEMPLATE,
-                VERSION,
-                ID
-            )
-                .values(
-                    projectId,
-                    pipelineId,
-                    pipelineName,
-                    "\${$PIPELINE_START_USER_NAME}",
-                    "\${$PIPELINE_START_USER_NAME}",
-                    "",
-                    "",
-                    successNotifyTypes,
-                    failNotifyTypes,
-                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
-                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
-                    isTemplate,
-                    settingVersion,
-                    id
-                )
-                .execute()
-        }
-    }
 
     fun saveSetting(
         dslContext: DSLContext,
@@ -106,57 +55,55 @@ class PipelineSettingVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
         val failSubscriptionList = setting.failSubscriptionList ?: listOf(setting.failSubscription)
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.insertInto(
+            val insert = dslContext.insertInto(
                 this,
+                ID,
                 PROJECT_ID,
                 PIPELINE_ID,
                 NAME,
-                SUCCESS_RECEIVER,
-                FAIL_RECEIVER,
-                SUCCESS_GROUP,
-                FAIL_GROUP,
-                SUCCESS_TYPE,
-                FAIL_TYPE,
-                FAIL_WECHAT_GROUP_FLAG,
-                FAIL_WECHAT_GROUP,
-                SUCCESS_WECHAT_GROUP_FLAG,
-                SUCCESS_WECHAT_GROUP,
-                SUCCESS_DETAIL_FLAG,
-                FAIL_DETAIL_FLAG,
-                SUCCESS_CONTENT,
-                FAIL_CONTENT,
+                DESC,
+                RUN_LOCK_TYPE,
+                WAIT_QUEUE_TIME_SECOND,
+                MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
-                VERSION,
-                ID,
+                BUILD_NUM_RULE,
+                CONCURRENCY_GROUP,
+                CONCURRENCY_CANCEL_IN_PROGRESS,
                 SUCCESS_SUBSCRIPTION,
-                FAILURE_SUBSCRIPTION
+                FAILURE_SUBSCRIPTION,
+                VERSION
             ).values(
+                id,
                 setting.projectId,
                 setting.pipelineId,
                 setting.pipelineName,
-                setting.successSubscription.users,
-                setting.failSubscription.users,
-                setting.successSubscription.groups.joinToString(","),
-                setting.failSubscription.groups.joinToString(","),
-                setting.successSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.types.joinToString(",") { it.name },
-                setting.failSubscription.wechatGroupFlag,
-                setting.failSubscription.wechatGroup,
-                setting.successSubscription.wechatGroupFlag,
-                setting.successSubscription.wechatGroup,
-                setting.successSubscription.detailFlag,
-                setting.failSubscription.detailFlag,
-                setting.successSubscription.content,
-                setting.failSubscription.content,
+                setting.desc,
+                PipelineRunLockType.toValue(setting.runLockType),
+                DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
+                setting.maxQueueSize,
                 isTemplate,
-                version,
-                id,
+                setting.buildNumRule,
+                setting.concurrencyGroup,
+                setting.concurrencyCancelInProgress,
                 JsonUtil.toJson(successSubscriptionList, false),
-                JsonUtil.toJson(failSubscriptionList, false)
+                JsonUtil.toJson(failSubscriptionList, false),
+                version
             ).onDuplicateKeyUpdate()
+                .set(NAME, setting.pipelineName)
+                .set(DESC, setting.desc)
+                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
-                .execute()
+            // pipelineAsCodeSettings 默认传空不更新
+            setting.pipelineAsCodeSettings?.let { self ->
+                insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
+            }
+            return insert.execute()
         }
     }
 
@@ -242,43 +189,28 @@ class PipelineSettingVersionDao {
     class PipelineSettingVersionJooqMapper : RecordMapper<TPipelineSettingVersionRecord, PipelineSettingVersion> {
         override fun map(record: TPipelineSettingVersionRecord?): PipelineSettingVersion? {
             return record?.let { t ->
-                val successType = t.successType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-                val failType = t.failType?.split(",")?.filter { i -> i.isNotBlank() }
-                    ?.map { type -> PipelineSubscriptionType.valueOf(type) }?.toSet() ?: emptySet()
-                val oldSuccessSubscription = Subscription(
-                    types = successType,
-                    groups = t.successGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.successReceiver ?: "",
-                    wechatGroupFlag = t.successWechatGroupFlag ?: false,
-                    wechatGroup = t.successWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
-                    detailFlag = t.successDetailFlag,
-                    content = t.successContent ?: ""
-                )
-                val oldFailSubscription = Subscription(
-                    types = failType,
-                    groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
-                    users = t.failReceiver ?: "",
-                    wechatGroupFlag = t.failWechatGroupFlag ?: false,
-                    wechatGroup = t.failWechatGroup ?: "",
-                    wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
-                    detailFlag = t.failDetailFlag,
-                    content = t.failContent ?: ""
-                )
-                val successSubscriptionList = t.successSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldSuccessSubscription)
-                val failSubscriptionList = t.failureSubscription?.let {
-                    JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldFailSubscription)
                 PipelineSettingVersion(
                     projectId = t.projectId,
                     pipelineId = t.pipelineId,
-                    successSubscription = oldSuccessSubscription,
-                    failSubscription = oldFailSubscription,
-                    successSubscriptionList = successSubscriptionList,
-                    failSubscriptionList = failSubscriptionList
+                    pipelineName = t.name,
+                    desc = t.desc,
+                    runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                    successSubscriptionList = t.successSubscription?.let {
+                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    },
+                    failSubscriptionList = t.failureSubscription?.let {
+                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    },
+                    version = t.version,
+                    labels = emptyList(),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
+                    maxQueueSize = t.maxQueueSize,
+                    buildNumRule = t.buildNumRule,
+                    concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencyGroup = t.concurrencyGroup,
+                    pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                    }
                 )
             }
         }

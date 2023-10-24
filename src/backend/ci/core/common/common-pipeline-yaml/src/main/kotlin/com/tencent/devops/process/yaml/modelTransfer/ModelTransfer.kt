@@ -35,7 +35,9 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -78,7 +80,7 @@ class ModelTransfer @Autowired constructor(
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
             pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
             desc = yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
-            concurrencyGroup = yaml.concurrency?.group,
+            concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
             runLockType = when {
@@ -134,13 +136,16 @@ class ModelTransfer @Autowired constructor(
 
         // 其他的stage
         yamlInput.yaml.formatStages().forEach { stage ->
+            yamlInput.aspectWrapper.setYamlStage4Yaml(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
             stageList.add(
                 modelStage.yaml2Stage(
                     stage = stage,
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     yamlInput = yamlInput
-                )
+                ).also {
+                    yamlInput.aspectWrapper.setModelStage4Model(it, PipelineTransferAspectWrapper.AspectType.AFTER)
+                }
             )
         }
         // 添加finally
@@ -230,13 +235,13 @@ class ModelTransfer @Autowired constructor(
 
     private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices> {
         val res = mutableListOf<PacNotices>()
-        setting.successSubscriptionList?.plus(setting.successSubscription)?.forEach {
+        setting.successSubscriptionList?.ifEmpty { listOf(setting.successSubscription) }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.SUCCESS.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }
-        setting.failSubscriptionList?.plus(setting.failSubscription)?.forEach {
+        setting.failSubscriptionList?.ifEmpty { listOf(setting.failSubscription) }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.FAILURE.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))

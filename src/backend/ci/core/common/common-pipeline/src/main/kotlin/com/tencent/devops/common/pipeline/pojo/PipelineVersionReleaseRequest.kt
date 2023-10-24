@@ -32,9 +32,9 @@ import io.swagger.annotations.ApiModelProperty
 
 data class PipelineVersionReleaseRequest(
     @ApiModelProperty("版本描述", required = false)
-    var description: String?,
-    @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
-    var targetAction: CodeTargetAction,
+    var description: String? = null,
+    @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
+    var targetAction: CodeTargetAction?,
     @ApiModelProperty("标签", required = false)
     var labels: List<String> = emptyList(),
     @ApiModelProperty("静态流水线组", required = false)
