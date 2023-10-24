@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.MASTER
@@ -724,7 +725,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     userId = userId,
                     atomCode = atomCode,
                     atomName = atomName,
-                    indicators = indicators
+                    indicators = indicators,
+                    version = if (branch == MASTER) null else atomVersion
                 )
 
                 // 再注册指标
@@ -751,10 +753,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
+                val extra = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
                 try {
-                    client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                    client.get(ServiceQualityIndicatorMarketResource::class)
+                        .deleteTestIndicator(atomCode, extra)
+                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, extra)
+                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, extra)
                 } catch (ignored: Throwable) {
                     logger.warn("clear atom:$atomCode test quality data fail", ignored)
                 }
@@ -794,10 +798,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         projectId: String
     ) {
         client.get(ServiceQualityControlPointMarketResource::class).setTestControlPoint(
-            userId, QualityControlPoint(
+            userId = userId,
+            tag = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST,
+            controlPoint = QualityControlPoint(
                 hashId = "",
                 type = atomCode,
-                name = atomName,
+                name = if (atomVersion.startsWith(TEST)) "$atomName($atomVersion)" else atomName,
                 stage = stage,
                 availablePos = listOf(
                     ControlPointPosition.create(BEFORE_POSITION),
@@ -822,13 +828,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         metadataResultMap: Map<String, Long>,
         indicators: Map<String, Any>
     ) {
+        val tag = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
         val indicatorsList = indicators.map {
             val map = it.value as Map<String, Any>
             val type = map["type"] as String?
             val valueType = map["valueType"] as String?
             IndicatorUpdate(
                 elementType = atomCode,
-                elementName = atomName,
+                elementName = if (atomVersion.startsWith(TEST)) "$atomName($atomVersion)" else atomName,
                 elementDetail = if (type.isNullOrBlank()) atomCode else type,
                 elementVersion = atomVersion,
                 enName = it.key,
@@ -842,13 +849,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 readOnly = map["readOnly"] as Boolean? ?: false,
                 stage = stage,
                 range = projectId,
-                tag = "IN_READY_TEST",
+                tag = tag,
                 enable = true,
                 type = IndicatorType.MARKET,
                 logPrompt = map["logPrompt"] as? String ?: ""
             )
         }
-        client.get(ServiceQualityIndicatorMarketResource::class).setTestIndicator(userId, atomCode, indicatorsList)
+        client.get(ServiceQualityIndicatorMarketResource::class).setTestIndicator(
+            userId = userId,
+            atomCode = atomCode,
+            tag = tag,
+            indicatorUpdateList = indicatorsList
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -856,8 +868,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         atomCode: String,
         atomName: String,
-        indicators: Map<String, Any>
+        indicators: Map<String, Any>,
+        version: String?
     ): Map<String, Long> {
+        val extra = version?.let { "$IN_READY_TEST($version)" } ?: IN_READY_TEST // 标注是正在测试中的
+        val name = version?.let { "$atomName($version)" } ?: atomName
         val metadataList = indicators.map {
             val map = it.value as Map<String, Any>
             val type = map["type"] as String?
@@ -866,16 +881,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 dataId = it.key,
                 dataName = map["label"] as String,
                 elementType = atomCode,
-                elementName = atomName,
+                elementName = name,
                 elementDetail = if (type.isNullOrBlank()) atomCode else type,
                 valueType = map["valueType"] as String? ?: "INT",
                 desc = map["desc"] as String? ?: "",
-                extra = "IN_READY_TEST" // 标注是正在测试中的
+                extra = extra
             )
         }
         return client.get(ServiceQualityMetadataMarketResource::class).setTestMetadata(
             userId = userId,
             atomCode = atomCode,
+            extra = extra,
             metadataList = metadataList
         ).data ?: mapOf()
     }
@@ -1058,9 +1074,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         // 删除质量红线相关数据
-        client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-        client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-        client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+        client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode, IN_READY_TEST)
+        client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, IN_READY_TEST)
+        client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, IN_READY_TEST)
         return Result(true)
     }
 

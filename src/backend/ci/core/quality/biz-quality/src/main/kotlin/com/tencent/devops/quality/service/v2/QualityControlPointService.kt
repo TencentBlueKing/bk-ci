@@ -235,9 +235,14 @@ class QualityControlPointService @Autowired constructor(
         return controlPoint != null && controlPoint.atomVersion <= atomVersion
     }
 
-    fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Long {
-        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type}")
-        return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
+    fun setTestControlPoint(userId: String, tag: String, controlPoint: QualityControlPoint): Long {
+        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type} | tag:$tag")
+        return controlPointDao.setTestControlPoint(
+            dslContext = dslContext,
+            userId = userId,
+            controlPoint = controlPoint,
+            tag = tag
+        )
     }
 
     fun refreshControlPoint(elementType: String): Int {
@@ -245,9 +250,9 @@ class QualityControlPointService @Autowired constructor(
         return controlPointDao.refreshControlPoint(dslContext, elementType)
     }
 
-    fun deleteTestControlPoint(elementType: String): Int {
-        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType")
-        return controlPointDao.deleteTestControlPoint(dslContext, elementType)
+    fun deleteTestControlPoint(elementType: String, tag: String): Int {
+        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType | tag:$tag")
+        return controlPointDao.deleteTestControlPoint(dslContext, elementType, tag)
     }
 
     fun deleteControlPoint(id: Long): Int {

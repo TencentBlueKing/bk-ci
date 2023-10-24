@@ -104,6 +104,7 @@ const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
 const val MASTER = "master" // 主干
 const val SYSTEM = "system" // 系统
+const val IN_READY_TEST = "IN_READY_TEST" // 正在测试中
 const val BUILD_RUNNING = "buildRunning" // 运行中
 const val BUILD_QUEUE = "buildQueue" // 构建排队中
 const val BUILD_REVIEWING = "buildReviewing" // 构建待审核
