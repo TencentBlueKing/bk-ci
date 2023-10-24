@@ -44,6 +44,10 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspectTrigger
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferJoinPoint
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
@@ -59,6 +63,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.LinkedList
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -350,6 +355,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
+            "yaml-model-002-v3",
             "yaml-model-001-v3",
             "yaml-model-001-v2"
         ]
@@ -361,6 +367,17 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("parse PreScriptBuildYaml")
         val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+        val aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+        aspects.add(
+            object : IPipelineTransferAspectTrigger {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
+                        jp.yamlTriggerOn()!!.repoName = "test/before"
+                    }
+                    return null
+                }
+            }
+        )
         watcher.start("normalize Yaml")
         pYml.replaceTemplate { templateFilter ->
             YamlTemplate(
@@ -378,10 +395,11 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }
         watcher.start("yaml2Model")
         val input = YamlTransferInput(
-            "testUser",
-            "testProject",
-            pipelineInfo,
-            pYml
+            userId = "testUser",
+            projectCode = "testProject",
+            pipelineInfo = pipelineInfo,
+            yaml = pYml,
+            aspectWrapper = PipelineTransferAspectWrapper(aspects)
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
