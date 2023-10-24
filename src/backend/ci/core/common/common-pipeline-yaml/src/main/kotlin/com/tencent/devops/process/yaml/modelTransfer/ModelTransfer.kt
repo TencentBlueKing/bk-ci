@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -135,13 +136,16 @@ class ModelTransfer @Autowired constructor(
 
         // 其他的stage
         yamlInput.yaml.formatStages().forEach { stage ->
+            yamlInput.aspectWrapper.setYamlStage4Yaml(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
             stageList.add(
                 modelStage.yaml2Stage(
                     stage = stage,
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     yamlInput = yamlInput
-                )
+                ).also {
+                    yamlInput.aspectWrapper.setModelStage4Model(it, PipelineTransferAspectWrapper.AspectType.AFTER)
+                }
             )
         }
         // 添加finally

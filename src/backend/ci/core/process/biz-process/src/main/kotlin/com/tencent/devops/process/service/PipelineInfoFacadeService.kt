@@ -51,7 +51,12 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -61,10 +66,12 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSIO
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -74,21 +81,16 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import java.net.URLEncoder
+import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -584,14 +586,22 @@ class PipelineInfoFacadeService @Autowired constructor(
         return result
     }
 
-    private fun transferModelAndSetting(userId: String, projectId: String, yml: String, isDefaultBranch: Boolean, branchName: String): PipelineModelAndSetting {
+    private fun transferModelAndSetting(
+        userId: String,
+        projectId: String,
+        yml: String,
+        isDefaultBranch: Boolean,
+        branchName: String,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
+    ): PipelineModelAndSetting {
         return try {
             val result = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = null,
                 actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml)
+                data = TransferBody(oldYaml = yml),
+                aspects = aspects
             )
             if (result.modelAndSetting == null) {
                 logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")

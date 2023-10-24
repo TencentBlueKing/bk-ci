@@ -48,6 +48,8 @@ import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import com.tencent.devops.process.yaml.modelTransfer.YamlIndexService
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
@@ -58,6 +60,7 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+import java.util.LinkedList
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -90,7 +93,8 @@ class PipelineTransferYamlService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         actionType: TransferActionType,
-        data: TransferBody
+        data: TransferBody,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         try {
@@ -136,7 +140,11 @@ class PipelineTransferYamlService @Autowired constructor(
                     }
                     watcher.start("step_3|transfer start")
                     val input = YamlTransferInput(
-                        userId, projectId, pipelineInfo, pYml
+                        userId = userId,
+                        projectCode = projectId,
+                        pipelineInfo = pipelineInfo,
+                        yaml = pYml,
+                        aspectWrapper = PipelineTransferAspectWrapper(aspects)
                     )
                     val model = modelTransfer.yaml2Model(input)
                     val setting = modelTransfer.yaml2Setting(input)

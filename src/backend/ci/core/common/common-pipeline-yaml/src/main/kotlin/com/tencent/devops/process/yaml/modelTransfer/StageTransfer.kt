@@ -53,6 +53,7 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_HOURS
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.Variable
@@ -98,6 +99,7 @@ class StageTransfer @Autowired(required = false) constructor(
             elementElapsed = null,
             params = variableTransfer.makeVariableFromYaml(yamlInput.yaml.formatVariables())
         )
+        yamlInput.aspectWrapper.setModelJob4Model(triggerContainer, PipelineTransferAspectWrapper.AspectType.AFTER)
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(listOf(triggerContainer), id = stageId, name = stageId)
@@ -133,6 +135,7 @@ class StageTransfer @Autowired(required = false) constructor(
         val containerList = mutableListOf<Container>()
 
         stage.jobs.forEachIndexed { jobIndex, job ->
+            yamlInput.aspectWrapper.setYamlJob4Yaml(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
             val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
@@ -161,6 +164,10 @@ class StageTransfer @Autowired(required = false) constructor(
                     buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
                 )
             }
+            yamlInput.aspectWrapper.setModelJob4Model(
+                containerList.last(),
+                PipelineTransferAspectWrapper.AspectType.AFTER
+            )
         }
 
         val stageEnable = if (stage.enable != null) stage.enable!! else true

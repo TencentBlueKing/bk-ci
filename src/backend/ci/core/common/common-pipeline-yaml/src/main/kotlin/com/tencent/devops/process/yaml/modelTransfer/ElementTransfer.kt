@@ -59,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
@@ -91,6 +92,7 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     fun yaml2Triggers(yamlInput: YamlTransferInput, elements: MutableList<Element>) {
         yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
+            yamlInput.aspectWrapper.setYamlTriggerOn(it.second, PipelineTransferAspectWrapper.AspectType.BEFORE)
             when (it.first) {
                 TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
                 TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
@@ -100,6 +102,10 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
             }
+            yamlInput.aspectWrapper.setModelElement4Model(
+                elements.last(),
+                PipelineTransferAspectWrapper.AspectType.AFTER
+            )
         }
     }
 
@@ -204,12 +210,14 @@ class ElementTransfer @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
+            yamlInput.aspectWrapper.setYamlStep4Yaml(step, PipelineTransferAspectWrapper.AspectType.BEFORE)
             val element: Element = yaml2element(
                 userId = yamlInput.userId,
                 step = step,
                 agentSelector = job.runsOn.agentSelector?.first(),
                 jobRunsOnType = JobRunsOnType.parse(job.runsOn.poolName)
             )
+            yamlInput.aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.AFTER)
             elementList.add(element)
         }
 
