@@ -99,8 +99,8 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
                 startByMessage = null
             ).id
             logger.info("serviceBuildManualStartup result is:$buildId")
-        } catch (t: Throwable) {
-            logger.error("$pipelineId buildManualStartup error:", t)
+        } catch (ignored: Throwable) {
+            logger.error("$pipelineId buildManualStartup error:", ignored)
             serviceBuildStatus = ExtServiceStatusEnum.BUILD_FAIL
         }
         return Result(ExtServiceBuildInitPipelineResp(pipelineId, buildId, serviceBuildStatus))
