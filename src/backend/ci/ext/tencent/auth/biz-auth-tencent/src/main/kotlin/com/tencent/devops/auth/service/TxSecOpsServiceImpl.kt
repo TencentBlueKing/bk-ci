@@ -35,7 +35,7 @@ class TxSecOpsServiceImpl constructor(
     private val secToken = ""
 
     override fun getUserWaterMark(userId: String): SecOpsWaterMarkInfoVo {
-        logger.info("get user water mark :$userId")
+        logger.info("get user water mark:$userId")
         return executePostHttpRequest(
             urlSuffix = USER_WATER_MARK_GET_SUFFIX,
             body = objectMapper.writeValueAsString(
