@@ -372,8 +372,7 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "trunk/bin/dd.txt",
-                        "trunk/bin/lobby"
+                        "trunk/bin"
                     )
                 )
             )
@@ -409,7 +408,7 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "trunk"
+                        "trunk/bin/lobby/loterry/aa.txt"
                     )
                 )
             )
@@ -483,7 +482,7 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "svn/trunk/doc/install/service/doc",
+                        "svn/trunk/doc",
                         "svn/branch/doc"
                     )
                 )
@@ -526,7 +525,28 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "branches"
+                        "branches/dir_a_1/a.kt",
+                        "branches/dir_a_1/a_1/b.kt"
+                    )
+                )
+            )
+        }
+
+        pathRegexFilter = PathRegexFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf(
+                "branches/dir_a/dir_b/dir_c/a.txt"
+            ),
+            includedPaths = listOf("**/dir_**/*"),
+            excludedPaths = emptyList(),
+            caseSensitive = true
+        )
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
+        response.getParam()[MATCH_PATHS]?.let {
+            Assertions.assertTrue(
+                it.split(",").toSet().containsAll(
+                    setOf(
+                        "branches/dir_a"
                     )
                 )
             )

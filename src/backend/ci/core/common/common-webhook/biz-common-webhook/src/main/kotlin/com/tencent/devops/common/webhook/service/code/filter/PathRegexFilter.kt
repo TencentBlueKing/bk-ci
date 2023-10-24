@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
+import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
 class PathRegexFilter(
@@ -57,28 +58,10 @@ class PathRegexFilter(
         val targetSet = if (matchPathsMap[userPath] == null) {
             mutableSetOf()
         } else {
-            matchPathsMap[userPath]!!.map {
-                TriggerPathDepth(
-                    path = it
-                )
-            }.toMutableSet()
+            matchPathsMap[userPath]!!
         }
-        var targetEventPath = getShortPath(userPath, eventPath)
-        // 匹配最后一层目录时，可忽略具体文件
-        if (userPath.endsWith("/*") &&
-            !userPath.endsWith("/**/*") &&
-            targetEventPath.path.contains("/")
-        ) {
-            targetEventPath = TriggerPathDepth(
-                path = targetEventPath.path.substring(0, targetEventPath.path.lastIndexOf("/"))
-            )
-        }
-        targetSet.add(targetEventPath)
-        // 按深度进行分组
-        val group = targetSet.groupBy { it.depth }
-        // 最浅深度
-        val shortDepthPathKey = group.keys.toList().sorted()[0]
-        matchPathsMap[userPath] = group[shortDepthPathKey]?.map { it.path }?.toMutableSet() ?: mutableSetOf()
+        targetSet.add(getShortPath(userPath, eventPath))
+        matchPathsMap[userPath] = targetSet
     }
 
     private fun patternIsMatchDir(userPath: String) =
@@ -86,24 +69,34 @@ class PathRegexFilter(
                 userPath.endsWith("/**") ||
                 userPath == "**"
 
-    private fun getShortPath(userPath: String, eventPath: String): TriggerPathDepth {
-        if (!patternIsMatchDir(userPath) || !eventPath.contains("/")) {
-            return TriggerPathDepth(
-                path = eventPath
-            )
+    private fun getShortPath(userPath: String, eventPath: String): String {
+        // 配置路径中最后可用字符串，可能为通配符字符串，如:dir_**
+        val lastValidStr = getLastValidStr(userPath)
+        if (!patternIsMatchDir(userPath) || !eventPath.contains("/") || lastValidStr.isNullOrBlank()) {
+            return eventPath
         }
         var targetShortPath = eventPath
-        var shortPath = eventPath.substring(0, eventPath.lastIndexOf("/"))
-        while (matcher.match(userPath, shortPath)) {
-            targetShortPath = shortPath
-            if (!shortPath.contains("/")) {
+        // 拆分目录层级
+        val eventPathDirArr = eventPath.split("/")
+        for (i in eventPathDirArr.indices) {
+            // 有效字符匹配
+            if (matcher.match(lastValidStr, eventPathDirArr[i])) {
+                targetShortPath = eventPathDirArr.subList(0, i + 1).joinToString(separator = "/")
                 break
             }
-            shortPath = shortPath.substring(0, shortPath.lastIndexOf("/"))
         }
-        return TriggerPathDepth(
-            path = targetShortPath
-        )
+        return targetShortPath
+    }
+
+    private fun getLastValidStr(userPath: String): String? {
+        val userPathDirArr = userPath.split("/")
+        for (i in userPathDirArr.size - 1 downTo 0) {
+            if (userPathDirArr[i] != "*" && userPathDirArr[i] != "**") {
+                return userPathDirArr[i]
+            }
+        }
+        logger.info("The userPath do not contain available string.")
+        return null
     }
 
     override fun getFinalPath(
@@ -112,7 +105,7 @@ class PathRegexFilter(
         matchPathsMap.isEmpty() -> {
             setOf()
         }
-        // 存在**时匹配所有文件，无视其他路径规则
+        // 存在**时匹配所有文件，无视其他路径规则，**时输出全路径
         matchPathsMap.containsKey("**") -> {
             matchPathsMap["**"] ?: setOf()
         }
@@ -124,9 +117,8 @@ class PathRegexFilter(
             targetPath.toSet()
         }
     }
-}
 
-data class TriggerPathDepth(
-    val path: String, // 路径信息
-    val depth: Int = path.split("/").size // 深度信息
-)
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+    }
+}
