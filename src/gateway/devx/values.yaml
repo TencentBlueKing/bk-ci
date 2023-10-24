@@ -1,0 +1,24 @@
+etcd:
+  persistence:
+    size: 10Gi
+dashboard:
+  enabled: true
+  service:
+    type: NodePort
+  config:
+    authentication:
+      users: [{"password":"Devops@2023","username":"bkci"}]
+apisix:
+  plugins:
+    - check-ip-project
+  customPlugins:
+    enabled: true
+    luaPath: "/opts/custom_plugins/?.lua"
+    plugins:
+      - name: "check-ip-project"
+        attrs: {}
+        configMap:
+          name: "check-ip-project"
+          mounts: 
+            - key: "check-ip-project.lua"
+              path: "/opts/custom_plugins/apisix/plugins/check-ip-project.lua"
