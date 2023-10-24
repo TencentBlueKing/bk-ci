@@ -90,7 +90,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 needPermission = false,
-                checkDeleteImmediately = true
+                checkDeleteImmediately = false
             )
         )
     }
