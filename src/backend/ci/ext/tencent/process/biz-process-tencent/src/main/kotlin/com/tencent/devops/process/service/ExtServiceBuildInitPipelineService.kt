@@ -69,7 +69,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             projectId = projectCode,
             model = model,
             channelCode = ChannelCode.AM
-        )
+        ).pipelineId
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
         val extServiceBaseInfo = extServiceBuildInitPipelineReq.extServiceBaseInfo
