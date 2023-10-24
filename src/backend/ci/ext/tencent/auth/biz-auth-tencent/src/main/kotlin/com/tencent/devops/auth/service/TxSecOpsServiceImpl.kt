@@ -44,7 +44,7 @@ class TxSecOpsServiceImpl constructor(
                     username = userId
                 )
             )
-        ).data ?: throw ErrorCodeException(
+        ).data?.firstOrNull { it.type == "image_base64" } ?: throw ErrorCodeException(
             errorCode = ERROR_WATER_MARK_NOT_EXIST,
             defaultMessage = "user water mark not exist!$userId"
         )
@@ -53,7 +53,7 @@ class TxSecOpsServiceImpl constructor(
     private fun executePostHttpRequest(
         urlSuffix: String,
         body: String
-    ): ResponseDTO<SecOpsWaterMarkInfoVo> {
+    ): ResponseDTO<List<SecOpsWaterMarkInfoVo>> {
         val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
         val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
         val url = secUrlPrefix + urlSuffix
@@ -73,7 +73,7 @@ class TxSecOpsServiceImpl constructor(
             logger.info("executeHttpRequest:${it.body!!}")
             val responseStr = it.body!!.string()
             logger.info("executeHttpRequest:$responseStr")
-            val responseDTO = objectMapper.readValue<ResponseDTO<SecOpsWaterMarkInfoVo>>(responseStr)
+            val responseDTO = objectMapper.readValue<ResponseDTO<List<SecOpsWaterMarkInfoVo>>>(responseStr)
             if (responseDTO.code != 200L) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response :($it)")
