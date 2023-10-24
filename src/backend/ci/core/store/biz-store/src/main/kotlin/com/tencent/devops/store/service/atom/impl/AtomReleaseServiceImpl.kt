@@ -723,7 +723,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val metadataResultMap = registerMetadata(
                     userId = userId,
                     atomCode = atomCode,
-                    atomName = atomCode,
+                    atomName = atomName,
                     indicators = indicators
                 )
 
@@ -732,7 +732,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     userId = userId,
                     projectId = projectCode,
                     atomCode = atomCode,
-                    atomName = atomCode,
+                    atomName = atomName,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     metadataResultMap = metadataResultMap,
@@ -743,7 +743,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 registerControlPoint(
                     userId = userId,
                     atomCode = atomCode,
-                    atomName = atomCode,
+                    atomName = atomName,
                     atomVersion = atomVersion,
                     stage = stageCode,
                     projectId = projectCode
