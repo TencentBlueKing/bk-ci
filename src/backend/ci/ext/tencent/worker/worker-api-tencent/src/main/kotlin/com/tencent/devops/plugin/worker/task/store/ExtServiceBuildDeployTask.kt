@@ -130,8 +130,7 @@ class ExtServiceBuildDeployTask : ITask() {
         val uploadResult = archiveApi.uploadFile(
             url = uploadFileUrl,
             file = file,
-            headers = headers,
-            isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            headers = headers
         )
         logger.info("ExtServiceBuildDeployTask uploadResult: $uploadResult")
         val uploadFlag = uploadResult.data
