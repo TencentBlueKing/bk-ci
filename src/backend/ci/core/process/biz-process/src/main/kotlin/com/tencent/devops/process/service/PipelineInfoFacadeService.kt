@@ -517,9 +517,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         yml: String,
         branchName: String,
-        isDefaultBranch: Boolean
+        isDefaultBranch: Boolean,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
-        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
+        val newResource = transferModelAndSetting(
+            userId = userId,
+            projectId = projectId,
+            yml = yml,
+            isDefaultBranch = isDefaultBranch,
+            branchName = branchName,
+            aspects = aspects
+        )
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
