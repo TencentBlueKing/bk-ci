@@ -709,6 +709,7 @@ class PipelineWebhookService @Autowired constructor(
                             ?: return@webhook
                         val elementRepositoryConfig = webhookElementParams.repositoryConfig
                         val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
+                        // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致，不更新
                         if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
                             logger.info(
                                 "webhook repository config different from element repository config|" +
@@ -716,19 +717,30 @@ class PipelineWebhookService @Autowired constructor(
                             )
                             return@webhook
                         }
-                        val repository = repoCache.putIfAbsent(
-                            "${projectId}_${elementRepositoryConfig.getRepositoryId()}", Optional.ofNullable(
-                                try {
-                                    scmProxyService.getRepo(
-                                        projectId = projectId,
-                                        repositoryConfig = elementRepositoryConfig
-                                    )
-                                } catch (ignored: Exception) {
-                                    logger.warn("fail to get repository info", ignored)
-                                    null
-                                }
-                            )
-                        )?.get()
+                        // 缓存代码库信息,避免频繁调用代码库信息接口
+                        val repoCacheKey = "${projectId}_${elementRepositoryConfig.getRepositoryId()}"
+                        val repositoryOptional = repoCache[repoCacheKey]
+                        val repository = if (repositoryOptional == null) {
+                            val repo = try {
+                                scmProxyService.getRepo(
+                                    projectId = projectId,
+                                    repositoryConfig = elementRepositoryConfig
+                                )
+                            } catch (ignored: Exception) {
+                                logger.warn("fail to get repository info", ignored)
+                                null
+                            }
+                            repoCache[repoCacheKey] = Optional.ofNullable(repo)
+                            repo
+                        } else {
+                            if (repositoryOptional.isPresent) {
+                                repositoryOptional.get()
+                            } else {
+                                return@webhook
+                            }
+                        }
+
+                        // 历史原因,git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,统计数据量
                         if (repository != null && webhook.projectName != repository.projectName) {
                             logger.info(
                                 "webhook projectName different from repo projectName|" +
