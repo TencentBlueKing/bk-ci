@@ -62,8 +62,8 @@ class ProjectRemoteDevService @Autowired constructor(
             null
         }
 
-        // 创建监控表盘
-        if (bizId != null) {
+        // 迁移监控权限, 创建监控表盘
+        if (bizId != null && migrateMonitorResource(listOf(projectCode))) {
             quickImportDashboard(bizId)
         }
 
@@ -106,6 +106,15 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn("quickImportDashboard request failed", e)
+        }
+    }
+
+    private fun migrateMonitorResource(projectList: List<String>): Boolean {
+        return try {
+            client.get(ServiceMonitorSpaceResource::class).migrateMonitorResource(projectList).data ?: false
+        } catch (e: Exception) {
+            logger.warn("migrateMonitorResource projects {} error", projectList, e)
+            false
         }
     }
 
