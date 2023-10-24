@@ -327,19 +327,7 @@ class SleepControl @Autowired constructor(
             )
         }
 
-        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
-        }
-
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            workspaceCommon.updateLastHistory(transactionContext, workspaceName, operator)
-            remoteDevBillingDao.endBilling(
-                dslContext = transactionContext,
-                workspaceName = workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-            )
-        }
+        workspaceCommon.statisticalData(workspace, operator)
 
         workspaceCommon.dispatchWebsocketPushEvent(
             userId = operator,

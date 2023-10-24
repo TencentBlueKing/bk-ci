@@ -46,6 +46,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -77,6 +78,7 @@ import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.time.Duration
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,6 +96,7 @@ class WorkspaceCommon @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisCache: RedisCacheService,
@@ -608,5 +611,27 @@ class WorkspaceCommon @Autowired constructor(
         projectId: String
     ): Map<String, Any> {
         return mapOf("devx_meta" to JsonUtil.toJson(listOf(mapOf("projectId" to projectId)), formatted = false))
+    }
+
+    /*
+    * 工作空间进入不使用状态，对数据进行统计和闭合处理
+    * */
+    fun statisticalData(
+        workspace: WorkspaceRecord,
+        operator: String
+    ) {
+        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
+        }
+
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            updateLastHistory(transactionContext, workspace.workspaceName, operator)
+            remoteDevBillingDao.endBilling(
+                dslContext = transactionContext,
+                workspaceName = workspace.workspaceName,
+                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
+            )
+        }
     }
 }

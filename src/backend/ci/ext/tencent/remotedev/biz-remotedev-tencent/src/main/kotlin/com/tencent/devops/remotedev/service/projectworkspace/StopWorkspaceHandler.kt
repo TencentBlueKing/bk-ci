@@ -52,13 +52,13 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class StopWorkspaceHandler @Autowired constructor(
@@ -162,9 +162,9 @@ class StopWorkspaceHandler @Autowired constructor(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(event.workspaceName)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(event.workspaceName)
+        )
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -182,7 +182,7 @@ class StopWorkspaceHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.RUNNING.name
+                        WorkspaceStatus.STOPPED.name
                     )
                 )
             }
@@ -207,6 +207,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 )
             )
         }
+        workspaceCommon.statisticalData(workspace, event.userId)
 
         // 分发到WS
         workspaceCommon.dispatchWebsocketPushEvent(
