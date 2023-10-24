@@ -51,6 +51,7 @@ import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
@@ -319,19 +320,16 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     }
 
     override fun downloadGitRepoFile(
-        repoName: String,
-        sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
-        filePath: String?,
-        format: String?,
-        isProjectPathWrapped: Boolean?,
+        request: DownloadGitRepoFileRequest,
         response: HttpServletResponse
     ) {
         val serviceUrlPrefix = client.getScmUrl(ServiceGitResource::class)
         val serviceUrl = "$serviceUrlPrefix/service/git/downloadGitRepoFile" +
-                "?repoName=$repoName&sha=$sha&token=$token&tokenType=$tokenType&filePath=$filePath" +
-                "&format=$format&isProjectPathWrapped=$isProjectPathWrapped"
+                "?repoName=${request.repoName}&sha=${request.sha}&token=$token&tokenType=$tokenType" +
+                "&filePath=${request.filePath}&format=${request.format}" +
+                "&isProjectPathWrapped=${request.isProjectPathWrapped}"
         OkhttpUtils.downloadFile(serviceUrl, response)
     }
 

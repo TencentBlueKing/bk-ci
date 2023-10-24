@@ -26,7 +26,9 @@
  */
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -81,18 +83,21 @@ class SampleStoreFileServiceImpl : StoreFileService() {
 
     override fun serviceArchiveAtomFile(
         userId: String,
-        projectCode: String,
-        atomCode: String,
-        serviceUrlPrefix: String,
-        releaseType: String,
-        version: String,
-        file: File,
-        os: String
+        client: Client,
+        archiveAtomRequest: ArchiveAtomRequest,
+        file: File
     ): Result<Boolean?> {
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/archiveAtom" +
-                "?userId=$userId&projectCode=$projectCode&atomCode=$atomCode" +
-                "&version=$version&releaseType=$releaseType&os=$os"
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
+        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
+                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
+                "&version=${archiveAtomRequest.version}")
+        archiveAtomRequest.releaseType?.let {
+            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
+        }
+        archiveAtomRequest.os?.let {
+            serviceUrl.append("&os=${archiveAtomRequest.os}")
+        }
+        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(

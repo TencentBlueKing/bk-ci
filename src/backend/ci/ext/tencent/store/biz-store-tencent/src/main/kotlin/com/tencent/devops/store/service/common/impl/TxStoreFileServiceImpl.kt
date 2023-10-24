@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
@@ -79,13 +80,9 @@ class TxStoreFileServiceImpl : StoreFileService() {
 
     override fun serviceArchiveAtomFile(
         userId: String,
-        projectCode: String,
-        atomCode: String,
-        serviceUrlPrefix: String,
-        releaseType: String,
-        version: String,
-        file: File,
-        os: String
+        client: Client,
+        archiveAtomRequest: ArchiveAtomRequest,
+        file: File
     ): Result<Boolean?> {
         TODO("内部版发布不需要归档插件包")
     }
