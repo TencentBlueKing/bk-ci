@@ -157,7 +157,12 @@ class CodeGitlabRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            authType = RepoAuthType.valueOf(record.authType)
+            // gitlab代码库的老数据authType字段为null
+            authType = if (record.authType.isNullOrBlank()) {
+                RepoAuthType.HTTP
+            } else {
+                RepoAuthType.valueOf(record.authType)
+            }
         )
     }
 
