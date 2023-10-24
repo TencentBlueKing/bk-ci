@@ -85,7 +85,7 @@ export const codelibConfig = {
     },
     git_http: {
         credentialTypes: 'USERNAME_PASSWORD,TOKEN_USERNAME_PASSWORD',
-        addType: 'TOKEN_USERNAME_PASSWORD',
+        addType: 'USERNAME_PASSWORD',
         label: 'Git',
         typeName: 'codeGit'
     },

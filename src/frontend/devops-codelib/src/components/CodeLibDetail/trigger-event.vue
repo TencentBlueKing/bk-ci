@@ -9,19 +9,25 @@
                 :options="{
                     disabledDate: time => time.getTime() > Date.now()
                 }"
+                :shortcuts="shortcuts"
                 :key="repoId"
             >
             </bk-date-picker>
             <bk-search-select
+                ref="searchSelect"
                 class="search-select"
                 v-model="searchValue"
                 :data="searchList"
                 clearable
                 :show-condition="false"
                 :placeholder="$t('codelib.触发器类型/事件类型/触发人/流水线名称')"
+                @menu-child-select="handleMenuChildSelect"
                 :key="repoId"
             >
             </bk-search-select>
+            <span class="refresh-icon" @click="handleRefresh">
+                <bk-icon type="refresh" />
+            </span>
         </header>
         <section
             v-if="eventList.length"
@@ -37,6 +43,7 @@
                         <TimelineCollapse
                             :data="data"
                             :time="key"
+                            @replay="replayEvent"
                         />
                     </div>
                 </li>
@@ -86,7 +93,8 @@
                 isLoadingMore: false,
                 hasLoadEnd: false,
                 pageLoading: false,
-                isInitTime: true
+                isInitTime: true,
+                shortcuts: []
             }
         },
         computed: {
@@ -166,6 +174,43 @@
             this.getEventTypeList()
             this.getTriggerTypeList()
             this.setDefaultDaterange()
+            this.shortcuts = [
+                {
+                    text: this.$t('codelib.今天'),
+                    value () {
+                        const end = new Date()
+                        const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+                        return [start, end]
+                    }
+                },
+                {
+                    text: this.$t('codelib.昨天'),
+                    value () {
+                        const time = new Date()
+                        const end = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1, 23, 59, 59)
+                        const start = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1)
+                        return [start, end]
+                    }
+                },
+                {
+                    text: this.$t('codelib.近3天'),
+                    value () {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 3)
+                        return [start, end]
+                    }
+                },
+                {
+                    text: this.$t('codelib.近7天'),
+                    value () {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+                        return [start, end]
+                    }
+                }
+            ]
         },
         methods: {
             ...mapActions('codelib', [
@@ -212,6 +257,7 @@
                 if (this.hasLoadEnd) return
                 if (this.page === 1) {
                     this.pageLoading = true
+                    this.eventList = []
                 } else {
                     this.isLoadingMore = true
                 }
@@ -273,6 +319,28 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
+            },
+
+            handleMenuChildSelect () {
+                setTimeout(() => {
+                    if (this.searchValue.length === 4) {
+                        this.$refs.searchSelect.hidePopper()
+                    }
+                })
+            },
+
+            async handleRefresh () {
+                this.pageLoading = true
+                this.hasLoadEnd = false
+                this.page = 1
+                await this.getListData()
+            },
+
+            replayEvent () {
+                this.pageLoading = true
+                setTimeout(() => {
+                    this.handleRefresh()
+                }, 3000)
             }
         }
     }
@@ -282,6 +350,19 @@
         height: 100%;
         .header-warpper {
             display: flex;
+        }
+        .refresh-icon {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #c4c6cc;
+            color: #63656e;
+            margin-left: 10px;
+            font-size: 18px;
+            cursor: pointer;
         }
         .date-picker {
             max-width: 300px;

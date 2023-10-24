@@ -67,10 +67,15 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .title-link {
         cursor: pointer;
         margin-left: 10px;
         color: #3c96ff;
+    }
+    ::v-deep .bk-label,
+    ::v-deep .bk-form-content,
+    ::v-deep .bk-form-radio {
+        font-size: 12px !important;
     }
 </style>

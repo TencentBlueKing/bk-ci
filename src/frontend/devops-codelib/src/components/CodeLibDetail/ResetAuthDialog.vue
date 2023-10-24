@@ -18,7 +18,7 @@
         <bk-form
             ref="form"
             :model="newRepoInfo"
-            :label-width="120"
+            :label-width="140"
             :rules="rules"
         >
             <!-- Github 重置授权 -->
@@ -559,7 +559,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .codelib-oauth {
         margin: 20px 0;
         .refresh-oauth {
@@ -575,6 +575,7 @@
             color: #979BA5;
         }
     }
-    .codelib-credential-selector {
+    .bk-dialog-title {
+        font-size: 20px;
     }
 </style>

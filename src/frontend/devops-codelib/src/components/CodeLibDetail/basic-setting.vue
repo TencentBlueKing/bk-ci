@@ -713,7 +713,7 @@
                     content: "";
                     position: relative;
                     display: inline-block;
-                    top: 2px;
+                    top: 4px;
                     width: 1px;
                     height: 16px;
                     margin: 0 16px;
@@ -747,8 +747,7 @@
         .history-item {
             display: inline-flex;
             line-height: 16px;
-            min-width: 230px;
-            max-width: 300px;
+            width: 280px;
             margin-right: 200px;
             margin-bottom: 16px;
             .label {

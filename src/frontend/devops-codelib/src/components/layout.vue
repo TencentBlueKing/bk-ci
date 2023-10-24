@@ -46,7 +46,7 @@
                 }
             },
             rightStyles () {
-                const paddingBottom = 20
+                const paddingBottom = 18
                 return {
                     height: `calc(100vh -  ${this.layoutOffsetTop + paddingBottom}px)`
                 }

@@ -34,6 +34,7 @@
                     ref="aliasNameInput"
                     :maxlength="60"
                     v-model="repoInfo.aliasName"
+                    @enter="handleSave"
                 >
                 </bk-input>
                 <bk-button
@@ -195,7 +196,26 @@
                     this.fetchRepoDetail(val)
                 },
                 immediate: true
+            },
+            active: {
+                handler (val) {
+                    this.$router.push({
+                        query: {
+                            ...this.$route.query,
+                            tab: val
+                        }
+                    })
+                }
+            },
+            'pipelinesDialogPayload.isShow' (val) {
+                if (!val) {
+                    this.pipelinesList = []
+                }
             }
+        },
+        created () {
+            const { tab } = this.$route.query
+            if (tab) this.active = tab || 'basic'
         },
         methods: {
             ...mapActions('codelib', [
@@ -369,18 +389,19 @@
             height: 100%;
         }
     }
+
     .codelib-detail {
         height: 100%;
         .detail-header {
             display: flex;
             justify-content: space-between;
-            flex: 1;
+            align-items: center;
             height: 48px;
-            line-height: 48px;
             background: #FAFBFD;
             padding: 0 24px;
         }
         .codelib-name {
+            width: 100%;
             font-size: 16px;
             color: #313238;
             margin-right: 30px;
@@ -392,7 +413,7 @@
             }
             span {
                 display: inline-block;
-                max-width: 400px;
+                max-width: 350px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -400,12 +421,13 @@
         }
         .edit-input {
             display: flex;
+            align-items: center;
             width: 100%;
         }
 
         .aliasName-input {
             flex: 1;
-            max-width: 400px;
+            max-width: 350px;
             min-width: 200px;
             line-height: 48px;
         }
@@ -426,10 +448,6 @@
         .address-content {
             white-space: nowrap;
         }
-        .codelib-type-icon {
-            position: relative;
-            bottom: 16px;
-        }
         .codelib-address {
             display: inline-block;
             max-width: 480px;
@@ -439,8 +457,6 @@
         }
         .copy-icon {
             margin-left: 10px;
-            position: relative;
-            top: -16px;
             cursor: pointer;
         }
     }

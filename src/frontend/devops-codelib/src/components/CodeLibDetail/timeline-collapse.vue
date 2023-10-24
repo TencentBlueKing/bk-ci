@@ -58,7 +58,7 @@
                                     <td width="25%">
                                         <div class="cell">{{ detail.pipelineName }}</div>
                                     </td>
-                                    <td width="55%">
+                                    <td width="75%">
                                         <div class="cell" v-if="detail.status === 'SUCCEED'">
                                             <StatusIcon :status="detail.status"></StatusIcon>
                                             {{ detail.reason }}  |
@@ -72,7 +72,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td width="15%">
+                                    <td class="replay-btn">
                                         <div class="cell">
                                             <a class="click-trigger" @click="handleReplay(detail)">{{ $t('codelib.重新触发') }}</a>
                                         </div>
@@ -154,6 +154,7 @@
                                 theme: 'success',
                                 message: this.$t('codelib.触发成功')
                             })
+                            this.$emit('replay')
                         })
                     }
                 })
@@ -178,6 +179,7 @@
                                 theme: 'success',
                                 message: this.$t('codelib.触发成功')
                             })
+                            this.$emit('replay')
                         })
                     }
                 })
@@ -339,6 +341,10 @@
         }
         .is-show-table {
             animation: fade-in 1s ease-in-out;
+        }
+        .replay-btn {
+            display: inline-block;
+            width: 142px;
         }
     }
     

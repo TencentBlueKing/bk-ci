@@ -33,8 +33,10 @@
     }
 </script>
 
-<style lang="scss">
-    .atom-form-label {
+<style lang="scss" scoped>
+    ::v-deep .bk-label,
+    ::v-deep .bk-form-content,
+    ::v-deep .bk-form-radio {
         font-size: 12px !important;
     }
 </style>

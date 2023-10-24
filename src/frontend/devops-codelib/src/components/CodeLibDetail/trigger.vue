@@ -20,8 +20,10 @@
         >
             <bk-table-column :label="$t('codelib.事件')" prop="eventType">
                 <template slot-scope="{ row }">
-                    <img style="width: 18px; height: 18px;" :src="`https:${row.atomLogo}`" alt="">
-                    {{ row.eventType }}
+                    <div class="event-name">
+                        <img class="logo" :src="`https:${row.atomLogo}`" alt="">
+                        {{ row.eventType }}
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.触发条件')" prop="eventType" show-overflow-tooltip>
@@ -74,6 +76,12 @@
                     </bk-button>
                 </template>
             </bk-table-column>
+            <template #empty>
+                <EmptyTableStatus
+                    :type="!!searchValue.length ? 'search-empty' : 'empty'"
+                    @clear="clearFilter"
+                />
+            </template>
         </bk-table>
         <atom-detail
             ref="atomDetailRef"
@@ -87,9 +95,11 @@
         mapActions
     } from 'vuex'
     import atomDetail from '../atom-detail.vue'
+    import EmptyTableStatus from '../empty-table-status.vue'
     export default {
         components: {
-            atomDetail
+            atomDetail,
+            EmptyTableStatus
         },
         props: {
             curRepo: {
@@ -329,6 +339,10 @@
             handelShowDetail (row) {
                 this.curAtom = row
                 this.$refs.atomDetailRef.isShow = true
+            },
+
+            clearFilter () {
+                this.searchValue = []
             }
         }
     }
@@ -345,8 +359,20 @@
                 -webkit-line-clamp: 300 !important;
                 padding: 10px 15px !important;
             }
+            .event-name {
+                display: flex;
+                align-items: center;
+                .logo {
+                    width: 18px;
+                    height: 18px;
+                    margin-right: 5px;
+                }
+            }
             .condition-item {
                 line-height: 20px;
+            }
+            ::v-deep .part-img {
+                margin-top: 0 !important;
             }
         }
     }
