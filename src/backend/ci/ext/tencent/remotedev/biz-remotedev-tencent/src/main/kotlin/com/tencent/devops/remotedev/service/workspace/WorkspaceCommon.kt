@@ -411,10 +411,15 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
-                .ifBlank { null }
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+                dslContext = dslContext,
+                userId = creator
+            ).projectId.ifBlank { null }
 
-            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.projectId
+            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(
+                dslContext = dslContext,
+                workspaceName = workspaceName
+            )?.projectId
         } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
             return false
