@@ -166,7 +166,7 @@
             <template
                 v-if="!isOAUTH">
                 <bk-form-item
-                    :label="$t('codelib.address')"
+                    :label="addressTitle"
                     :required="true"
                     property="url"
                     error-display-type="normal"
@@ -316,6 +316,17 @@
             },
             credentialList () {
                 return this.tickets || []
+            },
+            addressTitle () {
+                const type = this.isSvn ? this.newRepoInfo.svnType : this.newRepoInfo.authType
+                const titleMap = {
+                    http: this.$t('codelib.HTTP/HTTPS地址'),
+                    HTTP: this.$t('codelib.HTTP/HTTPS地址'),
+                    HTTPS: this.$t('codelib.HTTP/HTTPS地址'),
+                    SSH: this.$t('codelib.SSH地址'),
+                    ssh: this.$t('codelib.SSH地址')
+                }
+                return titleMap[type]
             }
         },
         watch: {
