@@ -154,6 +154,16 @@
                             includeUsers: this.$t('codelib.人员'),
                             excludeUsers: this.$t('codelib.排除人员')
                         },
+                        PULL_REQUEST: {
+                            branchName: this.$t('codelib.分支'),
+                            excludeBranchName: this.$t('codelib.排除的目标分支'),
+                            includeSourceBranchName: this.$t('codelib.源分支'),
+                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
+                            includePaths: this.$t('codelib.路径'),
+                            excludePaths: this.$t('codelib.排除路径'),
+                            includeUsers: this.$t('codelib.人员'),
+                            excludeUsers: this.$t('codelib.排除人员')
+                        },
                         MERGE_REQUEST: {
                             branchName: this.$t('codelib.分支'),
                             excludeBranchName: this.$t('codelib.排除的目标分支'),
