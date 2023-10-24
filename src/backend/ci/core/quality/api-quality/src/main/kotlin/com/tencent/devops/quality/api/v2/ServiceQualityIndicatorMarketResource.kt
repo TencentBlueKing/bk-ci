@@ -54,6 +54,8 @@ interface ServiceQualityIndicatorMarketResource {
         userId: String,
         @QueryParam("atomCode")
         atomCode: String,
+        @QueryParam("tag")
+        tag: String,
         indicatorUpdateList: Collection<IndicatorUpdate>
     ): Result<Int>
 
@@ -71,6 +73,8 @@ interface ServiceQualityIndicatorMarketResource {
     @DELETE
     fun deleteTestIndicator(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("extra")
+        extra: String
     ): Result<Int>
 }

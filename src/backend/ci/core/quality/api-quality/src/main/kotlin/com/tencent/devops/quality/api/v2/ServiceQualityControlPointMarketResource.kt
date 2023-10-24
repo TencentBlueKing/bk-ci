@@ -52,6 +52,8 @@ interface ServiceQualityControlPointMarketResource {
     fun setTestControlPoint(
         @QueryParam("userId")
         userId: String,
+        @QueryParam("tag")
+        tag: String,
         controlPoint: QualityControlPoint
     ): Result<Long>
 
@@ -68,6 +70,8 @@ interface ServiceQualityControlPointMarketResource {
     @DELETE
     fun deleteTestControlPoint(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("tag")
+        tag: String
     ): Result<Int>
 }
