@@ -271,7 +271,6 @@
                 </bk-table-column>
                 <bk-exception
                     slot="empty"
-                    class="no-build-history-exception"
                     type="search-empty"
                     scene="part"
                 >
@@ -975,7 +974,10 @@
 }
 
 .no-build-history-exception {
-    transform: translateY(50%);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     .no-build-history-box {
         display: grid;
         grid-gap: 12px;

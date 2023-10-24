@@ -36,6 +36,7 @@
         />
         <import-pipeline-popup
             :handle-import-success="handleImportModifyPipeline"
+            :pipeline-name="pipelineName"
             :is-show.sync="showImportDialog"
         ></import-pipeline-popup>
         <remove-confirm-dialog
@@ -83,6 +84,9 @@
             ...mapState('pipelines', ['pipelineActionState', 'pipelineInfo']),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName ?? ''
             },
             actionConfMenus () {
                 const pipeline = {
@@ -204,19 +208,9 @@
             importModifyPipeline () {
                 this.showImportDialog = true
             },
-            handleImportModifyPipeline (result) {
+            handleImportModifyPipeline () {
                 this.showImportDialog = false
-                this.setEditFrom(true)
                 this.$nextTick(() => {
-                    const pipelineVersion = this.pipelineInfo?.version
-                    const pipelineName = this.pipelineInfo?.pipelineName
-                    this.setPipeline({
-                        ...result.model,
-                        name: pipelineName,
-                        latestVersion: pipelineVersion,
-                        instanceFromTemplate: false
-                    })
-                    this.setPipelineEditing(true)
                     this.$router.push({
                         name: 'pipelinesEdit'
                     })

@@ -64,6 +64,9 @@ const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'..
 const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
 
+// 流水线导入
+const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
+
 const routes = [
     {
         path: '/pipeline/:projectId',
@@ -77,6 +80,15 @@ const routes = [
                 path: 'create',
                 component: CreatePipeline,
                 name: 'createPipeline'
+            },
+            {
+                path: 'import',
+                component: ImportPipelineEdit,
+                children: [{
+                    path: '',
+                    name: 'pipelineImportEdit',
+                    component: pipelinesEdit
+                }]
             },
             {
                 path: 'list',

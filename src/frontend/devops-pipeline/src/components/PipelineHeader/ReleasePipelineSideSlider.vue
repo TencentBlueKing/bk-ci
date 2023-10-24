@@ -6,7 +6,7 @@
         @hidden="hideReleaseSlider"
         :title="$t('releasePipeline')"
     >
-        <section slot="content" class="release-pipeline-pac-form">
+        <section slot="content" v-bkloading="{ isLoading }" class="release-pipeline-pac-form">
             <div class="release-pipeline-pac-conf">
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
@@ -18,9 +18,15 @@
                     <label for="enablePac">
                         {{ $t('codelibSrc') }}
                     </label>
-                    <bk-radio checked>
-                        {{ $t('gitcode') }}
-                    </bk-radio>
+                    <bk-radio-group v-model="releaseParams.scmType">
+                        <bk-radio
+                            v-for="item in pacSupportScmTypeList"
+                            :key="item"
+                            :value="item"
+                        >
+                            {{ $t(item) }}
+                        </bk-radio>
+                    </bk-radio-group>
                 </aside>
             </div>
             <bk-form
@@ -47,19 +53,22 @@
                             :desc="$t('aaaa')"
                             desc-type="icon"
                             desc-icon="bk-icon icon-question-circle-shape"
-                            property="codelibUrl"
+                            property="repoHashId"
                         >
                             <bk-select
                                 searchable
-                                v-model="releaseParams.codelibUrl"
+                                enable-scroll-load
+                                v-model="releaseParams.repoHashId"
+                                :scroll-loading="scrollLoadmoreConf"
+                                @scroll-end="fetchPacEnableCodelibList"
                                 :show-empty="false"
                                 :placeholder="$t('editPage.atomForm.selectTips')"
                             >
                                 <template v-if="pacEnableCodelibList.length > 0">
                                     <bk-option v-for="option in pacEnableCodelibList"
-                                        :key="option.id"
-                                        :id="option.id"
-                                        :name="option.name">
+                                        :key="option.repositoryHashId"
+                                        :id="option.repositoryHashId"
+                                        :name="option.aliasName">
                                     </bk-option>
                                 </template>
                                 <bk-exception v-else scene="part" type="empty">
@@ -79,10 +88,10 @@
                             :desc="$t('aaaa')"
                             desc-type="icon"
                             desc-icon="bk-icon icon-question-circle-shape"
-                            property="yamlDir"
+                            property="filePath"
                         >
                             <bk-input
-                                v-model="releaseParams.yamlDir"
+                                v-model="releaseParams.filePath"
                             >
                                 <span class="group-text" slot="prepend">.ci/</span>
                             </bk-input>
@@ -130,7 +139,7 @@
                     />
                 </div>
             </bk-form>
-            <div v-if="releaseParams.enablePac && !hasOauth" class="pac-oauth-enable">
+            <div v-if="releaseParams.enablePac && !hasOauth" class="pac-oauth-enable" v-bkloading="{ isLoading: refreshing }">
                 <header>
                     <bk-button
                         :loading="oauthing"
@@ -187,16 +196,25 @@
         },
         data () {
             return {
+                isLoading: false,
                 showPacCodelibSetting: false,
                 pacEnableCodelibList: [],
                 hasOauth: false,
                 oauthing: false,
                 refreshing: false,
+                scrollLoadmoreConf: {
+                    isLoading: false,
+                    page: 1,
+                    pageSize: 10,
+                    total: 0,
+                    size: 'small'
+                },
                 releaseParams: {
                     enablePac: false,
+                    repoHashId: '',
+                    scmType: '',
                     description: '',
-                    codelibUrl: '',
-                    yamlDir: '',
+                    filePath: '',
                     targetAction: 'COMMIT_TO_MASTER',
                     groupValue: {
                         labels: [],
@@ -207,20 +225,21 @@
         },
         computed: {
             ...mapState('pipelines', ['pipelineInfo', 'isManage']),
-            ...mapGetters('pipelines', ['isBranchVersion']),
+            ...mapGetters('pipelines', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
+            ...mapState('common', ['pacSupportScmTypeList']),
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionBranch
             },
             rules () {
                 return {
-                    codelibUrl: [{
+                    repoHashId: [{
                         required: true,
                         message: this.$t('stageReview.requireRule', [this.$t('yamlCodeLib')]),
                         trigger: 'blur'
                     }],
-                    yamlDir: [{
+                    filePath: [{
                         required: true,
-                        message: this.$t('stageReview.requireRule', [this.$t('yamlDir')]),
+                        message: this.$t('stageReview.requireRule', [this.$t('filePath')]),
                         trigger: 'blur'
                     }],
                     description: [{
@@ -242,14 +261,100 @@
                 ]
             }
         },
+        watch: {
+            yamlInfo: {
+                handler: function (val) {
+                    if (val) {
+                        Object.assign(this.releaseParams, val)
+                    }
+                },
+                immediate: true
+            },
+            pacSupportScmTypeList (val) {
+                if (val.length && !this.releaseParams.scmType) {
+                    this.releaseParams.scmType = val[0]
+                    this.$nextTick(() => {
+                        this.fetchPacEnableCodelibList()
+                    })
+                }
+            },
+            pacEnabled: {
+                handler: function (val) {
+                    this.releaseParams.enablePac = val
+                },
+                immediate: true
+            },
+            'releaseParams.enablePac': {
+                handler: function (val) {
+                    if (val) {
+                        this.init()
+                    }
+                },
+                immediate: true
+            },
+            'releaseParams.scmType': {
+                handler: function (val) {
+                    if (val) {
+                        this.$nextTick(() => {
+                            this.refreshOatuStatus()
+                        })
+                    }
+                },
+                immediate: true
+            }
+        },
         methods: {
             ...mapActions('atom', [
                 'releaseDraftPipeline',
                 'setSaveStatus'
             ]),
+            ...mapActions('common', [
+                'isPACOAuth',
+                'getSupportPacScmTypeList',
+                'getPACRepoList'
+            ]),
             ...mapMutations('pipelines', [
                 'updatePipelineInfo'
             ]),
+            async init () {
+                if (this.releaseParams.enablePac) {
+                    this.isLoading = true
+                    await this.getSupportPacScmTypeList()
+
+                    this.isLoading = false
+                }
+            },
+            async fetchPacEnableCodelibList () {
+                try {
+                    if (this.scrollLoadmoreConf.isLoading || (this.scrollLoadmoreConf.total && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)) {
+                        return
+                    }
+                    this.scrollLoadmoreConf.isLoading = true
+                    const { projectId } = this.$route.params
+                    const { scmType } = this.releaseParams
+                    const response = await this.getPACRepoList({
+                        projectId,
+                        repositoryType: scmType,
+                        enablePac: true,
+                        permission: 'USE',
+                        page: this.scrollLoadmoreConf.page,
+                        pageSize: this.scrollLoadmoreConf.pageSize
+                    })
+                    Object.assign(this.scrollLoadmoreConf, {
+                        total: response.total,
+                        page: response.page,
+                        pageSize: response.pageSize
+                    })
+                    this.pacEnableCodelibList = [
+                        ...this.pacEnableCodelibList,
+                        ...response.records
+                    ]
+                } catch (error) {
+
+                } finally {
+                    this.scrollLoadmoreConf.isLoading = false
+                }
+            },
             async releasePipeline () {
                 const { pipelineId, projectId } = this.$route.params
                 try {
@@ -361,7 +466,12 @@
                 if (this.oauthing) return
                 try {
                     this.oauthing = true
-                    // TODO: 请求Oauth,后端提供接口，先占位
+                    this.hasOauth = await this.isPACOAuth({
+                        projectId: this.$route.params.projectId,
+                        redirectUrIType: 'SPEC',
+                        redirectUrl: location.href,
+                        repositoryType: this.releaseParams.scmType
+                    })
                 } catch (error) {
 
                 } finally {
@@ -373,11 +483,14 @@
                 try {
                     this.refreshing = true
                     // TODO: 刷新Oauth状态
+                    this.hasOauth = await this.isPACOAuth({
+                        projectId: this.$route.params.projectId,
+                        repositoryType: this.releaseParams.scmType
+                    })
                 } catch (error) {
                     console.log(error)
                 } finally {
                     this.refreshing = false
-                    this.hasOauth = true
                 }
             }
         }

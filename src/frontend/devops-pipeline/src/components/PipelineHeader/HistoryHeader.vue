@@ -40,11 +40,9 @@
         computed: {
             ...mapState('pipelines', ['pipelineInfo']),
             ...mapGetters({
-                isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
+                isCurPipelineLocked: 'pipelines/isCurPipelineLocked',
+                pacEnabled: 'pipelines/pacEnabled'
             }),
-            pacEnabled () {
-                return this.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
-            },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
             },

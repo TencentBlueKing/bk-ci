@@ -49,7 +49,6 @@ export default {
     },
     methods: {
         ...mapActions('atom', [
-            'setPipelineEditing',
             'setPipeline',
             'updateContainer'
         ]),

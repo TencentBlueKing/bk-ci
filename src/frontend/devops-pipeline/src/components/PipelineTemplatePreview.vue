@@ -34,6 +34,7 @@
                     render-directive="if"
                 >
                     <component
+                        style="pointer-events: none"
                         v-bind="panel.props"
                         :is="panel.component"
                     />
@@ -117,6 +118,7 @@
                         component: 'triggerTab',
                         props: {
                             editable: false,
+                            clickable: false,
                             pipeline: this.templatePipeline
                         }
                     },

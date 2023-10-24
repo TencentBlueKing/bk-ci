@@ -147,7 +147,6 @@
                             version: this.latestVersion
                         })
                     ])
-                    debugger
                     this.activeYaml = yamlPreview.yaml
                     this.currentYaml = current.yamlPreview.yaml
                 } catch (error) {

@@ -301,7 +301,6 @@
                     atomCode,
                     version
                 })
-                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -412,6 +411,7 @@
                 deep: true,
                 handler: function (errorsItems) {
                     const isError = errorsItems.length > 0
+                    console.log('atom errors', errorsItems, this.errors)
                     this.handleUpdateAtom('isError', isError)
                 }
             }

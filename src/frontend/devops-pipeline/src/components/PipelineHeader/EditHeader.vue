@@ -87,10 +87,6 @@
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
-
-            btnDisabled () {
-                return this.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
-            },
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
             },
@@ -99,6 +95,9 @@
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
+            },
+            btnDisabled () {
+                return this.pipelineInfo?.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
@@ -134,7 +133,7 @@
                     },
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.pipelineInfo?.[debug ? 'version' : 'releaseVersion']
                     }
                 })
             },
@@ -171,9 +170,6 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
-                    // if (!pipelineId) {
-                    //     return this.importPipelineAndSetting(body)
-                    // }
 
                     // 请求执行构建
                     const { data: { version, versionName } } = await this.saveDraftPipeline({
@@ -194,6 +190,7 @@
                     this.setPipelineEditing(false)
                     this.updatePipelineInfo({
                         canDebug: true,
+                        canRelease: false,
                         version,
                         versionName
                     })

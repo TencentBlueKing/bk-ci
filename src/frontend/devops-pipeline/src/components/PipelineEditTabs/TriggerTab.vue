@@ -28,7 +28,7 @@
                 :element-index="editingElementPos.elementIndex"
                 :container-index="0"
                 :stage-index="0"
-                :editable="true"
+                :editable="editable"
                 :stages="pipeline.stages"
                 :is-instance-template="pipeline.instanceFromTemplate"
             />
@@ -73,6 +73,7 @@
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
             triggerList () {
+                console.log(this.container?.elements)
                 try {
                     return this.container?.elements || []
                 } catch (err) {
@@ -112,6 +113,7 @@
                 })
             },
             editTriggerAtom (index) {
+                if (!this.clickable) return
                 this.element = this.triggerList[index]
                 this.togglePropertyPanel({
                     isShow: true,

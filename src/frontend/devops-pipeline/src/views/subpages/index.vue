@@ -17,6 +17,8 @@
         },
         beforeDestroy () {
             this.$store.dispatch('atom/setPipeline', null)
+            this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
+            this.$store.dispatch('atom/setPipelineYaml', '')
             this.$store.commit('atom/resetPipelineSetting', null)
             this.$store.commit('pipelines/setPipelineInfo', null)
             this.$store.commit('pipelines/updatePipelineList', [])

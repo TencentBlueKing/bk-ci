@@ -49,7 +49,7 @@
     import { mapActions, mapState, mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
-    import TriggerConfig from './TriggerConfig'
+    import { TriggerTab } from '@/components/PipelineEditTabs/'
     import PipelineModel from './PipelineModel'
     import NotificationConfig from './NotificationConfig'
     import BaseConfig from './BaseConfig'
@@ -63,7 +63,7 @@
             // eslint-disable-next-line vue/no-unused-components
             PipelineModel,
             // eslint-disable-next-line vue/no-unused-components
-            TriggerConfig,
+            TriggerTab,
             // eslint-disable-next-line vue/no-unused-components
             NotificationConfig,
             // eslint-disable-next-line vue/no-unused-components
@@ -125,7 +125,13 @@
                         }
                     case 'trigger':
                         return {
-                            is: TriggerConfig
+                            is: TriggerTab,
+                            props: {
+                                editable: false,
+                                pipeline: this.pipeline,
+                                isLoading: !this.pipeline
+
+                            }
                         }
                     case 'notice':
                         return {

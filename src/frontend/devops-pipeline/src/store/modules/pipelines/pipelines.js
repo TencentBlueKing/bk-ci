@@ -67,6 +67,12 @@ const getters = {
     isBranchVersion: state => {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
     },
+    pacEnabled: state => {
+        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    yamlInfo: state => {
+        return state.pipelineInfo?.yamlInfo
+    },
     getAllPipelineList: state => state.allPipelineList
 }
 

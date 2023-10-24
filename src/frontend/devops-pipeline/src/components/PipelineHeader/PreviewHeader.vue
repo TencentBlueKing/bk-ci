@@ -35,7 +35,7 @@
                     :loading="executeStatus"
                     @click="handleClick"
                 >
-                    {{ $t("exec") }}
+                    {{ $t(isDebugPipeline ? "debug" : "exec") }}
                 </bk-button>
             </template>
         </aside>

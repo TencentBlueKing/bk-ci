@@ -35,6 +35,7 @@ import {
     QUALITY_ATOM_MUTATION,
     REFRESH_QUALITY_LOADING_MUNTATION,
     REPOSITORY_MUTATION,
+    SET_PAC_SUPPORT_SCM_TYPE_LIST,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
     TEMPLATE_MUTATION
@@ -54,7 +55,8 @@ export const state = {
     appNodes: {},
     ruleList: [],
     templateRuleList: [],
-    qualityAtom: []
+    qualityAtom: [],
+    pacSupportScmTypeList: []
 }
 
 export const mutations = {
@@ -123,6 +125,11 @@ export const mutations = {
             refreshLoading
         })
         return state
+    },
+    [SET_PAC_SUPPORT_SCM_TYPE_LIST]: (state, pacSupportScmTypeList) => {
+        Object.assign(state, {
+            pacSupportScmTypeList
+        })
     }
 }
 
@@ -302,5 +309,38 @@ export const actions = {
 
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
+    },
+    getSupportPacScmTypeList: async ({ commit, state }) => {
+        try {
+            if (state.pacSupportScmTypeList.length) {
+                return
+            }
+            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/supportScmType`)
+            commit(SET_PAC_SUPPORT_SCM_TYPE_LIST, data)
+        } catch (e) {
+            console.log(e)
+        }
+    },
+    isPACOAuth: async (_, { projectId, ...query }) => {
+        try {
+            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
+                params: query
+            })
+
+            return data?.status === 200
+        } catch (e) {
+            console.log(e)
+            return false
+        }
+    },
+    getPACRepoList: async (_, { projectId, ...params }) => {
+        try {
+            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/hasPermissionList`, {
+                params
+            })
+            return data
+        } catch (e) {
+            console.log(e)
+        }
     }
 }

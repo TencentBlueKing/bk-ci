@@ -205,27 +205,27 @@ export default {
             return res.data
         })
     },
-    transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
-        return request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+    async transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
+        const res = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
             params: {
                 pipelineId,
                 actionType
             }
-        }).then(res => {
-            switch (actionType) {
-                case 'FULL_YAML2MODEL':
-                    commit(SET_PIPELINE, res.data?.modelAndSetting?.model)
-                    commit(SET_PIPELINE_WITHOUT_TRIGGER, {
-                        ...res.data?.modelAndSetting?.model,
-                        stages: res.data?.modelAndSetting?.model.stages.slice(1)
-                    })
-                    commit(PIPELINE_SETTING_MUTATION, res.data?.modelAndSetting?.setting)
-                    break
-                case 'FULL_MODEL2YAML':
-                    commit(SET_PIPELINE_YAML, res.data?.newYaml)
-                    break
-            }
         })
+        switch (actionType) {
+            case 'FULL_YAML2MODEL':
+                commit(SET_PIPELINE, res.data?.modelAndSetting?.model)
+                commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                    ...res.data?.modelAndSetting?.model,
+                    stages: res.data?.modelAndSetting?.model.stages.slice(1)
+                })
+                commit(PIPELINE_SETTING_MUTATION, res.data?.modelAndSetting?.setting)
+                break
+            case 'FULL_MODEL2YAML':
+                commit(SET_PIPELINE_YAML, res.data?.newYaml)
+                break
+        }
+        return res
     },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
@@ -236,9 +236,11 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
+    setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
@@ -687,8 +689,8 @@ export default {
             return response.data
         })
     },
-    saveDraftPipeline ({ commit }, { projectId, pipelineId, ...draftPipeline }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/saveDraft`, draftPipeline)
+    saveDraftPipeline ({ commit }, { projectId, ...draftPipeline }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
     },
     releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)

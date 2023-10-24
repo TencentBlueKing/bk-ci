@@ -79,12 +79,12 @@
                             projectId,
                             searchName
                         }),
-                        ...(this.pipelineInfo?.pipelineId !== pipelineId
+                        ...(pipelineId
                             ? [this.requestPipelineSummary({
                                 projectId,
                                 pipelineId
                             })]
-                        : [])
+                            : [])
                     ])
 
                     this.setBreadCrumbPipelineList(list, pipelineInfo ?? this.pipelineInfo)

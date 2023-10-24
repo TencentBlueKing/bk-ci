@@ -113,7 +113,7 @@
     }
     .pipeline-notification-blocks {
         display: grid;
-        grid-auto-flow: column;
+        grid-auto-flow: row;
         grid-gap: 24px;
         grid-template-columns: repeat(2, 1fr);
         margin: 16px 0;

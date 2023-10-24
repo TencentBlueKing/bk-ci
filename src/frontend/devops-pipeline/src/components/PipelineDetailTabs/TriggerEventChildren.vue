@@ -11,7 +11,7 @@
                 <!-- [{{event.branch}}] commit
                 [<span class="text-link">{{event.commitId}}</span>]
                 pushed -->
-                {{event.eventDesc}}
+                <span v-html="event.eventDesc"></span>
                 <span class="trigger-event-item-lighter-field">{{ convertTime(event.eventTime) }}</span>
             </p>
             <p class="trigger-event-reason">
@@ -96,9 +96,13 @@
                 align-items: center;
                 grid-gap: 10px;
                 @include ellipsis();
-                .text-link {
+                .text-link,
+                > span > a {
                     color: #3A84FF;
                     cursor: pointer;
+                    &:hover {
+                        color: #699df4;
+                    }
                 }
             }
             .trigger-event-reason {
