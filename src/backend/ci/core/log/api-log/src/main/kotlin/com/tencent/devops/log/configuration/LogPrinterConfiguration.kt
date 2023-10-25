@@ -29,6 +29,7 @@ package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -41,5 +42,6 @@ import org.springframework.core.Ordered
 class LogPrinterConfiguration {
 
     @Bean
-    fun buildLogPrinter(client: Client) = BuildLogPrinter(client)
+    fun buildLogPrinter(client: Client, circuitBreakerRegistry: CircuitBreakerRegistry?) =
+        BuildLogPrinter(client, circuitBreakerRegistry)
 }
