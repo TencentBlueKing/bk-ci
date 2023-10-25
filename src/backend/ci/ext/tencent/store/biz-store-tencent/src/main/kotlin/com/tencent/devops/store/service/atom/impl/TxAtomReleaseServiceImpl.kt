@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
@@ -1194,14 +1195,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
             )
             doCancelReleaseBus(userId, atomId)
+            // 删除质量红线相关数据
+            client.get(ServiceQualityIndicatorMarketResource::class)
+                .deleteTestIndicator(atomCode, "$IN_READY_TEST(${record.version})")
+            client.get(ServiceQualityMetadataMarketResource::class)
+                .deleteTestMetadata(atomCode, "$IN_READY_TEST(${record.version})")
+            client.get(ServiceQualityControlPointMarketResource::class)
+                .deleteTestControlPoint(atomCode, "$IN_READY_TEST(${record.version})")
         }
-        // 删除质量红线相关数据
-        client.get(ServiceQualityIndicatorMarketResource::class)
-            .deleteTestIndicator("$atomCode-$branch")
-        client.get(ServiceQualityMetadataMarketResource::class)
-            .deleteTestMetadata("$atomCode-$branch")
-        client.get(ServiceQualityControlPointMarketResource::class)
-            .deleteTestControlPoint("$atomCode-$branch")
+
         return Result(true)
     }
 }
