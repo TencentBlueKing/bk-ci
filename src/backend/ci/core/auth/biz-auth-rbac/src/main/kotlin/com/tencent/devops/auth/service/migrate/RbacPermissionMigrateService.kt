@@ -31,6 +31,7 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
@@ -73,7 +74,8 @@ class RbacPermissionMigrateService constructor(
     private val migrateCreatorFixService: MigrateCreatorFixService,
     private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao
 ) : PermissionMigrateService {
 
     companion object {
@@ -214,6 +216,9 @@ class RbacPermissionMigrateService constructor(
             // 仅迁移已迁移成功的项目
             it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
         }?.forEach {
+            // 若已迁移监控资源，直接跳过
+            if (authMonitorSpaceDao.get(dslContext, it.englishName) != null)
+                return@forEach
             val projectInfo = authResourceService.get(
                 projectCode = it.englishName,
                 resourceType = AuthResourceType.PROJECT.value,
