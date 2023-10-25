@@ -65,8 +65,8 @@ interface BuildAtomResource {
 
     @ApiOperation("使用分支创建插件测试版本")
     @POST
-    @Path("/creat/test/version")
-    fun creatAtomBranchTestVersion(
+    @Path("/test/version/creat")
+    fun createAtomBranchTestVersion(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -76,7 +76,7 @@ interface BuildAtomResource {
 
     @ApiOperation("结束插件分支测试版本测试")
     @GET
-    @Path("/end/atoms/{atomCode}/test/version")
+    @Path("/atoms/{atomCode}/test/version/end")
     fun endBranchVersionTest(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -91,7 +91,7 @@ interface BuildAtomResource {
 
     @ApiOperation("根据插件版本ID获取插件版本进度")
     @GET
-    @Path("/desk/atom/release/process/{atomId}")
+    @Path("/desk/atom/release/Ids/{atomId}")
     fun getProcessInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

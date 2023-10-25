@@ -803,7 +803,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             controlPoint = QualityControlPoint(
                 hashId = "",
                 type = atomCode,
-                name = if (atomVersion.startsWith(TEST)) "$atomName($atomVersion)" else atomName,
+                name = atomName,
                 stage = stage,
                 availablePos = listOf(
                     ControlPointPosition.create(BEFORE_POSITION),
@@ -835,7 +835,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val valueType = map["valueType"] as String?
             IndicatorUpdate(
                 elementType = atomCode,
-                elementName = if (atomVersion.startsWith(TEST)) "$atomName($atomVersion)" else atomName,
+                elementName = atomName,
                 elementDetail = if (type.isNullOrBlank()) atomCode else type,
                 elementVersion = atomVersion,
                 enName = it.key,
@@ -872,7 +872,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         version: String?
     ): Map<String, Long> {
         val extra = version?.let { "$IN_READY_TEST($version)" } ?: IN_READY_TEST // 标注是正在测试中的
-        val name = version?.let { "$atomName($version)" } ?: atomName
         val metadataList = indicators.map {
             val map = it.value as Map<String, Any>
             val type = map["type"] as String?
@@ -881,7 +880,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 dataId = it.key,
                 dataName = map["label"] as String,
                 elementType = atomCode,
-                elementName = name,
+                elementName = atomName,
                 elementDetail = if (type.isNullOrBlank()) atomCode else type,
                 valueType = map["valueType"] as String? ?: "INT",
                 desc = map["desc"] as String? ?: "",

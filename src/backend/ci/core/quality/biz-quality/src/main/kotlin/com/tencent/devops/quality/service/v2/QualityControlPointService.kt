@@ -164,7 +164,6 @@ class QualityControlPointService @Autowired constructor(
         val elements = ElementUtils.getProjectElement(projectId).keys
         val recordList = controlPointDao.list(dslContext, elements)
         val controlPointList = serviceListFilter(recordList, projectId) ?: return listOf()
-        logger.info("serviceList projectId:$projectId controlPointList:${controlPointList.map { it.elementType }}")
         return controlPointList.filter { it.elementType in elements }
             .map {
                 QualityControlPoint(
