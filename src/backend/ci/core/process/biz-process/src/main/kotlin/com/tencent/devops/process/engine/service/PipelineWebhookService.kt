@@ -715,29 +715,28 @@ class PipelineWebhookService @Autowired constructor(
                                 "webhook repository config different from element repository config|" +
                                         "webhook:$webhookRepositoryConfig|element:$elementRepositoryConfig"
                             )
-                            return@webhook
                         }
                         // 缓存代码库信息,避免频繁调用代码库信息接口
-                        val repoCacheKey = "${projectId}_${elementRepositoryConfig.getRepositoryId()}"
-                        val repositoryOptional = repoCache[repoCacheKey]
-                        val repository = if (repositoryOptional == null) {
+                        val repoCacheKey = "${projectId}_${webhookRepositoryConfig.getRepositoryId()}"
+                        val repositoryOptional = repoCache[repoCacheKey] ?: run {
                             val repo = try {
                                 scmProxyService.getRepo(
                                     projectId = projectId,
-                                    repositoryConfig = elementRepositoryConfig
+                                    repositoryConfig = webhookRepositoryConfig
                                 )
                             } catch (ignored: Exception) {
-                                logger.warn("fail to get repository info", ignored)
+                                logger.warn(
+                                    "$projectId|$pipelineId|${webhookRepositoryConfig.getRepositoryId()}|" +
+                                            "fail to get repository info", ignored
+                                )
                                 null
                             }
-                            repoCache[repoCacheKey] = Optional.ofNullable(repo)
-                            repo
+                            Optional.ofNullable(repo)
+                        }
+                        val repository = if (repositoryOptional.isPresent) {
+                            repositoryOptional.get()
                         } else {
-                            if (repositoryOptional.isPresent) {
-                                repositoryOptional.get()
-                            } else {
-                                return@webhook
-                            }
+                            null
                         }
 
                         // 历史原因,git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,统计数据量
