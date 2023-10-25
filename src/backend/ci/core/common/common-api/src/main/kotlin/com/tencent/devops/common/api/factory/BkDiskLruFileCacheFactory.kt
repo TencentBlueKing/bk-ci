@@ -25,9 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    implementation("io.micrometer:micrometer-core")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-pool2")
-    api("com.github.ben-manes.caffeine:caffeine")
+package com.tencent.devops.common.api.factory
+
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
+
+object BkDiskLruFileCacheFactory {
+
+    fun getDiskLruFileCache(
+        cacheDir: String,
+        cacheSize: Long
+    ): BkDiskLruFileCache {
+        return BkDiskLruFileCache(cacheDir, cacheSize)
+    }
 }
