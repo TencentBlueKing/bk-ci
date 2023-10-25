@@ -13,7 +13,8 @@ import (
 func CleanLog() {
 	ticker := time.Tick(4 * time.Hour)
 	for range ticker {
-
+		cleanDumpFile(3 * 24)
+		cleanLogFile(3 * 24)
 	}
 }
 
