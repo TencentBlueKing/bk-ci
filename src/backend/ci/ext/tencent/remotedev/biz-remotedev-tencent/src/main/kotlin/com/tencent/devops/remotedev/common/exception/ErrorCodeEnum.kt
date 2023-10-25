@@ -149,7 +149,7 @@ enum class ErrorCodeEnum(
     CLIENT_NEED_UPDATED(
         errorType = ErrorType.USER,
         errorCode = "2132028",
-        formatErrorMessage = "Please install the latest version of the client: {0}"
+        formatErrorMessage = "Please install the latest version of the client: \n {0}"
     ),
     DELIVERING_FAILED(
         errorType = ErrorType.THIRD_PARTY,
