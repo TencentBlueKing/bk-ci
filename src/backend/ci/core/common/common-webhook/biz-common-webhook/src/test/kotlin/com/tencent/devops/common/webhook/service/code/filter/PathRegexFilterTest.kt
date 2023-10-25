@@ -408,7 +408,7 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "trunk/bin/lobby/loterry/aa.txt"
+                        ""
                     )
                 )
             )
@@ -426,9 +426,7 @@ class PathRegexFilterTest {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
-                        "hello.txt",
-                        "trunk.txt",
-                        "readme.txt"
+                        ""
                     )
                 )
             )
@@ -516,7 +514,7 @@ class PathRegexFilterTest {
                 "branches/dir_a_1/a.kt",
                 "branches/dir_a_1/a_1/b.kt"
             ),
-            includedPaths = listOf("**", "**/dir_a_1/a_1/**", "**/dir_a_1/*.kt"),
+            includedPaths = listOf("**/dir_a_1/a_1/**", "**/dir_a_1/*.kt"),
             excludedPaths = emptyList(),
             caseSensitive = true
         )
@@ -526,7 +524,7 @@ class PathRegexFilterTest {
                 it.split(",").toSet().containsAll(
                     setOf(
                         "branches/dir_a_1/a.kt",
-                        "branches/dir_a_1/a_1/b.kt"
+                        "branches/dir_a_1/a_1"
                     )
                 )
             )

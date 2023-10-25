@@ -50,7 +50,7 @@ class PathRegexFilter(
         return matcher.match(userPath, eventPath)
     }
 
-    override fun buildFinalIncludePath(
+    override fun extractMatchUserPath(
         eventPath: String,
         userPath: String,
         matchPathsMap: MutableMap<String, MutableSet<String>>
@@ -70,44 +70,53 @@ class PathRegexFilter(
                 userPath == "**"
 
     private fun getShortPath(userPath: String, eventPath: String): String {
-        // 配置路径中最后可用字符串，可能为通配符字符串，如:dir_**
-        val lastValidStr = getLastValidStr(userPath)
-        if (!patternIsMatchDir(userPath) || !eventPath.contains("/") || lastValidStr.isNullOrBlank()) {
-            return eventPath
+        val patternParts = userPath.split("/")
+        // 无视规则，直接返回空
+        if (isInvalidPattern(userPath)|| isInvalidPattern(patternParts)) {
+            return ""
         }
-        var targetShortPath = eventPath
-        // 拆分目录层级
-        val eventPathDirArr = eventPath.split("/")
-        for (i in eventPathDirArr.indices) {
-            // 有效字符匹配
-            if (matcher.match(lastValidStr, eventPathDirArr[i])) {
-                targetShortPath = eventPathDirArr.subList(0, i + 1).joinToString(separator = "/")
-                break
+        val pathParts = eventPath.split("/")
+        val pathList = mutableListOf<String>()
+        var pathIndex = 0
+        var segment = 0
+        while (segment < patternParts.size && pathIndex < pathParts.size) {
+            val patternPart = patternParts[segment]
+            // 无效字符
+            if (isInvalidPattern(patternPart)) {
+                // 以*或**结尾的规则，直接结束
+                if (segment == patternParts.size - 1) {
+                    break
+                }
+                val nextPatternPart = patternParts[segment + 1]
+                // 后续不存在有效字符继续找
+                if (isInvalidPattern(nextPatternPart)) {
+                    segment++
+                    continue
+                }
+                while (pathIndex < pathParts.size && !matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    val pathItem = pathParts[pathIndex++]
+                    pathList.add(pathItem)
+                }
+                // 追加上匹配上的真实目录[nextPatternPart可能为dir_**]
+                if (matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    pathList.add(pathParts[pathIndex])
+                }
+                segment++
+            } else {
+                val pathItem = pathParts[pathIndex]
+                pathList.add(pathItem)
             }
+            pathIndex++
+            segment++
         }
-        return targetShortPath
+        return pathList.joinToString("/")
     }
 
-    private fun getLastValidStr(userPath: String): String? {
-        val userPathDirArr = userPath.split("/")
-        for (i in userPathDirArr.size - 1 downTo 0) {
-            if (userPathDirArr[i] != "*" && userPathDirArr[i] != "**") {
-                return userPathDirArr[i]
-            }
-        }
-        logger.info("The userPath do not contain available string.")
-        return null
-    }
-
-    override fun getFinalPath(
+    override fun getFinalUserPath(
         matchPathsMap: MutableMap<String, MutableSet<String>>
     ): Set<String> = when {
         matchPathsMap.isEmpty() -> {
             setOf()
-        }
-        // 存在**时匹配所有文件，无视其他路径规则，**时输出全路径
-        matchPathsMap.containsKey("**") -> {
-            matchPathsMap["**"] ?: setOf()
         }
         // 合并所有匹配路径
         else -> {
@@ -118,7 +127,14 @@ class PathRegexFilter(
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+    private fun isInvalidPattern(pattern: String) = (pattern == "*" || pattern == "**")
+
+    private fun isInvalidPattern(patterns: List<String>): Boolean {
+        patterns.toSet().forEach {
+            if (!isInvalidPattern(it)) {
+                return false
+            }
+        }
+        return true
     }
 }
