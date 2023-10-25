@@ -35,6 +35,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -88,4 +89,19 @@ interface UserArchivePipelineResource {
         @PathParam(value = "projectId")
         projectId: String
     ): Result<List<Map<String, String>>>
+
+    @ApiOperation("迁移归档流水线数据")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/data/migrate")
+    fun migrateArchivePipelineData(
+        @ApiParam(value = "用户id", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目id", required = true)
+        @PathParam(value = "projectId")
+        projectId: String,
+        @ApiParam(value = "流水线id", required = true)
+        @PathParam(value = "pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

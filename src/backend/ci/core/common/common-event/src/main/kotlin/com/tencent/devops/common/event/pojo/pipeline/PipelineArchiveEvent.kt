@@ -25,40 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.enums
+package com.tencent.devops.common.event.pojo.pipeline
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
 /**
- * 事件动作
+ * 归档流水线事件
+ *
  * @version 1.0
  */
-enum class ActionType {
-    RETRY, // 重试
-    START, // 开始
-    REFRESH, // 刷新ElementAdditionalOptions
-    END, // 强制结束当前节点，会导致当前构建容器结束
-    SKIP, // 跳过-不执行
-    TERMINATE, // 终止
-    ARCHIVE, // 归档
-    ;
-
-    fun isStartOrRefresh() = isStart() || this == REFRESH
-
-    fun isStart() = START == this || RETRY == this
-
-    fun isEnd() = END == this || isTerminate()
-
-    fun isTerminate() = TERMINATE == this
-
-    fun isRetry() = RETRY == this
-
-    companion object {
-        @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
-        fun isStart(actionType: ActionType) = actionType.isStart()
-
-        @Deprecated(replaceWith = ReplaceWith("isEnd"), message = "replace by isEnd")
-        fun isEnd(actionType: ActionType) = actionType.isEnd()
-
-        @Deprecated(replaceWith = ReplaceWith("isTerminate"), message = "replace by isTerminate")
-        fun isTerminate(actionType: ActionType) = actionType.isTerminate()
-    }
-}
+@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_ARCHIVE)
+data class PipelineArchiveEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.ARCHIVE,
+    override var delayMills: Int = 0,
+    val cancelFlag: Boolean = false
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -25,40 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.enums
+package com.tencent.devops.misc.service.process
 
-/**
- * 事件动作
- * @version 1.0
- */
-enum class ActionType {
-    RETRY, // 重试
-    START, // 开始
-    REFRESH, // 刷新ElementAdditionalOptions
-    END, // 强制结束当前节点，会导致当前构建容器结束
-    SKIP, // 跳过-不执行
-    TERMINATE, // 终止
-    ARCHIVE, // 归档
-    ;
+import com.tencent.devops.misc.dao.process.ProcessDao
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    fun isStartOrRefresh() = isStart() || this == REFRESH
-
-    fun isStart() = START == this || RETRY == this
-
-    fun isEnd() = END == this || isTerminate()
-
-    fun isTerminate() = TERMINATE == this
-
-    fun isRetry() = RETRY == this
+@Service
+class ProcessArchivePipelineDataMigrateService @Autowired constructor(
+    private val processDao: ProcessDao
+) {
 
     companion object {
-        @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
-        fun isStart(actionType: ActionType) = actionType.isStart()
+        private val logger = LoggerFactory.getLogger(ProcessArchivePipelineDataMigrateService::class.java)
+        private const val DEFAULT_PAGE_SIZE = 20
+    }
 
-        @Deprecated(replaceWith = ReplaceWith("isEnd"), message = "replace by isEnd")
-        fun isEnd(actionType: ActionType) = actionType.isEnd()
+    /**
+     * 删除process数据库数据
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param cancelFlag 是否取消正在运行的构建
+     */
+    fun migrateData(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        cancelFlag: Boolean = false
+    ) {
 
-        @Deprecated(replaceWith = ReplaceWith("isTerminate"), message = "replace by isTerminate")
-        fun isTerminate(actionType: ActionType) = actionType.isTerminate()
     }
 }

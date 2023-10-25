@@ -103,7 +103,8 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
                 assignTableShardingRoutingRule(
                     tableShardingConfig = tableShardingConfig,
                     dataSourceName = dbShardingRoutingRule.dataSourceName,
-                    routingName = routingName
+                    routingName = routingName,
+                    ruleType = ShardingRuleTypeEnum.TABLE
                 )
             }
         }
@@ -172,16 +173,17 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
     override fun assignTableShardingRoutingRule(
         tableShardingConfig: TableShardingConfig,
         dataSourceName: String,
-        routingName: String
+        routingName: String,
+        ruleType: ShardingRuleTypeEnum
     ): ShardingRoutingRule {
         // 获取可用数据表真实名称
-        val validTableName = shardingRoutingRuleService.getValidTableName(dataSourceName, tableShardingConfig)
+        val validTableName = shardingRoutingRuleService.getValidTableName(ruleType, dataSourceName, tableShardingConfig)
         val tableShardingRoutingRule = ShardingRoutingRule(
             clusterName = tableShardingConfig.clusterName,
             moduleCode = tableShardingConfig.moduleCode,
             dataSourceName = dataSourceName,
             tableName = tableShardingConfig.tableName,
-            type = ShardingRuleTypeEnum.TABLE,
+            type = ruleType,
             routingName = routingName,
             routingRule = validTableName
         )

@@ -85,8 +85,12 @@ class SampleShardingRoutingRuleServiceImpl(
         // 从可用的数据库表中随机选择一个分配给该项目
         val tableName = tableShardingConfig.tableName
         val shardingNum = tableShardingConfig.shardingNum
-        val maxSizeIndex = shardingNum - 1
-        val randomIndex = (0..maxSizeIndex).random()
-        return "${tableName}_$randomIndex"
+        return if (shardingNum > 1) {
+            val maxSizeIndex = shardingNum - 1
+            val randomIndex = (0..maxSizeIndex).random()
+            "${tableName}_$randomIndex"
+        } else {
+            tableName
+        }
     }
 }

@@ -105,22 +105,33 @@ import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackR
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 @Repository
 class ProcessDataMigrateDao {
 
     fun getAuditResourceRecords(
         dslContext: DSLContext,
         projectId: String,
+        resourceType: String? = null,
+        resourceId: String? = null,
         limit: Int,
         offset: Int
     ): List<TAuditResourceRecord> {
         with(TAuditResource.T_AUDIT_RESOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!resourceType.isNullOrBlank()) {
+                conditions.add(RESOURCE_TYPE.eq(resourceType))
+            }
+            if (!resourceId.isNullOrBlank()) {
+                conditions.add(RESOURCE_ID.eq(resourceId))
+            }
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .orderBy(CREATED_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset).fetchInto(TAuditResourceRecord::class.java)
         }

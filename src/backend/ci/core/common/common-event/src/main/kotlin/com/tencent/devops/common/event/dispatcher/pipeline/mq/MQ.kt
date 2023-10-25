@@ -43,6 +43,9 @@ object MQ {
     const val ROUTE_PIPELINE_RESTORE = "r.engine.pipeline.restore"
     const val QUEUE_PIPELINE_RESTORE = "q.engine.pipeline.restore"
 
+    const val ROUTE_PIPELINE_ARCHIVE = "r.engine.pipeline.archive"
+    const val QUEUE_PIPELINE_ARCHIVE = "q.engine.pipeline.archive"
+
     const val ROUTE_PIPELINE_TIMER = "r.engine.pipeline.timer"
     const val QUEUE_PIPELINE_TIMER = "q.engine.pipeline.timer"
 

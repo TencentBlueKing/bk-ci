@@ -88,7 +88,8 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
                     shardingRoutingRule = shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
                         tableShardingConfig = tableShardingConfig,
                         dataSourceName = dbShardingRoutingRule.dataSourceName,
-                        routingName = routingName
+                        routingName = routingName,
+                        ruleType = ruleType
                     )
                 }
             }

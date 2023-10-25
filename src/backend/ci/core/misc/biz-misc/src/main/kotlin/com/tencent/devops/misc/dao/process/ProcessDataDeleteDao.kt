@@ -66,6 +66,7 @@ import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -73,10 +74,23 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProcessDataDeleteDao {
 
-    fun deleteAuditResource(dslContext: DSLContext, projectId: String) {
+    fun deleteAuditResource(
+        dslContext: DSLContext,
+        projectId: String,
+        resourceType: String? = null,
+        resourceId: String? = null
+    ) {
         with(TAuditResource.T_AUDIT_RESOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!resourceType.isNullOrBlank()) {
+                conditions.add(RESOURCE_TYPE.eq(resourceType))
+            }
+            if (!resourceId.isNullOrBlank()) {
+                conditions.add(RESOURCE_ID.eq(resourceId))
+            }
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .execute()
         }
     }

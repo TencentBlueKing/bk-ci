@@ -1,5 +1,6 @@
 package com.tencent.devops.misc.task
 
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -38,7 +39,7 @@ class MigratePipelineDataTask constructor(
             val migratingShardingDslContext = migratePipelineDataParam.migratingShardingDslContext
             val processDbMigrateDao = migratePipelineDataParam.processDataMigrateDao
             // 1、获取是否允许执行的信号量
-            semaphore.acquire()
+            semaphore?.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
             try {
                 if (cancelFlag) {
@@ -198,14 +199,24 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                if (doneSignal == null) {
+                    // 单独迁移一条流水线的数据时需要执行以下数据迁移逻辑
+                    migratePipelineAuditResourceData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                }
                 // 4、业务逻辑成功执行完后计数器减1
-                doneSignal.countDown()
+                doneSignal?.countDown()
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] end..............")
             } catch (ignored: Throwable) {
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] run task fail", ignored)
             } finally {
                 // 5、业务逻辑执行完成后释放信号量
-                semaphore.release()
+                semaphore?.release()
             }
         }
 
@@ -699,6 +710,30 @@ class MigratePipelineDataTask constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (buildTemplateAcrossInfoRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineAuditResourceData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val auditResourceRecords = processDataMigrateDao.getAuditResourceRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (auditResourceRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateAuditResourceData(migratingShardingDslContext, auditResourceRecords)
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (auditResourceRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun handleUnFinishPipelines(retryNum: Int) {

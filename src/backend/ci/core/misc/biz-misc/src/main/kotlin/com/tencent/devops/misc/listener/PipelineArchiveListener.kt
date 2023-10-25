@@ -25,40 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.enums
+package com.tencent.devops.misc.listener
 
-/**
- * 事件动作
- * @version 1.0
- */
-enum class ActionType {
-    RETRY, // 重试
-    START, // 开始
-    REFRESH, // 刷新ElementAdditionalOptions
-    END, // 强制结束当前节点，会导致当前构建容器结束
-    SKIP, // 跳过-不执行
-    TERMINATE, // 终止
-    ARCHIVE, // 归档
-    ;
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
+import com.tencent.devops.misc.service.process.ProcessArchivePipelineDataMigrateService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-    fun isStartOrRefresh() = isStart() || this == REFRESH
+@Component
+class PipelineArchiveListener @Autowired constructor(
+    private val processArchivePipelineDataMigrateService: ProcessArchivePipelineDataMigrateService
+) : Listener<PipelineArchiveEvent> {
 
-    fun isStart() = START == this || RETRY == this
-
-    fun isEnd() = END == this || isTerminate()
-
-    fun isTerminate() = TERMINATE == this
-
-    fun isRetry() = RETRY == this
+    override fun execute(event: PipelineArchiveEvent) {
+        val pipelineId = event.pipelineId
+        try {
+            processArchivePipelineDataMigrateService.migrateData(
+                userId = event.userId,
+                projectId = event.projectId,
+                pipelineId = pipelineId,
+                cancelFlag = event.cancelFlag
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to migrate pipeline[$pipelineId] data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to migrate pipeline[$pipelineId] data"
+            )
+        }
+    }
 
     companion object {
-        @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
-        fun isStart(actionType: ActionType) = actionType.isStart()
-
-        @Deprecated(replaceWith = ReplaceWith("isEnd"), message = "replace by isEnd")
-        fun isEnd(actionType: ActionType) = actionType.isEnd()
-
-        @Deprecated(replaceWith = ReplaceWith("isTerminate"), message = "replace by isTerminate")
-        fun isTerminate(actionType: ActionType) = actionType.isTerminate()
+        private val logger = LoggerFactory.getLogger(PipelineArchiveListener::class.java)
     }
 }
