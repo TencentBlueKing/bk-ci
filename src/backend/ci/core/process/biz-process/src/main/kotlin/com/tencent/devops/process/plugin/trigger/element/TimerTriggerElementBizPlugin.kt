@@ -52,7 +52,7 @@ class TimerTriggerElementBizPlugin constructor(
 
     override fun check(element: TimerTriggerElement, appearedCnt: Int) = Unit
 
-    @SuppressWarnings("NestedBlockDepth")
+    @SuppressWarnings("NestedBlockDepth", "ComplexMethod")
     override fun afterCreate(
         element: TimerTriggerElement,
         param: AfterCreateParam
