@@ -287,7 +287,7 @@ watch(() => projectData.value.englishName, (val) => {
   deep: true,
 });
 
-watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
   projectForm.value.validate();
   emits('approvedChange', true);
 }, {
@@ -356,6 +356,22 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
+    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+      <bk-select
+        v-model="projectData.projectType"
+        :placeholder="t('请选择项目类型')"
+        name="center"
+        searchable
+        @change="handleChangeForm"
+      >
+        <bk-option
+          v-for="type in projectTypeList"
+          :value="type.id"
+          :key="type.id"
+          :label="type.name"
+        />
+      </bk-select>
+    </bk-form-item>
     <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
@@ -409,10 +425,10 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+    <bk-form-item :label="t('项目所属运营产品')" property="bgIds" :required="true">
       <bk-select
-        v-model="projectData.projectType"
-        :placeholder="t('选择项目类型')"
+        v-model="projectData.projectTypes"
+        :placeholder="t('选择所属运营产品')"
         name="center"
         searchable
         @change="handleChangeForm"

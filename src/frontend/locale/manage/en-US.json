@@ -134,8 +134,10 @@
     "页游": "Web Game",
     "平台产品": "Platform Product",
     "支撑产品": "Support Product",
-    "选择项目类型": "Select project type",
+    "请选择项目类型": "Please Select project type",
     "重命名": "Rename",
     "项目类型": "Project Type",
-    "创建项目申请单已撤回": "Creation of project application has been withdrawn"
+    "创建项目申请单已撤回": "Creation of project application has been withdrawn",
+    "项目所属运营产品": "项目所属运营产品",
+    "请选择所属运营产品": "请选择所属运营产品"
 }

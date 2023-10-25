@@ -18,6 +18,7 @@ const projectData = ref({
   englishName: '',
   description: '',
   projectType: '',
+  projectTypes: '',
   logoAddr: '',
   bgId: 0,
   bgName: '',
@@ -146,7 +147,7 @@ const handleCancel = () => {
       flex: 1;
       margin: 0 auto;
       background-color: #fff;
-      padding: 32px 120px 32px 80px;
+      padding: 32px 120px 0 80px;
       box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
     }
     .mr10 {
