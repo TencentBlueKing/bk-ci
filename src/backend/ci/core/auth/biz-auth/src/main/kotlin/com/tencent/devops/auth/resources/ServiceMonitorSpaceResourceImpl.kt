@@ -44,6 +44,11 @@ class ServiceMonitorSpaceResourceImpl @Autowired constructor(
     }
 
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
-        return Result(permissionMigrateService.migrateMonitorResource(projectCodes))
+        return Result(
+            permissionMigrateService.migrateMonitorResource(
+                projectCodes = projectCodes,
+                async = false
+            )
+        )
     }
 }
