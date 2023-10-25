@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `PRIVATE_REASON` varchar(256) DEFAULT NULL COMMENT '插件代码库不开源原因',
   `DELETE_FLAG` bit(1) DEFAULT b'0' COMMENT '是否删除',
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
+  `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
