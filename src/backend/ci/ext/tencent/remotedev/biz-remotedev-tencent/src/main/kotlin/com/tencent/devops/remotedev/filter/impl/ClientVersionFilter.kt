@@ -68,7 +68,7 @@ class ClientVersionFilter constructor(
                     .entity(
                         I18nUtil.generateResponseDataObject(
                             messageCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
-                            params = arrayOf(cacheService.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT).toString()),
+                            params = arrayOf(cacheService.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
                             data = null,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage

@@ -227,7 +227,7 @@ class CreateControl @Autowired constructor(
         if (workspaceCreate.windowsResourceConfigId != null) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
-                params = arrayOf(redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT).toString()),
+                params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
                 defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
             )
         }
