@@ -63,11 +63,11 @@ class ClientVersionFilter : ApiFilter {
                 Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
                         I18nUtil.generateResponseDataObject(
-                            messageCode = ErrorCodeEnum.CLIENT_NEED_UPGRADE.errorCode,
+                            messageCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
                             params = null,
                             data = null,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPGRADE.formatErrorMessage
+                            defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
                         )
                     )
                     .build()
