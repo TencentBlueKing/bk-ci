@@ -188,7 +188,7 @@ class SampleImageInitService @Autowired constructor(
         )
         businessConfigDao.add(
             dslContext, BusinessConfigRequest(
-                business = BusinessEnum.BUILD_TYPE,
+                business = BusinessEnum.BUILD_TYPE.name,
                 feature = "defaultBuildResource",
                 businessValue = BuildType.DOCKER.name,
                 configValue = JsonUtil.toJson(defaultJobImage),
@@ -208,7 +208,7 @@ class SampleImageInitService @Autowired constructor(
                 businessConfigDao.update(
                     dslContext = dslContext,
                     request = BusinessConfigRequest(
-                        business = BusinessEnum.IMAGE,
+                        business = BusinessEnum.IMAGE.name,
                         feature = pipelineModelConfig.feature,
                         businessValue = pipelineModelConfig.businessValue,
                         configValue = pipelineModelStr,
