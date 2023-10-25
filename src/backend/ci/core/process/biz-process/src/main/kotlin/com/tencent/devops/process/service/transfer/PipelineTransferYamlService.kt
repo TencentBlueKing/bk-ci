@@ -121,6 +121,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     val pipelineInfo = pipelineId?.let {
                         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
                     }
+                    val defaultAspects: LinkedList<IPipelineTransferAspect> = LinkedList()
                     val pYml = TransferMapper.getObjectMapper()
                         .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
                     watcher.start("step_2|parse template")
@@ -144,7 +145,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         projectCode = projectId,
                         pipelineInfo = pipelineInfo,
                         yaml = pYml,
-                        aspectWrapper = PipelineTransferAspectWrapper(aspects)
+                        aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
                     )
                     val model = modelTransfer.yaml2Model(input)
                     val setting = modelTransfer.yaml2Setting(input)
