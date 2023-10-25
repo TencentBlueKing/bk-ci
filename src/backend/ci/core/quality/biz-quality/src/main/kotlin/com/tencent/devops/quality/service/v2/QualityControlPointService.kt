@@ -113,13 +113,11 @@ class QualityControlPointService @Autowired constructor(
     ): List<TQualityControlPointRecord>? {
         val filterResult = mutableListOf<TQualityControlPointRecord>()
         // 获取生产跑的，或者测试项目对应的
-        controlPointRecords.groupBy { it.elementType }.forEach { elementType, list ->
-            val testControlPoint = list.firstOrNull { it.testProject == projectId }
-            val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
-            if (testControlPoint != null) {
-                filterResult.add(testControlPoint)
+        controlPointRecords.forEach {
+            if (it.testProject == projectId) {
+                filterResult.add(it)
             } else {
-                if (prodControlPoint != null) filterResult.add(prodControlPoint)
+                if (it.testProject.isNullOrBlank()) filterResult.add(it)
             }
         }
         return filterResult
