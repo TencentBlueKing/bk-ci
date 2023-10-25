@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -55,4 +56,6 @@ interface PermissionProjectService {
     ): Boolean
 
     fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
+
+    fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO
 }

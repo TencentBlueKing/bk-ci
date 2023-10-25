@@ -81,6 +81,7 @@ import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import com.tencent.devops.store.utils.VersionUtils
@@ -353,7 +354,9 @@ class ImageProjectService @Autowired constructor(
             classifyId = dbClassifyId,
             classifyCode = classifyCode,
             classifyName = classifyLanName,
-            logoUrl = logoUrl,
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            },
             icon = icon,
             summary = summary,
             docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
@@ -970,7 +973,9 @@ class ImageProjectService @Autowired constructor(
             rdType = rdType,
             agentTypeScope = agentTypeScope,
             availableFlag = availableFlag,
-            logoUrl = logoUrl ?: "",
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            } ?: "",
             icon = icon ?: "",
             summary = summary ?: "",
             docsLink = docsLink,

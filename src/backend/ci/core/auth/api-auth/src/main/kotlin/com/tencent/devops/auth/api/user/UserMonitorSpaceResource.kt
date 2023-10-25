@@ -25,22 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.auth.api.user
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Component
-@Priority(Int.MAX_VALUE)
-@Suppress("UNUSED")
-open class FirstAtomPropsDecorateImpl : AbstractAtomDecorateImpl<Map<String, Any>>() {
-
-    override fun type() = AtomDecorateFactory.Kind.PROPS
-
-    override fun deserialize(json: String): Map<String, Any> {
-        return JsonUtil.toOrNull(json, object : TypeReference<Map<String, Any>>() {}) ?: mapOf()
-    }
+@Api(tags = ["AUTH_MONITOR_SPACE"], description = "监控空间接口")
+@Path("/user/auth/monitor/space")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserMonitorSpaceResource {
+    @ApiOperation("获取监控空间业务id")
+    @GET
+    @Path("/")
+    fun getMonitorSpaceBizId(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectCode")
+        @ApiParam("项目ID", required = false)
+        projectCode: String
+    ): Result<String>
 }

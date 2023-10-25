@@ -21,21 +21,36 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.action.impl
+package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
-import com.tencent.devops.store.service.atom.action.AtomDecorate
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 
-abstract class AbstractAtomDecorateImpl<S : Any> : AtomDecorate<S> {
-
-    private var nextPtr: AtomDecorate<S>? = null
-
-    override fun setNext(next: AtomDecorate<S>) {
-        nextPtr = next
+@CodeWebhookHandler
+@Suppress("TooManyFunctions")
+class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubCommitCommentEvent> {
+    companion object {
+        const val SHORT_COMMIT_SHA_LENGTH = 8
     }
 
-    override fun getNext(): AtomDecorate<S>? = nextPtr
+    override fun eventClass(): Class<GithubCommitCommentEvent> {
+        return GithubCommitCommentEvent::class.java
+    }
+
+    override fun getCommentParam(event: GithubCommitCommentEvent): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        with(event.comment) {
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
+            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
+        }
+        return startParams
+    }
 }

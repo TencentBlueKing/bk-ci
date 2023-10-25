@@ -203,6 +203,22 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun migrateMonitorResource(projectCodes: List<String>): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        client.get(ServiceProjectResource::class).listByProjectCode(
+            projectCodes = projectCodes.toSet()
+        ).data?.filter {
+            // 仅迁移已迁移成功的项目
+            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+        }?.forEach {
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateResourceService.migrateMonitorResource(projectCode = it.englishName)
+            }
+        }
+        return true
+    }
+
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
@@ -213,6 +229,22 @@ class RbacPermissionMigrateService constructor(
         logger.info("handover permissions :$permissionHandoverDTO")
         toRbacExecutorService.submit {
             migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
+        return true
+    }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        logger.info("fit sec to rbac:$migrateProjectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
+            toRbacExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migratePermissionHandoverService.fitSecToRbacAuth(
+                    projectCode = projectCode,
+                    projectCreator = migrateProjectConditionDTO.projectCreator!!,
+                    resourceType = migrateProjectConditionDTO.resourceType!!
+                )
+            }
         }
         return true
     }
