@@ -415,20 +415,6 @@ class PipelineRepositoryService constructor(
                     }
                 }
 
-                // 补偿动作--未来拆分出来，针对复杂的东西异步处理
-                ElementBizRegistrar.getPlugin(e)?.afterCreate(
-                    element = e,
-                    param = AfterCreateParam(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        pipelineName = model.name,
-                        userId = userId,
-                        channelCode = channelCode,
-                        create = create,
-                        container = c
-                    )
-                )
-
                 modelTasks.add(
                     PipelineModelTask(
                         projectId = projectId,

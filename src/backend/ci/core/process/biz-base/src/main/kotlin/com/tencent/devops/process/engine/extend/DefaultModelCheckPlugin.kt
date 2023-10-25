@@ -550,6 +550,8 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun createPrepare(sourceModel: Model?, originElement: Element, param: AfterCreateParam) {
+        logger.info("createPrepare The element(${originElement.name}/${originElement.id})," +
+                "sourceModel|[$sourceModel]")
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
             param.element = originElement
             logger.info("The element(${originElement.name}/${originElement.id}) is create")
