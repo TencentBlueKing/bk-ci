@@ -160,6 +160,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132030",
         formatErrorMessage = "update BkCC fail."
+    ),
+    CLIENT_NEED_UPGRADE(
+        errorType = ErrorType.USER,
+        errorCode = "2132031",
+        formatErrorMessage = "客户端版本过低,文案待补充"
     );
 
     fun getErrorMessage(): String {
