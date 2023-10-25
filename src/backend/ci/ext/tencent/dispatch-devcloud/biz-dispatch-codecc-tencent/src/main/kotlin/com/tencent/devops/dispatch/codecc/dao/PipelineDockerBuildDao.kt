@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.codecc.dao
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.model.dispatch.codecc.tables.TDispatchPipelineDockerBuild
 import com.tencent.devops.model.dispatch.codecc.tables.records.TDispatchPipelineDockerBuildRecord
+import com.tencent.devops.monitoring.pojo.DispatchStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -42,6 +43,7 @@ class PipelineDockerBuildDao {
                 BUILD_ID,
                 VM_SEQ_ID,
                 SECRET_KEY,
+                STATUS,
                 CREATED_TIME,
                 UPDATED_TIME,
                 ZONE,
@@ -54,6 +56,7 @@ class PipelineDockerBuildDao {
                     buildId,
                     vmSeqId,
                     SecurityUtil.encrypt(secretKey),
+                    0,
                     now,
                     now,
                     zone,
