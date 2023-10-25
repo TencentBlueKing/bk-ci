@@ -63,10 +63,17 @@ class RbacPermissionApplyService @Autowired constructor(
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
-    val itsmService: ItsmService
+    val itsmService: ItsmService,
+    val monitorSpaceService: AuthMonitorSpaceService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
+
+    @Value("\${monitor.register:false}")
+    private val registerMonitor: Boolean = false
+
+    @Value("\${monitor.iamSystem:}")
+    private val monitorSystemId = ""
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
         "project_code=%s&projectName=%s&resourceType=%s&resourceName=%s" +
@@ -409,9 +416,23 @@ class RbacPermissionApplyService @Autowired constructor(
         }
     }
 
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
+    override fun getGroupPermissionDetail(userId: String, groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+        val groupPermissionMap = mutableMapOf<String, List<GroupPermissionDetailVo>>()
+        groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DEVOPS_NAME)] =
+            getGroupPermissionDetailBySystem(systemId, groupId)
+        if (registerMonitor) {
+            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, groupId)
+            if (monitorGroupPermissionDetail.isNotEmpty()) {
+                groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
+                    getGroupPermissionDetailBySystem(monitorSystemId, groupId)
+            }
+        }
+        return groupPermissionMap
+    }
+
+    private fun getGroupPermissionDetailBySystem(iamSystemId: String, groupId: Int): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(groupId)
+            v2ManagerService.getGroupPermissionDetail(groupId, iamSystemId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
@@ -421,7 +442,11 @@ class RbacPermissionApplyService @Autowired constructor(
         }
         return iamGroupPermissionDetailList.map { detail ->
             val relatedResourceTypesDTO = detail.resourceGroups[0].relatedResourceTypesDTO[0]
-            buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
+            // 将resourceType转化为对应的资源类型名称
+            buildRelatedResourceTypesName(
+                iamSystemId = iamSystemId,
+                instancesDTO = relatedResourceTypesDTO.condition[0].instances[0]
+            )
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
                 name = I18nUtil.getCodeLanMessage(
@@ -429,20 +454,30 @@ class RbacPermissionApplyService @Autowired constructor(
                 ),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
+            val actionName = if (iamSystemId == monitorSystemId) {
+                monitorSpaceService.getMonitorActionName(action = detail.id)
+            } else {
+                rbacCacheService.getActionInfo(action = detail.id).actionName
+            }
             GroupPermissionDetailVo(
                 actionId = detail.id,
-                name = rbacCacheService.getActionInfo(action = detail.id).actionName,
+                name = actionName!!,
                 relatedResourceInfo = relatedResourceInfo
             )
         }.sortedBy { it.relatedResourceInfo.type }
     }
 
-    private fun buildRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
+    private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
         instancesDTO.let {
-            it.name = rbacCacheService.getResourceTypeInfo(it.type).name
+            val resourceTypeName = if (iamSystemId == systemId) {
+                rbacCacheService.getResourceTypeInfo(it.type).name
+            } else {
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
+            }
+            it.name = resourceTypeName
             it.path.forEach { element1 ->
                 element1.forEach { element2 ->
-                    element2.typeName = rbacCacheService.getResourceTypeInfo(element2.type).name
+                    element2.typeName = resourceTypeName
                 }
             }
         }
@@ -456,7 +491,7 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String?
     ): AuthApplyRedirectInfoVo {
         logger.info(
-            "RbacPermissionApplyService|getRedirectInformation: $userId|$projectId" +
+            "PermissionApplyService|getRedirectInformation: $userId|$projectId" +
                 "|$resourceType|$resourceCode|$action|"
         )
         val groupInfoList: MutableList<AuthRedirectGroupInfoVo> = mutableListOf()

@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
 import com.tencent.devops.common.api.pojo.Result
@@ -113,12 +114,8 @@ abstract class StoreFileService {
 
     abstract fun serviceArchiveAtomFile(
         userId: String,
-        projectCode: String,
-        atomCode: String,
-        serviceUrlPrefix: String,
-        releaseType: String,
-        version: String,
-        file: File,
-        os: String
+        client: Client,
+        archiveAtomRequest: ArchiveAtomRequest,
+        file: File
     ): Result<Boolean?>
 }

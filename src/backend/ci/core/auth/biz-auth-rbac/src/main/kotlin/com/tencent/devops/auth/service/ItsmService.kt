@@ -57,10 +57,10 @@ class ItsmService @Autowired constructor(
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
         val itsmResponseDTO = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
-        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
+        val itsmApiResData = itsmResponseDTO.data
         logger.info("itsmApiResData:$itsmApiResData")
 
-        if (!itsmApiResData["is_passed"].toString().toBoolean()) {
+        if (!itsmApiResData?.get("is_passed").toString().toBoolean()) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_ITSM_VERIFY_TOKEN_FAIL,
@@ -71,11 +71,10 @@ class ItsmService @Autowired constructor(
 
     fun getItsmTicketStatus(sn: String): String {
         val itsmResponseDTO = executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
-        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
-        return itsmApiResData["current_status"].toString()
+        return itsmResponseDTO.data?.get("current_status").toString()
     }
 
-    private fun executeHttpPost(urlSuffix: String, body: Any): ResponseDTO {
+    private fun executeHttpPost(urlSuffix: String, body: Any): ResponseDTO<Map<*, *>> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val requestBody = objectMapper.writeValueAsString(body)
@@ -90,7 +89,7 @@ class ItsmService @Autowired constructor(
         return executeHttpRequest(url, request)
     }
 
-    private fun executeHttpGet(urlSuffix: String): ResponseDTO {
+    private fun executeHttpGet(urlSuffix: String): ResponseDTO<Map<*, *>> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val url = itsmUrlPrefix + urlSuffix
@@ -102,14 +101,14 @@ class ItsmService @Autowired constructor(
         return executeHttpRequest(url, request)
     }
 
-    private fun executeHttpRequest(url: String, request: Request): ResponseDTO {
+    private fun executeHttpRequest(url: String, request: Request): ResponseDTO<Map<*, *>> {
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
             val responseStr = it.body!!.string()
-            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
+            val responseDTO = objectMapper.readValue<ResponseDTO<Map<*, *>>>(responseStr)
             if (responseDTO.code != 0L || !responseDTO.result) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")

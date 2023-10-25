@@ -59,6 +59,7 @@ import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.util.Base64
@@ -354,13 +355,15 @@ class RepoFileService @Autowired constructor(
     ) {
         val token = client.get(ServiceOauthResource::class).gitGet(repo.userName).data?.accessToken ?: ""
         gitService.downloadGitRepoFile(
-            repoName = repo.projectName,
             token = token,
-            sha = sha,
             tokenType = tokenType,
-            filePath = filePath,
-            format = format,
-            isProjectPathWrapped = isProjectPathWrapped ?: false,
+            request = DownloadGitRepoFileRequest(
+                repoName = repo.projectName,
+                sha = sha,
+                filePath = filePath,
+                format = format,
+                isProjectPathWrapped = isProjectPathWrapped ?: false
+            ),
             response = response
         )
     }
