@@ -102,17 +102,17 @@ data class GithubReviewCommentEvent(
 
 data class GithubReviewComment(
     override val id: Long,
-    override val url: String,
+    override val url: String?,
     @JsonProperty("html_url")
-    override val htmlUrl: String,
+    override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
     override val user: GithubUser,
     @JsonProperty("created_at")
-    override val createdAt: String,
+    override val createdAt: String?,
     @JsonProperty("updated_at")
-    override val updatedAt: String,
+    override val updatedAt: String?,
     @ApiModelProperty("Github PR Review Id")
     @JsonProperty("pull_request_review_id")
     val pullRequestReviewId: Long,
@@ -163,7 +163,7 @@ abstract class GithubComment(
     override val url: String?,
     @JsonProperty("html_url")
     @ApiModelProperty("评论链接[网页链接]")
-    override val htmlUrl: String,
+    override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
     @ApiModelProperty("评论内容")
@@ -190,7 +190,7 @@ open class GithubCommitComment(
     override val id: Long,
     override val url: String?,
     @JsonProperty("html_url")
-    override val htmlUrl: String,
+    override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
@@ -216,17 +216,17 @@ open class GithubCommitComment(
 @ApiModel("Github Issue 评论")
 data class GithubIssueComment(
     override val id: Long,
-    override val url: String,
+    override val url: String?,
     @JsonProperty("html_url")
-    override val htmlUrl: String,
+    override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
     override val body: String,
     override val user: GithubUser,
     @JsonProperty("created_at")
-    override val createdAt: String,
+    override val createdAt: String?,
     @JsonProperty("updated_at")
-    override val updatedAt: String,
+    override val updatedAt: String?,
     @JsonProperty("issue_url")
     @ApiModelProperty("评论链接[API链接]")
     val issueUrl: String

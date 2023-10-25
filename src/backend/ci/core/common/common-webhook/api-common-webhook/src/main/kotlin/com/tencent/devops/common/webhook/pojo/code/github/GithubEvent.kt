@@ -182,7 +182,7 @@ data class GithubRepository(
 //    @JsonProperty("contributors_url")
 //    val contributorsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/contributors
     @JsonProperty("created_at")
-    override val createdAt: String, // 1655798261 or 2022-06-21T08:45:42Z github这两种类型都会传,难受~
+    override val createdAt: String?, // 1655798261 or 2022-06-21T08:45:42Z github这两种类型都会传,难受~
     @JsonProperty("default_branch")
     val defaultBranch: String, // main
 //    @JsonProperty("deployments_url")
@@ -300,7 +300,7 @@ data class GithubRepository(
 //    @JsonProperty("trees_url")
 //    val treesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/git/trees{/sha}
     @JsonProperty("updated_at")
-    override val updatedAt: String, // 2022-06-21T07:54:56Z
+    override val updatedAt: String?, // 2022-06-21T07:54:56Z
     @JsonProperty("url")
     override val url: String, // https://github.com/yongyiduan/webhook-test
     @JsonProperty("visibility")
