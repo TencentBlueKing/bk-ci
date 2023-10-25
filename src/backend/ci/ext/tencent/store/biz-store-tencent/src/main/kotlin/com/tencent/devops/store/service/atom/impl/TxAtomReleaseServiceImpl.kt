@@ -1183,7 +1183,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val versionPrefix = "$TEST-$branch-"
-        val records = marketAtomDao.getAtomRecordByVersionPrefix(dslContext, atomCode, versionPrefix)
+        val records = marketAtomDao.getAtomBranchTestVersion(dslContext, atomCode, versionPrefix)
         records.forEach { record ->
             val atomId = record.id
             val status = AtomStatusEnum.TESTED.status.toByte()
