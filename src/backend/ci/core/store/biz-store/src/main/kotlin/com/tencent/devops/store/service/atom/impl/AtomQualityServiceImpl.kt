@@ -74,7 +74,7 @@ class AtomQualityServiceImpl @Autowired constructor(
             // 删除测试数据
             client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, IN_READY_TEST)
             client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode, IN_READY_TEST)
-            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, IN_READY_TEST)
         } finally {
             lock.unlock()
         }
