@@ -232,11 +232,7 @@ class PipelineRepositoryService constructor(
                     containerSeqId = containerSeqId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    model = model,
-                    userId = userId,
                     modelTasks = modelTasks,
-                    channelCode = channelCode,
-                    create = create,
                     distIds = distinctIdSet
                 )
             } else {
@@ -246,10 +242,7 @@ class PipelineRepositoryService constructor(
                     containerSeqId = containerSeqId,
                     userId = userId,
                     pipelineId = pipelineId,
-                    model = model,
                     modelTasks = modelTasks,
-                    channelCode = channelCode,
-                    create = create,
                     distIds = distinctIdSet
                 )
             }
@@ -263,11 +256,7 @@ class PipelineRepositoryService constructor(
         containerSeqId: AtomicInteger,
         projectId: String,
         pipelineId: String,
-        model: Model,
-        userId: String,
         modelTasks: MutableList<PipelineModelTask>,
-        channelCode: ChannelCode,
-        create: Boolean,
         distIds: HashSet<String>
     ) {
         if (stage.containers.size != 1) {
@@ -297,18 +286,6 @@ class PipelineRepositoryService constructor(
                 e.id = modelTaskIdGenerator.getNextId()
             }
             distIds.add(e.id!!)
-            ElementBizRegistrar.getPlugin(e)?.afterCreate(
-                element = e,
-                param = AfterCreateParam(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = model.name,
-                    userId = userId,
-                    channelCode = channelCode,
-                    create = create,
-                    container = c
-                )
-            )
 
             modelTasks.add(
                 PipelineModelTask(
@@ -336,10 +313,7 @@ class PipelineRepositoryService constructor(
         containerSeqId: AtomicInteger,
         userId: String,
         pipelineId: String,
-        model: Model,
         modelTasks: MutableList<PipelineModelTask>,
-        channelCode: ChannelCode,
-        create: Boolean,
         distIds: HashSet<String>
     ) {
         if (stage.containers.isEmpty()) {

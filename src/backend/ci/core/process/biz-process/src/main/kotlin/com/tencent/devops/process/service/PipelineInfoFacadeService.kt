@@ -467,21 +467,21 @@ class PipelineInfoFacadeService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    modelCheckPlugin.afterCreateElementInExistsModel(
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(
                         existModel = model,
                         sourceModel = null,
-                        param = AfterCreateParam(
+                        param = BeforeDeleteParam(
                             userId = userId,
                             projectId = projectId,
                             pipelineId = pipelineId ?: "",
                             channelCode = channelCode
                         )
                     )
-
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(
+                } else {
+                    modelCheckPlugin.afterCreateElementInExistsModel(
                         existModel = model,
                         sourceModel = null,
-                        param = BeforeDeleteParam(
+                        param = AfterCreateParam(
                             userId = userId,
                             projectId = projectId,
                             pipelineId = pipelineId ?: "",
