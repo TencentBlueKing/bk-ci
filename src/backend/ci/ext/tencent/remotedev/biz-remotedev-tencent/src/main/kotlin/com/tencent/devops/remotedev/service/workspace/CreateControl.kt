@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -225,7 +226,9 @@ class CreateControl @Autowired constructor(
 
         if (workspaceCreate.windowsResourceConfigId != null) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode
+                errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
+                params = arrayOf(redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT).toString()),
+                defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
             )
         }
 

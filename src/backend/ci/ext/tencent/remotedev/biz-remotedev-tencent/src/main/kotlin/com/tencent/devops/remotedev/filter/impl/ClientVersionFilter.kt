@@ -4,6 +4,8 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -14,7 +16,9 @@ import org.slf4j.LoggerFactory
 @Provider
 @PreMatching
 @RequestFilter
-class ClientVersionFilter : ApiFilter {
+class ClientVersionFilter constructor(
+    private val cacheService: RedisCacheService
+) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
         private const val BK_CI_CLIENT_VERSION = "BK_CI_CLIENT_VERSION"
@@ -64,7 +68,7 @@ class ClientVersionFilter : ApiFilter {
                     .entity(
                         I18nUtil.generateResponseDataObject(
                             messageCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
-                            params = null,
+                            params = arrayOf(cacheService.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT).toString()),
                             data = null,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
