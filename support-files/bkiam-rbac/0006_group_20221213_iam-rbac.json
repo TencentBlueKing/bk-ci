@@ -380,6 +380,12 @@
                 },
                 {
                   "id": "cgs_delete"
+                },
+                {
+                  "id": "cgs_share"
+                },
+                {
+                  "id": "cgs_edit"
                 }
               ]
             },

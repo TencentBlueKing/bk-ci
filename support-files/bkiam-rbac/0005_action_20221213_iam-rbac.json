@@ -2472,6 +2472,64 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "cgs_share",
+        "name": "分享云桌面",
+        "name_en": "Cgs Share",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_edit",
+        "name": "编辑云桌面",
+        "name_en": "Cgs Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "image_list",
         "name": "镜像列表",
         "name_en": "Image List",
