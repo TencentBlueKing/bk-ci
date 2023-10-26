@@ -77,6 +77,13 @@ class JobService @Autowired constructor(
                                 bkCloudId = it.bkCloudId,
                                 ip = it.ip
                             )
+                        },
+                        hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
+                            JobCloudHost(
+                                bkHostId = it.bkHostId,
+                                bkCloudId = it.bkCloudId,
+                                ip = it.ip
+                            )
                         }
                     ),
                     account = JobCloudAccount(
@@ -89,6 +96,13 @@ class JobService @Autowired constructor(
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
                 hostList = fileDistributeReq.executeTarget.hostList.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
+                    )
+                },
+                hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId,
                         bkCloudId = it.bkCloudId,
