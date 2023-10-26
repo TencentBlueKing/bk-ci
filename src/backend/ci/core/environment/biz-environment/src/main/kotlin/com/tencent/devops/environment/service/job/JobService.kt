@@ -161,7 +161,7 @@ class JobService @Autowired constructor(
     ): JobResult<QueryJobInstanceStatusResult> {
         ApigwJobCloudApi.setThreadLocal("queryJobInstanceStatus")
         return apigwJobCloudApi.executeGetRequest(
-            userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult
+            userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: false
         )
     }
 
@@ -176,7 +176,8 @@ class JobService @Autowired constructor(
     ): JobResult<GetAccountListResult> {
         ApigwJobCloudApi.setThreadLocal("getAccountList")
         return apigwJobCloudApi.executeGetRequest(
-            userId, GetAccountListResult::class.java, category, account, alias, start, length
+            userId, GetAccountListResult::class.java,
+            category ?: "", account ?: "", alias ?: "", start ?: "", length ?: ""
         )
     }
 }
