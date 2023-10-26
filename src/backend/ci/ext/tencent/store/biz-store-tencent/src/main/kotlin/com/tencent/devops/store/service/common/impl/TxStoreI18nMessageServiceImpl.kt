@@ -56,6 +56,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
+        private val fileSeparator: String = System.getProperty("file.separator")
     }
 
     override fun getFileStr(
@@ -167,7 +168,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     userId = userId,
                     content = request.content,
                     client = client,
-                    fileDirPath = "$fileDirPath$fileDirPath$uuid${fileDirPath}file"
+                    fileDirPath = "$fileDirPath$fileSeparator$uuid${fileSeparator}file"
                 )
             } else {
                 logger.warn("textReferenceFileAnalysis file is not  exists path:${file.path}")
