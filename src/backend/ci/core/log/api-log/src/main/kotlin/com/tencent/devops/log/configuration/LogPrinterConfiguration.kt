@@ -54,10 +54,12 @@ class LogPrinterConfiguration {
         builder.permittedNumberOfCallsInHalfOpenState(100)
         // 当错误率达到 10% 开启熔断
         builder.failureRateThreshold(10.0F)
-        // 请求超过 1s 就是慢请求
-        builder.slowCallRateThreshold(10.0F)
         // 慢请求超过 10% 开启熔断
+        builder.slowCallRateThreshold(10.0F)
+        // 请求超过 1s 就是慢请求
         builder.slowCallDurationThreshold(Duration.ofSeconds(1))
+        // 滑动窗口大小为 100，默认值
+        builder.slidingWindowSize(100)
         return BuildLogPrinter(client, CircuitBreakerRegistry.of(builder.build()))
     }
 }
