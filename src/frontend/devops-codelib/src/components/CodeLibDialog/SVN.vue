@@ -22,7 +22,7 @@
                 <bk-radio
                     value="http"
                 >
-                    {{ $t('codelib.用户名密码') }}
+                    {{ $t('codelib.用户名+密码') }}
                 </bk-radio>
             </bk-radio-group>
         </bk-form-item>

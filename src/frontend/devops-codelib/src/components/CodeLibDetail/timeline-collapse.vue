@@ -143,7 +143,8 @@
              */
             handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.确认重放此事件吗？'),
+                    title: this.$t('codelib.是否一键重新触发？'),
+                    subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
                     confirmFn: async () => {
                         this.replayAllEvent({
@@ -168,7 +169,8 @@
                 this.$bkInfo({
                     extCls: 'replay-dialog',
                     width: 400,
-                    title: this.$t('codelib.确认以此事件重新触发流水线 X 吗？', [pipelineName]),
+                    title: this.$t('codelib.是否重新触发？'),
+                    subTitle: this.$t('codelib.确认以此事件重新触发流水线X吗？', [pipelineName]),
                     confirmLoading: true,
                     confirmFn: async () => {
                         this.replayEvent({
@@ -287,7 +289,7 @@
             margin-left: 50px;
             .one-click-trigger {
                 font-size: 12px;
-                margin-right: 20px;
+                margin-right: 22px;
             }
         }
         .right-shape {

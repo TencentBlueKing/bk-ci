@@ -263,12 +263,12 @@
                 this.triggerType = paramsMap.triggerType || ''
                 this.eventType = paramsMap.eventType || ''
                 this.getTriggerData()
+            },
+            scmType (val) {
+                this.getEventTypeList()
+                this.getTriggerTypeList()
+                this.getTriggerData()
             }
-        },
-        created () {
-            this.getEventTypeList()
-            this.getTriggerTypeList()
-            this.getTriggerData()
         },
         methods: {
             ...mapActions('codelib', [

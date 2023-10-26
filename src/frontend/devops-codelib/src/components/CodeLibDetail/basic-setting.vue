@@ -196,7 +196,7 @@
                 <p>
                     {{ $t('codelib.请先将目录') }}
                     <span>{{ $t('codelib.改名或删除') }}</span>
-                    {{ $t('codelib.后重试，避免项目其他成员进行无效的YAML 文件修改') }}
+                    {{ $t('codelib.后重试，避免项目其他成员进行无效的YAML文件修改') }}
                     {{ $t('codelib.。') }}
                 </p>
             </span>
