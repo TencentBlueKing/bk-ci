@@ -434,7 +434,7 @@ class PipelineTriggerEventService @Autowired constructor(
         listOf()
     }
 
-    private fun PipelineTriggerEventVo.getI18nReason(language: String):String = getCodeLanMessage(
+    private fun PipelineTriggerEventVo.getI18nReason(language: String): String = getCodeLanMessage(
         messageCode = if (this.reason.isNullOrBlank()) {
             PipelineTriggerReason.TRIGGER_SUCCESS.name
         } else {
