@@ -41,6 +41,7 @@
                 >
                     <div class="timeline-section">
                         <TimelineCollapse
+                            :search-value="searchValue"
                             :data="data"
                             :time="key"
                             @replay="replayEvent"

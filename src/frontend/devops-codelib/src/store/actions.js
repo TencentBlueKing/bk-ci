@@ -455,9 +455,12 @@ const actions = {
         projectId,
         eventId,
         page,
-        pageSize
+        pageSize,
+        pipelineName
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?page=${page}&pageSize=${pageSize}`)
+        let queryUrl = ''
+        queryUrl = pipelineName ? `page=${page}&pageSize=${pageSize}&pipelineName=${pipelineName}` : `page=${page}&pageSize=${pageSize}`
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?${queryUrl}`)
     },
 
     /**
