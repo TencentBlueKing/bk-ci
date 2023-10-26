@@ -28,7 +28,9 @@ class ClientVersionFilter constructor(
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
-        USER("/api/user/", true),
+        USER_GET_USER("api/user/remotedev/get_user", true),
+        USER_SETTINGS("api/user/remotedev/settings", true),
+        USER("api/user/", false),
         DESKTOP("/api/desktop/", false),
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
@@ -54,7 +56,7 @@ class ClientVersionFilter constructor(
         // 开关
         if (cacheService.get(RedisKeys.REDIS_CLIENT_VERSION_CHECK).toString() == false.toString()) return true
         // 判断是否为合法的路径
-        val apiType = ApiType.parseType(path) ?: return false
+        val apiType = ApiType.parseType(path) ?: return true
         // 如果是op的接口访问直接跳过jwt认证
         if (!apiType.verify) return true
 
