@@ -509,7 +509,6 @@ open class DefaultModelCheckPlugin constructor(
 
     override fun beforeUpdateElementInExistsModel(existModel: Model, sourceModel: Model?, param: BeforeUpdateParam) {
         recursiveElement(existModel = existModel) {
-            logger.info("beforeUpdateElementInExistsModel,element[${JsonUtil.toJson(it, false)}]")
             updatePrepare(sourceModel, it, param)
         }
     }
@@ -548,23 +547,12 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun afterCreateElementInExistsModel(existModel: Model, sourceModel: Model?, param: AfterCreateParam) {
-        val sourceModelStr = if (sourceModel != null) {
-            JsonUtil.toJson(sourceModel, false)
-        } else {
-            ""
-        }
-        logger.info(
-            "afterCreateElementInExistsModel|existModel[${JsonUtil.toJson(existModel, false)}]|" +
-                    "sourceModel[$sourceModelStr]"
-        )
         recursiveElement(existModel = existModel) {
             createPrepare(sourceModel, it, param)
         }
     }
 
     private fun createPrepare(sourceModel: Model?, originElement: Element, param: AfterCreateParam) {
-        logger.info("createPrepare The element(${originElement.name}/${originElement.id})," +
-                "sourceModel|[$sourceModel]")
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
             logger.info("The element(${originElement.name}/${originElement.id}) is create")
             ElementBizRegistrar.getPlugin(originElement)?.afterCreate(
