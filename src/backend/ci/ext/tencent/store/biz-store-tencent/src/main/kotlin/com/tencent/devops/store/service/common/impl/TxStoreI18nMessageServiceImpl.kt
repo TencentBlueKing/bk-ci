@@ -151,7 +151,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = request.fileDir
-        ) + "/file"
+        )
         val file = File(fileDirPath, "${UUIDUtil.generate()}.zip")
         try {
             downloadFile(

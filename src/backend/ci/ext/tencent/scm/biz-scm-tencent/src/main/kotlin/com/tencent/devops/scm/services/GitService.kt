@@ -142,7 +142,7 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
-        private const val SLEEP_MILLS_FOR_RETRY = 3000L
+        private const val SLEEP_MILLS_FOR_RETRY = 2000L
     }
 
     @Value("\${gitCI.clientId}")
@@ -1725,6 +1725,9 @@ class GitService @Autowired constructor(
         isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
+        logger.info(
+            "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath is $filePath"
+        )
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
@@ -1741,9 +1744,6 @@ class GitService @Autowired constructor(
         com.tencent.devops.common.service.utils.RetryUtils.execute(
             action = object : com.tencent.devops.common.service.utils.RetryUtils.Action<Unit> {
             override fun execute() {
-                logger.info(
-                    "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath：$filePath"
-                )
                 OkhttpUtils.downloadFile(url.toString(), response)
             }
         }, retryTime = 3, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
