@@ -44,8 +44,10 @@ data class StageControlOption(
     @ApiModelProperty("运行条件", required = false)
     val runCondition: StageRunCondition = StageRunCondition.AFTER_LAST_FINISHED, // 运行条件
     @ApiModelProperty("是否人工触发", required = false)
+    @Deprecated("被StagePauseCheck.manualTrigger代替")
     val manualTrigger: Boolean? = false,
     @ApiModelProperty("可触发用户，支持引用变量", required = false)
+    @Deprecated("被StagePauseCheck.reviewGroups")
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
     @ApiModelProperty("已通过审核", required = false)
     var triggered: Boolean? = null, // 已通过审核
