@@ -428,7 +428,7 @@ onBeforeUnmount(() => {
     <bk-form-item :label="t('项目所属运营产品')" property="bgIds" :required="true">
       <bk-select
         v-model="projectData.projectTypes"
-        :placeholder="t('选择所属运营产品')"
+        :placeholder="t('请选择所属运营产品')"
         name="center"
         searchable
         @change="handleChangeForm"
