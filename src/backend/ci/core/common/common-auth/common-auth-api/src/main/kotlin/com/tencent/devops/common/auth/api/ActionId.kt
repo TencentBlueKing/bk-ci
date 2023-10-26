@@ -29,4 +29,28 @@ object ActionId {
     const val CERT_DELETE = "cert_delete"
     const val CERT_LIST = "cert_list"
     const val CERT_USE = "cert_use"
+
+    // 云桌面
+    const val CGS_CREATE = "cgs_create"
+    const val CGS_LIST = "cgs_list"
+    const val CGS_VIEW = "cgs_view"
+    const val CGS_STOP = "cgs_stop"
+    const val CGS_START = "cgs_start"
+    const val CGS_RESTART = "cgs_restart"
+    const val CGS_ASSIGN = "cgs_assign"
+    const val CGS_EDIT_TYPE = "cgs_edit-type"
+    const val CGS_REBUILD_SYSTEM_DISK = "cgs_rebuild-system-disk"
+    const val CGS_MAKE_IMAGE = "cgs_make-image"
+    const val CGS_EXPAND_DISK = "cgs_expand-disk"
+    const val CGS_DELETE = "cgs_delete"
+
+    // 镜像
+    const val IMAGE_LIST = "image_list"
+    const val IMAGE_DELETE = "image_delete"
+    const val IMAGE_EDIT = "image_edit"
+
+    // 代理仓库
+    const val CODE_PROXY_CREATE = "code_proxy_create"
+    const val CODE_PROXY_LIST = "code_proxy_list"
+    const val CODE_PROXY_DELETE = "code_proxy_delete"
 }
