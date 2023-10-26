@@ -169,6 +169,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     client = client,
                     fileDirPath = "$fileDirPath$fileDirPath$uuid${fileDirPath}file"
                 )
+            } else {
+                logger.warn("textReferenceFileAnalysis file is not  exists path:${file.path}")
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
