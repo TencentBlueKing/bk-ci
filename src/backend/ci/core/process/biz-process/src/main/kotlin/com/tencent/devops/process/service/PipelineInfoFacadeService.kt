@@ -783,7 +783,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
             modelCheckPlugin.beforeUpdateElementInExistsModel(
-                existModel, model, BeforeUpdateParam(
+                model, existModel, BeforeUpdateParam(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -791,7 +791,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
             modelCheckPlugin.afterCreateElementInExistsModel(
-                existModel, model, AfterCreateParam(
+                model, existModel, AfterCreateParam(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
