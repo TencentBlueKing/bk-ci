@@ -51,7 +51,7 @@ class JobService @Autowired constructor(
                     )
                 },
                 hostIdList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
-                    it.bkHostId
+                    it.bkHostId ?: 0L
                 }
             ),
             bkUsername = userId
@@ -73,7 +73,7 @@ class JobService @Autowired constructor(
                             )
                         },
                         hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
-                            it.bkHostId
+                            it.bkHostId ?: 0L
                         }
                     ),
                     account = JobCloudAccount(
