@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -20,24 +20,9 @@ import org.springframework.stereotype.Service
 @Service
 class BKCCService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val bkConfig: BkConfig
 ) {
-
-    @Value("\${bkCC.host:}")
-    val ccHost: String = ""
-
-    @Value("\${bkCC.userName:}")
-    val userName: String = ""
-
-    @Value("\${bkCC.bizId:#{null}}")
-    val bizId: Int? = null
-
-    @Value("\${remoteDev.appCode:}")
-    val appCode = ""
-
-    @Value("\${remoteDev.appToken:}")
-    val appSecret = ""
-
     fun updateHostMonitor(
         regionId: Int?,
         workspaceName: String?,
@@ -146,11 +131,11 @@ class BKCCService @Autowired constructor(
         props: Map<String, Any>
     ) {
         logger.debug("updateHost|hostIds|{}|props|{}", hostIds, props)
-        val url = "$ccHost/update_host/"
+        val url = "${bkConfig.ccHost}/update_host/"
         val body = UpdateHostReqBody(
-            bkAppCode = appCode,
-            bkAppSecret = appSecret,
-            bkUserName = userName,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            bkUserName = bkConfig.ccUserName,
             bkHostId = hostIds.joinToString(separator = ","),
             data = props
         )
@@ -184,16 +169,16 @@ class BKCCService @Autowired constructor(
         page: ListBizHostsReqPage,
         hostPropertyFilter: ListBizHostsCond
     ): ListBizHostResp? {
-        if (bizId == null) {
+        if (bkConfig.ccBizId == null) {
             return null
         }
-        val url = "$ccHost/list_biz_hosts/"
+        val url = "${bkConfig.ccHost}/list_biz_hosts/"
         val body = ListBizHostsReqBody(
-            bkAppCode = appCode,
-            bkAppSecret = appSecret,
-            bkUserName = userName,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            bkUserName = bkConfig.ccUserName,
             page = page,
-            bkBizId = bizId!!,
+            bkBizId = bkConfig.ccBizId!!,
             fields = fields,
             hostPropertyFilter = hostPropertyFilter
         )
