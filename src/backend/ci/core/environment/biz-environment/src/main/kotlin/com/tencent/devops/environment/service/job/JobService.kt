@@ -161,7 +161,7 @@ class JobService @Autowired constructor(
     ): JobResult<QueryJobInstanceStatusResult> {
         ApigwJobCloudApi.setThreadLocal("queryJobInstanceStatus")
         return apigwJobCloudApi.executeGetRequest(
-            userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: false
+            userId, QueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: ""
         )
     }
 
