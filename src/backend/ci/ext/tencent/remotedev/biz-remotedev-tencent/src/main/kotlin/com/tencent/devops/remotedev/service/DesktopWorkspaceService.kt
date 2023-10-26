@@ -38,11 +38,11 @@ class DesktopWorkspaceService @Autowired constructor(
             )
         ).data ?: return emptyMap()
 
-        val res = mutableMapOf<String, FetchOwnerAndAdminItem>()
+        val res = mutableMapOf<String, Pair<Set<String>?, MutableSet<String>?>>()
         projectAndAdmins.forEach { (projectId, admins) ->
-            res[projectId] = FetchOwnerAndAdminItem(
-                admin = admins,
-                owner = mutableSetOf()
+            res[projectId] = Pair(
+                first = admins,
+                second = mutableSetOf()
             )
         }
 
@@ -62,10 +62,18 @@ class DesktopWorkspaceService @Autowired constructor(
                 return@forEach
             }
 
-            res[projectId]?.owner?.add(owner)
+            res[projectId]?.second?.add(owner)
         }
 
-        return res
+        val result = mutableMapOf<String, FetchOwnerAndAdminItem>()
+        res.forEach { (projectId, adminAndOwners) ->
+            result[projectId] = FetchOwnerAndAdminItem(
+                admin = adminAndOwners.first?.joinToString(separator = ";"),
+                owner = adminAndOwners.second?.joinToString(separator = ";")
+            )
+        }
+
+        return result
     }
 
     fun updateCCHost(
