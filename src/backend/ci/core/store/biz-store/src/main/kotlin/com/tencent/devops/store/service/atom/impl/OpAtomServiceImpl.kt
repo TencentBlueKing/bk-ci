@@ -379,11 +379,12 @@ class OpAtomServiceImpl @Autowired constructor(
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
-        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
+        val uuid = UUIDUtil.generate()
+        val file = Files.createTempFile(uuid, ".$fileType").toFile()
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode)
+        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode) + "$fileSeparator$uuid"
         if (!File(atomPath).exists()) {
             ZipUtil.unZipFile(file, atomPath, false)
         }
