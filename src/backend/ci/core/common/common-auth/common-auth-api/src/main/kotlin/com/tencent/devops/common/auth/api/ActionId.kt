@@ -43,6 +43,8 @@ object ActionId {
     const val CGS_MAKE_IMAGE = "cgs_make-image"
     const val CGS_EXPAND_DISK = "cgs_expand-disk"
     const val CGS_DELETE = "cgs_delete"
+    const val CGS_SHARE = "cgs_share"
+    const val CGS_EDIT = "cgs_edit"
 
     // 镜像
     const val IMAGE_LIST = "image_list"

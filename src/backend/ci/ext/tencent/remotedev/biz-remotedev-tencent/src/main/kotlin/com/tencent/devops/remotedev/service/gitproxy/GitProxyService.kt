@@ -1,7 +1,12 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
@@ -13,6 +18,15 @@ class GitProxyService @Autowired constructor(
     private val gitproxyBkRepoClient: GitproxyBkRepoClient,
     private val redisOperation: RedisOperation
 ) {
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#data?.repoName",
+            instanceIds = "#data?.repoName"
+        ),
+        content = ActionAuditContent.CODE_PROXY_CREATE_CONTENT
+    )
     fun createRepo(
         userId: String,
         data: CreateGitProxyData
@@ -71,6 +85,15 @@ class GitProxyService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#repoName",
+            instanceIds = "#repoName"
+        ),
+        content = ActionAuditContent.CODE_PROXY_DELETE_CONTENT
+    )
     fun deleteRepo(
         userId: String,
         projectId: String,

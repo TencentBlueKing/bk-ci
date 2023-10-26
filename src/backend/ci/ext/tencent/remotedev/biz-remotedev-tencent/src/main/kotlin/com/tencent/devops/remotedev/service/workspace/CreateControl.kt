@@ -27,9 +27,15 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -110,6 +116,13 @@ class CreateControl @Autowired constructor(
         private const val BLANK_TEMPLATE_ID = 1
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        content = ActionAuditContent.CGS_CREATE_CONTENT
+    )
     fun asyncCreateWorkspace(
         pmUserId: String,
         projectId: String,
@@ -189,6 +202,14 @@ class CreateControl @Autowired constructor(
                 projectName = projectInfo.projectName
             )
 
+            // 审计
+            ActionAuditContext.current().addInstanceInfo(
+                workspaceName,
+                workspaceName,
+                null,
+                ws
+            )
+
             val bizId = MDC.get(TraceTag.BIZID)
             // 发送给k8s
             dispatcher.dispatch(
@@ -214,6 +235,13 @@ class CreateControl @Autowired constructor(
     }
 
     // 处理创建工作空间逻辑
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        content = ActionAuditContent.CGS_CREATE_CONTENT
+    )
     fun createWorkspace(
         userId: String,
         bkTicket: String,
@@ -232,6 +260,14 @@ class CreateControl @Autowired constructor(
         val workspace = if (workspaceCreate.windowsType != null) {
             loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
+
+        // 审计
+        ActionAuditContext.current().addInstanceInfo(
+            workspace.workspaceName,
+            workspace.workspaceName,
+            null,
+            workspace
+        )
 
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -428,7 +464,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -663,9 +699,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -693,7 +729,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

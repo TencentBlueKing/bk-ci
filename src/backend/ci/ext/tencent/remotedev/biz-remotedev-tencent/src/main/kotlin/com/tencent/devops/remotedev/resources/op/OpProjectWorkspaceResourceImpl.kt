@@ -1,7 +1,9 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
@@ -27,6 +29,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService
 ) : OpProjectWorkspaceResource {
+    @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun assignWorkspace(
         userId: String,
         data: OpProjectWorkspaceAssignData

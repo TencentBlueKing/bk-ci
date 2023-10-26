@@ -45,4 +45,31 @@ object ActionAuditContent {
     const val CREDENTIAL_DELETE_CONTENT = "delete credential $CONTENT_TEMPLATE"
     const val CREDENTIAL_LIST_CONTENT = "list credential $CONTENT_TEMPLATE"
     const val CREDENTIAL_USE_CONTENT = "use credential $CONTENT_TEMPLATE"
+
+    // 云桌面
+    const val CGS_CREATE_CONTENT = "create work space $CONTENT_TEMPLATE"
+    const val CGS_LIST_CONTENT = "list work space $CONTENT_TEMPLATE"
+    const val CGS_VIEW_CONTENT = "get work space $CONTENT_TEMPLATE"
+    const val CGS_STOP_CONTENT = "stop work space $CONTENT_TEMPLATE"
+    const val CGS_START_CONTENT = "start work space $CONTENT_TEMPLATE"
+    const val CGS_RESTART_CONTENT = "restart work space $CONTENT_TEMPLATE"
+    const val CGS_ASSIGN_CONTENT = "assign work space $CONTENT_TEMPLATE"
+    const val CGS_EDIT_TYPE_CONTENT = "modify work space type $CONTENT_TEMPLATE"
+    const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild work space system disk $CONTENT_TEMPLATE"
+    const val CGS_MAKE_IMAGE_CONTENT = "make work space image  $CONTENT_TEMPLATE"
+    const val CGS_EXPAND_DISK_CONTENT = "expand work space disk $CONTENT_TEMPLATE"
+    const val CGS_DELETE_CONTENT = "delete work space $CONTENT_TEMPLATE"
+    const val CGS_SHARE_CONTENT = "share work space $CONTENT_TEMPLATE"
+    const val CGS_EDIT_CONTENT = "edit work space $CONTENT_TEMPLATE"
+
+    // 云桌面镜像
+    const val IMAGE_LIST_CONTENT = "list work space image $CONTENT_TEMPLATE"
+    const val IMAGE_DELETE_CONTENT = "delete work space image $CONTENT_TEMPLATE"
+    const val IMAGE_EDIT_CONTENT = "modify work space image $CONTENT_TEMPLATE"
+
+    // 代理仓库
+    const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE"
+    const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE"
+    const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE"
+
 }

@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -132,10 +138,20 @@ class DeliverControl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_ASSIGN,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_RESTART_CONTENT
+    )
     fun assignUser2Workspace(
         userId: String,
         projectId: String,
         workspaceName: String,
+        @AuditRequestBody
         assigns: List<ProjectWorkspaceAssign>
     ) {
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
