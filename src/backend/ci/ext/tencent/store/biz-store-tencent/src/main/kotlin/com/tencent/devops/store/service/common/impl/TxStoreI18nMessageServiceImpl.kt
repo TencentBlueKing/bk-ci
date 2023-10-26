@@ -152,7 +152,8 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             userId = userId,
             atomDir = request.fileDir
         )
-        val file = File(fileDirPath, "${UUIDUtil.generate()}.zip")
+        val uuid = UUIDUtil.generate()
+        val file = File(fileDirPath, "$uuid.zip")
         try {
             downloadFile(
                 filePath = "file",
@@ -166,7 +167,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     userId = userId,
                     content = request.content,
                     client = client,
-                    fileDirPath = fileDirPath
+                    fileDirPath = "$fileDirPath$fileDirPath$uuid${fileDirPath}file"
                 )
             }
         } catch (ignored: Throwable) {
