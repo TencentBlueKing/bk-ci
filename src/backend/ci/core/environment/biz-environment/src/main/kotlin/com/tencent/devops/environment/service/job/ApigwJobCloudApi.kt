@@ -29,38 +29,32 @@ class ApigwJobCloudApi {
     @Value("\${job.bkScopeId:#{null}}")
     val bkScopeId: String = ""
 
-    @Value("\${job.bkScopeIdStag:#{null}}")
-    val bkScopeIdStag: String = ""
+    @Value("\${job.jobCloudApiBaseUrl:#{null}}")
+    val jobCloudApiBaseUrl: String? = null
 
-    @Value("\${job.jobCloudProdUrlPrefix:#{null}}")
-    val jobCloudProdUrlPrefix: String? = null
+    @Value("\${job.executeScriptPath:#{\"/api/v3/fast_execute_script\"}}")
+    val executeScriptPath: String = ""
 
-    @Value("\${job.jobCloudStagUrlPrefix:#{null}}")
-    val jobCloudStagUrlPrefix: String? = null
+    @Value("\${job.distributeFilePath:#{\"/api/v3/fast_transfer_file\"}}")
+    val distributeFilePath: String = ""
 
-    @Value("\${job.executeScriptPath:#{null}}")
-    val executeScriptPath: String? = null
+    @Value("\${job.terminateTaskPath:#{\"/api/v3/operate_job_instance\"}}")
+    val terminateTaskPath: String = ""
 
-    @Value("\${job.distributeFilePath:#{null}}")
-    val distributeFilePath: String? = null
+    @Value("\${job.queryJobInstanceStatusPath:#{\"/api/v3/get_job_instance_status\"}}")
+    val queryJobInstanceStatusPath: String = ""
 
-    @Value("\${job.terminateTaskPath:#{null}}")
-    val terminateTaskPath: String? = null
+    @Value("\${job.queryJobInstanceLogsPath:#{\"/api/v3/batch_get_job_instance_ip_log\"}}")
+    val queryJobInstanceLogsPath: String = ""
 
-    @Value("\${job.queryJobInstanceStatusPath:#{null}}")
-    val queryJobInstanceStatusPath: String? = null
+    @Value("\${job.createAccountPath:#{\"/api/v3/create_account\"}}")
+    val createAccountPath: String = ""
 
-    @Value("\${job.queryJobInstanceLogsPath:#{null}}")
-    val queryJobInstanceLogsPath: String? = null
+    @Value("\${job.deleteAccountPath:#{\"/api/v3/delete_account\"}}")
+    val deleteAccountPath: String = ""
 
-    @Value("\${job.createAccountPath:#{null}}")
-    val createAccountPath: String? = null
-
-    @Value("\${job.deleteAccountPath:#{null}}")
-    val deleteAccountPath: String? = null
-
-    @Value("\${job.getAccountListPath:#{null}}")
-    val getAccountListPath: String? = null
+    @Value("\${job.getAccountListPath:#{\"/api/v3/get_account_list\"}}")
+    val getAccountListPath: String = ""
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
@@ -99,25 +93,19 @@ class ApigwJobCloudApi {
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
         val operationName = getThreadLocal()
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
-        val url = when (operationName) {
-            "executeScript" -> jobCloudProdUrlPrefix + executeScriptPath
-            "distributeFile" -> jobCloudProdUrlPrefix + distributeFilePath
-            "terminateTask" -> jobCloudProdUrlPrefix + terminateTaskPath
-            "queryJobInstanceStatus" -> jobCloudProdUrlPrefix + queryJobInstanceStatusPath
-            "queryJobInstanceLogs" -> jobCloudProdUrlPrefix + queryJobInstanceLogsPath
-            "createAccount" -> jobCloudStagUrlPrefix + createAccountPath
-            "deleteAccount" -> jobCloudStagUrlPrefix + deleteAccountPath
-            "getAccountList" -> jobCloudStagUrlPrefix + getAccountListPath
+        val url = jobCloudApiBaseUrl + when (operationName) {
+            "executeScript" -> executeScriptPath
+            "distributeFile" -> distributeFilePath
+            "terminateTask" -> terminateTaskPath
+            "queryJobInstanceStatus" -> queryJobInstanceStatusPath
+            "queryJobInstanceLogs" -> queryJobInstanceLogsPath
+            "createAccount" -> createAccountPath
+            "deleteAccount" -> deleteAccountPath
+            "getAccountList" -> getAccountListPath
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
-        val bkScopeId = when (operationName) {
-            "executeScript", "distributeFile", "terminateTask",
-            "queryJobInstanceStatus", "queryJobInstanceLogs" -> bkScopeId
-
-//          "createAccount", "deleteAccount", "getAccountList" -> bkScopeIdStag
-            else -> bkScopeIdStag
-        }
+        val bkScopeId = bkScopeId
         return JobCloudAuthenticationReq(
             url = url,
             bkAuthorization = bkAuthorization,
