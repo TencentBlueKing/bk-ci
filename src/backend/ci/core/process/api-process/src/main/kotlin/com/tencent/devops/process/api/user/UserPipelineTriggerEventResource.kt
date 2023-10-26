@@ -176,6 +176,9 @@ interface UserPipelineTriggerEventResource {
         @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
+        @ApiParam("流水线名", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

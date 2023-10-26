@@ -132,6 +132,7 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
+        pipelineName: String? = null,
         startTime: Long? = null,
         endTime: Long? = null,
         limit: Int,
@@ -148,6 +149,7 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -204,6 +206,7 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
+        pipelineName: String? = null,
         startTime: Long? = null,
         endTime: Long? = null
     ): Long {
@@ -218,6 +221,7 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -269,13 +273,19 @@ class PipelineTriggerEventDao {
             startTime = startTime,
             endTime = endTime
         )
+        // 总数
+        val totalCondition = if (pipelineName.isNullOrBlank()) {
+            count()
+        } else {
+            count(`when`(t2.PIPELINE_NAME.like("%$pipelineName%"), 1))
+        }.`as`("total")
         return dslContext.select(
             t1.PROJECT_ID,
             t1.EVENT_ID,
             t1.EVENT_SOURCE,
             t1.EVENT_DESC,
             t1.EVENT_TIME,
-            count().`as`("total"),
+            totalCondition,
             count(`when`(t2.STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success ")
         ).from(t1).leftJoin(t2)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))

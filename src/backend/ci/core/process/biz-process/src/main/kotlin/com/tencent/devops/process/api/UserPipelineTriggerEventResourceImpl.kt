@@ -142,6 +142,7 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
+        pipelineName: String?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>> {
@@ -150,6 +151,7 @@ class UserPipelineTriggerEventResourceImpl(
                 projectId = projectId,
                 eventId = eventId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 page = page,
                 pageSize = pageSize,
                 userId = userId

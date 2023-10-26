@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
@@ -77,7 +78,7 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
-        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">{1}</a>"
+        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
     }
 
     fun getDetailId(): Long {
@@ -217,6 +218,7 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
+        pipelineName: String?,
         page: Int?,
         pageSize: Int?,
         userId: String
@@ -233,19 +235,22 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
             it.eventDesc = it.getI18nEventDesc(language)
             it.buildNum = it.getBuildNumUrl()
             it.reasonDetailList = it.getI18nReasonDetailDesc(language)
+            it.reason = it.getI18nReason(language)
             it
         }
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
         )
         return SQLPage(count = count, records = records)
     }
@@ -428,6 +433,16 @@ class PipelineTriggerEventService @Autowired constructor(
         logger.warn("Failed to resolve repo trigger event detail|source[$eventDesc]", ignored)
         listOf()
     }
+
+    private fun PipelineTriggerEventVo.getI18nReason(language: String):String = getCodeLanMessage(
+        messageCode = if (this.reason.isNullOrBlank()) {
+            PipelineTriggerReason.TRIGGER_SUCCESS.name
+        } else {
+            this.reason!!
+        },
+        language = language,
+        defaultMessage = this.reason
+    )
 
     /**
      * 获取构建链接
