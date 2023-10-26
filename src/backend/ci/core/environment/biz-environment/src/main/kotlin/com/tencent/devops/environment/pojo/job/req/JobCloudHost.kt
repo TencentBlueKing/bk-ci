@@ -14,4 +14,6 @@ data class JobCloudHost(
     @ApiModelProperty(value = "IP地址")
     @JsonProperty("ip")
     var ip: String? = ""
-)
+) {
+    constructor(bkCloudId: Long?, ip: String?) : this(null, bkCloudId, ip)
+}

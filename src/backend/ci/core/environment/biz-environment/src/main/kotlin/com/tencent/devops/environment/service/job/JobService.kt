@@ -46,17 +46,12 @@ class JobService @Autowired constructor(
             targetServer = JobCloudExecuteTarget(
                 hostList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
-                        bkHostId = it.bkHostId,
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 },
                 hostIdList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
-                    JobCloudHost(
-                        bkHostId = it.bkHostId,
-                        bkCloudId = it.bkCloudId,
-                        ip = it.ip
-                    )
+                    it.bkHostId
                 }
             ),
             bkUsername = userId
@@ -71,19 +66,14 @@ class JobService @Autowired constructor(
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
-                        hostList = fileSource.sourceFileServer.hostList.map {
+                        hostList = fileSource.sourceFileServer.hostList.filter { it.bkHostId == null }.map {
                             JobCloudHost(
-                                bkHostId = it.bkHostId,
                                 bkCloudId = it.bkCloudId,
                                 ip = it.ip
                             )
                         },
                         hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
-                            JobCloudHost(
-                                bkHostId = it.bkHostId,
-                                bkCloudId = it.bkCloudId,
-                                ip = it.ip
-                            )
+                            it.bkHostId
                         }
                     ),
                     account = JobCloudAccount(
@@ -95,19 +85,14 @@ class JobService @Autowired constructor(
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
-                hostList = fileDistributeReq.executeTarget.hostList.map {
+                hostList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
-                        bkHostId = it.bkHostId,
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 },
                 hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
-                    JobCloudHost(
-                        bkHostId = it.bkHostId,
-                        bkCloudId = it.bkCloudId,
-                        ip = it.ip
-                    )
+                    it.bkHostId
                 }
             ),
             accountAlias = fileDistributeReq.accountAlias,
