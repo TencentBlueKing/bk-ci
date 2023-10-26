@@ -66,15 +66,19 @@ class ClientVersionFilter constructor(
             return false
         }
         MINIMUM_VERSION.forEachIndexed { index, s ->
-            if (version.lastIndex < index || s > (version[index].toIntOrNull() ?: -1)) {
+            val v = version[index].toIntOrNull()
+            if (version.lastIndex < index || v == null) {
                 logger.info(
                     "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
-                            " $path $BK_CI_CLIENT_VERSION=$version < $MINIMUM_VERSION,return error."
+                            " $path $BK_CI_CLIENT_VERSION=$version not valid,return error."
                 )
                 return false
             }
+            if (s >= v) {
+                return true
+            }
         }
-        return true
+        return false
     }
 
     override fun filter(requestContext: ContainerRequestContext) {
