@@ -403,8 +403,10 @@ open class DefaultModelCheckPlugin constructor(
     private fun deletePrepare(sourceModel: Model?, originElement: Element, param: BeforeDeleteParam) {
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
             logger.info("The element(${originElement.name}/${originElement.id}) is delete")
-            param.element = originElement
-            ElementBizRegistrar.getPlugin(originElement)?.beforeDelete(originElement, param)
+            ElementBizRegistrar.getPlugin(originElement)?.beforeDelete(
+                originElement,
+                param.copy(element = originElement)
+            )
         } else {
             logger.info("The element(${originElement.name}/${originElement.id}) is not delete")
         }
@@ -507,6 +509,7 @@ open class DefaultModelCheckPlugin constructor(
 
     override fun beforeUpdateElementInExistsModel(existModel: Model, sourceModel: Model?, param: BeforeUpdateParam) {
         recursiveElement(existModel = existModel) {
+            logger.info("beforeUpdateElementInExistsModel,element[${JsonUtil.toJson(it, false)}]")
             updatePrepare(sourceModel, it, param)
         }
     }
@@ -528,10 +531,11 @@ open class DefaultModelCheckPlugin constructor(
         if (sourceModel != null) {
             val oldElement = sourceModel.elementFind(originElement)
             if (oldElement != null) {
-                param.newElement = originElement
-                param.oldElement = oldElement
                 logger.info("The element(${originElement.name}/${originElement.id}) is update")
-                ElementBizRegistrar.getPlugin(originElement)?.beforeUpdate(originElement, param)
+                ElementBizRegistrar.getPlugin(originElement)?.beforeUpdate(
+                    originElement,
+                    param.copy(oldElement = oldElement, newElement = originElement)
+                )
             } else {
                 logger.info(
                     "The element(${originElement.name}/${originElement.id}) is not update," +
@@ -562,9 +566,11 @@ open class DefaultModelCheckPlugin constructor(
         logger.info("createPrepare The element(${originElement.name}/${originElement.id})," +
                 "sourceModel|[$sourceModel]")
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
-            param.element = originElement
             logger.info("The element(${originElement.name}/${originElement.id}) is create")
-            ElementBizRegistrar.getPlugin(originElement)?.afterCreate(originElement, param)
+            ElementBizRegistrar.getPlugin(originElement)?.afterCreate(
+                originElement,
+                param.copy(element = originElement)
+            )
         } else {
             logger.info("The element(${originElement.name}/${originElement.id}) is not create")
         }
