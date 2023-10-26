@@ -12,7 +12,7 @@ class ClientTokenService constructor(
     private val systemToken: String? = ""
 
     fun getSystemToken(appCode: String?): String? {
-        return redisOperation.get(getTokenRedisKey(appCode ?: DEFAULT_APP))
+        return systemToken
     }
 
     fun setSystemToken(appCode: String?) {
