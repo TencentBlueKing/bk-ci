@@ -28,7 +28,6 @@
 package com.tencent.devops.store.utils
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import java.io.File
@@ -110,5 +109,5 @@ object AtomReleaseTxtAnalysisUtil {
 
     fun buildAtomArchivePath(userId: String, atomDir: String) =
         "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator" +
-                "$userId$fileSeparator$atomDir$fileSeparator${UUIDUtil.generate()}"
+                "$userId$fileSeparator$atomDir"
 }
