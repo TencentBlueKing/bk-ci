@@ -52,6 +52,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     count = 1
                 )
             )
+            Thread.sleep(1000)
         }
         return Result(true)
     }
@@ -67,7 +68,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 systemType = data.systemType,
                 ips = data.ips,
                 page = data.page,
-                pageSize = data.pageSize
+                pageSize = data.pageSize,
+                owner = data.owner
             )
         )
     }

@@ -6,5 +6,6 @@ data class ProjectWorkspaceFetchData(
     val systemType: WorkspaceSystemType?,
     val ips: List<String>?,
     val page: Int?,
-    val pageSize: Int?
+    val pageSize: Int?,
+    val owner: String?
 )

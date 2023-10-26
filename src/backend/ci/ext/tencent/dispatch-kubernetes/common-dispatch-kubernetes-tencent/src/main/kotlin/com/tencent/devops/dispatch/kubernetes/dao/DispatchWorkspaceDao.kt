@@ -97,6 +97,24 @@ class DispatchWorkspaceDao {
         }
     }
 
+    fun updateWorkspace(
+        workspaceName: String,
+        envId: String,
+        regionId: Int,
+        status: EnvStatusEnum,
+        dslContext: DSLContext
+    ) {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
+                .set(ENVIRONMENT_UID, envId)
+                .set(REGION_ID, regionId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
     fun deleteWorkspace(
         workspaceName: String,
         dslContext: DSLContext
