@@ -158,7 +158,7 @@ class PermissionService @Autowired constructor(
         redisOperation.set(
             key = REDIS_KEY + key,
             value = JsonUtil.toJson(params, false),
-            expiredInSecond = EXPIRED_SECOND
+            expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull() ?: EXPIRED_SECOND
         )
         return key
     }
