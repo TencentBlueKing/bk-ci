@@ -74,7 +74,7 @@ class ClientVersionFilter constructor(
                 )
                 return false
             }
-            if (s >= v) {
+            if (s < v || (index == MINIMUM_VERSION.lastIndex && s == v)) {
                 return true
             }
         }
