@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.meta.Ansi
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,8 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
     private val client: Client,
-    @Autowired(required = false)
-    private val circuitBreakerRegistry: CircuitBreakerRegistry? = null
+    private val circuitBreakerRegistry: CircuitBreakerRegistry
 ) {
 
     fun addLine(
@@ -53,20 +53,20 @@ class BuildLogPrinter(
     ) {
         try {
             doWithCircuitBreaker {
-                circuitBreakerRegistry?.let {
-                    genLogPrintPrintResource().addLogLine(
-                        buildId = buildId,
-                        logMessage = genLogMessage(
-                            message = message,
-                            tag = tag,
-                            subTag = subTag,
-                            jobId = jobId,
-                            logType = LogType.LOG,
-                            executeCount = executeCount
-                        )
+                genLogPrintPrintResource().addLogLine(
+                    buildId = buildId,
+                    logMessage = genLogMessage(
+                        message = message,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        logType = LogType.LOG,
+                        executeCount = executeCount
                     )
-                }
+                )
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLine error|message=$message", ignore)
         }
@@ -80,6 +80,8 @@ class BuildLogPrinter(
                     logMessages = logMessages
                 )
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLines error|logMessages=$logMessages", ignore)
         }
@@ -139,6 +141,8 @@ class BuildLogPrinter(
                     )
                 )
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addErrorLine error|message=$message", ignore)
         }
@@ -166,6 +170,8 @@ class BuildLogPrinter(
                     )
                 )
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addDebugLine error|message=$message", ignore)
         }
@@ -193,6 +199,8 @@ class BuildLogPrinter(
                     )
                 )
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addWarnLine error|message=$message", ignore)
         }
@@ -316,12 +324,12 @@ class BuildLogPrinter(
     private fun <T> doWithCircuitBreaker(
         action: () -> T
     ): T {
-        return circuitBreakerRegistry?.let {
+        return circuitBreakerRegistry.let {
             val breaker = it.circuitBreaker(this.javaClass.name)
             breaker.executeCallable {
                 action()
             }
-        } ?: action()
+        }
     }
 
     companion object {
