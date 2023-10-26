@@ -89,7 +89,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     ): Map<String, Any> {
         logger.info(
             "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
-                "$repositoryHashId]"
+                    "$repositoryHashId]"
         )
         // 获取蓝盾默认语言信息
         val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
