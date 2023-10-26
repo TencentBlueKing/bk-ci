@@ -44,7 +44,14 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostList = scriptExecuteReq.executeTarget.hostList.map {
+                hostList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId == null }.map {
+                    JobCloudHost(
+                        bkHostId = it.bkHostId,
+                        bkCloudId = it.bkCloudId,
+                        ip = it.ip
+                    )
+                },
+                hostIdList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
                     JobCloudHost(
                         bkHostId = it.bkHostId,
                         bkCloudId = it.bkCloudId,

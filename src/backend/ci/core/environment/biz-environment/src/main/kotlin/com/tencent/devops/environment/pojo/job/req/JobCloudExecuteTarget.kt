@@ -7,5 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudExecuteTarget(
     @ApiModelProperty(value = "主机列表")
     @JsonProperty("ip_list")
-    val hostList: List<JobCloudHost>?
+    val hostList: List<JobCloudHost>?,
+    @ApiModelProperty(value = "主机ID列表")
+    @JsonProperty("host_id_list")
+    val hostIdList: List<JobCloudHost>?,
 )
