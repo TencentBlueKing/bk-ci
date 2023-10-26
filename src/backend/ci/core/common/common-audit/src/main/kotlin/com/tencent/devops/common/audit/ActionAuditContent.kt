@@ -71,5 +71,4 @@ object ActionAuditContent {
     const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE"
     const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE"
     const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE"
-
 }
