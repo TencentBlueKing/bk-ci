@@ -61,7 +61,7 @@
     "Git": "Git",
     "TGit": "TGit",
     "P4": "P4",
-    "authType": "Authorization method",
+    "authType": "Authorization Method",
     "auth": "Auth",
     "authIdentity": "Authorized Identity",
     "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
@@ -175,5 +175,7 @@
     "是否一键重新触发？": "Replay event?",
     "将使用此事件重新触发关联的流水线": "Will be re-trigger the associated pipeline by this event.",
     "是否重新触发？": "Re-trigger pipeline?",
-    "确认以此事件重新触发流水线X吗？": "Re-trigger the pipeline [{0}] with this event？"
+    "确认以此事件重新触发流水线X吗？": "Re-trigger the pipeline [{0}] with this event？",
+    "展开": "Expand",
+    "收起": "Collapse"
 }

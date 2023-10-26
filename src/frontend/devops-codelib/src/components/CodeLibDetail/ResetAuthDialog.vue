@@ -18,7 +18,7 @@
         <bk-form
             ref="form"
             :model="newRepoInfo"
-            :label-width="140"
+            :label-width="165"
             :rules="rules"
         >
             <!-- Github 重置授权 -->

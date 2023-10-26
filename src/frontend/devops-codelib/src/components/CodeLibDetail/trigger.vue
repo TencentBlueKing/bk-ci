@@ -28,8 +28,17 @@
             </bk-table-column>
             <bk-table-column :label="$t('codelib.触发条件')" prop="eventType" show-overflow-tooltip>
                 <template slot-scope="{ row }">
-                    <div v-if="Object.keys(row.triggerCondition).length">
-                        <div v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item">
+                    <div
+                        v-if="Object.keys(row.triggerCondition).length"
+                        :class="{
+                            'trigger-condition-content': true,
+                            'expand-condition': row.isExpand
+                        }"
+                    >
+                        <div
+                            v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item"
+                            v-show="(index <= 2 && !row.isExpand) || row.isExpand"
+                        >
                             <span v-if="['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(scmType)">
                                 - {{ triggerConditionKeyMap[row.eventType][key] }}:
                             </span>
@@ -53,7 +62,9 @@
                                 </div>
                             </template>
                             <span v-else>{{ triggerConditionValueMap[item] || item }}</span>
+                            <div class="trigger-expand-btn" v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2" text @click="row.isExpand = true">{{ $t('codelib.展开') }}</div>
                         </div>
+                        <div class="trigger-expand-btn" v-if="row.isExpand && Object.keys(row.triggerCondition).length > 3 " text @click="row.isExpand = false">{{ $t('codelib.收起') }}</div>
                     </div>
                     <div v-else>--</div>
                 </template>
@@ -270,6 +281,13 @@
                 this.getTriggerData()
             }
         },
+        created () {
+            if (this.scmType) {
+                this.getEventTypeList()
+                this.getTriggerTypeList()
+                this.getTriggerData()
+            }
+        },
         methods: {
             ...mapActions('codelib', [
                 'fetchEventType',
@@ -290,7 +308,12 @@
                     eventType: this.eventType
                 }).then(res => {
                     this.pagination.count = res.count
-                    this.triggerData = res.records
+                    this.triggerData = res.records.map(i => {
+                        return {
+                            isExpand: false,
+                            ...i
+                        }
+                    })
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -355,7 +378,7 @@
         }
         .trigger-table {
             ::v-deep .cell {
-                max-height: 500px !important;
+                max-height: 1500px !important;
                 -webkit-line-clamp: 300 !important;
                 padding: 10px 15px !important;
             }
@@ -369,10 +392,24 @@
                 }
             }
             .condition-item {
+                position: relative;
                 line-height: 20px;
             }
             ::v-deep .part-img {
                 margin-top: 0 !important;
+            }
+            .trigger-condition-content {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+            }
+            .expand-condition {
+                -webkit-line-clamp: 100 !important;
+            }
+            .trigger-expand-btn {
+                color: #3A84FF;
+                cursor: pointer;
             }
         }
     }
