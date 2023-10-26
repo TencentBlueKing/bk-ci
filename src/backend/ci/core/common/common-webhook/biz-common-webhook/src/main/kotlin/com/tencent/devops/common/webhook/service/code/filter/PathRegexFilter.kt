@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
 class PathRegexFilter(
@@ -72,7 +71,7 @@ class PathRegexFilter(
     private fun getShortPath(userPath: String, eventPath: String): String {
         val patternParts = userPath.split("/")
         // 无视规则，直接返回空
-        if (isInvalidPattern(userPath)|| isInvalidPattern(patternParts)) {
+        if (isInvalidPattern(userPath) || isInvalidPattern(patternParts)) {
             return ""
         }
         val pathParts = eventPath.split("/")
