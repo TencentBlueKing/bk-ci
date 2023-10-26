@@ -544,6 +544,15 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     override fun afterCreateElementInExistsModel(existModel: Model, sourceModel: Model?, param: AfterCreateParam) {
+        val sourceModelStr = if (sourceModel != null) {
+            JsonUtil.toJson(sourceModel, false)
+        } else {
+            ""
+        }
+        logger.info(
+            "afterCreateElementInExistsModel|existModel[${JsonUtil.toJson(existModel, false)}]|" +
+                    "sourceModel[${sourceModelStr}]"
+        )
         recursiveElement(existModel = existModel) {
             createPrepare(sourceModel, it, param)
         }
