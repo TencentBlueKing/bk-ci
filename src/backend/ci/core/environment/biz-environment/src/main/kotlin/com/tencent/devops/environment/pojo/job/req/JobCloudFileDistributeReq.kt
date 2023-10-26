@@ -32,13 +32,7 @@ data class JobCloudFileDistributeReq(
     @ApiModelProperty(value = "文件分发超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400。")
     @JsonProperty("timeout")
     val timeout: Long,
-    @ApiModelProperty(value = "应用ID", required = true)
-    @JsonProperty("bk_app_code")
-    override var bkAppCode: String? = "",
-    @ApiModelProperty(value = "安全秘钥", required = true)
-    @JsonProperty("bk_app_secret")
-    override var bkAppSecret: String? = "",
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
-) : JobCloudPermission(bkScopeType, bkScopeId, bkAppCode, bkAppSecret, bkUsername)
+) : JobCloudPermission(bkScopeType, bkScopeId, bkUsername)
