@@ -27,8 +27,10 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
@@ -50,6 +52,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -93,6 +96,26 @@ class GithubReviewTriggerHandler @Autowired constructor(
         return event.pullRequest.title
     }
 
+    override fun getExternalId(event: GithubReviewEvent): String {
+        return event.repository.id.toString()
+    }
+
+    override fun getEventDesc(event: GithubReviewEvent, replayInfo: PipelineEventReplayInfo?): String {
+        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
+            replayInfo,
+            getUsername(event),
+            getI18Code(event)
+        )
+        return I18Variable(
+            code = i18Code,
+            params = listOf(
+                buildReviewUrl(event),
+                event.pullRequest.number.toString(),
+                username
+            )
+        ).toJsonStr()
+    }
+
     override fun preMatch(event: GithubReviewEvent): WebhookMatchResult {
         // Review事件仅提交操作才触发，评审通过、拒绝、要求修改
         val result = (event.action == "submitted" || event.action == "dismissed") &&
@@ -133,7 +156,11 @@ class GithubReviewTriggerHandler @Autowired constructor(
                 pipelineId = pipelineId,
                 filterName = "crState",
                 triggerOn = event.convertState(),
-                included = WebhookUtils.convert(includeCrState)
+                included = WebhookUtils.convert(includeCrState),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter)
         }
@@ -167,6 +194,17 @@ class GithubReviewTriggerHandler @Autowired constructor(
             }
         }
         return startParams
+    }
+
+    private fun getI18Code(event: GithubReviewEvent) = when (event.review.state) {
+        GithubReviewState.APPROVED.value -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
+        GithubReviewState.CHANGES_REQUESTED.value -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
+        GithubReviewState.DISMISSED.value -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
+        else -> ""
+    }
+
+    private fun buildReviewUrl(event: GithubReviewEvent) = with(event) {
+        review.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/pull/${pullRequest.number}"
     }
 
     companion object {

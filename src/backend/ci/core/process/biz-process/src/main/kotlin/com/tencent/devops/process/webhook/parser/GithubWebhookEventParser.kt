@@ -33,9 +33,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubIssueCommentEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewCommentEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewEvent
 import org.slf4j.LoggerFactory
 
 /**
@@ -61,6 +66,11 @@ class GithubWebhookEventParser(
             GithubCreateEvent.classType -> objectMapper.readValue<GithubCreateEvent>(body)
             GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(body)
             GithubCheckRunEvent.classType -> objectMapper.readValue<GithubCheckRunEvent>(body)
+            GithubCommitCommentEvent.classType -> objectMapper.readValue<GithubCommitCommentEvent>(body)
+            GithubIssueCommentEvent.classType -> objectMapper.readValue<GithubIssueCommentEvent>(body)
+            GithubReviewCommentEvent.classType -> objectMapper.readValue<GithubReviewCommentEvent>(body)
+            GithubIssuesEvent.classType -> objectMapper.readValue<GithubIssuesEvent>(body)
+            GithubReviewEvent.classType -> objectMapper.readValue<GithubReviewEvent>(body)
             else -> {
                 logger.info("Github event($eventType) is ignored")
                 return null
