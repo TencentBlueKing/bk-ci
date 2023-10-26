@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.filter.impl
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -21,7 +22,7 @@ class ClientVersionFilter constructor(
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
-        private const val BK_CI_CLIENT_VERSION = "BK_CI_CLIENT_VERSION"
+        private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
     }
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
@@ -55,7 +56,10 @@ class ClientVersionFilter constructor(
         if (!apiType.verify) return true
 
         val version = requestContext.headers[BK_CI_CLIENT_VERSION]?.get(0) ?: kotlin.run {
-            logger.info("$path not have BK_CI_CLIENT_VERSION,return error.")
+            logger.info(
+                "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
+                        " $path not have $BK_CI_CLIENT_VERSION,return error."
+            )
             return false
         }
         return true
