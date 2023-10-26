@@ -551,7 +551,7 @@ open class DefaultModelCheckPlugin constructor(
         }
         logger.info(
             "afterCreateElementInExistsModel|existModel[${JsonUtil.toJson(existModel, false)}]|" +
-                    "sourceModel[${sourceModelStr}]"
+                    "sourceModel[$sourceModelStr]"
         )
         recursiveElement(existModel = existModel) {
             createPrepare(sourceModel, it, param)
