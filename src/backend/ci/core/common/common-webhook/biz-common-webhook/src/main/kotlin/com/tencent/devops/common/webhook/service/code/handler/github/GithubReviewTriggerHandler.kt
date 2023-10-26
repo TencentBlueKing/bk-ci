@@ -49,6 +49,7 @@ import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
@@ -93,11 +94,11 @@ class GithubReviewTriggerHandler @Autowired constructor(
         return event.pullRequest.title
     }
 
-    override fun preMatch(event: GithubReviewEvent): ScmWebhookMatcher.MatchResult {
+    override fun preMatch(event: GithubReviewEvent): WebhookMatchResult {
         // Review事件仅提交操作才触发，评审通过、拒绝、要求修改
         val result = (event.action == "submitted" || event.action == "dismissed") &&
             event.review.state != GithubReviewState.COMMENTED.value
-        return ScmWebhookMatcher.MatchResult(result)
+        return WebhookMatchResult(result)
     }
 
     override fun getWebhookFilters(

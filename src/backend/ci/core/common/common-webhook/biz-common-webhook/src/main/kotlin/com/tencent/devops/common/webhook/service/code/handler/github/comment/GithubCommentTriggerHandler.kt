@@ -47,7 +47,7 @@ import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 
@@ -86,8 +86,8 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
         return event.comment.body
     }
 
-    override fun preMatch(event: T): ScmWebhookMatcher.MatchResult {
-        return ScmWebhookMatcher.MatchResult(true)
+    override fun preMatch(event: T): WebhookMatchResult {
+        return WebhookMatchResult(true)
     }
 
     override fun getWebhookFilters(
