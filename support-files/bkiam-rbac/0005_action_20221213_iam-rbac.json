@@ -2500,7 +2500,7 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "image delete",
+        "id": "image_delete",
         "name": "镜像删除",
         "name_en": "Image Delete",
         "auth_type": "rbac",
