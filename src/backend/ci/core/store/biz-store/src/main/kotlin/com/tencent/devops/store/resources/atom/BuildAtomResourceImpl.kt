@@ -46,7 +46,7 @@ class BuildAtomResourceImpl @Autowired constructor(
         return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
     }
 
-    override fun creatAtomBranchTestVersion(
+    override fun createAtomBranchTestVersion(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String> {
