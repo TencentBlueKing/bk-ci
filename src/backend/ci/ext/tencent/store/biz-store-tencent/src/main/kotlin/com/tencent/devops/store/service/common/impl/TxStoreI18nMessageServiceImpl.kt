@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -151,7 +152,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             userId = userId,
             atomDir = request.fileDir
         ) + "/file"
-        val file = File(fileDirPath, "file.zip")
+        val file = File(fileDirPath, "${UUIDUtil.generate()}.zip")
         try {
             downloadFile(
                 filePath = "file",
@@ -160,7 +161,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 branch = request.branch
             )
             if (file.exists()) {
-                ZipUtil.unZipFile(file, fileDirPath, false)
+                ZipUtil.unZipFile(file, fileDirPath, true)
                 result = storeFileService.textReferenceFileAnalysis(
                     userId = userId,
                     content = request.content,
