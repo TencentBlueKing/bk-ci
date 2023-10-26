@@ -28,7 +28,6 @@ class ClientVersionFilter constructor(
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
-        USER_GET_USER("api/user/remotedev/get_user", true),
         USER_SETTINGS("api/user/remotedev/settings", true),
         USER("api/user/", false),
         DESKTOP("/api/desktop/", false),
