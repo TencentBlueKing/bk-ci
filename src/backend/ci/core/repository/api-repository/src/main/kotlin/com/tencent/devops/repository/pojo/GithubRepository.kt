@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -48,7 +49,9 @@ data class GithubRepository(
     @ApiModelProperty("Git仓库ID", required = false)
     val gitProjectId: Long? = null,
     @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
-    override val credentialId: String = ""
+    override val credentialId: String = "",
+    @ApiModelProperty("代码库类型", required = false)
+    override val scmType: ScmType = ScmType.GITHUB
 ) : Repository {
     companion object {
         const val classType = "github"

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.annotations.ApiModel
@@ -51,7 +52,9 @@ data class CodeGitRepository(
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
     @ApiModelProperty("Git仓库ID", required = false)
-    val gitProjectId: Long?
+    val gitProjectId: Long?,
+    @ApiModelProperty("代码库类型", required = false)
+    override val scmType: ScmType = ScmType.CODE_GIT
 ) : Repository {
     companion object {
         const val classType = "codeGit"
