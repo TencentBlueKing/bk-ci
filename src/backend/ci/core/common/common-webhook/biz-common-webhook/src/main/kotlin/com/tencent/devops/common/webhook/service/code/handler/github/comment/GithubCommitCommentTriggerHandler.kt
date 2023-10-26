@@ -25,48 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.image
+package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
-import com.tencent.devops.remotedev.dao.ImageManageDao
-import com.tencent.devops.remotedev.pojo.image.ImageStatus
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 
-@Service
-class ImageManageService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val imageManageDao: ImageManageDao
-) {
-
+@CodeWebhookHandler
+@Suppress("TooManyFunctions")
+class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubCommitCommentEvent> {
     companion object {
-        private val logger = LoggerFactory.getLogger(ImageManageService::class.java)
+        const val SHORT_COMMIT_SHA_LENGTH = 8
     }
 
-    // 获取工作空间模板
-    fun getProjectImageList(projectId: String): List<ProjectImage> {
-        logger.info("ImageManageService|getProjectImageList|projectId|$projectId")
-        val result = mutableListOf<ProjectImage>()
-        imageManageDao.queryImageList(
-            projectId = projectId,
-            dslContext = dslContext
-        ).forEach {
-            result.add(
-                ProjectImage(
-                    id = it.id,
-                    projectId = it.projectId,
-                    imageName = it.imageName,
-                    version = it.version,
-                    path = it.path,
-                    size = it.size,
-                    zone = it.zone,
-                    creator = it.creator,
-                    status = ImageStatus.values()[it.status]
-                )
-            )
+    override fun eventClass(): Class<GithubCommitCommentEvent> {
+        return GithubCommitCommentEvent::class.java
+    }
+
+    override fun getCommentParam(event: GithubCommitCommentEvent): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        with(event.comment) {
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
+            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
         }
-        return result
+        return startParams
     }
 }

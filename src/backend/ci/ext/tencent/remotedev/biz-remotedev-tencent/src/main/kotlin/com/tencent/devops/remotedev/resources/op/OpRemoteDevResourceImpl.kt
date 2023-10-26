@@ -11,7 +11,6 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
-import com.tencent.devops.remotedev.service.DataTransferService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -33,8 +32,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl,
-    private val dataTransferService: DataTransferService
+    private val deleteControl: DeleteControl
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -162,10 +160,5 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
-    }
-
-    override fun windowsWorkspaceDaoInit(userId: String): Result<Boolean> {
-        dataTransferService.windowsWorkspaceDaoInit()
-        return Result(true)
     }
 }

@@ -185,7 +185,8 @@ class CreateControl @Autowired constructor(
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
                 groupName = null,
-                dslContext = dslContext
+                dslContext = dslContext,
+                projectName = projectInfo.projectName
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -242,7 +243,8 @@ class CreateControl @Autowired constructor(
             status = true,
             action = WorkspaceAction.PREPARING,
             systemType = workspace.workspaceSystemType, workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = projectId
         )
 
         return WorkspaceResponse(
@@ -317,7 +319,7 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
+            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType, event)
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -377,7 +379,8 @@ class CreateControl @Autowired constructor(
             action = WorkspaceAction.START,
             systemType = ws.workspaceSystemType,
             workspaceMountType = ws.workspaceMountType,
-            ownerType = ws.ownerType
+            ownerType = ws.ownerType,
+            projectId = ws.projectId
         )
     }
 
@@ -678,7 +681,8 @@ class CreateControl @Autowired constructor(
             deptName = userInfo?.deptName,
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
-            dslContext = dslContext
+            dslContext = dslContext,
+            projectName = workspace.projectId ?: ""
         )
     }
 
