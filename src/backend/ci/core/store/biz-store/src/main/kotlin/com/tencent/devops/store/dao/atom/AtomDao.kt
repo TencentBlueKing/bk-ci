@@ -1101,23 +1101,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun updateAtomDescriptionByCode(
-        dslContext: DSLContext,
-        userId: String,
-        atomCode: String,
-        description: String,
-        version: String
-    ) {
-        return with(TAtom.T_ATOM) {
-            dslContext.update(this)
-                .set(DESCRIPTION, description)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(MODIFIER, userId)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
-                .execute()
-        }
-    }
-
     /**
      * 获取已安装的插件个数
      */

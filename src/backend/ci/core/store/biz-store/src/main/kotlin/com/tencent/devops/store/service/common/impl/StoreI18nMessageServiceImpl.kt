@@ -39,7 +39,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
@@ -70,9 +69,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     @Autowired
     lateinit var storeFileService: StoreFileService
-
-    @Autowired
-    lateinit var atomDao: AtomDao
 
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
@@ -255,8 +251,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             request = TextReferenceFileParseRequest(
                                 fileDir = fileDir,
                                 repositoryHashId = repositoryHashId,
-                                content = value,
-                                language = language
+                                content = value
                             )
                         )
                         fileProperties["$it"] = value
@@ -381,7 +376,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 request = TextReferenceFileParseRequest(
                     content = fileStr,
                     fileDir = request.fileDir,
-                    language = request.language,
                     repositoryHashId = request.repositoryHashId
                 )
             )

@@ -106,7 +106,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             fileDir = "${request.fileDir}${separator}file"
         )
         if (fileNameList.isNullOrEmpty()) {
-            logger.info("descriptionAnalysis get fileNameList fail")
+            logger.info("textReferenceFileAnalysis get fileNameList fail")
             return request.content
         }
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
