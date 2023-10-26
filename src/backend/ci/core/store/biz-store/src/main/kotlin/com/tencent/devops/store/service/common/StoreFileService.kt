@@ -61,6 +61,7 @@ abstract class StoreFileService {
         client: Client,
         fileDirPath: String
     ): String {
+        logger.info("textReferenceFileAnalysis fileDirPath:$fileDirPath")
         val pathList = mutableListOf<String>()
         val result = mutableMapOf<String, String>()
         var text = content
