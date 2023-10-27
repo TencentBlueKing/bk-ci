@@ -46,7 +46,7 @@
             title: loading.title
         }">
             <bk-table v-if="showContent && nodeList.length"
-                size="medium"
+                :size="tableSize"
                 class="node-table-wrapper"
                 row-class-name="node-item-row"
                 :data="nodeList">
@@ -102,41 +102,17 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')} Ip`" prop="ip" min-width="80">
+                <bk-table-column label="IP" prop="ip" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.ip || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('environment.nodeInfo.os')" prop="osName">
+                <bk-table-column v-if="allRenderColumnMap.os" :label="$t('environment.nodeInfo.os')" prop="osName">
                     <template slot-scope="props">
                         {{ props.row.osName || '-' }}
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
-                    <template slot-scope="props">
-                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
-                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
-                                <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                            </div>
-                            <div class="prompt-operator" v-else>
-                                <bk-popover placement="top">
-                                    <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                    <template slot="content">
-                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                    </template>
-                                </bk-popover>
-                            </div>
-                        </div>
-                        <div v-else>
-                            <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
-                            <span>({{ props.row.createdUser }})</span>
-                        </div>
-                    </template>
-                </bk-table-column>
-                <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
+                <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus">
                     <template slot-scope="props">
                         <div class="table-node-item node-item-status"
                             v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
@@ -174,12 +150,43 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
+                <bk-table-column v-if="allRenderColumnMap.usage" :label="$t('environment.nodeInfo.usage')" prop="usage" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.ip || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80"></bk-table-column>
+                <!-- <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
+                    <template slot-scope="props">
+                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
+                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
+                                <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
+                            </div>
+                            <div class="prompt-operator" v-else>
+                                <bk-popover placement="top">
+                                    <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
+                                    <template slot="content">
+                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
+                                    </template>
+                                </bk-popover>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
+                            <span>({{ props.row.createdUser }})</span>
+                        </div>
+                    </template>
+                </bk-table-column> -->
+                <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyBy" min-width="80"></bk-table-column>
+                <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.createTime || '-' }}
                     </template>
-                </bk-table-column>
-                <bk-table-column :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
+                </bk-table-column> -->
+                <bk-table-column v-if="allRenderColumnMap.lastModifyTime" :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.lastModifyTime || '-' }}
                     </template>
@@ -231,6 +238,13 @@
                         </template>
                     </template>
                 </bk-table-column>
+                <bk-table-column type="setting">
+                    <bk-table-setting-content
+                        :fields="tableColumn"
+                        :selected="selectedTableColumn"
+                        :size="tableSize"
+                        @setting-change="handleSettingChange" />
+                </bk-table-column>
             </bk-table>
 
             <empty-node v-if="showContent && !nodeList.length"
@@ -279,6 +293,8 @@
     import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import emptyNode from './empty_node'
+
+    const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
         components: {
@@ -372,7 +388,9 @@
                             text: this.$t('environment.applyPermission')
                         }
                     ]
-                }
+                },
+                selectedTableColumn: [],
+                tableSize: 'small'
             }
         },
         computed: {
@@ -381,6 +399,13 @@
             },
             userInfo () {
                 return window.userInfo
+            },
+            allRenderColumnMap () {
+                console.log(this.selectedTableColumn, 'selectedTableColumn')
+                return this.selectedTableColumn.reduce((result, item) => {
+                    result[item.id] = true
+                    return result
+                }, {})
             }
         },
         watch: {
@@ -402,6 +427,60 @@
             }
         },
         created () {
+            this.tableColumn = [
+                {
+                    id: 'displayName',
+                    label: this.$t('environment.nodeInfo.displayName'),
+                    disabled: true
+                },
+                {
+                    id: 'ip',
+                    label: 'IP',
+                    disabled: true
+                },
+                {
+                    id: 'os',
+                    label: this.$t('environment.nodeInfo.os')
+                },
+                {
+                    id: 'nodeStatus',
+                    label: `${this.$t('environment.status')}(${this.$t('environment.version')})`
+                },
+                {
+                    id: 'usage',
+                    label: this.$t('environment.nodeInfo.usage')
+                },
+                {
+                    id: 'createdUser',
+                    label: this.$t('environment.nodeInfo.importer')
+                },
+                {
+                    id: 'lastModifyBy',
+                    label: this.$t('environment.nodeInfo.lastModifyBy')
+                },
+                {
+                    id: 'lastModifyTime',
+                    label: this.$t('environment.nodeInfo.lastModifyTime')
+                }
+
+            ]
+            const columnsCache = JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))
+            if (columnsCache) {
+                this.selectedTableColumn = Object.freeze(columnsCache.columns)
+                this.tableSize = columnsCache.size
+            } else {
+                this.selectedTableColumn = Object.freeze([
+                    { id: 'displayName' },
+                    { id: 'ip' },
+                    { id: 'os' },
+                    { id: 'nodeStatus' },
+                    { id: 'usage' },
+                    { id: 'createdUser' },
+                    { id: 'lastModifyBy' },
+                    { id: 'lastModifyTime' }
+                ])
+            }
+
             const urlParams = getQueryString('type')
             if (urlParams) {
                 this.constructImportForm.model = urlParams
@@ -939,6 +1018,14 @@
             },
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
+            },
+            handleSettingChange ({ fields, size }) {
+                this.selectedTableColumn = Object.freeze(fields)
+                this.tableSize = size
+                localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
+                    columns: fields,
+                    size
+                }))
             }
         }
     }
