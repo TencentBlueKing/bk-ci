@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TLogo
 import com.tencent.devops.model.store.tables.records.TLogoRecord
 import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -107,7 +108,9 @@ class StoreLogoDao {
         with(record) {
             return Logo(
                 id = id,
-                logoUrl = logoUrl,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                } ?: "",
                 logoType = type,
                 order = order,
                 link = link,

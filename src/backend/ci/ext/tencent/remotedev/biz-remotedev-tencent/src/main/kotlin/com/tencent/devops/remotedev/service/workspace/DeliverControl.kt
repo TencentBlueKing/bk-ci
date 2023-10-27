@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -67,6 +68,7 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService
 ) {
@@ -141,6 +143,7 @@ class DeliverControl @Autowired constructor(
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
+
         when {
             existOwner == null && assign2Owner != null -> {
                 val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -163,7 +166,11 @@ class DeliverControl @Autowired constructor(
                         params = arrayOf(workspaceName)
                     )
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
-                workspaceCommon.shareWorkspace(workspaceName, userId, listOf(assign2Owner), WorkspaceMountType.START)
+                workspaceCommon.shareWorkspace(
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    assigns = listOf(assign2Owner),
+                    mountType = WorkspaceMountType.START)
                 softwareManageService.installUserSoftwares(
                     projectId = projectId,
                     userId = assign2Owner.userId,
@@ -200,7 +207,12 @@ class DeliverControl @Autowired constructor(
             .filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
-            workspaceCommon.shareWorkspace(workspaceName, userId, add, WorkspaceMountType.START)
+            workspaceCommon.shareWorkspace(
+                workspaceName = workspaceName,
+                operator = userId,
+                assigns = add,
+                mountType = WorkspaceMountType.START
+            )
         }
 
         val am = assigns.map { m -> m.userId }
@@ -296,7 +308,8 @@ class DeliverControl @Autowired constructor(
                         action = WorkspaceAction.START,
                         systemType = workspace.workspaceSystemType,
                         workspaceMountType = workspace.workspaceMountType,
-                        ownerType = workspace.ownerType
+                        ownerType = workspace.ownerType,
+                        projectId = workspace.projectId
                     )
                 }
 

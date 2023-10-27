@@ -31,7 +31,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.common.sdk.github.response.PullRequestResponse
+import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
@@ -455,6 +459,30 @@ class GitScmService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn("fail to get cr info", e)
+            null
+        }
+    }
+
+    fun getPrInfo(
+        githubRepoName: String,
+        pullNumber: String,
+        repo: Repository
+    ): PullRequestResponse? {
+        return try {
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val prInfo = client.get(ServiceGithubPRResource::class).getPullRequest(
+                request = GetPullRequestRequest(
+                    repoName = githubRepoName,
+                    pullNumber = pullNumber
+                ),
+                token = accessToken
+            ).data
+            logger.info("get github pull info|repoName[$githubRepoName]|prNumber[$pullNumber]|[$prInfo]")
+            prInfo
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github pull request", ignored)
             null
         }
     }
