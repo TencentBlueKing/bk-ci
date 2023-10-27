@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
@@ -318,8 +319,10 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventSource = eventSource,
                 eventType = eventType,
                 triggerUser = userId,
-                // TODO 事件重放文案
-                eventDesc = "$userId replay $eventId",
+                eventDesc = I18Variable(
+                    code = EVENT_REPLAY_DESC,
+                    params = listOf(eventId.toString(), userId)
+                ).toJsonStr(),
                 replayEventId = eventId,
                 requestParams = requestParams,
                 createTime = LocalDateTime.now()

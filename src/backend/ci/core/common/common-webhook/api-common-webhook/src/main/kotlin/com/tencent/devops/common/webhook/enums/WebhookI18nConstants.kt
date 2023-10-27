@@ -122,5 +122,5 @@ object WebhookI18nConstants {
     const val ISSUES_ACTION_NOT_MATCH = "bkRepoTriggerIssueActionNotMatch"
 
     // 事件回放匹配码后缀
-    const val EVENT_REPLAY_SUFFIX = "Replay"
+    const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
 }

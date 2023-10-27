@@ -52,7 +52,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -100,18 +99,13 @@ class GithubReviewTriggerHandler @Autowired constructor(
         return event.repository.id.toString()
     }
 
-    override fun getEventDesc(event: GithubReviewEvent, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            getI18Code(event)
-        )
+    override fun getEventDesc(event: GithubReviewEvent): String {
         return I18Variable(
-            code = i18Code,
+            code = getI18Code(event),
             params = listOf(
                 buildReviewUrl(event),
                 event.pullRequest.number.toString(),
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

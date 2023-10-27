@@ -89,7 +89,6 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
@@ -161,18 +160,13 @@ class TGitMrTriggerHandler(
         return event.object_attributes.id
     }
 
-    override fun getEventDesc(event: GitMergeRequestEvent, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            getI18Code(event)
-        )
+    override fun getEventDesc(event: GitMergeRequestEvent): String {
         return I18Variable(
-            code = i18Code,
+            code = getI18Code(event),
             params = listOf(
                 "${event.object_attributes.url}",
                 event.object_attributes.iid.toString(),
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

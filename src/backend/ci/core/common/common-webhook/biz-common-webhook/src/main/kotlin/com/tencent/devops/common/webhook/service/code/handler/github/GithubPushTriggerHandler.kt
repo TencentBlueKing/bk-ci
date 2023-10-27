@@ -61,7 +61,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
@@ -106,7 +105,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         return event.headCommit?.message ?: ""
     }
 
-    override fun getEventDesc(event: GithubPushEvent, replayInfo: PipelineEventReplayInfo?): String {
+    override fun getEventDesc(event: GithubPushEvent): String {
         val linkUrl = if (event.headCommit != null) {
             "https://github.com/${event.repository.fullName}/commit/${event.headCommit?.id}"
         } else {
@@ -118,18 +117,13 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         } else {
             revision
         }
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC
-        )
         return I18Variable(
-            code = i18Code,
+            code = WebhookI18nConstants.GITHUB_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
                 linkUrl,
                 commitId,
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

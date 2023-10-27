@@ -31,7 +31,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 
 @Suppress("TooManyFunctions")
@@ -84,8 +83,8 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
         return eventHandler.getMessage(event)
     }
 
-    override fun getEventDesc(replayInfo: PipelineEventReplayInfo?): String {
-        return eventHandler.getEventDesc(event, replayInfo)
+    override fun getEventDesc(): String {
+        return eventHandler.getEventDesc(event)
     }
 
     override fun getExternalId(): String {

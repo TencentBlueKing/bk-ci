@@ -58,7 +58,6 @@ import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
@@ -99,25 +98,19 @@ class TGitReviewTriggerHandler(
         return ""
     }
 
-    override fun getEventDesc(event: GitReviewEvent, replayInfo: PipelineEventReplayInfo?): String {
+    override fun getEventDesc(event: GitReviewEvent): String {
         // 评审状态 to 事件人
         val (state, eventUser) = if (event.reviewer != null) {
             event.reviewer!!.state to event.reviewer!!.reviewer.name
         } else {
             event.state to getUsername(event)
         }
-        // 最终触发人 to 文案code
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            eventUser,
-            getI18Code(state)
-        )
         return I18Variable(
-            code = i18Code,
+            code = getI18Code(state),
             params = listOf(
                 "${event.repository.homepage}/reviews/${event.iid}",
                 event.iid,
-                username
+                eventUser
             )
         ).toJsonStr()
     }

@@ -57,7 +57,6 @@ import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
@@ -131,18 +130,13 @@ class TGitIssueTriggerHandler(
         return event.objectAttributes.title
     }
 
-    override fun getEventDesc(event: GitIssueEvent, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            getI18Code(event)
-        )
+    override fun getEventDesc(event: GitIssueEvent): String {
         return I18Variable(
-            code = i18Code,
+            code =  getI18Code(event),
             params = listOf(
                 "${event.objectAttributes.url}",
                 event.objectAttributes.iid,
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

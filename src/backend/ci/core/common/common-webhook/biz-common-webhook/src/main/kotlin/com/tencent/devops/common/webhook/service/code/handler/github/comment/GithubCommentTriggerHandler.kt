@@ -51,7 +51,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 
 /**
@@ -93,18 +92,13 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
         return event.repository.id.toString()
     }
 
-    override fun getEventDesc(event: T, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            WebhookI18nConstants.TGIT_NOTE_EVENT_DESC
-        )
+    override fun getEventDesc(event: T): String {
         return I18Variable(
-            code = i18Code,
+            code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
             params = listOf(
                 buildCommentUrl(event),
                 event.comment.id.toString(),
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

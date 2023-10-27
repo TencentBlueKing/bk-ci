@@ -57,7 +57,6 @@ import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
@@ -100,7 +99,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         return event.ref.replace("refs/tags/", "")
     }
 
-    override fun getEventDesc(event: GitTagPushEvent, replayInfo: PipelineEventReplayInfo?): String {
+    override fun getEventDesc(event: GitTagPushEvent): String {
         val createFrom = when {
             event.create_from.isNullOrBlank() || event.checkout_sha == event.create_from -> {
                 GitUtils.getShortSha(event.checkout_sha)
@@ -110,18 +109,13 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 event.create_from
             }
         }
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
-        )
         return I18Variable(
-            code = i18Code,
+            code = WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC,
             params = listOf(
                 "$createFrom",
                 "${event.repository.homepage}/-/tags/${getBranchName(event)}",
                 getBranchName(event),
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }
