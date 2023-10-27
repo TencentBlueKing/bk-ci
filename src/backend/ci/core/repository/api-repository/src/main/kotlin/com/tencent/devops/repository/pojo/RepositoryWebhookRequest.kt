@@ -6,8 +6,8 @@ import java.time.LocalDateTime
 
 @ApiModel("代码库webhook请求")
 data class RepositoryWebhookRequest(
-    @ApiModelProperty("事件Id，网关traceId")
-    var requestId: Long? = null,
+    @ApiModelProperty("请求ID")
+    var requestId: String,
     @ApiModelProperty("事件源,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port")
     val externalId: String,
     @ApiModelProperty("事件类型")

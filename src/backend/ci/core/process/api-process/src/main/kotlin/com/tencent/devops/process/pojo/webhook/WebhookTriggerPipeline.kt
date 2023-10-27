@@ -26,18 +26,10 @@
  *
  */
 
-package com.tencent.devops.process.webhook.pojo.event
+package com.tencent.devops.process.pojo.webhook
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-
-@Event(exchange = MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, routeKey = MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
-data class WebhookRequestReplayEvent(
-    val userId: String,
+data class WebhookTriggerPipeline(
     val projectId: String,
-    val hookRequestId: Long,
-    val scmType: ScmType,
-    val pipelineId: String? = null
-) : ITraceEvent()
+    val pipelineId: String,
+    val version: Int? = null
+)

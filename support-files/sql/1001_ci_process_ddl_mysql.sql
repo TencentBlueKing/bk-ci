@@ -1152,18 +1152,20 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_RECORD_TASK` (
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_EVENT`
 (
+    `REQUEST_ID`      varchar(64)  NOT NULL COMMENT '请求ID',
     `PROJECT_ID`      varchar(64)  NOT NULL COMMENT '项目ID',
     `EVENT_ID`        bigint(20)   NOT NULL COMMENT '事件ID',
     `TRIGGER_TYPE`    varchar(64)  NOT NULL COMMENT '触发类型',
-    `EVENT_SOURCE`    varchar(255) NOT NULL COMMENT '触发源',
+    `EVENT_SOURCE`    varchar(255) NOT NULL COMMENT '触发源,代码库hashId/触发人/远程ip',
     `EVENT_TYPE`      varchar(64)  NOT NULL COMMENT '事件类型',
     `TRIGGER_USER`    varchar(100) NOT NULL COMMENT '触发用户',
     `EVENT_DESC`      text         NOT NULL COMMENT '事件描述',
-    `HOOK_REQUEST_ID` bigint(20)   NULL COMMENT 'WEBHOOK请求ID',
+    `REPLAY_EVENT_ID` bigint(20)   NULL COMMENT '重放事件ID',
     `REQUEST_PARAMS`  text                  DEFAULT NULL COMMENT '请求参数',
-    `EVENT_TIME`      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件时间',
-    PRIMARY KEY (`EVENT_ID`, `EVENT_TIME`),
-    INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`)
+    `CREATE_TIME`      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件时间',
+    PRIMARY KEY (`EVENT_ID`, `CREATE_TIME`),
+    unique UNIQ_REQUEST(`REQUEST_ID`, `EVENT_SOURCE`),
+    INDEX IDX_EVENT (`PROJECT_ID`, `EVENT_SOURCE`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线触发事件表';
 
 -- ----------------------------

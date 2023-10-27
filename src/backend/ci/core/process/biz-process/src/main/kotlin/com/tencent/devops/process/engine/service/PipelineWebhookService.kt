@@ -64,7 +64,7 @@ import com.tencent.devops.process.engine.pojo.WebhookElementParams
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
+import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -293,11 +293,37 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getWebhookPipelines(name: String, repositoryType: String): List<PipelineWebhookSubscriber> {
+    fun getTriggerPipelines(name: String, repositoryType: String): List<WebhookTriggerPipeline> {
         return pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
             repositoryType = repositoryType
+        ) ?: emptyList()
+    }
+
+    fun listTriggerPipeline(
+        projectId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): List<WebhookTriggerPipeline> {
+        return pipelineWebhookDao.listTriggerPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            eventType = eventType
+        ) ?: emptyList()
+    }
+
+    fun listPipelineWebhook(
+        name: String,
+        repositoryType: String,
+        eventType: String
+    ): List<PipelineWebhook> {
+        return pipelineWebhookDao.listWebhookPipeline(
+            dslContext = dslContext,
+            projectName = getProjectName(name),
+            repositoryType = repositoryType,
+            eventType = eventType
         ) ?: emptyList()
     }
 
@@ -731,7 +757,9 @@ class PipelineWebhookService @Autowired constructor(
                                 )
                                 null
                             }
-                            Optional.ofNullable(repo)
+                            val optional = Optional.ofNullable(repo)
+                            repoCache[repoCacheKey] = optional
+                            optional
                         }
                         val repository = if (repositoryOptional.isPresent) {
                             repositoryOptional.get()

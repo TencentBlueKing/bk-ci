@@ -34,6 +34,8 @@ import java.time.LocalDateTime
 
 @ApiModel("流水线触发事件")
 data class PipelineTriggerEvent(
+    @ApiModelProperty("请求ID")
+    val requestId: String,
     @ApiModelProperty("项目ID")
     var projectId: String? = null,
     @ApiModelProperty("事件ID")
@@ -48,10 +50,10 @@ data class PipelineTriggerEvent(
     val triggerUser: String,
     @ApiModelProperty("事件描述")
     val eventDesc: String,
-    @ApiModelProperty("webhook事件请求ID")
-    val hookRequestId: Long?,
+    @ApiModelProperty("重放事件ID")
+    val replayEventId: Long? = null,
     @ApiModelProperty("事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
     @ApiModelProperty("触发事件")
-    val eventTime: LocalDateTime
+    val createTime: LocalDateTime
 )

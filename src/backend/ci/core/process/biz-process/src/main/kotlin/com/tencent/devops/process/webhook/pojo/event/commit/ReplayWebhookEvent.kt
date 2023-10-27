@@ -26,10 +26,25 @@
  *
  */
 
-package com.tencent.devops.process.pojo.webhook
+package com.tencent.devops.process.webhook.pojo.event.commit
 
-data class PipelineWebhookSubscriber(
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.service.trace.TraceTag
+import org.slf4j.MDC
+
+@Event(exchange = MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, routeKey = MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
+data class ReplayWebhookEvent(
+    val userId: String,
     val projectId: String,
-    val pipelineId: String,
-    val version: Int? = null
+    // 事件重放生成的事件ID
+    val eventId: Long,
+    // 重放的请求ID
+    val replayRequestId: String,
+    val scmType: ScmType,
+    val pipelineId: String? = null,
+    var retryTime: Int = 3,
+    var delayMills: Int = 0,
+    var traceId: String? = MDC.get(TraceTag.BIZID)
 )

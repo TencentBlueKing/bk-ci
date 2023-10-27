@@ -63,6 +63,7 @@ class PipelineTriggerEventDao {
         with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
             dslContext.insertInto(
                 this,
+                REQUEST_ID,
                 PROJECT_ID,
                 EVENT_ID,
                 TRIGGER_TYPE,
@@ -70,10 +71,11 @@ class PipelineTriggerEventDao {
                 EVENT_TYPE,
                 TRIGGER_USER,
                 EVENT_DESC,
-                HOOK_REQUEST_ID,
+                REPLAY_EVENT_ID,
                 REQUEST_PARAMS,
-                EVENT_TIME
+                CREATE_TIME
             ).values(
+                triggerEvent.requestId,
                 triggerEvent.projectId,
                 triggerEvent.eventId,
                 triggerEvent.triggerType,
@@ -81,9 +83,9 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventType,
                 triggerEvent.triggerUser,
                 JsonUtil.toJson(triggerEvent.eventDesc),
-                triggerEvent.hookRequestId,
+                triggerEvent.replayEventId,
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
-                triggerEvent.eventTime
+                triggerEvent.createTime
             ).onDuplicateKeyIgnore().execute()
         }
     }
@@ -162,7 +164,7 @@ class PipelineTriggerEventDao {
             t1.EVENT_TYPE,
             t1.TRIGGER_USER,
             t1.EVENT_DESC,
-            t1.EVENT_TIME,
+            t1.CREATE_TIME,
             t2.STATUS,
             t2.PIPELINE_ID,
             t2.PIPELINE_NAME,
@@ -173,7 +175,7 @@ class PipelineTriggerEventDao {
         ).from(t1).leftJoin(t2)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
-            .orderBy(t1.EVENT_TIME.desc()).limit(limit)
+            .orderBy(t1.CREATE_TIME.desc()).limit(limit)
             .offset(offset)
             .fetch().map {
                 PipelineTriggerEventVo(
@@ -284,14 +286,14 @@ class PipelineTriggerEventDao {
             t1.EVENT_ID,
             t1.EVENT_SOURCE,
             t1.EVENT_DESC,
-            t1.EVENT_TIME,
+            t1.CREATE_TIME,
             totalCondition,
             count(`when`(t2.STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success ")
         ).from(t1).leftJoin(t2)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
-            .groupBy(t1.PROJECT_ID, t1.EVENT_ID, t1.EVENT_SOURCE, t1.EVENT_DESC, t1.EVENT_TIME)
-            .orderBy(t1.EVENT_TIME.desc())
+            .groupBy(t1.PROJECT_ID, t1.EVENT_ID, t1.EVENT_SOURCE, t1.EVENT_DESC, t1.CREATE_TIME)
+            .orderBy(t1.CREATE_TIME.desc())
             .limit(limit)
             .offset(offset)
             .fetch().map {
@@ -358,6 +360,22 @@ class PipelineTriggerEventDao {
         return record?.let { convertEvent(it) }
     }
 
+    fun getEventByRequestId(
+        dslContext: DSLContext,
+        projectId: String,
+        requestId: String,
+        eventSource: String
+    ): PipelineTriggerEvent? {
+        val record = with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REQUEST_ID.eq(requestId))
+                .and(EVENT_SOURCE.eq(eventSource))
+                .fetchOne()
+        }
+        return record?.let { convertEvent(it) }
+    }
+
     fun getTriggerDetail(
         dslContext: DSLContext,
         projectId: String,
@@ -407,10 +425,10 @@ class PipelineTriggerEventDao {
             conditions.add(t2.PIPELINE_ID.eq(pipelineId))
         }
         if (startTime != null && startTime > 0) {
-            conditions.add(t1.EVENT_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            conditions.add(t1.CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
         }
         if (endTime != null && endTime > 0) {
-            conditions.add(t1.EVENT_TIME.le(Timestamp(endTime).toLocalDateTime()))
+            conditions.add(t1.CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
         }
         if (!pipelineName.isNullOrBlank()) {
             conditions.add(t2.PIPELINE_NAME.like("%$pipelineName%"))
@@ -421,6 +439,7 @@ class PipelineTriggerEventDao {
     fun convertEvent(record: TPipelineTriggerEventRecord): PipelineTriggerEvent {
         return with(record) {
             PipelineTriggerEvent(
+                requestId = requestId,
                 projectId = projectId,
                 eventId = eventId,
                 eventSource = eventSource,
@@ -428,13 +447,13 @@ class PipelineTriggerEventDao {
                 triggerUser = triggerUser,
                 eventType = eventType,
                 eventDesc = JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(),
-                hookRequestId = hookRequestId,
+                replayEventId = replayEventId,
                 requestParams = requestParams?.let {
                     JsonUtil.to(
                         it,
                         object : TypeReference<Map<String, String>>() {})
                 },
-                eventTime = eventTime
+                createTime = createTime
             )
         }
     }

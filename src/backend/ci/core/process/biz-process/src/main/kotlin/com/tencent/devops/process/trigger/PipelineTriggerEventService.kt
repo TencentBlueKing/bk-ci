@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -54,11 +54,14 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
@@ -70,7 +73,7 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     companion object {
@@ -87,6 +90,15 @@ class PipelineTriggerEventService @Autowired constructor(
 
     fun getEventId(): Long {
         return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_EVENT_BIZ_ID).data ?: 0
+    }
+
+    fun getEventId(projectId: String, requestId: String, eventSource: String): Long {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId ?: getEventId()
     }
 
     fun saveEvent(
@@ -301,11 +313,36 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
-        traceEventDispatcher.dispatch(
-            WebhookRequestReplayEvent(
+        // 保存重放事件
+        val requestId = MDC.get(TraceTag.BIZID)
+        val replayEventId = getEventId()
+        val replayTriggerEvent = with(triggerEvent) {
+            PipelineTriggerEvent(
+                requestId = requestId,
+                projectId = projectId,
+                eventId = replayEventId,
+                triggerType = triggerType,
+                eventSource = eventSource,
+                eventType = eventType,
+                triggerUser = userId,
+                // TODO 事件重放文案
+                eventDesc = "$userId replay $eventId",
+                replayEventId = eventId,
+                requestParams = requestParams,
+                createTime = LocalDateTime.now()
+            )
+        }
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = replayTriggerEvent
+        )
+        CodeWebhookEventDispatcher.dispatchReplayEvent(
+            rabbitTemplate = rabbitTemplate,
+            event = ReplayWebhookEvent(
                 userId = userId,
                 projectId = projectId,
-                hookRequestId = triggerEvent.hookRequestId!!,
+                eventId = replayEventId,
+                replayRequestId = triggerEvent.requestId,
                 scmType = scmType,
                 pipelineId = pipelineId
             )
@@ -364,6 +401,7 @@ class PipelineTriggerEventService @Autowired constructor(
         requestParams: Map<String, String>?
     ) {
         val eventId = getEventId()
+        val requestId = MDC.get(TraceTag.BIZID)
         saveEvent(
             triggerDetail = PipelineTriggerDetail(
                 eventId = eventId,
@@ -387,8 +425,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventType = triggerType,
                 triggerUser = userId,
                 requestParams = requestParams,
-                eventTime = LocalDateTime.now(),
-                hookRequestId = null
+                createTime = LocalDateTime.now(),
+                requestId = requestId
             )
         )
     }
