@@ -149,11 +149,11 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     ): String {
         if (request.repositoryHashId.isNullOrBlank()) return request.content
         var result = request.content
+        val uuid = UUIDUtil.generate()
         val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = request.fileDir
-        )
-        val uuid = UUIDUtil.generate()
+        ) + "$fileSeparator$uuid"
         val file = File(fileDirPath, "$uuid.zip")
         try {
             downloadFile(
@@ -169,7 +169,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                     userId = userId,
                     content = request.content,
                     client = client,
-                    fileDirPath = "$fileDirPath$fileSeparator$uuid${fileSeparator}file"
+                    fileDirPath = "$fileDirPath${fileSeparator}file"
                 )
             } else {
                 logger.warn("textReferenceFileAnalysis file is not  exists path:${file.path}")
@@ -177,8 +177,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
         } finally {
-            file.delete()
-            FileSystemUtils.deleteRecursively(File(fileDirPath).parentFile)
+            FileSystemUtils.deleteRecursively(File(fileDirPath))
         }
         return result
     }
