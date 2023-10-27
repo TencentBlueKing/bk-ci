@@ -4,5 +4,5 @@ import io.swagger.annotations.ApiModelProperty
 
 data class DeleteAccountReq(
     @ApiModelProperty(value = "帐号ID", required = true)
-    val id: String
+    val id: Long
 )

@@ -32,6 +32,10 @@ import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
+import com.tencent.devops.model.environment.tables.TEnv
+import com.tencent.devops.model.environment.tables.TEnvNode
+import com.tencent.devops.model.environment.tables.records.TEnvNodeRecord
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -43,6 +47,46 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun getNodesFromNodeHashList(dslContext: DSLContext, projectId: String, nodeHashIdList: List<String>): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(NODE_HASH_ID.`in`(nodeHashIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun getEnvsFromEnvHashList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this)
+                .where(ENV_HASH_ID.`in`(envHashIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .orderBy(ENV_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun getNodeIdsFromEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): List<TEnvNodeRecord> {
+        with(TEnvNode.T_ENV_NODE) {
+            return dslContext.selectFrom(this)
+                .where(ENV_ID.`in`(envIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .orderBy(ENV_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun getNodesFromNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(NODE_ID.`in`(nodeIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }
+    }
+
     fun get(dslContext: DSLContext, projectId: String, nodeId: Long): TNodeRecord? {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

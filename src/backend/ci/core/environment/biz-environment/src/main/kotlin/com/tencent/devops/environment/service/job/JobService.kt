@@ -7,6 +7,7 @@ import com.tencent.devops.environment.pojo.job.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.GetAccountListResult
+import com.tencent.devops.environment.pojo.job.Host
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
@@ -31,11 +32,23 @@ import org.springframework.stereotype.Service
 
 @Service("JobService")
 class JobService @Autowired constructor(
+    private val parseHashListService: ParseHashListService,
     private val apigwJobCloudApi: ApigwJobCloudApi
 ) {
-    fun executeScript(userId: String, scriptExecuteReq: ScriptExecuteReq): JobResult<ScriptExecuteResult> {
-        val dynamicGroupList: List<JobCloudHost> = emptyList()
-        val topoNodeList: List<JobCloudHost> = emptyList()
+    fun executeScript(
+        userId: String,
+        projectId: String,
+        scriptExecuteReq: ScriptExecuteReq
+    ): JobResult<ScriptExecuteResult> {
+        val hostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
+            projectId, scriptExecuteReq.executeTarget.envHashIdList
+        )
+        val hostListFromNodeHash: List<Host> = parseHashListService.getHostFromNodeList(
+            projectId, scriptExecuteReq.executeTarget.nodeHashIdList
+        )
+        val allHostList = scriptExecuteReq.executeTarget.hostList
+            .plus(hostListFromEnvHash)
+            .plus(hostListFromNodeHash)
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -44,13 +57,13 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId == null }.map {
+                hostList = allHostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 },
-                hostIdList = scriptExecuteReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
+                hostIdList = allHostList.filter { it.bkHostId != null }.map {
                     it.bkHostId ?: 0L
                 }
             ),
@@ -60,19 +73,37 @@ class JobService @Autowired constructor(
         return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq, ScriptExecuteResult::class.java)
     }
 
-    fun distributeFile(userId: String, fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
+    fun distributeFile(userId: String, projectId: String,fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
+        val executeTargetHostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
+            projectId, fileDistributeReq.executeTarget.envHashIdList
+        )
+        val executeTargetHostListFromNodeHash: List<Host> = parseHashListService.getHostFromNodeList(
+            projectId, fileDistributeReq.executeTarget.nodeHashIdList
+        )
+        val allExecuteTargetHostList = fileDistributeReq.executeTarget.hostList
+            .plus(executeTargetHostListFromEnvHash)
+            .plus(executeTargetHostListFromNodeHash)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
+                val fileSourceHostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
+                    projectId, fileSource.sourceFileServer.envHashIdList
+                )
+                val fileSourceHostListFromNodeHash: List<Host> = parseHashListService.getHostFromNodeList(
+                    projectId, fileSource.sourceFileServer.nodeHashIdList
+                )
+                val allFileSourceHostList = fileDistributeReq.executeTarget.hostList
+                    .plus(fileSourceHostListFromEnvHash)
+                    .plus(fileSourceHostListFromNodeHash)
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
-                        hostList = fileSource.sourceFileServer.hostList.filter { it.bkHostId == null }.map {
+                        hostList = allFileSourceHostList.filter { it.bkHostId == null }.map {
                             JobCloudHost(
                                 bkCloudId = it.bkCloudId,
                                 ip = it.ip
                             )
                         },
-                        hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
+                        hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map {
                             it.bkHostId ?: 0L
                         }
                     ),
@@ -85,13 +116,13 @@ class JobService @Autowired constructor(
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
-                hostList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId == null }.map {
+                hostList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 },
-                hostIdList = fileDistributeReq.executeTarget.hostList.filter { it.bkHostId != null }.map {
+                hostIdList = allExecuteTargetHostList.filter { it.bkHostId != null }.map {
                     it.bkHostId ?: 0L
                 }
             ),

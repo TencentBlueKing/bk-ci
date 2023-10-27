@@ -46,12 +46,10 @@ import com.tencent.devops.environment.pojo.job.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.TaskTerminateResult
 import com.tencent.devops.environment.pojo.job.JobResult
 import com.tencent.devops.environment.service.job.JobService
-import com.tencent.devops.environment.service.job.ParseHashListService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceJobResourceImpl @Autowired constructor(
-    private val parseHashListService: ParseHashListService,
     private val jobService: JobService
 ) : ServiceJobResource {
     override fun executeScript(
@@ -60,7 +58,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         checkParam(userId, projectId)
-        return jobService.executeScript(userId, scriptExecuteReq)
+        return jobService.executeScript(userId, projectId, scriptExecuteReq)
     }
 
     override fun distributeFile(
@@ -69,7 +67,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
         checkParam(userId, projectId)
-        return jobService.distributeFile(userId, fileDistributeReq)
+        return jobService.distributeFile(userId, projectId, fileDistributeReq)
     }
 
     override fun terminateTask(

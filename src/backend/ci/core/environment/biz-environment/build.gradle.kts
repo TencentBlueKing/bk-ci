@@ -43,4 +43,5 @@ dependencies {
     api("org.json:json")
     api("org.influxdb:influxdb-java")
     api(project(":core:auth:api-auth"))
+    implementation(project(mapOf("path" to ":core:misc:model-misc")))
 }

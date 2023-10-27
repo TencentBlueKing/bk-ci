@@ -1,43 +1,78 @@
 package com.tencent.devops.environment.service.job
 
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.job.Host
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("ParseHashListService")
-class ParseHashListService {
-    fun getDynamicGroupList(envHashIdList: List<String>?): List<String> {
-        if (!envHashIdList.isNullOrEmpty()) {
-            val trimDynamicGroupList = discardBlankHashId(hashIdList = envHashIdList)
-
-            return emptyList()
-        } else {
-            logger.warn("[getDynamicGroupList] envHashIdList is null or empty.")
-            return emptyList()
-        }
-    }
-
-    fun getTopoNodeList(nodeHashIdList: List<String>?): List<String> {
-        if (!nodeHashIdList.isNullOrEmpty()) {
-            val trimDynamicGroupList = discardBlankHashId(hashIdList = nodeHashIdList)
-
-            return emptyList()
-        } else {
-            logger.warn("[getTopoNodeList] nodeHashIdList is null or empty.")
-            return emptyList()
-        }
-    }
-
-    private fun discardBlankHashId(hashIdList: List<String>): MutableSet<String> {
-        val trimBlankHashIdList = mutableSetOf<String>()
-        for (hashId in hashIdList) {
-            if (hashId.isNotBlank()) {
-                trimBlankHashIdList.add(hashId)
-            }
-        }
-        return trimBlankHashIdList
-    }
-
+class ParseHashListService  @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val nodeDao: NodeDao
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(ParseHashListService::class.java)
+    }
+
+    fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host> {
+        if (!envHashIdList.isNullOrEmpty()) {
+            val envIdList = mutableListOf<Long>()
+            val envRecord = nodeDao.getEnvsFromEnvHashList(
+                dslContext, projectId, envHashIdList
+            )
+            envRecord.map {
+                envIdList.add(it.envId)
+            }
+
+            val nodeIdList = mutableListOf<Long>()
+            val envNodeRecord = nodeDao.getNodeIdsFromEnvIdList(
+                dslContext, projectId, envIdList
+            )
+            envNodeRecord.map {
+                nodeIdList.add(it.nodeId)
+            }
+
+            val nodeHostList = mutableListOf<Host>()
+            val nodeRecord = nodeDao.getNodesFromNodeIdList(
+                dslContext, projectId, nodeIdList
+            )
+            nodeRecord.map {
+                nodeHostList.add(
+                    Host(
+                        bkHostId = /*null*/it.hostId,
+                        bkCloudId = /*null*/it.cloudAreaId,
+                        ip = it.nodeIp
+                    )
+                )
+            }
+            return nodeHostList
+        } else {
+            logger.warn("[getHostFromDynamicGroupList] envHashIdList is null or empty.")
+            return emptyList()
+        }
+    }
+
+    fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host> {
+        if (!nodeHashIdList.isNullOrEmpty()) {
+            val hostList = mutableListOf<Host>()
+            val nodeRecord = nodeDao.getNodesFromNodeHashList(
+                dslContext, projectId, nodeHashIdList
+            )
+            nodeRecord.map {
+                hostList.add(
+                    Host(
+                        bkHostId = /*null*/it.hostId,
+                        bkCloudId = /*null*/it.cloudAreaId,
+                        ip = it.nodeIp
+                    )
+                )
+            }
+            return hostList
+        } else {
+            logger.warn("[getHostFromTopoNodeList] nodeHashIdList is null or empty.")
+            return emptyList()
+        }
     }
 }
