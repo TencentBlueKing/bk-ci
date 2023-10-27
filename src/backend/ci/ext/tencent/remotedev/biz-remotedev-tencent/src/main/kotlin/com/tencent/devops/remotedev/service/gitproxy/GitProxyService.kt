@@ -28,8 +28,22 @@ class GitProxyService @Autowired constructor(
             repoName = data.repoName,
             url = data.url,
             desc = data.desc,
-            gitType = data.gitType
+            gitType = data.gitType,
+            category = BkRepoCategory.PROXY,
+            enableLfs = false
         )
+        if (data.enableLfsCache == true && data.gitType == ScmType.CODE_GIT) {
+            gitproxyBkRepoClient.createRepo(
+                userId = userId,
+                projectId = data.projectId,
+                repoName = "Lfs_${data.repoName}",
+                url = data.url,
+                desc = data.desc,
+                gitType = data.gitType,
+                category = BkRepoCategory.REMOTE,
+                enableLfs = true
+            )
+        }
         return true
     }
 
@@ -54,7 +68,7 @@ class GitProxyService @Autowired constructor(
         val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize, gitType)
         val resp = repos.records.map { record ->
             FetchRepoResp(
-                url = record.configuration.proxy.url,
+                url = record.configuration.proxy?.url ?: "",
                 proxyUrl = record.configuration.url,
                 creator = record.createdBy,
                 createdDate = record.createdDate,
