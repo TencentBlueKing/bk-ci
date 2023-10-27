@@ -78,8 +78,8 @@ class WorkspaceJoinDao {
         machineType: String?
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
-            // 没 ip 没 owner
-            if (ips.isNullOrEmpty() && owner == null) {
+            // 没有包含其他表的条件
+            if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
                 return (
                         genFetchProjectWorkspaceCond(
                             dslContext = dslContext,
@@ -97,8 +97,8 @@ class WorkspaceJoinDao {
                     .fetch(WorkspaceDao.workspaceMapper)
             }
 
-            // 只有owner
-            if (ips.isNullOrEmpty() && owner != null) {
+            // 包含 detail 表的条件
+            if (!ips.isNullOrEmpty() || zoneId != null) {
                 return genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -112,10 +112,11 @@ class WorkspaceJoinDao {
                     machineType = machineType
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
-                    .fetch(workspaceFieldMapper)
+                    .fetch(workspaceWithDetailMapper)
+
             }
 
-            // 剩下的都带 ip 所以都有 detail
+            // 剩下的只剩 workspace 表的
             return genFetchProjectWorkspaceCond(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -129,7 +130,7 @@ class WorkspaceJoinDao {
                 machineType = machineType
             ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
-                .fetch(workspaceWithDetailMapper)
+                .fetch(workspaceFieldMapper)
         }
     }
 
