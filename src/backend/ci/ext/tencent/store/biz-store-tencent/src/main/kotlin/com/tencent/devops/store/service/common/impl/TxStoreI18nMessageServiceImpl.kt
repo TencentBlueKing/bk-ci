@@ -164,15 +164,12 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             )
             if (file.exists()) {
                 ZipUtil.unZipFile(file, fileDirPath, true)
-                printDirectoryContents(fileDirPath)
                 result = storeFileService.textReferenceFileAnalysis(
                     userId = userId,
                     content = request.content,
                     client = client,
                     fileDirPath = "$fileDirPath${fileSeparator}file"
                 )
-            } else {
-                logger.warn("textReferenceFileAnalysis file is not  exists path:${file.path}")
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
@@ -180,19 +177,5 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             FileSystemUtils.deleteRecursively(File(fileDirPath))
         }
         return result
-    }
-
-    fun printDirectoryContents(directoryPath: String, level: Int = 0) {
-        val directory = File(directoryPath)
-        val files = directory.listFiles()
-
-        files?.forEach { file ->
-            if (file.isDirectory) {
-                logger.info("printDirectoryContents:${"\t".repeat(level)}[${file.name}]")
-                printDirectoryContents(file.path, level + 1)
-            } else {
-                logger.info("${"\t".repeat(level)}- ${file.name}")
-            }
-        }
     }
 }
