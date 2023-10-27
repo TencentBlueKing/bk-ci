@@ -8,12 +8,12 @@ import io.swagger.annotations.ApiModelProperty
 data class FileDistributeLog(
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
-    val bkCloudId: Long?,
+    val bkCloudId: ULong?,
     @ApiModelProperty(value = "IP地址")
     val ip: String?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Long?,
+    val bkHostId: ULong?,
     @ApiModelProperty(value = "文件分发日志内容", required = true)
     @JsonProperty("file_logs")
     val fileLogList: List<FileLog>

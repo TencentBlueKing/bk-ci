@@ -2,7 +2,6 @@ package com.tencent.devops.environment.pojo.job
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import org.jooq.types.ULong
 
 @ApiModel("主机结构")
 data class Host(

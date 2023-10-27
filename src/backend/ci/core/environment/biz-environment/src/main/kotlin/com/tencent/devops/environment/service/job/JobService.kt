@@ -64,7 +64,7 @@ class JobService @Autowired constructor(
                     )
                 },
                 hostIdList = allHostList.filter { it.bkHostId != null }.map {
-                    it.bkHostId ?: 0L
+                    it.bkHostId ?: 0uL
                 }
             ),
             bkUsername = userId
@@ -104,7 +104,7 @@ class JobService @Autowired constructor(
                             )
                         },
                         hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map {
-                            it.bkHostId ?: 0L
+                            it.bkHostId ?: 0uL
                         }
                     ),
                     account = JobCloudAccount(
@@ -123,7 +123,7 @@ class JobService @Autowired constructor(
                     )
                 },
                 hostIdList = allExecuteTargetHostList.filter { it.bkHostId != null }.map {
-                    it.bkHostId ?: 0L
+                    it.bkHostId ?: 0uL
                 }
             ),
             accountAlias = fileDistributeReq.accountAlias,

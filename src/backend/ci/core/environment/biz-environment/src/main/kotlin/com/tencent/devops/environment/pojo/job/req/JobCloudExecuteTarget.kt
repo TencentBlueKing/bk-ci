@@ -10,5 +10,5 @@ data class JobCloudExecuteTarget(
     val hostList: List<JobCloudHost>?,
     @ApiModelProperty(value = "主机ID列表")
     @JsonProperty("host_id_list")
-    val hostIdList: List<Long>?
+    val hostIdList: List<ULong>?
 )

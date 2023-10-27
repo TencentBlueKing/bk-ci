@@ -8,10 +8,10 @@ import io.swagger.annotations.ApiModelProperty
 data class HostInRes(
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
-    val bkCloudId: Long?,
+    val bkCloudId: ULong?,
     @ApiModelProperty(value = "IP地址")
     val ip: String?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Long?
+    val bkHostId: ULong?
 )
