@@ -41,8 +41,8 @@ class ParseHashListService @Autowired constructor(
             nodeRecord.map {
                 nodeHostList.add(
                     Host(
-                        bkHostId = it.hostId,
-                        bkCloudId = it.cloudAreaId,
+                        bkHostId = it.hostId as ULong?,
+                        bkCloudId = it.cloudAreaId as ULong?,
                         ip = it.nodeIp
                     )
                 )
@@ -63,8 +63,8 @@ class ParseHashListService @Autowired constructor(
             nodeRecord.map {
                 hostList.add(
                     Host(
-                        bkHostId = it.hostId,
-                        bkCloudId = it.cloudAreaId,
+                        bkHostId = it.hostId as ULong?,
+                        bkCloudId = it.cloudAreaId as ULong?,
                         ip = it.nodeIp
                     )
                 )
