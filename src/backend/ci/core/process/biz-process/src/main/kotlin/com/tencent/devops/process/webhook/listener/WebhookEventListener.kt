@@ -52,6 +52,7 @@ class WebhookEventListener constructor(
     private val webhookRequestService: WebhookRequestService
 ) {
 
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     fun handleCommitEvent(event: ICodeWebhookEvent) {
         val traceId = MDC.get(TraceTag.BIZID)
         if (traceId.isNullOrEmpty()) {

@@ -129,7 +129,8 @@ class PipelineRemoteAuthService @Autowired constructor(
                  不使用client.get直接调用，因client内不支持同服务间的feign调用。故只能通过网关代理下 */
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, pipeline.projectId)
         return bkTag.invokeByTag(projectConsulTag) {
-            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, $projectConsulTag ${bkTag.getFinalTag()}")
+            logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, " +
+                    "$projectConsulTag ${bkTag.getFinalTag()}")
             val buildId = pipelineTriggerEventService.saveSpecificEvent(
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
