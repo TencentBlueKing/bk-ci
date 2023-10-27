@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("ParseHashListService")
-class ParseHashListService  @Autowired constructor(
+class ParseHashListService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao
 ) {
@@ -41,8 +41,8 @@ class ParseHashListService  @Autowired constructor(
             nodeRecord.map {
                 nodeHostList.add(
                     Host(
-                        bkHostId = /*null*/it.hostId,
-                        bkCloudId = /*null*/it.cloudAreaId,
+                        bkHostId = it.hostId,
+                        bkCloudId = it.cloudAreaId,
                         ip = it.nodeIp
                     )
                 )
@@ -63,8 +63,8 @@ class ParseHashListService  @Autowired constructor(
             nodeRecord.map {
                 hostList.add(
                     Host(
-                        bkHostId = /*null*/it.hostId,
-                        bkCloudId = /*null*/it.cloudAreaId,
+                        bkHostId = it.hostId,
+                        bkCloudId = it.cloudAreaId,
                         ip = it.nodeIp
                     )
                 )
