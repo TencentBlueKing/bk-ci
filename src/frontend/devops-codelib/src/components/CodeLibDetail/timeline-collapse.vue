@@ -67,7 +67,7 @@
                                         <div class="cell">
                                             <div v-for="i in detail.reasonDetailList" :key="i">
                                                 <StatusIcon :status="detail.status"></StatusIcon>
-                                                <span style="color: red;">TRIGGER_NOT_MATCH</span>  |
+                                                <span style="color: red;">{{ detail.failReason }}</span>  |
                                                 <span>{{ i }}</span>
                                             </div>
                                         </div>
