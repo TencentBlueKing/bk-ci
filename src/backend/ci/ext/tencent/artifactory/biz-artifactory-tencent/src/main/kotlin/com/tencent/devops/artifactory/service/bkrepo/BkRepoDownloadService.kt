@@ -94,7 +94,7 @@ open class BkRepoDownloadService @Autowired constructor(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
         )
-        val normalizedPath = getNormalizePath(path, artifactoryType, userId, projectId)
+        val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
             creatorId = creatorId ?: userId,
             userId = userId,
