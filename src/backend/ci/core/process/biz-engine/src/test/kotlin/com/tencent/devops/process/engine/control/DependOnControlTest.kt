@@ -39,7 +39,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 class DependOnControlTest {
     private val pipelineContainerService: PipelineContainerService = mockk()
