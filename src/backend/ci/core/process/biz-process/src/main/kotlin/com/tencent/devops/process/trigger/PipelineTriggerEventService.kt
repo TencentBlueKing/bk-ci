@@ -123,6 +123,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val language = I18nUtil.getLanguage(userId)
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
             projectId = projectId,
@@ -145,13 +146,7 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = try {
-                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(I18nUtil.getLanguage(userId))
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                it.eventDesc
-            }
-            it
+            fillEventDetailParam(it, language)
         }
         return SQLPage(count = count, records = records)
     }
@@ -239,11 +234,7 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDesc(language)
-            it.buildNum = it.getBuildNumUrl()
-            it.reasonDetailList = it.getI18nReasonDetailDesc(language)
-            it.reason = it.getI18nReason(language)
-            it
+            fillEventDetailParam(it, language)
         }
         val count = pipelineTriggerEventDao.countTriggerEvent(
             dslContext = dslContext,
@@ -434,14 +425,14 @@ class PipelineTriggerEventService @Autowired constructor(
         listOf()
     }
 
-    private fun PipelineTriggerEventVo.getI18nReason(language: String): String = getCodeLanMessage(
-        messageCode = if (this.reason.isNullOrBlank()) {
+    private fun getI18nReason(reason: String?, language: String): String = getCodeLanMessage(
+        messageCode = if (reason.isNullOrBlank()) {
             PipelineTriggerReason.TRIGGER_SUCCESS.name
         } else {
-            this.reason!!
+            reason
         },
         language = language,
-        defaultMessage = this.reason
+        defaultMessage = reason
     )
 
     /**
@@ -454,6 +445,28 @@ class PipelineTriggerEventService @Autowired constructor(
             MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
         } else {
             null
+        }
+    }
+
+    /**
+     * 填充事件相关参数
+     * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
+     */
+    private fun fillEventDetailParam(
+        eventParam: PipelineTriggerEventVo,
+        language: String
+    ): PipelineTriggerEventVo {
+        return with(eventParam) {
+            eventDesc = getI18nEventDesc(language)
+            buildNum = getBuildNumUrl()
+            reasonDetailList = getI18nReasonDetailDesc(language)
+            reason = getI18nReason(eventParam.reason, language)
+            failReason = if (!reasonDetailList.isNullOrEmpty()) {
+                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name, language)
+            } else {
+                ""
+            }
+            this
         }
     }
 }
