@@ -732,7 +732,10 @@ class PipelineWebhookService @Autowired constructor(
                         if (webhook.taskId.isNullOrBlank()) return@webhook
                         val element = elementMap[webhook.taskId] ?: return@webhook
                         val webhookElementParams = getElementRepositoryConfig(element, variable = params)
-                            ?: return@webhook
+                            ?: run{
+                                logger.info("webhook not find match element|${webhook.id}")
+                                return@webhook
+                            }
                         val elementRepositoryConfig = webhookElementParams.repositoryConfig
                         val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
                         // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致，不更新

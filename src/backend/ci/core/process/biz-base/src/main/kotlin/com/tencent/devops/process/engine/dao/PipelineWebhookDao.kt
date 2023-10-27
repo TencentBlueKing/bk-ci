@@ -200,24 +200,6 @@ class PipelineWebhookDao {
 
     fun listWebhookPipeline(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        repositoryType: String,
-        eventType: String
-    ): List<PipelineWebhook> {
-        with(T_PIPELINE_WEBHOOK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(REPOSITORY_TYPE.eq(repositoryType))
-                .and(EVENT_TYPE.eq(eventType))
-                .and(DELETE.eq(false))
-                .fetch().map { convert(it) }
-        }
-    }
-
-    fun listWebhookPipeline(
-        dslContext: DSLContext,
         projectName: String,
         repositoryType: String,
         eventType: String
