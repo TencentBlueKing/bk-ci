@@ -132,7 +132,7 @@ class TGitIssueTriggerHandler(
 
     override fun getEventDesc(event: GitIssueEvent): String {
         return I18Variable(
-            code =  getI18Code(event),
+            code = getI18Code(event),
             params = listOf(
                 "${event.objectAttributes.url}",
                 event.objectAttributes.iid,
