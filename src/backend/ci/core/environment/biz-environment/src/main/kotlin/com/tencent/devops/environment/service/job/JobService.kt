@@ -73,7 +73,11 @@ class JobService @Autowired constructor(
         return apigwJobCloudApi.executePostRequest(userId, jobCloudScriptExecuteReq, ScriptExecuteResult::class.java)
     }
 
-    fun distributeFile(userId: String, projectId: String,fileDistributeReq: FileDistributeReq): JobResult<FileDistributeResult> {
+    fun distributeFile(
+        userId: String,
+        projectId: String,
+        fileDistributeReq: FileDistributeReq
+    ): JobResult<FileDistributeResult> {
         val executeTargetHostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
             projectId, fileDistributeReq.executeTarget.envHashIdList
         )
