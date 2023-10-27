@@ -52,7 +52,7 @@ class WebhookRequestService(
     private val webhookEventFactory: WebhookEventFactory,
     private val webhookTriggerService: WebhookTriggerService,
     private val dslContext: DSLContext,
-    private val pipelineTriggerEventDao: PipelineTriggerEventDao,
+    private val pipelineTriggerEventDao: PipelineTriggerEventDao
 ) {
 
     companion object {

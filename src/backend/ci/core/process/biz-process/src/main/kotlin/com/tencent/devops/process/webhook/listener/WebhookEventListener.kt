@@ -237,7 +237,7 @@ class WebhookEventListener constructor(
                 MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             }
         }
-        logger.info("Receive ReplayWebhookEvent from MQ [replay|${replayEvent}]")
+        logger.info("Receive ReplayWebhookEvent from MQ [replay|$replayEvent]")
         var result = false
         try {
             webhookRequestService.handleReplay(replayEvent = replayEvent)
@@ -262,7 +262,6 @@ class WebhookEventListener constructor(
                         )
                     )
                 }
-
             }
             MDC.remove(TraceTag.BIZID)
         }

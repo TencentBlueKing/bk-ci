@@ -159,7 +159,7 @@ class PipelineTriggerEventService @Autowired constructor(
             offset = sqlLimit.offset
         ).map {
             it.eventDesc = it.getI18nEventDesc(language)
-            it.reason = getI18nReason(it.reason,language)
+            it.reason = getI18nReason(it.reason, language)
             it
         }
         return SQLPage(count = count, records = records)

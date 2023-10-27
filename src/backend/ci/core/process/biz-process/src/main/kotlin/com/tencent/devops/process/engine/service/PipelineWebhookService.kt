@@ -732,7 +732,7 @@ class PipelineWebhookService @Autowired constructor(
                         if (webhook.taskId.isNullOrBlank()) return@webhook
                         val element = elementMap[webhook.taskId] ?: return@webhook
                         val webhookElementParams = getElementRepositoryConfig(element, variable = params)
-                            ?: run{
+                            ?: run {
                                 logger.info("webhook not find match element|${webhook.id}")
                                 return@webhook
                             }
