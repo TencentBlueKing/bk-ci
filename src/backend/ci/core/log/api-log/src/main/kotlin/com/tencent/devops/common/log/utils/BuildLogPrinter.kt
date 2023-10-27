@@ -35,7 +35,6 @@ import com.tencent.devops.log.meta.Ansi
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
