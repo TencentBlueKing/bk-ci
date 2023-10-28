@@ -121,7 +121,7 @@ class PipelineTriggerEventService @Autowired constructor(
         }
     }
 
-    fun listTriggerEvent(
+    fun listPipelineTriggerEvent(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -137,7 +137,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -147,7 +147,7 @@ class PipelineTriggerEventService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -240,7 +240,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
@@ -251,7 +251,7 @@ class PipelineTriggerEventService @Autowired constructor(
         ).map {
             fillEventDetailParam(it, language)
         }
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
@@ -323,7 +323,8 @@ class PipelineTriggerEventService @Autowired constructor(
                     code = EVENT_REPLAY_DESC,
                     params = listOf(eventId.toString(), userId)
                 ).toJsonStr(),
-                replayEventId = eventId,
+                // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
+                replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId,
                 requestParams = requestParams,
                 createTime = LocalDateTime.now()
             )

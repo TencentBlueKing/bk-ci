@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.external
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
@@ -38,6 +39,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -60,8 +62,9 @@ class ExternalScmResourceImpl @Autowired constructor(
         secret: String?,
         traceId: String,
         body: String
-    ) =
-        Result(
+    ): Result<Boolean> {
+        logger.info("traceId: ${MDC.get(TraceTag.BIZID)}")
+        return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
                 rabbitTemplate = rabbitTemplate,
                 event = GitWebhookEvent(
@@ -71,6 +74,8 @@ class ExternalScmResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))

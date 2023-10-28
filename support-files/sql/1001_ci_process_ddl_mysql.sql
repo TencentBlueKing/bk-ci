@@ -1160,7 +1160,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_EVENT`
     `EVENT_TYPE`      varchar(64)  NOT NULL COMMENT '事件类型',
     `TRIGGER_USER`    varchar(100) NOT NULL COMMENT '触发用户',
     `EVENT_DESC`      text         NOT NULL COMMENT '事件描述',
-    `REPLAY_EVENT_ID` bigint(20)   NULL COMMENT '重放事件ID',
+    `REPLAY_REQUEST_ID` varchar(64)   NULL COMMENT '重放请求ID',
     `REQUEST_PARAMS`  text                  DEFAULT NULL COMMENT '请求参数',
     `CREATE_TIME`      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件时间',
     PRIMARY KEY (`EVENT_ID`, `CREATE_TIME`),

@@ -738,7 +738,7 @@ class PipelineWebhookService @Autowired constructor(
                             }
                         val elementRepositoryConfig = webhookElementParams.repositoryConfig
                         val webhookRepositoryConfig = getRepositoryConfig(webhook, params)
-                        // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致，不更新
+                        // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致,打印日志统计
                         if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
                             logger.info(
                                 "webhook repository config different from element repository config|" +
@@ -777,6 +777,13 @@ class PipelineWebhookService @Autowired constructor(
                                         "webhook:${webhook.projectName}|repo:${repository.projectName}"
                             )
                         }
+                        val repositoryHashId = when {
+                            repository != null -> repository.repoHashId
+                            webhookRepositoryConfig.repositoryType == RepositoryType.ID ->
+                                webhookRepositoryConfig.repositoryHashId
+
+                            else -> null
+                        }
                         pipelineWebhookDao.updateWebhookEventInfo(
                             dslContext = dslContext,
                             eventType = webhookElementParams.eventType?.name ?: "",
@@ -784,7 +791,7 @@ class PipelineWebhookService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             taskId = webhook.taskId!!,
-                            repositoryHashId = repository?.repoHashId
+                            repositoryHashId = repositoryHashId
                         )
                     } catch (ignored: Exception) {
                         logger.info("update webhook event info error|$webhook", ignored)

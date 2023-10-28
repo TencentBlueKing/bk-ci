@@ -71,7 +71,7 @@ class PipelineTriggerEventDao {
                 EVENT_TYPE,
                 TRIGGER_USER,
                 EVENT_DESC,
-                REPLAY_EVENT_ID,
+                REPLAY_REQUEST_ID,
                 REQUEST_PARAMS,
                 CREATE_TIME
             ).values(
@@ -83,7 +83,7 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventType,
                 triggerEvent.triggerUser,
                 JsonUtil.toJson(triggerEvent.eventDesc),
-                triggerEvent.replayEventId,
+                triggerEvent.replayRequestId,
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
                 triggerEvent.createTime
             ).onDuplicateKeyIgnore().execute()
@@ -126,7 +126,7 @@ class PipelineTriggerEventDao {
         }
     }
 
-    fun listTriggerEvent(
+    fun listTriggerDetail(
         dslContext: DSLContext,
         projectId: String,
         eventId: Long? = null,
@@ -172,7 +172,7 @@ class PipelineTriggerEventDao {
             t2.BUILD_NUM,
             t2.REASON,
             t2.REASON_DETAIL
-        ).from(t1).leftJoin(t2)
+        ).from(t2).leftJoin(t1)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
             .orderBy(t1.CREATE_TIME.desc()).limit(limit)
@@ -200,7 +200,7 @@ class PipelineTriggerEventDao {
             }
     }
 
-    fun countTriggerEvent(
+    fun countTriggerDetail(
         dslContext: DSLContext,
         projectId: String,
         eventId: Long? = null,
@@ -447,7 +447,7 @@ class PipelineTriggerEventDao {
                 triggerUser = triggerUser,
                 eventType = eventType,
                 eventDesc = JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(),
-                replayEventId = replayEventId,
+                replayRequestId = replayRequestId,
                 requestParams = requestParams?.let {
                     JsonUtil.to(
                         it,

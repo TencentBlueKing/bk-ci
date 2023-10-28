@@ -51,7 +51,7 @@ data class PipelineTriggerEvent(
     @ApiModelProperty("事件描述")
     val eventDesc: String,
     @ApiModelProperty("重放事件ID")
-    val replayEventId: Long? = null,
+    val replayRequestId: String? = null,
     @ApiModelProperty("事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
     @ApiModelProperty("触发事件")
