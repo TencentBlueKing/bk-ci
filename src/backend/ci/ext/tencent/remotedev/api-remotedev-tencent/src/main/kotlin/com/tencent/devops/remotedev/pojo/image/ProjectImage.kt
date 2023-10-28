@@ -53,5 +53,7 @@ data class ProjectImage(
     @ApiModelProperty("状态")
     val status: ImageStatus,
     @ApiModelProperty("创建人")
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("创建时间")
+    val createdTime: Long
 )
