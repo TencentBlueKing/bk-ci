@@ -109,7 +109,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     zoneId = resource.zoneId,
                     machineType = resource.machineType,
                     cgsId = event.devFile.cgsId,
-                    projectId = event.projectId
+                    projectId = event.projectId,
+                    image = event.devFile.imageCosFile
                 )
             )
         )

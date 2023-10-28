@@ -295,6 +295,7 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun makeWorkspaceImage(event: WorkspaceOperateEvent): WorkspaceImageInfo {
+        //
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
