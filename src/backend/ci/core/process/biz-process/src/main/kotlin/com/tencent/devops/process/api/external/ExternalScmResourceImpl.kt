@@ -76,7 +76,6 @@ class ExternalScmResourceImpl @Autowired constructor(
         )
     }
 
-
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))
 
