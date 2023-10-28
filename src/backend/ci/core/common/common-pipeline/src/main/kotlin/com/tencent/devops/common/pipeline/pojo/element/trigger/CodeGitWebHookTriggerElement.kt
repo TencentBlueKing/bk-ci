@@ -29,8 +29,12 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.selector
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -116,68 +120,69 @@ data class CodeGitWebHookTriggerElement(
     }
 
     // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
-    override fun triggerCondition(): Map<String, Any?> {
-        return when (eventType) {
+    override fun triggerCondition(): List<ElementProp> {
+        val props = when (eventType) {
             CodeEventType.PUSH -> {
-                mapOf(
-                    "branchName" to branchName,
-                    "excludeBranchName" to excludeBranchName,
-                    "includePaths" to includePaths,
-                    "excludePaths" to excludePaths,
-                    "includeUsers" to includeUsers,
-                    "excludeUsers" to excludeUsers
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
             CodeEventType.MERGE_REQUEST -> {
-                mapOf(
-                    "branchName" to branchName,
-                    "excludeBranchName" to excludeBranchName,
-                    "includeSourceBranchName" to includeSourceBranchName,
-                    "excludeSourceBranchName" to excludeSourceBranchName,
-                    "includePaths" to includePaths,
-                    "excludePaths" to excludePaths,
-                    "includeUsers" to includeUsers,
-                    "excludeUsers" to excludeUsers
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
+                    vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
             CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                mapOf(
-                    "branchName" to branchName,
-                    "excludeBranchName" to excludeBranchName,
-                    "includeSourceBranchName" to includeSourceBranchName,
-                    "excludeSourceBranchName" to excludeSourceBranchName,
-                    "includePaths" to includePaths,
-                    "excludePaths" to excludePaths,
-                    "includeUsers" to includeUsers,
-                    "excludeUsers" to excludeUsers
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
+                    vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
             CodeEventType.TAG_PUSH -> {
-                mapOf(
-                    "tagName" to tagName,
-                    "excludeTagName" to excludeTagName,
-                    "fromBranches" to fromBranches
+                listOf(
+                    vuexInput(name = "tagName", value = tagName),
+                    vuexInput(name = "excludeTagName", value = excludeTagName),
+                    vuexInput(name = "fromBranches", value = fromBranches),
                 )
             }
             CodeEventType.REVIEW -> {
-                mapOf(
-                    "includeCrState" to includeCrState,
-                    "includeCrTypes" to includeCrTypes
+                listOf(
+                    selector(name = "includeCrState", value = includeCrState),
+                    selector(name = "includeCrTypes", value = includeCrTypes)
                 )
             }
             CodeEventType.ISSUES -> {
-                mapOf(
-                    "includeIssueAction" to includeIssueAction
+                listOf(
+                    selector(name = "includeIssueAction", value = includeIssueAction)
                 )
             }
             CodeEventType.NOTE -> {
-                mapOf(
-                    "includeNoteTypes" to includeNoteTypes,
-                    "includeNoteComment" to includeNoteComment
+                listOf(
+                    selector(name = "includeNoteTypes", value = includeNoteTypes),
+                    vuexInput(name = "includeNoteComment", value = includeNoteComment)
                 )
             }
             else ->
-                emptyMap()
+                emptyList()
         }
+        return props.filterNotNull()
     }
 }

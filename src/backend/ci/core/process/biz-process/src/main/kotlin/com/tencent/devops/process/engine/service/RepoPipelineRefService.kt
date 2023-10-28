@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -306,7 +307,7 @@ class RepoPipelineRefService @Autowired constructor(
                     atomCategory = RepoAtomCategoryEnum.TRIGGER.name,
                     triggerType = triggerType,
                     eventType = eventType,
-                    triggerCondition = (element as WebHookTriggerElement).triggerCondition()
+                    triggerCondition = JsonUtil.toJson((element as WebHookTriggerElement).triggerCondition())
                 )
             )
         }

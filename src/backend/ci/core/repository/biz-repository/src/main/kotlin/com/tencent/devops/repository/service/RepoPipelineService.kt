@@ -33,6 +33,9 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
@@ -226,9 +229,7 @@ class RepoPipelineService @Autowired constructor(
                 eventType = it.eventType,
                 taskParams = JsonUtil.to(it.taskParams, object : TypeReference<Map<String, Any>>() {}),
                 triggerCondition = it.triggerCondition?.let { condition ->
-                    JsonUtil.to(
-                        condition,
-                        object : TypeReference<Map<String, Any>>() {})
+                    translateCondition(condition)
                 },
                 triggerConditionMd5 = it.triggerConditionMd5,
                 pipelineRefCount = pipelineRefCountMap[it.id] ?: 0,
@@ -238,6 +239,20 @@ class RepoPipelineService @Autowired constructor(
             )
         }
         return SQLPage(count = count, records = triggerRecords)
+    }
+
+    private fun translateCondition(triggerCondition: String): Map<String, Any> {
+        val elementProps = JsonUtil.to(triggerCondition, object : TypeReference<List<ElementProp>>() {})
+        return elementProps.associateBy(
+            { I18nUtil.getCodeLanMessage(it.name) },
+            {
+                if (it.type == ElementPropType.SELECTOR) {
+                    (it.value as List<*>).map { value -> I18nUtil.getCodeLanMessage(value.toString()) }
+                } else {
+                    it.value
+                }
+            }
+        )
     }
 
     private fun getAtomProp(atomCodes: Set<String>) = try {

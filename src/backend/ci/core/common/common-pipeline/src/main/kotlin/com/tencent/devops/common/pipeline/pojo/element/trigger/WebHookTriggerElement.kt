@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 
 abstract class WebHookTriggerElement(
     override val name: String = "webhook base class",
@@ -35,5 +36,5 @@ abstract class WebHookTriggerElement(
     override var status: String? = null
 ) : Element(name, id, status) {
 
-    open fun triggerCondition(): Map<String, Any?> = emptyMap()
+    open fun triggerCondition(): List<ElementProp> = emptyList()
 }

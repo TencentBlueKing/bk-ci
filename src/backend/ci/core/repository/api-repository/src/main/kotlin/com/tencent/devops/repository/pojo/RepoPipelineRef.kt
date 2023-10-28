@@ -56,7 +56,7 @@ data class RepoPipelineRef(
     @ApiModelProperty("事件类型")
     val eventType: String?,
     @ApiModelProperty("触发条件")
-    val triggerCondition: Map<String, Any?>?,
+    val triggerCondition: String?,
     @ApiModelProperty("触发条件md5")
     val triggerConditionMd5: String?
 )
