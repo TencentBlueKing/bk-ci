@@ -106,7 +106,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        logger.info("save pipeline trigger event|event[$triggerEvent]|detail[$triggerDetail]")
         triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -310,9 +309,11 @@ class PipelineTriggerEventService @Autowired constructor(
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)
         val replayEventId = getEventId()
+        // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
+        val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
         val replayTriggerEvent = with(triggerEvent) {
             PipelineTriggerEvent(
-                requestId = requestId,
+                requestId = MDC.get(TraceTag.BIZID),
                 projectId = projectId,
                 eventId = replayEventId,
                 triggerType = triggerType,
@@ -323,8 +324,7 @@ class PipelineTriggerEventService @Autowired constructor(
                     code = EVENT_REPLAY_DESC,
                     params = listOf(eventId.toString(), userId)
                 ).toJsonStr(),
-                // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
-                replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId,
+                replayRequestId = replayRequestId,
                 requestParams = requestParams,
                 createTime = LocalDateTime.now()
             )

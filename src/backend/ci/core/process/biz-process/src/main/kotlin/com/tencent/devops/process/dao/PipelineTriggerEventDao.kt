@@ -227,7 +227,7 @@ class PipelineTriggerEventDao {
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.selectCount().from(t1).leftJoin(t2)
+        return dslContext.selectCount().from(t2).leftJoin(t1)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
             .fetchOne(0, Long::class.java)!!
