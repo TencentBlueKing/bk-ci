@@ -146,6 +146,16 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
+    fun renewalExperienceDuration(userId: String, time: Long): Boolean {
+        logger.info("$userId renewalExperienceDuration")
+        val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+
+
+        remoteDevSettingDao.createOrUpdateSetting(dslContext, setting, userId)
+
+        return true
+    }
+
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->

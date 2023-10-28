@@ -67,6 +67,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun renewalExperienceDuration(userId: String, renewalTime: Long): Result<Boolean> {
+        remoteDevSettingService.updateSetting4Op(it)
+    }
+
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
