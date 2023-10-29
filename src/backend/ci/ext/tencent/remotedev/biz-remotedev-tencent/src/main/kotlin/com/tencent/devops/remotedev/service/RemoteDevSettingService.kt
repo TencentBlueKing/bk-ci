@@ -146,12 +146,26 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
-    fun renewalExperienceDuration(userId: String, time: Long): Boolean {
+    fun renewalExperienceDuration(userId: String, time: Int): Boolean {
         logger.info("$userId renewalExperienceDuration")
         val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+        val data = OPUserSetting(
+            userIds = listOf(userId),
+            maxRunningCount = setting.maxRunningCount,
+            maxHavingCount = setting.maxHavingCount,
+            onlyCloudIDE = setting.onlyCloudIDE,
+            allowedDownload = setting.allowedDownload,
+            needWatermark = setting.needWatermark,
+            autoDeletedDays = setting.autoDeletedDays,
+            mountType = setting.mountType,
+            startCloudExperienceDuration = setting.startCloudExperienceDuration?.plus(time),
+            allowedCopy = setting.allowedCopy,
+            clientWhiteList = setting.clientWhiteList,
+            grayFlag = false,
+            startWhiteList = setting.startWhiteList
+        )
 
-
-        remoteDevSettingDao.createOrUpdateSetting(dslContext, setting, userId)
+        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
 
         return true
     }

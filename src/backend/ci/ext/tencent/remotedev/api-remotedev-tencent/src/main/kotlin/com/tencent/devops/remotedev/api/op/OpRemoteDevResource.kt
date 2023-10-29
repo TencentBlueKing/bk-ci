@@ -135,7 +135,7 @@ interface OpRemoteDevResource {
         userId: String,
         @ApiParam(value = "续期时长", required = true)
         @QueryParam("renewalTime")
-        renewalTime: Long
+        renewalTime: Int
     ): Result<Boolean>
 
     @ApiOperation("获取用户设置")
