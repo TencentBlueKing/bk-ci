@@ -245,13 +245,11 @@ class RepoPipelineService @Autowired constructor(
     private fun translateCondition(triggerCondition: String): Map<String, Any> {
         val elementProps = JsonUtil.to(triggerCondition, object : TypeReference<List<ElementProp>>() {})
         return elementProps.associateBy(
-            { I18nUtil.getCodeLanMessage("${TRIGGER_CONDITION_PREFIX}.${it.name}") },
+            { I18nUtil.getCodeLanMessage("$TRIGGER_CONDITION_PREFIX.${it.name}") },
             {
                 if (it.type == ElementPropType.SELECTOR) {
                     (it.value as List<*>).map { value ->
-                        I18nUtil.getCodeLanMessage(
-                            "${TRIGGER_CONDITION_PREFIX}.${it.name}.${value.toString()}"
-                        )
+                        I18nUtil.getCodeLanMessage("$TRIGGER_CONDITION_PREFIX.${it.name}.$value")
                     }
                 } else {
                     it.value
