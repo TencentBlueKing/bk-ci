@@ -39,22 +39,45 @@
                             v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item"
                             v-show="(index <= 2 && !row.isExpand) || row.isExpand"
                         >
-                            <span>- {{ key }}:</span>
-                            <template v-if="Array.isArray(item) && item.length === 1">
-                                <span>{{ item.join(',') }}</span>
-                            </template>
-                            <template v-else-if="Array.isArray(item)">
-                                <!-- 路径 -->
-                                <div
-                                    v-for="i in item"
-                                    :key="i"
-                                    class="array-item"
+                            <bk-popover
+                                :disabled="!Array.isArray(item) || (Array.isArray(item) && item.length <= 2)"
+                            >
+                                <span>- {{ key }}:</span>
+                                <template v-if="Array.isArray(item) && item.length === 1">
+                                    <span>{{ item.join(',') }}</span>
+                                </template>
+                                <template
+                                    v-else-if="Array.isArray(item)"
                                 >
-                                    - {{ i }}
+                                    <div
+                                        v-for="(i, itemIndex) in item"
+                                        v-show="itemIndex <= 1"
+                                        :key="i"
+                                        class="array-item"
+                                    >
+                                        - {{ i }}
+                                    </div>
+                                    <div
+                                        v-if="item.length > 2"
+                                        class="array-item"
+                                    >
+                                        ...
+                                    </div>
+                                </template>
+                                <span v-else>{{ key }}</span>
+                                <div class="trigger-expand-btn" v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2" text @click="row.isExpand = true">{{ $t('codelib.展开') }}</div>
+                                <div slot="content" style="white-space: normal;">
+                                    <span>- {{ key }}:</span>
+                                    <div
+                                        v-for="i in item"
+                                        :key="i"
+                                        class="array-item"
+                                    >
+                                        - {{ i }}
+                                    </div>
                                 </div>
-                            </template>
-                            <span v-else>{{ key }}</span>
-                            <div class="trigger-expand-btn" v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2" text @click="row.isExpand = true">{{ $t('codelib.展开') }}</div>
+                            </bk-popover>
+
                         </div>
                         <div class="trigger-expand-btn" v-if="row.isExpand && Object.keys(row.triggerCondition).length > 3 " text @click="row.isExpand = false">{{ $t('codelib.收起') }}</div>
                     </div>
@@ -307,5 +330,14 @@
                 cursor: pointer;
             }
         }
+    }
+</style>
+
+<style lang="scss">
+    .array-item {
+        margin-left: 25px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 </style>
