@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.JsonUtil
@@ -43,6 +44,7 @@ import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.Executors
@@ -73,6 +75,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
         private const val BATCH_HANDLE_NUM = 50
+        private const val DEFAULT_MAX_FILE_CACHE_SIZE = 2147483648L
         private val executors = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
     }
@@ -85,7 +88,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         i18nDir: String,
         propertiesKeyPrefix: String?,
         dbKeyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        version: String?
     ): Map<String, Any> {
         logger.info(
             "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
@@ -134,7 +138,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 repositoryHashId = repositoryHashId,
                 fieldLocaleInfos = fieldLocaleInfos,
                 dbKeyPrefix = dbKeyPrefix,
-                userId = userId
+                userId = userId,
+                version = version
             )
         }
         return jsonMap
@@ -147,7 +152,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileDir: String,
         i18nDir: String,
         keyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        version: String?
     ) {
         logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId]")
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
@@ -162,7 +168,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             repositoryHashId = repositoryHashId,
             fieldLocaleInfos = fieldLocaleInfos,
             dbKeyPrefix = keyPrefix,
-            userId = userId
+            userId = userId,
+            version = version
         )
     }
 
@@ -209,7 +216,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         repositoryHashId: String?,
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         dbKeyPrefix: String?,
-        userId: String
+        userId: String,
+        version: String? = null
     ) {
         executors.submit {
             // 获取资源文件名称列表
@@ -232,6 +240,11 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
+                val textReferencePaths = getTextReferenceFilePath(fileProperties)
+                if (textReferencePaths.isNotEmpty()) {
+
+                }
+
                 fileProperties.keys.forEach {
                     var value = fileProperties["$it"]?.toString()
                     if (!value.isNullOrBlank()) {
@@ -337,6 +350,20 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): List<String>?
 
+    fun getTextReferenceFilePath(properties: Properties): Map<String, String> {
+    val map = mutableMapOf<String, String>()
+    val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
+    properties.keys.map { it as String }.forEach { key ->
+        val text = properties[key].toString()
+        val matcher: Matcher = pattern.matcher(text)
+        if (matcher.find()) {
+            map[key] = matcher.group(2).replace("\"", "")
+        }
+    }
+    return map
+}
+
+
     private fun getTextReferenceFileContent(
         userId: String,
         projectCode: String,
@@ -390,6 +417,19 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     fun isStaticFile(path: String): Boolean {
         val extension = path.substringAfterLast(".")
         return extension in setOf("jpg", "png", "svg", "gif")
+    }
+
+    private fun getTextReferenceFile(projectCode: String, version: String) {
+        val fileCacheDir = "${TextReferenceFileAnalysisUtil.getAtomBasePath()}${File.separator}" +
+                "cache${File.separator}$projectCode${File.separator}$version"
+        val textReferenceFileCache =
+            BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, DEFAULT_MAX_FILE_CACHE_SIZE)
+        val textReferenceFile = File(fileCacheDir)
+        val fileCacheKey = "${projectCode}-${version}-TextReference"
+        textReferenceFileCache.get(fileCacheKey, textReferenceFile)
+        if (!textReferenceFile.exists()) {
+
+        }
     }
 
     abstract fun textReferenceFileAnalysis(

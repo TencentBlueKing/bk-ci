@@ -35,7 +35,7 @@ import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -110,7 +110,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             logger.info("descriptionAnalysis get fileNameList fail")
             return request.content
         }
-        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
+        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = request.fileDir
         )

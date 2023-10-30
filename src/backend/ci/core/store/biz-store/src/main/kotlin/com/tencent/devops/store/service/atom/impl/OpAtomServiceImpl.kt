@@ -83,7 +83,7 @@ import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
 import java.io.File
 import java.io.InputStream
@@ -384,7 +384,7 @@ class OpAtomServiceImpl @Autowired constructor(
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode) + "$fileSeparator$uuid"
+        val atomPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(userId, atomCode) + "$fileSeparator$uuid"
         if (!File(atomPath).exists()) {
             ZipUtil.unZipFile(file, atomPath, false)
         }
@@ -449,7 +449,7 @@ class OpAtomServiceImpl @Autowired constructor(
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
-            val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
+            val logoUrlAnalysisResult = TextReferenceFileAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
             if (logoUrlAnalysisResult.isNotOk()) {
                 return Result(
                     data = false,

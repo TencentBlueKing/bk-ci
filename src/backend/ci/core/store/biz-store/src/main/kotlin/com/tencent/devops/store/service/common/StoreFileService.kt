@@ -31,7 +31,7 @@ import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -87,7 +87,7 @@ abstract class StoreFileService {
             }
         }
         // 解析获取文件引用路径
-        text = AtomReleaseTxtAnalysisUtil.regexAnalysis(
+        text = TextReferenceFileAnalysisUtil.regexAnalysis(
             input = text,
             fileDirPath = fileDirPath,
             pathList = pathList
@@ -102,8 +102,17 @@ abstract class StoreFileService {
                 pathList = pathList.map { LocalFileInfo(it) }
             )
         )
-        return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
+        return TextReferenceFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
     }
+
+    abstract fun downloadFile(
+        client: Client,
+        filePath: String,
+        file: File,
+        repositoryHashId: String? = null,
+        branch: String? = null,
+        format: String? = null
+    )
 
     abstract fun uploadFileToPath(
         userId: String,

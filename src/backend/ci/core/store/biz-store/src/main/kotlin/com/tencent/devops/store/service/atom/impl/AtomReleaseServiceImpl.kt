@@ -379,7 +379,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             i18nDir = i18nDir,
             propertiesKeyPrefix = KEY_RELEASE_INFO,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            repositoryHashId = atomRecord.repositoryHashId,
+            version = version
         ).toMutableMap()
         updateRequestDataMap[versionContentFieldName] =
             updateRequestDataMap["$KEY_VERSION_INFO.$versionContentFieldName"].toString()
@@ -414,7 +415,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             fileDir = "$atomCode/$version",
             i18nDir = i18nDir,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            repositoryHashId = atomRecord.repositoryHashId,
+            version = version
         )
         // 校验插件发布类型
         marketAtomCommonService.validateReleaseType(
@@ -662,7 +664,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     fileDir = "$atomCode/$atomVersion",
                     i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
                     keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
-                    repositoryHashId = repositoryHashId
+                    repositoryHashId = repositoryHashId,
+                    version = atomVersion
                 )
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
@@ -704,7 +707,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     fileDir = "$atomCode/$atomVersion",
                     i18nDir = i18nDir,
                     dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-                    repositoryHashId = repositoryHashId
+                    repositoryHashId = repositoryHashId,
+                    version = atomVersion
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())

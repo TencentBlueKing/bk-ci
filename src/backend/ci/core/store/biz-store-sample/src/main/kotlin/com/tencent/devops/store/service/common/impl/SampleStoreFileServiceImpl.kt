@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
@@ -39,6 +40,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.service.common.StoreFileService
 import java.io.File
+import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -47,6 +49,20 @@ class SampleStoreFileServiceImpl : StoreFileService() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SampleStoreFileServiceImpl::class.java)
+    }
+
+    override fun downloadFile(
+        client: Client,
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?,
+        format: String?
+    ) {
+        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        logger.info("downloadFile filePath:$filePath")
+        OkhttpUtils.downloadFile(url, file)
     }
 
     @Suppress("NestedBlockDepth")
