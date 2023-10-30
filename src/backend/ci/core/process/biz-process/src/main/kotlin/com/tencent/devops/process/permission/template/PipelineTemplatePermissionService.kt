@@ -74,4 +74,42 @@ interface PipelineTemplatePermissionService {
         permissions: Set<AuthPermission>,
         templateRecords: Result<out Record>?
     ): Map<AuthPermission, Result<out Record>>
+
+    /**
+     * 注册流水线模板到权限中心与权限关联
+     * @param userId userId
+     * @param projectId projectId
+     * @param templateId 流水线模板ID
+     * @param templateName 流水线模板名称
+     */
+    fun createResource(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        templateName: String
+    )
+
+    /**
+     * 注册流水线模板到权限中心与权限关联
+     * @param userId userId
+     * @param projectId projectId
+     * @param templateId 流水线模板ID
+     * @param templateName 流水线模板名称
+     */
+    fun modifyResource(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        templateName: String
+    )
+
+    /**
+     * 从权限中心删除流水线模板资源
+     * @param projectId projectId
+     * @param templateId 流水线模板ID
+     */
+    fun deleteResource(
+        projectId: String,
+        templateId: String
+    )
 }

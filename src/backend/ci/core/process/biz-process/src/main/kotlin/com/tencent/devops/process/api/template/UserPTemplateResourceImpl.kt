@@ -66,12 +66,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
     }
 
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
-        return Result(templateFacadeService.deleteTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            version = version
-        ))
+        return Result(
+            templateFacadeService.deleteTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version
+            )
+        )
     }
 
     override fun deleteTemplate(
@@ -80,12 +82,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         templateId: String,
         versionName: String
     ): Result<Boolean> {
-        return Result(templateFacadeService.deleteTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            versionName = versionName
-        ))
+        return Result(
+            templateFacadeService.deleteTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                versionName = versionName
+            )
+        )
     }
 
     override fun updateTemplate(
@@ -116,7 +120,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(projectId, templateType, null, page, pageSize))
+        return Result(templateFacadeService.listAllTemplate(userId, projectId, templateType, null, page, pageSize))
     }
 
     override fun getTemplate(

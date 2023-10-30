@@ -28,70 +28,26 @@
 package com.tencent.devops.process.permission.template
 
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import org.jooq.Record
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 
-/**
- * Pipeline专用权限校验接口
- */
 abstract class AbstractPipelineTemplatePermissionService constructor(
-    private val authProjectApi: AuthProjectApi,
-    private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    open val authProjectApi: AuthProjectApi,
+    open val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : PipelineTemplatePermissionService {
-    override fun checkPipelineTemplatePermission(
-        userId: String,
-        projectId: String,
-        permission: AuthPermission
-    ): Boolean {
-        return authProjectApi.checkProjectManager(
-            userId = userId,
-            serviceCode = pipelineAuthServiceCode,
-            projectCode = projectId
-        )
-    }
-
-    override fun checkPipelineTemplatePermission(
-        userId: String,
-        projectId: String,
-        templateId: String,
-        permission: AuthPermission
-    ): Boolean {
-        return false
-    }
-
-    override fun getResourcesByPermission(
-        userId: String,
-        projectCode: String,
-        permissions: Set<AuthPermission>,
-        templateRecords: Result<out Record>?
-    ): Map<AuthPermission, Result<out Record>> {
-        if (templateRecords == null) return emptyMap()
-        return permissions.associateWith { permission ->
-            handleTemplateWithoutPermissionManage(
-                permission = permission,
-                templateRecords = templateRecords,
-                userId = userId,
-                projectCode = projectCode
-            )
-        }
-    }
-
     fun handleTemplateWithoutPermissionManage(
         permission: AuthPermission,
         templateRecords: Result<out Record>,
         userId: String,
-        projectCode: String
+        projectId: String
     ): Result<out Record> {
         return when (permission) {
             AuthPermission.LIST -> templateRecords
             AuthPermission.VIEW -> {
-                if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectCode)) {
+                if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                     templateRecords
                 } else {
                     emptyList<Record>() as Result<out Record>
@@ -99,5 +55,9 @@ abstract class AbstractPipelineTemplatePermissionService constructor(
             }
             else -> emptyList<Record>() as Result<out Record>
         }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(AbstractPipelineTemplatePermissionService::class.java)
     }
 }

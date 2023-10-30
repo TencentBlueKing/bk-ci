@@ -41,6 +41,8 @@ data class ProjectProperties(
     val cloudDesktopNum: Int = 0,
     @ApiModelProperty("云研发管理员，多人用分号分隔", required = false)
     val remotedevManager: String? = null,
+    @ApiModelProperty("是否开启流水线模板管理", required = false)
+    val enableTemplatePermissionManage: Boolean? = null,
     @ApiModelProperty("数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null
 )
