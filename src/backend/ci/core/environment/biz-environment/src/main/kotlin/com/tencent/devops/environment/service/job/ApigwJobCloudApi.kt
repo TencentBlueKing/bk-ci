@@ -206,7 +206,7 @@ class ApigwJobCloudApi {
                     data = operationResult
                 )
                 if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] jobResult1: " + logWithLengthLimit(jobResult.toString()))
+                    logger.debug("[$operationName] jobResult: " + logWithLengthLimit(jobResult.toString()))
                 return jobResult
             }
         } catch (exception: Exception) {

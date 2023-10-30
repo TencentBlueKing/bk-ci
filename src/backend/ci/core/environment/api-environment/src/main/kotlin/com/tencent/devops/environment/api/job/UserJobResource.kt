@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.api.job
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.JobResult
@@ -32,7 +33,7 @@ interface UserJobResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam(value = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
@@ -50,7 +51,7 @@ interface UserJobResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
