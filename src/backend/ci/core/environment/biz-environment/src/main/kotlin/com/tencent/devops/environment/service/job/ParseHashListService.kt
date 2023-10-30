@@ -58,23 +58,30 @@ class ParseHashListService @Autowired constructor(
 
     fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host> {
         if (!nodeHashIdList.isNullOrEmpty()) {
-            val hostList = mutableListOf<Host>()
+//            val hostList = mutableListOf<Host>()
             val nodeRecord = nodeDao.getNodesFromNodeHashList(
                 dslContext, projectId, nodeHashIdList
             )
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
-            nodeRecord.map {
-                if (logger.isDebugEnabled) logger.debug(
-                    "[getHostFromNodeList] it.hostId: ${it.hostId}, " +
-                        "it.cloudAreaId: ${it.cloudAreaId}, " +
-                        "it.nodeIp: ${it.nodeIp}"
-                )
-                hostList.add(
-                    Host(
-                        bkHostId = it.hostId,
-                        bkCloudId = it.cloudAreaId,
-                        ip = it.nodeIp
-                    )
+//            nodeRecord.map {
+//                if (logger.isDebugEnabled) logger.debug(
+//                    "[getHostFromNodeList] it.hostId: ${it.hostId}, " +
+//                        "it.cloudAreaId: ${it.cloudAreaId}, " +
+//                        "it.nodeIp: ${it.nodeIp}"
+//                )
+//                hostList.add(
+//                    Host(
+//                        bkHostId = it.hostId,
+//                        bkCloudId = it.cloudAreaId,
+//                        ip = it.nodeIp
+//                    )
+//                )
+//            }
+            val hostList = nodeRecord.map {
+                Host(
+                    bkHostId = it.hostId,
+                    bkCloudId = it.cloudAreaId,
+                    ip = it.nodeIp
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")
