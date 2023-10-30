@@ -380,6 +380,12 @@
                 },
                 {
                   "id": "cgs_delete"
+                },
+                {
+                  "id": "cgs_share"
+                },
+                {
+                  "id": "cgs_edit"
                 }
               ]
             },
@@ -410,6 +416,30 @@
                 },
                 {
                   "id": "code_proxy_delete"
+                }
+              ]
+            },
+            {
+              "name": "流水线模板",
+              "name_en": "Pipeline Template Permissions",
+              "actions": [
+                {
+                  "id": "pipeline_template_view"
+                },
+                {
+                  "id": "pipeline_template_edit"
+                },
+                {
+                  "id": "pipeline_template_delete"
+                },
+                {
+                  "id": "pipeline_template_create"
+                },
+                {
+                  "id": "pipeline_template_list"
+                },
+                {
+                  "id": "pipeline_template_manage"
                 }
               ]
             }
