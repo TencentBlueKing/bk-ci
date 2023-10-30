@@ -191,8 +191,13 @@ class WorkspaceService @Autowired constructor(
         needPermission: Boolean = true
     ): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
 
         RedisCallLimit(
@@ -200,11 +205,7 @@ class WorkspaceService @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
             expiredTimeInSeconds
         ).tryLock().use {
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
+
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
                 client.get(ServiceStartCloudResource::class)

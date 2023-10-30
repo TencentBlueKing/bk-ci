@@ -109,10 +109,10 @@ class PermissionService @Autowired constructor(
             }
         )
 
-    fun checkOwnerPermission(userId: String, workspaceName: String) {
+    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
