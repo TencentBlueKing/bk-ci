@@ -58,7 +58,7 @@ import java.util.Optional
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(RedisAutoConfiguration::class)
-@AutoConfigureAfter(name = ["lettuceConnectionConfiguration"])
+@AutoConfigureAfter(name = ["org.springframework.boot.autoconfigure.data.redis.LettuceConnectionConfiguration"])
 @EnableConfigurationProperties(RedisSplitProperties::class)
 class RedisAutoConfiguration {
 
