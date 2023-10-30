@@ -36,6 +36,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -57,6 +58,7 @@ import java.util.Optional
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(RedisAutoConfiguration::class)
+@AutoConfigureAfter(name = ["lettuceConnectionConfiguration"])
 @EnableConfigurationProperties(RedisSplitProperties::class)
 class RedisAutoConfiguration {
 
