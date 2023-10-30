@@ -2,7 +2,6 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.Host
-import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

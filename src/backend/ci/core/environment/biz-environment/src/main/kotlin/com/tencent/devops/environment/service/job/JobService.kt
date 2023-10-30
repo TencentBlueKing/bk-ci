@@ -27,7 +27,6 @@ import com.tencent.devops.environment.pojo.job.req.JobCloudQueryJobInstanceLogsR
 import com.tencent.devops.environment.pojo.job.req.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
