@@ -3,7 +3,7 @@ module github.com/TencentBlueKing/bk-ci/src/agent
 go 1.19
 
 require (
-	github.com/docker/docker v23.0.3+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/gofrs/flock v0.8.1
 	// 1.24 以上的版本引入了memcall和memguard会导致
 	// 1、ulimit corefile被设置为0 https://github.com/ci-plugins/memguard/blob/master/core/init.go
