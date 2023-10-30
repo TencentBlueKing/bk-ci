@@ -51,7 +51,7 @@ class ParseHashListService @Autowired constructor(
             if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
             return nodeHostList
         } else {
-            logger.warn("[getHostFromDynamicGroupList] envHashIdList is null or empty.")
+            logger.warn("[getHostFromEnvList] envHashIdList is null or empty.")
             return emptyList()
         }
     }
@@ -62,6 +62,7 @@ class ParseHashListService @Autowired constructor(
             val nodeRecord = nodeDao.getNodesFromNodeHashList(
                 dslContext, projectId, nodeHashIdList
             )
+            if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             nodeRecord.map {
                 hostList.add(
                     Host(
@@ -74,7 +75,7 @@ class ParseHashListService @Autowired constructor(
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")
             return hostList
         } else {
-            logger.warn("[getHostFromTopoNodeList] nodeHashIdList is null or empty.")
+            logger.warn("[getHostFromNodeList] nodeHashIdList is null or empty.")
             return emptyList()
         }
     }
