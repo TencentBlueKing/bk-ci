@@ -97,7 +97,7 @@ class StartControl @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
-        permissionService.checkProjectVisitPermission(userId, workspace.projectId)
+        permissionService.checkUserVisitPermission(userId, workspace.projectId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
