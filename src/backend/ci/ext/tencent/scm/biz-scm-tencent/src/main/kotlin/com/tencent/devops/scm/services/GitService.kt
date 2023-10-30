@@ -142,7 +142,7 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
-        private const val SLEEP_MILLS_FOR_RETRY = 2000L
+        private const val SLEEP_MILLS_FOR_RETRY = 3000L
     }
 
     @Value("\${gitCI.clientId}")
@@ -1746,7 +1746,7 @@ class GitService @Autowired constructor(
             override fun execute() {
                 OkhttpUtils.downloadFile(url.toString(), response)
             }
-        }, retryTime = 3, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
+        }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
