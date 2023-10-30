@@ -63,7 +63,7 @@ class RedisAutoConfiguration {
     @Value("\${spring.redis.name:#{null}}")
     private var redisName: String? = null
 
-    @Value("\${spring.redis.split.enabled:false")
+    @Value("\${spring.redis.split.enabled:false}")
     private var splitEnabled: Boolean = false
 
     @Primary
