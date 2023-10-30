@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.job.ExecuteTarget
 import com.tencent.devops.environment.pojo.job.Host
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -14,6 +15,18 @@ class ParseHashListService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ParseHashListService::class.java)
+    }
+
+    fun getAllHostList(projectId: String, executeTarget: ExecuteTarget): List<Host> {
+        val hostListFromEnvHash: List<Host> = getHostFromEnvList(projectId, executeTarget.envHashIdList)
+        val hostListFromNodeHash: List<Host> = getHostFromNodeList(projectId, executeTarget.nodeHashIdList)
+        return if (null != executeTarget.hostList) {
+            listOf(
+                executeTarget.hostList!!, hostListFromEnvHash, hostListFromNodeHash
+            ).flatten()
+        } else {
+            listOf(hostListFromEnvHash, hostListFromNodeHash).flatten()
+        }
     }
 
     fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host> {
