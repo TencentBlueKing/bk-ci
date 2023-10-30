@@ -342,7 +342,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         projectCode: String,
         request: TextReferenceFileParseRequest
     ): String {
-        val content = request.content
+        var content = request.content
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(content)
         val path: String
@@ -351,23 +351,45 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         } else {
             return content
         }
-        return getFileStr(
-            projectCode = projectCode,
-            fileDir = request.fileDir,
-            fileName = "file/$path",
-            repositoryHashId = request.repositoryHashId,
-            branch = request.branch
-        )?.let { fileStr ->
-            textReferenceFileAnalysis(
-                userId = userId,
-                projectCode = projectCode,
-                request = TextReferenceFileParseRequest(
-                    content = fileStr,
+        try {
+            if (!isStaticFile(path)) {
+                content = getFileStr(
+                    projectCode = projectCode,
                     fileDir = request.fileDir,
-                    repositoryHashId = request.repositoryHashId
+                    fileName = "file/$path",
+                    repositoryHashId = request.repositoryHashId,
+                    branch = request.branch
+                )?.let { fileStr ->
+                    textReferenceFileAnalysis(
+                        userId = userId,
+                        projectCode = projectCode,
+                        request = TextReferenceFileParseRequest(
+                            content = fileStr,
+                            fileDir = request.fileDir,
+                            repositoryHashId = request.repositoryHashId
+                        )
+                    )
+                } ?: content
+            } else {
+                content = textReferenceFileAnalysis(
+                    userId = userId,
+                    projectCode = projectCode,
+                    request = TextReferenceFileParseRequest(
+                        content = content,
+                        fileDir = request.fileDir,
+                        repositoryHashId = request.repositoryHashId
+                    )
                 )
-            )
-        } ?: content
+            }
+        } catch (ignored: Throwable) {
+            logger.info("failed to parse text reference")
+        }
+        return content
+    }
+
+    fun isStaticFile(path: String): Boolean {
+        val extension = path.substringAfterLast(".")
+        return extension in setOf("jpg", "png", "svg", "gif")
     }
 
     abstract fun textReferenceFileAnalysis(
