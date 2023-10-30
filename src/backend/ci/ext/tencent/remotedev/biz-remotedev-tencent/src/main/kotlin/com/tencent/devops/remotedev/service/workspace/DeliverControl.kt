@@ -167,38 +167,20 @@ class DeliverControl @Autowired constructor(
                         errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                         params = arrayOf(workspaceName)
                     )
-                if (!workspace.status.checkDistributing()) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
-                        params = arrayOf(
-                            workspace.workspaceName,
-                            "status is ${workspace.status}, can't assign user now"
-                        )
-                    )
-                }
-                val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
-                    ?: throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
-                        params = arrayOf(workspaceName)
-                    )
-                logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}|detail|$detail")
+                logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START)
-                softwareManageService.installUserSoftwares(
-                    projectId = projectId,
-                    userId = assign2Owner.userId,
-                    ip = detail.environmentIP,
-                    workspaceName = workspaceName
+                    mountType = WorkspaceMountType.START
                 )
-                // 异步发起用户软件安装，更新为运行中
-                workspaceDao.updateWorkspaceStatus(
-                    dslContext = dslContext,
-                    workspaceName = workspace.workspaceName,
-                    status = WorkspaceStatus.RUNNING
-                )
+                if (workspace.status.checkDistributing()) {
+                    workspaceDao.updateWorkspaceStatus(
+                        dslContext = dslContext,
+                        workspaceName = workspace.workspaceName,
+                        status = WorkspaceStatus.RUNNING
+                    )
+                }
             }
 
             existOwner != null && assign2Owner?.userId != existOwner.sharedUser -> {

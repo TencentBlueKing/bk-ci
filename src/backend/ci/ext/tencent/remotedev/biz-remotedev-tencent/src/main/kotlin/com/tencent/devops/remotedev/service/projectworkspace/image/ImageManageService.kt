@@ -32,6 +32,7 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
@@ -70,7 +71,8 @@ class ImageManageService @Autowired constructor(
                     sourceCgsType = it.sourceCgsType,
                     sourceCgsZone = it.sourceCgsZone,
                     creator = it.creator,
-                    status = ImageStatus.values()[it.status]
+                    status = ImageStatus.values()[it.status],
+                    createdTime = it.createTime.timestamp()
                 )
             )
         }

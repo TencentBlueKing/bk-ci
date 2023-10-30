@@ -27,36 +27,44 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class PermissionService @Autowired constructor(
     private val client: Client,
+    private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val remoteDevSettingDao: RemoteDevSettingDao,
@@ -66,6 +74,8 @@ class PermissionService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
+        private const val REDIS_KEY = "remotedev_1Password:"
+        private const val EXPIRED_SECOND = 5L
     }
 
     @Value("\${remoteDev.enablePermission:true}")
@@ -129,10 +139,10 @@ class PermissionService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-                token = checkTokenService.getSystemToken(null)!!,
-                userId = userId,
-                projectCode = projectId
-            ).data ?: false
+            token = checkTokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId
+        ).data ?: false
 
         if (!checkProjectManager && projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
             throw ErrorCodeException(
@@ -141,6 +151,35 @@ class PermissionService @Autowired constructor(
             )
         }
         return true
+    }
+
+    private fun initRedisUser(params: UserOnePassword): String {
+        val key = UUIDUtil.generate()
+        redisOperation.set(
+            key = REDIS_KEY + key,
+            value = JsonUtil.toJson(params, false),
+            expiredInSecond = redisCache.get(RedisKeys.REDIS_1PASSWORD_EXPIRED_SECOND)?.toLongOrNull() ?: EXPIRED_SECOND
+        )
+        return key
+    }
+
+    fun checkAndGetUser1Password(key: String): UserOnePassword {
+        val value = redisOperation.get(REDIS_KEY + key)
+        if (value.isNullOrBlank()) {
+            throw OperationException("Session is already registered or has expired.Please reapply for authorization.")
+        }
+        redisOperation.delete(REDIS_KEY + key)
+        return JsonUtil.to(value, object : TypeReference<UserOnePassword>() {})
+    }
+
+    fun init1Password(userId: String, workspaceName: String): String {
+        val key = initRedisUser(
+            UserOnePassword(
+                userId, workspaceName
+            )
+        )
+        logger.info("start init1Password|$userId|$workspaceName|$key")
+        return URLEncoder.encode(key, "UTF-8")
     }
 
     fun checkUserPermission(userId: String, workspaceName: String): Boolean {

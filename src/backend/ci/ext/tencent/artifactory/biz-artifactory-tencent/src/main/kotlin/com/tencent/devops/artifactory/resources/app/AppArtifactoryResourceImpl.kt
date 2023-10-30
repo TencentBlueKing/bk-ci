@@ -45,6 +45,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -57,7 +58,10 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -74,6 +78,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val pipelineService: PipelineService,
+    private val tokenService: ClientTokenService,
     private val client: Client
 ) : AppArtifactoryResource {
 
@@ -187,6 +192,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun detail(
         userId: String,
         projectId: String,
@@ -213,10 +219,28 @@ class AppArtifactoryResourceImpl @Autowired constructor(
 
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            var resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = tokenService.getSystemToken(null)!!,
+                projectCode = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId,
+                group = BkAuthGroup.RESOURCE_MANAGER
+            ).data
+            if (resourceGroupMembers.isNullOrEmpty()) {
+                resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(null)!!,
+                    projectCode = projectId,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectId,
+                    group = BkAuthGroup.MANAGER
+                ).data
+            }
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(pipelineInfo?.creator ?: "")
+                params = arrayOf(resourceGroupMembers.let {
+                    it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
+                }.joinToString(","))
             )
         }
 

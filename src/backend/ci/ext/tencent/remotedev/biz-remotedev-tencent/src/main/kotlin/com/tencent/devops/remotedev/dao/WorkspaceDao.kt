@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -294,6 +295,7 @@ class WorkspaceDao {
                 .let {
                     if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
                 }
+                .skipCheck()
                 .fetch(workspaceMapper)
         }
     }
@@ -532,14 +534,16 @@ class WorkspaceDao {
         userId: String? = null,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null
+        projectId: String? = null,
+        systemType: WorkspaceSystemType? = null
     ): List<WorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
                 userId = userId,
                 status = status,
                 mountType = mountType,
-                projectId = projectId
+                projectId = projectId,
+                systemType = systemType
             )
 
             if (condition.isEmpty()) {
@@ -675,7 +679,8 @@ class WorkspaceDao {
         workspaceName: String? = null,
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
-        projectId: String? = null
+        projectId: String? = null,
+        systemType: WorkspaceSystemType? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -690,6 +695,9 @@ class WorkspaceDao {
             }
             if (mountType != null) {
                 condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+            }
+            if (systemType != null) {
+                condition.add(SYSTEM_TYPE.eq(systemType.name))
             }
             if (projectId != null) {
                 condition.add(PROJECT_ID.eq(projectId))

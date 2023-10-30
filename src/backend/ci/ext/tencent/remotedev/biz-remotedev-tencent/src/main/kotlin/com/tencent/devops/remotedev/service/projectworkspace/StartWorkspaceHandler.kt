@@ -38,6 +38,7 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -57,15 +58,15 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 class StartWorkspaceHandler @Autowired constructor(
@@ -76,6 +77,7 @@ class StartWorkspaceHandler @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
@@ -176,9 +178,9 @@ class StartWorkspaceHandler @Autowired constructor(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(event.workspaceName)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(event.workspaceName)
+        )
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -187,6 +189,7 @@ class StartWorkspaceHandler @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
+                remoteDevBillingDao.newBilling(transactionContext, workspace.workspaceName, event.userId)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,

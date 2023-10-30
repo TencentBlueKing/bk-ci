@@ -35,7 +35,6 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -44,8 +43,6 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -96,15 +93,14 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -832,27 +828,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            val sshKey = sshService.getSshPublicKeys4Ws(setOf(userId))
-            val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, it.workspaceName, it.workspaceMountType).data!!
-            val cache = WorkSpaceCacheInfo(
-                sshKey,
-                workspaceInfo.environmentHost,
-                workspaceInfo.hostIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.environmentIP,
-                workspaceInfo.namespace,
-                workspaceInfo.curLaunchId,
-                workspaceInfo.regionId
-            )
-
-            workspaceDao.saveOrUpdateWorkspaceDetail(
-                dslContext = dslContext,
-                workspaceName = it.workspaceName,
-                detail = JsonUtil.toJson(cache)
-            )
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
         }
     }
 
