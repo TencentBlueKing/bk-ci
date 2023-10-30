@@ -33,7 +33,7 @@ interface UserJobResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
@@ -51,7 +51,7 @@ interface UserJobResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
