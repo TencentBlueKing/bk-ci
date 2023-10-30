@@ -80,7 +80,7 @@ class ClientVersionFilter constructor(
                 requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString(),
                 version.toString()
             )
-        }
+        }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
         MINIMUM_VERSION.forEachIndexed { index, s ->
             if (split.lastIndex < index) {
                 return false
