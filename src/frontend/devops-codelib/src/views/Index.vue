@@ -26,7 +26,7 @@
                                 :clearable="true"
                                 right-icon="icon-search"
                                 v-model="aliasName"
-                                @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
+                                @enter="handleEnterSearch"
                                 @change="clearAliasName"
                             >
                             </bk-input>
@@ -263,6 +263,10 @@
                     sortBy,
                     sortType
                 })
+            },
+
+            handleEnterSearch () {
+                this.refreshCodelibList(this.projectId, 1)
             },
 
             async createCodelib (typeLabel, isEdit) {

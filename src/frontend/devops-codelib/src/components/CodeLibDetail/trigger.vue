@@ -194,6 +194,13 @@
                 this.triggerType = paramsMap.triggerType || ''
                 this.eventType = paramsMap.eventType || ''
                 this.getTriggerData()
+            },
+            scmType (val, oldVal) {
+                if (!oldVal) {
+                    this.getEventTypeList()
+                    this.getTriggerTypeList()
+                    this.getTriggerData()
+                }
             }
         },
         created () {
