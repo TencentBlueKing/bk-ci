@@ -40,7 +40,10 @@
                             v-show="(index <= 2 && !row.isExpand) || row.isExpand"
                         >
                             <span>- {{ key }}:</span>
-                            <template v-if="Array.isArray(item)">
+                            <template v-if="Array.isArray(item) && item.length === 1">
+                                <span>{{ item.join(',') }}</span>
+                            </template>
+                            <template v-else-if="Array.isArray(item)">
                                 <!-- 路径 -->
                                 <div
                                     v-for="i in item"
@@ -162,7 +165,6 @@
                 val.forEach(item => {
                     const id = item.id
                     const value = item.values[0].id
-
                     paramsMap[id] = value
                 })
                 this.pagination.current = 1
@@ -243,17 +245,14 @@
                     })
                 })
             },
-
             handlePageChange (page) {
                 this.pagination.current = page
                 this.getTriggerData()
             },
-
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
                 this.getTriggerData()
             },
-
             handelShowDetail (row) {
                 this.curAtom = row
                 this.$refs.atomDetailRef.isShow = true
@@ -274,7 +273,7 @@
         .trigger-table {
             ::v-deep .cell {
                 max-height: 1500px !important;
-                -webkit-line-clamp: 300 !important;
+                -webkit-line-clamp: 3 !important;
                 padding: 10px 15px !important;
             }
             .event-name {
