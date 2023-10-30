@@ -1,0 +1,15 @@
+version: v3.0
+name: all job
+resources:
+  repositories:
+    - repository: groupA/repoA
+      name: repoA
+      ref: refs/tags/v1.0  # 可选
+      credentials: # 可选，默认为开启CI的用户
+        personal-access-token: GIT_ACCESS_TOKEN
+extends:
+  template: pipeline-template.yaml@repoA
+  ref: master
+  variables:
+    aaaa: bbbb
+    cccc: dddd

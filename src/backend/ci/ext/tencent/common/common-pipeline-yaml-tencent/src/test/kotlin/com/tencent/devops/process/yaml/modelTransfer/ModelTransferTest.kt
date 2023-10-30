@@ -293,7 +293,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             CodeGitRepository(
                 aliasName = "aliasName/xxx",
-                url = "https://git.code.oa.com/XXX/XXX.git",
+                url = "https://git.com/XXX/XXX.git",
                 credentialId = "credentialId",
                 projectName = "projectName",
                 userName = "userName",
@@ -316,7 +316,8 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "model-yaml-001"
+            "model-yaml-001",
+            "model-yaml-002"
         ]
     )
     fun model2Yaml(value: String) {
@@ -355,6 +356,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
+            "yaml-model-003-v3-template",
             "yaml-model-002-v3",
             "yaml-model-001-v3",
             "yaml-model-001-v2"
@@ -468,7 +470,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {
-        return ""
+        return testReadResourceFile("transfer/templates/${param.path.path}")
     }
 
     private fun testReadResourceFile(resourceName: String): String {
