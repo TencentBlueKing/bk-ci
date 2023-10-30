@@ -22,16 +22,12 @@ class ParseHashListService @Autowired constructor(
             val envRecord = nodeDao.getEnvsFromEnvHashList(
                 dslContext, projectId, envHashIdList
             )
-            val envIdList = envRecord.map {
-                it.envId
-            }
+            val envIdList = envRecord.map { it.envId }
 
             val envNodeRecord = nodeDao.getNodeIdsFromEnvIdList(
                 dslContext, projectId, envIdList
             )
-            val nodeIdList = envNodeRecord.map {
-                it.nodeId
-            }
+            val nodeIdList = envNodeRecord.map { it.nodeId }
 
             val nodeRecord = nodeDao.getNodesFromNodeIdList(
                 dslContext, projectId, nodeIdList
@@ -53,10 +49,6 @@ class ParseHashListService @Autowired constructor(
 
     fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host> {
         if (!nodeHashIdList.isNullOrEmpty()) {
-            if (logger.isDebugEnabled) logger.debug(
-                "[getHostFromNodeList] projectId: $projectId，" +
-                    "nodeHashIdList：$nodeHashIdList"
-            )
             val nodeRecord = nodeDao.getNodesFromNodeHashList(
                 dslContext, projectId, nodeHashIdList
             )

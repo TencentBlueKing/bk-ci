@@ -36,10 +36,6 @@ class JobService @Autowired constructor(
     private val parseHashListService: ParseHashListService,
     private val apigwJobCloudApi: ApigwJobCloudApi
 ) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(JobService::class.java)
-    }
-
     fun executeScript(
         userId: String,
         projectId: String,
@@ -54,12 +50,6 @@ class JobService @Autowired constructor(
         val allHostList = scriptExecuteReq.executeTarget.hostList
             .plus(hostListFromEnvHash)
             .plus(hostListFromNodeHash)
-        if (logger.isDebugEnabled)
-            logger.debug(
-                "[executeScript] scriptExecuteReq.executeTarget.hostList: " +
-                    "${scriptExecuteReq.executeTarget.hostList}, " +
-                    "allHostList: $allHostList"
-            )
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -70,7 +60,7 @@ class JobService @Autowired constructor(
             targetServer = JobCloudExecuteTarget(
                 hostList = allHostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
-                        bkCloudId = it.bkCloudId,
+                        bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
                 },
@@ -114,7 +104,7 @@ class JobService @Autowired constructor(
                     server = JobCloudExecuteTarget(
                         hostList = allFileSourceHostList.filter { it.bkHostId == null }.map {
                             JobCloudHost(
-                                bkCloudId = it.bkCloudId,
+                                bkCloudId = it.bkCloudId ?: 0,
                                 ip = it.ip
                             )
                         },
@@ -133,7 +123,7 @@ class JobService @Autowired constructor(
             executeTarget = JobCloudExecuteTarget(
                 hostList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
                     JobCloudHost(
-                        bkCloudId = it.bkCloudId,
+                        bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
                 },
@@ -170,7 +160,7 @@ class JobService @Autowired constructor(
             hostList = queryJobInstanceLogsReq.hostList?.map {
                 JobCloudHost(
                     bkHostId = it.bkHostId,
-                    bkCloudId = it.bkCloudId,
+                    bkCloudId = it.bkCloudId ?: 0,
                     ip = it.ip
                 )
             },
