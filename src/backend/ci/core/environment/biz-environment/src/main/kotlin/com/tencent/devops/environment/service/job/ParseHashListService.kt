@@ -2,6 +2,7 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.Host
+import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,6 +48,7 @@ class ParseHashListService @Autowired constructor(
                     )
                 )
             }
+            if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
             return nodeHostList
         } else {
             logger.warn("[getHostFromDynamicGroupList] envHashIdList is null or empty.")
@@ -69,6 +71,7 @@ class ParseHashListService @Autowired constructor(
                     )
                 )
             }
+            if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")
             return hostList
         } else {
             logger.warn("[getHostFromTopoNodeList] nodeHashIdList is null or empty.")
