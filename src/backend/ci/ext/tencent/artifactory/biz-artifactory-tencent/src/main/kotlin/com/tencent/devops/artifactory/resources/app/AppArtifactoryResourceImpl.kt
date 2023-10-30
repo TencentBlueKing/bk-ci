@@ -189,6 +189,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun detail(
         userId: String,
         projectId: String,
