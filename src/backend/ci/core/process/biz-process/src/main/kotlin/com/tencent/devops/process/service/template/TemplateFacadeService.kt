@@ -573,6 +573,7 @@ class TemplateFacadeService @Autowired constructor(
             templateName = null,
             storeFlag = storeFlag
         )
+        // 1、获取项目是否开启流水线模板管理
         val templates = templateDao.listTemplate(
             dslContext = dslContext,
             projectId = projectId,
