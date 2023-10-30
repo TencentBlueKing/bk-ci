@@ -59,17 +59,17 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPTemplateResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
     UserPTemplateResource {
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_CREATE)
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
         return Result(TemplateId(templateFacadeService.createTemplate(projectId, userId, template)))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
         return Result(templateFacadeService.deleteTemplate(projectId, userId, templateId))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
         return Result(templateFacadeService.deleteTemplate(
             projectId = projectId,
@@ -79,7 +79,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(
         userId: String,
         projectId: String,
@@ -94,7 +94,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun updateTemplate(
         userId: String,
         projectId: String,
@@ -136,7 +136,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
     }
 
     @Suppress("ALL")
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun updateTemplateSetting(
         userId: String,
         projectId: String,
@@ -169,7 +169,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(templateFacadeService.getTemplateSetting(projectId, userId, templateId))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun copyTemplate(
         userId: String,
         projectId: String,
@@ -179,7 +179,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(TemplateId(templateFacadeService.copyTemplate(userId, projectId, templateId, copyTemplateReq)))
     }
 
-    @AuditEntry(actionId = ActionId.PROJECT_MANAGE)
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun saveAsTemplate(
         userId: String,
         projectId: String,

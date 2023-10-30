@@ -8,12 +8,6 @@ object ActionAuditContent {
 
     // 项目
     const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_CREATE_TEMPLATE_CONTENT = "create template $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_COPY_TEMPLATE_CONTENT = "copy template $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_SAVE_AS_TEMPLATE_CONTENT = "save as template $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_DELETE_TEMPLATE_CONTENT = "delete template $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_UPDATE_TEMPLATE_SETTING_CONTENT = "update template setting $CONTENT_TEMPLATE"
-    const val PROJECT_MANAGE_UPDATE_TEMPLATE_CONTENT = "update template $CONTENT_TEMPLATE"
 
     // 流水线
     const val PIPELINE_VIEW_CONTENT = "get pipeline info $CONTENT_TEMPLATE"
@@ -28,6 +22,14 @@ object ActionAuditContent {
     const val PIPELINE_DELETE_CONTENT = "delete pipeline $CONTENT_TEMPLATE"
     const val PIPELINE_DELETE_VERSION_CONTENT = "delete pipeline version $CONTENT_TEMPLATE"
     const val PIPELINE_EXECUTE_CONTENT = "execute pipeline $CONTENT_TEMPLATE"
+
+    // 流水线模板
+    const val PIPELINE_TEMPLATE_CREATE_CONTENT = "create template $CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EDIT_COPY_CONTENT = "copy template $CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EDIT_SAVE_AS_CONTENT = "save as template $CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_DELETE_CONTENT = "delete template $CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT = "update template setting $CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EDIT_CONTENT = "update template $CONTENT_TEMPLATE"
 
     // 证书
     const val CERT_CREATE_CONTENT = "create cert $CONTENT_TEMPLATE"

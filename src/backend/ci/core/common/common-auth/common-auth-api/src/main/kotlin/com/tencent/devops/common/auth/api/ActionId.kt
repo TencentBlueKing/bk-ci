@@ -14,6 +14,11 @@ object ActionId {
     const val PIPELINE_SHARE = "pipeline_share"
     const val PIPELINE_DOWNLOAD = "pipeline_download"
 
+    // 流水线模板
+    const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
+    const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
+    const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"
     const val CREDENTIAL_VIEW = "credential_view"
