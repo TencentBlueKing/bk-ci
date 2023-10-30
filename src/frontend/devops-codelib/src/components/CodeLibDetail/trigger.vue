@@ -39,15 +39,10 @@
                             v-for="(item, key, index) in row.triggerCondition" :key="index" class="condition-item"
                             v-show="(index <= 2 && !row.isExpand) || row.isExpand"
                         >
-                            <span v-if="['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(scmType)">
-                                - {{ triggerConditionKeyMap[row.eventType][key] }}:
-                            </span>
-                            <span v-else>
-                                - {{ triggerConditionKeyMap[key] }}:
-                            </span>
+                            <span>- {{ key }}:</span>
                             <template v-if="Array.isArray(item)">
                                 <span v-for="(i, itemIndex) in item" :key="i">
-                                    {{ triggerConditionValueMap[i] || i }}
+                                    {{ i }}
                                     <span v-if="itemIndex + 1 !== item.length">,</span>
                                 </span>
                             </template>
@@ -61,7 +56,7 @@
                                     - {{ path }}
                                 </div>
                             </template>
-                            <span v-else>{{ triggerConditionValueMap[item] || item }}</span>
+                            <span v-else>{{ key }}</span>
                             <div class="trigger-expand-btn" v-if="!row.isExpand && Object.keys(row.triggerCondition).length > 3 && index === 2" text @click="row.isExpand = true">{{ $t('codelib.展开') }}</div>
                         </div>
                         <div class="trigger-expand-btn" v-if="row.isExpand && Object.keys(row.triggerCondition).length > 3 " text @click="row.isExpand = false">{{ $t('codelib.收起') }}</div>
@@ -161,100 +156,6 @@
                 return list.filter((data) => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
-            },
-            triggerConditionKeyMap () {
-                let obj = {}
-                console.log(this.scmType, 'this.scmType')
-                if (['CODE_GIT', 'CODE_GITLAB', 'GITHUB', 'CODE_TGIT'].includes(this.scmType)) {
-                    obj = {
-                        PUSH: {
-                            branchName: this.$t('codelib.分支'),
-                            excludeBranchName: this.$t('codelib.排除分支'),
-                            includePaths: this.$t('codelib.路径'),
-                            excludePaths: this.$t('codelib.排除路径'),
-                            includeUsers: this.$t('codelib.人员'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        },
-                        PULL_REQUEST: {
-                            branchName: this.$t('codelib.分支'),
-                            excludeBranchName: this.$t('codelib.排除的目标分支'),
-                            includeSourceBranchName: this.$t('codelib.源分支'),
-                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
-                            includePaths: this.$t('codelib.路径'),
-                            excludePaths: this.$t('codelib.排除路径'),
-                            includeUsers: this.$t('codelib.人员'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        },
-                        MERGE_REQUEST: {
-                            branchName: this.$t('codelib.分支'),
-                            excludeBranchName: this.$t('codelib.排除的目标分支'),
-                            includeSourceBranchName: this.$t('codelib.源分支'),
-                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
-                            includePaths: this.$t('codelib.路径'),
-                            excludePaths: this.$t('codelib.排除路径'),
-                            includeUsers: this.$t('codelib.人员'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        },
-                        MERGE_REQUEST_ACCEPT: {
-                            branchName: this.$t('codelib.分支'),
-                            excludeBranchName: this.$t('codelib.排除的目标分支'),
-                            includeSourceBranchName: this.$t('codelib.源分支'),
-                            excludeSourceBranchName: this.$t('codelib.排除的源分支'),
-                            includePaths: this.$t('codelib.路径'),
-                            excludePaths: this.$t('codelib.排除路径'),
-                            includeUsers: this.$t('codelib.人员'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        },
-                        TAG_PUSH: {
-                            tagName: 'Tag',
-                            excludeTagName: this.$t('codelib.排除Tag'),
-                            fromBranches: this.$t('codelib.来源分支')
-                        },
-                        NOTE: {
-                            includeNoteComment: this.$t('codelib.评论内容'),
-                            includeNoteTypes: this.$t('codelib.评论类型')
-                        },
-                        REVIEW: {
-                            includeCrState: this.$t('codelib.CR状态')
-                        },
-                        ISSUES: {
-                            includeIssueAction: this.$t('codelib.动作')
-                        },
-                        CREATE: {
-                            branchName: this.$t('codelib.要素名'),
-                            excludeBranchName: this.$t('codelib.排除要素名'),
-                            excludeUsers: this.$t('codelib.排除人员')
-                        }
-                    }
-                } else if (this.scmType === 'CODE_SVN') {
-                    obj = {
-                        relativePath: this.$t('codelib.相对路径'),
-                        excludePaths: this.$t('codelib.排除路径'),
-                        includeUsers: this.$t('codelib.人员'),
-                        excludeUsers: this.$t('codelib.排除人员')
-                    }
-                } else if (this.scmType === 'CODE_P4') {
-                    obj = {
-                        includePaths: this.$t('codelib.路径'),
-                        excludePaths: this.$t('codelib.排除路径')
-                    }
-                }
-                return obj
-            },
-            triggerConditionValueMap () {
-                return {
-                    approving: this.$t('codelib.评审中'),
-                    approved: this.$t('codelib.评审通过'),
-                    change_denied: this.$t('codelib.评审被拒绝'),
-                    change_required: this.$t('codelib.代码要求修改'),
-                    Commit: this.$t('codelib.对提交进行评论'),
-                    Review: this.$t('codelib.对评审进行评论'),
-                    Issue: this.$t('codelib.对缺陷进行评论'),
-                    open: this.$t('codelib.创建'),
-                    close: this.$t('codelib.关闭'),
-                    reopen: this.$t('codelib.重新打开'),
-                    update: this.$t('codelib.更新')
-                }
             }
         },
         watch: {
