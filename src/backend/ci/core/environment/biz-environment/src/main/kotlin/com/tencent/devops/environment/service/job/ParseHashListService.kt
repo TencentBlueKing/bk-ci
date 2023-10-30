@@ -59,6 +59,10 @@ class ParseHashListService @Autowired constructor(
     fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host> {
         if (!nodeHashIdList.isNullOrEmpty()) {
 //            val hostList = mutableListOf<Host>()
+            if (logger.isDebugEnabled) logger.debug(
+                "[getHostFromNodeList] projectId: $projectId，" +
+                    "nodeHashIdList：$nodeHashIdList"
+            )
             val nodeRecord = nodeDao.getNodesFromNodeHashList(
                 dslContext, projectId, nodeHashIdList
             )
