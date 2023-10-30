@@ -429,7 +429,7 @@ class RedisOperation(
 
     private fun <T> writeSlaveIfNeed(action: () -> T) {
         slaveThreadPool.submit {
-            if (slaveRedisTemplate != null && splitMode == RedisSplitProperties.Mode.WRITE_ALL_READ_MASTER) {
+            if (slaveRedisTemplate != null && splitMode == RedisSplitProperties.Mode.DOUBLE_WRITE_SLAVE) {
                 action()
             }
         }

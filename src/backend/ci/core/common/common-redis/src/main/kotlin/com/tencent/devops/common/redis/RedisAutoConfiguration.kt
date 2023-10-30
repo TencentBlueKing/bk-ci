@@ -34,6 +34,7 @@ import io.lettuce.core.metrics.MicrometerOptions
 import io.lettuce.core.resource.ClientResources
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -51,6 +52,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
+import java.util.Optional
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -64,12 +66,12 @@ class RedisAutoConfiguration {
     @Primary
     @Bean("redisOperation")
     fun redisOperation(
-        redisConnectionFactory: RedisConnectionFactory,
-        slaveRedisConnectionFactory: RedisConnectionFactory?,
+        @Qualifier("redisConnectionFactory") redisConnectionFactory: RedisConnectionFactory,
+        @Qualifier("slaveRedisConnectionFactory") slaveRedisConnectionFactory: Optional<RedisConnectionFactory>,
         redisSplitProperties: RedisSplitProperties
     ): RedisOperation {
         val redisTemplate = getRedisTemplate(redisConnectionFactory)
-        val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it) }
+        val slaveRedisTemplate = slaveRedisConnectionFactory.orElse(null)?.let { getRedisTemplate(it) }
         return RedisOperation(
             masterRedisTemplate = redisTemplate,
             slaveRedisTemplate = slaveRedisTemplate,
@@ -80,12 +82,12 @@ class RedisAutoConfiguration {
 
     @Bean("redisStringHashOperation")
     fun redisStringHashOperation(
-        redisConnectionFactory: RedisConnectionFactory,
-        slaveRedisConnectionFactory: RedisConnectionFactory?,
+        @Qualifier("redisConnectionFactory") redisConnectionFactory: RedisConnectionFactory,
+        @Qualifier("slaveRedisConnectionFactory") slaveRedisConnectionFactory: Optional<RedisConnectionFactory>,
         redisSplitProperties: RedisSplitProperties
     ): RedisOperation {
         val redisTemplate = getRedisTemplate(redisConnectionFactory, true)
-        val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it, true) }
+        val slaveRedisTemplate = slaveRedisConnectionFactory.orElse(null)?.let { getRedisTemplate(it, true) }
         return RedisOperation(
             masterRedisTemplate = redisTemplate,
             slaveRedisTemplate = slaveRedisTemplate,
