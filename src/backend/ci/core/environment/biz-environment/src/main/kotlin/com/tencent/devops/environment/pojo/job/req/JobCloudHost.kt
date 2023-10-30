@@ -17,4 +17,5 @@ data class JobCloudHost(
 ) {
     constructor(bkCloudId: Long?, ip: String?) : this(null, bkCloudId, ip)
     constructor(bkHostId: Long?) : this(bkHostId, null, null)
+    constructor() : this(null, null, null)
 }
