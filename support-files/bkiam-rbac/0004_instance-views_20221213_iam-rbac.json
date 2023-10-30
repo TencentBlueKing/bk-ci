@@ -320,6 +320,24 @@
           }
         ]
       }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "pipeline_template_instance",
+        "name": "流水线模板",
+        "name_en": "Pipeline Template",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template"
+          }
+        ]
+      }
     }
   ]
 }

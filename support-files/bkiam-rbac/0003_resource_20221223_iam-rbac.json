@@ -333,6 +333,24 @@
         },
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "pipeline_template",
+        "name": "流水线模板",
+        "name_en": "Pipeline Template",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
     }
   ]
 }

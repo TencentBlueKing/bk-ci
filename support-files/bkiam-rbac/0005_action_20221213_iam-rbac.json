@@ -2163,7 +2163,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2191,7 +2191,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2219,7 +2219,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2248,7 +2248,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2277,7 +2277,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2306,7 +2306,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2335,7 +2335,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2364,7 +2364,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2393,7 +2393,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2422,7 +2422,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2451,7 +2451,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2480,7 +2480,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2509,7 +2509,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "cgs",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2538,7 +2538,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "image",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2566,7 +2566,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "image",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2595,7 +2595,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "image",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2652,7 +2652,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "code_proxy",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2680,7 +2680,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "code_proxy",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
@@ -2695,6 +2695,174 @@
           "proxy_list"
         ],
         "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_create",
+        "name": "创建流水线模板",
+        "name_en": "Pipeline Template Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_list",
+        "name": "流水线模板列表",
+        "name_en": "Pipeline Template List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_delete",
+        "name": "删除流水线模板",
+        "name_en": "Pipeline Template Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_view",
+        "name": "查看流水线模板",
+        "name_en": "Pipeline Template View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_edit",
+        "name": "编辑流水线模板",
+        "name_en": "Pipeline Template Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list",
+          "pipeline_template_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_template_manage",
+        "name": "管理流水线模板",
+        "name_en": "Pipeline Template Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_template_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_template_list",
+          "pipeline_template_view"
+        ],
         "version": 1
       }
     }
