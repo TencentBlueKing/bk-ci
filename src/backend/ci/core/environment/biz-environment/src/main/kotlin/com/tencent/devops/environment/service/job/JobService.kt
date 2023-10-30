@@ -47,8 +47,8 @@ class JobService @Autowired constructor(
             projectId, scriptExecuteReq.executeTarget.nodeHashIdList
         )
         val allHostList = scriptExecuteReq.executeTarget.hostList
-            .plus(hostListFromEnvHash)
-            .plus(hostListFromNodeHash)
+            ?.plus(hostListFromEnvHash)
+            ?.plus(hostListFromNodeHash)
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -57,13 +57,13 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostList = allHostList.filter { it.bkHostId == null }.map {
+                hostList = allHostList?.filter { it.bkHostId == null }?.map {
                     JobCloudHost(
                         bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
                 },
-                hostIdList = allHostList.filter { it.bkHostId != null }.map {
+                hostIdList = allHostList?.filter { it.bkHostId != null }?.map {
                     it.bkHostId ?: 0L
                 }
             ),
@@ -85,8 +85,8 @@ class JobService @Autowired constructor(
             projectId, fileDistributeReq.executeTarget.nodeHashIdList
         )
         val allExecuteTargetHostList = fileDistributeReq.executeTarget.hostList
-            .plus(executeTargetHostListFromEnvHash)
-            .plus(executeTargetHostListFromNodeHash)
+            ?.plus(executeTargetHostListFromEnvHash)
+            ?.plus(executeTargetHostListFromNodeHash)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 val fileSourceHostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
@@ -96,18 +96,18 @@ class JobService @Autowired constructor(
                     projectId, fileSource.sourceFileServer.nodeHashIdList
                 )
                 val allFileSourceHostList = fileDistributeReq.executeTarget.hostList
-                    .plus(fileSourceHostListFromEnvHash)
-                    .plus(fileSourceHostListFromNodeHash)
+                    ?.plus(fileSourceHostListFromEnvHash)
+                    ?.plus(fileSourceHostListFromNodeHash)
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
-                        hostList = allFileSourceHostList.filter { it.bkHostId == null }.map {
+                        hostList = allFileSourceHostList?.filter { it.bkHostId == null }?.map {
                             JobCloudHost(
                                 bkCloudId = it.bkCloudId ?: 0,
                                 ip = it.ip
                             )
                         },
-                        hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map {
+                        hostIdList = allFileSourceHostList?.filter { it.bkHostId != null }?.map {
                             it.bkHostId ?: 0L
                         }
                     ),
@@ -120,13 +120,13 @@ class JobService @Autowired constructor(
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
-                hostList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
+                hostList = allExecuteTargetHostList?.filter { it.bkHostId == null }?.map {
                     JobCloudHost(
                         bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
                 },
-                hostIdList = allExecuteTargetHostList.filter { it.bkHostId != null }.map {
+                hostIdList = allExecuteTargetHostList?.filter { it.bkHostId != null }?.map {
                     it.bkHostId ?: 0L
                 }
             ),
