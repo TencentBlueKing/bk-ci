@@ -21,6 +21,12 @@ class ClientVersionDao {
         }
     }
 
+    fun fetch(dslContext: DSLContext, ip: String, userId: String): String? {
+        return with(TClientVersion.T_CLIENT_VERSION) {
+            dslContext.selectFrom(this).where(IP.eq(ip).and(USER.eq(userId))).fetchAny()?.version
+        }
+    }
+
     /**
      * 新增项目镜像
      */

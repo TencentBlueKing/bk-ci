@@ -31,7 +31,7 @@ class ClientVersionFilter constructor(
         private const val HEADER_IP = "x-client-ip"
     }
 
-    lateinit var clientVersion: Map<String, String>
+    lateinit var clientVersion: MutableMap<String, String>
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
@@ -102,6 +102,7 @@ class ClientVersionFilter constructor(
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
         }
         val recordVersion = clientVersion["$ip-$user"]
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion")
         when {
             recordVersion == null -> {
                 val count = clientVersionDao.create(
@@ -110,9 +111,8 @@ class ClientVersionFilter constructor(
                     userId = user,
                     version = version
                 )
-                if (count > 0) {
-                    logger.info("init client version record|$ip|$user|$version")
-                }
+                logger.info("init client version record|$ip|$user|$version|$count")
+                clientVersion["$ip-$user"] = version
             }
 
             recordVersion != version -> {
@@ -123,8 +123,13 @@ class ClientVersionFilter constructor(
                     version = version,
                     lastVersion = recordVersion
                 )
+                logger.info("client update now|$ip|$user|$version|$recordVersion|$count")
                 if (count > 0) {
-                    logger.info("client update now|$ip|$user|$version|$recordVersion|$count")
+                    clientVersion["$ip-$user"] = version
+                } else {
+                    clientVersion["$ip-$user"] = clientVersionDao.fetch(
+                        dslContext = dslContext, ip = ip, userId = user
+                    )!!
                 }
             }
         }
