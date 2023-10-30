@@ -16,7 +16,7 @@ class ClientVersionDao {
         dslContext: DSLContext
     ): List<Triple<String/*ip*/, String/*user*/, String/*version*/>> {
         return with(TClientVersion.T_CLIENT_VERSION) {
-            dslContext.select(IP, USER, VERSION).skipCheck()
+            dslContext.select(IP, USER, VERSION).from(this).skipCheck()
                 .fetch().map { Triple(it.value1(), it.value2(), it.value3()) }
         }
     }
