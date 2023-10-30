@@ -126,7 +126,7 @@ data class CodeTGitWebHookTriggerElement(
 
                 CodeEventType.REVIEW -> {
                     listOf(
-                        selector(name = "includeCrState", value = includeCrState),
+                        selector(name = "includeCrState", value = includeCrState)
                     )
                 }
 
