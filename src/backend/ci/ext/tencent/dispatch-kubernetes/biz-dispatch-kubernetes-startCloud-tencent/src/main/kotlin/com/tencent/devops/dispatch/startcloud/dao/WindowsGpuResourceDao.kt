@@ -82,7 +82,9 @@ class WindowsGpuResourceDao {
         dslContext: DSLContext
     ) {
         return with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
-            dslContext.delete(this).execute()
+            dslContext.delete(this)
+                .where(CGS_ID.isNotNull)
+                .execute()
         }
     }
 
