@@ -14,6 +14,11 @@ object ActionId {
     const val PIPELINE_SHARE = "pipeline_share"
     const val PIPELINE_DOWNLOAD = "pipeline_download"
 
+    // 流水线模板
+    const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
+    const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
+    const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"
     const val CREDENTIAL_VIEW = "credential_view"
@@ -43,6 +48,8 @@ object ActionId {
     const val CGS_MAKE_IMAGE = "cgs_make-image"
     const val CGS_EXPAND_DISK = "cgs_expand-disk"
     const val CGS_DELETE = "cgs_delete"
+    const val CGS_SHARE = "cgs_share"
+    const val CGS_EDIT = "cgs_edit"
 
     // 镜像
     const val IMAGE_LIST = "image_list"

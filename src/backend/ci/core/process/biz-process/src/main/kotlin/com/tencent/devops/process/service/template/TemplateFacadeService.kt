@@ -193,11 +193,11 @@ class TemplateFacadeService @Autowired constructor(
     private val maxErrorReasonLength: Int = 200
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_CREATE_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
     )
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
@@ -234,13 +234,13 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT,
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE,
             instanceIds = "#srcTemplateId",
             instanceNames = "#copyTemplateReq?.templateName"
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_COPY_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_COPY_CONTENT
     )
     fun copyTemplate(
         userId: String,
@@ -305,11 +305,11 @@ class TemplateFacadeService @Autowired constructor(
      * 流水线另存为模版
      */
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_SAVE_AS_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_SAVE_AS_CONTENT
     )
     fun saveAsTemplate(
         userId: String,
@@ -369,11 +369,11 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_DELETE_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
         logger.info("Start to delete the template $templateId by user $userId")
@@ -420,11 +420,11 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_DELETE_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
@@ -457,11 +457,11 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_DELETE_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
@@ -498,11 +498,11 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_UPDATE_TEMPLATE_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_CONTENT
     )
     fun updateTemplate(
         projectId: String,
@@ -573,11 +573,11 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PROJECT_MANAGE,
+        actionId = ActionId.PIPELINE_TEMPLATE_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PROJECT
+            resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
-        content = ActionAuditContent.PROJECT_MANAGE_UPDATE_TEMPLATE_SETTING_CONTENT
+        content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT
     )
     fun updateTemplateSetting(
         projectId: String,
