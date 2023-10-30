@@ -57,6 +57,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
@@ -220,20 +221,24 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 token = tokenService.getSystemToken(null)!!,
                 projectCode = projectId,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = pipelineId
-            ).data.let { it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList() }
-            if (resourceGroupMembers.isEmpty()) {
+                resourceCode = pipelineId,
+                group = BkAuthGroup.RESOURCE_MANAGER
+            ).data
+            if (resourceGroupMembers.isNullOrEmpty()) {
                 resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
                     token = tokenService.getSystemToken(null)!!,
                     projectCode = projectId,
                     resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectId
-                ).data.let { it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList() }
+                    resourceCode = projectId,
+                    group = BkAuthGroup.MANAGER
+                ).data
             }
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(resourceGroupMembers.joinToString(","))
+                params = arrayOf(resourceGroupMembers.let {
+                    it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
+                }.joinToString(","))
             )
         }
 
