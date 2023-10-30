@@ -28,6 +28,7 @@
 package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.common.redis.split.RedisSplitProperties
 import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder
 import io.lettuce.core.metrics.MicrometerOptions
 import io.lettuce.core.resource.ClientResources
@@ -36,19 +37,25 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.data.redis.ClientResourcesBuilderCustomizer
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.connection.RedisPassword
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(RedisAutoConfiguration::class)
+@EnableConfigurationProperties(RedisSplitProperties::class)
 class RedisAutoConfiguration {
 
     @Value("\${spring.redis.name:#{null}}")
@@ -56,26 +63,58 @@ class RedisAutoConfiguration {
 
     @Primary
     @Bean("redisOperation")
-    fun redisOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
-        val template = RedisTemplate<String, String>()
-        template.setConnectionFactory(factory)
-        template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = StringRedisSerializer()
-        template.afterPropertiesSet()
-        return RedisOperation(template, redisName)
+    fun redisOperation(
+        redisConnectionFactory: RedisConnectionFactory,
+        slaveRedisConnectionFactory: RedisConnectionFactory?,
+        redisSplitProperties: RedisSplitProperties
+    ): RedisOperation {
+        val redisTemplate = getRedisTemplate(redisConnectionFactory)
+        val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it) }
+        return RedisOperation(
+            masterRedisTemplate = redisTemplate,
+            slaveRedisTemplate = slaveRedisTemplate,
+            splitMode = redisSplitProperties.mode,
+            redisName = redisName
+        )
     }
 
     @Bean("redisStringHashOperation")
-    fun redisStringHashOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
-        val template = RedisTemplate<String, String>()
-        template.setConnectionFactory(factory)
-        template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = StringRedisSerializer()
-        template.hashValueSerializer = StringRedisSerializer()
-        template.hashKeySerializer = StringRedisSerializer()
-        template.afterPropertiesSet()
-        return RedisOperation(template, redisName)
+    fun redisStringHashOperation(
+        redisConnectionFactory: RedisConnectionFactory,
+        slaveRedisConnectionFactory: RedisConnectionFactory?,
+        redisSplitProperties: RedisSplitProperties
+    ): RedisOperation {
+        val redisTemplate = getRedisTemplate(redisConnectionFactory, true)
+        val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it, true) }
+        return RedisOperation(
+            masterRedisTemplate = redisTemplate,
+            slaveRedisTemplate = slaveRedisTemplate,
+            splitMode = redisSplitProperties.mode,
+            redisName = redisName
+        )
     }
+
+    @Bean("slaveRedisConnectionFactory")
+    @ConditionalOnProperty(prefix = "spring.redis.split", name = ["enabled"], havingValue = "true")
+    fun slaveRedisConnectionFactory(
+        redisConnectionFactory: RedisConnectionFactory,
+        redisSplitProperties: RedisSplitProperties
+    ): LettuceConnectionFactory {
+        if (redisConnectionFactory is LettuceConnectionFactory) {
+            val masterClientConfiguration = redisConnectionFactory.clientConfiguration // 复用主库的lettuce配置
+
+            val slaveConfiguration = RedisStandaloneConfiguration()
+            slaveConfiguration.hostName = redisSplitProperties.host!!
+            slaveConfiguration.port = redisSplitProperties.port!!
+            slaveConfiguration.password = RedisPassword.of(redisSplitProperties.password!!)
+            slaveConfiguration.database = redisSplitProperties.database!!
+
+            return LettuceConnectionFactory(slaveConfiguration, masterClientConfiguration)
+        } else {
+            throw RuntimeException("Redis split just support lettuce")
+        }
+    }
+
 
     @Bean
     fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
@@ -91,5 +130,21 @@ class RedisAutoConfiguration {
                 MicrometerCommandLatencyRecorder(meterRegistry, options)
             )
         }
+    }
+
+    private fun getRedisTemplate(
+        redisConnectionFactory: RedisConnectionFactory,
+        setHashSerializer: Boolean = false
+    ): RedisTemplate<String, String> {
+        val template = RedisTemplate<String, String>()
+        template.setConnectionFactory(redisConnectionFactory)
+        template.keySerializer = StringRedisSerializer()
+        template.valueSerializer = StringRedisSerializer()
+        if (setHashSerializer) {
+            template.hashValueSerializer = StringRedisSerializer()
+            template.hashKeySerializer = StringRedisSerializer()
+        }
+        template.afterPropertiesSet()
+        return template
     }
 }
