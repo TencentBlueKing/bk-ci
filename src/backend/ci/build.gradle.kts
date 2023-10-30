@@ -8,14 +8,6 @@ apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
-
-    configurations.all {
-        resolutionStrategy {
-            cacheChangingModulesFor(0, "seconds")
-            cacheDynamicVersionsFor( 0, "seconds")
-        }
-    }
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
