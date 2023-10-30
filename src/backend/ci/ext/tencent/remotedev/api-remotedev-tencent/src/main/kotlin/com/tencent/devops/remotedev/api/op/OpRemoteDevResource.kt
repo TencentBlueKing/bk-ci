@@ -126,6 +126,18 @@ interface OpRemoteDevResource {
         data: List<OPUserSetting>
     ): Result<Boolean>
 
+    @ApiOperation("续期体验时长")
+    @POST
+    @Path("/renewal_time")
+    fun renewalExperienceDuration(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "续期时长", required = true)
+        @QueryParam("renewalTime")
+        renewalTime: Int
+    ): Result<Boolean>
+
     @ApiOperation("获取用户设置")
     @GET
     @Path("/get_user_setting")

@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo.image
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间模板配置")
+@ApiModel("自定义镜像")
 data class ProjectImage(
     @ApiModelProperty("ID")
     val id: Long,
@@ -53,5 +53,7 @@ data class ProjectImage(
     @ApiModelProperty("状态")
     val status: ImageStatus,
     @ApiModelProperty("创建人")
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("创建时间")
+    val createdTime: Long
 )
