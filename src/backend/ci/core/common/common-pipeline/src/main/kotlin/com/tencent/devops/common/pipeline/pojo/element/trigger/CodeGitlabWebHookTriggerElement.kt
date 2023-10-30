@@ -148,7 +148,7 @@ data class CodeGitlabWebHookTriggerElement(
             CodeEventType.TAG_PUSH -> {
                 listOf(
                    vuexInput(name = "tagName", value = tagName),
-                   vuexInput(name = "excludeTagName", value = excludeTagName),
+                   vuexInput(name = "excludeTagName", value = excludeTagName)
                 )
             }
             else ->

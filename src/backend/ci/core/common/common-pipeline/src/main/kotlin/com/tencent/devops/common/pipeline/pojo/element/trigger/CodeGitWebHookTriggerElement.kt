@@ -160,7 +160,7 @@ data class CodeGitWebHookTriggerElement(
                 listOf(
                     vuexInput(name = "tagName", value = tagName),
                     vuexInput(name = "excludeTagName", value = excludeTagName),
-                    vuexInput(name = "fromBranches", value = fromBranches),
+                    vuexInput(name = "fromBranches", value = fromBranches)
                 )
             }
             CodeEventType.REVIEW -> {

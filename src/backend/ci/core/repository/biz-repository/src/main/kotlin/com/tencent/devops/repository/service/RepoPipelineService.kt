@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.TRIGGER_CONDITION_PREFIX
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.pojo.RepoPipelineRef
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
@@ -244,10 +245,14 @@ class RepoPipelineService @Autowired constructor(
     private fun translateCondition(triggerCondition: String): Map<String, Any> {
         val elementProps = JsonUtil.to(triggerCondition, object : TypeReference<List<ElementProp>>() {})
         return elementProps.associateBy(
-            { I18nUtil.getCodeLanMessage(it.name) },
+            { I18nUtil.getCodeLanMessage("${TRIGGER_CONDITION_PREFIX}.${it.name}") },
             {
                 if (it.type == ElementPropType.SELECTOR) {
-                    (it.value as List<*>).map { value -> I18nUtil.getCodeLanMessage(value.toString()) }
+                    (it.value as List<*>).map { value ->
+                        I18nUtil.getCodeLanMessage(
+                            "${TRIGGER_CONDITION_PREFIX}.${it.name}.${value.toString()}"
+                        )
+                    }
                 } else {
                     it.value
                 }
