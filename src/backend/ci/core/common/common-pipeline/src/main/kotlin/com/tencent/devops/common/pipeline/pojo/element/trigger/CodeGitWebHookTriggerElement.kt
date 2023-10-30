@@ -132,6 +132,7 @@ data class CodeGitWebHookTriggerElement(
                     staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.MERGE_REQUEST -> {
                 listOf(
                     vuexInput(name = "branchName", value = branchName),
@@ -144,6 +145,7 @@ data class CodeGitWebHookTriggerElement(
                     staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 listOf(
                     vuexInput(name = "branchName", value = branchName),
@@ -156,6 +158,7 @@ data class CodeGitWebHookTriggerElement(
                     staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.TAG_PUSH -> {
                 listOf(
                     vuexInput(name = "tagName", value = tagName),
@@ -163,23 +166,27 @@ data class CodeGitWebHookTriggerElement(
                     vuexInput(name = "fromBranches", value = fromBranches)
                 )
             }
+
             CodeEventType.REVIEW -> {
                 listOf(
                     selector(name = "includeCrState", value = includeCrState),
                     selector(name = "includeCrTypes", value = includeCrTypes)
                 )
             }
+
             CodeEventType.ISSUES -> {
                 listOf(
                     selector(name = "includeIssueAction", value = includeIssueAction)
                 )
             }
+
             CodeEventType.NOTE -> {
                 listOf(
                     selector(name = "includeNoteTypes", value = includeNoteTypes),
                     vuexInput(name = "includeNoteComment", value = includeNoteComment)
                 )
             }
+
             else ->
                 emptyList()
         }

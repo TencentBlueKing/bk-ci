@@ -101,56 +101,60 @@ data class CodeGitlabWebHookTriggerElement(
         val props = when (eventType) {
             CodeEventType.PUSH -> {
                 listOf(
-                   vuexInput(name = "branchName", value = branchName),
-                   vuexInput(name = "excludeBranchName", value = excludeBranchName),
-                   vuexInput(name = "includePaths", value = includePaths),
-                   vuexInput(name = "excludePaths", value = excludePaths),
-                   staffInput(name = "includeUsers", value = includeUsers),
-                   staffInput(name = "excludeUsers", value = excludeUsers)
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.MERGE_REQUEST -> {
                 listOf(
-                   vuexInput(name = "branchName", value = branchName),
-                   vuexInput(name = "excludeBranchName", value = excludeBranchName),
-                   vuexInput(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
                         name = "includeSourceBranchName",
                         value = includeSourceBranchName
                     ),
-                   vuexInput(
+                    vuexInput(
                         name = "includeSourceBranchName",
                         value = includeSourceBranchName
                     ),
-                   vuexInput(name = "includePaths", value = includePaths),
-                   vuexInput(name = "excludePaths", value = excludePaths),
-                   staffInput(name = "includeUsers", value = includeUsers),
-                   staffInput(name = "excludeUsers", value = excludeUsers)
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 listOf(
-                   vuexInput(name = "branchName", value = branchName),
-                   vuexInput(name = "excludeBranchName", value = excludeBranchName),
-                   vuexInput(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
                         name = "includeSourceBranchName",
                         value = includeSourceBranchName
                     ),
-                   vuexInput(
+                    vuexInput(
                         name = "includeSourceBranchName",
                         value = includeSourceBranchName
                     ),
-                   vuexInput(name = "includePaths", value = includePaths),
-                   vuexInput(name = "excludePaths", value = excludePaths),
-                   staffInput(name = "includeUsers", value = includeUsers),
-                   staffInput(name = "excludeUsers", value = excludeUsers)
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
+
             CodeEventType.TAG_PUSH -> {
                 listOf(
-                   vuexInput(name = "tagName", value = tagName),
-                   vuexInput(name = "excludeTagName", value = excludeTagName)
+                    vuexInput(name = "tagName", value = tagName),
+                    vuexInput(name = "excludeTagName", value = excludeTagName)
                 )
             }
+
             else ->
                 emptyList()
         }
