@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
-import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage

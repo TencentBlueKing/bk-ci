@@ -82,7 +82,8 @@ data class TriggerContainer(
     @ApiModelProperty("各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
     override var template: String? = null,
-    override var ref: String? = null
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

@@ -34,6 +34,7 @@ import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 
 /**

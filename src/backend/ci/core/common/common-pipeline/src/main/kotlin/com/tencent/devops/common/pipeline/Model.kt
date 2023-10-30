@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,8 +66,14 @@ data class Model(
     var staticViews: List<String> = emptyList(),
     @ApiModelProperty("各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
+    @ApiModelProperty("模板地址", required = true)
     override var template: String? = null,
-    override var ref: String? = null
+    @ApiModelProperty("模板版本", required = true)
+    override var ref: String? = null,
+    @ApiModelProperty("模板入参", required = true)
+    override var variables: Map<String, String>? = null,
+    @ApiModelProperty("模板资源", required = true)
+    val resources: Resources? = null
 ) : IModelTemplate {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0

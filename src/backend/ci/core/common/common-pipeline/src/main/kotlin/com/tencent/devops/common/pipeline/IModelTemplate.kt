@@ -34,6 +34,7 @@ interface IModelTemplate {
 
     var template: String?
     var ref: String?
+    var variables: Map<String, String>?
 
     /**
      * 判读是否来自于模板

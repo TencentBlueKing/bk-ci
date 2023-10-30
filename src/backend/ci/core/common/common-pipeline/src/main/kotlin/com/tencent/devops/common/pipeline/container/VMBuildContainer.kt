@@ -122,7 +122,8 @@ data class VMBuildContainer(
     @ApiModelProperty("分裂后的容器集合（分裂后的父容器特有字段）", required = false)
     var groupContainers: MutableList<VMBuildContainer>? = null,
     override var template: String? = null,
-    override var ref: String? = null
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"

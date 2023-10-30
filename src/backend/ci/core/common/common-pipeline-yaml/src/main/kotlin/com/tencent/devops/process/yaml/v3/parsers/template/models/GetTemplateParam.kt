@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v3.parsers.template.models
 
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
-import com.tencent.devops.process.yaml.v3.models.Repositories
+import com.tencent.devops.common.pipeline.pojo.transfer.Repositories
 
 /**
  * 获取模板的参数接口，

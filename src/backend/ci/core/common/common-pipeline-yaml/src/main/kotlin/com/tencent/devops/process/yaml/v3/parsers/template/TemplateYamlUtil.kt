@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v3.parsers.template
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
-import com.tencent.devops.process.yaml.v3.models.Repositories
+import com.tencent.devops.common.pipeline.pojo.transfer.Repositories
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
 import com.tencent.devops.process.yaml.v3.parsers.template.models.NoReplaceTemplate

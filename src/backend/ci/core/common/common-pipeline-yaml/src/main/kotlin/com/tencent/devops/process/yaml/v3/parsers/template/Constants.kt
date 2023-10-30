@@ -31,7 +31,8 @@ object Constants {
     const val templateDirectory = ".ci/templates/"
 
     // 引用模板的关键字
-    const val TEMPLATE_KEY = "template"
+    // todo 通过改关键字名，达到屏蔽模板替换目的
+    const val TEMPLATE_KEY = "----not-support-template----"
     const val REF = "ref"
 
     //  模板变量关键字

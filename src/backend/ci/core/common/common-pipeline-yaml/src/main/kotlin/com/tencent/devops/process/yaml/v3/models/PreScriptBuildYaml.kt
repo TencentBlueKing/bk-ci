@@ -35,6 +35,7 @@ import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 
 /**
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段

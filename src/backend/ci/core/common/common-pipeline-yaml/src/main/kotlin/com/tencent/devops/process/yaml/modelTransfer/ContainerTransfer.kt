@@ -51,7 +51,7 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.job.Mutex
