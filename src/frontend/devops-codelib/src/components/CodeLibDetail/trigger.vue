@@ -41,19 +41,13 @@
                         >
                             <span>- {{ key }}:</span>
                             <template v-if="Array.isArray(item)">
-                                <span v-for="(i, itemIndex) in item" :key="i">
-                                    {{ i }}
-                                    <span v-if="itemIndex + 1 !== item.length">,</span>
-                                </span>
-                            </template>
-                            <template v-else-if="key.includes('Paths') && item">
                                 <!-- 路径 -->
                                 <div
-                                    v-for="path in item.split(',')"
-                                    :key="path"
-                                    style="margin-left: 20px;"
+                                    v-for="i in item"
+                                    :key="i"
+                                    class="array-item"
                                 >
-                                    - {{ path }}
+                                    - {{ i }}
                                 </div>
                             </template>
                             <span v-else>{{ key }}</span>
@@ -304,6 +298,12 @@
                 text-overflow: ellipsis;
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
+                .array-item {
+                    margin-left: 25px;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
             }
             .expand-condition {
                 -webkit-line-clamp: 100 !important;
