@@ -45,15 +45,15 @@ class JobService @Autowired constructor(
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
-//        val hostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
-//            projectId, scriptExecuteReq.executeTarget.envHashIdList
-//        )
-//        val hostListFromNodeHash: List<Host> = parseHashListService.getHostFromNodeList(
-//            projectId, scriptExecuteReq.executeTarget.nodeHashIdList
-//        )
+        val hostListFromEnvHash: List<Host> = parseHashListService.getHostFromEnvList(
+            projectId, scriptExecuteReq.executeTarget.envHashIdList
+        )
+        val hostListFromNodeHash: List<Host> = parseHashListService.getHostFromNodeList(
+            projectId, scriptExecuteReq.executeTarget.nodeHashIdList
+        )
         val allHostList = scriptExecuteReq.executeTarget.hostList
-//            .plus(hostListFromEnvHash)
-//            .plus(hostListFromNodeHash)
+            .plus(hostListFromEnvHash)
+            .plus(hostListFromNodeHash)
         if (logger.isDebugEnabled)
             logger.debug(
                 "[executeScript] scriptExecuteReq.executeTarget.hostList: " +
