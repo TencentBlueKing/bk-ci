@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.TRIGGER_CONDITION_PREFIX
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
@@ -227,7 +228,10 @@ class RepoPipelineService @Autowired constructor(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 atomCode = it.atomCode,
                 triggerType = it.triggerType,
-                eventType = it.eventType,
+                eventType = I18nUtil.getCodeLanMessage(
+                    messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.eventType}",
+                    defaultMessage = it.eventType,
+                ),
                 taskParams = JsonUtil.to(it.taskParams, object : TypeReference<Map<String, Any>>() {}),
                 triggerCondition = it.triggerCondition?.let { condition ->
                     translateCondition(condition)

@@ -235,7 +235,7 @@ class RepoPipelineRefDao {
         ids: List<Long>
     ): List<TRepositoryPipelineRefRecord> {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
-            dslContext.selectFrom(this).where(ID.`in`(ids)).fetch()
+            dslContext.selectFrom(this).where(ID.`in`(ids)).orderBy(EVENT_TYPE.desc()).fetch()
         }
     }
 }
