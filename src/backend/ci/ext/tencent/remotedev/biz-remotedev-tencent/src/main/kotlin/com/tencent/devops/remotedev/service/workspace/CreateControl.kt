@@ -185,7 +185,8 @@ class CreateControl @Autowired constructor(
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
                 groupName = null,
-                dslContext = dslContext
+                dslContext = dslContext,
+                projectName = projectInfo.projectName
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -224,7 +225,9 @@ class CreateControl @Autowired constructor(
 
         if (workspaceCreate.windowsResourceConfigId != null) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.NEED_UPDATED.errorCode
+                errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
+                params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
+                defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
             )
         }
 
@@ -680,7 +683,8 @@ class CreateControl @Autowired constructor(
             deptName = userInfo?.deptName,
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
-            dslContext = dslContext
+            dslContext = dslContext,
+            projectName = workspace.projectId ?: ""
         )
     }
 
