@@ -64,6 +64,11 @@ class ParseHashListService @Autowired constructor(
             )
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             nodeRecord.map {
+                if (logger.isDebugEnabled) logger.debug(
+                    "[getHostFromNodeList] it.hostId: ${it.hostId}, " +
+                        "it.cloudAreaId: ${it.cloudAreaId}, " +
+                        "it.nodeIp: ${it.nodeIp}"
+                )
                 hostList.add(
                     Host(
                         bkHostId = it.hostId,
