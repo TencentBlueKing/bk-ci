@@ -230,7 +230,7 @@ class RepoPipelineService @Autowired constructor(
                 triggerType = it.triggerType,
                 eventType = I18nUtil.getCodeLanMessage(
                     messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.eventType}",
-                    defaultMessage = it.eventType,
+                    defaultMessage = it.eventType
                 ),
                 taskParams = JsonUtil.to(it.taskParams, object : TypeReference<Map<String, Any>>() {}),
                 triggerCondition = it.triggerCondition?.let { condition ->
