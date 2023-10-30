@@ -147,4 +147,15 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Map<String, Map<String, Int>>>
+
+    @ApiOperation("获取用户1Password")
+    @GET
+    @Path("/1Password")
+    fun onePassword(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
 }
