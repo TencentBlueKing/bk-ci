@@ -42,6 +42,7 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.Concurrency
+import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.Notices
@@ -129,6 +130,15 @@ class ModelTransfer @Autowired constructor(
         yamlInput: YamlTransferInput
     ): Model {
         val stageList = mutableListOf<Stage>()
+        val model = Model(
+            name = yamlInput.yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
+            desc = yamlInput.yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
+            stages = stageList,
+            labels = emptyList(),
+            instanceFromTemplate = false,
+            pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId,
+            resources = yamlInput.yaml.formatResources()
+        )
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         var stageIndex = 1
@@ -159,46 +169,20 @@ class ModelTransfer @Autowired constructor(
                 )
             )
         }
-
-        return Model(
-            name = yamlInput.yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
-            desc = yamlInput.yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
-            stages = stageList,
-            labels = emptyList(),
-            instanceFromTemplate = false,
-            pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
-        )
+        checkExtends(yamlInput.yaml.templateFilter().extends, model)
+        return model
     }
 
     fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYaml {
-        val stages = mutableListOf<PreStage>()
-        modelInput.model.stages.forEachIndexed { index, stage ->
-            if (index == 0 || stage.finally) return@forEachIndexed
-            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId)
-            stages.add(ymlStage)
-        }
         val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
-        val triggerOn = makeTriggerOn(modelInput)
-        val variables = variableTransfer.makeVariableFromModel(modelInput.model)
-        val lastStage = modelInput.model.stages.last()
-        val finally = if (lastStage.finally)
-            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId).jobs else null
-        val concurrency = makeConcurrency(modelInput.setting)
-
-        return when (modelInput.version) {
+        val yaml = when (modelInput.version) {
             YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
                 version = "v2.0",
                 name = modelInput.setting.pipelineName,
                 desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
-                triggerOn = triggerOn.firstOrNull() as PreTriggerOn?,
-                variables = variables,
-                stages = TransferMapper.anyTo(stages),
-                extends = null,
-                resources = null,
-                notices = makeNoticesV2(modelInput.setting),
-                finally = finally as LinkedHashMap<String, Any>?,
-                concurrency = concurrency
+                resources = modelInput.model.resources,
+                notices = makeNoticesV2(modelInput.setting)
             )
 
             YamlVersion.Version.V3_0 -> PreTemplateScriptBuildYamlV3(
@@ -206,19 +190,48 @@ class ModelTransfer @Autowired constructor(
                 name = modelInput.setting.pipelineName,
                 desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
-                triggerOn = triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it },
-                variables = variables,
-                stages = TransferMapper.anyTo(stages),
-                extends = null,
-                resources = null,
-                notices = makeNoticesV3(modelInput.setting),
-                finally = finally as LinkedHashMap<String, Any>?,
-                concurrency = concurrency
+                resources = modelInput.model.resources,
+                notices = makeNoticesV3(modelInput.setting)
             )
         }
+        if (modelInput.model.template != null) {
+            yaml.extends = Extends(
+                modelInput.model.template!!,
+                modelInput.model.ref,
+                modelInput.model.variables
+            )
+            return yaml
+        }
+
+        val triggerOn = makeTriggerOn(modelInput)
+        when (modelInput.version) {
+            YamlVersion.Version.V2_0 -> {
+                (yaml as PreTemplateScriptBuildYaml).triggerOn = triggerOn.firstOrNull() as PreTriggerOn?
+            }
+
+            YamlVersion.Version.V3_0 -> {
+                (yaml as PreTemplateScriptBuildYamlV3).triggerOn =
+                    triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it }
+            }
+        }
+        val stages = mutableListOf<PreStage>()
+        modelInput.model.stages.forEachIndexed { index, stage ->
+            if (index == 0 || stage.finally) return@forEachIndexed
+            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId)
+            stages.add(ymlStage)
+        }
+        yaml.stages = TransferMapper.anyTo(stages)
+        yaml.variables = variableTransfer.makeVariableFromModel(modelInput.model)
+        val lastStage = modelInput.model.stages.last()
+        val finally = if (lastStage.finally)
+            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId).jobs else null
+        yaml.finally = finally as LinkedHashMap<String, Any>?
+        yaml.concurrency = makeConcurrency(modelInput.setting)
+
+        return yaml
     }
 
-    private fun makeNoticesV2(setting: PipelineSetting): List<GitNotices> {
+    private fun makeNoticesV2(setting: PipelineSetting): List<GitNotices>? {
         val res = mutableListOf<GitNotices>()
         setting.successSubscriptionList?.forEach {
             if (it.types.isNotEmpty()) {
@@ -230,10 +243,10 @@ class ModelTransfer @Autowired constructor(
                 res.add(GitNotices(it, IfType.FAILURE.name))
             }
         }
-        return res
+        return res.ifEmpty { null }
     }
 
-    private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices> {
+    private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices>? {
         val res = mutableListOf<PacNotices>()
         setting.successSubscriptionList?.ifEmpty { listOf(setting.successSubscription) }?.forEach {
             if (it.types.isNotEmpty()) {
@@ -247,7 +260,7 @@ class ModelTransfer @Autowired constructor(
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }
-        return res
+        return res.ifEmpty { null }
     }
 
     private fun makeConcurrency(setting: PipelineSetting): Concurrency? {
@@ -348,5 +361,13 @@ class ModelTransfer @Autowired constructor(
             }
         }
         return labels
+    }
+
+    private fun checkExtends(extends: Extends?, model: Model) {
+        if (extends != null) {
+            model.template = extends.template
+            model.ref = extends.ref
+            model.variables = extends.variables
+        }
     }
 }

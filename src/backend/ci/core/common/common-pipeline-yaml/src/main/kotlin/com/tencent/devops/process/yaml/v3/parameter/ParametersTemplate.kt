@@ -28,13 +28,14 @@
 package com.tencent.devops.process.yaml.v3.parameter
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.yaml.v3.models.Variable
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreParametersTemplate(
-    val parameters: List<Map<String, Any>>?
+    val variables: MutableMap<String, Any>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ParametersTemplateNull(
-    val parameters: List<Parameters>?
+    val variables: Map<String, Variable>?
 )

@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v3.parsers.template.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.process.yaml.v3.models.Extends
-import com.tencent.devops.process.yaml.v3.models.Resources
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 
 // 不用被模板替换的流水线变量，直接通过Yaml生成Object

@@ -43,7 +43,7 @@ import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.process.yaml.v3.models.ResourcesPools
+import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableDatasource
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
