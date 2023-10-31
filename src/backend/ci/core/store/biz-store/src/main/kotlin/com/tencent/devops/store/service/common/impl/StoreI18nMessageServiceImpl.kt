@@ -39,7 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
@@ -85,7 +85,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         i18nDir: String,
         propertiesKeyPrefix: String?,
         dbKeyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        version: String
     ): Map<String, Any> {
         logger.info(
             "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
@@ -134,7 +135,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 repositoryHashId = repositoryHashId,
                 fieldLocaleInfos = fieldLocaleInfos,
                 dbKeyPrefix = dbKeyPrefix,
-                userId = userId
+                userId = userId,
+                version = version
             )
         }
         return jsonMap
@@ -147,7 +149,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileDir: String,
         i18nDir: String,
         keyPrefix: String?,
-        repositoryHashId: String?
+        repositoryHashId: String?,
+        version: String
     ) {
         logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId]")
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
@@ -162,7 +165,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             repositoryHashId = repositoryHashId,
             fieldLocaleInfos = fieldLocaleInfos,
             dbKeyPrefix = keyPrefix,
-            userId = userId
+            userId = userId,
+            version = version
         )
     }
 
@@ -209,11 +213,12 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         repositoryHashId: String?,
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         dbKeyPrefix: String?,
-        userId: String
+        userId: String,
+        version: String
     ) {
         executors.submit {
             // 获取资源文件名称列表
-            val propertiesFileNames = getFileNames(
+            val propertiesFileNames = storeFileService.getFileNames(
                 projectCode = projectCode,
                 fileDir = fileDir,
                 i18nDir = i18nDir,
@@ -232,19 +237,26 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
-                fileProperties.keys.forEach {
-                    var value = fileProperties["$it"]?.toString()
-                    if (!value.isNullOrBlank()) {
-                        value = getTextReferenceFileContent(
+                val textReferenceContentMap= getTextReferenceFileContent(fileProperties)
+                var textReferenceFileDir: File? = null
+                if (textReferenceContentMap.isNotEmpty()) {
+                    textReferenceFileDir = storeFileService.getTextReferenceFileDir(
+                        userId = userId,
+                        version = version,
+                        request = TextReferenceFileDownloadRequest(
                             projectCode = projectCode,
-                            userId = userId,
-                            request = TextReferenceFileParseRequest(
-                                fileDir = fileDir,
-                                repositoryHashId = repositoryHashId,
-                                content = value
-                            )
+                            fileDir = fileDir,
+                            repositoryHashId = repositoryHashId
                         )
-                        fileProperties["$it"] = value
+                    )
+                }
+                if (textReferenceFileDir != null && textReferenceFileDir.exists()) {
+                    textReferenceContentMap.forEach { (k, v) ->
+                        fileProperties[k] = getTextReferenceFileParsing(
+                            userId = userId,
+                            fileDir = textReferenceFileDir.path,
+                            content = v
+                        )
                     }
                 }
 
@@ -321,80 +333,64 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): String?
 
-    abstract fun downloadFile(
-        filePath: String,
-        file: File,
-        repositoryHashId: String? = null,
-        branch: String? = null,
-        format: String? = null
-    )
-
-    abstract fun getFileNames(
-        projectCode: String,
-        fileDir: String,
-        i18nDir: String? = null,
-        repositoryHashId: String? = null,
-        branch: String? = null
-    ): List<String>?
-
-    private fun getTextReferenceFileContent(
-        userId: String,
-        projectCode: String,
-        request: TextReferenceFileParseRequest
-    ): String {
-        var content = request.content
-        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-        val matcher: Matcher = pattern.matcher(content)
-        val path: String
+    /**
+     * 获取存在文件引用的配置
+     */
+    fun getTextReferenceFileContent(properties: Properties): Map<String, String> {
+    val map = mutableMapOf<String, String>()
+    val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
+    properties.keys.map { it as String }.forEach { key ->
+        val text = properties[key].toString()
+        val matcher: Matcher = pattern.matcher(text)
         if (matcher.find()) {
-            path = matcher.group(2).replace("\"", "")
-        } else {
-            return content
+            map[key] = text
         }
+    }
+        return map
+    }
+
+    private fun getTextReferenceFileParsing(
+        userId: String,
+        fileDir: String,
+        content: String,
+        recursionFlag: Boolean = false
+    ): String {
+        var result = content
+        val fileNames: MutableList<String> = mutableListOf()
+        val regex = Regex(pattern = BK_CI_PATH_REGEX)
+        val matchResult = regex.findAll(content)
         try {
-            if (!isStaticFile(path)) {
-                content = getFileStr(
-                    projectCode = projectCode,
-                    fileDir = request.fileDir,
-                    fileName = "file/$path",
-                    repositoryHashId = request.repositoryHashId,
-                    branch = request.branch
-                )?.let { fileStr ->
-                    textReferenceFileAnalysis(
+            matchResult.forEach {
+                val fileName = it.groupValues[2].replace("\"", "")
+                val isStatic = storeFileService.isStaticFile(fileName)
+                // 文本文件引用只允许引用一层，防止循环引用
+                if (!isStatic && !recursionFlag) {
+                    val textFile = File("$fileDir${File.separator}$fileName")
+                    result = textFile.readText()
+                    return getTextReferenceFileParsing(
                         userId = userId,
-                        projectCode = projectCode,
-                        request = TextReferenceFileParseRequest(
-                            content = fileStr,
-                            fileDir = request.fileDir,
-                            repositoryHashId = request.repositoryHashId
-                        )
+                        fileDir = fileDir,
+                        content = result,
+                        recursionFlag = true
                     )
-                } ?: content
-            } else {
-                content = textReferenceFileAnalysis(
+                }
+                if (isStatic) {
+                    fileNames.add(fileName)
+                }
+            }
+            if (fileNames.isNotEmpty()) {
+                result = storeFileService.getStaticFileReference(
                     userId = userId,
-                    projectCode = projectCode,
-                    request = TextReferenceFileParseRequest(
-                        content = content,
-                        fileDir = request.fileDir,
-                        repositoryHashId = request.repositoryHashId
-                    )
+                    content = content,
+                    fileDirPath = fileDir,
+                    fileNames = fileNames
                 )
             }
         } catch (ignored: Throwable) {
             logger.info("failed to parse text reference")
         }
-        return content
+        return result
     }
 
-    fun isStaticFile(path: String): Boolean {
-        val extension = path.substringAfterLast(".")
-        return extension in setOf("jpg", "png", "svg", "gif")
-    }
 
-    abstract fun textReferenceFileAnalysis(
-        userId: String,
-        projectCode: String,
-        request: TextReferenceFileParseRequest
-    ): String
 }
