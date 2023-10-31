@@ -1,8 +1,8 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.pojo.job.ExecuteTarget
-import com.tencent.devops.environment.pojo.job.Host
+import com.tencent.devops.environment.pojo.job.req.ExecuteTarget
+import com.tencent.devops.environment.pojo.job.req.Host
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

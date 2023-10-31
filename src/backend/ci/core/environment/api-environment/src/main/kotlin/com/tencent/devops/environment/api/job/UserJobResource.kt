@@ -2,10 +2,10 @@ package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.environment.pojo.job.JobResult
-import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsReq
-import com.tencent.devops.environment.pojo.job.QueryJobInstanceLogsResult
-import com.tencent.devops.environment.pojo.job.QueryJobInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.resp.JobResult
+import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

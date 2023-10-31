@@ -4,10 +4,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.pojo.job.JobResult
-import com.tencent.devops.environment.pojo.job.req.JobCloudAuthenticationReq
-import com.tencent.devops.environment.pojo.job.req.JobCloudPermission
-import com.tencent.devops.environment.pojo.job.resp.JobCloudResp
+import com.tencent.devops.environment.pojo.job.jobCloudRes.JobCloudResult
+import com.tencent.devops.environment.pojo.job.jobCloudReq.JobCloudAuthenticationReq
+import com.tencent.devops.environment.pojo.job.jobCloudReq.JobCloudPermission
+import com.tencent.devops.environment.pojo.job.jobCloudRes.JobCloudResp
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -125,7 +125,7 @@ class ApigwJobCloudApi {
         bkUsername: String,
         jobCloud: T,
         classOfU: Class<U>
-    ): JobResult<U> {
+    ): JobCloudResult<U> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
@@ -138,7 +138,7 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
-    fun <T, U> executeGetRequest(bkUsername: String, classOfT: Class<T>, vararg args: U): JobResult<T> {
+    fun <T, U> executeGetRequest(bkUsername: String, classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
         val operationName = getThreadLocal()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
@@ -155,7 +155,7 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doGet(url, headers), classOfT)
     }
 
-    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): JobResult<T> {
+    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): JobCloudResult<T> {
         val operationName = getThreadLocal()
         removeThreadLocal()
         try {
@@ -199,15 +199,15 @@ class ApigwJobCloudApi {
                             logWithLengthLimit(operationResult.toString())
                     )
                 }
-                val jobResult = JobResult(
+                val jobCloudResult = JobCloudResult(
                     code = jobCloudResp.code,
                     result = jobCloudResp.result,
                     jobRequestId = jobCloudResp.jobRequestId,
                     data = operationResult
                 )
                 if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] jobResult: " + logWithLengthLimit(jobResult.toString()))
-                return jobResult
+                    logger.debug("[$operationName] jobCloudResult: " + logWithLengthLimit(jobCloudResult.toString()))
+                return jobCloudResult
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
