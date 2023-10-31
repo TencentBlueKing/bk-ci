@@ -122,7 +122,6 @@ class RedisAutoConfiguration {
         }
     }
 
-
     @Bean
     fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
         return SimpleRateLimiter(redisOperation)
