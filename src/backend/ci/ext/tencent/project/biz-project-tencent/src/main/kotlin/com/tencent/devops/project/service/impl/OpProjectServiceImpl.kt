@@ -163,7 +163,9 @@ class OpProjectServiceImpl @Autowired constructor(
         }
 
         // 更新云研发项目时相关操作
-        projectRemoteDevService.enableRemoteDev(userId, dbProjectRecord.englishName, dbProjectRecord.projectName)
+        if (projectInfoRequest.properties?.remotedev == true) {
+            projectRemoteDevService.enableRemoteDev(userId, dbProjectRecord.englishName, dbProjectRecord.projectName)
+        }
 
         return if (!flag) {
             0 // 更新操作
