@@ -114,6 +114,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.utils.StoreUtils
+import java.util.Date
+import java.util.concurrent.Executors
 import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -122,8 +124,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.Executors
 
 @Service
 @RefreshScope
@@ -514,7 +514,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             fileDir = "$atomCode/$atomVersion",
             i18nDir = i18nDir,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-            repositoryHashId = repoId
+            repositoryHashId = repoId,
+            version = atomVersion
         )
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
