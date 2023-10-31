@@ -435,8 +435,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         queryModelFlag: Boolean = true
     ): Result<out Record>? {
         val tTemplate = TTemplate.T_TEMPLATE
@@ -457,8 +457,8 @@ class TemplateDao {
             templateType = templateType,
             templateIdList = templateIdList,
             storeFlag = storeFlag,
-            page = page,
-            pageSize = pageSize,
+            offset = offset,
+            limit = limit,
             tTemplate = tTemplate,
             conditions = conditions,
             queryModelFlag = queryModelFlag
@@ -470,8 +470,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         tTemplate: TTemplate,
         conditions: MutableList<Condition>,
         queryModelFlag: Boolean = true
@@ -525,8 +525,8 @@ class TemplateDao {
             .where(conditions)
             .orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
 
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return if (null != offset && null != limit) {
+            baseStep.limit(offset, limit).fetch()
         } else {
             baseStep.fetch()
         }

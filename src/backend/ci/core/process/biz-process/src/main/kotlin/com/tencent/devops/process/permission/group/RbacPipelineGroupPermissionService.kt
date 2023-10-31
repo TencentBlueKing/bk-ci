@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.permission
+package com.tencent.devops.process.permission.group
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission

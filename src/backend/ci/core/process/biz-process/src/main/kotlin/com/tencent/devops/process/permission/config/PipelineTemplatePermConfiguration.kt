@@ -29,11 +29,16 @@
 package com.tencent.devops.process.permission.config
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.PipelineGroupAuthServiceCode
-import com.tencent.devops.process.permission.group.MockPipelineGroupPermissionService
-import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
-import com.tencent.devops.process.permission.group.RbacPipelineGroupPermissionService
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.permission.template.RbacPipelineTemplatePermissionService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -46,21 +51,36 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class PipelineGroupPermConfiguration {
+class PipelineTemplatePermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacPipelineGroupPermissionService(
         authPermissionApi: AuthPermissionApi,
-        authResourceApi: AuthResourceApi,
-        pipelineGroupAuthServiceCode: PipelineGroupAuthServiceCode
-    ): PipelineGroupPermissionService = RbacPipelineGroupPermissionService(
+        authProjectApi: AuthProjectApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        dslContext: DSLContext,
+        pipelineInfoDao: PipelineInfoDao,
+        pipelineViewGroupService: PipelineViewGroupService,
+        client: Client,
+        authResourceApi: AuthResourceApi
+    ): PipelineTemplatePermissionService = RbacPipelineTemplatePermissionService(
         authPermissionApi = authPermissionApi,
-        authResourceApi = authResourceApi,
-        pipelineGroupAuthServiceCode = pipelineGroupAuthServiceCode
+        authProjectApi = authProjectApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        dslContext = dslContext,
+        pipelineInfoDao = pipelineInfoDao,
+        client = client,
+        authResourceApi = authResourceApi
     )
 
     @Bean
-    @ConditionalOnMissingBean(PipelineGroupPermissionService::class)
-    fun mockPipelineGroupPermissionService() = MockPipelineGroupPermissionService()
+    @ConditionalOnMissingBean(PipelineTemplatePermissionService::class)
+    fun mockPipelineGroupPermissionService(
+        authProjectApi: AuthProjectApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode
+    ) = MockPipelineTemplatePermissionService(
+        authProjectApi = authProjectApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode
+    )
 }

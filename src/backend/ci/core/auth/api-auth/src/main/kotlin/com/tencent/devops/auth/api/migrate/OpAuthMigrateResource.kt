@@ -123,12 +123,4 @@ interface OpAuthMigrateResource {
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
-
-    @POST
-    @Path("/fitSecToRbacAuth/")
-    @ApiOperation("fitSec升级到rbac权限")
-    fun fitSecToRbacAuth(
-        @ApiParam("按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
-    ): Result<Boolean>
 }
