@@ -83,7 +83,7 @@ class RemoteDevCvmDao {
                 conditions.add(PROJECT_ID.eq(it))
             }
         }
-        return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM).fetch()
+        return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM).where(conditions).fetch()
     }
 
     fun updateCvm(
