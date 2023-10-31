@@ -242,8 +242,13 @@ class WorkspaceJoinDao {
 
         // owner 条件查询
         if (owner != null) {
-            conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
-            conditions.add(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
+            val sql = (TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                .and(TWorkspace.T_WORKSPACE.CREATOR.like("%$owner%")))
+                .or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
+                )
+            conditions.add(sql)
         }
 
         // machineType 条件查询
