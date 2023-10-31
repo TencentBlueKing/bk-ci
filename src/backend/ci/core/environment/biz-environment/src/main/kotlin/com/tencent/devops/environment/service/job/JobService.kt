@@ -240,7 +240,7 @@ class JobService @Autowired constructor(
                                     status = jobCloudFileLog.status,
                                     logContent = jobCloudFileLog.logContent
                                 )
-                            },
+                            }
                         )
                     }
                 )
