@@ -15,6 +15,4 @@ data class ScriptExecuteResult(
     @ApiModelProperty(value = "步骤实例ID", required = true)
     @get:JsonProperty("step_instance_id")
     val stepInstanceId: Long
-) {
-    constructor() : this(-1L, "null", -1L)
-}
+)
