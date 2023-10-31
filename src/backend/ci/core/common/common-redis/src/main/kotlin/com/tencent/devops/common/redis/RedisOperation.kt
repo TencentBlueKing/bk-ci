@@ -28,6 +28,7 @@
 package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.split.RedisSplitProperties
+import io.micrometer.core.instrument.util.NamedThreadFactory
 import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
@@ -48,7 +49,7 @@ class RedisOperation(
     // max expire time is 30 days
     private val maxExpireTime = TimeUnit.DAYS.toSeconds(30)
 
-    private val slaveThreadPool = Executors.newSingleThreadExecutor()
+    private val slaveThreadPool = Executors.newSingleThreadExecutor(NamedThreadFactory("redis-double-write"))
 
     fun get(key: String, isDistinguishCluster: Boolean? = false): String? {
         return masterRedisTemplate.opsForValue().get(getFinalKey(key, isDistinguishCluster))
