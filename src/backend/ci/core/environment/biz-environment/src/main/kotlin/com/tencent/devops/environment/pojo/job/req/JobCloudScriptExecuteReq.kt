@@ -20,9 +20,12 @@ data class JobCloudScriptExecuteReq(
     @ApiModelProperty(value = "脚本执行超时时间", notes = "单位：秒，默认7200秒，取值范围1-86400")
     @JsonProperty("timeout")
     val timeout: Long,
-    @ApiModelProperty(value = "执行帐号别名", required = true)
+    @ApiModelProperty(value = "执行帐号别名", notes = "和accountId必须存在一个。同时存在时，accountId优先。")
     @JsonProperty("account_alias")
-    val accountAlias: String,
+    val accountAlias: String?,
+    @ApiModelProperty(value = "机器执行账号ID", notes = "和accountAlias必须存在一个。同时存在时，accountId优先。")
+    @JsonProperty("account_id")
+    val accountId: Long?,
     @ApiModelProperty(value = "是否执行敏感参数", notes = "0：不是（默认），1：是")
     @JsonProperty("is_param_sensitive")
     val isParamSensitive: Int,

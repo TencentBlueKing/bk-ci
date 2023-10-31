@@ -20,6 +20,8 @@ data class ScriptExecuteReq(
     val scriptLanguage: Int,
     @ApiModelProperty(value = "执行目标", required = true)
     val executeTarget: ExecuteTarget,
-    @ApiModelProperty(value = "机器执行帐号用户名", required = true)
-    val account: String
+    @ApiModelProperty(value = "机器执行账号别名", notes = "和accountId必须存在一个。同时存在时，accountId优先。")
+    val accountAlias: String?,
+    @ApiModelProperty(value = "机器执行账号ID", notes = "和accountAlias必须存在一个。同时存在时，accountId优先。")
+    val accountId: Long?
 )

@@ -45,7 +45,8 @@ class JobService @Autowired constructor(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
             timeout = scriptExecuteReq.timeout,
-            accountAlias = scriptExecuteReq.account,
+            accountAlias = scriptExecuteReq.accountAlias,
+            accountId = scriptExecuteReq.accountId,
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(

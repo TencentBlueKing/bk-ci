@@ -15,7 +15,6 @@ data class JobResult<out T>(
     @get:JsonProperty("job_request_id")
     val jobRequestId: String?,
     @ApiModelProperty("数据")
-    @get:JsonProperty("data")
     @BkFieldI18n
     val data: T? = null
 ) {
