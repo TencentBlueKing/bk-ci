@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("文本引用文件解析请求")
-data class TextReferenceFileParseRequest(
+@ApiModel("文本引用文件下载请求")
+data class TextReferenceFileDownloadRequest(
+    @ApiModelProperty("项目代码", required = true)
+    val projectCode: String,
     @ApiModelProperty("插件包文件路径", required = true)
     val fileDir: String,
     @ApiModelProperty("仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
     @ApiModelProperty("分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("文本内容", required = true)
-    val content: String
+    val branch: String? = null
 )

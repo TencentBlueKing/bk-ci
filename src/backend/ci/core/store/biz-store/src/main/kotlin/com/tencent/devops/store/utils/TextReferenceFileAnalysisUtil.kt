@@ -27,7 +27,12 @@
 
 package com.tencent.devops.store.utils
 
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import java.io.File
@@ -75,9 +80,9 @@ object TextReferenceFileAnalysisUtil {
      */
     fun filePathReplace(
         result: MutableMap<String, String>,
-        descriptionContent: String
+        text: String
     ): String {
-        var content = descriptionContent
+        var content = text
         // 替换资源路径
         result.forEach {
             val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
@@ -104,6 +109,34 @@ object TextReferenceFileAnalysisUtil {
             )
         } else {
             Result(relativePath)
+        }
+    }
+
+    fun serviceArchiveAtomFile(
+        client: Client,
+        userId: String,
+        archiveAtomRequest: ArchiveAtomRequest,
+        file: File
+    ): Result<Boolean?> {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
+        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
+                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
+                "&version=${archiveAtomRequest.version}")
+        archiveAtomRequest.releaseType?.let {
+            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
+        }
+        archiveAtomRequest.os?.let {
+            serviceUrl.append("&os=${archiveAtomRequest.os}")
+        }
+        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+            response.body!!.string()
+            if (!response.isSuccessful) {
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
+            return Result(true)
         }
     }
 

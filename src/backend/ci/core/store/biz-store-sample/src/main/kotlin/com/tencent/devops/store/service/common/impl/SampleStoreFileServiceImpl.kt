@@ -26,19 +26,20 @@
  */
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -52,7 +53,6 @@ class SampleStoreFileServiceImpl : StoreFileService() {
     }
 
     override fun downloadFile(
-        client: Client,
         filePath: String,
         file: File,
         repositoryHashId: String?,
@@ -65,10 +65,54 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         OkhttpUtils.downloadFile(url, file)
     }
 
+    override fun getFileNames(
+        projectCode: String,
+        fileDir: String,
+        i18nDir: String?,
+        repositoryHashId: String?,
+        branch: String?
+    ): List<String>? {
+        var filePath = "$projectCode/$fileDir"
+        i18nDir?.let { filePath = "$filePath/$i18nDir" }
+        logger.info("getFileNames by filePath:$filePath")
+        return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = BKREPO_STORE_PROJECT_ID,
+            repoName = REPO_NAME_PLUGIN,
+            filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
+        ).data
+    }
+
+    override fun textReferenceFileDownload(
+        userId: String,
+        request: TextReferenceFileDownloadRequest
+    ): File? {
+        val separator = File.separator
+        val fileNameList = getFileNames(
+            projectCode = request.projectCode,
+            fileDir = "${request.fileDir}${separator}file"
+        )
+        if (fileNameList.isNullOrEmpty()) {
+            logger.warn("get text reference file list fail")
+            return null
+        }
+        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
+            userId = userId,
+            atomDir = request.fileDir
+        )
+        val downloadPath = "$fileDirPath${separator}file"
+        fileNameList.forEach {
+            downloadFile(
+                "${request.projectCode}$separator${request.fileDir}${separator}file$separator$it",
+                File(downloadPath, it)
+            )
+        }
+        return File(downloadPath)
+    }
+
     @Suppress("NestedBlockDepth")
     override fun uploadFileToPath(
         userId: String,
-        client: Client,
         result: MutableMap<String, String>,
         localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String> {
@@ -95,33 +139,5 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             }
         }
         return result
-    }
-
-    override fun serviceArchiveAtomFile(
-        userId: String,
-        client: Client,
-        archiveAtomRequest: ArchiveAtomRequest,
-        file: File
-    ): Result<Boolean?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
-        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
-                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
-                "&version=${archiveAtomRequest.version}")
-        archiveAtomRequest.releaseType?.let {
-            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
-        }
-        archiveAtomRequest.os?.let {
-            serviceUrl.append("&os=${archiveAtomRequest.os}")
-        }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
-            response.body!!.string()
-            if (!response.isSuccessful) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.SYSTEM_ERROR,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            }
-            return Result(true)
-        }
     }
 }

@@ -33,9 +33,6 @@ import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -76,56 +73,5 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
         logger.info("downloadFile filePath:$filePath")
         OkhttpUtils.downloadFile(url, file)
-    }
-
-    override fun getFileNames(
-        projectCode: String,
-        fileDir: String,
-        i18nDir: String?,
-        repositoryHashId: String?,
-        branch: String?
-    ): List<String>? {
-        var filePath = "$projectCode/$fileDir"
-        i18nDir?.let { filePath = "$filePath/$i18nDir" }
-        logger.info("getFileNames by filePath:$filePath")
-        return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-            userId = BKREPO_DEFAULT_USER,
-            projectId = BKREPO_STORE_PROJECT_ID,
-            repoName = REPO_NAME_PLUGIN,
-            filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
-        ).data
-    }
-
-    override fun textReferenceFileAnalysis(
-        userId: String,
-        projectCode: String,
-        request: TextReferenceFileParseRequest
-    ): String {
-        val separator = File.separator
-        val fileNameList = getFileNames(
-            projectCode = projectCode,
-            fileDir = "${request.fileDir}${separator}file"
-        )
-        if (fileNameList.isNullOrEmpty()) {
-            logger.info("descriptionAnalysis get fileNameList fail")
-            return request.content
-        }
-        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
-            userId = userId,
-            atomDir = request.fileDir
-        )
-        fileNameList.forEach {
-            downloadFile(
-                "$projectCode$separator${request.fileDir}${separator}file$separator$it",
-                File("$fileDirPath${separator}${UUIDUtil.generate()}${separator}file", it)
-            )
-        }
-
-        return storeFileService.textReferenceFileAnalysis(
-            fileDirPath = "$fileDirPath${separator}file",
-            userId = userId,
-            content = request.content,
-            client = client
-        )
     }
 }

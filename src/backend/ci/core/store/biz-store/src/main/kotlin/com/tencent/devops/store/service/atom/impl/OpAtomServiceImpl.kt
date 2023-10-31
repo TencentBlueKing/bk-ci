@@ -491,7 +491,6 @@ class OpAtomServiceImpl @Autowired constructor(
         releaseInfo.description = storeFileService.textReferenceFileAnalysis(
             content = releaseInfo.description,
             fileDirPath = "$atomPath${fileSeparator}file",
-            client = client,
             userId = userId
         )
         taskJsonMap[KEY_RELEASE_INFO] = releaseInfo
@@ -503,7 +502,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = storeFileService.serviceArchiveAtomFile(
+                val archiveAtomResult = TextReferenceFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     client = client,
                     file = file,
