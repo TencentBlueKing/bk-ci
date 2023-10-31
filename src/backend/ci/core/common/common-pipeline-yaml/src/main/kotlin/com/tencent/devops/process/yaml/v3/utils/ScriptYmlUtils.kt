@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
@@ -77,6 +78,7 @@ import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.NoteRule
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
@@ -85,20 +87,18 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
 import com.tencent.devops.process.yaml.v3.stageCheck.Flow
 import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v3.stageCheck.StageReviews
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -192,6 +192,7 @@ object ScriptYmlUtils {
             ParametersType.ARRAY -> {
                 Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
             }
+
             else -> {
                 Pattern.compile("\\$\\{\\{([^{}]+?)}}")
             }
@@ -313,6 +314,7 @@ object ScriptYmlUtils {
                     )
                 )
             }
+
             preScriptBuildYaml.jobs != null -> {
                 listOf(
                     Stage(
@@ -323,6 +325,7 @@ object ScriptYmlUtils {
                     )
                 )
             }
+
             else -> {
                 preStages2Stages(preScriptBuildYaml.stages as List<PreStage>, transferData)
             }
@@ -711,7 +714,6 @@ object ScriptYmlUtils {
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
-            res.credentials = preTriggerOn.credentials
         }
 
         return res
@@ -728,6 +730,7 @@ object ScriptYmlUtils {
                     reposIgnore = reposIgnore,
                     reposIgnoreCondition = reposIgnoreCondition
                 )
+
                 credentials is Map<*, *> && credentials["username"] != null && credentials["password"] != null -> {
                     return RepositoryHook(
                         name = name,
@@ -737,6 +740,7 @@ object ScriptYmlUtils {
                         reposIgnoreCondition = reposIgnoreCondition
                     )
                 }
+
                 credentials is Map<*, *> && credentials["token"] != null -> {
                     return RepositoryHook(
                         name = name,
@@ -745,6 +749,7 @@ object ScriptYmlUtils {
                         reposIgnoreCondition = reposIgnoreCondition
                     )
                 }
+
                 else -> return RepositoryHook(
                     name = name,
                     reposIgnore = reposIgnore,
@@ -765,12 +770,15 @@ object ScriptYmlUtils {
             preTriggerOn.manual is String && preTriggerOn.manual == EnableType.TRUE.value -> {
                 return ManualRule()
             }
+
             preTriggerOn.manual is String && preTriggerOn.manual == EnableType.FALSE.value -> {
                 return ManualRule(false)
             }
+
             preTriggerOn.manual is Map<*, *> -> kotlin.runCatching {
                 JsonUtil.anyTo(preTriggerOn.manual, object : TypeReference<ManualRule>() {})
             }.getOrElse { ManualRule() }
+
             else -> ManualRule()
         }
     }
@@ -882,9 +890,39 @@ object ScriptYmlUtils {
                     is List<*> -> JsonUtil.anyTo(schedules, object : TypeReference<List<SchedulesRule>>() {})
                     else -> null
                 }
-            }.getOrNull()
+            }.getOrNull()?.onEach { schedule ->
+                initScheduleCron(schedule)
+            }
         }
         return null
+    }
+
+    private fun initScheduleCron(rule: SchedulesRule) {
+        when (rule.cron) {
+            is String -> rule.advanceExpression = listOf(rule.cron)
+            is List<*> -> rule.advanceExpression = rule.cron as List<String>
+        }
+        val newExpression = mutableListOf<String>()
+        rule.interval?.let { interval ->
+            val week = interval.week.map {
+                when (it) {
+                    "Sun", "Sunday" -> 1
+                    "Mon", "Monday" -> 2
+                    "Tue", "Tuesday" -> 3
+                    "Wed", "Wednesday" -> 4
+                    "Thu", "Thursday" -> 5
+                    "Fri", "Friday" -> 6
+                    "Sat", "Saturday" -> 7
+                    else -> return@let
+                }
+            }.ifEmpty { return@let }
+            val timePoints = interval.timePoints ?: listOf("00:00")
+            timePoints.forEach { time ->
+                val (h, m) = time.split(":").map { it.toIntOrNull() ?: return@let }
+                newExpression.add("0 $m $h ? * ${week.joinToString(separator = ",")}")
+            }
+        }
+        rule.newExpression = newExpression
     }
 
     private fun mrRule(
