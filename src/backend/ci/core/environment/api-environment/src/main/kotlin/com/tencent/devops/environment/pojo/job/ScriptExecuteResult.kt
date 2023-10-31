@@ -7,13 +7,13 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("执行脚本的结果")
 data class ScriptExecuteResult(
     @ApiModelProperty(value = "作业实例ID", required = true)
-    @JsonProperty("job_instance_id")
+    @get:JsonProperty("job_instance_id")
     val jobInstanceId: Long,
     @ApiModelProperty(value = "作业实例名称", required = true)
-    @JsonProperty("job_instance_name")
+    @get:JsonProperty("job_instance_name")
     val jobInstanceName: String,
     @ApiModelProperty(value = "步骤实例ID", required = true)
-    @JsonProperty("step_instance_id")
+    @get:JsonProperty("step_instance_id")
     val stepInstanceId: Long
 ) {
     constructor() : this(-1L, "null", -1L)
