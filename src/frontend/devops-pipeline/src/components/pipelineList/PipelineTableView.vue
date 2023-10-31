@@ -17,7 +17,6 @@
         @header-dragend="handelHeaderDragend"
         @row-mouse-enter="handleRowMouseEnter"
         @row-mouse-leave="handleRowMouseLeave"
-        :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
@@ -274,7 +273,7 @@
                 },
                 visibleTagCountList: {},
                 tableWidthMap: {},
-                tableSize: 'small',
+                tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
                 showCollectIndex: -1
@@ -464,6 +463,9 @@
             handleSelectChange (selection, ...args) {
                 this.selectionLength = selection.length
                 this.$emit('selection-change', selection, ...args)
+                this.$nextTick(() => {
+                    this.$refs.pipelineTable?.doLayout?.()
+                })
             },
             goGroup (groupName) {
                 const group = this.groupNamesMap[groupName]
@@ -542,7 +544,7 @@
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline.viewNames)) {
-                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`].clientWidth * 2
+                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`]?.clientWidth * 2
                         const groupNameLength = pipeline.viewNames.length
                         const moreTag = this.$refs?.[`groupNameMore_${index}`]?.$el
                         const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
@@ -616,6 +618,7 @@
         align-items: center;
         justify-content: center;
         background: #EAEBF0;
+        grid-gap: 10px;
         height: 32px;
     }
     .latest-build-multiple-row {

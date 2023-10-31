@@ -36,6 +36,7 @@
             />
 
             <component
+                class="pipeine-config-content-box"
                 v-else-if="dynamicComponentConf"
                 v-bind="dynamicComponentConf.props"
                 :is="dynamicComponentConf.is"
@@ -130,7 +131,6 @@
                                 editable: false,
                                 pipeline: this.pipeline,
                                 isLoading: !this.pipeline
-
                             }
                         }
                     case 'notice':
@@ -237,6 +237,10 @@
         .pipeline-model-content {
             flex: 1;
             overflow: hidden;
+        }
+        .pipeine-config-content-box {
+            height: 100%;
+            overflow: auto;
         }
     }
 </style>

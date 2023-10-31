@@ -1159,7 +1159,7 @@
   "hasNoPermissionPipelineTips": "There are {0} pipelines without permission to delete",
   "removeNoPermissionPipeline": "Remove unprivileged pipeline",
   "clearSelection": "Clear",
-  "selectedCount": "Selected <b>{0}</b> items,",
+  "selectedCount": "Selected <b>{0}</b> items, ",
   "staticGroupTips": "Manually add pipeline to group",
   "dynamicGroupTips": "Dynamic matching based on the name, tag and other attributes",
   "lastModify": "Last modified on ",

@@ -1,11 +1,11 @@
 <template>
     <bk-sideslider
         class="bkci-property-panel"
+        :is-show.sync="visible"
         :width="640"
         :quick-close="true"
         :before-close="handleBeforeClose"
         @animation-end="afterHidden"
-        :is-show.sync="visible"
     >
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">

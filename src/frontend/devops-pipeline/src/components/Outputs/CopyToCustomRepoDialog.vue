@@ -22,6 +22,7 @@
         />
         <section class="copy-custom-repo-tree">
             <bk-big-tree
+                v-if="isCopyDialogShow"
                 ref="customRepoTree"
                 selectable
                 :expand-on-click="false"

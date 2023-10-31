@@ -361,13 +361,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 50px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
-        margin: 10px 0;
+        top: 50px;
         &:before {
             content: '';
             display: block;
