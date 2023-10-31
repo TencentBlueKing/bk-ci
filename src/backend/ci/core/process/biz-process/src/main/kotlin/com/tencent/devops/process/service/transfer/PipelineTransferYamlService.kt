@@ -213,6 +213,10 @@ class PipelineTransferYamlService @Autowired constructor(
             setting = setting,
             model = resource.model
         )
+        val pipelineIndex = mutableListOf<TransferMark>()
+        val triggerIndex = mutableListOf<TransferMark>()
+        val noticeIndex = mutableListOf<TransferMark>()
+        val settingIndex = mutableListOf<TransferMark>()
         val yaml = resource.yaml ?: transfer(
             userId = userId,
             projectId = projectId,
@@ -220,11 +224,6 @@ class PipelineTransferYamlService @Autowired constructor(
             actionType = TransferActionType.FULL_MODEL2YAML,
             data = TransferBody(modelAndSetting)
         ).newYaml ?: return PreviewResponse("")
-
-        val pipelineIndex = mutableListOf<TransferMark>()
-        val triggerIndex = mutableListOf<TransferMark>()
-        val noticeIndex = mutableListOf<TransferMark>()
-        val settingIndex = mutableListOf<TransferMark>()
         TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
             if (key in pipeline_key) pipelineIndex.add(value)
             if (key in trigger_key) triggerIndex.add(value)

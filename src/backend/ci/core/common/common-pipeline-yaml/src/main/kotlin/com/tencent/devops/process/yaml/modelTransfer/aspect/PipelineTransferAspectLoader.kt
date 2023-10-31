@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 import java.util.concurrent.ConcurrentMap
 
-
 object PipelineTransferAspectLoader {
     private val cachedInstances: ConcurrentMap<String, IPipelineTransferAspect> = ConcurrentHashMap()
 

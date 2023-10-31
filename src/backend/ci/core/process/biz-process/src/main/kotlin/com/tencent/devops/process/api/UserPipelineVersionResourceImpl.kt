@@ -75,6 +75,7 @@ import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -322,18 +323,26 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 version = it
             )
         }
+        val (yamlSupported, yamlPreview, msg) = try {
+            val response = transferService.buildPreview(
+                userId, projectId, pipelineId, resource
+            )
+            Triple(true, response, null)
+        } catch (e: PipelineTransferException) {
+            Triple(false, null, e.message)
+        }
         return Result(
             PipelineModelWithYaml(
                 modelAndSetting = modelAndSetting,
-                yamlPreview = transferService.buildPreview(
-                    userId, projectId, pipelineId, resource
-                ),
+                yamlPreview = yamlPreview,
                 description = resource.description,
                 canDebug = resource.status == VersionStatus.COMMITTING,
                 version = resource.version,
                 versionName = resource.versionName,
                 baseVersion = resource.baseVersion,
-                baseVersionName = baseResource?.versionName
+                baseVersionName = baseResource?.versionName,
+                yamlSupported = yamlSupported,
+                yamlInvalidMsg = msg
             )
         )
     }

@@ -13,7 +13,6 @@ import com.tencent.devops.process.yaml.v3.models.job.Job as YamlV3Job
 import com.tencent.devops.process.yaml.v3.models.stage.Stage as YamlV3Stage
 import com.tencent.devops.process.yaml.v3.models.step.Step as YamlV3Step
 
-
 class PipelineTransferAspectWrapper {
     private val aspectTrigger = LinkedList<IPipelineTransferAspectTrigger>()
     private val aspectElement = LinkedList<IPipelineTransferAspectElement>()
@@ -38,7 +37,6 @@ class PipelineTransferAspectWrapper {
         BEFORE,
         AFTER;
     }
-
 
     /*
     * AspectType.BEFORE: model -> yaml before stage
@@ -143,7 +141,6 @@ class PipelineTransferAspectWrapper {
         }
         return res
     }
-
 
     private fun aspectAfter(): Any? {
         val wrappers = iPipelineTransferAspects(clzName)
