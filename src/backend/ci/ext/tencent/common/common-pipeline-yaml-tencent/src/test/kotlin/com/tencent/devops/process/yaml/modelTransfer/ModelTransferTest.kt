@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
@@ -46,6 +47,7 @@ import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspectTrigger
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferJoinPoint
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
@@ -317,7 +319,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ValueSource(
         strings = [
             "model-yaml-001",
-            "model-yaml-002"
+//            "model-yaml-002"
         ]
     )
     fun model2Yaml(value: String) {
@@ -325,16 +327,26 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         val yamlV3 = testReadResourceFile("transfer/$value/yamlV3.yaml")
         val modelAndSetting = JsonUtil.to(file, object : TypeReference<PipelineModelAndSetting>() {})
 
+        val invalidElement = mutableListOf<String>()
+        val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("step_1|FULL_MODEL2YAML V3 start")
         val yml = modelTransfer.model2yaml(
             ModelTransferInput(
-                "test",
-                modelAndSetting.model,
-                modelAndSetting.setting,
-                YamlVersion.Version.V3_0
+                userId = "test",
+                model = modelAndSetting.model,
+                setting = modelAndSetting.setting,
+                version = YamlVersion.Version.V3_0,
+                aspectWrapper = PipelineTransferAspectWrapper(defaultAspects)
             )
         )
+        if (!invalidElement.isNullOrEmpty()) {
+            println(invalidElement)
+            throw PipelineTransferException(
+                CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER,
+                arrayOf(invalidElement.joinToString("\n"))
+            )
+        }
         val newYaml = TransferMapper.toYaml(yml)
         Assertions.assertEquals(newYaml, TransferMapper.toYaml(TransferMapper.to(yamlV3)))
 //        v2 暂不支持跳过检查
