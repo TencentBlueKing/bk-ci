@@ -46,9 +46,6 @@ class RemoteDevCvmService @Autowired constructor(
 
     // 新增模板
     fun batchAddCvm(userId: String, cvmList: List<RemotedevCvmData>): Boolean {
-        logger.info(
-            "RemoteDevCvmService|batchAddCvm|userId|$userId|cvmList|$cvmList"
-        )
         // 模板信息写入DB
         remoteDevCvmDao.batchAddCvm(
             cvmList = cvmList,
@@ -62,11 +59,6 @@ class RemoteDevCvmService @Autowired constructor(
         id: Long,
         remotedevCvmData: RemotedevCvmData
     ): Boolean {
-        logger.info(
-            "RemoteDevCvmService|updateCvm|" +
-                "id|$id|remotedevCvmData|$remotedevCvmData"
-        )
-
         // 更新模板信息
         remoteDevCvmDao.updateCvm(
             id = id,
@@ -81,7 +73,6 @@ class RemoteDevCvmService @Autowired constructor(
     fun deleteCvm(
         id: Long
     ): Boolean {
-        logger.info("RemoteDevCvmService|deleteCvm|id|$id")
         // 删除模板信息
         remoteDevCvmDao.deleteCvm(
             id = id,
