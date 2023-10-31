@@ -27,23 +27,15 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
-import com.tencent.devops.common.api.util.OkhttpUtils
-import java.io.File
 import java.net.URLEncoder
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SampleStoreI18nMessageServiceImpl::class.java)
-    }
 
     override fun getFileStr(
         projectCode: String,
@@ -60,18 +52,5 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             repoName = REPO_NAME_PLUGIN,
             filePath = filePath
         ).data
-    }
-
-    override fun downloadFile(
-        filePath: String,
-        file: File,
-        repositoryHashId: String?,
-        branch: String?,
-        format: String?
-    ) {
-        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
-                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
-        logger.info("downloadFile filePath:$filePath")
-        OkhttpUtils.downloadFile(url, file)
     }
 }

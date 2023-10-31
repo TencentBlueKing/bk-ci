@@ -333,14 +333,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         branch: String? = null
     ): String?
 
-    abstract fun downloadFile(
-        filePath: String,
-        file: File,
-        repositoryHashId: String? = null,
-        branch: String? = null,
-        format: String? = null
-    )
-
     /**
      * 获取存在文件引用的配置
      */
