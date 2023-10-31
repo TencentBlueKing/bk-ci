@@ -88,10 +88,10 @@ class PermissionService @Autowired constructor(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = name) ?: return emptyList()
-                    if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
-                        return listOf(ws.createUserId)
+                    return if (ws.ownerType == WorkspaceOwnerType.PERSONAL) {
+                        listOf(ws.createUserId)
                     } else {
-                        return workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
+                        workspaceSharedDao.fetchWorkspaceSharedInfo(dslContext, ws.workspaceName)
                             .filter { it.type == WorkspaceShared.AssignType.OWNER }.map { it.sharedUser }
                     }
                 }
@@ -109,10 +109,10 @@ class PermissionService @Autowired constructor(
             }
         )
 
-    fun checkOwnerPermission(userId: String, workspaceName: String) {
+    fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -123,7 +123,8 @@ class PermissionService @Autowired constructor(
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserManager(userId, projectId)) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)
+            ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -148,6 +149,25 @@ class PermissionService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
+            )
+        }
+        return true
+    }
+
+    // 判断用户是否项目成员
+    fun checkUserVisitPermission(
+        userId: String,
+        projectCode: String
+    ): Boolean {
+        val result =
+            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId
+            )
+        if (result.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectCode")
             )
         }
         return true
