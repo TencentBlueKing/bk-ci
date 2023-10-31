@@ -122,10 +122,37 @@ class ElementTransfer @Autowired(required = false) constructor(
                 return@forEach
             }
             if (element is TimerTriggerElement) {
+                val timePoints = element.newExpression?.map {
+                    val (_, m, h) = it.split(" ")
+                    "${h.padStart(2, '0')}:${m.padStart(2, '0')}"
+                }
+                val week: List<String>? = element.newExpression
+                    ?.firstOrNull()
+                    ?.split(" ")
+                    ?.get(5)
+                    ?.split(",")
+                    ?.map m@{ w ->
+                        when (w) {
+                            "1" -> "Sun"
+                            "2" -> "Mon"
+                            "3" -> "Tue"
+                            "4" -> "Wed"
+                            "5" -> "Thu"
+                            "6" -> "Fri"
+                            "7" -> "Sat"
+                            else -> return@m ""
+                        }
+                    }
                 schedules.add(
                     SchedulesRule(
-                        cron = element.newExpression?.firstOrNull(),
-                        advanceCron = element.advanceExpression?.ifEmpty { null },
+                        interval = week?.let { SchedulesRule.Interval(week, timePoints) },
+                        cron = if (element.advanceExpression?.size == 1) {
+                            element.advanceExpression?.first()
+                        } else {
+                            element.advanceExpression
+                        },
+                        repoName = element.repoName,
+                        branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.isElementEnable().nullIfDefault(true)
                     )

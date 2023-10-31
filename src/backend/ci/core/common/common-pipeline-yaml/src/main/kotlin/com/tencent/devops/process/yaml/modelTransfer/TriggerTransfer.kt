@@ -556,12 +556,14 @@ class TriggerTransfer @Autowired(required = false) constructor(
             )
         }
 
-        triggerOn.schedules?.let { remote ->
-            remote.forEach { timer ->
+        triggerOn.schedules?.let { schedule ->
+            schedule.forEach { timer ->
                 elementQueue.add(
                     TimerTriggerElement(
-                        newExpression = timer.cron?.let { listOf(it) },
-                        advanceExpression = timer.advanceCron,
+                        repoName = timer.repoName,
+                        branches = timer.branches,
+                        newExpression = timer.newExpression,
+                        advanceExpression = timer.advanceExpression,
                         noScm = timer.always != true
                     ).checkTriggerElementEnable(timer.enable)
                 )

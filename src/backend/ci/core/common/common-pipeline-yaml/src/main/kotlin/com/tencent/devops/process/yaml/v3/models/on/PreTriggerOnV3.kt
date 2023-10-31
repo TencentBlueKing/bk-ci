@@ -40,7 +40,6 @@ data class PreTriggerOnV3(
     @ApiModelProperty(name = "repo-name")
     val repoName: String? = null,
     var type: String? = null,
-    val credentials: String? = null,
     override val push: Any? = null,
     override val tag: Any? = null,
     override val mr: Any? = null,
