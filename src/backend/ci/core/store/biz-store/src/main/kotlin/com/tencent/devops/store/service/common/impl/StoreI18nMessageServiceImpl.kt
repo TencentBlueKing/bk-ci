@@ -237,7 +237,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileName = propertiesFileName,
                     repositoryHashId = repositoryHashId
                 ) ?: return@forEach
-                val textReferenceContentMap= getTextReferenceFileContent(fileProperties)
+                val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
                 var textReferenceFileDir: File? = null
                 if (textReferenceContentMap.isNotEmpty()) {
                     textReferenceFileDir = storeFileService.getTextReferenceFileDir(
@@ -391,6 +391,4 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         }
         return result
     }
-
-
 }
