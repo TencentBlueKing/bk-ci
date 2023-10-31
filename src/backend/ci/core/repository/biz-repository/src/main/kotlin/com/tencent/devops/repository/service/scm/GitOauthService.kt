@@ -206,16 +206,8 @@ class GitOauthService @Autowired constructor(
         val gitProjectId = authParams["gitProjectId"] as String?
         val token = gitService.getToken(userId, code)
         // 在oauth授权过程中,可以输入公共账号去鉴权，所以需要再验证token所属人
-        var oauthUserId = gitService.getUserInfoByToken(token.accessToken).username
-        if (oauthUserId.isNullOrBlank()) {
-            logger.warn("invalid user info,username is empty,use userId[$userId]")
-            oauthUserId = userId
-        }
-        val existToken = doGetAccessToken(oauthUserId)
-        if (existToken == null || oauthUserId != userId) {
-            logger.info("save access token,oauthUserId[$oauthUserId],userId[$userId]")
-            saveAccessToken(oauthUserId, token)
-        }
+        val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
+        saveAccessToken(oauthUserId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return GitOauthCallback(
