@@ -4,10 +4,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.pojo.job.jobCloudRes.JobCloudResult
-import com.tencent.devops.environment.pojo.job.jobCloudReq.JobCloudAuthenticationReq
-import com.tencent.devops.environment.pojo.job.jobCloudReq.JobCloudPermission
-import com.tencent.devops.environment.pojo.job.jobCloudRes.JobCloudResp
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudPermission
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResp
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
