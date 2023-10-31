@@ -46,6 +46,7 @@ dependencies {
     api("ch.qos.logback:logback-core")
     api("ch.qos.logback:logback-classic")
     api("com.github.ben-manes.caffeine:caffeine")
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }
 
