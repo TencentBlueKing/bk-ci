@@ -35,28 +35,22 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(
     val authPermissionApi: AuthPermissionApi,
-    authProjectApi: AuthProjectApi,
-    pipelineAuthServiceCode: PipelineAuthServiceCode,
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
     val authResourceApi: AuthResourceApi
-) : AbstractPipelineTemplatePermissionService(
-    authProjectApi = authProjectApi,
-    pipelineAuthServiceCode = pipelineAuthServiceCode
-) {
+) : PipelineTemplatePermissionService {
     override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
@@ -110,28 +104,17 @@ class RbacPipelineTemplatePermissionService constructor(
     override fun getResourcesByPermission(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>,
-        templateRecords: Result<out Record>?
-    ): Map<AuthPermission, Result<out Record>> {
-        if (templateRecords == null) return emptyMap()
-        // 是否开启模板权限管理
-        val enableTemplatePermissionManage = enableTemplatePermissionManage(projectId)
-        return permissions.associateWith { permission ->
-            if (!enableTemplatePermissionManage) {
-                handleTemplateWithoutPermissionManage(
-                    permission = permission,
-                    templateRecords = templateRecords,
-                    userId = userId,
-                    projectId = projectId
-                )
-            } else {
-                handleTemplateWithPermissionManage(
-                    permission = permission,
-                    templateRecords = templateRecords,
-                    userId = userId,
-                    projectId = projectId
-                )
-            }
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        return permissions.associateWith {
+            authPermissionApi.getUserResourceByPermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                permission = it,
+                supplier = null
+            )
         }
     }
 
@@ -181,30 +164,9 @@ class RbacPipelineTemplatePermissionService constructor(
         }
     }
 
-    private fun enableTemplatePermissionManage(projectId: String): Boolean {
+    override fun enableTemplatePermissionManage(projectId: String): Boolean {
         val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectId).data
         return projectInfo != null && projectInfo.properties?.enableTemplatePermissionManage == true
-    }
-
-    private fun handleTemplateWithPermissionManage(
-        permission: AuthPermission,
-        templateRecords: Result<out Record>,
-        userId: String,
-        projectId: String
-    ): Result<out Record> {
-        val resources = authPermissionApi.getUserResourceByPermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            permission = permission,
-            supplier = null
-        )
-        return templateRecords.filter { record ->
-            val tTemplate = TTemplate.T_TEMPLATE
-            val templateId = record[tTemplate.ID]
-            resources.contains(templateId)
-        } as Result<out Record>
     }
 
     companion object {

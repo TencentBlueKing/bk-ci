@@ -90,12 +90,4 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
-        return Result(
-            permissionMigrateService.fitSecToRbacAuth(
-                migrateProjectConditionDTO = migrateProjectConditionDTO
-            )
-        )
-    }
 }

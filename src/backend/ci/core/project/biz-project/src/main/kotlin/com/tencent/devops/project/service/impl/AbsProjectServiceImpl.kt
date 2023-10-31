@@ -1132,7 +1132,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectProperties(
-        userId: String,
+        userId: String?,
         projectCode: String,
         properties: ProjectProperties
     ): Boolean {

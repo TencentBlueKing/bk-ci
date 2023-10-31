@@ -50,6 +50,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -200,6 +201,14 @@ class RbacPermissionMigrateService constructor(
             resourceType = resourceType,
             projectCreator = projectCreator
         )
+        // 若迁移流水线模板权限，需要修改项目的properties字段
+        if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
+            val properties = client.get(ServiceProjectResource::class).get(projectCode).data!!.properties
+                ?: ProjectProperties()
+            properties.enableTemplatePermissionManage = true
+            logger.info("update project($projectCode) properties|$properties")
+            client.get(ServiceProjectResource::class).updateProjectProperties(projectCode, properties)
+        }
         return true
     }
 
@@ -229,22 +238,6 @@ class RbacPermissionMigrateService constructor(
         logger.info("handover permissions :$permissionHandoverDTO")
         toRbacExecutorService.submit {
             migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
-        }
-        return true
-    }
-
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        logger.info("fit sec to rbac:$migrateProjectConditionDTO")
-        val traceId = MDC.get(TraceTag.BIZID)
-        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
-            toRbacExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                migratePermissionHandoverService.fitSecToRbacAuth(
-                    projectCode = projectCode,
-                    projectCreator = migrateProjectConditionDTO.projectCreator!!,
-                    resourceType = migrateProjectConditionDTO.resourceType!!
-                )
-            }
         }
         return true
     }

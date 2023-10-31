@@ -28,8 +28,6 @@
 package com.tencent.devops.process.permission.template
 
 import com.tencent.devops.common.auth.api.AuthPermission
-import org.jooq.Record
-import org.jooq.Result
 
 interface PipelineTemplatePermissionService {
     /**
@@ -72,8 +70,7 @@ interface PipelineTemplatePermissionService {
         userId: String,
         projectId: String,
         permissions: Set<AuthPermission>,
-        templateRecords: Result<out Record>?
-    ): Map<AuthPermission, Result<out Record>>
+    ): Map<AuthPermission, List<String>>
 
     /**
      * 注册流水线模板到权限中心与权限关联
@@ -112,4 +109,11 @@ interface PipelineTemplatePermissionService {
         projectId: String,
         templateId: String
     )
+
+    /**
+     * 是否开启流水线模板管理
+     * @param projectId projectId
+     * @param templateId 流水线模板ID
+     */
+    fun enableTemplatePermissionManage(projectId: String): Boolean
 }

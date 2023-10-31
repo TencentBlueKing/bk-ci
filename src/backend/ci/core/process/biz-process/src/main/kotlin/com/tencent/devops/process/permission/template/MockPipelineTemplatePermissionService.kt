@@ -32,31 +32,18 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.constant.ProcessMessageCode
-import org.jooq.Record
-import org.jooq.Result
+import org.slf4j.LoggerFactory
 
 class MockPipelineTemplatePermissionService constructor(
-    authProjectApi: AuthProjectApi,
-    pipelineAuthServiceCode: PipelineAuthServiceCode,
-) : AbstractPipelineTemplatePermissionService(
-    authProjectApi = authProjectApi,
-    pipelineAuthServiceCode = pipelineAuthServiceCode
-) {
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode
+) : PipelineTemplatePermissionService {
     override fun getResourcesByPermission(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>,
-        templateRecords: Result<out Record>?
-    ): Map<AuthPermission, Result<out Record>> {
-        if (templateRecords == null) return emptyMap()
-        return permissions.associateWith { permission ->
-            handleTemplateWithoutPermissionManage(
-                permission = permission,
-                templateRecords = templateRecords,
-                userId = userId,
-                projectId = projectId
-            )
-        }
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     override fun checkPipelineTemplatePermission(
@@ -108,10 +95,16 @@ class MockPipelineTemplatePermissionService constructor(
         templateId: String
     ) = Unit
 
+    override fun enableTemplatePermissionManage(projectId: String): Boolean = false
+
     override fun modifyResource(
         userId: String,
         projectId: String,
         templateId: String,
         templateName: String
     ) = Unit
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MockPipelineTemplatePermissionService::class.java)
+    }
 }
