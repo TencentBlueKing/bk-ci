@@ -76,6 +76,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -106,6 +107,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
+    private val remoteDevCvmService: RemoteDevCvmService,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
@@ -443,6 +445,11 @@ class WorkspaceService @Autowired constructor(
                 projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
             )
         }
+    }
+
+    fun getRemotedevCvm(projectId: String?): List<RemotedevCvmData> {
+        logger.info("get remotedev cvm list")
+        return remoteDevCvmService.getRemotedevCvmList(projectId)
     }
 
     private fun parsingWorkspace(

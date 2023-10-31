@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.model.remotedev.tables.TRemotedevCvm
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevCvmRecord
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -73,11 +74,16 @@ class RemoteDevCvmDao {
     }
 
     fun queryCvmList(
+        projectId: String?,
         dslContext: DSLContext
     ): Result<TRemotedevCvmRecord> {
-        return with(TRemotedevCvm.T_REMOTEDEV_CVM) {
-            dslContext.selectFrom(this).fetch()
+        val conditions = mutableListOf<Condition>()
+        with(TRemotedevCvm.T_REMOTEDEV_CVM) {
+            projectId?.let {
+                conditions.add(PROJECT_ID.eq(it))
+            }
         }
+        return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM).fetch()
     }
 
     fun updateCvm(

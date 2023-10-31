@@ -16,7 +16,7 @@ class OpRemoteDevCvmResourceImpl @Autowired constructor(
     }
 
     override fun getRemotedevCvmList(userId: String): Result<List<RemotedevCvmData>> {
-        return Result(remoteDevCvmService.getRemotedevCvmList())
+        return Result(remoteDevCvmService.getRemotedevCvmList(projectId = null))
     }
 
     override fun updateRemotedevCvm(userId: String, cvmId: Long, remotedevCvmData: RemotedevCvmData): Result<Boolean> {

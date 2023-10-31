@@ -92,10 +92,12 @@ class RemoteDevCvmService @Autowired constructor(
     }
 
     // 获取工作空间模板
-    fun getRemotedevCvmList(): List<RemotedevCvmData> {
+    fun getRemotedevCvmList(projectId: String?): List<RemotedevCvmData> {
         val result = mutableListOf<RemotedevCvmData>()
         remoteDevCvmDao.queryCvmList(
+            projectId = projectId,
             dslContext = dslContext
+
         ).forEach {
             result.add(
                 RemotedevCvmData(
