@@ -30,23 +30,11 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.constant.MASTER
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.store.pojo.common.TextReferenceFileParseRequest
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
-import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.FileSystemUtils
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
@@ -97,85 +85,5 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 null
             }
         }
-    }
-
-    override fun downloadFile(
-        filePath: String,
-        file: File,
-        repositoryHashId: String?,
-        branch: String?,
-        format: String?
-    ) {
-        val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
-        val url = "$serviceUrl/service/git/downloadGitRepoFile?" +
-                "repoId=$repositoryHashId&repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
-                "&tokenType=${TokenTypeEnum.OAUTH.name}" +
-                "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
-                "&format=${format ?: "zip"}"
-        OkhttpUtils.downloadFile(url, file)
-    }
-
-    override fun getFileNames(
-        projectCode: String,
-        fileDir: String,
-        i18nDir: String?,
-        repositoryHashId: String?,
-        branch: String?
-    ): List<String>? {
-        return if (!repositoryHashId.isNullOrBlank()) {
-            val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-                repoId = repositoryHashId,
-                refName = branch,
-                path = i18nDir,
-                tokenType = TokenTypeEnum.PRIVATE_KEY
-            ).data
-            gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
-        } else {
-            val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
-            client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = bkrepoStoreProjectId,
-                repoName = BkRepoEnum.PLUGIN.repoName,
-                filePath = filePath
-            ).data
-        }
-    }
-
-    override fun textReferenceFileAnalysis(
-        userId: String,
-        projectCode: String,
-        request: TextReferenceFileParseRequest
-    ): String {
-        if (request.repositoryHashId.isNullOrBlank()) return request.content
-        var result = request.content
-        val uuid = UUIDUtil.generate()
-        val fileDirPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(
-            userId = userId,
-            atomDir = request.fileDir
-        ) + "$fileSeparator$uuid"
-        val file = File(fileDirPath, "$uuid.zip")
-        try {
-            downloadFile(
-                filePath = "file",
-                file = file,
-                repositoryHashId = request.repositoryHashId,
-                branch = request.branch
-            )
-            if (file.exists()) {
-                ZipUtil.unZipFile(file, fileDirPath, true)
-                result = storeFileService.textReferenceFileAnalysis(
-                    userId = userId,
-                    content = request.content,
-                    client = client,
-                    fileDirPath = "$fileDirPath${fileSeparator}file"
-                )
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
-        } finally {
-            FileSystemUtils.deleteRecursively(File(fileDirPath))
-        }
-        return result
     }
 }

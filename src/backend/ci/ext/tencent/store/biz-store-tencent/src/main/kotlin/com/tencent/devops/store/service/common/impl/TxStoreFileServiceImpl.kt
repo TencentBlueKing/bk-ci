@@ -27,32 +27,47 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.MASTER
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
+import java.net.URLEncoder
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
 class TxStoreFileServiceImpl : StoreFileService() {
 
+    @Value("\${store.bkrepo.projectId:bk-store}")
+    private val bkrepoStoreProjectId: String = "bk-store"
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreFileServiceImpl::class.java)
     }
     override fun uploadFileToPath(
         userId: String,
-        client: Client,
         result: MutableMap<String, String>,
         localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String> {
@@ -78,13 +93,76 @@ class TxStoreFileServiceImpl : StoreFileService() {
         return result
     }
 
-    override fun serviceArchiveAtomFile(
+    override fun getFileNames(
+        projectCode: String,
+        fileDir: String,
+        i18nDir: String?,
+        repositoryHashId: String?,
+        branch: String?
+    ): List<String>? {
+        return if (!repositoryHashId.isNullOrBlank()) {
+            val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
+                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                repoId = repositoryHashId,
+                refName = branch,
+                path = i18nDir,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            ).data
+            gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
+        } else {
+            val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
+            client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
+                userId = BKREPO_DEFAULT_USER,
+                projectId = bkrepoStoreProjectId,
+                repoName = BkRepoEnum.PLUGIN.repoName,
+                filePath = filePath
+            ).data
+        }
+    }
+
+    override fun textReferenceFileDownload(
         userId: String,
-        client: Client,
-        archiveAtomRequest: ArchiveAtomRequest,
-        file: File
-    ): Result<Boolean?> {
-        TODO("内部版发布不需要归档插件包")
+        textReferenceFileCache: BkDiskLruFileCache,
+        fileCacheKey: String,
+        request: TextReferenceFileDownloadRequest
+    ): File? {
+        val separator = File.separator
+        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
+            userId = userId,
+            atomDir = request.fileDir
+        )
+        val zipFile= File("$fileDirPath${separator}file.zip")
+        try {
+            downloadFile(
+                filePath = "file",
+                file = zipFile,
+                repositoryHashId = request.repositoryHashId,
+                branch = request.branch
+            )
+            if (zipFile.exists()) {
+                ZipUtil.unZipFile(zipFile, fileDirPath, true)
+                textReferenceFileCache.put(fileCacheKey, zipFile)
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
+        }
+        return File("$fileDirPath${fileSeparator}file")
+    }
+
+    override fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String?,
+        branch: String?,
+        format: String?
+    ) {
+        val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
+        val url = "$serviceUrl/service/git/downloadGitRepoFile?" +
+                "repoId=$repositoryHashId&repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
+                "&tokenType=${TokenTypeEnum.OAUTH.name}" +
+                "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
+                "&format=${format ?: "zip"}"
+        OkhttpUtils.downloadFile(url, file)
     }
 
     private fun serviceUploadFile(
