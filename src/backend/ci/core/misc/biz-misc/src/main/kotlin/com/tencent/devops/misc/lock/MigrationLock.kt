@@ -30,14 +30,23 @@ package com.tencent.devops.misc.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class ProjectMigrationLock(redisOperation: RedisOperation, projectId: String) :
+class MigrationLock(redisOperation: RedisOperation, projectId: String, pipelineId: String? = null) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:project:$projectId:migration",
+        lockKey = getLockKey(projectId, pipelineId),
         expiredTimeInSeconds = 1800L
     ) {
     override fun decorateKey(key: String): String {
         // key无需加上集群信息前缀来区分
         return key
+    }
+}
+
+private fun getLockKey(projectId: String, pipelineId: String? = null): String {
+    val defaultKey = "lock:migration:project:$projectId"
+    return if (!pipelineId.isNullOrBlank()) {
+        "$defaultKey:pipeline:$pipelineId"
+    } else {
+        defaultKey
     }
 }

@@ -53,6 +53,7 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
+import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
@@ -319,10 +320,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deleteTemplatePipeline(dslContext: DSLContext, projectId: String) {
+    fun deleteTemplatePipeline(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
@@ -348,10 +349,18 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineTriggerReview(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
+        with(TPipelineTriggerReview.T_PIPELINE_TRIGGER_REVIEW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
@@ -364,10 +373,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineRecentUse(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineRecentUse(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineRecentUse.T_PIPELINE_RECENT_USE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
