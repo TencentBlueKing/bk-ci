@@ -28,7 +28,6 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -109,10 +108,14 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
     }
 
-    fun baseTriggers2yaml(elements: List<Element>): TriggerOn? {
+    fun baseTriggers2yaml(elements: List<Element>, aspectWrapper: PipelineTransferAspectWrapper): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
         elements.forEach { element ->
+            aspectWrapper.setModelElement4Model(
+                element,
+                PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     enable = element.isElementEnable().nullIfDefault(true),
@@ -170,59 +173,75 @@ class ElementTransfer @Autowired(required = false) constructor(
         if (schedules.isNotEmpty()) {
             triggerOn.value.schedules = schedules
         }
-        if (triggerOn.isInitialized()) return triggerOn.value
+        if (triggerOn.isInitialized()) {
+            aspectWrapper.setYamlTriggerOn(
+                triggerOn.value,
+                PipelineTransferAspectWrapper.AspectType.AFTER
+            )
+            return triggerOn.value
+        }
         return null
     }
 
-    fun scmTriggers2Yaml(elements: List<Element>, projectId: String): Map<ScmType, TriggerOn> {
+    fun scmTriggers2Yaml(
+        elements: List<Element>,
+        projectId: String,
+        aspectWrapper: PipelineTransferAspectWrapper
+    ): Map<ScmType, TriggerOn> {
         val res = mutableMapOf<ScmType, TriggerOn>()
         val fix = elements.groupBy { it.getClassType() }
 
         val gitElement = fix[CodeGitWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeGitWebHookTriggerElement)
         }
         if (!gitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_GIT })
         }
 
         val tGitElement = fix[CodeTGitWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeTGitWebHookTriggerElement)
         }
         if (!tGitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_TGIT })
         }
 
         val githubElement = fix[CodeGithubWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeGithubWebHookTriggerElement)
         }
         if (!githubElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.GITHUB })
         }
 
         val svnElement = fix[CodeSVNWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeSVNWebHookTriggerElement)
         }
         if (!svnElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(svnElement, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(svnElement, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_SVN })
         }
 
         val p4Element = fix[CodeP4WebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeP4WebHookTriggerElement)
         }
         if (!p4Element.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(p4Element, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(p4Element, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_P4 })
         }
 
         val gitlabElement = fix[CodeGitlabWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
             WebHookTriggerElementChanger(it as CodeGitlabWebHookTriggerElement)
         }
         if (!gitlabElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId, aspectWrapper)
             res.putAll(gitTrigger.associateBy { ScmType.CODE_GITLAB })
         }
         return res
@@ -237,7 +256,10 @@ class ElementTransfer @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
-            yamlInput.aspectWrapper.setYamlStep4Yaml(step, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            yamlInput.aspectWrapper.setYamlStep4Yaml(
+                yamlStep = step,
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             val element: Element = yaml2element(
                 userId = yamlInput.userId,
                 step = step,
@@ -427,18 +449,26 @@ class ElementTransfer @Autowired(required = false) constructor(
 
     fun model2YamlSteps(
         job: Container,
-        projectId: String
+        projectId: String,
+        aspectWrapper: PipelineTransferAspectWrapper
     ): List<PreStep> {
         val stepList = mutableListOf<PreStep>()
         job.elements.forEach { element ->
+            aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.BEFORE)
             val step = element2YamlStep(element, projectId)
-            stepList.add(step)
+            aspectWrapper.setYamlStep4Yaml(
+                yamlPreStep = step,
+                aspectType = PipelineTransferAspectWrapper.AspectType.AFTER
+            )
+            if (step != null) {
+                stepList.add(step)
+            }
         }
         return stepList
     }
 
     @Suppress("ComplexMethod")
-    fun element2YamlStep(element: Element, projectId: String): PreStep {
+    fun element2YamlStep(element: Element, projectId: String): PreStep? {
         val uses = "${element.getAtomCode()}@${element.version}"
         return when {
             element.getAtomCode() == "checkout" && element is MarketBuildAtomElement -> {
@@ -514,10 +544,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             } else {
                 null
             }
-        } ?: throw PipelineTransferException(
-            ELEMENT_NOT_SUPPORT_TRANSFER,
-            arrayOf(uses)
-        )
+        }
     }
 
     protected fun makeServiceElementList(job: Job): MutableList<Element> {

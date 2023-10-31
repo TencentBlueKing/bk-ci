@@ -146,7 +146,10 @@ class ModelTransfer @Autowired constructor(
 
         // 其他的stage
         yamlInput.yaml.formatStages().forEach { stage ->
-            yamlInput.aspectWrapper.setYamlStage4Yaml(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            yamlInput.aspectWrapper.setYamlStage4Yaml(
+                yamlStage = stage,
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             stageList.add(
                 modelStage.yaml2Stage(
                     stage = stage,
@@ -217,17 +220,23 @@ class ModelTransfer @Autowired constructor(
         val stages = mutableListOf<PreStage>()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
-            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId)
+            modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId, modelInput.aspectWrapper)
+            modelInput.aspectWrapper.setYamlStage4Yaml(
+                yamlPreStage = ymlStage,
+                aspectType = PipelineTransferAspectWrapper.AspectType.AFTER
+            )
             stages.add(ymlStage)
         }
         yaml.stages = TransferMapper.anyTo(stages)
         yaml.variables = variableTransfer.makeVariableFromModel(modelInput.model)
         val lastStage = modelInput.model.stages.last()
-        val finally = if (lastStage.finally)
-            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId).jobs else null
+        val finally = if (lastStage.finally) {
+            modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId, modelInput.aspectWrapper).jobs
+        } else null
         yaml.finally = finally as LinkedHashMap<String, Any>?
         yaml.concurrency = makeConcurrency(modelInput.setting)
-
         return yaml
     }
 
@@ -278,9 +287,20 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeTriggerOn(modelInput: ModelTransferInput): List<IPreTriggerOn> {
+        modelInput.aspectWrapper.setModelStage4Model(
+            modelInput.model.stages[0],
+            PipelineTransferAspectWrapper.AspectType.BEFORE
+        )
+        modelInput.aspectWrapper.setModelJob4Model(
+            modelInput.model.stages[0].containers[0],
+            PipelineTransferAspectWrapper.AspectType.BEFORE
+        )
         val triggers = (modelInput.model.stages[0].containers[0] as TriggerContainer).elements
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers)?.toPre(modelInput.version)
-        val scmTrigger = elementTransfer.scmTriggers2Yaml(triggers, modelInput.setting.projectId)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
+            ?.toPre(modelInput.version)
+        val scmTrigger = elementTransfer.scmTriggers2Yaml(
+            triggers, modelInput.setting.projectId, modelInput.aspectWrapper
+        )
         when (modelInput.version) {
             YamlVersion.Version.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器

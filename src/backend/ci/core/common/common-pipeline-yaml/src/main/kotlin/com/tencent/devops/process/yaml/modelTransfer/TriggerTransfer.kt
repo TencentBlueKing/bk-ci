@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
@@ -176,7 +177,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
     }
 
     @Suppress("ComplexMethod")
-    fun git2YamlTriggerOn(elements: List<WebHookTriggerElementChanger>, projectId: String): List<TriggerOn> {
+    fun git2YamlTriggerOn(
+        elements: List<WebHookTriggerElementChanger>,
+        projectId: String,
+        aspectWrapper: PipelineTransferAspectWrapper
+    ): List<TriggerOn> {
         val res = mutableMapOf<String, TriggerOn>()
         elements.forEach { git ->
             val name = when (git.repositoryType) {
@@ -276,6 +281,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin()
                 )
             }
+            aspectWrapper.setYamlTriggerOn(nowExist, PipelineTransferAspectWrapper.AspectType.AFTER)
         }
         return res.values.toList()
     }

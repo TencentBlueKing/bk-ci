@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
@@ -68,7 +69,10 @@ class YamlIndexService @Autowired constructor(
         val position = position(
             userId = userId, line = line, column = column, yaml = data.yaml, preYaml = pYml
         )
-        val yml = elementTransfer.element2YamlStep(data.data, projectId)
+        val yml = elementTransfer.element2YamlStep(data.data, projectId) ?: throw PipelineTransferException(
+            ELEMENT_NOT_SUPPORT_TRANSFER,
+            arrayOf("${data.data.getClassType()}(${data.data.name})")
+        )
         val index = TransferMapper.indexYaml(position = position, pYml = pYml, yml = yml, type = data.type)
         val outYaml = TransferMapper.toYaml(pYml)
         return ElementInsertResponse(yaml = outYaml, mark = TransferMapper.markYaml(index, outYaml))
