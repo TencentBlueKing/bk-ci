@@ -131,7 +131,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
             userId = userId,
             atomDir = request.fileDir
         )
-        val zipFile= File("$fileDirPath${separator}file.zip")
+        val zipFile = File("$fileDirPath${separator}file.zip")
         try {
             downloadFile(
                 filePath = "file",
