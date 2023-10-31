@@ -12,11 +12,9 @@ data class JobResult<out T>(
     @ApiModelProperty("结果bool值")
     val result: Boolean? = null,
     @ApiModelProperty("请求ID", required = true)
-    @get:JsonProperty("job_request_id")
+    @JsonProperty("job_request_id")
     val jobRequestId: String?,
     @ApiModelProperty("数据")
     @BkFieldI18n
     val data: T? = null
-) {
-    constructor(data: T) : this(0, true, null, data)
-}
+)
