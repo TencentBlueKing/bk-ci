@@ -34,8 +34,10 @@ import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
@@ -85,6 +87,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
 
     override fun textReferenceFileDownload(
         userId: String,
+        textReferenceFileCache: BkDiskLruFileCache,
+        fileCacheKey: String,
         request: TextReferenceFileDownloadRequest
     ): File? {
         val separator = File.separator
@@ -107,7 +111,11 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                 File(downloadPath, it)
             )
         }
-        return File(downloadPath)
+        val fileDownloadDir = File(downloadPath)
+        val zipPath = "$downloadPath${File.separator}file.zip"
+        val zipFile = ZipUtil.zipDir(fileDownloadDir, zipPath)
+        textReferenceFileCache.put(fileCacheKey, zipFile)
+        return fileDownloadDir
     }
 
     @Suppress("NestedBlockDepth")

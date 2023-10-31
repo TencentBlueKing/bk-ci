@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
@@ -83,14 +84,16 @@ abstract class StoreFileService {
         var fileDir: File? = null
         try {
             textReferenceFileCache.get(fileCacheKey, textReferenceFilePack)
-            if (!textReferenceFilePack.exists()) {
-                fileDir = textReferenceFileDownload(userId, request) ?: return null
-                val zipPath = "${fileDir.absolutePath}${File.separator}file.zip"
-                val zipFile = ZipUtil.zipDir(fileDir, zipPath)
-                textReferenceFileCache.put(fileCacheKey, zipFile)
+            fileDir = if (!textReferenceFilePack.exists()) {
+                textReferenceFileDownload(
+                    userId = userId,
+                    textReferenceFileCache = textReferenceFileCache,
+                    fileCacheKey = fileCacheKey,
+                    request = request
+                ) ?: return null
             } else {
                 ZipUtil.unZipFile(textReferenceFilePack, fileDirPath, true)
-                fileDir = File(fileDirPath)
+                File(fileDirPath)
             }
         } catch (ignore: Throwable) {
             logger.warn("get text reference file fail message:${ignore.message}")
@@ -108,6 +111,8 @@ abstract class StoreFileService {
 
     abstract fun textReferenceFileDownload(
         userId: String,
+        textReferenceFileCache: BkDiskLruFileCache,
+        fileCacheKey: String,
         request: TextReferenceFileDownloadRequest
     ): File?
 
