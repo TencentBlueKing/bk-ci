@@ -266,7 +266,7 @@ class MonitorNotifyJob @Autowired constructor(
             "bk_app_secret" to appSecret,
             "sql" to """
                     SELECT COUNT(distinct userId) as dailyCount
-                    FROM 100205_bkdevops_build_history.druid
+                    FROM 100205_bkdevops_build_history
                     WHERE thedate='${DateFormatUtils.format(startTime, "yyyyMMdd")}'
                     LIMIT 1
                 """.trimIndent(),

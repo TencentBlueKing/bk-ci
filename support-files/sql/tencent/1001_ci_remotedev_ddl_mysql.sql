@@ -392,10 +392,22 @@ CREATE TABLE IF NOT EXISTS `T_WHITE_LIST` (
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='白名单控制';
 
 -- ----------------------------
+-- Table structure for T_CLIENT_VERSION 客户端版本控制
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
+    `IP` varchar(32) NOT NULL DEFAULT '' COMMENT '客户端ip地址',
+    `USER` varchar(128) NOT NULL DEFAULT '' COMMENT '用户',
+    `VERSION` varchar(16) NOT NULL COMMENT '客户端版本',
+    `LAST_UPDATE_TIME` timestamp NULL COMMENT '最近版本更新时间',
+    `LAST_VERSION` varchar(16) NULL COMMENT '上次的版本',
+    UNIQUE `ukey`(`IP`,`USER`),
+    KEY `idx_version` (`VERSION`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
+
+-- ----------------------------
 -- Table structure for T_REMOTE_CODE_PROXY CODE—PROXY数据
 -- ----------------------------
-
-CREATE TABLE T_REMOTE_CODE_PROXY (
+CREATE TABLE IF NOT EXISTS `T_REMOTE_CODE_PROXY` (
 	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
     `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
 	`NAME` varchar(255)  NOT NULL COMMENT 'proxy名称',

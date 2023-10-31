@@ -146,10 +146,10 @@ enum class ErrorCodeEnum(
         errorCode = "2132027",
         formatErrorMessage = "The cloud desktop resources under the current project are insufficient, currently {0}"
     ),
-    NEED_UPDATED(
+    CLIENT_NEED_UPDATED(
         errorType = ErrorType.USER,
         errorCode = "2132028",
-        formatErrorMessage = "Client needs to be updated"
+        formatErrorMessage = "Please install the latest version of the client: \n {0}"
     ),
     DELIVERING_FAILED(
         errorType = ErrorType.THIRD_PARTY,
