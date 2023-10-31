@@ -318,7 +318,8 @@ class ProjectDao {
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
         approvalStatus: Int,
-        subjectScopesStr: String
+        subjectScopesStr: String,
+        properties: ProjectProperties?
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -347,7 +348,8 @@ class ProjectDao {
                 ENABLED,
                 PROPERTIES,
                 SUBJECT_SCOPES,
-                AUTH_SECRECY
+                AUTH_SECRECY,
+                PROPERTIES
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -371,7 +373,7 @@ class ProjectDao {
                 userDeptDetail.centerName,
                 channelCode!!.name,
                 true,
-                projectCreateInfo.properties?.let {
+                properties?.let {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,

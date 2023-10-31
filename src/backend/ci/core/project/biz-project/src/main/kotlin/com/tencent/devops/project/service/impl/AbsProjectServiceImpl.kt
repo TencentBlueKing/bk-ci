@@ -48,6 +48,7 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -114,7 +115,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
-    private val projectApprovalService: ProjectApprovalService
+    private val projectApprovalService: ProjectApprovalService,
+    private val profile: Profile
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -226,7 +228,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectId = projectId,
                     channelCode = projectChannel,
                     approvalStatus = approvalStatus,
-                    subjectScopesStr = subjectScopesStr
+                    subjectScopesStr = subjectScopesStr,
+                    properties = buildProjectProperties(projectInfo.properties)
                 )
                 if (!needApproval) {
                     projectExtService.createExtProjectInfo(
@@ -253,7 +256,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
-                // todo 待确定，切换v3-RBAC后，是否需要做其他操作
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -268,6 +270,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
+    }
+
+    private fun buildProjectProperties(properties: ProjectProperties?): ProjectProperties? {
+        var finalProperties = properties
+        if (profile.isRbac()) {
+            // rbac新建项目默认开启流水线模板管理权限
+            finalProperties = properties ?: ProjectProperties()
+            finalProperties.enableTemplatePermissionManage = true
+        }
+        return finalProperties
     }
 
     override fun createExtProject(
