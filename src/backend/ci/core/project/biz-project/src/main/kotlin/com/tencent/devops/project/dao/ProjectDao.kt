@@ -348,8 +348,7 @@ class ProjectDao {
                 ENABLED,
                 PROPERTIES,
                 SUBJECT_SCOPES,
-                AUTH_SECRECY,
-                PROPERTIES
+                AUTH_SECRECY
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
