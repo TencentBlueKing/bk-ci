@@ -2,16 +2,26 @@ package com.tencent.devops.remotedev.service.gitproxy
 
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.dao.RemoteDevCodeProxyDao
+import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
+import org.jooq.DSLContext
+import org.jooq.JSON
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
 @Service
 class GitProxyService @Autowired constructor(
     private val gitproxyBkRepoClient: GitproxyBkRepoClient,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val dslContext: DSLContext,
+    private val codeProxyDao: RemoteDevCodeProxyDao
 ) {
     fun createRepo(
         userId: String,
@@ -65,22 +75,37 @@ class GitProxyService @Autowired constructor(
         pageSize: Int,
         gitType: ScmType?
     ): Page<FetchRepoResp> {
-        val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize, gitType)
-        val resp = repos.records.map { record ->
+        val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val count = codeProxyDao.countFetchCodeProxy(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = scmType2ProxyType(gitType)
+        )
+        val records = codeProxyDao.fetchCodeProxy(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = scmType2ProxyType(gitType),
+            limit = pageLimit
+        )
+
+        val resp = records.map { record ->
+            val conf = JsonUtil.to<CodeProxyConf>(record.conf.data())
             FetchRepoResp(
-                url = record.configuration.proxy?.url ?: "",
-                proxyUrl = record.configuration.url,
-                creator = record.createdBy,
-                createdDate = record.createdDate,
+                url = record.url,
+                proxyUrl = conf.proxyUrl,
+                creator = record.creator,
+                createdDate = dateFormat.format(record.createTime),
                 repoName = record.name,
                 type = record.type,
-                desc = record.description
+                desc = record.desc,
+                lfsUrl = conf.lfsUrl
             )
         }
+
         return Page(
-            pageNumber = repos.pageNumber,
-            pageSize = repos.pageSize,
-            totalRecords = repos.totalRecords,
+            pageNumber = page,
+            pageSize = pageSize,
+            totalRecords = count.toLong(),
             records = resp
         )
     }
@@ -94,8 +119,16 @@ class GitProxyService @Autowired constructor(
         return true
     }
 
+    private fun scmType2ProxyType(scmType: ScmType?): String {
+        return when (scmType) {
+            ScmType.CODE_SVN -> "SVN"
+            else -> "GIT"
+        }
+    }
+
     companion object {
         // bkrepo project 缓存
         const val REDIS_BKREPO_PROJECT = "remotedev:bkrepo:existProject"
+        private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     }
 }
