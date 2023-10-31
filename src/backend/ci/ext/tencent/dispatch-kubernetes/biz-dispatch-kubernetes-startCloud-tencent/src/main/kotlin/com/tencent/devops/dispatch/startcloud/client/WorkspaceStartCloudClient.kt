@@ -8,6 +8,8 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
@@ -24,8 +26,6 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShareRep
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startcloud.pojo.Page
-import java.net.SocketTimeoutException
-import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
+import java.util.*
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -447,6 +449,53 @@ class WorkspaceStartCloudClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getWorkspaceInfo(
+        userId: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/status"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId get workspace info response: $responseContent")
+                val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == environmentInfoRsp.code) {
+                    return environmentInfoRsp.data!!
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentInfoRsp.code}-${environmentInfoRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get workspace info SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
