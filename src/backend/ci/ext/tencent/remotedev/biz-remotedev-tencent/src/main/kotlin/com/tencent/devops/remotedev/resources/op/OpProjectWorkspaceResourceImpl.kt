@@ -8,7 +8,6 @@ import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -77,7 +76,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun fetchOwnerAndAdmin(
         userId: String,
         data: FetchOwnerAndAdminData
-    ): Result<Map<String, FetchOwnerAndAdminItem>> {
+    ): Result<Set<String>> {
         return Result(desktopWorkspaceService.fetchOwnerAndAdmin(data))
     }
 
