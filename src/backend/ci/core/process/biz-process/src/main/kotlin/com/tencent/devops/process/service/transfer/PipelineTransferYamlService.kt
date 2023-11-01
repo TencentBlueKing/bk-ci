@@ -131,7 +131,7 @@ class PipelineTransferYamlService @Autowired constructor(
                     if (invalidElement.isNotEmpty()) {
                         throw PipelineTransferException(
                             ELEMENT_NOT_SUPPORT_TRANSFER,
-                            arrayOf(invalidElement.joinToString("\n", "- "))
+                            arrayOf(invalidElement.joinToString("\n- ", "- "))
                         )
                     }
                     watcher.start("step_2|mergeYaml")
