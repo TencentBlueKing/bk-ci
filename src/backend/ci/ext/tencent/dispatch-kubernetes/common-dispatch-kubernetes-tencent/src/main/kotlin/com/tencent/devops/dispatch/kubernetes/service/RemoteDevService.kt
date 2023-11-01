@@ -84,22 +84,8 @@ class RemoteDevService @Autowired constructor(
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
-            // 检验workspace状态
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
-                .getWorkspaceInfo(userId, event.workspaceName)
-
-            if (workspaceInfo.status != EnvStatusEnum.running) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                    I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
-                )
-            }
-
             if (mountType == WorkspaceMountType.START) {
                 val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
-
                 dslContext.transaction { t ->
                     val context = DSL.using(t)
                     dispatchWorkspaceDao.updateWorkspace(
@@ -140,6 +126,19 @@ class RemoteDevService @Autowired constructor(
                         environmentUid = result.enviromentUid,
                         operator = userId,
                         action = EnvironmentAction.CREATE
+                    )
+                }
+
+                // 检验workspace状态
+                val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
+                    .getWorkspaceInfo(userId, event.workspaceName)
+
+                if (workspaceInfo.status != EnvStatusEnum.running) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                        I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                     )
                 }
 
