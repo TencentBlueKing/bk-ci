@@ -49,7 +49,7 @@ class RemoteDevCodeProxyDao {
     fun countFetchCodeProxy(
         dslContext: DSLContext,
         projectId: String,
-        type: String?,
+        type: String?
     ): Int {
         with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
             val sql = dslContext.selectFrom(this)
