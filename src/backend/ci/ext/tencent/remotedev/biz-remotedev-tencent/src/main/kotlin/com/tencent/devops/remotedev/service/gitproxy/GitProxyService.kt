@@ -14,7 +14,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 
 @Service
 class GitProxyService @Autowired constructor(
@@ -113,7 +113,7 @@ class GitProxyService @Autowired constructor(
                 url = record.url,
                 proxyUrl = conf.proxyUrl,
                 creator = record.creator,
-                createdDate = dateFormat.format(record.createTime),
+                createdDate = record.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 repoName = record.name,
                 type = record.type,
                 desc = record.desc,
@@ -158,7 +158,6 @@ class GitProxyService @Autowired constructor(
     }
 
     companion object {
-        private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         private const val LFS_REPONAME_PREFIX = "Lfs_"
     }
 }
