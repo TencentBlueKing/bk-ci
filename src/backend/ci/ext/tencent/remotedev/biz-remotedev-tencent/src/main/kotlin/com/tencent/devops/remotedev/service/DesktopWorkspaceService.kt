@@ -8,7 +8,6 @@ import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataAction
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataScope
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -27,17 +26,20 @@ class DesktopWorkspaceService @Autowired constructor(
 
     fun fetchOwnerAndAdmin(
         data: FetchOwnerAndAdminData
-    ): Map<String, FetchOwnerAndAdminItem> {
+    ): Set<String> {
         // 查询云研发项目管理员
         val projectAndAdmins = client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
             FetchRemoteDevData(
                 projectIds = data.projectIds.toSet()
             )
-        ).data ?: return emptyMap()
+        ).data ?: return emptySet()
 
-        val res = mutableMapOf<String, FetchOwnerAndAdminItem>()
+        val res = mutableSetOf<String>()
         projectAndAdmins.forEach { (projectId, admins) ->
-            res[projectId] = FetchOwnerAndAdminItem(admins?.joinToString(separator = ";") ?: "")
+            if (admins.isNullOrEmpty()) {
+                return@forEach
+            }
+            res.addAll(admins)
         }
 
         return res
