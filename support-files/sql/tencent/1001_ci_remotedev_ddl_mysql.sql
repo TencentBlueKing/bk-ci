@@ -391,4 +391,17 @@ CREATE TABLE IF NOT EXISTS `T_WHITE_LIST` (
     UNIQUE `ukey`(`NAME`,`TYPE`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='白名单控制';
 
+-- ----------------------------
+-- Table structure for T_CLIENT_VERSION 客户端版本控制
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
+    `IP` varchar(32) NOT NULL DEFAULT '' COMMENT '客户端ip地址',
+    `USER` varchar(128) NOT NULL DEFAULT '' COMMENT '用户',
+    `VERSION` varchar(16) NOT NULL COMMENT '客户端版本',
+    `LAST_UPDATE_TIME` timestamp NULL COMMENT '最近版本更新时间',
+    `LAST_VERSION` varchar(16) NULL COMMENT '上次的版本',
+    UNIQUE `ukey`(`IP`,`USER`),
+    KEY `idx_version` (`VERSION`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
+
 SET FOREIGN_KEY_CHECKS = 1;
