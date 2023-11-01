@@ -371,7 +371,7 @@ class JobService @Autowired constructor(
                             endTime = stepInstance.endTime,
                             totalTime = stepInstance.totalTime,
                             stepRetries = stepInstance.stepRetries,
-                            stepHostResultList = stepInstance.jobCloudStepHostResultList?.map { jobCldStepHostResult ->
+                            stepIpResultList = stepInstance.jobCloudStepHostResultList?.map { jobCldStepHostResult ->
                                 StepHostResult(
                                     ip = jobCldStepHostResult.ip,
                                     bkHostId = jobCldStepHostResult.bkHostId,
