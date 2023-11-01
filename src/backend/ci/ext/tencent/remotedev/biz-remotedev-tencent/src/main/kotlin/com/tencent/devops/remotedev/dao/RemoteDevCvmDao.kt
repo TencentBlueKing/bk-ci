@@ -100,6 +100,7 @@ class RemoteDevCvmDao {
                 .set(CPU, data.cpu)
                 .set(MEMORY, data.memory)
                 .set(SUBNET, data.subnet)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
         }
