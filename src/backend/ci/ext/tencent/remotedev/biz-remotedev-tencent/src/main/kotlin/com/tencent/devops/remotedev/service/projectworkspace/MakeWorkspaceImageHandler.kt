@@ -28,9 +28,12 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ImageManageDao
@@ -54,6 +57,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
@@ -66,6 +70,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class MakeWorkspaceImageHandler @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -187,12 +192,21 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             params = arrayOf(event.workspaceName)
         )
 
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
+
+        val workspaceStatus = if (workspaceInfo.status == EnvStatusEnum.running) {
+            WorkspaceStatus.RUNNING
+        } else {
+            WorkspaceStatus.STOPPED
+        }
+
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.STOPPED,
+                    status = workspaceStatus,
                     dslContext = transactionContext
                 )
 
@@ -204,7 +218,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.STOPPED.name
+                        workspaceStatus.name
                     )
                 )
 
@@ -229,7 +243,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = event.workspaceName,
                 operator = event.userId,
-                action = WorkspaceAction.STOP,
+                action = WorkspaceAction.MAKE_IMAGE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status.name,
@@ -254,7 +268,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             errorMsg = event.errorMsg,
             type = WebSocketActionType.WORKSPACE_MAKE_IMAGE,
             status = event.status,
-            action = WorkspaceAction.STOP,
+            action = WorkspaceAction.MAKE_IMAGE,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,
