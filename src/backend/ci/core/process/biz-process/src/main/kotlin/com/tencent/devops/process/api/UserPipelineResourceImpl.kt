@@ -359,6 +359,10 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipeline)
     }
 
+    override fun getBuildFormProperty(userId: String, projectId: String, pipelineId: String): Result<Model> {
+        TODO("Not yet implemented")
+    }
+
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
         checkParam(userId, projectId)
         return Result(
