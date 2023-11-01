@@ -1060,7 +1060,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             i18nDir = i18nDir,
             dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
             repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch
+            branch = marketAtomUpdateRequest.branch,
+            version = version
         )
         val validateResult = validateUpdateMarketAtomReq(
             userId = userId,
