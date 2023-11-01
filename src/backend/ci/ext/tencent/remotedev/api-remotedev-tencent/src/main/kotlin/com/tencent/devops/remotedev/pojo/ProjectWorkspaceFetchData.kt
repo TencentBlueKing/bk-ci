@@ -10,5 +10,5 @@ data class ProjectWorkspaceFetchData(
     val owner: String?,
     val status: WorkspaceStatus?,
     val zoneId: String?,
-    val machineType: String?,
+    val machineType: String?
 )

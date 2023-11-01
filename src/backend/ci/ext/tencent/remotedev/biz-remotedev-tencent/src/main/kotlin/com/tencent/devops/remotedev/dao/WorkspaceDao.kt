@@ -213,7 +213,6 @@ class WorkspaceDao {
         }
     }
 
-
     private fun TWorkspace.unionSelect(
         shared: TWorkspaceShared,
         creator: String,
@@ -731,7 +730,6 @@ class WorkspaceDao {
             }
         }
     }
-
 
     fun fetchWinWorkspaceIpAndRegId(
         dslContext: DSLContext,
