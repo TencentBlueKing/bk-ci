@@ -51,7 +51,8 @@ interface StoreI18nMessageService {
         propertiesKeyPrefix: String? = null,
         dbKeyPrefix: String? = null,
         repositoryHashId: String? = null,
-        branch: String? = null
+        branch: String? = null,
+        version: String
     ): Map<String, Any>
 
     /**
@@ -73,7 +74,8 @@ interface StoreI18nMessageService {
         i18nDir: String,
         keyPrefix: String? = null,
         repositoryHashId: String? = null,
-        branch: String? = null
+        branch: String? = null,
+        version: String
     )
 
     /**

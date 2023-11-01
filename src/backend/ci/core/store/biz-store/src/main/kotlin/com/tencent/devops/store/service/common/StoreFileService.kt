@@ -26,18 +26,23 @@
  */
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
+import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
+import java.util.Locale
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -47,18 +52,79 @@ import org.springframework.stereotype.Service
 @Service
 abstract class StoreFileService {
 
+    @Autowired
+    lateinit var client: Client
+
+    @Value("\${store.defaultStaticFileFormat}")
+    lateinit var defaultStaticFileFormat: String
+
     companion object {
         const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
         val fileSeparator: String = System.getProperty("file.separator")
         private val logger = LoggerFactory.getLogger(StoreFileService::class.java)
         private const val FILE_DEFAULT_SIZE = 1024
+        private const val DEFAULT_MAX_FILE_CACHE_SIZE = 2147483648L
     }
+
+    fun getTextReferenceFileDir(
+        userId: String,
+        version: String,
+        request: TextReferenceFileDownloadRequest
+    ): File? {
+        val fileCacheDir = "${TextReferenceFileAnalysisUtil.getAtomBasePath()}${File.separator}" +
+                "cache${File.separator}${request.projectCode}${File.separator}$version"
+        logger.info("getTextReferenceFileDir fileCacheDir:$fileCacheDir")
+        val textReferenceFileCache =
+            BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, DEFAULT_MAX_FILE_CACHE_SIZE)
+        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
+            userId = userId,
+            atomDir = request.fileDir
+        )
+        logger.info("getTextReferenceFileDir fileDirPath:$fileDirPath")
+        val textReferenceFilePack = File("$fileDirPath${File.separator}file.zip")
+        val fileCacheKey = getFileCacheKey(request.projectCode, version)
+        var fileDir: File? = null
+        try {
+            textReferenceFileCache.get(fileCacheKey, textReferenceFilePack)
+            fileDir = if (!textReferenceFilePack.exists()) {
+                textReferenceFileDownload(
+                    userId = userId,
+                    textReferenceFileCache = textReferenceFileCache,
+                    fileCacheKey = fileCacheKey,
+                    request = request
+                ) ?: return null
+            } else {
+                ZipUtil.unZipFile(textReferenceFilePack, fileDirPath, true)
+                File(fileDirPath)
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("get text reference file fail message:${ignore.message}")
+        }
+        logger.info("getTextReferenceFileDir fileDir:$fileDir")
+        return fileDir
+    }
+
+    abstract fun getFileNames(
+        projectCode: String,
+        fileDir: String,
+        i18nDir: String? = null,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ): List<String>?
+
+    abstract fun textReferenceFileDownload(
+        userId: String,
+        textReferenceFileCache: BkDiskLruFileCache,
+        fileCacheKey: String,
+        request: TextReferenceFileDownloadRequest
+    ): File?
+
+    private fun getFileCacheKey(projectCode: String, version: String) = "$projectCode-$version-TextReference"
 
     @Suppress("NestedBlockDepth")
     fun textReferenceFileAnalysis(
         userId: String,
         content: String,
-        client: Client,
         fileDirPath: String
     ): String {
         val pathList = mutableListOf<String>()
@@ -87,7 +153,7 @@ abstract class StoreFileService {
             }
         }
         // 解析获取文件引用路径
-        text = AtomReleaseTxtAnalysisUtil.regexAnalysis(
+        text = TextReferenceFileAnalysisUtil.regexAnalysis(
             input = text,
             fileDirPath = fileDirPath,
             pathList = pathList
@@ -95,27 +161,54 @@ abstract class StoreFileService {
         // 上传文件获取远程静态文件url
         val uploadFileToPathResult = uploadFileToPath(
             userId = userId,
-            client = client,
             result = result,
             localDirectoryInfo = LocalDirectoryInfo(
                 fileDirPath = fileDirPath,
                 pathList = pathList.map { LocalFileInfo(it) }
             )
         )
-        return AtomReleaseTxtAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
+        return TextReferenceFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
     }
+
+    fun getStaticFileReference(
+        userId: String,
+        content: String,
+        fileDirPath: String,
+        fileNames: List<String>
+    ): String {
+        val result = mutableMapOf<String, String>()
+        // 上传文件获取远程静态文件url
+        val uploadFileToPathResult = uploadFileToPath(
+            userId = userId,
+            result = result,
+            localDirectoryInfo = LocalDirectoryInfo(
+                fileDirPath = fileDirPath,
+                pathList = fileNames.map { LocalFileInfo(it) }
+            )
+        )
+        if (uploadFileToPathResult.isNotEmpty()) {
+            return TextReferenceFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), content)
+        }
+        return content
+    }
+
+    abstract fun downloadFile(
+        filePath: String,
+        file: File,
+        repositoryHashId: String? = null,
+        branch: String? = null,
+        format: String? = null
+    )
 
     abstract fun uploadFileToPath(
         userId: String,
-        client: Client,
         result: MutableMap<String, String>,
         localDirectoryInfo: LocalDirectoryInfo
     ): Map<String, String>
 
-    abstract fun serviceArchiveAtomFile(
-        userId: String,
-        client: Client,
-        archiveAtomRequest: ArchiveAtomRequest,
-        file: File
-    ): Result<Boolean?>
+    fun isStaticFile(path: String): Boolean {
+        val allowedExtensions = defaultStaticFileFormat.split(",").toSet()
+        val extension = path.substringAfterLast(".")
+        return extension.lowercase(Locale.getDefault()) in allowedExtensions.map { it.lowercase(Locale.getDefault()) }
+    }
 }

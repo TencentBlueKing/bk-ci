@@ -25,31 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.util
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class AtomReleaseTxtAnalysisUtilTest {
-
-    @Test
-    fun regexAnalysisTest() {
-        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
-        val pathList = mutableListOf<String>()
-        val result = mutableMapOf<String, String>()
-        AtomReleaseTxtAnalysisUtil.regexAnalysis(
-            input = input,
-            fileDirPath = "",
-            pathList = pathList
-        )
-        pathList.forEach {
-            result[it] = "www.tested.xxx"
-        }
-        val filePathReplaceResult = AtomReleaseTxtAnalysisUtil.filePathReplace(result, input)
-        Assertions.assertEquals(
-            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
-            filePathReplaceResult
-        )
-    }
-}
+@ApiModel("文本引用文件下载请求")
+data class TextReferenceFileDownloadRequest(
+    @ApiModelProperty("项目代码", required = true)
+    val projectCode: String,
+    @ApiModelProperty("插件包文件路径", required = true)
+    val fileDir: String,
+    @ApiModelProperty("仓库哈希ID", required = false)
+    val repositoryHashId: String? = null,
+    @ApiModelProperty("分支", required = false)
+    val branch: String? = null
+)

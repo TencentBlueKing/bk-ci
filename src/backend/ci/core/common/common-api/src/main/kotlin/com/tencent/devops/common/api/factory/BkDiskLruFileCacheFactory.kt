@@ -25,19 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.common.api.factory
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 
-@ApiModel("文本引用文件解析请求")
-data class TextReferenceFileParseRequest(
-    @ApiModelProperty("插件包文件路径", required = true)
-    val fileDir: String,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String? = null,
-    @ApiModelProperty("分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("文本内容", required = true)
-    val content: String
-)
+object BkDiskLruFileCacheFactory {
+
+    fun getDiskLruFileCache(
+        cacheDir: String,
+        cacheSize: Long
+    ): BkDiskLruFileCache {
+        return BkDiskLruFileCache(cacheDir, cacheSize)
+    }
+}

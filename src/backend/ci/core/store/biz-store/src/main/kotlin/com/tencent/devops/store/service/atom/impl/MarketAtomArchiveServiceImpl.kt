@@ -270,7 +270,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             jsonMap = taskDataMap.toMutableMap(),
             fileDir = "$atomCode/$version",
             i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+            version = version
         )
         val propsMap = mutableMapOf<String, Any?>()
         val releaseInfoMap = taskDataMap[KEY_RELEASE_INFO] as? Map<String, Any>

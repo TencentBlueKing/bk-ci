@@ -31,6 +31,7 @@ import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
+import org.springframework.data.redis.core.script.RedisScript
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -250,6 +251,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.execute(action)
     }
 
+    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?): T {
+        return redisTemplate.execute(script, keys, *args)
+    }
+
     fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForList().size(getFinalKey(key, isDistinguishCluster))
     }
@@ -272,6 +277,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
 
     fun trim(key: String, start: Long, end: Long) {
         redisTemplate.opsForList().trim(key, start, end)
+    }
+
+    fun setNxEx(key: String, value: String, expiredInSecond: Long): Boolean {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS) ?: false
     }
 
     fun getRedisName(): String? {
