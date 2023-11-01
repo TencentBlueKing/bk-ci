@@ -65,7 +65,7 @@ interface BuildAtomResource {
 
     @ApiOperation("使用分支创建插件测试版本")
     @POST
-    @Path("/test/version/creat")
+    @Path("/test/version/create")
     fun createAtomBranchTestVersion(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
