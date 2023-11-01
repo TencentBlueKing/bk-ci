@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -107,26 +108,37 @@ class PipelineTransferYamlService @Autowired constructor(
                     watcher.start("step_1|FULL_MODEL2YAML start")
                     val invalidElement = mutableListOf<String>()
                     val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
-                    val yml = modelTransfer.model2yaml(
-                        ModelTransferInput(
-                            userId = userId,
-                            model = data.modelAndSetting!!.model,
-                            setting = data.modelAndSetting!!.setting,
-                            version = YamlVersion.Version.V3_0,
-                            aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
+                    val (yamlSupported, newYaml, msg) = try {
+                        val response = modelTransfer.model2yaml(
+                            ModelTransferInput(
+                                userId = userId,
+                                model = data.modelAndSetting!!.model,
+                                setting = data.modelAndSetting!!.setting,
+                                version = YamlVersion.Version.V3_0,
+                                aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
+                            )
                         )
-                    )
-                    if (!invalidElement.isNullOrEmpty()) {
+                        val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
+                        Triple(true, newYaml, null)
+                    } catch (e: PipelineTransferException) {
+                        Triple(false, null, I18nUtil.getCodeLanMessage(
+                            messageCode = e.errorCode,
+                            params = e.params,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            defaultMessage = e.defaultMessage
+                        ))
+                    }
+                    if (invalidElement.isNotEmpty()) {
                         throw PipelineTransferException(
                             ELEMENT_NOT_SUPPORT_TRANSFER,
                             arrayOf(invalidElement.joinToString("\n"))
                         )
                     }
                     watcher.start("step_2|mergeYaml")
-                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(yml))
+
                     watcher.stop()
                     logger.info(watcher.toString())
-                    return TransferResponse(newYaml = newYaml)
+                    return TransferResponse(newYaml = newYaml, yamlSupported = yamlSupported, yamlInvalidMsg = msg)
                 }
 
                 TransferActionType.FULL_YAML2MODEL -> {
