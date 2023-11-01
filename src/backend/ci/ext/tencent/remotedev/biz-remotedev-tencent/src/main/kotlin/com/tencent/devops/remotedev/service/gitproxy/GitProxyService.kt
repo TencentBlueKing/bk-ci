@@ -11,11 +11,9 @@ import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import org.jooq.DSLContext
-import org.jooq.JSON
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
 
 @Service
 class GitProxyService @Autowired constructor(

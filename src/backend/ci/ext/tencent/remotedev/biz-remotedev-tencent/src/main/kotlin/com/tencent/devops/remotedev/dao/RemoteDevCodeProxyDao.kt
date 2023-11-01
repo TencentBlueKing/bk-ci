@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemoteCodeProxy
