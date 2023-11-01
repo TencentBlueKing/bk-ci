@@ -63,7 +63,6 @@ class StartWorkspaceService @Autowired constructor(
             } else {
                 statusResMap[status]!!.value++
             }
-
         }
         return ComputerStatusResp(
             count = resp.size,
