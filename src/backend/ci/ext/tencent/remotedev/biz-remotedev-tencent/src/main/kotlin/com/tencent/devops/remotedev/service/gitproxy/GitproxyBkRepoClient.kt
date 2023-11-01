@@ -15,6 +15,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
@@ -48,7 +49,7 @@ class GitproxyBkRepoClient @Autowired constructor(
         gitType: ScmType,
         category: BkRepoCategory,
         enableLfs: Boolean
-    ) {
+    ): CreateRepoRespData? {
         val requestData = CreateRepoData(
             projectId = projectId,
             name = repoName,
@@ -89,7 +90,7 @@ class GitproxyBkRepoClient @Autowired constructor(
             .headers(getCommonHeaders(userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        doRequest(request).resolveResponse<Response<Void>>()
+        return doRequest(request).resolveResponse<Response<CreateRepoRespData>>()?.data
     }
 
     fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: ScmType?): Page<RepoInfo> {

@@ -20,7 +20,8 @@ class RemoteDevCodeProxyDao {
         url: String,
         conf: CodeProxyConf,
         desc: String?,
-        creator: String
+        creator: String,
+        enableLfs: Boolean
     ) {
         with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
             dslContext.insertInto(
@@ -31,7 +32,8 @@ class RemoteDevCodeProxyDao {
                 URL,
                 CONF,
                 DESC,
-                CREATOR
+                CREATOR,
+                ENABLE_LFS
             ).values(
                 projectId,
                 name,
@@ -39,7 +41,8 @@ class RemoteDevCodeProxyDao {
                 url,
                 JSON.json(JsonUtil.toJson(conf, false)),
                 desc,
-                creator
+                creator,
+                enableLfs
             ).execute()
         }
     }
@@ -73,6 +76,25 @@ class RemoteDevCodeProxyDao {
             }
             sql.limit(limit.limit).offset(limit.offset)
             return sql.fetch()
+        }
+    }
+
+    fun fetchSingleCodeProxy(
+        dslContext: DSLContext,
+        projectId: String,
+        repoName: String
+    ): TRemoteCodeProxyRecord? {
+        with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(NAME.eq(repoName)).fetchAny()
+        }
+    }
+
+    fun deleteCodeProxy(
+        dslContext: DSLContext,
+        id: Long
+    ) {
+        with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
+            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
         }
     }
 }
