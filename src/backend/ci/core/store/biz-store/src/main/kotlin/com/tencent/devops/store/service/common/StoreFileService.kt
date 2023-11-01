@@ -73,12 +73,14 @@ abstract class StoreFileService {
     ): File? {
         val fileCacheDir = "${TextReferenceFileAnalysisUtil.getAtomBasePath()}${File.separator}" +
                 "cache${File.separator}${request.projectCode}${File.separator}$version"
+        logger.info("getTextReferenceFileDir fileCacheDir:$fileCacheDir")
         val textReferenceFileCache =
             BkDiskLruFileCacheFactory.getDiskLruFileCache(fileCacheDir, DEFAULT_MAX_FILE_CACHE_SIZE)
         val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
             userId = userId,
             atomDir = request.fileDir
         )
+        logger.info("getTextReferenceFileDir fileDirPath:$fileDirPath")
         val textReferenceFilePack = File("$fileDirPath${File.separator}file.zip")
         val fileCacheKey = getFileCacheKey(request.projectCode, version)
         var fileDir: File? = null
@@ -98,6 +100,7 @@ abstract class StoreFileService {
         } catch (ignore: Throwable) {
             logger.warn("get text reference file fail message:${ignore.message}")
         }
+        logger.info("getTextReferenceFileDir fileDir:$fileDir")
         return fileDir
     }
 
