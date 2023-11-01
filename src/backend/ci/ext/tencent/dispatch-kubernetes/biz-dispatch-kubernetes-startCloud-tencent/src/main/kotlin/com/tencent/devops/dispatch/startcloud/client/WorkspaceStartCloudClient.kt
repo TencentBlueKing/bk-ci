@@ -481,7 +481,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         "${response.code}"
                     )
                 }
-                logger.info("$userId get workspace info response: $responseContent")
+                logger.info("$userId get workspace info body: $body response: $responseContent")
                 val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
                 if (OK == environmentInfoRsp.code) {
                     return environmentInfoRsp.data!!
