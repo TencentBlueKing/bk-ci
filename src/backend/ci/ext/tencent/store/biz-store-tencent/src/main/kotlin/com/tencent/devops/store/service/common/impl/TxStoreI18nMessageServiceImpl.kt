@@ -44,7 +44,6 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
-        private val fileSeparator: String = System.getProperty("file.separator")
     }
 
     override fun getFileStr(
