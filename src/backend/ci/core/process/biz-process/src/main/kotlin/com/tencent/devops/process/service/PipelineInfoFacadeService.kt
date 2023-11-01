@@ -46,7 +46,9 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -124,7 +126,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
-    private val pipelineRecentUseService: PipelineRecentUseService
+    private val pipelineRecentUseService: PipelineRecentUseService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -136,7 +139,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*pipelineId*/, ChannelCode>()
 
-    fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+    fun exportPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int? = null,
+        storageType: PipelineStorageType? = PipelineStorageType.MODEL
+    ): Response {
         val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(
@@ -156,22 +165,30 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         )
 
-        val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)
             ?: throw OperationException(
                 I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
-            ?: throw OperationException(
-                I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
-            )
-
+        val settingInfo = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = targetVersion.settingVersion ?: 1
+        )
+        val model = targetVersion.model
         // 适配兼容老数据
         model.stages.forEach {
             it.transformCompatibility()
         }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
-        return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
+        return if (storageType == PipelineStorageType.YAML) {
+            val suffix = PipelineStorageType.YAML.fileSuffix
+            exportStringToFile(targetVersion.yaml ?: "", "${settingInfo.pipelineName}$suffix")
+        } else {
+            val suffix = PipelineStorageType.MODEL.fileSuffix
+            exportStringToFile(JsonUtil.toJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
+        }
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
@@ -232,18 +249,18 @@ class PipelineInfoFacadeService @Autowired constructor(
         return newPipelineId
     }
 
-    private fun exportModelToFile(modelAndSetting: PipelineModelAndSetting, pipelineName: String): Response {
+    private fun exportStringToFile(content: String, fileName: String): Response {
         // 流式下载
         val fileStream = StreamingOutput { output ->
             val sb = StringBuilder()
-            sb.append(JsonUtil.toJson(modelAndSetting))
+            sb.append(content)
             output.write(sb.toString().toByteArray())
             output.flush()
         }
-        val fileName = URLEncoder.encode("$pipelineName.json", "UTF-8")
+        val encodeName = URLEncoder.encode(fileName, "UTF-8")
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $fileName")
+            .header("content-disposition", "attachment; filename = $encodeName")
             .header("Cache-Control", "no-cache")
             .build()
     }
@@ -265,10 +282,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
         fixTemplateVersion: Long? = null,
-        versionStatus: VersionStatus? = VersionStatus.COMMITTING,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
-        useConcurrencyGroup: Boolean? = false
+        useConcurrencyGroup: Boolean? = false,
+        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -378,18 +396,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     model
                 }
                 watcher.start("generateYaml")
-                val savedYaml = yaml ?: transferService.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = null,
-                    actionType = TransferActionType.FULL_MODEL2YAML,
-                    data = TransferBody(
-                        modelAndSetting = PipelineModelAndSetting(
-                            model = model,
-                            setting = PipelineSetting() // TODO #8161 定义流水线设置的默认值
+                val savedYaml = yaml ?: try {
+                    transferService.transfer(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = null,
+                        actionType = TransferActionType.FULL_MODEL2YAML,
+                        data = TransferBody(
+                            modelAndSetting = PipelineModelAndSetting(
+                                model = model,
+                                setting = PipelineSetting(pipelineAsCodeSettings = pipelineAsCodeSettings)
+                            )
                         )
-                    )
-                ).newYaml
+                    ).newYaml ?: ""
+                } catch (ignore: Throwable) {
+                    // 旧流水线可能无法转换，用空YAML代替
+                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
+                    "# ${ignore.message}"
+                }
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
@@ -404,7 +428,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     templateId = templateId,
                     description = null,
                     yamlStr = savedYaml,
-                    baseVersion = null
+                    baseVersion = null,
+                    pipelineAsCodeSettings = pipelineAsCodeSettings
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -520,6 +545,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean,
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
+        val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         val newResource = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
@@ -538,7 +564,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 VersionStatus.RELEASED
             } else {
                 VersionStatus.BRANCH
-            }
+            },
+            pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = result.pipelineId
@@ -548,7 +575,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = result.pipelineId,
             setting = newResource.setting.copy(
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false
         )
@@ -563,6 +590,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
+        val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
@@ -572,7 +600,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             setting = newResource.setting.copy(
-                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false,
             dispatchPipelineUpdateEvent = false
@@ -589,7 +617,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 VersionStatus.RELEASED
             } else {
                 VersionStatus.BRANCH
-            }
+            },
+            pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         return result
     }
@@ -825,25 +854,24 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = version,
             includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
         )
-        val draftSetting = draftVersion?.version?.let {
+        val draftSetting = draftVersion.version.let {
             pipelineSettingFacadeService.userGetSetting(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = it
             )
-        } ?: pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+        }
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = draftSetting.copy(
-                labels = request.labels
+                labels = request.labels,
+                desc = request.description ?: ""
             )
         )
         // TODO #8164 增加同步PAC仓库
@@ -873,7 +901,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = VersionStatus.RELEASED,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
-            baseVersion = draftVersion.baseVersion
+            baseVersion = draftVersion.baseVersion,
+            pipelineAsCodeSettings = savedSetting.pipelineAsCodeSettings
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
@@ -898,7 +927,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         savedSetting: PipelineSetting? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         description: String? = null,
-        baseVersion: Int? = null
+        baseVersion: Int? = null,
+        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -986,7 +1016,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 versionStatus = versionStatus,
                 description = description,
                 yamlStr = yaml,
-                baseVersion = baseVersion
+                baseVersion = baseVersion,
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

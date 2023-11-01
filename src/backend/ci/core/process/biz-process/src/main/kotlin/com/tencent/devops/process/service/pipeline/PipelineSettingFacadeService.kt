@@ -254,9 +254,20 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
-            val ve = pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)
-            settingInfo.successSubscriptionList = ve.successSubscriptionList
-            settingInfo.failSubscriptionList = ve.failSubscriptionList
+            // #8161 除了通知以外增加了其他用户配置作为版本管理
+            pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
+                settingInfo.successSubscriptionList = ve.successSubscriptionList
+                settingInfo.failSubscriptionList = ve.failSubscriptionList
+                settingInfo.labels = ve.labels
+                settingInfo.desc = ve.desc
+                settingInfo.buildNumRule = ve.buildNumRule
+                settingInfo.runLockType = ve.runLockType
+                settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute
+                settingInfo.maxQueueSize = ve.maxQueueSize
+                settingInfo.concurrencyGroup = ve.concurrencyGroup
+                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress
+                settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
+            }
         }
 
         return settingInfo

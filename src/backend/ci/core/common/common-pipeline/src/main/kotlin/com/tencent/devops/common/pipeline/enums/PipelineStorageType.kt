@@ -27,12 +27,12 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-enum class PipelineStorageType(val desc: String) {
-    YAML("YAML编排"),
-    MODEL("JSON编排");
+enum class PipelineStorageType(val desc: String, val fileSuffix: String) {
+    YAML("YAML编排", ".yaml"),
+    MODEL("JSON编排", ".json");
 
     companion object {
-        fun getActionType(type: String): PipelineStorageType {
+        fun getActionType(type: String?): PipelineStorageType {
             return when (type) {
                 "YAML" -> YAML
                 else -> MODEL

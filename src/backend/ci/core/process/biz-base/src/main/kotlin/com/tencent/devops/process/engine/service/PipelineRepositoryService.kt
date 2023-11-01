@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -101,7 +102,6 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -198,8 +198,8 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        yamlStr: String?,
-        baseVersion: Int?,
+        yamlStr: String? = null,
+        baseVersion: Int? = null,
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
@@ -207,7 +207,8 @@ class PipelineRepositoryService constructor(
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        description: String? = null
+        description: String? = null,
+        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -253,7 +254,7 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                setting = pipelineSetting,
+                setting = pipelineSetting?.copy(pipelineAsCodeSettings = pipelineAsCodeSettings),
                 updateLastModifyUser = updateLastModifyUser,
                 versionStatus = versionStatus,
                 description = description,
@@ -291,7 +292,8 @@ class PipelineRepositoryService constructor(
                 templateId = templateId,
                 versionStatus = versionStatus,
                 description = description,
-                baseVersion = baseVersion
+                baseVersion = baseVersion,
+                pipelineAsCodeSettings = pipelineAsCodeSettings
             )
             operationLogService.addOperationLog(
                 userId = userId,
@@ -593,7 +595,8 @@ class PipelineRepositoryService constructor(
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        description: String?
+        description: String?,
+        pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
         val modelVersion = 1
         val pipelineVersion = 1
@@ -681,13 +684,7 @@ class PipelineRepositoryService constructor(
                                 pipelineName = model.name,
                                 failNotifyTypes = notifyTypes,
                                 maxPipelineResNum = maxPipelineResNum,
-                                pipelineAsCodeSettings = try {
-                                    client.get(ServiceProjectResource::class).get(projectId).data
-                                        ?.properties?.pipelineAsCodeSettings
-                                } catch (ignore: Throwable) {
-                                    logger.warn("[$projectId]|Failed to sync project|pipelineId=$pipelineId", ignore)
-                                    null
-                                },
+                                pipelineAsCodeSettings = pipelineAsCodeSettings,
                                 settingVersion = settingVersion
                             )?.let { setting ->
                                 pipelineSettingVersionDao.saveSetting(

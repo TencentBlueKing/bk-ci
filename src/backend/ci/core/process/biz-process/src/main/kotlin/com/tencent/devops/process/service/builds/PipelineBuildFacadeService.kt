@@ -649,6 +649,7 @@ class PipelineBuildFacadeService(
                 buildNo = buildNo,
                 startValues = values,
                 triggerReviewers = triggerReviewers,
+                signPipelineVersion = version,
                 debug = debug
             )
         } finally {

@@ -76,7 +76,9 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -95,6 +97,10 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) : UserPipelineVersionResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserPipelineVersionResourceImpl::class.java)
+    }
 
     override fun getPipelineDetailIncludeDraft(
         userId: String,
@@ -148,6 +154,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             version = releaseVersion?.settingVersion ?: releaseVersion?.version ?: 0,
             detailInfo = detailInfo
         )
+        val version = draftVersion?.version ?: releaseVersion!!.version
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
             PipelineDetail(
@@ -164,7 +171,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 createTime = detailInfo.createTime,
                 updateTime = detailInfo.updateTime,
                 viewNames = detailInfo.viewNames,
-                version = draftVersion?.version ?: releaseVersion!!.version,
+                version = version,
                 versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
                 releaseVersion = releaseVersion?.version,
                 releaseVersionName = releaseVersion?.versionName,
@@ -264,7 +271,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                     instanceFromTemplate = instanceFromTemplate
                 ),
                 channelCode = ChannelCode.BS,
-                checkPermission = false,
+                checkPermission = true,
                 instanceType = request.instanceType,
                 versionStatus = VersionStatus.COMMITTING,
                 useSubscriptionSettings = request.useSubscriptionSettings,
@@ -394,29 +401,13 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun savePipelineDraft(
         userId: String,
         projectId: String,
-        pipelineId: String,
         modelAndYaml: PipelineModelWithYamlRequest
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.EDIT
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
-        )
 
+        var pipelineId = modelAndYaml.pipelineId
         val (model, setting, newYaml) = if (modelAndYaml.storageType == PipelineStorageType.YAML) {
+            // YAML形式的保存需要所有插件都为支持转换的市场插件
             val transferResult = transferService.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -429,45 +420,66 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
             Triple(transferResult.modelAndSetting?.model, transferResult.modelAndSetting?.setting, modelAndYaml.yaml)
         } else {
-            val baseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            // MODEL形式的保存需要兼容旧数据
+            val newYaml = try {
+                transferService.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    actionType = TransferActionType.FULL_MODEL2YAML,
+                    data = TransferBody(
+                        modelAndSetting = modelAndYaml.modelAndSetting,
+                        oldYaml = pipelineId?.let {
+                            pipelineRepositoryService.getPipelineResourceVersion(
+                                projectId = projectId,
+                                pipelineId = it,
+                                version = modelAndYaml.baseVersion,
+                                includeDraft = true
+                            )?.yaml
+                        } ?: ""
+                    )
+                ).newYaml
+            } catch (ignore: Throwable) {
+                // 旧流水线可能无法转换，用空YAML代替
+                logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
+                "# ${ignore.message}"
+            }
+            Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, newYaml)
+        }
+        val pipelineResult = if (pipelineId.isNullOrBlank()) {
+            pipelineInfoFacadeService.createPipeline(
+                userId = userId,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                version = modelAndYaml.baseVersion,
-                includeDraft = true
+                model = model ?: modelAndYaml.modelAndSetting.model,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                versionStatus = VersionStatus.COMMITTING,
+                yaml = newYaml
             )
-            val transferResult = transferService.transfer(
+        } else {
+            val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                actionType = TransferActionType.FULL_MODEL2YAML,
-                data = TransferBody(
-                    modelAndSetting = modelAndYaml.modelAndSetting,
-                    oldYaml = baseVersion?.yaml ?: ""
-                )
+                setting = setting ?: modelAndYaml.modelAndSetting.setting,
+                checkPermission = false,
+                dispatchPipelineUpdateEvent = false
             )
-            Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, transferResult.newYaml)
+            pipelineInfoFacadeService.editPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = model ?: modelAndYaml.modelAndSetting.model,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                checkTemplate = false,
+                versionStatus = VersionStatus.COMMITTING,
+                description = modelAndYaml.description,
+                yaml = newYaml,
+                savedSetting = savedSetting
+            )
         }
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            setting = setting ?: modelAndYaml.modelAndSetting.setting,
-            checkPermission = false,
-            dispatchPipelineUpdateEvent = false
-        )
-        val pipelineResult = pipelineInfoFacadeService.editPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model ?: modelAndYaml.modelAndSetting.model,
-            channelCode = ChannelCode.BS,
-            checkPermission = false,
-            checkTemplate = false,
-            versionStatus = VersionStatus.COMMITTING,
-            description = modelAndYaml.description,
-            yaml = newYaml,
-            savedSetting = savedSetting
-        )
+        pipelineId = pipelineResult.pipelineId
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
@@ -671,6 +683,22 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 debugBuildId = resource.debugBuildId,
                 baseVersion = resource.baseVersion
             )
+        )
+    }
+
+    override fun exportPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?,
+        storageType: String?
+    ): Response {
+        return pipelineInfoFacadeService.exportPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            storageType = PipelineStorageType.getActionType(storageType)
         )
     }
 

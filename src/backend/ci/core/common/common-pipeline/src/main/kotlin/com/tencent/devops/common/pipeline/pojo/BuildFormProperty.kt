@@ -40,6 +40,8 @@ data class BuildFormProperty(
     var name: String? = null,
     @ApiModelProperty("是否必须", required = true)
     var required: Boolean,
+    @ApiModelProperty("是否为常量", required = true)
+    var constant: Boolean? = false,
     @ApiModelProperty("元素类型", required = true)
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)

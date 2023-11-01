@@ -15,5 +15,9 @@ data class TemplatePreviewDetail(
     @ApiModelProperty("预览流水线设置")
     val setting: PipelineSetting?,
     @ApiModelProperty("高亮位置，可能多个")
-    val highlightMarkList: List<TransferMark>?
+    val highlightMarkList: List<TransferMark>?,
+    @ApiModelProperty("是否支持YAML解析", required = true)
+    val yamlSupported: Boolean = true,
+    @ApiModelProperty("YAML解析异常信息")
+    val yamlInvalidMsg: String? = null
 )
