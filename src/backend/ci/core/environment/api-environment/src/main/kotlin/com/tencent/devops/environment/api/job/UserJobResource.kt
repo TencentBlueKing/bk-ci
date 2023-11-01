@@ -53,6 +53,6 @@ interface UserJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "批量查询日志的请求信息", required = true)
-        queryLogsReq: QueryJobInstanceLogsReq
+        queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
 }
