@@ -4,9 +4,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceShared
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataAction
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataScope
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -38,42 +35,12 @@ class DesktopWorkspaceService @Autowired constructor(
             )
         ).data ?: return emptyMap()
 
-        val res = mutableMapOf<String, Pair<Set<String>?, MutableSet<String>?>>()
+        val res = mutableMapOf<String, FetchOwnerAndAdminItem>()
         projectAndAdmins.forEach { (projectId, admins) ->
-            res[projectId] = Pair(
-                first = admins,
-                second = mutableSetOf()
-            )
+            res[projectId] = FetchOwnerAndAdminItem(admins?.joinToString(separator = ";") ?: "")
         }
 
-        workspaceDao.fetchWorkspaceWithOwner(
-            dslContext = dslContext,
-            status = WorkspaceStatus.RUNNING,
-            mountType = WorkspaceMountType.START,
-            projectIds = projectAndAdmins.keys,
-            ip = null,
-            assignType = WorkspaceShared.AssignType.OWNER
-        )?.forEach {
-            val owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String
-
-            val projectId = it["PROJECT_ID"] as String
-
-            if (owner.isBlank()) {
-                return@forEach
-            }
-
-            res[projectId]?.second?.add(owner)
-        }
-
-        val result = mutableMapOf<String, FetchOwnerAndAdminItem>()
-        res.forEach { (projectId, adminAndOwners) ->
-            result[projectId] = FetchOwnerAndAdminItem(
-                admin = adminAndOwners.first?.joinToString(separator = ";"),
-                owner = adminAndOwners.second?.joinToString(separator = ";")
-            )
-        }
-
-        return result
+        return res
     }
 
     fun updateCCHost(

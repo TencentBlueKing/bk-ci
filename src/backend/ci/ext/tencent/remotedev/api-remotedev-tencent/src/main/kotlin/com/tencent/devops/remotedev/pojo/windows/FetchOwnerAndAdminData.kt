@@ -5,6 +5,5 @@ data class FetchOwnerAndAdminData(
 )
 
 data class FetchOwnerAndAdminItem(
-    val admin: String?,
-    val owner: String?
+    val admin: String?
 )
