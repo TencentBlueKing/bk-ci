@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.resources.job
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.UserJobResource
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.resp.JobResult
@@ -9,6 +10,7 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.service.job.JobService
 import org.springframework.beans.factory.annotation.Autowired
 
+@RestResource
 class UserJobResourceImpl @Autowired constructor(
     private val jobService: JobService
 ) : UserJobResource {
