@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -104,7 +105,10 @@ class GitProxyService @Autowired constructor(
         )
 
         val resp = records.map { record ->
-            val conf = JsonUtil.to<CodeProxyConf>(record.conf.data())
+            val conf = JsonUtil.getObjectMapper().readValue(
+                record.conf.data(),
+                object : TypeReference<CodeProxyConf>() {}
+            )
             FetchRepoResp(
                 url = record.url,
                 proxyUrl = conf.proxyUrl,
@@ -154,8 +158,6 @@ class GitProxyService @Autowired constructor(
     }
 
     companion object {
-        // bkrepo project 缓存
-        const val REDIS_BKREPO_PROJECT = "remotedev:bkrepo:existProject"
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         private const val LFS_REPONAME_PREFIX = "Lfs_"
     }
