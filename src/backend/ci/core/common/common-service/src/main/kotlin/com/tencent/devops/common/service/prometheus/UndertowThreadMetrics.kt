@@ -10,7 +10,6 @@ import javax.management.MBeanServer
 import javax.management.MalformedObjectNameException
 import javax.management.ObjectName
 
-
 class UndertowThreadMetrics : MeterBinder {
     private val platformMBeanServer = ManagementFactory.getPlatformMBeanServer()
     override fun bindTo(registry: MeterRegistry) {
