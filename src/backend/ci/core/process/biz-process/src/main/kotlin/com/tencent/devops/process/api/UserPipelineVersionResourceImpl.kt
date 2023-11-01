@@ -330,10 +330,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
             Triple(
-                false, null, I18nUtil.generateResponseDataObject(
+                false, null, I18nUtil.getCodeLanMessage(
                     messageCode = e.errorCode,
                     params = e.params,
-                    data = null,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     defaultMessage = e.defaultMessage
                 )
