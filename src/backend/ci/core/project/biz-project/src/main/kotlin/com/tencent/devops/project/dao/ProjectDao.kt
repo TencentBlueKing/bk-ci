@@ -347,7 +347,8 @@ class ProjectDao {
                 ENABLED,
                 PROPERTIES,
                 SUBJECT_SCOPES,
-                AUTH_SECRECY
+                AUTH_SECRECY,
+                PRODUCT_ID
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -375,7 +376,8 @@ class ProjectDao {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,
-                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value
+                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
+                projectCreateInfo.productId
             ).execute()
         }
     }
@@ -406,6 +408,7 @@ class ProjectDao {
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
+                .set(PRODUCT_ID, projectUpdateInfo.productId)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }

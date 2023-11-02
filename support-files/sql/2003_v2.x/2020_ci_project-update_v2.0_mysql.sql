@@ -48,6 +48,15 @@ BEGIN
         ADD COLUMN `cluster_type` VARCHAR(32) NOT NULL DEFAULT '' comment '集群类型';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'product_id') THEN
+    ALTER TABLE `T_PROJECT`
+        ADD COLUMN `product_id` int(10) DEFAULT NULL comment '运营产品ID';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

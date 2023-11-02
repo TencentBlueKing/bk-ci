@@ -173,5 +173,7 @@ data class ProjectVO(
     @ApiModelProperty("是否展示用户管理图标")
     val showUserManageIcon: Boolean? = null,
     @ApiModelProperty("渠道")
-    val channelCode: String? = null
+    val channelCode: String? = null,
+    @ApiModelProperty("运营产品ID")
+    val productId: Int? = null
 )
