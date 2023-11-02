@@ -122,7 +122,7 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    client: Client,
+    client: Client
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
