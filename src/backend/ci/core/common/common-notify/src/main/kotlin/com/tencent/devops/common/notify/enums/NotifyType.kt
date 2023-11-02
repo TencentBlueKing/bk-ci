@@ -33,5 +33,6 @@ enum class NotifyType {
     WECHAT,
     SMS,
     WEWORK,
-    WEWORK_GROUP
+    WEWORK_GROUP,
+    VOICE
 }
