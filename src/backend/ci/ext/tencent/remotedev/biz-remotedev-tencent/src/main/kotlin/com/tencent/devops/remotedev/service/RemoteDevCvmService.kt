@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.dao.RemoteDevCvmDao
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import org.jooq.DSLContext
@@ -82,13 +84,20 @@ class RemoteDevCvmService @Autowired constructor(
         return true
     }
 
-    // 获取工作空间模板
-    fun getRemotedevCvmList(projectId: String?): List<RemotedevCvmData> {
+    fun getAllRemotedevCvm(
+        projectId: String? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): List<RemotedevCvmData> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
         val result = mutableListOf<RemotedevCvmData>()
         remoteDevCvmDao.queryCvmList(
+            dslContext = dslContext,
             projectId = projectId,
-            dslContext = dslContext
-
+            zone = null,
+            ips = null,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ).forEach {
             result.add(
                 RemotedevCvmData(
@@ -104,5 +113,49 @@ class RemoteDevCvmService @Autowired constructor(
             )
         }
         return result
+    }
+
+    // 获取工作空间模板
+    fun getRemotedevCvmList(
+        projectId: String? = null,
+        zone: String? = null,
+        ips: List<String>? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Page<RemotedevCvmData> {
+        logger.info("Start to getRemotedevCvmList")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val count = remoteDevCvmDao.countAllCvmList(
+            dslContext = dslContext,
+            projectId = projectId,
+            zone = zone,
+            ips = ips
+        )
+        val result = mutableListOf<RemotedevCvmData>()
+        remoteDevCvmDao.queryCvmList(
+            dslContext = dslContext,
+            projectId = projectId,
+            zone = zone,
+            ips = ips,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        ).forEach {
+            result.add(
+                RemotedevCvmData(
+                    id = it.id.toInt(),
+                    projectId = it.projectId,
+                    ip = it.ip,
+                    zone = it.zone,
+                    availableRegion = it.availableRegion,
+                    cpu = it.cpu,
+                    memory = it.memory,
+                    subnet = it.subnet
+                )
+            )
+        }
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = result
+        )
     }
 }

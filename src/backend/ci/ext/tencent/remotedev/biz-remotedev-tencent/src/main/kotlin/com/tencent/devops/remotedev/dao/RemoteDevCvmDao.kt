@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevCvm
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevCvmRecord
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
@@ -73,17 +75,53 @@ class RemoteDevCvmDao {
         ).execute()
     }
 
-    fun queryCvmList(
+    fun countAllCvmList(
+        dslContext: DSLContext,
         projectId: String?,
-        dslContext: DSLContext
+        zone: String?,
+        ips: List<String>?
+    ): Long {
+            val conditions = mutableListOf<Condition>()
+            with(TRemotedevCvm.T_REMOTEDEV_CVM) {
+                projectId?.let {
+                    conditions.add(PROJECT_ID.eq(it))
+                }
+                zone?.let {
+                    conditions.add(ZONE.eq(it))
+                }
+                ips?.let {
+                    conditions.add(IP.`in`(ips))
+                }
+            }
+            return dslContext.selectCount().from(TRemotedevCvm.T_REMOTEDEV_CVM)
+                .where(conditions)
+                .skipCheck()
+                .fetchOne(0, Long::class.java)!!
+    }
+
+    fun queryCvmList(
+        dslContext: DSLContext,
+        projectId: String?,
+        zone: String?,
+        ips: List<String>?,
+        limit: SQLLimit
     ): Result<TRemotedevCvmRecord> {
         val conditions = mutableListOf<Condition>()
         with(TRemotedevCvm.T_REMOTEDEV_CVM) {
             projectId?.let {
                 conditions.add(PROJECT_ID.eq(it))
             }
+            zone?.let {
+                conditions.add(ZONE.eq(it))
+            }
+            ips?.let {
+                conditions.add(IP.`in`(ips))
+            }
         }
-        return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM).where(conditions).fetch()
+        return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM)
+            .where(conditions)
+            .limit(limit.limit).offset(limit.offset)
+            .fetch()
     }
 
     fun updateCvm(

@@ -448,8 +448,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getRemotedevCvm(projectId: String?): List<RemotedevCvmData> {
-        logger.info("get remotedev cvm list")
-        return remoteDevCvmService.getRemotedevCvmList(projectId)
+        logger.debug("get remotedev cvm list")
+        return remoteDevCvmService.getAllRemotedevCvm(projectId)
     }
 
     private fun parsingWorkspace(

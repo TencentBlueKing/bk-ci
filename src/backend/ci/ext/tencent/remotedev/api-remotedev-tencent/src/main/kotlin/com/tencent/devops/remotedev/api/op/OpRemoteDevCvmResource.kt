@@ -28,13 +28,14 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmFetchData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -62,13 +63,15 @@ interface OpRemoteDevCvmResource {
     ): Result<Boolean>
 
     @ApiOperation("获取cvm")
-    @GET
+    @POST
     @Path("/list")
     fun getRemotedevCvmList(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<RemotedevCvmData>>
+        userId: String,
+        @ApiParam("查询参数")
+        data: RemotedevCvmFetchData
+    ): Result<Page<RemotedevCvmData>>
 
     @ApiOperation("更新cvm")
     @PUT
