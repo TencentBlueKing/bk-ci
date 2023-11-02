@@ -14,10 +14,10 @@ import com.tencent.devops.notify.pojo.VoiceMessage
 import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.utils.TofUtil
 import org.jooq.DSLContext
-import org.jvnet.hk2.annotations.Service
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
 @Primary
 @Service
