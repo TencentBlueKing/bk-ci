@@ -109,7 +109,8 @@ object ProjectUtils {
             authSecrecy = tProjectRecord.authSecrecy,
             managePermission = managePermission,
             showUserManageIcon = showUserManageIcon,
-            channelCode = tProjectRecord.channel
+            channelCode = tProjectRecord.channel,
+            productId = tProjectRecord.productId
         )
     }
 
