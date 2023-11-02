@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -158,11 +159,11 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             )
         )
         val result = pipelineVersionFacadeService.getVersionCreatorInPage(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize
-            )
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize
+        )
         return Result(result)
     }
 
