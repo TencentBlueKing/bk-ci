@@ -34,14 +34,11 @@ import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -87,10 +84,9 @@ class SampleStoreFileServiceImpl : StoreFileService() {
 
     override fun textReferenceFileDownload(
         userId: String,
-        textReferenceFileCache: BkDiskLruFileCache,
-        fileCacheKey: String,
+        fileDirPath: String,
         request: TextReferenceFileDownloadRequest
-    ): File? {
+    ): String? {
         val separator = File.separator
         val fileNameList = getFileNames(
             projectCode = request.projectCode,
@@ -100,10 +96,6 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             logger.warn("get text reference file list fail")
             return null
         }
-        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
-            userId = userId,
-            atomDir = request.fileDir
-        )
         val downloadPath = "$fileDirPath${separator}file"
         fileNameList.forEach {
             downloadFile(
@@ -111,11 +103,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
                 File(downloadPath, it)
             )
         }
-        val fileDownloadDir = File(downloadPath)
-        val zipPath = "$downloadPath${File.separator}file.zip"
-        val zipFile = ZipUtil.zipDir(fileDownloadDir, zipPath)
-        textReferenceFileCache.put(fileCacheKey, zipFile)
-        return fileDownloadDir
+        return downloadPath
     }
 
     @Suppress("NestedBlockDepth")

@@ -44,6 +44,8 @@ import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.regex.Matcher
@@ -248,10 +250,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     branch = branch
                 ) ?: return@forEach
                 val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
-                logger.info("textReferenceContentMap:$textReferenceContentMap")
-                var textReferenceFileDir: File? = null
+                var textReferenceFileDirPath: String? = null
                 if (textReferenceContentMap.isNotEmpty()) {
-                    textReferenceFileDir = storeFileService.getTextReferenceFileDir(
+                    textReferenceFileDirPath = storeFileService.getTextReferenceFileDir(
                         userId = userId,
                         version = version,
                         request = TextReferenceFileDownloadRequest(
@@ -261,13 +262,18 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                         )
                     )
                 }
-                if (textReferenceFileDir != null && textReferenceFileDir.exists()) {
-                    textReferenceContentMap.forEach { (k, v) ->
-                        fileProperties[k] = getTextReferenceFileParsing(
-                            userId = userId,
-                            fileDir = textReferenceFileDir.path,
-                            content = v
-                        )
+                val isDirectoryNotEmpty = isDirectoryNotEmpty(textReferenceFileDirPath)
+                if (isDirectoryNotEmpty) {
+                    try {
+                        textReferenceContentMap.forEach { (k, v) ->
+                            fileProperties[k] = getTextReferenceFileParsing(
+                                userId = userId,
+                                fileDir = textReferenceFileDirPath!!,
+                                content = v
+                            )
+                        }
+                    } finally {
+                        File(textReferenceFileDirPath!!).deleteRecursively()
                     }
                 }
 
@@ -379,11 +385,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 // 文本文件引用只允许引用一层，防止循环引用
                 if (!isStatic && !recursionFlag) {
                     val textFile = File("$fileDir${File.separator}$fileName")
-                    result = textFile.readText()
                     return getTextReferenceFileParsing(
                         userId = userId,
                         fileDir = fileDir,
-                        content = result,
+                        content = textFile.readText(),
                         recursionFlag = true
                     )
                 }
@@ -403,5 +408,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             logger.info("failed to parse text reference")
         }
         return result
+    }
+
+    private fun isDirectoryNotEmpty(path: String?): Boolean {
+        if (path == null) {
+            return false
+        }
+        val directory = Paths.get(path)
+        return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
 }
