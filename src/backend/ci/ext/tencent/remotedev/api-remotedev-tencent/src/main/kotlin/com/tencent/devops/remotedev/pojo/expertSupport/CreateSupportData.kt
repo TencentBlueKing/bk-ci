@@ -4,7 +4,6 @@ data class CreateSupportData(
     val projectId: String,
     val hostIp: String,
     val creator: String,
-    val responder: String,
     val content: String,
     val workspaceName: String
 )

@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.expertSupport.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expertSupport.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.expertSupport.UpdateSupportData
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -29,21 +30,22 @@ class ExpertSupportService @Autowired constructor(
     fun createSupport(
         data: CreateSupportData
     ) {
+        // 从配置获取响应人
+        val responder = expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.RESPONDER)
+        if (responder.isEmpty()) {
+            logger.warn("createSupport no responder")
+            return
+        }
         val id = expertSupportDao.addSupport(
             dslContext = dslContext,
             projectId = data.projectId,
             hostIp = data.hostIp,
             workspaceName = data.workspaceName,
             creator = data.creator,
-            responder = data.responder,
+            responder = responder.first().content,
             status = ExpertSupportStatus.CREATE,
             content = data.content
         )
-        // 从配置获取响应人
-        val responder = expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.RESPONDER)
-        if (responder.isEmpty()) {
-            return
-        }
         // 发送企业微信给响应者
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
@@ -108,5 +110,9 @@ class ExpertSupportService @Autowired constructor(
         id: Long
     ) {
         expertSupportDao.deleteExpertSupportConfig(dslContext, id)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
     }
 }
