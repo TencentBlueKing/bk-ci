@@ -165,6 +165,7 @@ class GitproxyBkRepoClient @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
+            logger.debug("gitproxy request bkrepo {} resp {}", this.request.url, responseContent)
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
