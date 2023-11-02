@@ -56,6 +56,7 @@ class TOF4Service @Autowired constructor(
         const val TOF4_EMAIL_URL_WITH_ATTACH = "/ebus/tof4_msg/api/v1/Message/SendMail"
         const val TOF4_EMAIL_URL = "/ebus/tof4_msg/api/v1/Message/SendMailInfo"
         const val TOF4_RTX_URL = "/ebus/tof4_msg/api/v1/Message/SendRTXInfo"
+        const val TOF4_VOICE_URL = "/ebus/tof4_msg/api/v1/Message/SendCtiInfo"
     }
 
     private val okHttpClient = OkHttpClient()

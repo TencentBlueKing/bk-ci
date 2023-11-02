@@ -41,6 +41,7 @@ const val ROUTE_EMAIL = "email"
 const val ROUTE_SMS = "sms"
 const val ROUTE_WEWORK = "wework"
 const val ROUTE_PUSH = "push"
+const val ROUTE_VOICE = "voice"
 
 const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE = "QUALITY_AUDIT_NOTIFY_TEMPLATE"
 const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE = "QUALITY_END_NOTIFY_TEMPLATE"
