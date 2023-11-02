@@ -43,7 +43,7 @@ class GitProxyService @Autowired constructor(
             enableLfs = false
         )
         var lfsRespData: CreateRepoRespData? = null
-        val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_GIT
+        val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
         if (enableLfs) {
             lfsRespData = gitproxyBkRepoClient.createRepo(
                 userId = userId,
@@ -60,7 +60,7 @@ class GitProxyService @Autowired constructor(
             dslContext = dslContext,
             projectId = data.projectId,
             name = data.repoName,
-            type = scmType2ProxyType(data.gitType),
+            type = scmType2ProxyType(data.gitType)!!,
             url = data.url,
             conf = CodeProxyConf(
                 proxyUrl = respData?.configuration?.settings?.clientUrl,
@@ -150,7 +150,10 @@ class GitProxyService @Autowired constructor(
         return true
     }
 
-    private fun scmType2ProxyType(scmType: ScmType?): String {
+    private fun scmType2ProxyType(scmType: ScmType?): String? {
+        if (scmType == null) {
+            return null
+        }
         return when (scmType) {
             ScmType.CODE_SVN -> "SVN"
             else -> "GIT"
