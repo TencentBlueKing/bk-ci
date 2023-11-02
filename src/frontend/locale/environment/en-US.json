@@ -270,5 +270,8 @@
         "OTHER": "Other",
         "UNKNOWN": "Unknown"
     },
-    "newPool": "New Pool"
+    "newPool": "New Pool",
+    "nodeSearchTips": "IP / Alias / OS / Creator / Last Modifier",
+    "alias": "Alias",
+    "lastModifier": "Last Modifier"
 }

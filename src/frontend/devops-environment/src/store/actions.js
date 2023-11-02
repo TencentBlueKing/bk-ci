@@ -91,8 +91,12 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`).then(response => {
+    requestNodeList ({ commit }, {
+        projectId,
+        page,
+        pageSize
+    }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}?page=${page}&pageSize=${pageSize}`).then(response => {
             return response
         })
     },

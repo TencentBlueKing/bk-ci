@@ -371,7 +371,7 @@
             async confirmFn () {
                 const selectNodeId = []
                 this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
-                let message, theme
+                let theme
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
@@ -382,18 +382,12 @@
                         params: selectNodeId
                     })
 
-                    message = this.$t('environment.successfullyImported')
                     theme = 'success'
                 } catch (err) {
-                    message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
                     this.loading.isLoading = false
-                    this.$emit('confirm-fn')
+                    this.$emit('confirm-fn', theme)
                     this.importText = this.$t('environment.import')
                 }
             },

@@ -93,7 +93,7 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
+                <bk-button key="a" theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
                     @click="confirmFn">{{ constructToolConf.importText }}</bk-button>
                 <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
             </div>

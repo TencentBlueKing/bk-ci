@@ -265,5 +265,8 @@
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知"
     },
-    "newPool": "创建"
+    "newPool": "创建",
+    "nodeSearchTips": "IP/别名/操作系统/创建人/最近修改人",
+    "alias": "别名",
+    "lastModifier": "最近修改人"
 }

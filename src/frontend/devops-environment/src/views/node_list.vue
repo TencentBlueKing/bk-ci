@@ -13,7 +13,7 @@
                                 action: NODE_RESOURCE_ACTION.CREATE
                             }
                         }"
-                        theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                        theme="primary" @click="toImportNode('cmdb')" key="idcTestMachine">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
                     <bk-button
                         v-perm="{
                             permissionData: {
@@ -23,7 +23,7 @@
                                 action: NODE_RESOURCE_ACTION.CREATE
                             }
                         }"
-                        theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+                        theme="primary" @click="toImportNode('construct')" key="thirdPartyBuildMachine">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
                 </template>
                 <bk-button
                     v-else
@@ -45,207 +45,236 @@
             isLoading: loading.isLoading,
             title: loading.title
         }">
-            <bk-table v-if="showContent && nodeList.length"
-                :size="tableSize"
-                class="node-table-wrapper"
-                row-class-name="node-item-row"
-                :data="nodeList">
-                <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
-                    <template slot-scope="props">
-                        <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
-                            <div class="edit-content">
-                                <input type="text" class="bk-form-input env-name-input"
-                                    maxlength="30"
-                                    name="nodeName"
-                                    v-validate="'required'"
-                                    v-model="curEditNodeDisplayName"
-                                    :class="{ 'is-danger': errors.has('nodeName') }">
-                                <div class="handler-btn">
-                                    <span class="edit-base save" @click="saveEdit(props.row)">{{ $t('environment.save') }}</span>
-                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{ $t('environment.cancel') }}</span>
+            <template v-if="showContent && nodeList.length">
+                <bk-search-select
+                    class="search-input"
+                    v-model="searchValue"
+                    :placeholder="$t('environment.nodeSearchTips')"
+                    :data="filterData"
+                    :show-condition="false"
+                    clearable
+                >
+                </bk-search-select>
+                <bk-table
+                    :size="tableSize"
+                    class="node-table-wrapper"
+                    row-class-name="node-item-row"
+                    :data="nodeList"
+                    :pagination="pagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="handlePageLimitChange"
+                >
+                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" show-overflow-tooltip>
+                        <template slot-scope="props">
+                            <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
+                                <div class="edit-content">
+                                    <input type="text" class="bk-form-input env-name-input"
+                                        maxlength="30"
+                                        name="nodeName"
+                                        v-validate="'required'"
+                                        v-model="curEditNodeDisplayName"
+                                        :class="{ 'is-danger': errors.has('nodeName') }">
+                                    <div class="handler-btn">
+                                        <span class="edit-base save" @click="saveEdit(props.row)">{{ $t('environment.save') }}</span>
+                                        <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{ $t('environment.cancel') }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="table-node-item node-item-id" v-else>
-                            <span
-                                v-perm="canShowDetail(props.row) ? {
-                                    hasPermission: props.row.canView,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.VIEW
-                                    }
-                                } : {}"
-                                class="node-name"
-                                :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
-                                :title="props.row.displayName"
-                                @click="toNodeDetail(props.row)"
-                            >
-                                {{ props.row.displayName || '-' }}
-                            </span>
-                            <span
-                                v-perm="{
-                                    hasPermission: props.row.canEdit,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.EDIT
-                                    }
-                                }"
-                            >
-                                <i class="devops-icon icon-edit" v-if="!isEditNodeStatus" @click="editNodeName(props.row)"></i>
-                            </span>
-                        </div>
-                    </template>
-                </bk-table-column>
-                <bk-table-column label="IP" prop="ip" min-width="80">
-                    <template slot-scope="props">
-                        {{ props.row.ip || '-' }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column v-if="allRenderColumnMap.os" :label="$t('environment.nodeInfo.os')" prop="osName">
-                    <template slot-scope="props">
-                        {{ props.row.osName || '-' }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus">
-                    <template slot-scope="props">
-                        <div class="table-node-item node-item-status"
-                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
-                            <span class="node-status-icon normal-stutus-icon"></span>
-                            <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
-                        </div>
-                        <div class="table-node-item node-item-status">
-                            <!-- 状态icon -->
-                            <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
-                            <span class="node-status-icon abnormal-stutus-icon"
-                                v-if="failStatus.includes(props.row.nodeStatus)">
-                            </span>
-                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                v-if="runningStatus.includes(props.row.nodeStatus)">
-                                <div class="rotate rotate1"></div>
-                                <div class="rotate rotate2"></div>
-                                <div class="rotate rotate3"></div>
-                                <div class="rotate rotate4"></div>
-                                <div class="rotate rotate5"></div>
-                                <div class="rotate rotate6"></div>
-                                <div class="rotate rotate7"></div>
-                                <div class="rotate rotate8"></div>
-                            </div>
-                            <!-- 状态值 -->
-                            <span class="install-agent"
-                                v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
-                                @click="installAgent(props.row)">
-                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                            </span>
-                            <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
-                            <div class="install-agent"
-                                v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                                @click="installAgent(props.row)"
-                            >{{ `（${$t('environment.install')}Agent）` }}</div>
-                        </div>
-                    </template>
-                </bk-table-column>
-                <bk-table-column v-if="allRenderColumnMap.usage" :label="$t('environment.nodeInfo.usage')" prop="usage" min-width="80">
-                    <template slot-scope="props">
-                        {{ props.row.ip || '-' }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80"></bk-table-column>
-                <!-- <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
-                    <template slot-scope="props">
-                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
-                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
-                                <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                            </div>
-                            <div class="prompt-operator" v-else>
-                                <bk-popover placement="top">
-                                    <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                    <template slot="content">
-                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                    </template>
-                                </bk-popover>
-                            </div>
-                        </div>
-                        <div v-else>
-                            <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
-                            <span>({{ props.row.createdUser }})</span>
-                        </div>
-                    </template>
-                </bk-table-column> -->
-                <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyBy" min-width="80"></bk-table-column>
-                <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
-                    <template slot-scope="props">
-                        {{ props.row.createTime || '-' }}
-                    </template>
-                </bk-table-column> -->
-                <bk-table-column v-if="allRenderColumnMap.lastModifyTime" :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
-                    <template slot-scope="props">
-                        {{ props.row.lastModifyTime || '-' }}
-                    </template>
-                </bk-table-column>
-                <bk-table-column :label="$t('environment.operation')" width="160">
-                    <template slot-scope="props">
-                        <template v-if="props.row.canUse">
-                            <div class="table-node-item node-item-handler">
+                            <div class="table-node-item node-item-id" v-else>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                    v-perm="{
-                                        hasPermission: props.row.canDelete,
+                                    v-perm="canShowDetail(props.row) ? {
+                                        hasPermission: props.row.canView,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
                                             resourceType: NODE_RESOURCE_TYPE,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: NODE_RESOURCE_ACTION.VIEW
+                                        }
+                                    } : {}"
+                                    class="node-name"
+                                    :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                                    :title="props.row.displayName"
+                                    @click="toNodeDetail(props.row)"
+                                >
+                                    {{ props.row.displayName || '-' }}
+                                </span>
+                                <span
+                                    v-perm="{
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.EDIT
                                         }
                                     }"
-                                    class="node-handle delete-node-text"
-                                    @click.stop="confirmDelete(props.row, index)"
                                 >
-                                    {{ $t('environment.delete') }}
-                                </span>
-                                <span id="moreHandler" class="node-handle more-handle"
-                                    v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
-                                    <bk-popover
-                                        placement="bottom-start"
-                                        size="samll"
-                                        theme="light">
-                                        <span>{{ $t('environment.more') }}</span>
-                                        <div slot="content" class="devcloud-menu-list">
-                                            <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
-                                        </div>
-                                    </bk-popover>
+                                    <i class="devops-icon icon-edit" v-if="!isEditNodeStatus" @click="editNodeName(props.row)"></i>
                                 </span>
                             </div>
                         </template>
-                        <template v-else>
-                            <bk-button
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                theme="primary"
-                                outline
-                                @click="handleApplyPermission(props.row)"
-                            >
-                                {{ $t('environment.applyPermission') }}
-                            </bk-button>
+                    </bk-table-column>
+                    <bk-table-column label="IP" prop="ip" min-width="80" show-overflow-tooltip>
+                        <template slot-scope="props">
+                            {{ props.row.ip || '-' }}
                         </template>
-                    </template>
-                </bk-table-column>
-                <bk-table-column type="setting">
-                    <bk-table-setting-content
-                        :fields="tableColumn"
-                        :selected="selectedTableColumn"
-                        :size="tableSize"
-                        @setting-change="handleSettingChange" />
-                </bk-table-column>
-            </bk-table>
+                    </bk-table-column>
+                    <bk-table-column v-if="allRenderColumnMap.os" :label="$t('environment.nodeInfo.os')" prop="osName" show-overflow-tooltip>
+                        <template slot-scope="props">
+                            {{ props.row.osName || '-' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus" min-width="150">
+                        <template slot-scope="props">
+                            <div class="table-node-item node-item-status"
+                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
+                                <span class="node-status-icon normal-stutus-icon"></span>
+                                <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
+                            </div>
+                            <div class="table-node-item node-item-status">
+                                <!-- 状态icon -->
+                                <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
+                                <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
+                                <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                    v-if="runningStatus.includes(props.row.nodeStatus)">
+                                    <div class="rotate rotate1"></div>
+                                    <div class="rotate rotate2"></div>
+                                    <div class="rotate rotate3"></div>
+                                    <div class="rotate rotate4"></div>
+                                    <div class="rotate rotate5"></div>
+                                    <div class="rotate rotate6"></div>
+                                    <div class="rotate rotate7"></div>
+                                    <div class="rotate rotate8"></div>
+                                </div>
+                                <!-- 状态值 -->
+                                <span class="install-agent"
+                                    v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
+                                    @click="installAgent(props.row)">
+                                    {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                </span>
+                                <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                                <!-- <div class="install-agent"
+                                    v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                    @click="installAgent(props.row)"
+                                >{{ `（${$t('environment.install')}Agent）` }}</div> -->
+                            </div>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column v-if="allRenderColumnMap.usage" :label="$t('environment.nodeInfo.usage')" prop="usage" min-width="80" show-overflow-tooltip>
+                        <template slot-scope="props">
+                            {{ props.row.ip || '-' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80" show-overflow-tooltip></bk-table-column>
+                    <!-- <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
+                        <template slot-scope="props">
+                            <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
+                                <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
+                                    <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
+                                </div>
+                                <div class="prompt-operator" v-else>
+                                    <bk-popover placement="top">
+                                        <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
+                                        <template slot="content">
+                                            <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
+                                            <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
+                                            <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
+                                        </template>
+                                    </bk-popover>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
+                                <span>({{ props.row.createdUser }})</span>
+                            </div>
+                        </template>
+                    </bk-table-column> -->
+                    <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyBy" min-width="80" show-overflow-tooltip></bk-table-column>
+                    <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
+                        <template slot-scope="props">
+                            {{ props.row.createTime || '-' }}
+                        </template>
+                    </bk-table-column> -->
+                    <bk-table-column v-if="allRenderColumnMap.lastModifyTime" :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80" show-overflow-tooltip>
+                        <template slot-scope="props">
+                            {{ props.row.lastModifyTime || '-' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t('environment.operation')" width="200">
+                        <template slot-scope="props">
+                            <template v-if="props.row.canUse">
+                                <div class="table-node-item">
+                                    <span
+                                        class="node-handle delete-node-text">
+                                        {{ $t('environment.reImport') }}
+                                    </span>
+                                    <span
+                                        class="node-handle delete-node-text"
+                                        @click="handleInstallAgent"
+                                    >
+                                        {{ $t('environment.installAgent') }}
+                                    </span>
+                                    <span
+                                        class="node-handle delete-node-text"
+                                        @click="handleInstallAgent"
+                                    >
+                                        {{ $t('environment.reinstallAgent') }}
+                                    </span>
+                                    <span
+                                        v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                        v-perm="{
+                                            hasPermission: props.row.canDelete,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceCode: props.row.nodeHashId,
+                                                action: NODE_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        class="node-handle delete-node-text"
+                                        @click.stop="confirmDelete(props.row, index)"
+                                    >
+                                        {{ $t('environment.delete') }}
+                                    </span>
+                                    <span id="moreHandler" class="node-handle more-handle"
+                                        v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
+                                        <bk-popover
+                                            placement="bottom-start"
+                                            size="samll"
+                                            theme="light">
+                                            <span>{{ $t('environment.more') }}</span>
+                                            <div slot="content" class="devcloud-menu-list">
+                                                <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
+                                            </div>
+                                        </bk-popover>
+                                    </span>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <bk-button
+                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    theme="primary"
+                                    outline
+                                    @click="handleApplyPermission(props.row)"
+                                >
+                                    {{ $t('environment.applyPermission') }}
+                                </bk-button>
+                            </template>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column type="setting">
+                        <bk-table-setting-content
+                            :fields="tableColumn"
+                            :selected="selectedTableColumn"
+                            :size="tableSize"
+                            @setting-change="handleSettingChange" />
+                    </bk-table-column>
+                </bk-table>
+            </template>
 
             <empty-node v-if="showContent && !nodeList.length"
                 :to-import-node="toImportNode"
@@ -281,6 +310,17 @@
             @cancelMakeMirror="makeMirrorConf.isShow = false"
             @submitMakeMirror="requestList"
         ></make-mirror-dialog>
+
+        <!-- 导入成功、失败提示弹框 -->
+        <import-tips-dialog
+            ref="importTipsDialog"
+            :status="importStatus"
+        />
+
+        <!-- 重装/安装Agent -->
+        <installAgent
+            ref="installAgent"
+        />
     </div>
 </template>
 
@@ -289,6 +329,9 @@
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import importTipsDialog from '@/components/devops/environment/import-tips-dialog'
+    import installAgent from '@/components/devops/environment/install-agent'
+    import StatusIcon from '@/components/status-icon.vue'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
@@ -302,7 +345,10 @@
             thirdConstruct,
             configManageNode,
             dropdownList,
-            makeMirrorDialog
+            makeMirrorDialog,
+            importTipsDialog,
+            StatusIcon,
+            installAgent
         },
         data () {
             return {
@@ -390,7 +436,14 @@
                     ]
                 },
                 selectedTableColumn: [],
-                tableSize: 'small'
+                tableSize: 'small',
+                searchValue: [],
+                importStatus: 'success',
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 15
+                }
             }
         },
         computed: {
@@ -401,11 +454,51 @@
                 return window.userInfo
             },
             allRenderColumnMap () {
-                console.log(this.selectedTableColumn, 'selectedTableColumn')
                 return this.selectedTableColumn.reduce((result, item) => {
                     result[item.id] = true
                     return result
                 }, {})
+            },
+            filterData () {
+                const data = [
+                    {
+                        name: 'IP',
+                        id: 'ip'
+                    },
+                    {
+                        name: this.$t('environment.alias'),
+                        id: 'alias'
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.os'),
+                        id: 'OS',
+                        children: [
+                            {
+                                id: 'windows',
+                                name: 'Windows'
+                            },
+                            {
+                                id: 'Linux',
+                                name: 'Linux'
+                            },
+                            {
+                                id: 'Mac',
+                                name: 'Mac'
+                            }
+                        ]
+                    },
+                    {
+                        name: this.$t('environment.envInfo.creator'),
+                        id: 'creator'
+                    },
+                    {
+                        name: this.$t('environment.lastModifier'),
+                        id: 'lastModifier'
+                    }
+                ]
+                return data.filter(data => {
+                    return !this.searchValue.find(val => val.id === data.id)
+                })
             }
         },
         watch: {
@@ -520,10 +613,13 @@
             async requestList () {
                 try {
                     const res = await this.$store.dispatch('environment/requestNodeList', {
-                        projectId: this.projectId
+                        projectId: this.projectId,
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
                     })
 
                     this.nodeList.splice(0, this.nodeList.length)
+                    this.pagination.count = 200
 
                     res.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
@@ -820,7 +916,7 @@
                 if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
-                    this.constructToolConf.importText = this.$t('environment.comfirm')
+                    this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 } else if (['CC', 'CMDB'].includes(node.nodeType)) {
                     const url = `${IWIKI_DOCS_URL}/x/WtMrAg`
@@ -840,7 +936,7 @@
             async confirmFn () {
                 if (!this.dialogLoading.isLoading) {
                     this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.comfirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
+                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.confirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
 
                     let message, theme
 
@@ -1012,7 +1108,9 @@
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
             },
-            confirmCmdbFn (nodes) {
+            confirmCmdbFn (theme) {
+                this.importStatus = theme
+                this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
                 this.requestList()
             },
@@ -1026,6 +1124,16 @@
                     columns: fields,
                     size
                 }))
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+            },
+            
+            handlePageLimitChange (limit) {
+                this.pagination.limit = limit
+            },
+            handleInstallAgent () {
+                this.$refs.installAgent.isShow = true
             }
         }
     }
@@ -1121,7 +1229,7 @@
 
         .node-item-content {
             position: absolute;
-            top: 12px;
+            top: 7px;
             display: flex;
             width: 90%;
             min-width: 280px;
@@ -1146,7 +1254,7 @@
                 margin-left: 10px;
                 position: absolute;
                 right: 11px;
-                top: 8px;
+                top: 7px;
                 .edit-base {
                     cursor: pointer;
                 }
@@ -1165,6 +1273,7 @@
         }
 
         .node-table-wrapper {
+            margin-top: 20px;
             td:first-child {
                 position: relative;
                 color: $primaryColor;
@@ -1200,10 +1309,6 @@
                 padding-right: 30px;
             }
 
-            td:last-child {
-                cursor: pointer;
-            }
-
             .edit-node-item {
                 width: 24%;
             }
@@ -1230,5 +1335,8 @@
             padding: 15px 55px;
             color: $fontWeightColor;
         }
+    }
+    .search-input {
+        width: 500px;
     }
 </style>
