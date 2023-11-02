@@ -259,6 +259,10 @@
                 type: String,
                 default: ''
             },
+            userId: {
+                type: String,
+                default: ''
+            },
             isP4: Boolean,
             isSvn: Boolean,
             isGitLab: Boolean,
@@ -428,6 +432,16 @@
                     }
                 },
                 deep: true
+            },
+
+            userId (val) {
+                if (val) {
+                    this.newRepoInfo = {
+                        ...this.newRepoInfo,
+                        userName: val
+                    }
+                    this.handleUpdateRepo()
+                }
             }
         },
         methods: {
@@ -445,23 +459,15 @@
                         redirectUrl: window.location.href,
                         refreshToken: true
                     }).then(res => {
-                        if (res.status === 200) {
-                            this.newRepoInfo = {
-                                ...this.newRepoInfo,
-                                userName: this.$store.state.user.username
-                            }
-                            this.handleUpdateRepo()
-                        } else {
-                            window.location.href = res.url
-                        }
+                        window.location.href = res.url
                         this.$emit('updateList')
                     }).finally(() => {
-                        const { id, page, limit } = this.$route.query
+                        const newQuery = { ...this.$route.query }
+                        delete newQuery.resetType
+                        delete newQuery.userId
                         this.$router.push({
                             query: {
-                                id,
-                                page,
-                                limit
+                                ...newQuery
                             }
                         })
                     })
@@ -469,24 +475,17 @@
                     this.refreshGithubOauth({
                         projectId: this.projectId,
                         resetType: 'resetGithubOauth',
-                        redirectUrl: window.location.href
+                        redirectUrl: window.location.href,
+                        refreshToken: true
                     }).then(res => {
-                        if (res.status === 200) {
-                            this.newRepoInfo = {
-                                ...this.newRepoInfo,
-                                userName: this.$store.state.user.username
-                            }
-                            this.handleUpdateRepo()
-                        } else {
-                            window.location.href = res.url
-                        }
+                        window.location.href = res.url
                     }).finally(() => {
-                        const { id, page, limit } = this.$route.query
+                        const newQuery = { ...this.$route.query }
+                        delete newQuery.resetType
+                        delete newQuery.userId
                         this.$router.push({
                             query: {
-                                id,
-                                page,
-                                limit
+                                ...newQuery
                             }
                         })
                     })
@@ -540,6 +539,15 @@
                     })
                 }).finally(() => {
                     this.isSaveLoading = false
+                    const newQuery = { ...this.$route.query }
+                    delete newQuery.resetType
+                    delete newQuery.userId
+
+                    this.$router.push({
+                        query: {
+                            ...newQuery
+                        }
+                    })
                 })
             },
             handleConfirm () {

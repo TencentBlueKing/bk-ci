@@ -353,7 +353,7 @@ const actions = {
         type,
         resetType = '',
         redirectUrl = '',
-        refreshToken
+        refreshToken = false
     }) {
         const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}&refreshToken=${refreshToken}`)
         commit(SET_OAUTH_MUTATION, {
@@ -369,9 +369,10 @@ const actions = {
     async refreshGithubOauth ({ commit }, {
         projectId,
         resetType = '',
-        redirectUrl = ''
+        redirectUrl = '',
+        refreshToken = false
     }) {
-        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/github/isOauth?projectId=${projectId}&validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}&refreshToken=${refreshToken}`)
         commit(SET_OAUTH_MUTATION, {
             oAuth: res,
             type: 'github'

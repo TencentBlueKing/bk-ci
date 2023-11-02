@@ -251,6 +251,7 @@
             :cur-repo="curRepo"
             :repo-info="repoInfo"
             :type="type"
+            :user-id="userId"
             :is-p4="isP4"
             :is-svn="isSvn"
             :is-git-lab="isGitLab"
@@ -320,7 +321,8 @@
                 isGithub: false,
                 isGitLab: false,
                 pacProjectName: '',
-                codelibTypeConstants: ''
+                codelibTypeConstants: '',
+                userId: ''
             }
         },
         computed: {
@@ -369,11 +371,13 @@
                 handler (val) {
                     setTimeout(async () => {
                         // await this.handleCheckPacProject(val)
-                        const { resetType } = this.$route.query
+                        const { resetType, userId } = this.$route.query
                         if (['checkGitOauth', 'checkTGitOauth', 'checkGithubOauth'].includes(resetType)) {
                             await this.handleTogglePacStatus()
                         } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
-                            await this.handleResetAuth()
+                            this.userId = userId
+                            console.log(123)
+                            // await this.handleResetAuth()
                         }
                     }, 200)
                 },
