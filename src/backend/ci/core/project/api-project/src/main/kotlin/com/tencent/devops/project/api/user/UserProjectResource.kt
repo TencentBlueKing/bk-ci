@@ -333,7 +333,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/getOperationalProducts")
+    @Path("/product/getOperationalProducts")
     @ApiOperation("查询运营产品")
     fun getOperationalProducts(
         @ApiParam("userId", required = true)
