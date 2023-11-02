@@ -44,31 +44,41 @@ import org.slf4j.LoggerFactory
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(
     val authPermissionApi: AuthPermissionApi,
-    val authProjectApi: AuthProjectApi,
-    val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
-    val authResourceApi: AuthResourceApi
-) : PipelineTemplatePermissionService {
+    val authResourceApi: AuthResourceApi,
+    authProjectApi: AuthProjectApi,
+    pipelineAuthServiceCode: PipelineAuthServiceCode
+) : AbstractPipelineTemplatePermissionService(
+    authProjectApi = authProjectApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode
+) {
     override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        // todo 待校验，若该项目未迁移模板资源，去校验模板权限，是否会报错？
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
-                permission = permission,
-                projectCode = projectId
-            )) {
-            logger.warn("user($userId) has no $permission permission under project($projectId)")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
-                defaultMessage = "user($userId) has no $permission permission under project($projectId)!"
+        if (!enableTemplatePermissionManage(projectId)) {
+            super.checkPipelineTemplatePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = permission
             )
+        } else {
+            if (!authPermissionApi.validateUserResourcePermission(
+                    user = userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    resourceType = resourceType,
+                    permission = permission,
+                    projectCode = projectId
+                )) {
+                logger.warn("user($userId) has no $permission permission under project($projectId)")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
+                    defaultMessage = "user($userId) has no $permission permission under project($projectId)!"
+                )
+            }
         }
         return true
     }
@@ -79,24 +89,31 @@ class RbacPipelineTemplatePermissionService constructor(
         templateId: String,
         permission: AuthPermission
     ): Boolean {
-        // todo 待校验，若该项目未迁移模板资源，去校验模板权限，是否会报错？
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
-                projectCode = projectId,
-                resourceCode = templateId,
+        if (!enableTemplatePermissionManage(projectId)) {
+            super.checkPipelineTemplatePermission(
+                userId = userId,
+                projectId = projectId,
                 permission = permission
-            )) {
-            logger.warn(
-                "The user($userId) does not have permission to " +
-                    "${permission.value} the template under this project($projectId)"
             )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
-                defaultMessage = "The user($userId) does not have permission to " +
-                    "${permission.value} the template under this project($projectId)"
-            )
+        } else {
+            if (!authPermissionApi.validateUserResourcePermission(
+                    user = userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    resourceType = resourceType,
+                    projectCode = projectId,
+                    resourceCode = templateId,
+                    permission = permission
+                )) {
+                logger.warn(
+                    "The user($userId) does not have permission to " +
+                        "${permission.value} the template under this project($projectId)"
+                )
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
+                    defaultMessage = "The user($userId) does not have permission to " +
+                        "${permission.value} the template under this project($projectId)"
+                )
+            }
         }
         return true
     }

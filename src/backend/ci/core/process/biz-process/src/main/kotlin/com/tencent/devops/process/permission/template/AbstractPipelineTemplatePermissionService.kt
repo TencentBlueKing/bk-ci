@@ -27,43 +27,56 @@
 
 package com.tencent.devops.process.permission.template
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.process.constant.ProcessMessageCode
+import org.slf4j.LoggerFactory
 
-class MockPipelineTemplatePermissionService constructor(
-    authProjectApi: AuthProjectApi,
-    pipelineAuthServiceCode: PipelineAuthServiceCode
-) : AbstractPipelineTemplatePermissionService(
-    authProjectApi = authProjectApi,
-    pipelineAuthServiceCode = pipelineAuthServiceCode
-) {
-    override fun getResourcesByPermission(
+abstract class AbstractPipelineTemplatePermissionService constructor(
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode
+) : PipelineTemplatePermissionService {
+
+    override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        permission: AuthPermission
+    ): Boolean {
+        if (!authProjectApi.checkProjectManager(
+                userId = userId,
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId
+            )) {
+            logger.warn("The manager users is empty of project $projectId")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
+            )
+        }
+        return true
     }
 
-    override fun createResource(
+    override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
         templateId: String,
-        templateName: String
-    ) = Unit
+        permission: AuthPermission
+    ): Boolean {
+        if (!authProjectApi.checkProjectManager(
+                userId = userId,
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId
+            )) {
+            logger.warn("The manager users is empty of project $projectId")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
+            )
+        }
+        return true
+    }
 
-    override fun deleteResource(
-        projectId: String,
-        templateId: String
-    ) = Unit
-
-    override fun enableTemplatePermissionManage(projectId: String): Boolean = false
-
-    override fun modifyResource(
-        userId: String,
-        projectId: String,
-        templateId: String,
-        templateName: String
-    ) = Unit
+    companion object {
+        private val logger = LoggerFactory.getLogger(AbstractPipelineTemplatePermissionService::class.java)
+    }
 }
