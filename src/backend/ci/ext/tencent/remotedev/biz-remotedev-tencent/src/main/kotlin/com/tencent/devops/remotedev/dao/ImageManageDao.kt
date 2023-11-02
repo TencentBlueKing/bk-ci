@@ -22,6 +22,7 @@ class ImageManageDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(ImageStatus.SUCCESS.ordinal))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
