@@ -534,7 +534,7 @@ class TxProjectServiceImpl @Autowired constructor(
                         "DictType" to "4"
                     )
                 )
-            ).result
+            ).result.data
         } catch (ignore: Exception) {
             logger.warn("get obs products fail!${ignore.message}")
             emptyList()
