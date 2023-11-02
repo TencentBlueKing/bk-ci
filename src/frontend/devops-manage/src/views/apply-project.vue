@@ -20,6 +20,7 @@ const projectData = ref({
   projectType: '',
   projectTypes: '',
   logoAddr: '',
+  productId: '',
   bgId: 0,
   bgName: '',
   deptId: '',

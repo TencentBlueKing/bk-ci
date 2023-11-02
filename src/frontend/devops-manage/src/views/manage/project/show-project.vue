@@ -113,6 +113,10 @@ const fieldMap = [
     after: 'afterProjectType'
   },
   {
+    current: 'productId',
+    after: 'afterProductId'
+  },
+  {
     current: 'centerName',
     after: 'afterCenterName',
   },
@@ -357,6 +361,24 @@ onMounted(async () => {
                     <div>{{ projectData.afterDescription }}</div>
                   </div>
                 </bk-form-item>
+                <bk-form-item :label="t('项目类型')" property="bg">
+                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
+                  <div class="diff-content" v-if="projectData.afterProjectType">
+                    <p class="update-title">
+                      {{ t('本次更新：') }}
+                    </p>
+                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
+                  </div>
+                </bk-form-item>
+                <bk-form-item :label="t('项目所属运营产品')" property="bg">
+                  <span>{{ projectTypeNameMap[projectData.productId] }}</span>
+                  <div class="diff-content" v-if="projectData.afterProductId">
+                    <p class="update-title">
+                      {{ t('本次更新：') }}
+                    </p>
+                    <span>{{ projectTypeNameMap[projectData.afterProductId] }}</span>
+                  </div>
+                </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
                   <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
                   <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
@@ -366,15 +388,6 @@ onMounted(async () => {
                   <span>
                     {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
                   </span>
-                  </div>
-                </bk-form-item>
-                <bk-form-item :label="t('项目类型')" property="bg">
-                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
-                  <div class="diff-content" v-if="projectData.afterProjectType">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
-                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目性质')" property="authSecrecy">

@@ -37,6 +37,7 @@ const logoFiles = computed(() => {
 });
 const projectForm = ref(null);
 const iframeRef = ref(null);
+const operationalList = ref([]);
 const vm = getCurrentInstance();
 const rules = {
   englishName: [
@@ -91,6 +92,7 @@ const deptLoading = ref({
   bg: false,
   dept: false,
   center: false,
+  product: false,
 });
 
 const curDepartmentInfo = ref({
@@ -251,6 +253,19 @@ const showMemberDialog = () => {
   showDialog.value = true;
 };
 
+const fetchOperationalList = async () => {
+  deptLoading.value.product = true;
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+    deptLoading.value.product = false;
+  });
+};
+
 const validateProjectNameTips = ref('');
 watch(() => projectData.value.projectName, (val) => {
   if (props.type === 'apply' && val) {
@@ -297,6 +312,7 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
 onMounted(async () => {
   await fetchUserDetail();
   await fetchDepartmentList();
+  await fetchOperationalList();
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -425,20 +441,18 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属运营产品')" property="bgIds" :required="true">
+    <bk-form-item :label="t('项目所属运营产品')" property="productId" :required="true">
       <bk-select
-        v-model="projectData.projectTypes"
+        v-model="projectData.productId"
         :placeholder="t('请选择所属运营产品')"
         name="center"
+        filterable
+        :list="operationalList"
+        enable-virtual-render
+        :loading="deptLoading.product"
         searchable
         @change="handleChangeForm"
       >
-        <bk-option
-          v-for="type in projectTypeList"
-          :value="type.id"
-          :key="type.id"
-          :label="type.name"
-        />
       </bk-select>
     </bk-form-item>
     <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
