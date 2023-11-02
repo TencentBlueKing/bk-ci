@@ -341,7 +341,7 @@
                 this.pageLoading = true
                 setTimeout(() => {
                     this.handleRefresh()
-                }, 3000)
+                }, 1000)
             }
         }
     }

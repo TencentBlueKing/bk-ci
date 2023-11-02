@@ -217,6 +217,7 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
 
+                this.aliasName = query.searchName || ''
                 const id = query.id || (cache && cache.id) || ''
                 const page = (cache && cache.page) || 1
                 const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
@@ -265,7 +266,13 @@
                 })
             },
 
-            handleEnterSearch () {
+            handleEnterSearch (val) {
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        searchName: val
+                    }
+                })
                 this.refreshCodelibList(this.projectId, 1)
             },
 

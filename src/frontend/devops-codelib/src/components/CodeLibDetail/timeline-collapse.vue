@@ -351,8 +351,10 @@
             animation: fade-in 1s ease-in-out;
         }
         .replay-btn {
-            display: inline-block;
-            width: 142px;
+            .cell {
+                display: inline-block;
+                width: 110px;
+            }
         }
     }
     

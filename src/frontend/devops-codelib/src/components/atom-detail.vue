@@ -56,6 +56,7 @@
         },
         watch: {
             atomCode (val) {
+                this.atomPropsModel = {}
                 this.fetchAtomModalData()
             }
         },

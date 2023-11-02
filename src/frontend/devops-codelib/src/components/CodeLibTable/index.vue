@@ -414,6 +414,7 @@
                     this.selectId = row.repositoryHashId
                     this.$router.push({
                         query: {
+                            ...this.$route.query,
                             id: row.repositoryHashId,
                             page: this.page,
                             limit: this.pagination.limit
@@ -565,7 +566,7 @@
     height: 42px;
     line-height: 42px;
     left: 310px;
-    font-size: 10px;
+    font-size: 12px;
     color: #3A84FF;
     cursor: pointer;
     text-align: center;
