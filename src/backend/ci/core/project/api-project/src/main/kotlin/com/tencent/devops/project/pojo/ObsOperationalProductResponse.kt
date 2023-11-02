@@ -10,5 +10,5 @@ data class ObsOperationalProductResponse(
     @ApiModelProperty("id")
     val id: String,
     @ApiModelProperty("运营产品")
-    val operationalProducts: List<OperationalProductVO>
+    val result: List<OperationalProductVO>
 )
