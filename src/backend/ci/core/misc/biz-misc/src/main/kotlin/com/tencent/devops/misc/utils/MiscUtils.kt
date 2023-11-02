@@ -25,13 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.db.pojo
+package com.tencent.devops.misc.utils
 
-const val DATA_SOURCE_NAME_PREFIX = "ds_"
-const val MIGRATING_DATA_SOURCE_NAME_PREFIX = "mig_ds_"
-const val ARCHIVE_DATA_SOURCE_NAME_PREFIX = "archive_ds_"
-const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
-const val DEFAULT_MIGRATING_DATA_SOURCE_NAME = "mig_ds_0"
-const val DEFAULT_ARCHIVE_DATA_SOURCE_NAME = "archive_ds_0"
-const val MIGRATING_SHARDING_DSL_CONTEXT = "migratingShardingDslContext"
-const val ARCHIVE_SHARDING_DSL_CONTEXT = "archiveShardingDslContext"
+object MiscUtils {
+
+    /**
+     * 获取未记录已迁移完成项目的redis键
+     * @param moduleCode 模块标识
+     * @return 未记录已迁移完成项目的redis键
+     */
+    fun getUnRecordedMigratedProjectsRedisKey(moduleCode: String): String {
+        return "$moduleCode:unRecorded:migrated:projects"
+    }
+
+    /**
+     * 获取未记录已迁移完成流水线的redis键
+     * @param moduleCode 模块标识
+     * @return 未记录已迁移完成流水线的redis键
+     */
+    fun getUnRecordedMigratedPipelinesRedisKey(moduleCode: String): String {
+        return "$moduleCode:unRecorded:migrated:pipelines"
+    }
+}

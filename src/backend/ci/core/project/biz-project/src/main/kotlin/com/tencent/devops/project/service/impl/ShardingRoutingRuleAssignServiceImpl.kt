@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_ARCHIVE
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -125,13 +126,22 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         }
         // 根据模块查找还有空余容量的数据源
         val dataTagModules = dataTagModulesConfig.split(",")
+        val dbDataTag = if (dataTagModules.contains(moduleCode.name)) {
+            if (ruleType == ShardingRuleTypeEnum.ARCHIVE_DB && dataTag.isNullOrBlank()) {
+                KEY_ARCHIVE
+            } else {
+                dataTag
+            }
+        } else {
+            null
+        }
         val dataSourceNames = dataSourceDao.listByModule(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,
             ruleType = ruleType,
             fullFlag = false,
-            dataTag = if (dataTagModules.contains(moduleCode.name)) dataTag else null
+            dataTag = dbDataTag
         )?.map { it.dataSourceName }
 
         if (dataSourceNames.isNullOrEmpty() && ruleType == ShardingRuleTypeEnum.ARCHIVE_DB) {

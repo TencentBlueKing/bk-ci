@@ -54,6 +54,7 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
+import com.tencent.devops.model.process.tables.TPipelineTimer
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
@@ -96,6 +97,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
+import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerReviewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -1136,6 +1138,34 @@ class ProcessDataMigrateDao {
         with(TPipelineTriggerReview.T_PIPELINE_TRIGGER_REVIEW) {
             val insertRecords = pipelineTriggerReviewRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
+        }
+    }
+
+    fun getPipelineTimerRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineTimerRecord? {
+        with(TPipelineTimer.T_PIPELINE_TIMER) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .fetchOne()
+        }
+    }
+
+    fun migratePipelineTimerData(
+        migratingShardingDslContext: DSLContext,
+        pipelineTimerRecord: TPipelineTimerRecord
+    ) {
+        with(TPipelineTimer.T_PIPELINE_TIMER) {
+            migratingShardingDslContext.insertInto(this)
+                .set(pipelineTimerRecord)
+                .onDuplicateKeyUpdate()
+                .set(PROJECT_ID, pipelineTimerRecord.projectId)
+                .set(CRONTAB, pipelineTimerRecord.crontab)
+                .set(CREATOR, pipelineTimerRecord.creator)
+                .set(CREATE_TIME, pipelineTimerRecord.createTime)
+                .set(CHANNEL, pipelineTimerRecord.channel)
         }
     }
 }

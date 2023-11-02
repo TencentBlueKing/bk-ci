@@ -80,7 +80,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = targetDataSourceName
             )
             // 项目已经迁移成功则不再删除db中数据
-            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
+            if (!projectDataMigrateHistoryService.isDataMigrated(queryParam)) {
                 deleteProcessRelData(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -230,7 +230,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = targetDataSourceName
             )
             // 项目已经迁移成功则不再删除db中数据
-            if (!projectDataMigrateHistoryService.isProjectDataMigrated(queryParam)) {
+            if (!projectDataMigrateHistoryService.isDataMigrated(queryParam)) {
                 deleteProjectRelData(dslContext, projectId)
             } else {
                 throw ErrorCodeException(

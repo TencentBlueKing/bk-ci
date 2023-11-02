@@ -42,19 +42,20 @@ class PipelineArchiveListener @Autowired constructor(
 ) : Listener<PipelineArchiveEvent> {
 
     override fun execute(event: PipelineArchiveEvent) {
+        val projectId = event.projectId
         val pipelineId = event.pipelineId
         try {
             processArchivePipelineDataMigrateService.migrateData(
                 userId = event.userId,
-                projectId = event.projectId,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 cancelFlag = event.cancelFlag
             )
         } catch (ignored: Throwable) {
-            logger.warn("Fail to migrate pipeline[$pipelineId] data", ignored)
+            logger.warn("Fail to migrate project[$projectId] pipeline[$pipelineId] data", ignored)
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to migrate pipeline[$pipelineId] data"
+                defaultMessage = "Fail to migrate project[$projectId] pipeline[$pipelineId] data"
             )
         }
     }

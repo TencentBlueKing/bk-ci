@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_NUM
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.enums.CrudEnum
@@ -56,6 +57,7 @@ import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.service.project.DataSourceService
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
+import com.tencent.devops.misc.utils.MiscUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
@@ -96,7 +98,6 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val LONG_PAGE_SIZE = 1000
         private const val RETRY_NUM = 3
         private const val MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE = "MIGRATE_PROCESS_PROJECT_DATA_FAIL_TEMPLATE"
-        private const val FAIL_MSG = "failMsg"
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
         private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
@@ -277,6 +278,11 @@ class ProcessDataMigrateService @Autowired constructor(
         try {
             // 等待所有任务执行完成
             doneSignal.await(migrationTimeout, TimeUnit.HOURS)
+            // 把项目加入未记录已迁移完成项目集合中
+            redisOperation.addSetValue(
+                key = MiscUtils.getUnRecordedMigratedProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                item = projectId
+            )
             logger.info("migrateProjectData all pipeline tasks have been completed|params:[$userId|$projectId]")
             // 执行迁移完成后的逻辑
             doAfterMigrationBus(
@@ -289,6 +295,11 @@ class ProcessDataMigrateService @Autowired constructor(
                 pipelineNum = pipelineNum,
                 migrationLock = migrationLock,
                 dataTag = dataTag
+            )
+            // 在未记录已迁移完成项目集合移除该项目
+            redisOperation.removeSetMember(
+                key = MiscUtils.getUnRecordedMigratedProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                item = projectId
             )
         } catch (ignored: Throwable) {
             val errorMsg = ignored.message

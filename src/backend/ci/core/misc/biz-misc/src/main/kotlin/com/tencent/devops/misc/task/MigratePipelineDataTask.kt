@@ -1,5 +1,6 @@
 package com.tencent.devops.misc.task
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -7,6 +8,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
+import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -67,11 +69,11 @@ class MigratePipelineDataTask constructor(
                         offset = offset
                     )
                     migrateBuildLinkedData(
-                        buildHistoryRecords,
-                        processDbMigrateDao,
-                        dslContext,
-                        projectId,
-                        migratingShardingDslContext
+                        buildHistoryRecords = buildHistoryRecords,
+                        processDataMigrateDao = processDbMigrateDao,
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        migratingShardingDslContext = migratingShardingDslContext
                     )
                     processDbMigrateDao.migratePipelineBuildHistoryData(
                         migratingShardingDslContext = migratingShardingDslContext,
@@ -223,6 +225,14 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 3.21、迁移T_PIPELINE_TIMER表数据
+                migratePipelineTimerData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (doneSignal == null) {
                     // 单独迁移一条流水线的数据时需要执行以下数据迁移逻辑
                     migratePipelineAuditResourceData(
@@ -259,6 +269,10 @@ class MigratePipelineDataTask constructor(
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] end..............")
             } catch (ignored: Throwable) {
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] run task fail", ignored)
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_DATA_FAIL,
+                    params = arrayOf(pipelineId)
+                )
             } finally {
                 // 5、业务逻辑执行完成后释放信号量
                 semaphore?.release()
@@ -937,6 +951,26 @@ class MigratePipelineDataTask constructor(
             processDataMigrateDao.migrateTemplatePipelineData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 tTemplatePipelineRecord = tTemplatePipelineRecord
+            )
+        }
+    }
+
+    private fun migratePipelineTimerData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        val pipelineTimerRecord = processDataMigrateDao.getPipelineTimerRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (pipelineTimerRecord != null) {
+            processDataMigrateDao.migratePipelineTimerData(
+                migratingShardingDslContext = migratingShardingDslContext,
+                pipelineTimerRecord = pipelineTimerRecord
             )
         }
     }
