@@ -258,7 +258,6 @@
                 if (this.hasLoadEnd) return
                 if (this.page === 1) {
                     this.pageLoading = true
-                    this.eventList = []
                 } else {
                     this.isLoadingMore = true
                 }
@@ -278,6 +277,9 @@
                     startTime: daterange[0],
                     endTime: daterange[1]
                 }).then(res => {
+                    if (this.page === 1) {
+                        this.eventList = []
+                    }
                     this.eventList = [...this.eventList, ...res.records]
                     this.timelineMap = {}
                     

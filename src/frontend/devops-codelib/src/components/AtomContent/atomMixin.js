@@ -6,6 +6,7 @@ import VuexInput from '../AtomFormField/VuexInput'
 import RequestSelector from '../AtomFormField/RequestSelector'
 import StaffInput from '../AtomFormField/StaffInput'
 import Accordion from '../AtomFormField/Accordion'
+import Tips from '../AtomFormField/Tips'
 import { rely } from './utils.js'
 
 const atomMixin = {
@@ -17,7 +18,8 @@ const atomMixin = {
         RequestSelector,
         AtomCheckbox,
         StaffInput,
-        Accordion
+        Accordion,
+        Tips
     },
     methods: {
         rely (obj, element) {

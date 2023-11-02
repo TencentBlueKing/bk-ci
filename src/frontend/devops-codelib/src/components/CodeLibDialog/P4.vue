@@ -63,7 +63,7 @@
                     </i>
                 </bk-option>
             </bk-select>
-            <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+            <span class="add-cred-btn" @click="addCredential">{{ $t('codelib.new') }}</span>
         </bk-form-item>
     </bk-form>
 </template>

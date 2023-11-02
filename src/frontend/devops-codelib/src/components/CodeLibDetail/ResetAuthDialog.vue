@@ -210,7 +210,7 @@
                         </bk-option>
                     </bk-select>
                     <span
-                        class="text-link"
+                        class="add-cred-btn"
                         @click="addCredential"
                     >
                         {{ $t('codelib.new') }}
@@ -442,7 +442,8 @@
                     this.refreshGitOauth({
                         type: this.isGit ? 'git' : 'tgit',
                         resetType: this.isGit ? 'resetGitOauth' : 'resetTGitOauth',
-                        redirectUrl: window.location.href
+                        redirectUrl: window.location.href,
+                        refreshToken: true
                     }).then(res => {
                         if (res.status === 200) {
                             this.newRepoInfo = {

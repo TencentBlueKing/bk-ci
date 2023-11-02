@@ -54,6 +54,21 @@
                 customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
             }
         },
+        watch: {
+            element: {
+                handler (val) {
+                    if (this.element.repositoryType === 'NAME') {
+                        this.atomPropsModel.repositoryName.hidden = false
+                        this.atomPropsModel.repositoryHashId.hidden = true
+                    } else {
+                        this.atomPropsModel.repositoryName.hidden = true
+                        this.atomPropsModel.repositoryHashId.hidden = false
+                    }
+                },
+                deep: true,
+                immediate: true
+            }
+        },
         created () {
             this.customTriggerControlModel = {}
             const { thirdUrl, thirdSecretToken } = this.atomPropsModel

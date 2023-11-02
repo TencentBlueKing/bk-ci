@@ -352,9 +352,10 @@ const actions = {
     async refreshGitOauth ({ commit }, {
         type,
         resetType = '',
-        redirectUrl = ''
+        redirectUrl = '',
+        refreshToken
     }) {
-        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}`)
+        const res = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/${type}/isOauth?validationCheck=true&resetType=${resetType}&redirectUrl=${redirectUrl}&refreshToken=${refreshToken}`)
         commit(SET_OAUTH_MUTATION, {
             oAuth: res,
             type

@@ -333,7 +333,7 @@
     .error-tips {
         display: block;
     }
-    .text-link {
+    .add-cred-btn {
         position: relative;
         top: -10px;
         cursor: pointer;
