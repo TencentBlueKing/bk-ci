@@ -55,7 +55,7 @@ class PipelineTemplatePermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-    fun rbacPipelineGroupPermissionService(
+    fun rbacPipelineTemplatePermissionService(
         authPermissionApi: AuthPermissionApi,
         authProjectApi: AuthProjectApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -76,7 +76,7 @@ class PipelineTemplatePermConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PipelineTemplatePermissionService::class)
-    fun mockPipelineGroupPermissionService(
+    fun mockPipelineTemplatePermissionService(
         authProjectApi: AuthProjectApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode
     ) = MockPipelineTemplatePermissionService(
