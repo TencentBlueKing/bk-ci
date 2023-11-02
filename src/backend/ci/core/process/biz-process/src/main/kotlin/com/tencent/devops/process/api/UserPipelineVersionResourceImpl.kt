@@ -28,40 +28,23 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
-import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -69,38 +52,22 @@ import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
-import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
-import org.slf4j.LoggerFactory
+import com.tencent.devops.process.service.PipelineVersionFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
 class UserPipelineVersionResourceImpl @Autowired constructor(
-    private val pipelineListFacadeService: PipelineListFacadeService,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineOperationLogService: PipelineOperationLogService,
-    private val transferService: PipelineTransferYamlService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
-    private val repositoryVersionService: PipelineRepositoryVersionService,
-    private val pipelineRecentUseService: PipelineRecentUseService,
-    private val templateFacadeService: TemplateFacadeService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) : UserPipelineVersionResource {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserPipelineVersionResourceImpl::class.java)
-    }
 
     override fun getPipelineDetailIncludeDraft(
         userId: String,
@@ -108,77 +75,9 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<PipelineDetail> {
         checkParam(userId, projectId)
-        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                params = arrayOf(pipelineId)
-            )
-        val draftVersion = pipelineRepositoryService.getDraftVersionResource(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        // 存在草稿版本就可以调试
-        val canDebug = draftVersion != null
-        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = detailInfo.pipelineVersion,
-            includeDraft = true
-        )
-        if (draftVersion == null && releaseVersion == null) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-            params = arrayOf(pipelineId)
-        )
-        // TODO #8161 增加分支名称的保存
-        var baseVersionBranch: String? = "master"
-        var canRelease = false
-        var baseVersionStatus = VersionStatus.RELEASED
-        draftVersion?.let { draft ->
-            val baseVersion = draft.baseVersion?.let { base ->
-                pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = base
-                )
-            }
-            baseVersion?.status?.let { baseVersionStatus = it }
-//            baseVersionBranch = baseVersion.ref
-            draft.debugBuildId?.let {
-                canRelease = pipelineRuntimeService.getBuildInfo(projectId, it)?.status?.isSuccess() == true
-            }
-        }
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = releaseVersion?.settingVersion ?: releaseVersion?.version ?: 0,
-            detailInfo = detailInfo
-        )
-        val version = draftVersion?.version ?: releaseVersion!!.version
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(
-            PipelineDetail(
-                pipelineId = detailInfo.pipelineId,
-                pipelineName = detailInfo.pipelineName,
-                hasCollect = detailInfo.hasCollect,
-                instanceFromTemplate = detailInfo.instanceFromTemplate,
-                canManualStartup = detailInfo.canManualStartup,
-                canDebug = canDebug,
-                canRelease = canRelease,
-                hasPermission = detailInfo.hasPermission,
-                pipelineDesc = detailInfo.pipelineDesc,
-                creator = detailInfo.creator,
-                createTime = detailInfo.createTime,
-                updateTime = detailInfo.updateTime,
-                viewNames = detailInfo.viewNames,
-                version = version,
-                versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
-                releaseVersion = releaseVersion?.version,
-                releaseVersionName = releaseVersion?.versionName,
-                baseVersionStatus = baseVersionStatus,
-                baseVersionBranch = baseVersionBranch,
-                pipelineAsCodeSettings = setting.pipelineAsCodeSettings ?: PipelineAsCodeSettings()
-            )
+            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(userId, projectId, pipelineId)
         )
     }
 
@@ -208,7 +107,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineInfoFacadeService.releaseDraftVersion(
+            pipelineVersionFacadeService.releaseDraftVersion(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -228,55 +127,11 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             projectId = projectId,
             AuthPermission.CREATE
         )
-        val (templateModel, instanceFromTemplate) = if (request.emptyTemplate == true) {
-            val model = Model(
-                name = request.pipelineName,
-                desc = "",
-                stages = listOf(
-                    Stage(
-                        id = "stage-1",
-                        containers = listOf(
-                            TriggerContainer(
-                                id = "0",
-                                name = "trigger",
-                                elements = listOf(
-                                    ManualTriggerElement(
-                                        id = "T-1-1-1",
-                                        name = "manualTrigger"
-                                    )
-                                )
-                            )
-                        )
-                    )
-                ),
-                pipelineCreator = userId
-            )
-            Pair(model, true)
-        } else {
-            val template = templateFacadeService.getTemplate(
-                userId = userId,
-                projectId = projectId,
-                templateId = request.templateId,
-                version = request.templateVersion
-            )
-            Pair(template.template, true)
-        }
         return Result(
-            pipelineInfoFacadeService.createPipeline(
+            pipelineVersionFacadeService.createPipelineFromTemplate(
                 userId = userId,
                 projectId = projectId,
-                model = templateModel.copy(
-                    name = request.pipelineName,
-                    templateId = request.templateId,
-                    instanceFromTemplate = instanceFromTemplate
-                ),
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                instanceType = request.instanceType,
-                versionStatus = VersionStatus.COMMITTING,
-                useSubscriptionSettings = request.useSubscriptionSettings,
-                useLabelSettings = request.useLabelSettings,
-                useConcurrencyGroup = request.useConcurrencyGroup
+                request = request
             )
         )
     }
@@ -304,59 +159,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            includeDraft = true
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
-        )
-        val setting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = resource.settingVersion ?: version
-        )
-        val modelAndSetting = PipelineModelAndSetting(
-            setting = setting,
-            model = resource.model
-        )
-        val baseResource = resource.baseVersion?.let {
-            repositoryVersionService.getPipelineVersionSimple(
+        return Result(
+            pipelineVersionFacadeService.getVersion(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = it
-            )
-        }
-        val (yamlSupported, yamlPreview, msg) = try {
-            val response = transferService.buildPreview(
-                userId, projectId, pipelineId, resource
-            )
-            Triple(true, response, null)
-        } catch (e: PipelineTransferException) {
-            Triple(
-                false, null, I18nUtil.getCodeLanMessage(
-                    messageCode = e.errorCode,
-                    params = e.params,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    defaultMessage = e.defaultMessage
-                )
-            )
-        }
-        return Result(
-            PipelineModelWithYaml(
-                modelAndSetting = modelAndSetting,
-                yamlPreview = yamlPreview,
-                description = resource.description,
-                canDebug = resource.status == VersionStatus.COMMITTING,
-                version = resource.version,
-                versionName = resource.versionName,
-                baseVersion = resource.baseVersion,
-                baseVersionName = baseResource?.versionName,
-                yamlSupported = yamlSupported,
-                yamlInvalidMsg = msg
+                version = version
             )
         )
     }
@@ -384,17 +192,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            includeDraft = true
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
-        )
         return Result(
-            transferService.buildPreview(userId, projectId, pipelineId, resource)
+            pipelineVersionFacadeService.preview(userId, projectId, pipelineId, version)
         )
     }
 
@@ -404,94 +203,23 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         modelAndYaml: PipelineModelWithYamlRequest
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
-
-        var pipelineId = modelAndYaml.pipelineId
-        val (model, setting, newYaml) = if (modelAndYaml.storageType == PipelineStorageType.YAML) {
-            // YAML形式的保存需要所有插件都为支持转换的市场插件
-            val transferResult = transferService.transfer(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(
-                    modelAndSetting = modelAndYaml.modelAndSetting,
-                    oldYaml = modelAndYaml.yaml ?: ""
-                )
-            )
-            Triple(transferResult.modelAndSetting?.model, transferResult.modelAndSetting?.setting, modelAndYaml.yaml)
-        } else {
-            // MODEL形式的保存需要兼容旧数据
-            val newYaml = try {
-                transferService.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    actionType = TransferActionType.FULL_MODEL2YAML,
-                    data = TransferBody(
-                        modelAndSetting = modelAndYaml.modelAndSetting,
-                        oldYaml = pipelineId?.let {
-                            pipelineRepositoryService.getPipelineResourceVersion(
-                                projectId = projectId,
-                                pipelineId = it,
-                                version = modelAndYaml.baseVersion,
-                                includeDraft = true
-                            )?.yaml
-                        } ?: ""
-                    )
-                ).newYaml
-            } catch (ignore: Throwable) {
-                // 旧流水线可能无法转换，用空YAML代替
-                logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
-                "# ${ignore.message}"
-            }
-            Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, newYaml)
-        }
-        val pipelineResult = if (pipelineId.isNullOrBlank()) {
-            pipelineInfoFacadeService.createPipeline(
-                userId = userId,
-                projectId = projectId,
-                model = model ?: modelAndYaml.modelAndSetting.model,
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                versionStatus = VersionStatus.COMMITTING,
-                yaml = newYaml
-            )
-        } else {
-            val savedSetting = pipelineSettingFacadeService.saveSetting(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                setting = setting ?: modelAndYaml.modelAndSetting.setting,
-                checkPermission = false,
-                dispatchPipelineUpdateEvent = false
-            )
-            pipelineInfoFacadeService.editPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                model = model ?: modelAndYaml.modelAndSetting.model,
-                channelCode = ChannelCode.BS,
-                checkPermission = true,
-                checkTemplate = false,
-                versionStatus = VersionStatus.COMMITTING,
-                description = modelAndYaml.description,
-                yaml = newYaml,
-                savedSetting = savedSetting
-            )
-        }
-        pipelineId = pipelineResult.pipelineId
+        val result = pipelineVersionFacadeService.savePipelineDraft(
+            userId = userId,
+            projectId = projectId,
+            modelAndYaml = modelAndYaml
+        )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
+                resourceId = result.pipelineId,
                 resourceName = modelAndYaml.modelAndSetting.model.name,
                 userId = userId,
                 action = "edit",
-                actionContent = "Save Ver.${pipelineResult.version}",
+                actionContent = "Save Ver.${result.version}",
                 projectId = projectId
             )
         )
-        return Result(pipelineResult)
+        return Result(result)
     }
 
     override fun creatorList(
@@ -661,27 +389,12 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        val resource = pipelineRepositoryService.rollbackDraftFromVersion(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
         return Result(
-            PipelineVersionSimple(
+            pipelineVersionFacadeService.rollbackDraftFromVersion(
+                userId = userId,
+                projectId = projectId,
                 pipelineId = pipelineId,
-                creator = resource.creator,
-                createTime = resource.createTime.timestampmilli(),
-                version = resource.version,
-                versionName = resource.versionName ?: "init",
-                referFlag = resource.referFlag,
-                referCount = resource.referCount,
-                pipelineVersion = resource.pipelineVersion,
-                triggerVersion = resource.triggerVersion,
-                settingVersion = resource.settingVersion,
-                status = resource.status,
-                debugBuildId = resource.debugBuildId,
-                baseVersion = resource.baseVersion
+                version = version
             )
         )
     }

@@ -51,7 +51,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
-import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
@@ -357,10 +356,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
-    }
-
-    override fun getBuildFormProperty(userId: String, projectId: String, pipelineId: String): Result<Model> {
-        TODO("Not yet implemented")
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {

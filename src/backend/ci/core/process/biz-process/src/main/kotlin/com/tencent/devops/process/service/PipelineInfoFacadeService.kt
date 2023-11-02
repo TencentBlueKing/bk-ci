@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -54,7 +53,6 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
@@ -68,7 +66,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSIO
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -123,7 +120,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val pipelineRecentUseService: PipelineRecentUseService,
@@ -835,83 +831,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 params = arrayOf(e.message ?: "")
             )
         }
-    }
-
-    fun releaseDraftVersion(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int,
-        request: PipelineVersionReleaseRequest
-    ): DeployPipelineResult {
-        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
-            )
-        }
-        val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            includeDraft = true
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
-        )
-        val draftSetting = draftVersion.version.let {
-            pipelineSettingFacadeService.userGetSetting(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = it
-            )
-        }
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            setting = draftSetting.copy(
-                labels = request.labels,
-                desc = request.description ?: ""
-            )
-        )
-        // TODO #8164 增加同步PAC仓库
-        if (draftVersion?.status != VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
-        )
-        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
-            val debugBuild = pipelineRuntimeService.getBuildInfo(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = debugBuildId
-            )
-            debugBuild?.status?.isSuccess() == true
-        } ?: false
-        if (!latestDebugPassed) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
-        )
-        val result = pipelineRepositoryService.deployPipeline(
-            model = draftVersion.model.copy(staticViews = request.staticViews),
-            projectId = projectId,
-            signPipelineId = pipelineId,
-            userId = draftVersion.creator,
-            channelCode = ChannelCode.BS,
-            create = false,
-            updateLastModifyUser = true,
-            savedSetting = savedSetting,
-            versionStatus = VersionStatus.RELEASED,
-            description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
-            yamlStr = draftVersion.yaml,
-            baseVersion = draftVersion.baseVersion,
-            pipelineAsCodeSettings = savedSetting.pipelineAsCodeSettings
-        )
-        // #8164 发布后的流水将调试信息清空为0，重新计数
-        pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
-        return DeployPipelineResult(
-            pipelineId = pipelineId,
-            pipelineName = draftVersion.model.name,
-            version = result.version,
-            versionName = result.versionName
-        )
     }
 
     fun editPipeline(

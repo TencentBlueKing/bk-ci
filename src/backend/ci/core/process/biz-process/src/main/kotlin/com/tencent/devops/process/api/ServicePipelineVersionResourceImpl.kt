@@ -42,7 +42,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
-import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
