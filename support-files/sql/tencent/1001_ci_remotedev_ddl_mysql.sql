@@ -404,4 +404,32 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
 
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT 专家支持通知表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`PROJECT_ID` varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
+    `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
+	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
+	`RESPONDER` varchar(32)  NOT NULL COMMENT '响应人',
+	`SUPPORTER` varchar(32)  NULL COMMENT '协助人',
+	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=10000 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT_CONFIG 专家支持配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`TYPE` varchar(16)  NOT NULL COMMENT '配置类型',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;

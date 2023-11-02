@@ -1,0 +1,17 @@
+package com.tencent.devops.remotedev.pojo.expertSupport
+
+data class CreateExpertSupportConfigData(
+    val type: ExpertSupportConfigType,
+    val content: String
+)
+
+enum class ExpertSupportConfigType {
+    ERROR,
+    RESPONDER,
+    SUPPORTER;
+}
+
+data class FetchExpertSupResp(
+    val id: Long,
+    val content: String
+)
