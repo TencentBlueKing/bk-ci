@@ -306,11 +306,11 @@ class PipelineTriggerEventDao {
                 .groupBy(PROJECT_ID, EVENT_ID)
         }
         return dslContext.select(
-            T_PIPELINE_TRIGGER_EVENT.PROJECT_ID,
-            T_PIPELINE_TRIGGER_EVENT.EVENT_ID,
-            T_PIPELINE_TRIGGER_EVENT.EVENT_SOURCE,
-            T_PIPELINE_TRIGGER_EVENT.EVENT_DESC,
-            T_PIPELINE_TRIGGER_EVENT.CREATE_TIME,
+            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.PROJECT_ID),
+            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_ID),
+            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_SOURCE),
+            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_DESC),
+            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.CREATE_TIME),
             detailInfo.field("total", Int::class.java),
             detailInfo.field("success", Int::class.java)
         )
