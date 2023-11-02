@@ -305,31 +305,35 @@ class PipelineTriggerEventDao {
                 .where(buildDetailCondition)
                 .groupBy(PROJECT_ID, EVENT_ID)
         }
-        return dslContext.select(
-            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.PROJECT_ID),
-            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_ID),
-            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_SOURCE),
-            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_DESC),
-            eventInfo.field(T_PIPELINE_TRIGGER_EVENT.CREATE_TIME),
-            detailInfo.field("total", Int::class.java),
-            detailInfo.field("success", Int::class.java)
-        )
-            .from(eventInfo)
-            .leftJoin(detailInfo)
-            .on(T_PIPELINE_TRIGGER_EVENT.EVENT_ID.eq(T_PIPELINE_TRIGGER_DETAIL.EVENT_ID)
-                .and(T_PIPELINE_TRIGGER_EVENT.PROJECT_ID.eq(T_PIPELINE_TRIGGER_DETAIL.PROJECT_ID)))
-            .where(detailInfo.field("total", Int::class.java)?.gt(0))
-            .fetch().map {
-                RepoTriggerEventVo(
-                    projectId = it.value1(),
-                    eventId = it.value2(),
-                    repoHashId = it.value3(),
-                    eventDesc = it.value4(),
-                    eventTime = it.value5().timestampmilli(),
-                    total = it.value6(),
-                    success = it.value7()
+        return with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.select(
+                eventInfo.field(PROJECT_ID),
+                eventInfo.field(EVENT_ID),
+                eventInfo.field(EVENT_SOURCE),
+                eventInfo.field(EVENT_DESC),
+                eventInfo.field(CREATE_TIME),
+                detailInfo.field("total", Int::class.java),
+                detailInfo.field("success", Int::class.java)
+            )
+                .from(eventInfo)
+                .leftJoin(detailInfo)
+                .on(
+                    eventInfo.field(EVENT_ID)?.eq(detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.EVENT_ID))
+                        ?.and(eventInfo.field(PROJECT_ID)?.eq(detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.PROJECT_ID)))
                 )
-            }
+                .where(detailInfo.field("total", Int::class.java)?.gt(0))
+                .fetch().map {
+                    RepoTriggerEventVo(
+                        projectId = it.value1(),
+                        eventId = it.value2(),
+                        repoHashId = it.value3(),
+                        eventDesc = it.value4(),
+                        eventTime = it.value5().timestampmilli(),
+                        total = it.value6(),
+                        success = it.value7()
+                    )
+                }
+        }
     }
 
     fun countRepoTriggerEvent(
