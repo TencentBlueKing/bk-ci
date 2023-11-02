@@ -45,12 +45,7 @@ class ExternalRepoResourceImpl @Autowired constructor(
 ) : ExternalRepoResource {
     override fun gitCallback(code: String, state: String): Response {
         val gitOauthCallback = gitOauthService.gitCallback(code, state)
-        val uri = UriBuilder.fromUri(
-            "${gitOauthCallback.redirectUrl}?$GIT_OAUTH_USER_KEY=${gitOauthCallback.oauthUserId}"
-        ).build()
-        logger.info("git auth callback[$uri]")
-        val responseBuilder = Response.temporaryRedirect(uri)
-        return responseBuilder.build()
+        return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
     }
 
     override fun tGitCallback(code: String, state: String): Response {
