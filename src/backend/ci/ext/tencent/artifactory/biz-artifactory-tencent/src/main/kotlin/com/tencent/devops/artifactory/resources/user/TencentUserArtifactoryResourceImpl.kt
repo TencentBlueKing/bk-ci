@@ -51,7 +51,6 @@ import com.tencent.devops.common.web.RestResource
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
-import javax.ws.rs.BadRequestException
 import kotlin.math.ceil
 
 @Primary
