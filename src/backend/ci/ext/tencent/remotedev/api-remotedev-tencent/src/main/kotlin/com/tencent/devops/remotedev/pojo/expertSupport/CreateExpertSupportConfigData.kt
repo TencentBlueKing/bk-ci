@@ -7,7 +7,6 @@ data class CreateExpertSupportConfigData(
 
 enum class ExpertSupportConfigType {
     ERROR,
-    RESPONDER,
     SUPPORTER;
 }
 

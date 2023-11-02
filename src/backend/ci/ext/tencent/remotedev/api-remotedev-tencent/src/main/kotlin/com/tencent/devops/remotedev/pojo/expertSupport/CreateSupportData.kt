@@ -5,7 +5,9 @@ data class CreateSupportData(
     val hostIp: String,
     val creator: String,
     val content: String,
-    val workspaceName: String
+    val workspaceName: String,
+    val city: String,
+    val machineType: String
 )
 
 enum class ExpertSupportStatus {

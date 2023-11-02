@@ -6,6 +6,7 @@ import com.tencent.devops.remotedev.api.op.OpExpertSupport
 import com.tencent.devops.remotedev.pojo.expertSupport.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expertSupport.FetchExpertSupResp
+import com.tencent.devops.remotedev.pojo.expertSupport.UpdateSupportData
 import com.tencent.devops.remotedev.service.expertSupport.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -13,6 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpExpertSupportImpl @Autowired constructor(
     private val expertSupportService: ExpertSupportService
 ) : OpExpertSupport {
+    override fun updateExpertSup(userId: String, data: UpdateSupportData): Result<Boolean> {
+        expertSupportService.updateSupportStatus(data)
+        return Result(true)
+    }
+
     override fun fetchSupportConfig(userId: String, type: ExpertSupportConfigType): Result<List<FetchExpertSupResp>> {
         return Result(expertSupportService.fetchSupportConfig(type))
     }

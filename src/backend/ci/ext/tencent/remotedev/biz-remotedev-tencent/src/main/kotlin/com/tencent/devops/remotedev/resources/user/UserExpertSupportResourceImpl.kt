@@ -4,9 +4,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
 import com.tencent.devops.remotedev.pojo.expertSupport.CreateSupportData
-import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportStatus
-import com.tencent.devops.remotedev.pojo.expertSupport.FetchSupportResp
-import com.tencent.devops.remotedev.pojo.expertSupport.UpdateSupportData
 import com.tencent.devops.remotedev.service.expertSupport.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -16,11 +13,6 @@ class UserExpertSupportResourceImpl @Autowired constructor(
 ) : UserExpertSupportResource {
     override fun addExpertSup(userId: String, data: CreateSupportData): Result<Boolean> {
         expertSupportService.createSupport(data)
-        return Result(true)
-    }
-
-    override fun updateExpertSup(userId: String, data: UpdateSupportData): Result<Boolean> {
-        expertSupportService.updateSupportStatus(data)
         return Result(true)
     }
 

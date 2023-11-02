@@ -17,10 +17,11 @@ class ExpertSupportDao {
         projectId: String,
         hostIp: String,
         creator: String,
-        responder: String,
         status: ExpertSupportStatus,
         content: String,
-        workspaceName: String
+        workspaceName: String,
+        city: String,
+        machineType: String
     ): Long {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             return dslContext.insertInto(
@@ -29,19 +30,21 @@ class ExpertSupportDao {
                 HOST_IP,
                 WORKSPACE_NAME,
                 CREATOR,
-                RESPONDER,
                 SUPPORTER,
                 STATUS,
-                CONTENT
+                CONTENT,
+                CITY,
+                MACHINE_TYPE
             ).values(
                 projectId,
                 hostIp,
                 workspaceName,
                 creator,
-                responder,
                 null,
                 status.name,
-                content
+                content,
+                city,
+                machineType
             ).returning(ID)
                 .fetchOne()!!.id
         }
