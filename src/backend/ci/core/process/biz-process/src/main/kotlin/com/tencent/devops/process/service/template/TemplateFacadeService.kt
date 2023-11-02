@@ -82,7 +82,7 @@ import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -151,7 +151,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineTemplatePermissionService: MockPipelineTemplatePermissionService,
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val stageTagService: StageTagService,
@@ -2313,6 +2313,10 @@ class TemplateFacadeService @Autowired constructor(
             )
         }
         return templateList
+    }
+
+    fun enableTemplatePermissionManage(projectId: String): Boolean {
+        return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
     }
 
     companion object {
