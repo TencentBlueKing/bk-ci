@@ -204,9 +204,6 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
         return Result(
             bkRepoDownloadService.outerHtmlUrl4Download(
                 userId = userId,
