@@ -35,16 +35,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.notify.enums.EnumNotifyPriority
-import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.wechatwork.WechatWorkRobotService
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
@@ -58,7 +54,6 @@ import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
-import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
@@ -68,7 +63,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
 import java.io.File
@@ -82,12 +76,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val commonNotifyMessageTemplateDao: CommonNotifyMessageTemplateDao,
-    private val emailService: EmailService,
-    private val rtxService: RtxService,
-    private val wechatService: WechatService,
-    private val weworkService: WeworkService,
-    private val wechatWorkService: WechatWorkService,
-    private val wechatWorkRobotService: WechatWorkRobotService,
     private val redisOperation: RedisOperation,
     private val messageTemplateDao: MessageTemplateDao,
     private val commonConfig: CommonConfig
@@ -95,11 +83,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
-        private const val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     }
-
-    @Value("\${wework.domain}")
-    private val userUseDomain: Boolean? = true
 
     @PostConstruct
     fun init() {
@@ -770,31 +754,5 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             else -> null
         }
         return Result(notifyContext)
-    }
-
-    private fun sendRtxNotifyMessage(
-        commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
-        sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
-        title: String,
-        body: String,
-        sender: String
-    ) {
-        logger.info("sendRtxNotifyMessage:\ntitle:$title,\nbody:$body")
-        val rtxNotifyMessage = RtxNotifyMessage()
-        rtxNotifyMessage.sender = sender
-        rtxNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
-        // 企业微信通知触发人
-        val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
-        if (null != triggerUserId && "" != triggerUserId &&
-            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)
-        ) {
-            rtxNotifyMessage.addReceiver(triggerUserId)
-        }
-        rtxNotifyMessage.title = title
-        rtxNotifyMessage.body = body
-        rtxNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
-        rtxNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
-            ?: EnumNotifySource.BUSINESS_LOGIC
-        rtxService.sendMqMsg(rtxNotifyMessage)
     }
 }

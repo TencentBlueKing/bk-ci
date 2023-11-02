@@ -38,8 +38,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.wechatwork.WechatWorkRobotService
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DESIGNATED_APPROVER_APPROVAL
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
@@ -50,6 +48,7 @@ import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
+import com.tencent.devops.notify.service.notifier.NotifierUtils
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateAction
@@ -59,12 +58,12 @@ import com.tencent.devops.support.model.approval.MoaWorkItemCreateKeyAndValue
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateUiType
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import com.tencent.devops.support.model.approval.MoaWorkitemCreateCategoryType
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Primary
 @Service
@@ -75,12 +74,6 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val tNotifyMessageTemplateDao: TNotifyMessageTemplateDao,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val commonNotifyMessageTemplateDao: CommonNotifyMessageTemplateDao,
-    private val emailService: EmailService,
-    private val rtxService: RtxService,
-    private val wechatService: WechatService,
-    private val weworkService: WeworkService,
-    private val wechatWorkService: WechatWorkService,
-    private val wechatWorkRobotService: WechatWorkRobotService,
     private val redisOperation: RedisOperation,
     private val messageTemplateDao: MessageTemplateDao,
     private val commonConfig: CommonConfig
@@ -88,12 +81,6 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     dslContext = dslContext,
     notifyMessageTemplateDao = notifyMessageTemplateDao,
     commonNotifyMessageTemplateDao = commonNotifyMessageTemplateDao,
-    emailService = emailService,
-    rtxService = rtxService,
-    wechatService = wechatService,
-    weworkService = weworkService,
-    wechatWorkService = wechatWorkService,
-    wechatWorkRobotService = wechatWorkRobotService,
     messageTemplateDao = messageTemplateDao,
     redisOperation = redisOperation,
     commonConfig = commonConfig
@@ -164,7 +151,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             }
         }
         val detailView = JsonUtil.toOrNull(
-            replaceContentParams(request.bodyParams, moaTplRecord.body),
+            NotifierUtils.replaceContentParams(request.bodyParams, moaTplRecord.body),
             object : TypeReference<List<MoaWorkItemCreateKeyAndValue>>() {}
         )
 
@@ -194,7 +181,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                 handler = receiver,
                 processInstId = processInstId,
                 processName = moaTplRecord.processName,
-                title = replaceContentParams(request.titleParams, moaTplRecord.title),
+                title = NotifierUtils.replaceContentParams(request.titleParams, moaTplRecord.title),
                 data = request.callbackData?.map { MoaWorkItemCreateData(it.key, listOf(it.value)) } ?: emptyList()
             )
         }
