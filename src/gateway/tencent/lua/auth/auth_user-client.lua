@@ -10,7 +10,7 @@
 
 -- 二进制网关转发
 local x_gw_token = ngx.var.http_x_devops_token -- 二进制网关转发
-if x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
+if x_gw_token ~= nil and x_gw_token == config.gw_token and ngx.var.http_x_devops_uid ~= nil then
     ngx.header["x-devops-uid"] = ngx.var.http_x_devops_uid
     if ngx.var.http_x_devops_bk_token ~= nil then
         ngx.header["x-devops-bk-token"] = ngx.var.http_x_devops_bk_token
