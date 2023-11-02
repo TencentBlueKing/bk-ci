@@ -27,12 +27,7 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace.image
 
-import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -85,15 +80,6 @@ class ImageManageService @Autowired constructor(
         return result
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.IMAGE_DELETE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.IMAGE,
-            instanceNames = "#imageId",
-            instanceIds = "#imageId"
-        ),
-        content = ActionAuditContent.IMAGE_DELETE_CONTENT
-    )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
         imageManageDao.deleteWorkspaceImage(projectId, imageId, dslContext)

@@ -25,39 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.image
+package com.tencent.devops.remotedev.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("自定义镜像")
-data class ProjectImage(
-    @ApiModelProperty("ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("镜像ID")
-    val imageId: String,
-    @ApiModelProperty("镜像名称")
-    val imageName: String,
-    @ApiModelProperty("路径")
-    val imageCosFile: String,
-    @ApiModelProperty("size")
-    val size: String,
-    @ApiModelProperty("镜像关联cgsId")
-    val sourceCgsId: String,
-    @ApiModelProperty("镜像关联cgsType")
-    val sourceCgsType: String,
-    @ApiModelProperty("区域")
-    val sourceCgsZone: String,
-    @ApiModelProperty("展示区域")
-    val sourceCgsZoneName: String,
-    @ApiModelProperty("区域简写")
-    val sourceCgsZoneShortName: String,
-    @ApiModelProperty("状态")
-    val status: ImageStatus,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("创建时间")
-    val createdTime: Long
+@ApiModel("用户1password模型")
+data class UserOnePassword(
+    @ApiModelProperty("用户名")
+    val userId: String,
+    @ApiModelProperty("工作空间（审计）")
+    val workspaceName: String
 )
