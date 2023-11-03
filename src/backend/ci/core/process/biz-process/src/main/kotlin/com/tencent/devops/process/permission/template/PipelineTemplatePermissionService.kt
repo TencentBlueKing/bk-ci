@@ -113,7 +113,6 @@ interface PipelineTemplatePermissionService {
     /**
      * 是否开启流水线模板管理
      * @param projectId projectId
-     * @param templateId 流水线模板ID
      */
     fun enableTemplatePermissionManage(projectId: String): Boolean
 }

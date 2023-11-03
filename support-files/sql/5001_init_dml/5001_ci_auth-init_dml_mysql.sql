@@ -50,7 +50,8 @@ REPLACE INTO  T_AUTH_RESOURCE_TYPE (`ID`, RESOURCE_TYPE, NAME, ENGLISH_NAME, `DE
         (12, 'experience_group', 'Experience Group', 'Experience Group', 'Experience Group', 'Experience Group', 'project', 'bk_ci_rbac', 'system', null, 0),
         (13, 'rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'project', 'bk_ci_rbac', 'system', null, 0),
         (14, 'quality_group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (15, 'project', 'Project', 'Project', 'Project', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0);
+        (15, 'project', 'Project', 'Project', 'Project', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (16, 'pipeline_template', 'Pipeline Template', 'Pipeline Template', 'Pipeline Template', 'Pipeline Template', 'project', 'bk_ci_rbac', 'system', null, 0);
 REPLACE INTO  T_AUTH_ACTION(`ACTION`, RESOURCE_TYPE, RELATED_RESOURCE_TYPE, ACTION_NAME, ENGLISH_NAME, CREATE_USER, `DELETE`, ACTION_TYPE) VALUES
         ('project_visit', 'project', 'project', 'Project Visit', 'Project Visit', 'system', 0, 'view'),
         ('project_view', 'project', 'project', 'project View', 'Project View', 'system', 0, 'view'),
@@ -68,6 +69,13 @@ REPLACE INTO  T_AUTH_ACTION(`ACTION`, RESOURCE_TYPE, RELATED_RESOURCE_TYPE, ACTI
         ('pipeline_share', 'pipeline', 'pipeline', 'Pipeline Share', 'Pipeline Share', 'system', 0, 'execute'),
         ('pipeline_list', 'pipeline', 'pipeline', 'Pipeline List', 'Pipeline List', 'system', 0, 'view'),
         ('pipeline_manage', 'pipeline', 'pipeline', 'Pipeline Manage', 'Pipeline Manage', 'system', 0, 'edit'),
+
+        ('pipeline_template_view', 'pipeline_template', 'pipeline_template', 'Pipeline Template View', 'Pipeline Template View', 'system', 0, 'view'),
+        ('pipeline_template_edit', 'pipeline_template', 'pipeline_template', 'Pipeline Template Edit', 'Pipeline Template Edit', 'system', 0, 'edit'),
+        ('pipeline_template_delete', 'pipeline_template', 'pipeline_template', 'Pipeline Template Delete', 'Pipeline Template Delete', 'system', 0, 'delete'),
+        ('pipeline_template_create', 'pipeline_template', 'project', 'Pipeline Template Create', 'Pipeline Template Create', 'system', 0, 'create'),
+        ('pipeline_template_list', 'pipeline_template', 'pipeline_template', 'Pipeline Template List', 'Pipeline Template List', 'system', 0, 'view'),
+        ('pipeline_template_manage', 'pipeline_template', 'pipeline_template', 'Pipeline Template Manage', 'Pipeline Template Manage', 'system', 0, 'edit'),
 
         ('codecc_task_analyze', 'codecc_task', 'codecc_task', 'CodeCC Task Analyze', 'CodeCC Task Analyze', 'system', 0, 'execute'),
         ('codecc_task_manage-defect', 'codecc_task', 'codecc_task', 'CodeCC Task Manage Defect', 'CodeCC Task Manage Defect', 'system', 0, 'edit'),
