@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.atom.AtomConfigInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.ReleaseInfo
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
@@ -266,11 +267,13 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val version = atomPkgInfoUpdateRequest.version
         taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = taskDataMap.toMutableMap(),
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+            ),
             version = version
         )
         val propsMap = mutableMapOf<String, Any?>()
