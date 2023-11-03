@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.pojo.gitproxy
 
-
 data class RefreshCodeProxyData(
     val projectId: String,
     val name: String,
