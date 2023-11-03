@@ -419,7 +419,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 fileDir = "$atomCode/$version",
                 i18nDir = i18nDir,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-                repositoryHashId = atomRecord.repositoryHashId,
+                repositoryHashId = atomRecord.repositoryHashId
             ),
             version = version
         )
