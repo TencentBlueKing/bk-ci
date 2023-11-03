@@ -171,6 +171,7 @@ class ProjectApprovalDao {
                 .set(UPDATOR, projectApprovalInfo.updator)
                 .set(TIPS_STATUS, projectApprovalInfo.tipsStatus)
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
+                .set(PRODUCT_ID, projectApprovalInfo.productId)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
