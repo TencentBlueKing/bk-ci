@@ -177,5 +177,6 @@
     "是否重新触发？": "Re-trigger pipeline?",
     "确认以此事件重新触发流水线X吗？": "Re-trigger the pipeline [{0}] with this event？",
     "展开": "Expand",
-    "收起": "Collapse"
+    "收起": "Collapse",
+    "重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。": "Caution: Resetting authorization may cause running pipelines to fail."
 }

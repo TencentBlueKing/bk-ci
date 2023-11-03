@@ -15,6 +15,12 @@
         >
             {{ $t('codelib.resetAuth') }}
         </h3>
+        <bk-alert
+            class="reset-auth-tips"
+            type="error"
+            closable
+            :title="$t('codelib.重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。')"
+        />
         <bk-form
             ref="form"
             :model="newRepoInfo"
@@ -590,5 +596,9 @@
     }
     .bk-dialog-title {
         font-size: 20px;
+    }
+    .reset-auth-tips {
+        margin-left: 70px;
+        width: 80%;
     }
 </style>
