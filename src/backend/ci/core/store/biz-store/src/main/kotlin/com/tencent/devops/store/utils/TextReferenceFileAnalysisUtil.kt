@@ -92,7 +92,7 @@ object TextReferenceFileAnalysisUtil {
             val analysisMatcher: Matcher = analysisPattern.matcher(content)
             while (analysisMatcher.find()) {
                 val match = analysisMatcher.group()
-                content = content.replace(match, "![${key}](${value})")
+                content = content.replace(match, "![$key]($value)")
             }
         }
         return content
