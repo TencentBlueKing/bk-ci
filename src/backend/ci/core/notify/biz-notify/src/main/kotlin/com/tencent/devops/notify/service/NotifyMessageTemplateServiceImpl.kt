@@ -436,6 +436,15 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         notifyTemplateMessage = it
                     )
                 }
+                if (it.notifyTypeScope.contains(NotifyType.VOICE.name)) {
+                    notifyMessageTemplateDao.addVoiceNotifyMessageTemplate(
+                        dslContext = context,
+                        commonTemplateId = id,
+                        id = UUIDUtil.generate(),
+                        userId = userId,
+                        notifyTemplateMessage = it
+                    )
+                }
             }
         }
         return Result(true)
@@ -499,7 +508,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     upsetRtxTemplate(templateId, userId, it, uid)
                 }
                 if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
-                    upSetEmailTemplate(templateId, userId, it, uid)
+                    upsetEmailTemplate(templateId, userId, it, uid)
+                }
+                if (it.notifyTypeScope.contains(NotifyType.VOICE.name)) {
+                    upsetVoiceTemplate(templateId, userId, it, uid)
                 }
                 updateOtherSpecialTemplate(it, templateId, uid, userId)
             }
@@ -557,6 +569,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 NotifyType.WECHAT.name -> {
                     notifyMessageTemplateDao.deleteWechatNotifyMessageTemplate(context, templateId)
                 }
+
+                NotifyType.VOICE.name -> {
+                    notifyMessageTemplateDao.deleteVoiceNotifyMessageTemplate(context, templateId)
+                }
             }
 
             if (existsNotifyType.size == 1 && existsNotifyType[0] == notifyType) {
@@ -582,6 +598,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             notifyMessageTemplateDao.deleteEmailsNotifyMessageTemplate(dsl, templateId)
             notifyMessageTemplateDao.deleteRtxNotifyMessageTemplate(dsl, templateId)
             notifyMessageTemplateDao.deleteWechatNotifyMessageTemplate(dsl, templateId)
+            notifyMessageTemplateDao.deleteVoiceNotifyMessageTemplate(dsl, templateId)
         }
         return Result(true)
     }
@@ -679,12 +696,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 NotifyContext(title, body)
             }
 
+            NotifyType.VOICE.name -> {
+                val voiceTplRecord = notifyMessageTemplateDao.getVoiceNotifyMessageTemplate(
+                    dslContext = dslContext,
+                    commonTemplateId = commonNotifyMessageTemplateRecord.id
+                )!!
+                val title = NotifierUtils.replaceContentParams(request.titleParams, voiceTplRecord.taskName)
+                val body = NotifierUtils.replaceContentParams(request.bodyParams, voiceTplRecord.content)
+                NotifyContext(title, body)
+            }
+
             else -> null
         }
         return Result(notifyContext)
     }
 
-    private fun upSetEmailTemplate(
+    private fun upsetEmailTemplate(
         templateId: String,
         userId: String,
         it: NotifyTemplateMessage,
@@ -705,6 +732,31 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 newId = uid,
                 userId = userId,
                 addNotifyTemplateMessage = it
+            )
+        }
+    }
+
+    private fun upsetVoiceTemplate(
+        templateId: String,
+        userId: String,
+        it: NotifyTemplateMessage,
+        uid: String
+    ) {
+        val num = notifyMessageTemplateDao.countVoiceMessageTemplate(dslContext, templateId)
+        if (num > 0) {
+            notifyMessageTemplateDao.updateVoiceNotifyMessageTemplate(
+                dslContext = dslContext,
+                userId = userId,
+                templateId = templateId,
+                notifyTemplateMessage = it
+            )
+        } else {
+            notifyMessageTemplateDao.addVoiceNotifyMessageTemplate(
+                dslContext = dslContext,
+                commonTemplateId = templateId,
+                id = uid,
+                userId = userId,
+                notifyTemplateMessage = it
             )
         }
     }
