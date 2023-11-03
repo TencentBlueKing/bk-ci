@@ -272,7 +272,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 projectCode = projectCode,
                 fileDir = "$atomCode/$version",
                 i18nDir = i18nDir,
-                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
             ),
             version = version
         )
