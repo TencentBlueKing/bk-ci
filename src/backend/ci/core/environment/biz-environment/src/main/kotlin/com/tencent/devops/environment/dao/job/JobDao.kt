@@ -26,7 +26,7 @@ class JobDao {
         projectId: String,
         jobInstanceId: Long,
         createUser: String
-    ): TJobProjRecord {
+    ): Int {
         val currentTime = LocalDateTime.now()
         with(TJobProj.T_JOB_PROJ) {
             return dslContext.insertInto(
@@ -40,7 +40,7 @@ class JobDao {
                 jobInstanceId,
                 createUser,
                 currentTime
-            ).returning(JOB_INSTANCE_ID).fetchOne()!!
+            ).execute()
         }
     }
 }

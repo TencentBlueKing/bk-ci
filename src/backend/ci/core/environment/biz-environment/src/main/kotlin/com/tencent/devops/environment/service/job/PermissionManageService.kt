@@ -30,7 +30,7 @@ class PermissionManageService @Autowired constructor(
     }
 
     fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
-        val jobProjRecord = jobDao.addJobProjRecord(dslContext, projectId, jobInstanceId, createUser)
-        if (logger.isDebugEnabled) logger.debug("[recordJobInsToProj] jobProjRecord: $jobProjRecord")
+        val jobProjInsertResult = jobDao.addJobProjRecord(dslContext, projectId, jobInstanceId, createUser)
+        if (logger.isDebugEnabled) logger.debug("[recordJobInsToProj] jobProjInsertResult: $jobProjInsertResult")
     }
 }
