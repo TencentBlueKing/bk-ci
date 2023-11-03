@@ -4,6 +4,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataAction
 import com.tencent.devops.remotedev.pojo.op.OpOpUpdateCCHostDataScope
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -21,7 +22,8 @@ class DesktopWorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
     private val bkccService: BKCCService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val workspaceWindowsDao: WorkspaceWindowsDao
 ) {
 
     fun fetchOwnerAndAdmin(
@@ -110,6 +112,10 @@ class DesktopWorkspaceService @Autowired constructor(
                 return true
             }
         }
+    }
+
+    fun checkWorkspaceProject(projectId: String, ip: String): Boolean {
+        return workspaceWindowsDao.countProjectIp(dslContext, projectId, ip) > 0
     }
 
     companion object {

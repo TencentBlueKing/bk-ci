@@ -60,17 +60,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
-        return Result(
-            workspaceService.getProjectWorkspaceList4Op(
-                projectId = data.projectId,
-                workspaceName = data.workspaceName,
-                systemType = data.systemType,
-                ips = data.ips,
-                page = data.page,
-                pageSize = data.pageSize,
-                owner = data.owner
-            )
-        )
+        return Result(workspaceService.getProjectWorkspaceList4Op(data))
     }
 
     override fun fetchOwnerAndAdmin(
