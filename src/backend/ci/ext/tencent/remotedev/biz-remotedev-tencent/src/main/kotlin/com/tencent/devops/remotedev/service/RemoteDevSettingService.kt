@@ -42,16 +42,16 @@ import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
-import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.GitTransferService
+import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import java.time.Duration
+import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
@@ -185,7 +185,7 @@ class RemoteDevSettingService @Autowired constructor(
 
             data.startWhiteList?.let { isEnabled ->
                 if (isEnabled) {
-                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId, override = true)
                 } else {
                     whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
                 }

@@ -124,7 +124,7 @@ class PermissionService @Autowired constructor(
         if (!enablePermission) return
 
         if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)
-            ) {
+        ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
@@ -212,11 +212,10 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserCreate(userId: String, runningOnly: Boolean = false): Boolean {
-        val setting = remoteDevSettingDao.fetchSingleUserWsCount(dslContext, userId)
-        val maxRunningCount = setting.first ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT)?.toInt() ?: 1
+        val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+        val maxRunningCount = setting.maxRunningCount
         if (!runningOnly) {
-            val maxHavingCount = setting.second ?: redisCache.get(RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT)
-                ?.toInt() ?: 3
+            val maxHavingCount = setting.maxHavingCount
             workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId, unionShared = false).let {
                 if (it >= maxHavingCount) {
                     throw ErrorCodeException(
