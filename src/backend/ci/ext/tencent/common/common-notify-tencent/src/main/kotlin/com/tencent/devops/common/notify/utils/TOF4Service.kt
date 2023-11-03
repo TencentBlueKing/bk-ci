@@ -216,7 +216,7 @@ class TOF4Service @Autowired constructor(
         val signData = String.format("%s%s%s%s", timestamp, tofToken, nonce, timestamp)
         val signature: String
         try {
-            signature = HashUtils.sha256(signData)
+            signature = HashUtils.sha256(signData).uppercase()
         } catch (e: Exception) {
             logger.error("sha256 fail when generate tof4 header", e)
             return null
