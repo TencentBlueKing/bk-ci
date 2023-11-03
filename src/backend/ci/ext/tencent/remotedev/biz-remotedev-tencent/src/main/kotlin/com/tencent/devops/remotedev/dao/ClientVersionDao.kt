@@ -62,7 +62,7 @@ class ClientVersionDao {
                 .set(VERSION, version)
                 .set(LAST_UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_VERSION, lastVersion)
-                .where(USER.eq(USER).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
+                .where(USER.eq(userId).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
         }
     }
 }
