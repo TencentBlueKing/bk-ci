@@ -39,11 +39,14 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Suppress("LongParameterList")
 @Repository
 class PipelineSettingVersionDao {
+
+    private val logger = LoggerFactory.getLogger(PipelineSettingVersionDao::class.java)
 
     fun saveSetting(
         dslContext: DSLContext,
@@ -55,7 +58,7 @@ class PipelineSettingVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
         val failSubscriptionList = setting.failSubscriptionList ?: listOf(setting.failSubscription)
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            val insert = dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 ID,
                 PROJECT_ID,
@@ -71,6 +74,7 @@ class PipelineSettingVersionDao {
                 CONCURRENCY_CANCEL_IN_PROGRESS,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
+                PIPELINE_AS_CODE_SETTINGS,
                 VERSION
             ).values(
                 id,
@@ -87,6 +91,9 @@ class PipelineSettingVersionDao {
                 setting.concurrencyCancelInProgress,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
+                setting.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.toJson(self, false)
+                },
                 version
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
@@ -99,11 +106,7 @@ class PipelineSettingVersionDao {
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
-            // pipelineAsCodeSettings 默认传空不更新
-            setting.pipelineAsCodeSettings?.let { self ->
-                insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-            }
-            return insert.execute()
+                .execute()
         }
     }
 

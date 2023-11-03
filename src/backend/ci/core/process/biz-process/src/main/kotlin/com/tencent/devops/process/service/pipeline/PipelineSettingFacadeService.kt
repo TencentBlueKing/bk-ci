@@ -221,7 +221,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-
+        // 正式版本的流水线设置
         var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
