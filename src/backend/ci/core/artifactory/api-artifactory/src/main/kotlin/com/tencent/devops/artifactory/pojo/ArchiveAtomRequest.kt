@@ -42,5 +42,7 @@ data class ArchiveAtomRequest(
     @ApiModelProperty("发布类型", required = false)
     val releaseType: ReleaseTypeEnum?,
     @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?
+    val os: String?,
+    @ApiModelProperty("重新上传标识", required = true)
+    val reUploadFlag: Boolean = false
 )

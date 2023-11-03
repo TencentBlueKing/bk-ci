@@ -34,7 +34,9 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
+import com.tencent.devops.model.process.tables.TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL
 import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
+import com.tencent.devops.model.process.tables.TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventRecord
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
@@ -45,7 +47,6 @@ import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.`when`
 import org.springframework.stereotype.Repository
@@ -60,9 +61,10 @@ class PipelineTriggerEventDao {
         dslContext: DSLContext,
         triggerEvent: PipelineTriggerEvent
     ) {
-        with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+        with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.insertInto(
                 this,
+                REQUEST_ID,
                 PROJECT_ID,
                 EVENT_ID,
                 TRIGGER_TYPE,
@@ -70,10 +72,11 @@ class PipelineTriggerEventDao {
                 EVENT_TYPE,
                 TRIGGER_USER,
                 EVENT_DESC,
-                HOOK_REQUEST_ID,
+                REPLAY_REQUEST_ID,
                 REQUEST_PARAMS,
-                EVENT_TIME
+                CREATE_TIME
             ).values(
+                triggerEvent.requestId,
                 triggerEvent.projectId,
                 triggerEvent.eventId,
                 triggerEvent.triggerType,
@@ -81,9 +84,9 @@ class PipelineTriggerEventDao {
                 triggerEvent.eventType,
                 triggerEvent.triggerUser,
                 JsonUtil.toJson(triggerEvent.eventDesc),
-                triggerEvent.hookRequestId,
+                triggerEvent.replayRequestId,
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
-                triggerEvent.eventTime
+                triggerEvent.createTime
             ).onDuplicateKeyIgnore().execute()
         }
     }
@@ -92,7 +95,7 @@ class PipelineTriggerEventDao {
         dslContext: DSLContext,
         triggerDetail: PipelineTriggerDetail
     ) {
-        with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+        with(T_PIPELINE_TRIGGER_DETAIL) {
             dslContext.insertInto(
                 this,
                 DETAIL_ID,
@@ -124,7 +127,7 @@ class PipelineTriggerEventDao {
         }
     }
 
-    fun listTriggerEvent(
+    fun listTriggerDetail(
         dslContext: DSLContext,
         projectId: String,
         eventId: Long? = null,
@@ -132,13 +135,14 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
+        pipelineName: String? = null,
         startTime: Long? = null,
         endTime: Long? = null,
         limit: Int,
         offset: Int
     ): List<PipelineTriggerEventVo> {
-        val t1 = TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT.`as`("t1")
-        val t2 = TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
+        val t1 = T_PIPELINE_TRIGGER_EVENT.`as`("t1")
+        val t2 = T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
         val conditions = buildConditions(
             t1 = t1,
             t2 = t2,
@@ -148,6 +152,7 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -160,7 +165,7 @@ class PipelineTriggerEventDao {
             t1.EVENT_TYPE,
             t1.TRIGGER_USER,
             t1.EVENT_DESC,
-            t1.EVENT_TIME,
+            t1.CREATE_TIME,
             t2.STATUS,
             t2.PIPELINE_ID,
             t2.PIPELINE_NAME,
@@ -168,10 +173,10 @@ class PipelineTriggerEventDao {
             t2.BUILD_NUM,
             t2.REASON,
             t2.REASON_DETAIL
-        ).from(t1).leftJoin(t2)
+        ).from(t2).leftJoin(t1)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
-            .orderBy(t1.EVENT_TIME.desc()).limit(limit)
+            .orderBy(t1.CREATE_TIME.desc()).limit(limit)
             .offset(offset)
             .fetch().map {
                 PipelineTriggerEventVo(
@@ -196,7 +201,7 @@ class PipelineTriggerEventDao {
             }
     }
 
-    fun countTriggerEvent(
+    fun countTriggerDetail(
         dslContext: DSLContext,
         projectId: String,
         eventId: Long? = null,
@@ -204,11 +209,12 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
+        pipelineName: String? = null,
         startTime: Long? = null,
         endTime: Long? = null
     ): Long {
-        val t1 = TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT.`as`("t1")
-        val t2 = TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
+        val t1 = T_PIPELINE_TRIGGER_EVENT.`as`("t1")
+        val t2 = T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
         val conditions = buildConditions(
             t1 = t1,
             t2 = t2,
@@ -218,10 +224,11 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.selectCount().from(t1).leftJoin(t2)
+        return dslContext.selectCount().from(t2).leftJoin(t1)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
             .fetchOne(0, Long::class.java)!!
@@ -231,7 +238,7 @@ class PipelineTriggerEventDao {
         dslContext: DSLContext,
         eventIds: List<String>
     ): Result<TPipelineTriggerEventRecord> {
-        return with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+        return with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.selectFrom(this)
                 .where(EVENT_ID.`in`(eventIds))
                 .fetch()
@@ -253,48 +260,80 @@ class PipelineTriggerEventDao {
         limit: Int,
         offset: Int
     ): List<RepoTriggerEventVo> {
-        val t1 = TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT.`as`("t1")
-        val t2 = TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
-        val conditions = buildConditions(
-            t1 = t1,
-            t2 = t2,
+        val buildDetailCondition = buildDetailCondition(
+            T_PIPELINE_TRIGGER_DETAIL,
+            projectId = projectId,
+            pipelineName = pipelineName,
+            pipelineId = pipelineId,
+            eventId = eventId
+        )
+        val buildEventCondition = buildEventCondition(
+            T_PIPELINE_TRIGGER_EVENT,
             projectId = projectId,
             eventSource = eventSource,
             eventId = eventId,
-            pipelineName = pipelineName,
             eventType = eventType,
             triggerUser = triggerUser,
             triggerType = triggerType,
-            pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.select(
-            t1.PROJECT_ID,
-            t1.EVENT_ID,
-            t1.EVENT_SOURCE,
-            t1.EVENT_DESC,
-            t1.EVENT_TIME,
-            count().`as`("total"),
-            count(`when`(t2.STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success ")
-        ).from(t1).leftJoin(t2)
-            .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
-            .where(conditions)
-            .groupBy(t1.PROJECT_ID, t1.EVENT_ID, t1.EVENT_SOURCE, t1.EVENT_DESC, t1.EVENT_TIME)
-            .orderBy(t1.EVENT_TIME.desc())
-            .limit(limit)
-            .offset(offset)
-            .fetch().map {
-                RepoTriggerEventVo(
-                    projectId = it.value1(),
-                    eventId = it.value2(),
-                    repoHashId = it.value3(),
-                    eventDesc = it.value4(),
-                    eventTime = it.value5().timestampmilli(),
-                    total = it.value6(),
-                    success = it.value7()
+        // 事件信息
+        val eventInfo = with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.select(
+                PROJECT_ID,
+                EVENT_ID,
+                EVENT_SOURCE,
+                EVENT_DESC,
+                CREATE_TIME
+            )
+                .from(this)
+                .where(buildEventCondition)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit)
+                .offset(offset)
+        }
+        // 详情信息
+        val detailInfo = with(T_PIPELINE_TRIGGER_DETAIL) {
+            dslContext.select(
+                EVENT_ID,
+                PROJECT_ID,
+                count().`as`("total"),
+                count(`when`(STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success")
+            )
+                .from(T_PIPELINE_TRIGGER_DETAIL)
+                .where(buildDetailCondition)
+                .groupBy(PROJECT_ID, EVENT_ID)
+        }
+        return with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.select(
+                eventInfo.field(PROJECT_ID),
+                eventInfo.field(EVENT_ID),
+                eventInfo.field(EVENT_SOURCE),
+                eventInfo.field(EVENT_DESC),
+                eventInfo.field(CREATE_TIME),
+                detailInfo.field("total", Int::class.java),
+                detailInfo.field("success", Int::class.java)
+            )
+                .from(eventInfo)
+                .leftJoin(detailInfo)
+                .on(
+                    eventInfo.field(EVENT_ID)?.eq(detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.EVENT_ID))
+                        ?.and(eventInfo.field(PROJECT_ID)?.eq(detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.PROJECT_ID)))
                 )
-            }
+                .where(detailInfo.field("total", Int::class.java)?.gt(0))
+                .fetch().map {
+                    RepoTriggerEventVo(
+                        projectId = it.value1(),
+                        eventId = it.value2(),
+                        repoHashId = it.value3(),
+                        eventDesc = it.value4(),
+                        eventTime = it.value5().timestampmilli(),
+                        total = it.value6(),
+                        success = it.value7()
+                    )
+                }
+        }
     }
 
     fun countRepoTriggerEvent(
@@ -310,27 +349,61 @@ class PipelineTriggerEventDao {
         startTime: Long? = null,
         endTime: Long? = null
     ): Long {
-        val t1 = TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT.`as`("t1")
-        val t2 = TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
-        val conditions = buildConditions(
-            t1 = t1,
-            t2 = t2,
+        val buildDetailCondition = buildDetailCondition(
+            T_PIPELINE_TRIGGER_DETAIL,
+            projectId = projectId,
+            pipelineName = pipelineName,
+            pipelineId = pipelineId,
+            eventId = eventId
+        )
+        val buildEventCondition = buildEventCondition(
+            T_PIPELINE_TRIGGER_EVENT,
             projectId = projectId,
             eventSource = eventSource,
             eventId = eventId,
-            pipelineName = pipelineName,
             eventType = eventType,
             triggerUser = triggerUser,
             triggerType = triggerType,
-            pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.select(DSL.countDistinct(t1.PROJECT_ID, t1.EVENT_ID))
-            .from(t1)
-            .leftJoin(t2)
-            .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
-            .where(conditions)
+        // 事件信息
+        val eventInfo = with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.select(
+                PROJECT_ID,
+                EVENT_ID,
+                EVENT_SOURCE,
+                EVENT_DESC,
+                CREATE_TIME
+            )
+                .from(this)
+                .where(buildEventCondition)
+                .orderBy(CREATE_TIME.desc())
+        }
+        // 详情信息
+        val detailInfo = with(T_PIPELINE_TRIGGER_DETAIL) {
+            dslContext.select(
+                EVENT_ID,
+                PROJECT_ID,
+                count().`as`("total")
+            )
+                .from(this)
+                .where(buildDetailCondition)
+                .groupBy(PROJECT_ID, EVENT_ID)
+        }
+        return dslContext.selectCount()
+            .from(eventInfo)
+            .leftJoin(detailInfo)
+            .on(
+                eventInfo.field(T_PIPELINE_TRIGGER_EVENT.PROJECT_ID)?.eq(
+                    detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.PROJECT_ID)
+                )?.and(
+                    eventInfo.field(T_PIPELINE_TRIGGER_EVENT.EVENT_ID)?.eq(
+                        detailInfo.field(T_PIPELINE_TRIGGER_DETAIL.EVENT_ID)
+                    )
+                )
+            )
+            .where(detailInfo.field("total", Int::class.java)?.gt(0))
             .fetchOne(0, Long::class.java)!!
     }
 
@@ -339,10 +412,26 @@ class PipelineTriggerEventDao {
         projectId: String,
         eventId: Long
     ): PipelineTriggerEvent? {
-        val record = with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+        val record = with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
                 .and(PROJECT_ID.eq(projectId))
+                .fetchOne()
+        }
+        return record?.let { convertEvent(it) }
+    }
+
+    fun getEventByRequestId(
+        dslContext: DSLContext,
+        projectId: String,
+        requestId: String,
+        eventSource: String
+    ): PipelineTriggerEvent? {
+        val record = with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REQUEST_ID.eq(requestId))
+                .and(EVENT_SOURCE.eq(eventSource))
                 .fetchOne()
         }
         return record?.let { convertEvent(it) }
@@ -353,13 +442,79 @@ class PipelineTriggerEventDao {
         projectId: String,
         detailId: Long
     ): PipelineTriggerDetail? {
-        val record = with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+        val record = with(T_PIPELINE_TRIGGER_DETAIL) {
             dslContext.selectFrom(this)
                 .where(DETAIL_ID.eq(detailId))
                 .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
         return record?.let { convertDetail(it) }
+    }
+
+    private fun buildDetailCondition(
+        t2: TPipelineTriggerDetail,
+        eventId: Long? = null,
+        pipelineName: String? = null,
+        projectId: String,
+        pipelineId: String? = null
+    ): List<Condition> {
+        val conditions = mutableListOf<Condition>()
+        with(t2) {
+            if (eventId != null) {
+                conditions.add(EVENT_ID.eq(eventId))
+            }
+            if (!pipelineName.isNullOrBlank()) {
+                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            if (projectId.isNotBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+        }
+        return conditions
+    }
+
+    private fun buildEventCondition(
+        t1: TPipelineTriggerEvent,
+        eventId: Long? = null,
+        eventSource: String? = null,
+        projectId: String,
+        eventType: String?,
+        triggerUser: String? = null,
+        triggerType: String? = null,
+        startTime: Long? = null,
+        endTime: Long? = null
+    ): List<Condition> {
+        val conditions = mutableListOf<Condition>()
+        with(t1) {
+            if (eventId != null) {
+                conditions.add(EVENT_ID.eq(eventId))
+            }
+            if (!eventSource.isNullOrBlank()) {
+                conditions.add(EVENT_SOURCE.eq(eventSource))
+            }
+            if (projectId.isNotBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!eventType.isNullOrBlank()) {
+                conditions.add(EVENT_TYPE.eq(eventType))
+            }
+            if (!triggerUser.isNullOrBlank()) {
+                conditions.add(TRIGGER_USER.eq(triggerUser))
+            }
+            if (!triggerType.isNullOrBlank()) {
+                conditions.add(TRIGGER_TYPE.eq(triggerType))
+            }
+            if (startTime != null) {
+                conditions.add(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            }
+            if (endTime != null) {
+                conditions.add(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+            }
+        }
+        return conditions
     }
 
     private fun buildConditions(
@@ -377,40 +532,35 @@ class PipelineTriggerEventDao {
         endTime: Long? = null
     ): List<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(t1.PROJECT_ID.eq(projectId))
-        if (!eventSource.isNullOrBlank()) {
-            conditions.add(t1.EVENT_SOURCE.eq(eventSource))
-        }
-        if (eventId != null) {
-            conditions.add(t1.EVENT_ID.eq(eventId))
-        }
-        if (!eventType.isNullOrBlank()) {
-            conditions.add(t1.EVENT_TYPE.eq(eventType))
-        }
-        if (!triggerUser.isNullOrBlank()) {
-            conditions.add(t1.TRIGGER_USER.eq(triggerUser))
-        }
-        if (!triggerType.isNullOrBlank()) {
-            conditions.add(t1.TRIGGER_TYPE.eq(triggerType))
-        }
-        if (!pipelineId.isNullOrBlank()) {
-            conditions.add(t2.PIPELINE_ID.eq(pipelineId))
-        }
-        if (startTime != null && startTime > 0) {
-            conditions.add(t1.EVENT_TIME.ge(Timestamp(startTime).toLocalDateTime()))
-        }
-        if (endTime != null && endTime > 0) {
-            conditions.add(t1.EVENT_TIME.le(Timestamp(endTime).toLocalDateTime()))
-        }
-        if (!pipelineName.isNullOrBlank()) {
-            conditions.add(t2.PIPELINE_NAME.like("%$pipelineName%"))
-        }
+        conditions.addAll(
+            buildEventCondition(
+                t1,
+                eventId = eventId,
+                eventSource = eventSource,
+                projectId = projectId,
+                eventType = eventType,
+                triggerType = triggerType,
+                triggerUser = triggerUser,
+                startTime = startTime,
+                endTime = endTime
+            )
+        )
+        conditions.addAll(
+            buildDetailCondition(
+                t2,
+                eventId = eventId,
+                projectId = projectId,
+                pipelineName = pipelineName,
+                pipelineId = pipelineId
+            )
+        )
         return conditions
     }
 
     fun convertEvent(record: TPipelineTriggerEventRecord): PipelineTriggerEvent {
         return with(record) {
             PipelineTriggerEvent(
+                requestId = requestId,
                 projectId = projectId,
                 eventId = eventId,
                 eventSource = eventSource,
@@ -418,13 +568,13 @@ class PipelineTriggerEventDao {
                 triggerUser = triggerUser,
                 eventType = eventType,
                 eventDesc = JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(),
-                hookRequestId = hookRequestId,
+                replayRequestId = replayRequestId,
                 requestParams = requestParams?.let {
                     JsonUtil.to(
                         it,
                         object : TypeReference<Map<String, String>>() {})
                 },
-                eventTime = eventTime
+                createTime = createTime
             )
         }
     }

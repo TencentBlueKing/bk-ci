@@ -46,8 +46,16 @@ class UserPipelineTriggerEventResourceImpl(
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) : UserPipelineTriggerEventResource {
 
-    override fun listTriggerType(): Result<List<IdValue>> {
-        return Result(PipelineTriggerType.toMap())
+    override fun listTriggerType(
+        userId: String,
+        scmType: ScmType?
+    ): Result<List<IdValue>> {
+        return Result(
+            PipelineTriggerType.toMap(
+                userId = userId,
+                scmType = scmType
+            )
+        )
     }
 
     override fun listEventType(
@@ -80,7 +88,8 @@ class UserPipelineTriggerEventResourceImpl(
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>> {
         return Result(
-            pipelineTriggerEventService.listTriggerEvent(
+            pipelineTriggerEventService.listPipelineTriggerEvent(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 eventType = eventType,
@@ -133,6 +142,7 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
+        pipelineName: String?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>> {
@@ -141,6 +151,7 @@ class UserPipelineTriggerEventResourceImpl(
                 projectId = projectId,
                 eventId = eventId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 page = page,
                 pageSize = pageSize,
                 userId = userId

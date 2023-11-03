@@ -36,11 +36,12 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
@@ -49,15 +50,19 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
@@ -69,7 +74,7 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     companion object {
@@ -77,7 +82,7 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
-        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">{1}</a>"
+        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
     }
 
     fun getDetailId(): Long {
@@ -88,11 +93,19 @@ class PipelineTriggerEventService @Autowired constructor(
         return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_EVENT_BIZ_ID).data ?: 0
     }
 
+    fun getEventId(projectId: String, requestId: String, eventSource: String): Long {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId ?: getEventId()
+    }
+
     fun saveEvent(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        logger.info("save pipeline trigger event|event[$triggerEvent]|detail[$triggerDetail]")
         triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -121,7 +134,9 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-    fun listTriggerEvent(
+
+    fun listPipelineTriggerEvent(
+        userId: String,
         projectId: String,
         pipelineId: String,
         eventType: String?,
@@ -135,7 +150,8 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val language = I18nUtil.getLanguage(userId)
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -145,7 +161,7 @@ class PipelineTriggerEventService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -156,7 +172,11 @@ class PipelineTriggerEventService @Autowired constructor(
             endTime = endTime,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )
+        ).map {
+            it.eventDesc = it.getI18nEventDesc(language)
+            it.reason = getI18nReason(it.reason, language)
+            it
+        }
         return SQLPage(count = count, records = records)
     }
 
@@ -222,6 +242,7 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
+        pipelineName: String?,
         page: Int?,
         pageSize: Int?,
         userId: String
@@ -233,24 +254,23 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDesc(language)
-            it.buildNum = it.getBuildNumUrl()
-            it.reasonDetailList = it.getI18nReasonDetailDesc(language)
-            it
+            fillEventDetailParam(it, language)
         }
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
         )
         return SQLPage(count = count, records = records)
     }
@@ -301,11 +321,40 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
-        traceEventDispatcher.dispatch(
-            WebhookRequestReplayEvent(
+        // 保存重放事件
+        val requestId = MDC.get(TraceTag.BIZID)
+        val replayEventId = getEventId()
+        // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
+        val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
+        val replayTriggerEvent = with(triggerEvent) {
+            PipelineTriggerEvent(
+                requestId = MDC.get(TraceTag.BIZID),
+                projectId = projectId,
+                eventId = replayEventId,
+                triggerType = triggerType,
+                eventSource = eventSource,
+                eventType = eventType,
+                triggerUser = userId,
+                eventDesc = I18Variable(
+                    code = EVENT_REPLAY_DESC,
+                    params = listOf(eventId.toString(), userId)
+                ).toJsonStr(),
+                replayRequestId = replayRequestId,
+                requestParams = requestParams,
+                createTime = LocalDateTime.now()
+            )
+        }
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = replayTriggerEvent
+        )
+        CodeWebhookEventDispatcher.dispatchReplayEvent(
+            rabbitTemplate = rabbitTemplate,
+            event = ReplayWebhookEvent(
                 userId = userId,
                 projectId = projectId,
-                hookRequestId = triggerEvent.hookRequestId!!,
+                eventId = replayEventId,
+                replayRequestId = triggerEvent.requestId,
                 scmType = scmType,
                 pipelineId = pipelineId
             )
@@ -364,6 +413,7 @@ class PipelineTriggerEventService @Autowired constructor(
         requestParams: Map<String, String>?
     ) {
         val eventId = getEventId()
+        val requestId = MDC.get(TraceTag.BIZID)
         saveEvent(
             triggerDetail = PipelineTriggerDetail(
                 eventId = eventId,
@@ -387,8 +437,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 eventType = triggerType,
                 triggerUser = userId,
                 requestParams = requestParams,
-                eventTime = LocalDateTime.now(),
-                hookRequestId = null
+                createTime = LocalDateTime.now(),
+                requestId = requestId
             )
         )
     }
@@ -434,6 +484,16 @@ class PipelineTriggerEventService @Autowired constructor(
         listOf()
     }
 
+    private fun getI18nReason(reason: String?, language: String): String = getCodeLanMessage(
+        messageCode = if (reason.isNullOrBlank()) {
+            PipelineTriggerReason.TRIGGER_SUCCESS.name
+        } else {
+            reason
+        },
+        language = language,
+        defaultMessage = reason
+    )
+
     /**
      * 获取构建链接
      */
@@ -444,6 +504,28 @@ class PipelineTriggerEventService @Autowired constructor(
             MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
         } else {
             null
+        }
+    }
+
+    /**
+     * 填充事件相关参数
+     * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
+     */
+    private fun fillEventDetailParam(
+        eventParam: PipelineTriggerEventVo,
+        language: String
+    ): PipelineTriggerEventVo {
+        return with(eventParam) {
+            eventDesc = getI18nEventDesc(language)
+            buildNum = getBuildNumUrl()
+            reasonDetailList = getI18nReasonDetailDesc(language)
+            reason = getI18nReason(eventParam.reason, language)
+            failReason = if (!reasonDetailList.isNullOrEmpty()) {
+                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name, language)
+            } else {
+                ""
+            }
+            this
         }
     }
 }

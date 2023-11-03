@@ -33,19 +33,25 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("IMPLICIT_CAST_TO_ANY")
 @ApiModel("流水线触发类型")
 enum class PipelineTriggerType {
     // WEB_HOOK 触发
     @ApiModelProperty("SVN 代码库")
     CODE_SVN,
+
     @ApiModelProperty("GIT 代码库")
     CODE_GIT,
+
     @ApiModelProperty("Gitlab 代码库")
     CODE_GITLAB,
+
     @ApiModelProperty("Github 代码库")
     GITHUB,
+
     @ApiModelProperty("TGIT 代码库")
     CODE_TGIT,
+
     @ApiModelProperty("P4 代码库")
     CODE_P4,
 
@@ -70,14 +76,27 @@ enum class PipelineTriggerType {
     REMOTE;
 
     companion object {
+        // 通用触发类型
+        private val commonTriggerTypes = listOf(MANUAL, TIME_TRIGGER, REMOTE)
 
-        fun toMap(): List<IdValue> {
-            return PipelineTriggerType.values().map {
+        fun toMap(
+            scmType: ScmType?,
+            userId: String
+        ): List<IdValue> {
+            val triggerTypes = if (scmType == null) {
+                PipelineTriggerType.values().toList()
+            } else {
+                PipelineTriggerType.values().filter {
+                    scmType.name == it.name
+                }.plus(commonTriggerTypes)
+            }
+            return triggerTypes.map {
                 IdValue(
                     id = it.name,
                     value = I18nUtil.getCodeLanMessage(
                         messageCode = "TRIGGER_TYPE_${it.name}",
-                        defaultMessage = it.name
+                        defaultMessage = it.name,
+                        language = I18nUtil.getLanguage(userId)
                     )
                 )
             }

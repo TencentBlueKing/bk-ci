@@ -32,12 +32,12 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.WebhookRequestService
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ICodeWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
@@ -52,6 +52,7 @@ class WebhookEventListener constructor(
     private val webhookRequestService: WebhookRequestService
 ) {
 
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     fun handleCommitEvent(event: ICodeWebhookEvent) {
         val traceId = MDC.get(TraceTag.BIZID)
         if (traceId.isNullOrEmpty()) {
@@ -227,8 +228,43 @@ class WebhookEventListener constructor(
         }
     }
 
-    fun handleReplayRequest(replayEvent: WebhookRequestReplayEvent) {
-        webhookRequestService.replay(replayEvent = replayEvent)
+    fun handleReplayEvent(replayEvent: ReplayWebhookEvent) {
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!replayEvent.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, replayEvent.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
+        logger.info("Receive ReplayWebhookEvent from MQ [replay|$replayEvent]")
+        var result = false
+        try {
+            webhookRequestService.handleReplay(replayEvent = replayEvent)
+            result = true
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to handle the Github event [${replayEvent.retryTime}]", ignore)
+        } finally {
+            if (!result && replayEvent.retryTime >= 0) {
+                logger.warn("Retry to handle the Github event [${replayEvent.retryTime}]")
+                with(replayEvent) {
+                    CodeWebhookEventDispatcher.dispatchReplayEvent(
+                        rabbitTemplate = rabbitTemplate,
+                        event = ReplayWebhookEvent(
+                            userId = userId,
+                            projectId = projectId,
+                            eventId = eventId,
+                            replayRequestId = replayRequestId,
+                            scmType = scmType,
+                            pipelineId = pipelineId,
+                            retryTime = retryTime - 1,
+                            delayMills = DELAY_MILLS
+                        )
+                    )
+                }
+            }
+            MDC.remove(TraceTag.BIZID)
+        }
     }
 
     companion object {

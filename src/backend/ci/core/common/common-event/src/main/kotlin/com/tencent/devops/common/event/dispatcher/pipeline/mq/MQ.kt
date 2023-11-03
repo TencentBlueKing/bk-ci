@@ -307,6 +307,9 @@ object MQ {
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
+    // 数据库分片
+    const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
+
     // pac每条流水线触发事件
     const val EXCHANGE_PAC_PIPELINE_LISTENER = "e.pac.pipeline.listener"
     // pac开启流水线事件

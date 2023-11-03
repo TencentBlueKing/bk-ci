@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_CODE_P4` (
   PRIMARY KEY (`REPOSITORY_ID`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
-create table T_REPOSITORY_TGIT_TOKEN
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_TGIT_TOKEN`
 (
     `ID`            bigint auto_increment comment '主键ID'
         primary key,
@@ -202,7 +202,7 @@ create table T_REPOSITORY_TGIT_TOKEN
 
 CREATE TABLE IF NOT EXISTS `T_REPOSITORY_WEBHOOK_REQUEST`
 (
-    `REQUEST_ID`      bigint(20) NOT NULL AUTO_INCREMENT COMMENT '请求ID',
+    `REQUEST_ID`      varchar(64)  NOT NULL COMMENT '请求ID',
     `EXTERNAL_ID`     varchar(255)                       DEFAULT NULL COMMENT '代码库平台ID',
     `REPOSITORY_TYPE` varchar(32)                        DEFAULT NULL COMMENT '触发类型',
     `EVENT_TYPE`      varchar(255)                       DEFAULT NULL COMMENT '事件类型',

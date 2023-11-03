@@ -29,19 +29,21 @@
 package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.trigger.WebhookTriggerService
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -50,6 +52,8 @@ class WebhookRequestService(
     private val client: Client,
     private val webhookEventFactory: WebhookEventFactory,
     private val webhookTriggerService: WebhookTriggerService,
+    private val dslContext: DSLContext,
+    private val pipelineTriggerEventDao: PipelineTriggerEventDao,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
@@ -69,7 +73,9 @@ class WebhookRequestService(
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
         val eventTime = LocalDateTime.now()
+        val requestId = MDC.get(TraceTag.BIZID)
         val repositoryWebhookRequest = RepositoryWebhookRequest(
+            requestId = requestId,
             externalId = matcher.getExternalId(),
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
@@ -80,31 +86,39 @@ class WebhookRequestService(
             requestBody = request.body,
             createTime = eventTime
         )
-        val hookRequestId = client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+        client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
             repositoryWebhookRequest = repositoryWebhookRequest
         ).data!!
         webhookTriggerService.trigger(
             scmType = scmType,
             matcher = matcher,
-            hookRequestId = hookRequestId,
+            requestId = requestId,
             eventTime = eventTime
         )
         pipelineYamlFacadeService.trigger(
             eventObject = event,
             scmType = scmType,
-            hookRequestId = hookRequestId,
+            hookRequestId = requestId,
             eventTime = eventTime
         )
     }
 
-    fun replay(replayEvent: WebhookRequestReplayEvent) {
+    fun handleReplay(replayEvent: ReplayWebhookEvent) {
         with(replayEvent) {
+            val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventId = eventId
+            ) ?: run {
+                logger.info("replay trigger event not found|$eventId")
+                return
+            }
             val repoWebhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-                requestId = hookRequestId
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND,
-                params = arrayOf(hookRequestId.toString())
-            )
+                requestId = replayRequestId
+            ).data ?: run {
+                logger.info("replay webhook request not found|$replayRequestId")
+                return
+            }
             val webhookRequest = WebhookRequest(
                 headers = repoWebhookRequest.requestHeader,
                 body = repoWebhookRequest.requestBody
@@ -115,11 +129,10 @@ class WebhookRequestService(
             }
             val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
-            val eventTime = LocalDateTime.now()
             webhookTriggerService.replay(
                 replayEvent = replayEvent,
-                matcher = matcher,
-                eventTime = eventTime
+                triggerEvent = triggerEvent,
+                matcher = matcher
             )
         }
     }

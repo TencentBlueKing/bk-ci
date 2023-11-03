@@ -31,6 +31,7 @@ import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
+import org.springframework.data.redis.core.script.RedisScript
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -184,8 +185,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), *values)
     }
 
-    fun sremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
-        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), values)
+    fun sremove(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), *values)
     }
 
     fun sscan(
@@ -242,16 +243,24 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         redisTemplate.expire(getFinalKey(key, isDistinguishCluster), expiredInSecond, TimeUnit.SECONDS)
     }
 
+    fun getExpire(key: String, isDistinguishCluster: Boolean? = false): Long {
+        return redisTemplate.getExpire(getFinalKey(key, isDistinguishCluster))
+    }
+
     fun <T> execute(action: RedisCallback<T>): T? {
         return redisTemplate.execute(action)
+    }
+
+    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?): T {
+        return redisTemplate.execute(script, keys, *args)
     }
 
     fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForList().size(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun listRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): List<String>? {
-        return redisTemplate.opsForList().range(getFinalKey(key, isDistinguishCluster), start, end)
+    fun listRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): List<String> {
+        return redisTemplate.opsForList().range(getFinalKey(key, isDistinguishCluster), start, end) ?: emptyList()
     }
 
     fun leftPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
@@ -268,6 +277,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
 
     fun trim(key: String, start: Long, end: Long) {
         redisTemplate.opsForList().trim(key, start, end)
+    }
+
+    fun setNxEx(key: String, value: String, expiredInSecond: Long): Boolean {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS) ?: false
     }
 
     fun getRedisName(): String? {

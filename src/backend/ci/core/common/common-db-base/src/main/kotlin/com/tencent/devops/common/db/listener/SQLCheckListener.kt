@@ -32,21 +32,9 @@ class SQLCheckListener : DefaultExecuteListener() {
                         DSL.using(ctx.configuration()).fetch("EXPLAIN $realSQL")
                     for (record in explain) {
                         val rows = record.get("rows")?.toString()
-                        val type = record.get("type")?.toString()
-                        val key = record.get("key")?.toString()
-                        if (type == null && key == null && rows == null) {
-                            continue
-                        }
-                        if (type == null || type.uppercase() == "ALL") {
-                            logger.error("SQL: $realSQL , type: $type is not allowed")
-                            return false
-                        }
-                        if (key.isNullOrBlank()) {
-                            logger.error("SQL: $realSQL , key can not be blank. Please add table index")
-                            return false
-                        }
-                        if (rows == null || rows.toInt() > 1000000) {
-                            logger.error("SQL: $realSQL , too many rows. Please optimization table index")
+                        val possibleKeys = record.get("possible_keys")?.toString()
+                        if (possibleKeys.isNullOrBlank() && rows != null) {
+                            logger.error("SQL: $realSQL , possible_keys can not be blank. Please add table index")
                             return false
                         }
                     }

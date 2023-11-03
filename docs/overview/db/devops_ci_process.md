@@ -50,8 +50,6 @@
 | [T_PIPELINE_VIEW_USER_LAST_VIEW](#T_PIPELINE_VIEW_USER_LAST_VIEW) |  |
 | [T_PIPELINE_VIEW_USER_SETTINGS](#T_PIPELINE_VIEW_USER_SETTINGS) |  |
 | [T_PIPELINE_WEBHOOK](#T_PIPELINE_WEBHOOK) |  |
-| [T_PIPELINE_WEBHOOK_BUILD_LOG](#T_PIPELINE_WEBHOOK_BUILD_LOG) |  |
-| [T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL](#T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) |  |
 | [T_PIPELINE_WEBHOOK_QUEUE](#T_PIPELINE_WEBHOOK_QUEUE) |  |
 | [T_PROJECT_PIPELINE_CALLBACK](#T_PROJECT_PIPELINE_CALLBACK) |  |
 | [T_PROJECT_PIPELINE_CALLBACK_HISTORY](#T_PROJECT_PIPELINE_CALLBACK_HISTORY) |  |
@@ -849,43 +847,6 @@
 |  9   | TASK_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 任务id  |
 |  10   | DELETE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除  |
 
-**表名：** <a id="T_PIPELINE_WEBHOOK_BUILD_LOG">T_PIPELINE_WEBHOOK_BUILD_LOG</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | CODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 代码库类型  |
-|  3   | REPO_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 代码库别名  |
-|  4   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 代码提交ID  |
-|  5   | REQUEST_CONTENT |   text   | 65535 |   0    |    Y     |  N   |       | 事件内容  |
-|  6   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  7   | RECEIVED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 接收时间  |
-|  8   | FINISHED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 完成时间  |
-
-**表名：** <a id="T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL">T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | LOG_ID |   bigint   | 20 |   0    |    N     |  N   |       |   |
-|  3   | CODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 代码库类型  |
-|  4   | REPO_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 代码库别名  |
-|  5   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 代码提交ID  |
-|  6   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
-|  7   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
-|  8   | TASK_ID |   varchar   | 34 |   0    |    N     |  N   |       | 任务id  |
-|  9   | TASK_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 任务名称  |
-|  10   | SUCCESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否成功  |
-|  11   | TRIGGER_RESULT |   text   | 65535 |   0    |    Y     |  N   |       | 触发结果  |
-|  12   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a id="T_PIPELINE_WEBHOOK_QUEUE">T_PIPELINE_WEBHOOK_QUEUE</a>
 
