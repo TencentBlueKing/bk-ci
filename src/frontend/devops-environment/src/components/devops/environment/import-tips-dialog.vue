@@ -15,24 +15,29 @@
         </div>
         <div class="tips-content">
             <template v-if="status === 'success'">
-                <div>{{ $t('environment.nextCan') }}</div>
-                <div>
-                    1.{{ $t('environment.use') }}
+                <template v-if="status">
+                    <div>{{ $t('environment.nextCan') }}</div>
+                    <div>
+                        1.{{ $t('environment.use') }}
+                        <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
+                        {{ $t('environment.executionJobScript') }}
+                    </div>
+                    <div>
+                        2.{{ $t('environment.use') }}
+                        <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
+                        {{ $t('environment.executionJobPushFile') }}
+                    </div>
+                </template>
+                <template v-else>
+                    <span>{{ $t('environment.GSEAgentAbnormal1', [12]) }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
-                    {{ $t('environment.executionJobScript') }}
-                </div>
-                <div>
-                    2.{{ $t('environment.use') }}
+                    <span>{{ $t('environment.and') }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
-                    {{ $t('environment.executionJobPushFile') }}
-                </div>
+                    <span>{{ $t('environment.GSEAgentAbnormal2') }}</span>
+                </template>
             </template>
             <template v-else>
-                <span>{{ $t('environment.GSEAgentAbnormal1', [12]) }}</span>
-                <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
-                <span>{{ $t('environment.and') }}</span>
-                <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
-                <span>{{ $t('environment.GSEAgentAbnormal2') }}</span>
+                ddddddddddddddd
             </template>
         </div>
     </bk-dialog>
@@ -59,7 +64,6 @@
 </script>
 <style lang="scss">
     .import-tips {
-        z-index: 100 !important;
         .tips-header {
             display: inline-block;
             width: 100%;

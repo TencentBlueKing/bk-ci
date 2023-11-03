@@ -272,6 +272,7 @@
     "installAgent": "安装Agent",
     "reinstallAgent": "重装Agent",
     "reImport": "重新导入",
+    "failedImport": "导入失败",
     "nextCan": "接下来，你可以：",
     "use": "使用",
     "jobScriptExecution": "作业平台-脚本执行",

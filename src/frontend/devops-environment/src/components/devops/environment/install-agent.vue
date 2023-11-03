@@ -74,24 +74,24 @@
                 </bk-form-item>
             </bk-form>
         </div> -->
-        <div slot="content">
+        <div class="sideslider-content" slot="content">
             <div class="install-status">
-                <!-- <template>
+                <template>
                     <Icon class="icon" name="loading" />
                     <span>{{ $t('environment.installingTips') }}</span>
                 </template>
-                <template>
+                <!-- <template>
                     <i class="bk-icon import-status-icon icon-check-1 success icon"></i>
                     <span>{{ $t('environment.installSuccessTips') }}</span>
                 </template> -->
-                <template>
+                <!-- <template>
                     <i class="bk-icon import-status-icon icon-close error icon"></i>
                     <span>{{ $t('environment.installFailTips') }}</span>
                     <bk-button text class="ml10">{{ $t('environment.retry') }}</bk-button>
-                </template>
+                </template> -->
             </div>
-            <div class="log-wrapper">
-                <div v-once id="executeScriptLog" style="height: 100%;" />
+            <div ref="editor" class="log-wrapper">
+                <div ref="executeScriptLog" v-once id="executeScriptLog" style="height: 100%;" />
             </div>
         </div>
         <div slot="footer">
@@ -102,14 +102,15 @@
                 {{ $t('environment.cancel') }}
             </bk-button>
         </div>
+        <section v-once id="executeScriptLog" style="height: 100%;" />
     </bk-sideslider>
 </template>
 
 <script>
-    import ace from 'ace-builds'
-    import 'ace/mode-text'
-    import 'ace/theme-monokai'
-    import 'ace/ext-searchbox'
+    import ace from 'ace-builds/src-noconflict/ace'
+    import 'ace-builds/src-noconflict/mode-text'
+    import 'ace-builds/src-noconflict/theme-monokai'
+    import 'ace-builds/src-noconflict/ext-searchbox'
     export default {
         data () {
             return {
@@ -118,19 +119,26 @@
                 labelWidth: 100,
                 formData: {
                     oauthMethod: 'password'
+                },
+                isWillAutoScroll: true
+            }
+        },
+        watch: {
+            isShow (val) {
+                if (val) {
+                    this.$nextTick(() => {
+                        this.initEditor()
+                    })
                 }
             }
         },
         created () {
             this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             this.labelWidth = this.isZH ? 100 : 130
-
-            this.initEditor()
         },
         methods: {
             initEditor () {
                 const editor = ace.edit('executeScriptLog')
-                editor.getSession().setMode('ace/mode/text')
                 editor.setTheme('ace/theme/monokai')
                 editor.setOptions({
                     wrapBehavioursEnabled: true,
@@ -174,6 +182,9 @@
         display: flex;
         align-items: center;
     }
+    .sideslider-content {
+        height: 100%;
+    }
     .node-title {
         font-size: 12px;
         padding-left: 15px;
@@ -199,19 +210,79 @@
 </style>
 
 <style lang="scss">
-    .import-status-icon {
-        width: 38px;
-        height: 38px;
-        line-height: 38px;
-        font-size: 36px;
-        border-radius: 50%;
-        &.success {
-            background-color: #e5f6ea;
-            color: #3fc06d;
+.import-status-icon {
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+    font-size: 36px;
+    border-radius: 50%;
+    &.success {
+        background-color: #e5f6ea;
+        color: #3fc06d;
+    }
+    &.error {
+        background-color: #fdd;
+        color: #ea3636;
+    }
+}
+.log-wrapper {
+    width: 100%;
+    height: calc(100% - 90px);
+    padding-top: 20px;
+    /* stylelint-disable selector-class-pattern */
+    .ace_editor {
+        overflow: unset;
+        line-height: 1.6;
+        color: #c4c6cc;
+        background: #1d1d1d;
+
+        .ace_gutter {
+            padding-top: 4px;
+            margin-bottom: -4px;
+            color: #63656e;
+            background: #292929;
         }
-        &.error {
-            background-color: #fdd;
-            color: #ea3636;
+
+        .ace_scroller {
+            padding-top: 4px;
+            margin-bottom: -4px;
+        }
+
+        .ace_hidden-cursors .ace_cursor {
+            opacity: 0% !important;
+        }
+
+        .ace_selected-word {
+            background: rgb(135 139 145 / 25%);
+        }
+
+        .ace_scrollbar-v,
+        .ace_scrollbar-h {
+            &::-webkit-scrollbar-thumb {
+                background-color: #3b3c42;
+                border: 1px solid #63656e;
+            }
+
+            &::-webkit-scrollbar-corner {
+                background-color: transparent;
+            }
+        }
+
+        .ace_scrollbar-v {
+            margin-right: -20px;
+
+            &::-webkit-scrollbar {
+                width: 14px;
+            }
+        }
+
+        .ace_scrollbar-h {
+            margin-bottom: -20px;
+
+            &::-webkit-scrollbar {
+                height: 14px;
+            }
         }
     }
+}
 </style>
