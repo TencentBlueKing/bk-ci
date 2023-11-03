@@ -393,7 +393,8 @@ class GithubService @Autowired constructor(
     override fun isOAuth(
         userId: String,
         projectId: String,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
         val accessToken = if (refreshToken == true) {

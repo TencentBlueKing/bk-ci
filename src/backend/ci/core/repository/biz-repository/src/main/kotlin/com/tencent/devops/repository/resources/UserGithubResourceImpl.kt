@@ -59,13 +59,15 @@ class UserGithubResourceImpl @Autowired constructor(
     override fun isOAuth(
         userId: String,
         projectId: String,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): Result<AuthorizeResult> {
         return Result(
             githubService.isOAuth(
                 userId = userId,
                 projectId = projectId,
-                refreshToken = refreshToken
+                refreshToken = refreshToken,
+                resetType = resetType
             )
         )
     }
