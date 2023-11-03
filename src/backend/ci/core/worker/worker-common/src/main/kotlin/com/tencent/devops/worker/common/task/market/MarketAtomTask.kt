@@ -267,7 +267,8 @@ open class MarketAtomTask : ITask() {
                 atomData = atomData,
                 atomTmpSpace = atomTmpSpace,
                 workspace = workspace,
-                projectId = projectId
+                projectId = projectId,
+                buildId = buildTask.buildId
             )
             // 检查插件包的完整性
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -397,7 +398,8 @@ open class MarketAtomTask : ITask() {
         atomData: AtomEnv,
         atomTmpSpace: File,
         workspace: File,
-        projectId: String
+        projectId: String,
+        buildId: String
     ): File {
         // 取插件文件名
         val atomFilePath = atomData.pkgPath!!
@@ -448,9 +450,10 @@ open class MarketAtomTask : ITask() {
                         AtomStatusEnum.TESTING.name,
                         AtomStatusEnum.CODECCING.name,
                         AtomStatusEnum.AUDITING.name
-                    )
+                    ) && !fileCacheDir.contains(buildId)
                 ) {
-                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中(未发布的插件版本内容可能会变化故也不存入缓存)
+                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
+                    // 未发布的插件版本内容可能会变化故也不存入缓存、工作空间如果以构建ID为维度没法实现资源复用故也不存入缓存
                     bkDiskLruFileCache.put(fileCacheKey, atomExecuteFile)
                 }
             } else {
