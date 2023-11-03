@@ -48,6 +48,7 @@ import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -55,13 +56,17 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val permissionManageService: PermissionManageService
 ) : ServiceJobResource {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)
+    }
+
     override fun executeScript(
         userId: String,
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         checkParamBlank(userId, projectId)
-        val jobResult = jobService.executeScript(userId, projectId, scriptExecuteReq)
+        val jobResult = jobService.executeScript(projectId, scriptExecuteReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }
@@ -72,7 +77,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
         checkParamBlank(userId, projectId)
-        val jobResult=jobService.distributeFile(userId, projectId, fileDistributeReq)
+        val jobResult = jobService.distributeFile(projectId, fileDistributeReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }
@@ -84,7 +89,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<TaskTerminateResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, taskTerminateReq.jobInstanceId)
-        val jobResult=jobService.terminateTask(userId, taskTerminateReq)
+        val jobResult = jobService.terminateTask(taskTerminateReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }
@@ -97,7 +102,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceStatusResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, jobInstanceId)
-        val jobResult=jobService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
+        val jobResult = jobService.queryJobInstanceStatus(projectId, jobInstanceId, returnIpResult)
         jobResult.data?.let { it.jobInstance?.let { it1 -> recordJobInsToProj(projectId, it1.jobInstanceId, userId) } }
         return jobResult
     }
@@ -109,7 +114,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceLogsResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, queryJobInstanceLogsReq.jobInstanceId)
-        val jobResult=jobService.queryJobInstanceLogs(userId, queryJobInstanceLogsReq)
+        val jobResult = jobService.queryJobInstanceLogs(queryJobInstanceLogsReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }
@@ -120,7 +125,8 @@ class ServiceJobResourceImpl @Autowired constructor(
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult> {
         checkParamBlank(userId, projectId)
-        return jobService.createAccount(userId, createAccountReq)
+        logger.info("[createAccount] userId:$userId, projectId:$projectId")
+        return jobService.createAccount(createAccountReq)
     }
 
     override fun deleteAccount(
@@ -129,7 +135,8 @@ class ServiceJobResourceImpl @Autowired constructor(
         deleteAccountReq: DeleteAccountReq
     ): JobResult<DeleteAccountResult> {
         checkParamBlank(userId, projectId)
-        return jobService.deleteAccount(userId, deleteAccountReq)
+        logger.info("[deleteAccount] userId:$userId, projectId:$projectId")
+        return jobService.deleteAccount(deleteAccountReq)
     }
 
     override fun getAccountList(
@@ -142,7 +149,8 @@ class ServiceJobResourceImpl @Autowired constructor(
         length: Int?
     ): JobResult<GetAccountListResult> {
         checkParamBlank(userId, projectId)
-        return jobService.getAccountList(userId, projectId, account, alias, category, start, length)
+        logger.info("[getAccountList] userId:$userId, projectId:$projectId")
+        return jobService.getAccountList(projectId, account, alias, category, start, length)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

@@ -2,6 +2,7 @@ package com.tencent.devops.environment.service.job.api
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
@@ -15,11 +16,9 @@ import org.springframework.stereotype.Component
 
 @Component("ApigwJobCloudApi")
 class ApigwJobCloudApi {
-    // @Value("\${auth.appCode:}")
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 
-    // @Value("\${auth.appSecret:}")
     @Value("\${job.bkAppSecret:}")
     private val bkAppSecret = ""
 
@@ -88,9 +87,9 @@ class ApigwJobCloudApi {
         )
     }
 
-    fun getJobCloudAuthReq(bkUsername: String): JobCloudAuthenticationReq {
+    fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"${bkUsername}\"}"
+            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
         val operationName = getThreadLocal()
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
         val url = jobCloudApiBaseUrl + when (operationName) {
@@ -121,12 +120,8 @@ class ApigwJobCloudApi {
             logOrigin
     }
 
-    fun <T : JobCloudPermission, U : Any> executePostRequest(
-        bkUsername: String,
-        jobCloud: T,
-        classOfU: Class<U>
-    ): JobCloudResult<U> {
-        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
+    fun <T : JobCloudPermission, U : Any> executePostRequest(jobCloud: T, classOfU: Class<U>): JobCloudResult<U> {
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
@@ -138,9 +133,9 @@ class ApigwJobCloudApi {
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
-    fun <T, U> executeGetRequest(bkUsername: String, classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
+    fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
         val operationName = getThreadLocal()
-        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq(bkUsername)
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val suffix = when (operationName) {
             "queryJobInstanceStatus" -> QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX
