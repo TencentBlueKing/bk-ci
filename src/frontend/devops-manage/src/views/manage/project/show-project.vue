@@ -33,6 +33,7 @@ const isLoading = ref(false);
 const userName = ref('');
 const hasPermission = ref(true)
 const showException = ref(false);
+const operationalList = ref([]);
 const exceptionObj = ref({
   type: '',
   title: '',
@@ -161,6 +162,21 @@ const handleEdit = () => {
 const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank')
 };
+
+const fetchOperationalList = async () => {
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+  });
+};
+
+const getOperational = (id) => {
+  return operationalList.value.find(i => i.ProductId === String(id))
+}
 
 /**
  * 取消更新项目 
@@ -310,6 +326,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
+  await fetchOperationalList();
 });
 </script>
 
@@ -330,7 +347,7 @@ onMounted(async () => {
     <bk-loading class="content-wrapper" :loading="isLoading">
       <article class="project-info-content">
         <template v-if="hasPermission">
-          <template v-if="projectData.projectCode">
+          <template v-if="projectData.projectCode && operationalList.length">
             <section class="content-main">
               <bk-form class="detail-content-form" :label-width="160">
                 <bk-form-item :label="t('项目名称')" property="projectName">
@@ -371,12 +388,12 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属运营产品')" property="bg">
-                  <span>{{ projectTypeNameMap[projectData.productId] }}</span>
+                  <span>{{ getOperational(projectData.productId)?.ProductName || projectData.productId }}</span>
                   <div class="diff-content" v-if="projectData.afterProductId">
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                    <span>{{ projectTypeNameMap[projectData.afterProductId] }}</span>
+                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || '123' }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
