@@ -63,7 +63,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                     AND COLUMN_NAME = 'product_id') THEN
     ALTER TABLE `T_PROJECT_APPROVAL`
-        ADD COLUMN `product_id` int(10) DEFAULT NULL comment '运营产品ID';
+        ADD COLUMN `PRODUCT_ID` int(10) DEFAULT NULL comment '运营产品ID';
     END IF;
 
     COMMIT;
