@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.resources.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.PermissionService
@@ -29,6 +30,10 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
         return Result(workspaceService.getWorkspaceProject())
+    }
+
+    override fun queryProjectRemoteDevCvm(projectId: String?): Result<List<RemotedevCvmData>> {
+        return Result(workspaceService.getRemotedevCvm(projectId))
     }
 
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
