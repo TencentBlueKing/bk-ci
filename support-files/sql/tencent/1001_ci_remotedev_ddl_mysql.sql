@@ -405,6 +405,25 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
 
 -- ----------------------------
+-- Table structure for T_REMOTEDEV_CVM 云研发CVM
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CVM` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '蓝盾项目ID',
+    `IP` varchar(32) NOT NULL DEFAULT '' COMMENT '内网IP',
+    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
+    `AVAILABLE_REGION` varchar(32) NOT NULL COMMENT '可用区',
+    `CPU` int(11) NOT NULL DEFAULT '8' COMMENT 'CPU(核)',
+    `MEMORY` int(11) NOT NULL DEFAULT '16' COMMENT '内存(G)',
+    `SUBNET` varchar(128) NOT NULL DEFAULT '' COMMENT '子网',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`IP`,`PROJECT_ID`,`ZONE`),
+    KEY `idx_version` (`AVAILABLE_REGION`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='云研发CVM';
+
+-- ----------------------------
 -- Table structure for T_REMOTE_CODE_PROXY CODE—PROXY数据
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTE_CODE_PROXY` (

@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceWindowsRecord
 import org.jooq.DSLContext
@@ -57,5 +58,19 @@ class WorkspaceWindowsDao {
                 .set(HOST_IP, hostIp ?: "")
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
+    }
+
+    fun countProjectIp(
+        dslContext: DSLContext,
+        projectId: String,
+        ip: String
+    ): Int {
+        return dslContext.fetchCount(
+            dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
+                .from(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
+                .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+                .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
+        )
     }
 }
