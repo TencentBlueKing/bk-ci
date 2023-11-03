@@ -89,9 +89,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<TaskTerminateResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, taskTerminateReq.jobInstanceId)
-        val jobResult = jobService.terminateTask(taskTerminateReq)
-        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
-        return jobResult
+        return jobService.terminateTask(taskTerminateReq)
     }
 
     override fun queryJobInstanceStatus(
@@ -102,9 +100,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceStatusResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, jobInstanceId)
-        val jobResult = jobService.queryJobInstanceStatus(projectId, jobInstanceId, returnIpResult)
-        jobResult.data?.let { it.jobInstance?.let { it1 -> recordJobInsToProj(projectId, it1.jobInstanceId, userId) } }
-        return jobResult
+        return jobService.queryJobInstanceStatus(projectId, jobInstanceId, returnIpResult)
     }
 
     override fun queryJobInstanceLogs(
@@ -114,9 +110,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     ): JobResult<QueryJobInstanceLogsResult> {
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, queryJobInstanceLogsReq.jobInstanceId)
-        val jobResult = jobService.queryJobInstanceLogs(queryJobInstanceLogsReq)
-        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
-        return jobResult
+        return jobService.queryJobInstanceLogs(queryJobInstanceLogsReq)
     }
 
     override fun createAccount(
