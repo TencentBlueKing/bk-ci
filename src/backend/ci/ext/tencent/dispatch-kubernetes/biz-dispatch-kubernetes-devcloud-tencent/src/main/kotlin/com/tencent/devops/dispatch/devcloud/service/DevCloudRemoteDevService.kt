@@ -65,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
@@ -278,7 +279,11 @@ class DevCloudRemoteDevService @Autowired constructor(
             started = podInfo?.started ?: false
         )
     }
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
         // 将task放入缓存，等待回调
         devcloudWorkspaceRedisUtils.refreshTaskStatus(
             userId = userId,

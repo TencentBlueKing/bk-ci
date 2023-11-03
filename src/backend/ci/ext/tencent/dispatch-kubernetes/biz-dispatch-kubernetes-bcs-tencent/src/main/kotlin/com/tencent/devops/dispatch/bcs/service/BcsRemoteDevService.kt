@@ -54,6 +54,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -266,7 +267,11 @@ class BcsRemoteDevService @Autowired constructor(
             )
         }
 
-        override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+        override fun waitTaskFinish(
+            userId: String,
+            taskId: String,
+            type: UpdateEventType
+        ): DispatchBuildTaskStatus {
 
             logger.info("BcsRemoteDevService|start to do waitTaskFinish|userId|$userId|taskId|$taskId")
             // 将task放入缓存，等待回调
