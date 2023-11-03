@@ -163,7 +163,6 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${obs.token:#{null}}")
     private var obsToken: String = ""
 
-
     override fun getByEnglishName(
         userId: String,
         englishName: String,
