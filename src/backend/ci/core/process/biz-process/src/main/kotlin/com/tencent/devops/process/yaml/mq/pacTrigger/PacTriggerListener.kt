@@ -28,8 +28,8 @@
 
 package com.tencent.devops.process.yaml.mq.pacTrigger
 
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.common.event.listener.trace.BaseTraceListener
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.process.yaml.PipelineYamlBuildService
 import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
@@ -40,14 +40,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class PacTriggerListener @Autowired constructor(
-    traceEventDispatcher: TraceEventDispatcher,
+    pipelineEventDispatcher: PipelineEventDispatcher,
     private val actionFactory: EventActionFactory,
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlBuildService: PipelineYamlBuildService,
     private val exceptionHandler: PacTriggerExceptionHandler
-) : BaseTraceListener<BasePacYamlEvent>(
-    traceEventDispatcher = traceEventDispatcher
+) : BaseListener<BasePacYamlEvent>(
+    pipelineEventDispatcher = pipelineEventDispatcher
 ) {
     override fun run(event: BasePacYamlEvent) {
         when (event) {

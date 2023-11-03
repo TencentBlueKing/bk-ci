@@ -28,6 +28,8 @@
 
 package com.tencent.devops.process.yaml.mq.pacTrigger
 
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
@@ -35,10 +37,22 @@ import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
 open class BasePacYamlEvent(
-    open val projectId: String,
+    override val source: String,
+    override val projectId: String,
+    open val yamlPath: String,
+    override val userId: String,
     open val eventStr: String,
     open val metaData: ActionMetaData,
     open val actionCommonData: EventCommonData,
     open val actionContext: PacTriggerContext,
-    open val actionSetting: PacRepoSetting
-) : ITraceEvent()
+    open val actionSetting: PacRepoSetting,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0
+) : IPipelineEvent(
+    actionType = ActionType.START,
+    source = source,
+    projectId = projectId,
+    pipelineId = yamlPath,
+    userId = userId,
+    delayMills = delayMills
+)

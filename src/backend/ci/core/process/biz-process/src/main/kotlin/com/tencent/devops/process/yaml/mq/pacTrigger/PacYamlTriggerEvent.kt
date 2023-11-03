@@ -38,7 +38,10 @@ import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
 @Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
 data class PacYamlTriggerEvent(
+    override val source: String = "PacYamlTrigger",
     override val projectId: String,
+    override val yamlPath: String,
+    override val userId: String,
     override val eventStr: String,
     override val metaData: ActionMetaData,
     override val actionCommonData: EventCommonData,
@@ -46,7 +49,10 @@ data class PacYamlTriggerEvent(
     override val actionSetting: PacRepoSetting,
     val scmType: ScmType
 ) : BasePacYamlEvent(
+    source = source,
     projectId = projectId,
+    yamlPath = yamlPath,
+    userId = userId,
     eventStr = eventStr,
     metaData = metaData,
     actionCommonData = actionCommonData,

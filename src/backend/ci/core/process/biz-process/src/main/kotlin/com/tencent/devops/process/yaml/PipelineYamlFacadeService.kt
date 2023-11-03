@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.PacTriggerPipeline
@@ -47,7 +48,6 @@ import com.tencent.devops.process.yaml.actions.pacActions.data.PacEnableEvent
 import com.tencent.devops.process.yaml.actions.pacActions.data.PacPushYamlFileEvent
 import com.tencent.devops.process.yaml.mq.pacTrigger.PacYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.pacTrigger.PacYamlTriggerEvent
-import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -62,7 +62,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val eventActionFactory: EventActionFactory,
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val traceEventDispatcher: TraceEventDispatcher,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val objectMapper: ObjectMapper,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val webhookEventFactory: WebhookEventFactory,
@@ -127,9 +127,11 @@ class PipelineYamlFacadeService @Autowired constructor(
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
             action.data.context.ciDirId = ciDirId
-            traceEventDispatcher.dispatch(
+            pipelineEventDispatcher.dispatch(
                 PacYamlEnableEvent(
                     projectId = projectId,
+                    yamlPath = it.yamlPath,
+                    userId = userId,
                     eventStr = objectMapper.writeValueAsString(event),
                     metaData = action.metaData,
                     actionCommonData = action.data.eventCommon,
@@ -143,10 +145,10 @@ class PipelineYamlFacadeService @Autowired constructor(
     fun trigger(
         eventObject: CodeWebhookEvent,
         scmType: ScmType,
-        hookRequestId: Long,
+        requestId: String,
         eventTime: LocalDateTime
     ) {
-        logger.info("pac yaml trigger|$hookRequestId|$scmType")
+        logger.info("pac yaml trigger|$requestId|$scmType")
         val action = eventActionFactory.load(eventObject)
         if (action == null) {
             logger.warn("pac trigger|request event not support|$eventObject")
@@ -172,7 +174,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             return
         }
         val removeFiles = action.getRemoveFiles()
-        // 在默认分支上删除文件需要删除文件
+        // 在默认分支上删除文件需要删除流水线
         if (action.data.context.defaultBranch == action.data.eventCommon.branch && !removeFiles.isNullOrEmpty()) {
             removeFiles.forEach { removeFile ->
                 pipelineYamlInfoDao.delete(
@@ -194,8 +196,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
             eventDesc = matcher.getEventDesc(),
-            hookRequestId = hookRequestId,
-            eventTime = eventTime
+            requestId = requestId,
+            createTime = eventTime
         )
         pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -225,9 +227,11 @@ class PipelineYamlFacadeService @Autowired constructor(
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
             action.data.context.eventId = eventId
-            traceEventDispatcher.dispatch(
+            pipelineEventDispatcher.dispatch(
                 PacYamlTriggerEvent(
                     projectId = projectId,
+                    yamlPath = it.yamlPath,
+                    userId = action.data.getUserId(),
                     eventStr = objectMapper.writeValueAsString(eventObject),
                     metaData = action.metaData,
                     actionCommonData = action.data.eventCommon,

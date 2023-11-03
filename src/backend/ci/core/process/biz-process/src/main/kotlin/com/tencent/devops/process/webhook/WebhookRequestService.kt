@@ -98,7 +98,7 @@ class WebhookRequestService(
         pipelineYamlFacadeService.trigger(
             eventObject = event,
             scmType = scmType,
-            hookRequestId = requestId,
+            requestId = requestId,
             eventTime = eventTime
         )
     }
