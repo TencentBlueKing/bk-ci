@@ -20,7 +20,7 @@ class WeworkGroupNotifier @Autowired constructor(
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val dslContext: DSLContext
-) : BaseNotifier() {
+) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
 

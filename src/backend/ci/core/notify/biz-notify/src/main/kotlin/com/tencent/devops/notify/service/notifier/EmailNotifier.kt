@@ -20,7 +20,7 @@ class EmailNotifier @Autowired constructor(
     private val emailService: EmailService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val dslContext: DSLContext
-) : BaseNotifier() {
+) : INotifier {
     override fun type(): NotifyType = NotifyType.EMAIL
     override fun send(
         request: SendNotifyMessageTemplateRequest,

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class VoiceNotifier @Autowired constructor(
     private val voiceService: VoiceService
-) : BaseNotifier() {
+) : INotifier {
     override fun type(): NotifyType = NotifyType.VOICE
 
     override fun send(

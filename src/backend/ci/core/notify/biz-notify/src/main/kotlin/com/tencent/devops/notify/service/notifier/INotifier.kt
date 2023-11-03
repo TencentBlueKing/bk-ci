@@ -7,16 +7,16 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 /**
  * 通知器
  */
-abstract class BaseNotifier {
+interface INotifier {
     /**
      * 支持类型
      */
-    abstract fun type(): NotifyType
+    fun type(): NotifyType
 
     /**
      * 发送
      */
-    abstract fun send(
+    fun send(
         request: SendNotifyMessageTemplateRequest, // 请求
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord // 模板
     )

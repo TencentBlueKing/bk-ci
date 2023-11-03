@@ -19,7 +19,7 @@ class WechatNotifier @Autowired constructor(
     private val wechatService: WechatService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val dslContext: DSLContext
-) : BaseNotifier() {
+) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
     override fun type(): NotifyType = NotifyType.WECHAT

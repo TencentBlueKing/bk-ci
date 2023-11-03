@@ -57,7 +57,7 @@ import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
-import com.tencent.devops.notify.service.notifier.BaseNotifier
+import com.tencent.devops.notify.service.notifier.INotifier
 import com.tencent.devops.notify.service.notifier.NotifierUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -672,7 +672,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val sendAllNotify = request.notifyType == null
         val notifyTypeScope = commonNotifyMessageTemplateRecord.notifyTypeScope
 
-        val notifiers = SpringContextUtil.getBeansWithClass(BaseNotifier::class.java)
+        val notifiers = SpringContextUtil.getBeansWithClass(INotifier::class.java)
         for (notifier in notifiers) {
             if (sendAllNotify || request.notifyType?.contains(notifier.type().name) == true) {
                 if (!notifyTypeScope.contains(notifier.type().name)) {
