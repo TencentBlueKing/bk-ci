@@ -376,7 +376,6 @@
                             await this.handleTogglePacStatus()
                         } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
                             this.userId = userId
-                            console.log(123)
                             // await this.handleResetAuth()
                         }
                     }, 200)

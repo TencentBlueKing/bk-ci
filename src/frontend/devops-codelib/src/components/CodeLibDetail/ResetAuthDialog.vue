@@ -438,9 +438,13 @@
                 if (val) {
                     this.newRepoInfo = {
                         ...this.newRepoInfo,
-                        userName: val
+                        userName: val,
+                        authIdentity: ''
                     }
-                    this.handleUpdateRepo()
+                    this.newRepoInfo.authType = 'OAUTH'
+                    this.$nextTick(() => {
+                        this.handleUpdateRepo()
+                    })
                 }
             }
         },
