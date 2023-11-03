@@ -382,6 +382,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         modelAndYaml: PipelineModelWithYamlRequest
     ): DeployPipelineResult {
         val pipelineId = modelAndYaml.pipelineId
+        val versionStatus = VersionStatus.COMMITTING
         val (model, setting, newYaml) = if (modelAndYaml.storageType == PipelineStorageType.YAML) {
             // YAML形式的保存需要所有插件都为支持转换的市场插件
             val transferResult = transferService.transfer(
@@ -429,7 +430,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 model = model ?: modelAndYaml.modelAndSetting.model,
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
-                versionStatus = VersionStatus.COMMITTING,
+                versionStatus = versionStatus,
                 yaml = newYaml
             )
         } else {
@@ -439,6 +440,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 checkPermission = false,
+                versionStatus = versionStatus,
                 dispatchPipelineUpdateEvent = false
             )
             pipelineInfoFacadeService.editPipeline(
@@ -449,7 +451,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 checkTemplate = false,
-                versionStatus = VersionStatus.COMMITTING,
+                versionStatus = versionStatus,
                 description = modelAndYaml.description,
                 yaml = newYaml,
                 savedSetting = savedSetting

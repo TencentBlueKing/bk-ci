@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.audit.service.AuditService
@@ -95,6 +96,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         setting: PipelineSetting,
+        versionStatus: VersionStatus = VersionStatus.RELEASED,
         checkPermission: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
@@ -134,6 +136,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             userId = userId,
             setting = setting,
             version = settingVersion,
+            versionStatus = versionStatus,
             updateLastModifyUser = updateLastModifyUser
         )
 

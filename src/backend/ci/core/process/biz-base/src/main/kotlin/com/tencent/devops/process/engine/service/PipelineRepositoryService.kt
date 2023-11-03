@@ -1422,6 +1422,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         setting: PipelineSetting,
         version: Int,
+        versionStatus: VersionStatus,
         updateLastModifyUser: Boolean? = true
     ): PipelineName {
         setting.checkParam()
@@ -1449,7 +1450,7 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            pipelineInfoDao.update(
+            if (versionStatus == VersionStatus.RELEASED) pipelineInfoDao.update(
                 dslContext = context,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,

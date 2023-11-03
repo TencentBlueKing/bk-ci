@@ -542,6 +542,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
         val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+        val versionStatus = if (isDefaultBranch) {
+            VersionStatus.RELEASED
+        } else {
+            VersionStatus.BRANCH
+        }
         val newResource = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
@@ -556,11 +561,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model = newResource.model,
             channelCode = ChannelCode.BS,
             yaml = yml,
-            versionStatus = if (isDefaultBranch) {
-                VersionStatus.RELEASED
-            } else {
-                VersionStatus.BRANCH
-            },
+            versionStatus = versionStatus,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         newResource.setting.projectId = projectId
@@ -573,6 +574,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             setting = newResource.setting.copy(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
+            versionStatus = versionStatus,
             checkPermission = false
         )
         return result
@@ -587,6 +589,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         isDefaultBranch: Boolean
     ): DeployPipelineResult {
         val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+        val versionStatus = if (isDefaultBranch) {
+            VersionStatus.RELEASED
+        } else {
+            VersionStatus.BRANCH
+        }
         val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName)
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
@@ -599,9 +606,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false,
+            versionStatus = versionStatus,
             dispatchPipelineUpdateEvent = false
         )
-        val result = editPipeline(
+        return editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -609,14 +617,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             yaml = yml,
             savedSetting = savedSetting,
-            versionStatus = if (isDefaultBranch) {
-                VersionStatus.RELEASED
-            } else {
-                VersionStatus.BRANCH
-            },
+            versionStatus = versionStatus,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
-        return result
     }
 
     private fun transferModelAndSetting(
