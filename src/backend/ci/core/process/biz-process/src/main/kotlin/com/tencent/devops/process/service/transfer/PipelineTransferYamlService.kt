@@ -224,11 +224,15 @@ class PipelineTransferYamlService @Autowired constructor(
             actionType = TransferActionType.FULL_MODEL2YAML,
             data = TransferBody(modelAndSetting)
         ).newYaml ?: return PreviewResponse("")
-        TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
-            if (key in pipeline_key) pipelineIndex.add(value)
-            if (key in trigger_key) triggerIndex.add(value)
-            if (key in notice_key) noticeIndex.add(value)
-            if (key in setting_key) settingIndex.add(value)
+        try {
+            TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+                if (key in pipeline_key) pipelineIndex.add(value)
+                if (key in trigger_key) triggerIndex.add(value)
+                if (key in notice_key) noticeIndex.add(value)
+                if (key in setting_key) settingIndex.add(value)
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
         }
         return PreviewResponse(yaml, pipelineIndex, triggerIndex, noticeIndex, settingIndex)
     }

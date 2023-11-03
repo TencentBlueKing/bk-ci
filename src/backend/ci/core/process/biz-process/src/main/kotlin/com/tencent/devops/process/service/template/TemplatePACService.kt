@@ -113,29 +113,33 @@ class TemplatePACService @Autowired constructor(
         val highlightMarkList = mutableListOf<TransferMark>()
         if (yaml != null && highlightType != null) {
             run outside@{
-                TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
-                    when {
-                        highlightType == HighlightType.LABEL && key == "label" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                try {
+                    TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+                        when {
+                            highlightType == HighlightType.LABEL && key == "label" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                            highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.NOTIFY && key == "notices" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                            highlightType == HighlightType.NOTIFY && key == "notices" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
-                            highlightMarkList.add(value)
-                            // pipelineModel 可能多个
-                            return@forEach
+                            highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
+                                highlightMarkList.add(value)
+                                // pipelineModel 可能多个
+                                return@forEach
+                            }
                         }
                     }
+                } catch (ignore: Throwable) {
+                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
                 }
             }
         }
