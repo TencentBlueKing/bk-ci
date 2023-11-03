@@ -42,6 +42,7 @@ import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
+import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
@@ -49,6 +50,7 @@ import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.OrgService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
+import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
@@ -66,6 +68,7 @@ class NotifyMessageConsumer @Autowired constructor(
     private val smsService: SmsService,
     private val wechatService: WechatService,
     private val weworkService: WeworkService,
+    private val voiceService: VoiceService,
     private val orgService: OrgService
 ) {
     companion object {
@@ -140,6 +143,17 @@ class NotifyMessageConsumer @Autowired constructor(
             smsService.sendMessage(smsNotifyMessageWithOperation)
         } catch (ignored: Exception) {
             logger.warn("Failed process received SMS message", ignored)
+        }
+    }
+
+    fun onReceiveVoiceMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
+        try {
+            val parseStaff = orgService.parseStaff(voiceNotifyMessageWithOperation.receivers)
+            voiceNotifyMessageWithOperation.clearReceivers()
+            voiceNotifyMessageWithOperation.addAllReceivers(parseStaff)
+            voiceService.sendMessage(voiceNotifyMessageWithOperation)
+        } catch (e: Exception) {
+            logger.warn("Failed process received voice message", e)
         }
     }
 
