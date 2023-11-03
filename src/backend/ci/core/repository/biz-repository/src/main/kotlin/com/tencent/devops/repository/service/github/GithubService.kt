@@ -407,7 +407,8 @@ class GithubService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 repoHashId = null,
-                popupTag = ""
+                popupTag = "",
+                resetType = resetType
             ).redirectUrl
         )
         // 校验token是否有效
@@ -420,7 +421,8 @@ class GithubService @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     repoHashId = null,
-                    popupTag = ""
+                    popupTag = "",
+                    resetType = resetType
                 ).redirectUrl
             )
         }
