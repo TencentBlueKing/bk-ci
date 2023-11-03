@@ -5,9 +5,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemoteCodeProxy
 import com.tencent.devops.model.remotedev.tables.records.TRemoteCodeProxyRecord
 import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
-import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
-import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.springframework.stereotype.Repository
