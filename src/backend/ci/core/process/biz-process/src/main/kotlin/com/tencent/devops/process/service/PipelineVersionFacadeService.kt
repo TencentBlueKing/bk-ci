@@ -117,7 +117,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         // TODO #8161 增加分支名称的保存
         var baseVersionBranch: String? = "master"
-        var canRelease = false
+        val canRelease = false
         var baseVersionStatus = VersionStatus.RELEASED
         draftVersion?.let { draft ->
             val baseVersion = draft.baseVersion?.let { base ->
@@ -129,9 +129,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
             baseVersion?.status?.let { baseVersionStatus = it }
 //            baseVersionBranch = baseVersion.ref
-            draft.debugBuildId?.let {
-                canRelease = pipelineRuntimeService.getBuildInfo(projectId, it)?.status?.isSuccess() == true
-            }
+//            draft.debugBuildId?.let {
+//                canRelease = pipelineRuntimeService.getBuildInfo(projectId, it)?.status?.isSuccess() == true
+//            }
         }
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
