@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
@@ -51,4 +52,25 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/list")
     fun getRemotedevProjects(): Result<List<RemotedevProject>>
+
+    @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
+    @GET
+    @Path("/project/cvm")
+    fun queryProjectRemoteDevCvm(
+        @ApiParam("project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<List<RemotedevCvmData>>
+
+    @ApiOperation("校验是否是当前项目下的云桌面")
+    @GET
+    @Path("/checkWorkspaceProject")
+    fun checkWorkspaceProject(
+        @ApiParam("projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }
