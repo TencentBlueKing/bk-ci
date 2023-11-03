@@ -267,7 +267,8 @@ class WorkspaceService @Autowired constructor(
             owner = null,
             status = null,
             zoneId = null,
-            machineType = null
+            machineType = null,
+            expertSupId = null
         )
         val result = workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -280,7 +281,8 @@ class WorkspaceService @Autowired constructor(
             owner = null,
             status = null,
             zoneId = null,
-            machineType = null
+            machineType = null,
+            expertSupId = null
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -302,7 +304,8 @@ class WorkspaceService @Autowired constructor(
             owner = data.owner,
             status = data.status,
             zoneId = data.zoneId,
-            machineType = data.machineType
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
         )
         val result = workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
@@ -315,7 +318,8 @@ class WorkspaceService @Autowired constructor(
             owner = data.owner,
             status = data.status,
             zoneId = data.zoneId,
-            machineType = data.machineType
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -426,7 +430,8 @@ class WorkspaceService @Autowired constructor(
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
-                            disk = it.memory
+                            disk = it.memory,
+                            expertSupportList = expertMap[it.workspaceName]
                         )
                     )
                 }
