@@ -452,46 +452,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         templateId: String,
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean> {
-        var hasEmail = false
-        var hasRtx = false
-        var hasWechat = false
         val notifyTypeScopeSet = mutableSetOf<String>()
         // 判断提交的数据中是否存在同样类型的
         notifyMessageTemplateRequest.msg.forEach {
-            if (it.notifyTypeScope.contains(NotifyType.EMAIL.name) && !hasEmail) {
-                hasEmail = true
-                notifyTypeScopeSet.add(NotifyType.EMAIL.name)
-            } else if (it.notifyTypeScope.contains(NotifyType.EMAIL.name) && hasEmail) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("notifyType"),
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            }
-
-            if (it.notifyTypeScope.contains(NotifyType.RTX.name) && !hasRtx) {
-                hasRtx = true
-                notifyTypeScopeSet.add(NotifyType.RTX.name)
-            } else if (it.notifyTypeScope.contains(NotifyType.RTX.name) && hasRtx) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("notifyType"),
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            }
-
-            if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && !hasWechat) {
-                hasWechat = true
-                notifyTypeScopeSet.add(NotifyType.WECHAT.name)
-            } else if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && hasWechat) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("notifyType"),
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
+            for (notifyType in NotifyType.opEditable()) {
+                if (it.notifyTypeScope.contains(notifyType.name)) {
+                    if (notifyTypeScopeSet.contains(notifyType.name)) {
+                        logger.warn("${notifyType.name} has set.")
+                        return I18nUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf("notifyType"),
+                            data = false,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    }
+                    notifyTypeScopeSet.add(notifyType.name)
+                }
             }
         }
 
@@ -517,61 +493,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             // 根据模板类型向消息模板信息表中添加信息
             notifyMessageTemplateRequest.msg.forEach {
                 if (it.notifyTypeScope.contains(NotifyType.WECHAT.name)) {
-                    val num = notifyMessageTemplateDao.countWechatMessageTemplate(dslContext, templateId)
-                    if (num > 0) {
-                        notifyMessageTemplateDao.updateWechatNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            userId = userId,
-                            templateId = templateId,
-                            notifyMessageTemplate = it
-                        )
-                    } else {
-                        notifyMessageTemplateDao.addWECHATNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            id = templateId,
-                            newId = uid,
-                            userId = userId,
-                            notifyTemplateMessage = it
-                        )
-                    }
+                    upsetWechatTemplate(templateId, userId, it, uid)
                 }
                 if (it.notifyTypeScope.contains(NotifyType.RTX.name)) {
-                    val num = notifyMessageTemplateDao.countRtxMessageTemplate(dslContext, templateId)
-                    if (num > 0) {
-                        notifyMessageTemplateDao.updateRtxNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            userId = userId,
-                            templateId = templateId,
-                            notifyMessageTemplate = it
-                        )
-                    } else {
-                        notifyMessageTemplateDao.addRTXNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            id = templateId,
-                            newId = uid,
-                            userId = userId,
-                            notifyTemplateMessage = it
-                        )
-                    }
+                    upsetRtxTemplate(templateId, userId, it, uid)
                 }
                 if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
-                    val num = notifyMessageTemplateDao.countEmailMessageTemplate(dslContext, templateId)
-                    if (num > 0) {
-                        notifyMessageTemplateDao.updateEmailsNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            userId = userId,
-                            templateId = templateId,
-                            notifyTemplateMessage = it
-                        )
-                    } else {
-                        notifyMessageTemplateDao.addEmailsNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            id = templateId,
-                            newId = uid,
-                            userId = userId,
-                            addNotifyTemplateMessage = it
-                        )
-                    }
+                    upSetEmailTemplate(templateId, userId, it, uid)
                 }
                 updateOtherSpecialTemplate(it, templateId, uid, userId)
             }
@@ -754,5 +682,80 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             else -> null
         }
         return Result(notifyContext)
+    }
+
+    private fun upSetEmailTemplate(
+        templateId: String,
+        userId: String,
+        it: NotifyTemplateMessage,
+        uid: String
+    ) {
+        val num = notifyMessageTemplateDao.countEmailMessageTemplate(dslContext, templateId)
+        if (num > 0) {
+            notifyMessageTemplateDao.updateEmailsNotifyMessageTemplate(
+                dslContext = dslContext,
+                userId = userId,
+                templateId = templateId,
+                notifyTemplateMessage = it
+            )
+        } else {
+            notifyMessageTemplateDao.addEmailsNotifyMessageTemplate(
+                dslContext = dslContext,
+                id = templateId,
+                newId = uid,
+                userId = userId,
+                addNotifyTemplateMessage = it
+            )
+        }
+    }
+
+    private fun upsetRtxTemplate(
+        templateId: String,
+        userId: String,
+        it: NotifyTemplateMessage,
+        uid: String
+    ) {
+        val num = notifyMessageTemplateDao.countRtxMessageTemplate(dslContext, templateId)
+        if (num > 0) {
+            notifyMessageTemplateDao.updateRtxNotifyMessageTemplate(
+                dslContext = dslContext,
+                userId = userId,
+                templateId = templateId,
+                notifyMessageTemplate = it
+            )
+        } else {
+            notifyMessageTemplateDao.addRTXNotifyMessageTemplate(
+                dslContext = dslContext,
+                id = templateId,
+                newId = uid,
+                userId = userId,
+                notifyTemplateMessage = it
+            )
+        }
+    }
+
+    private fun upsetWechatTemplate(
+        templateId: String,
+        userId: String,
+        it: NotifyTemplateMessage,
+        uid: String
+    ) {
+        val num = notifyMessageTemplateDao.countWechatMessageTemplate(dslContext, templateId)
+        if (num > 0) {
+            notifyMessageTemplateDao.updateWechatNotifyMessageTemplate(
+                dslContext = dslContext,
+                userId = userId,
+                templateId = templateId,
+                notifyMessageTemplate = it
+            )
+        } else {
+            notifyMessageTemplateDao.addWECHATNotifyMessageTemplate(
+                dslContext = dslContext,
+                id = templateId,
+                newId = uid,
+                userId = userId,
+                notifyTemplateMessage = it
+            )
+        }
     }
 }

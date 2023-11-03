@@ -35,4 +35,14 @@ enum class NotifyType {
     WEWORK,
     WEWORK_GROUP,
     VOICE
+    ;
+
+    /**
+     * OP系统可以编辑的通知模板
+     */
+    companion object {
+        fun opEditable(): List<NotifyType> {
+            return listOf(EMAIL, RTX, WECHAT)
+        }
+    }
 }
