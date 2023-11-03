@@ -268,7 +268,8 @@ class ProjectApprovalDao {
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
                 approver = approver,
                 tipsStatus = tipsStatus,
-                projectType = projectType
+                projectType = projectType,
+                productId = productId
             )
         }
     }
