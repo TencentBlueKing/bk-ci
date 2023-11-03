@@ -41,7 +41,6 @@ class WeworkNotifier @Autowired constructor(
         )
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(WeworkNotifier::class.java)
     }
