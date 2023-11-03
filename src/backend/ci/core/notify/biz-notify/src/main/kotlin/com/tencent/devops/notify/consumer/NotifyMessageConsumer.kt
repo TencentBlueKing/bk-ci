@@ -32,11 +32,13 @@ import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
+import com.tencent.devops.notify.QUEUE_NOTIFY_VOICE
 import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
 import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.ROUTE_RTX
 import com.tencent.devops.notify.ROUTE_SMS
+import com.tencent.devops.notify.ROUTE_VOICE
 import com.tencent.devops.notify.ROUTE_WECHAT
 import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
@@ -146,6 +148,16 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
+        bindings = [
+            QueueBinding(
+                key = [ROUTE_VOICE],
+                value = Queue(value = QUEUE_NOTIFY_VOICE, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )
+        ]
+    )
     fun onReceiveVoiceMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(voiceNotifyMessageWithOperation.receivers)
