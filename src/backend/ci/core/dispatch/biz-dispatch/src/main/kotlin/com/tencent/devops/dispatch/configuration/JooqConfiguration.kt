@@ -71,10 +71,7 @@ class JooqConfiguration {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
 
-            if ((packageName == "com.tencent.devops.dispatch.service") ||
-                (packageName == "com.tencent.devops.dispatch.listener") ||
-                (packageName == "com.tencent.devops.dispatch.cron") ||
-                (packageName.startsWith("com.tencent.devops.dispatch.docker"))) {
+            if ((packageName.startsWith("com.tencent.devops.dispatch."))) {
                 val configuration = configurationMap["dispatchJooqConfiguration"]
                     ?: throw NoSuchBeanDefinitionException("no dispatchJooqConfiguration")
                 LOG.info("dslContext_init|dispatchJooqConfiguration|${declaringClass.name}")

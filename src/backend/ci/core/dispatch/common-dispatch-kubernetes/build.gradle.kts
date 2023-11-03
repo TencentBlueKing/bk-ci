@@ -32,7 +32,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
+    api(project(":core:common:common-db-base"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-dispatch-sdk"))
