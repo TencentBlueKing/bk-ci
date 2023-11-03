@@ -143,6 +143,7 @@ class ProjectApprovalDao {
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
+                .set(PRODUCT_ID, projectUpdateInfo.productId)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -170,6 +171,7 @@ class ProjectApprovalDao {
                 .set(UPDATOR, projectApprovalInfo.updator)
                 .set(TIPS_STATUS, projectApprovalInfo.tipsStatus)
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
+                .set(PRODUCT_ID, projectApprovalInfo.productId)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -266,7 +268,8 @@ class ProjectApprovalDao {
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
                 approver = approver,
                 tipsStatus = tipsStatus,
-                projectType = projectType
+                projectType = projectType,
+                productId = productId
             )
         }
     }
