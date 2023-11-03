@@ -516,7 +516,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 fileDir = "$atomCode/$atomVersion",
                 i18nDir = i18nDir,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-                repositoryHashId = repoId,
+                repositoryHashId = repoId
             ),
             version = atomVersion
         )
