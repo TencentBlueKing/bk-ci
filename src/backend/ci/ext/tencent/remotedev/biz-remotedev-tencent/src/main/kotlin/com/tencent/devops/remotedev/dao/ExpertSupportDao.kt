@@ -83,6 +83,18 @@ class ExpertSupportDao {
         }
     }
 
+    fun fetchSupByWorkspaceName(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<TRemotedevExpertSupportRecord> {
+        with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .and(STATUS.ne(ExpertSupportStatus.DONE.name))
+                .fetch()
+        }
+    }
+
     // ---- config -----
     fun addExpertSupportConfig(
         dslContext: DSLContext,
