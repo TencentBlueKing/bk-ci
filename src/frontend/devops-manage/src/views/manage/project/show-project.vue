@@ -164,6 +164,7 @@ const handleToApprovalDetails = (applyId: any) => {
 };
 
 const fetchOperationalList = async () => {
+  isLoading.value = true;
   await http.getOperationalList().then((res) => {
     operationalList.value = res.map(i => ({
       ...i,
@@ -171,6 +172,7 @@ const fetchOperationalList = async () => {
       label: i.ProductName,
       id: i.ProductId,
     }));
+    isLoading.value = false;
   });
 };
 
