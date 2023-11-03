@@ -84,22 +84,8 @@ class RemoteDevService @Autowired constructor(
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
-            // 检验workspace状态
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
-                .getWorkspaceInfo(userId, event.workspaceName)
-
-            if (workspaceInfo.status != EnvStatusEnum.running) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                    I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
-                )
-            }
-
             if (mountType == WorkspaceMountType.START) {
                 val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
-
                 dslContext.transaction { t ->
                     val context = DSL.using(t)
                     dispatchWorkspaceDao.updateWorkspace(
@@ -140,6 +126,19 @@ class RemoteDevService @Autowired constructor(
                         environmentUid = result.enviromentUid,
                         operator = userId,
                         action = EnvironmentAction.CREATE
+                    )
+                }
+
+                // 检验workspace状态
+                val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
+                    .getWorkspaceInfo(userId, event.workspaceName)
+
+                if (workspaceInfo.status != EnvStatusEnum.running) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                        I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                     )
                 }
 
@@ -295,6 +294,24 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun makeWorkspaceImage(event: WorkspaceOperateEvent): WorkspaceImageInfo {
+        // 先检测工作空间状态
+        val environmentInfoRspData = remoteDevServiceFactory.loadRemoteDevService(event.mountType).getWorkspaceInfo(
+            userId = event.userId,
+            workspaceName = event.workspaceName
+        )
+
+        var workspaceRunning = false
+        if (environmentInfoRspData.status == EnvStatusEnum.running ||
+            environmentInfoRspData.status == EnvStatusEnum.startFailed ||
+            environmentInfoRspData.status == EnvStatusEnum.stopFailed ||
+            environmentInfoRspData.status == EnvStatusEnum.abnormalAfterRunning) {
+            // 制作镜像前先关机
+            stopWorkspace(event)
+
+            // 标识这是一次开机制作镜像
+            workspaceRunning = true
+        }
+
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
@@ -309,6 +326,11 @@ class RemoteDevService @Autowired constructor(
                 status = EnvStatusEnum.stopped,
                 dslContext = dslContext
             )
+
+            // 如果是开机制作镜像，镜像制作完成后要开机
+            if (workspaceRunning) {
+                startWorkspace(event)
+            }
 
             return WorkspaceImageInfo(
                 imageId = event.imageId ?: "",

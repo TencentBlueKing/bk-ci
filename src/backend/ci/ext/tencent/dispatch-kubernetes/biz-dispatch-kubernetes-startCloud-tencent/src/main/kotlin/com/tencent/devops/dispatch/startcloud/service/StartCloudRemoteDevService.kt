@@ -38,7 +38,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -109,7 +108,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     zoneId = resource.zoneId,
                     machineType = resource.machineType,
                     cgsId = event.devFile.cgsId,
-                    projectId = event.projectId
+                    projectId = event.projectId,
+                    image = event.devFile.imageCosFile
                 )
             )
         )
@@ -210,13 +210,17 @@ class StartCloudRemoteDevService @Autowired constructor(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
+        val workspaceStatus = workspaceClient.getWorkspaceInfo(
+            userId = userId,
+            environmentOperate = EnvironmentOperate(getEnvironmentUid(workspaceName))
+        )
         return WorkspaceInfo(
-            status = EnvStatusEnum.running,
-            hostIP = "",
-            environmentIP = "",
-            clusterId = "",
-            namespace = "",
-            environmentHost = "",
+            status = workspaceStatus.status,
+            hostIP = workspaceStatus.hostIP,
+            environmentIP = workspaceStatus.environmentIP,
+            clusterId = workspaceStatus.clusterId,
+            namespace = workspaceStatus.namespace,
+            environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
             curLaunchId = curLaunchId,
