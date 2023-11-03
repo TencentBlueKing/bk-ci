@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.resources.job
 
+import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.ServiceJobResource
@@ -46,19 +47,23 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
 import com.tencent.devops.environment.service.job.JobService
+import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceJobResourceImpl @Autowired constructor(
-    private val jobService: JobService
+    private val jobService: JobService,
+    private val permissionManageService: PermissionManageService
 ) : ServiceJobResource {
     override fun executeScript(
         userId: String,
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
-        checkParam(userId, projectId)
-        return jobService.executeScript(userId, projectId, scriptExecuteReq)
+        checkParamBlank(userId, projectId)
+        val jobResult = jobService.executeScript(userId, projectId, scriptExecuteReq)
+        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
+        return jobResult
     }
 
     override fun distributeFile(
@@ -66,8 +71,10 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
-        checkParam(userId, projectId)
-        return jobService.distributeFile(userId, projectId, fileDistributeReq)
+        checkParamBlank(userId, projectId)
+        val jobResult=jobService.distributeFile(userId, projectId, fileDistributeReq)
+        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
+        return jobResult
     }
 
     override fun terminateTask(
@@ -75,8 +82,11 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         taskTerminateReq: TaskTerminateReq
     ): JobResult<TaskTerminateResult> {
-        checkParam(userId, projectId)
-        return jobService.terminateTask(userId, taskTerminateReq)
+        checkParamBlank(userId, projectId)
+        checkJobInsBelongToProj(projectId, taskTerminateReq.jobInstanceId)
+        val jobResult=jobService.terminateTask(userId, taskTerminateReq)
+        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
+        return jobResult
     }
 
     override fun queryJobInstanceStatus(
@@ -85,8 +95,11 @@ class ServiceJobResourceImpl @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        checkParam(userId, projectId)
-        return jobService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
+        checkParamBlank(userId, projectId)
+        checkJobInsBelongToProj(projectId, jobInstanceId)
+        val jobResult=jobService.queryJobInstanceStatus(userId, projectId, jobInstanceId, returnIpResult)
+        jobResult.data?.let { it.jobInstance?.let { it1 -> recordJobInsToProj(projectId, it1.jobInstanceId, userId) } }
+        return jobResult
     }
 
     override fun queryJobInstanceLogs(
@@ -94,8 +107,11 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
-        checkParam(userId, projectId)
-        return jobService.queryJobInstanceLogs(userId, queryJobInstanceLogsReq)
+        checkParamBlank(userId, projectId)
+        checkJobInsBelongToProj(projectId, queryJobInstanceLogsReq.jobInstanceId)
+        val jobResult=jobService.queryJobInstanceLogs(userId, queryJobInstanceLogsReq)
+        jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
+        return jobResult
     }
 
     override fun createAccount(
@@ -103,7 +119,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult> {
-        checkParam(userId, projectId)
+        checkParamBlank(userId, projectId)
         return jobService.createAccount(userId, createAccountReq)
     }
 
@@ -112,7 +128,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         projectId: String,
         deleteAccountReq: DeleteAccountReq
     ): JobResult<DeleteAccountResult> {
-        checkParam(userId, projectId)
+        checkParamBlank(userId, projectId)
         return jobService.deleteAccount(userId, deleteAccountReq)
     }
 
@@ -125,16 +141,29 @@ class ServiceJobResourceImpl @Autowired constructor(
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        checkParam(userId, projectId)
+        checkParamBlank(userId, projectId)
         return jobService.getAccountList(userId, projectId, account, alias, category, start, length)
     }
 
-    private fun checkParam(userId: String, projectId: String) {
+    private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("projectId is blank.")
         }
+    }
+
+    private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
+        if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
+            throw OauthForbiddenException(
+                message = "The job instance you have queried doesn't belong to the current project " +
+                    "or more than three months."
+            )
+        }
+    }
+
+    private fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
+        permissionManageService.recordJobInsToProj(projectId, jobInstanceId, createUser)
     }
 }
