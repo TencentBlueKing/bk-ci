@@ -207,17 +207,17 @@ class PipelineVersionFacadeService @Autowired constructor(
         if (draftVersion.status != VersionStatus.COMMITTING) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
         )
-        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
-            val debugBuild = pipelineRuntimeService.getBuildInfo(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = debugBuildId
-            )
-            debugBuild?.status?.isSuccess() == true
-        } ?: false
-        if (!latestDebugPassed) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
-        )
+//        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
+//            val debugBuild = pipelineRuntimeService.getBuildInfo(
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = debugBuildId
+//            )
+//            debugBuild?.status?.isSuccess() == true
+//        } ?: false
+//        if (!latestDebugPassed) throw ErrorCodeException(
+//            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
+//        )
         val result = pipelineRepositoryService.deployPipeline(
             model = draftVersion.model.copy(staticViews = request.staticViews),
             projectId = projectId,

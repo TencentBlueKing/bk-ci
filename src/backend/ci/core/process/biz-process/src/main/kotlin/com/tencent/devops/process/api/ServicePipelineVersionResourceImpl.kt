@@ -34,9 +34,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.PipelineModelWithYaml
+import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
@@ -45,91 +47,178 @@ import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class ServicePipelineVersionResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
-    private val pipelineOperationLogService: PipelineOperationLogService
+    private val pipelineOperationLogService: PipelineOperationLogService,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) : ServicePipelineVersionResource {
 
-    override fun savePipeline(
+    override fun getPipelineDetailIncludeDraft(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        model: Model,
-        description: String?,
-        channelCode: ChannelCode
-    ): Result<Boolean> {
+        pipelineId: String
+    ): Result<PipelineDetail> {
         checkParam(userId, projectId)
-        val pipelineResult = pipelineInfoFacadeService.editPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            model = model,
-            yaml = null,
-            channelCode = ChannelCode.BS,
-            checkPermission = true,
-            checkTemplate = true,
-            versionStatus = VersionStatus.COMMITTING,
-            description = description
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(
+            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(userId, projectId, pipelineId)
         )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = model.name,
-                userId = userId,
-                action = "edit",
-                actionContent = "Save Ver.${pipelineResult.version}",
-                projectId = projectId
-            )
-        )
-        return Result(true)
     }
 
-    override fun saveSetting(
+    override fun releaseVersion(
         userId: String,
         projectId: String,
         pipelineId: String,
-        setting: PipelineSetting,
-        channelCode: ChannelCode
-    ): Result<Boolean> {
+        version: Int,
+        request: PipelineVersionReleaseRequest
+    ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = setting,
-            checkPermission = true
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
         )
-        pipelineInfoFacadeService.updatePipelineSettingVersion(
+        return Result(
+            pipelineVersionFacadeService.releaseDraftVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                request = request
+            )
+        )
+    }
+
+    override fun createPipelineFromTemplate(
+        userId: String,
+        projectId: String,
+        request: TemplateInstanceCreateRequest
+    ): Result<DeployPipelineResult> {
+        pipelinePermissionService.checkPipelinePermission(
             userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            settingVersion = savedSetting.version
+            projectId = projectId,
+            AuthPermission.CREATE
+        )
+        return Result(
+            pipelineVersionFacadeService.createPipelineFromTemplate(
+                userId = userId,
+                projectId = projectId,
+                request = request
+            )
+        )
+    }
+
+    override fun getVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<PipelineModelWithYaml> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.getVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
+    override fun preview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<PreviewResponse> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.preview(userId, projectId, pipelineId, version)
+        )
+    }
+
+    override fun savePipelineDraft(
+        userId: String,
+        projectId: String,
+        modelAndYaml: PipelineModelWithYamlRequest
+    ): Result<DeployPipelineResult> {
+        checkParam(userId, projectId)
+        val result = pipelineVersionFacadeService.savePipelineDraft(
+            userId = userId,
+            projectId = projectId,
+            modelAndYaml = modelAndYaml
         )
         auditService.createAudit(
             Audit(
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = setting.pipelineName,
+                resourceId = result.pipelineId,
+                resourceName = modelAndYaml.modelAndSetting.model.name,
                 userId = userId,
                 action = "edit",
-                actionContent = "Update Setting",
+                actionContent = "Save Ver.${result.version}",
                 projectId = projectId
             )
         )
-        return Result(true)
+        return Result(result)
     }
 
     override fun creatorList(
@@ -137,8 +226,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode
+        pageSize: Int?
     ): Result<Page<String>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -171,11 +259,12 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        fromVersion: Int?,
+        versionName: String?,
         creator: String?,
         description: String?,
         page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode
+        pageSize: Int?
     ): Result<Page<PipelineVersionWithInfo>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -199,12 +288,12 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             pipelineVersionFacadeService.listPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                fromVersion = fromVersion,
+                versionName = versionName,
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
-                fromVersion = null,
-                versionName = null,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 5
             )
         )
     }
@@ -214,8 +303,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?,
-        channelCode: ChannelCode
+        pageSize: Int?
     ): Result<Page<PipelineOperationDetail>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -243,6 +331,86 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
+        )
+    }
+
+    override fun operatorList(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<String>> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val result = pipelineOperationLogService.getOperatorInPage(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        return Result(result)
+    }
+
+    override fun rollbackDraftFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<PipelineVersionSimple> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.rollbackDraftFromVersion(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
+    override fun exportPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int?,
+        storageType: String?
+    ): Response {
+        return pipelineInfoFacadeService.exportPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            storageType = PipelineStorageType.getActionType(storageType)
         )
     }
 
