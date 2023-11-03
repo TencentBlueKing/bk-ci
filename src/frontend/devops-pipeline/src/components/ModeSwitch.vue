@@ -14,7 +14,18 @@
 
 <script>
     import { mapState, mapActions } from 'vuex'
+    import { CODE_MODE } from '@/utils/pipelineConst'
     export default {
+        props: {
+            isYamlSupport: {
+                type: Boolean,
+                default: true
+            },
+            yamlInvalidMsg: {
+                type: String,
+                default: ''
+            }
+        },
         emit: ['change'],
         computed: {
             ...mapState([
@@ -35,6 +46,25 @@
                 'updatePipelineMode'
             ]),
             updateMode (mode) {
+                if (mode === CODE_MODE && !this.isYamlSupport && this.yamlInvalidMsg) {
+                    this.$bkInfo({
+                        type: 'error',
+                        width: 500,
+                        title: this.$t('invalidCodeMode'),
+                        subHeader: this.$createElement('pre', {
+                            style: {
+                                padding: '16px',
+                                background: '#f5f5f5',
+                                textAlign: 'left',
+                                lineHeight: '24px',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-all'
+                            }
+                        }, this.yamlInvalidMsg),
+                        showFooter: false
+                    })
+                    return
+                }
                 this.updatePipelineMode(mode)
                 this.$emit('change', mode)
             }

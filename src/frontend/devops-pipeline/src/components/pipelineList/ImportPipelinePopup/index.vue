@@ -20,7 +20,8 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapMutations } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { hashID } from '@/utils/util'
     export default {
         name: 'import-pipeline-popup',
@@ -39,7 +40,7 @@
             }
         },
         computed: {
-            ...mapState('pipelines', [
+            ...mapState('atom', [
                 'pipelineInfo'
             ])
         },
@@ -49,6 +50,9 @@
             }
         },
         methods: {
+            ...mapActions([
+                'updatePipelineMode'
+            ]),
             ...mapActions('atom', [
                 'setEditFrom',
                 'transferModelToYaml',
@@ -56,9 +60,6 @@
                 'setPipelineYaml',
                 'setPipelineSetting',
                 'setPipelineWithoutTrigger'
-            ]),
-            ...mapMutations('pipelines', [
-                'setPipelineInfo'
             ]),
 
             handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
@@ -108,7 +109,10 @@
 
                     this.$nextTick(() => {
                         this.$router.push({
-                            name: 'pipelineImportEdit'
+                            name: 'pipelineImportEdit',
+                            params: {
+                                tab: 'pipeline'
+                            }
                         })
                     })
                 }
@@ -120,8 +124,12 @@
                 })
             },
             async updatePipeline (result, newPipelineName) {
+                const pipeline = {
+                    ...result.model,
+                    name: newPipelineName
+                }
                 try {
-                    await this.transferModelToYaml({
+                    const res = await this.transferModelToYaml({
                         projectId: this.$route.params.projectId,
                         actionType: 'FULL_MODEL2YAML',
                         modelAndSetting: {
@@ -136,34 +144,32 @@
                         },
                         oldYaml: ''
                     })
-
-                    this.setPipelineSetting({
-                        ...result.setting,
-                        pipelineName: newPipelineName
+                    Object.assign(pipeline, {
+                        yamlSupported: res.yamlSupported,
+                        yamlInvalidMsg: res.yamlInvalidMsg
                     })
-                    this.setPipeline({
-                        ...result.model,
-                        name: newPipelineName
-                    })
-                    this.setPipelineWithoutTrigger({
-                        ...result.model,
-                        stages: result.model.stages.slice(1),
-                        name: newPipelineName
-                    })
-                    this.setPipelineInfo({
-                        ...(this.pipelineInfo ?? {}),
-                        pipelineName: newPipelineName
-                    })
-
-                    return true
                 } catch (error) {
                     console.log(error)
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message || error
+                    Object.assign(pipeline, {
+                        yamlSupported: false,
+                        yamlInvalidMsg: error.message
                     })
-                    return false
                 }
+
+                this.setPipelineSetting({
+                    ...result.setting,
+                    pipelineName: newPipelineName
+                })
+                this.setPipeline(pipeline)
+                this.setPipelineWithoutTrigger({
+                    ...pipeline,
+                    stages: result.model.stages.slice(1)
+                })
+                this.$store.commit(`atom/${SET_PIPELINE_INFO}`, {
+                    ...(this.pipelineInfo ?? {}),
+                    pipelineName: newPipelineName
+                })
+                return true
             },
             checkJosnValid (json) {
                 try {

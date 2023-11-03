@@ -105,11 +105,9 @@
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'pipelineInfo'
-            ]),
             ...mapState('atom', [
-                'pipelineYaml'
+                'pipelineYaml',
+                'pipelineInfo'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -168,7 +166,7 @@
                             isRelease: item.status === 'RELEASED'
                         }
                     })
-                    this.activeVersion = this.versionList.find(item => item.version === this.pipelineInfo?.version)
+                    this.activeVersion = this.versionList.find(item => item.version === this.value)
                 }).catch(err => {
                     this.$showTips({
                         message: err.message || err,

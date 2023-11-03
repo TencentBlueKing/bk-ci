@@ -51,7 +51,7 @@
             execHandler: Function
         },
         computed: {
-            ...mapState('pipelines', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -60,22 +60,22 @@
             },
             asideNav () {
                 return [{
-                    title: this.$t('执行信息'),
+                    title: this.$t('executeInfo'),
                     children: [{
-                        title: this.$t('执行历史'),
+                        title: this.$t('pipelinesHistory'),
                         name: 'history'
                     }, {
-                        title: this.$t('触发事件'),
+                        title: this.$t('triggerEvent'),
                         name: 'triggerEvent'
                     }, {
-                        title: this.$t('产出物'),
+                        title: this.$t('details.outputs'),
                         name: 'artifactory'
                     }].map(child => ({
                         ...child,
                         active: this.activeMenuItem === child.name
                     }))
                 }, {
-                    title: this.$t('流水线配置'),
+                    title: this.$t('pipelineConf'),
                     link: {
                         handler: () => {
                             this.$router.push({
@@ -87,31 +87,31 @@
                             })
                         },
                         icon: 'edit-conf',
-                        title: this.$t('编辑流水线')
+                        title: this.$t('pipelineEdit')
                     },
                     children: [{
-                        title: this.$t('流水线编排'),
+                        title: this.$t('pipelineModel'),
                         name: 'pipeline'
                     }, {
-                        title: this.$t('触发器配置'),
+                        title: this.$t('triggerConf'),
                         name: 'trigger'
                     }, {
-                        title: this.$t('通知配置'),
+                        title: this.$t('notifyConf'),
                         name: 'notice'
                     }, {
-                        title: this.$t('基础配置'),
+                        title: this.$t('baseConf'),
                         name: 'setting'
                     }].map(child => ({
                         ...child,
                         active: this.activeMenuItem === child.name
                     }))
                 }, {
-                    title: this.$t('更多'),
+                    title: this.$t('more'),
                     children: [{
-                        title: this.$t('权限设置'),
+                        title: this.$t('authSetting'),
                         name: 'permission'
                     }, {
-                        title: this.$t('操作日志'),
+                        title: this.$t('operationLog'),
                         name: 'changeLog'
                     }].map(child => ({
                         ...child,

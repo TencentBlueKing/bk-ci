@@ -85,7 +85,7 @@ const routes = [
                 path: 'import',
                 component: ImportPipelineEdit,
                 children: [{
-                    path: '',
+                    path: ':tab',
                     name: 'pipelineImportEdit',
                     component: pipelinesEdit
                 }]

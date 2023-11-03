@@ -14,8 +14,10 @@
 </template>
 
 <script>
-    import { mapActions, mapMutations } from 'vuex'
+    import { mapActions } from 'vuex'
     import { navConfirm } from '@/utils/util'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         props: {
             version: {
@@ -39,9 +41,6 @@
             ...mapActions('pipelines', [
                 'rollbackPipelineVersion'
             ]),
-            ...mapMutations('pipelines', [
-                'updatePipelineInfo'
-            ]),
             async rollback () {
                 try {
                     this.loading = true
@@ -64,7 +63,7 @@
                         ...this.$route.params,
                         version: this.version
                     })
-                    this.updatePipelineInfo({
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         version,
                         versionName
                     })

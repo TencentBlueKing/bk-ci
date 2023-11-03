@@ -38,11 +38,11 @@
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
             ...mapState('atom', [
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'pipelineInfo'
             ]),
             ...mapState('pipelines', [
-                'executeStatus',
-                'pipelineInfo'
+                'executeStatus'
             ]),
             projectId () {
                 return this.$route.params.projectId

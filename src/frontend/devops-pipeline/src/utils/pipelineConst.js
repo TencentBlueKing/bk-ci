@@ -153,3 +153,6 @@ export const PIPELINE_SORT_FILED = {
     latestBuildStartDate: 'LAST_EXEC_TIME',
     updateTime: 'UPDATE_TIME'
 }
+
+export const UI_MODE = 'MODEL'
+export const CODE_MODE = 'YAML'

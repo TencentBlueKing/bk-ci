@@ -31,7 +31,7 @@
             ...mapGetters({
                 pipelineList: 'pipelines/getPipelineList'
             }),
-            ...mapState('pipelines', [
+            ...mapState('atom', [
                 'pipelineInfo'
             ]),
             breadCrumbs () {
@@ -41,23 +41,27 @@
                     to: {
                         name: 'pipelineListEntry'
                     }
-                }, {
-                    paramId: 'pipelineId',
-                    paramName: 'pipelineName',
-                    selectedValue: this.pipelineInfo?.pipelineName ?? '--',
-                    records: this.pipelineList,
-                    showTips: true,
-                    tipsName: 'switch_pipeline_hint',
-                    tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                    to: this.$route.name === 'pipelinesHistory'
-                        ? null
-                        : {
-                            name: 'pipelinesHistory'
-                        },
-                    handleSelected: this.doSelectPipeline,
-                    searching: this.pipelineListSearching,
-                    handleSearch: debounce(this.handleSearchPipeline, 300)
-                }, {
+                }, this.$route.name === 'pipelineImportEdit'
+                    ? {
+                        selectedValue: this.pipelineInfo?.pipelineName ?? '--'
+                    }
+                    : {
+                        paramId: 'pipelineId',
+                        paramName: 'pipelineName',
+                        selectedValue: this.pipelineInfo?.pipelineName ?? '--',
+                        records: this.pipelineList,
+                        showTips: true,
+                        tipsName: 'switch_pipeline_hint',
+                        tipsContent: this.$t('subpage.switchPipelineTooltips'),
+                        to: ['pipelinesHistory'].includes(this.$route.name)
+                            ? null
+                            : {
+                                name: 'pipelinesHistory'
+                            },
+                        handleSelected: this.doSelectPipeline,
+                        searching: this.pipelineListSearching,
+                        handleSearch: debounce(this.handleSearchPipeline, 300)
+                    }, {
                     selectedValue: ''
                 }]
             }
@@ -66,10 +70,10 @@
             this.fetchPipelineList()
         },
         methods: {
-            ...mapActions('pipelines', [
-                'searchPipelineList',
-                'requestPipelineSummary'
-            ]),
+            ...mapActions({
+                searchPipelineList: 'pipelines/searchPipelineList',
+                requestPipelineSummary: 'atom/requestPipelineSummary'
+            }),
             async fetchPipelineList (searchName) {
                 try {
                     const { projectId, pipelineId } = this.$route.params

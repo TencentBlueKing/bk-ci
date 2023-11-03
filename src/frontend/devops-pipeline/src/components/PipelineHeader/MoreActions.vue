@@ -51,7 +51,7 @@
 </template>
 
 <script>
-    import { mapState, mapMutations, mapActions } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
@@ -60,6 +60,8 @@
     import CopyIcon from '@/components/copyIcon'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         components: {
             ImportPipelinePopup,
@@ -81,7 +83,12 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineActionState', 'pipelineInfo']),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            ...mapState('pipelines', [
+                'pipelineActionState'
+            ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -146,13 +153,12 @@
         methods: {
             ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom', 'updatePipelineSetting']),
             ...mapActions('pipelines', ['requestToggleCollect']),
-            ...mapMutations('pipelines', ['updatePipelineInfo']),
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
             renameDone (name) {
                 this.$nextTick(() => {
-                    this.updatePipelineInfo({
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         pipelineName: name
                     })
                     this.pipelineSetting
@@ -227,7 +233,7 @@
                         ...this.pipelineInfo,
                         isCollect
                     })
-                    this.updatePipelineInfo({
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         hasCollect: isCollect
                     })
                 } catch (err) {

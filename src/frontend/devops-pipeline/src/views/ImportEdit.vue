@@ -8,6 +8,7 @@
 <script>
     import { mapState } from 'vuex'
     import ImportPipelineHeader from '@/components/PipelineHeader/ImportPipelineHeader'
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
     export default {
         components: {
             ImportPipelineHeader
@@ -27,6 +28,14 @@
                     name: 'pipelineList'
                 })
             }
+        },
+        beforeDestroy () {
+            this.$store.dispatch('atom/setPipeline', null)
+            this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
+            this.$store.dispatch('atom/setPipelineYaml', '')
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
+            this.$store.commit('pipelines/updatePipelineList', [])
         }
     }
 </script>

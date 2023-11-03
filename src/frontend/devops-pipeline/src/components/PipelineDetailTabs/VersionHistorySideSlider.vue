@@ -98,7 +98,7 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo']),
             releaseVersion () {
                 return this.pipelineInfo?.version
             },

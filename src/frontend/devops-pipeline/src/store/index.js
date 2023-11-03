@@ -28,6 +28,8 @@ import atom from './modules/atom'
 import common from './modules/common/'
 import pipelines from './modules/pipelines/'
 
+import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+
 import {
     BKUI_LS_PIPELINE_MODE,
     FETCH_ERROR,
@@ -35,8 +37,6 @@ import {
 } from './constants'
 Vue.use(Vuex)
 
-const UI_MODE = 'MODEL'
-const CODE_MODE = 'YAML'
 const modeList = [UI_MODE, CODE_MODE]
 const initPipelineMode = localStorage.getItem(BKUI_LS_PIPELINE_MODE)
 export default new Vuex.Store({

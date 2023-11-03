@@ -37,8 +37,7 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineInfo']),
-            ...mapState('atom', ['pipelineSetting']),
+            ...mapState('atom', ['pipelineInfo', 'pipelineSetting']),
             panels () {
                 return [{
                     name: 'baseInfo',

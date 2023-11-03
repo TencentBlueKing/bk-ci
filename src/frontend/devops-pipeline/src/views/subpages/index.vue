@@ -9,6 +9,8 @@
 </template>
 
 <script>
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         created () {
             this.$store.dispatch('requestProjectDetail', {
@@ -20,7 +22,7 @@
             this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
             this.$store.dispatch('atom/setPipelineYaml', '')
             this.$store.commit('atom/resetPipelineSetting', null)
-            this.$store.commit('pipelines/setPipelineInfo', null)
+            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
             this.$store.commit('pipelines/updatePipelineList', [])
         }
     }

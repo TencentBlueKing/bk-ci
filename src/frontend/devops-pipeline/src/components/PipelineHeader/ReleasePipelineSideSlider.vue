@@ -179,7 +179,9 @@
 
 <script>
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
-    import { mapActions, mapState, mapMutations, mapGetters } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         components: {
             PipelineGroupSelector
@@ -224,8 +226,13 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['pipelineInfo', 'isManage']),
-            ...mapGetters('pipelines', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            ...mapState('pipelines', [
+                'isManage'
+            ]),
+            ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionBranch
@@ -313,9 +320,6 @@
                 'getSupportPacScmTypeList',
                 'getPACRepoList'
             ]),
-            ...mapMutations('pipelines', [
-                'updatePipelineInfo'
-            ]),
             async init () {
                 if (this.releaseParams.enablePac) {
                     this.isLoading = true
@@ -370,7 +374,7 @@
                             ...groupValue
                         }
                     })
-                    this.updatePipelineInfo({
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         releaseVersion: version,
                         releaseVersionName: versionName,
                         canDebug: false

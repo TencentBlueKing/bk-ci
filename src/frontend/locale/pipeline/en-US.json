@@ -1277,5 +1277,16 @@
   "refreshOauthStatus": "刷新授权状态",
   "oauthPacTips": "尚未授权，请先点击按钮授权。<br/> 授权后，将使用你的身份提交 YAML 文件到代码库。需拥有代码库开发者及以上权限。",
   "reExec": "重新执行",
-  "reDebug": "重新调试"
+  "reDebug": "重新调试",
+  "pipelineConf": "流水线配置",
+  "pipelineModel": "流水线编排",
+  "pipelineEdit": "编辑流水线",
+  "triggerConf": "触发器配置",
+  "notifyConf": "通知配置",
+  "baseConf": "基础配置",
+  "authSetting": "权限设置",
+  "operationLog": "操作日志",
+  "executeInfo": "执行信息",
+  "triggerEvent": "触发事件",
+  "invalidCodeMode": "切换到Code方式失败"
 }

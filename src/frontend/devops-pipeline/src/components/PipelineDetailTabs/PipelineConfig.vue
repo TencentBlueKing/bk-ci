@@ -1,7 +1,10 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <header class="pipeline-config-header">
-            <mode-switch />
+            <mode-switch
+                :is-yaml-support="isYamlSupport"
+                :yaml-invalid-msg="yamlInvalidMsg"
+            />
             <VersionSideslider
                 v-model="activePipelineVersion"
                 ref="versionSideslider"
@@ -19,7 +22,7 @@
             <VersionDiffEntry
                 v-if="!isCurrentVersion"
                 :version="activePipelineVersion"
-                :latest-version="latestVersion"
+                :latest-version="releaseVersion"
                 :current-yaml="pipelineYaml"
             >
                 <i class="devops-icon icon-diff" />
@@ -50,9 +53,8 @@
     import { mapActions, mapState, mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
-    import { TriggerTab } from '@/components/PipelineEditTabs/'
+    import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import PipelineModel from './PipelineModel'
-    import NotificationConfig from './NotificationConfig'
     import BaseConfig from './BaseConfig'
     import VersionSideslider from './VersionSideslider'
     import Logo from '@/components/Logo'
@@ -61,13 +63,8 @@
     export default {
         components: {
             ModeSwitch,
-            // eslint-disable-next-line vue/no-unused-components
             PipelineModel,
-            // eslint-disable-next-line vue/no-unused-components
             TriggerTab,
-            // eslint-disable-next-line vue/no-unused-components
-            NotificationConfig,
-            // eslint-disable-next-line vue/no-unused-components
             BaseConfig,
             YamlEditor,
             Logo,
@@ -86,31 +83,33 @@
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'pipelineInfo'
-            ]),
             ...mapState('atom', [
                 'pipelineYaml',
+                'pipelineSetting',
                 'pipelineWithoutTrigger',
-                'pipeline'
+                'pipeline',
+                'pipelineInfo'
             ]),
             ...mapGetters({
-                isCodeMode: 'isCodeMode'
+                isCodeMode: 'isCodeMode',
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
+                isYamlSupport: 'atom/isYamlSupport',
+                yamlInvalidMsg: 'atom/yamlInvalidMsg'
             }),
             pipelineType () {
                 return this.$route.params.type
             },
-            latestVersion () {
-                return this.pipelineInfo?.version
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion
             },
-            latestVersionName () {
-                return this.pipelineInfo?.versionName
+            releaseVersionName () {
+                return this.pipelineInfo?.releaseVersionName
             },
             canRollBack () {
-                return this.activePipelineVersion !== this.pipelineInfo?.version && !this.pipelineInfo?.canDebug
+                return this.activePipelineVersion !== this.pipelineInfo?.releaseVersion && !this.pipelineInfo?.canDebug
             },
             isCurrentVersion () {
-                return this.activePipelineVersion === this.pipelineInfo?.version
+                return this.activePipelineVersion === this.pipelineInfo?.releaseVersion
             },
             draftVersionName () {
                 return this.$refs?.versionSideslider?.getDraftVersion()
@@ -135,7 +134,12 @@
                         }
                     case 'notice':
                         return {
-                            is: NotificationConfig
+                            is: NotifyTab,
+                            props: {
+                                editable: false,
+                                failSubscriptionList: this.getPipelineSubscriptions('fail'),
+                                successSubscriptionList: this.getPipelineSubscriptions('success')
+                            }
                         }
                     case 'setting':
                         return {
@@ -148,26 +152,27 @@
         },
         watch: {
             pipelineType (type) {
-                this.yamlHighlightBlock = this.yamlHighlightBlockMap[type]
+                this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[type] ?? []
             },
             isCodeMode (val) {
                 if (val) {
-                    this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType] ?? []
+                    this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[this.pipelineType] ?? []
                 }
             },
-            latestVersion (version) {
+            releaseVersion (version) {
                 this.activePipelineVersion = version
                 this.$nextTick(() => {
                     this.init()
                 })
             },
-            latestVersionName (versionName) {
+            releaseVersionName (versionName) {
                 this.activePipelineVersionName = versionName
             }
         },
         created () {
-            if (this.latestVersion) {
-                this.activePipelineVersion = this.latestVersion
+            if (this.releaseVersion) {
+                this.activePipelineVersion = this.releaseVersion
+                console.log(this.releaseVersion, this.activePipelineVersion, 'init')
                 this.$nextTick(() => {
                     this.init()
                 })

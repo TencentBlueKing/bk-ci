@@ -60,11 +60,11 @@
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo']),
             ...mapGetters({
-                isCurPipelineLocked: 'pipelines/isCurPipelineLocked'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
-            ...mapState('pipelines', ['pipelineInfo', 'executeStatus']),
+            ...mapState('pipelines', ['executeStatus']),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },

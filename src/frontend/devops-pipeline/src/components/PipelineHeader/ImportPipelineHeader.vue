@@ -1,7 +1,10 @@
 <template>
     <div class="pipeline-import-edit-header">
         <pipeline-bread-crumb />
-        <mode-switch />
+        <mode-switch
+            :is-yaml-support="isYamlSupport"
+            :yaml-invalid-msg="yamlInvalidMsg"
+        />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -17,9 +20,11 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ModeSwitch from '@/components/ModeSwitch'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         components: {
             PipelineBreadCrumb,
@@ -34,12 +39,14 @@
                 'saveStatus',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
-                'pipelineYaml'
+                'pipelineYaml',
+                'pipelineInfo'
             ]),
-            ...mapState('pipelines', ['pipelineInfo']),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
-                checkPipelineInvalid: 'atom/checkPipelineInvalid'
+                checkPipelineInvalid: 'atom/checkPipelineInvalid',
+                isYamlSupport: 'atom/isYamlSupport',
+                yamlInvalidMsg: 'atom/yamlInvalidMsg'
             })
         },
         methods: {
@@ -48,9 +55,6 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'updateContainer'
-            ]),
-            ...mapMutations('pipelines', [
-                'updatePipelineInfo'
             ]),
 
             formatParams (pipeline) {
@@ -102,7 +106,7 @@
                         yaml: pipelineYaml
                     })
                     this.setPipelineEditing(false)
-                    this.updatePipelineInfo({
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         canDebug: true,
                         canRelease: false,
                         version,

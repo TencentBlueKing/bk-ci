@@ -40,7 +40,6 @@ function rootCommit (commit, ACTION_CONST, payload) {
 
 const state = {
     pipelineList: [],
-    pipelineInfo: null,
     allPipelineList: [],
     hasCreatePermission: false,
     templateSetting: {},
@@ -58,21 +57,6 @@ const state = {
 
 const getters = {
     getPipelineList: state => state.pipelineList,
-    isCurPipelineLocked: state => {
-        return state.pipelineInfo?.runLockType === 'LOCK'
-    },
-    isDraftPipeline: state => {
-        return state.pipelineInfo?.pipelineResource?.status === 'COMMITTING'
-    },
-    isBranchVersion: state => {
-        return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
-    },
-    pacEnabled: state => {
-        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
-    },
-    yamlInfo: state => {
-        return state.pipelineInfo?.yamlInfo
-    },
     getAllPipelineList: state => state.allPipelineList
 }
 
@@ -144,18 +128,7 @@ const mutations = {
             }
         })
     },
-    /**
-     * 更新 store.pipeline 中的 pipelineInfo
-     *
-     * @param {Object} state store state
-     * @param {Object} obj pipelineInfo 对象
-     */
-    setPipelineInfo (state, obj) {
-        state.pipelineInfo = obj
-    },
-    updatePipelineInfo (state, partOfInfo) {
-        Object.assign(state.pipelineInfo, partOfInfo)
-    },
+
     /**
      * 更新 store.pipeline 中的 pipelineList 中的某一项的某个key的value
      *
@@ -309,14 +282,6 @@ const actions = {
         const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
 
         return ajax.get(url).then(response => {
-            return response.data
-        })
-    },
-    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
-
-        return ajax.get(url).then(response => {
-            commit('setPipelineInfo', response.data)
             return response.data
         })
     },

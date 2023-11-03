@@ -61,6 +61,7 @@ import {
     SET_PIPELINE_CONTAINER,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
+    SET_PIPELINE_INFO,
     SET_PIPELINE_STAGE,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
@@ -79,6 +80,7 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_WHOLE_ATOM_INPUT
@@ -137,8 +139,26 @@ export default {
         Vue.set(state, 'fetchingAtomList', fetching)
         return state
     },
+    /**
+     * 更新 store.pipeline 中的 pipelineInfo
+     *
+     * @param {Object} state store state
+     * @param {Object} obj pipelineInfo 对象
+     */
+    [SET_PIPELINE_INFO]: (state, obj) => {
+        Vue.set(state, 'pipelineInfo', obj)
+        console.log(obj, 'set123')
+    },
+    [UPDATE_PIPELINE_INFO]: (state, partOfInfo) => {
+        const pipelineInfo = {
+            ...(state.pipelineInfo ?? {})
+        }
+        Object.assign(pipelineInfo, partOfInfo)
+        console.log(pipelineInfo, 123)
+        Vue.set(state, 'pipelineInfo', pipelineInfo)
+    },
     [SET_PIPELINE]: (state, pipeline = null) => {
-        if (!state.pipeline) {
+        if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
             return state
         }

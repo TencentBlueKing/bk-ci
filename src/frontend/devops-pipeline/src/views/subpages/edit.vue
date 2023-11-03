@@ -102,7 +102,8 @@
                 'editfromImport'
             ]),
             ...mapGetters({
-                isCodeMode: 'isCodeMode'
+                isCodeMode: 'isCodeMode',
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -115,9 +116,6 @@
             },
             curPanel () {
                 return this.panels.find(panel => panel.name === this.currentTab)
-            },
-            isDraftEdit () {
-                return this.$route.name === 'pipelineImportEdit'
             },
             panels () {
                 return [{
@@ -145,8 +143,8 @@
                             label: this.$t('settings.notify'),
                             component: 'NotifyTab',
                             bindData: {
-                                failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? null,
-                                successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? null,
+                                failSubscriptionList: this.getPipelineSubscriptions('fail'),
+                                successSubscriptionList: this.getPipelineSubscriptions('success'),
                                 updateSubscription: (name, value) => {
                                     this.setPipelineEditing(true)
                                     console.log(name, value)
@@ -194,23 +192,31 @@
                     this.removeLeaveListenr()
                 }
             },
-            isCodeMode (val) {
-                const pipeline = Object.assign({}, this.pipeline, {
-                    stages: [
-                        this.pipeline.stages[0],
-                        ...(this.pipelineWithoutTrigger?.stages ?? [])
-                    ]
-                })
-                this.transferModelToYaml({
-                    projectId: this.$route.params.projectId,
-                    pipelineId: this.$route.params.pipelineId,
-                    actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
-                    modelAndSetting: {
-                        model: pipeline,
-                        setting: this.pipelineSetting
-                    },
-                    oldYaml: this.pipelineYaml
-                })
+            isCodeMode: async function (val) {
+                try {
+                    const pipeline = Object.assign({}, this.pipeline, {
+                        stages: [
+                            this.pipeline.stages[0],
+                            ...(this.pipelineWithoutTrigger?.stages ?? [])
+                        ]
+                    })
+                    const res = await this.transferModelToYaml({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
+                        modelAndSetting: {
+                            model: pipeline,
+                            setting: this.pipelineSetting
+                        },
+                        oldYaml: this.pipelineYaml
+                    })
+                    console.log(res)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                }
             }
         },
         mounted () {
@@ -253,7 +259,7 @@
                 'requestMatchTemplateRuleList'
             ]),
             async init () {
-                if (!this.isDraftEdit && this.pipelineVersion) {
+                if (this.pipelineVersion) {
                     this.isLoading = true
                     await this.requestPipeline({
                         ...this.$route.params,

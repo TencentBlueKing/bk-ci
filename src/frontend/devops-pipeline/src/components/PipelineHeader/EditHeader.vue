@@ -3,7 +3,10 @@
         <pipeline-bread-crumb>
             <bk-tag>{{ currentVersionName }}</bk-tag>
         </pipeline-bread-crumb>
-        <mode-switch />
+        <mode-switch
+            :is-yaml-support="isYamlSupport"
+            :yaml-invalid-msg="yamlInvalidMsg"
+        />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -30,15 +33,6 @@
                     />
                 </span>
             </bk-button>
-            <bk-button
-                theme="primary"
-                :disabled="btnDisabled"
-                :loading="executeStatus"
-                :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
-                @click="exec(false)"
-            >
-                {{ $t("exec") }}
-            </bk-button>
             <!-- <more-actions /> -->
             <span :class="['publish-pipeline-btn', {
                 'publish-diabled': !canRelease
@@ -52,9 +46,10 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     // import MoreActions from './MoreActions.vue'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     import ModeSwitch from '@/components/ModeSwitch'
@@ -79,13 +74,16 @@
                 'saveStatus',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
-                'pipelineYaml'
+                'pipelineYaml',
+                'pipelineInfo'
             ]),
-            ...mapState('pipelines', ['pipelineInfo', 'executeStatus', 'isManage']),
+            ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
-                isCurPipelineLocked: 'pipelines/isCurPipelineLocked',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
-                checkPipelineInvalid: 'atom/checkPipelineInvalid'
+                checkPipelineInvalid: 'atom/checkPipelineInvalid',
+                isYamlSupport: 'atom/isYamlSupport',
+                yamlInvalidMsg: 'atom/yamlInvalidMsg'
             }),
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
@@ -93,18 +91,16 @@
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
-            canManualStartup () {
-                return this.pipelineInfo?.canManualStartup ?? false
-            },
-            btnDisabled () {
-                return this.pipelineInfo?.canDebug || this.executeStatus || !this.canManualStartup || this.isCurPipelineLocked
-            },
+
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
+            baseVersionName () {
+                return this.pipelineInfo?.baseVersionName ?? '--'
+            },
             currentVersionName () {
                 if (this.pipelineInfo?.canDebug) {
-                    return this.$t('editPage.draftVersion', [this.pipeline?.baseVersionName ?? '--'])
+                    return this.$t('editPage.draftVersion', [this.baseVersionName ?? '--'])
                 }
                 return this.pipelineInfo?.versionName ?? '--'
             },
@@ -121,9 +117,6 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'updateContainer'
-            ]),
-            ...mapMutations('pipelines', [
-                'updatePipelineInfo'
             ]),
             async exec (debug) {
                 this.$router.push({
@@ -175,7 +168,7 @@
                     const { data: { version, versionName } } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
-                        baseVersion: pipeline.baseVersion,
+                        baseVersion: this.pipelineInfo.baseVersion,
                         storageType: this.pipelineMode,
                         modelAndSetting: {
                             model: {
@@ -188,7 +181,9 @@
                         yaml: pipelineYaml
                     })
                     this.setPipelineEditing(false)
-                    this.updatePipelineInfo({
+
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                        pipelineName: pipelineSetting.pipelineName,
                         canDebug: true,
                         canRelease: false,
                         version,

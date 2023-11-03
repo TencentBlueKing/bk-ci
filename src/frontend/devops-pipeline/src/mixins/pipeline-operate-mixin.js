@@ -33,11 +33,11 @@ export default {
             'curProject'
         ]),
         ...mapState('pipelines', [
-            'pipelineInfo',
             'executeStatus'
         ]),
         ...mapState('atom', [
             'pipeline',
+            'pipelineInfo',
             'pipelineSetting'
         ]),
         isTemplatePipeline () {

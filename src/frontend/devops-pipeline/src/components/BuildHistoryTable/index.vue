@@ -456,7 +456,7 @@
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus'
             }),
-            ...mapState('pipelines', [
+            ...mapState('atom', [
                 'pipelineInfo'
             ]),
             projectId () {

@@ -53,7 +53,10 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <mode-switch />
+                <mode-switch
+                    :is-yaml-support="isYamlSupport"
+                    :yaml-invalid-msg="yamlInvalidMsg"
+                />
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -253,7 +256,7 @@
     import { convertMillSec, convertTime } from '@/utils/util'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -298,7 +301,10 @@
                 'showPanelType',
                 'isPropertyPanelVisible'
             ]),
-
+            ...mapGetters({
+                isYamlSupport: 'atom/isYamlSupport',
+                yamlInvalidMsg: 'atom/yamlInvalidMsg'
+            }),
             panels () {
                 return [
                     {

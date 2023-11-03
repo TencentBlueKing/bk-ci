@@ -35,7 +35,7 @@
         },
 
         computed: {
-            ...mapState('pipelines', [
+            ...mapState('atom', [
                 'pipelineInfo'
             ]),
 

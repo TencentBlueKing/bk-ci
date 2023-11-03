@@ -26,7 +26,12 @@
                 'getExecuteParams',
                 'getSkipedAtomIds'
             ]),
-            ...mapState('pipelines', ['executeStep', 'pipelineInfo']),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            ...mapState('pipelines', [
+                'executeStep'
+            ]),
             isDebugPipeline () {
                 return Object.prototype.hasOwnProperty.call(this.$route.query, 'debug')
             },

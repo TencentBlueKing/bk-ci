@@ -30,6 +30,7 @@ export default {
         pipelineYaml: '',
         pipelineSetting: null,
         template: null,
+        pipelineInfo: null,
         fetchingAtmoModal: false,
         fetchingContainer: false,
         commendAtomCount: 0,

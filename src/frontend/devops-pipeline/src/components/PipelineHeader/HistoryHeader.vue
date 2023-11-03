@@ -18,6 +18,9 @@
                     {{ $t("exec") }}
                 </bk-button>
             </span>
+            <router-link :to="editRouteName">
+                <bk-button>{{ $t("edit") }}</bk-button>
+            </router-link>
             <more-actions />
         </aside>
     </div>
@@ -38,10 +41,10 @@
             MoreActions
         },
         computed: {
-            ...mapState('pipelines', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo']),
             ...mapGetters({
-                isCurPipelineLocked: 'pipelines/isCurPipelineLocked',
-                pacEnabled: 'pipelines/pacEnabled'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                pacEnabled: 'atom/pacEnabled'
             }),
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
@@ -62,6 +65,12 @@
                         content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
+            },
+            editRouteName () {
+                return {
+                    name: 'pipelinesEdit',
+                    params: this.$route.params
+                }
             }
         },
         methods: {

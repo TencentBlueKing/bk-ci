@@ -27,14 +27,26 @@ function isSkip (status) {
 }
 
 export default {
-    getPipelineTriggers: state => {
-        const triggers = state.pipeline?.stages?.[0].containers?.[0].elements ?? []
-        return triggers?.map(trigger => {
-            return {
-                name: trigger.name,
-                isEnable: trigger?.additionalOptions?.enable ?? true
-            }
-        })
+    isCurPipelineLocked: state => {
+        return state.pipelineInfo?.runLockType === 'LOCK'
+    },
+    isDraftPipeline: state => {
+        return state.pipelineInfo?.baseVersionStatus === 'COMMITTING'
+    },
+    isBranchVersion: state => {
+        return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
+    },
+    pacEnabled: state => {
+        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    yamlInfo: state => {
+        return state.pipelineInfo?.yamlInfo
+    },
+    isYamlSupport: state => {
+        return state.pipelineInfo?.yamlSupported ?? true
+    },
+    yamlInvalidMsg: state => {
+        return state.pipelineInfo?.yamlInvalidMsg ?? true
     },
     getPipelineSubscriptions: state => type => {
         return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []

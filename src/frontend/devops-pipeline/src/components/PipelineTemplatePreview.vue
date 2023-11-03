@@ -13,7 +13,10 @@
         @cancel="handleCancel"
     >
         <template v-if="templatePipeline && isShow">
-            <mode-switch />
+            <mode-switch
+                :is-yaml-support="isYamlSupport"
+                :yaml-invalid-msg="yamlInvalidMsg"
+            />
             <YamlEditor
                 v-if="isCodeMode"
                 style="margin-top: 20px;"
@@ -49,17 +52,14 @@
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
     import Pipeline from '@/components/Pipeline'
+    import { UI_MODE } from '@/utils/pipelineConst'
     import { BaseSettingTab, NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
     export default {
         components: {
             ModeSwitch,
-            // eslint-disable-next-line vue/no-unused-components
             Pipeline,
-            // eslint-disable-next-line vue/no-unused-components
             TriggerTab,
-            // eslint-disable-next-line vue/no-unused-components
             NotifyTab,
-            // eslint-disable-next-line vue/no-unused-components
             BaseSettingTab,
             YamlEditor
 
@@ -81,11 +81,16 @@
                 activePanel: 'pipelineModel',
                 templateYaml: '',
                 highlightMarkList: [],
+                isYamlSupport: true,
+                yamlInvalidMsg: '',
                 pipelineSetting: null
             }
         },
         computed: {
-            ...mapGetters(['isCodeMode']),
+            ...mapGetters({
+                isCodeMode: 'isCodeMode',
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+            }),
             title () {
                 return this.$t('templatePreivewHeader', [this.templatePipeline?.name ?? '', this.previewSettingType])
             },
@@ -101,7 +106,7 @@
                 return [
                     {
                         name: 'pipelineModel',
-                        label: this.$t('流水线编排'),
+                        label: this.$t('pipelineModel'),
                         component: 'Pipeline',
                         props: {
                             pipeline: {
@@ -114,7 +119,7 @@
                     },
                     {
                         name: 'triggerConf',
-                        label: this.$t('触发器'),
+                        label: this.$t('triggerName'),
                         component: 'triggerTab',
                         props: {
                             editable: false,
@@ -124,17 +129,17 @@
                     },
                     {
                         name: 'notification',
-                        label: this.$t('通知'),
+                        label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         props: {
                             editable: false,
-                            failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? null,
-                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? null
+                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
+                            successSubscriptionList: this.getPipelineSubscriptions('success')
                         }
                     },
                     {
                         name: 'baseConfig',
-                        label: this.$t('基础设置'),
+                        label: this.$t('editPage.baseSetting'),
                         component: 'BaseSettingTab',
                         props: {
                             editable: false,
@@ -155,13 +160,11 @@
                 }
             }
         },
-        created () {
-            console.log('templatePipeline', this.templatePipeline)
-        },
         methods: {
-            ...mapActions('pipelines', [
-                'requestTemplatePreview'
-            ]),
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode',
+                requestTemplatePreview: 'pipelines/requestTemplatePreview'
+            }),
             async init () {
                 try {
                     this.isLoading = true
@@ -170,10 +173,15 @@
                         templateId: this.templatePipeline.templateId,
                         highlightType: this.highlightType
                     })
-                    this.templateYaml = res.templateYaml
-                    this.highlightMarkList = res.highlightMarkList ?? []
+                    if (!res.yamlSupported && this.isCodeMode) {
+                        this.updatePipelineMode(UI_MODE)
+                    } else {
+                        this.templateYaml = res.templateYaml
+                        this.highlightMarkList = res.highlightMarkList ?? []
+                    }
+                    this.isYamlSupport = res.yamlSupported
+                    this.yamlInvalidMsg = res.yamlInvalidMsg
                     this.pipelineSetting = res.setting
-                    console.log('res', res)
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',

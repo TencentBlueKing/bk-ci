@@ -21,8 +21,10 @@ import {
     LOG_API_URL_PREFIX,
     MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    UPDATE_PIPELINE_MODE
 } from '@/store/constants'
+import { UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
@@ -77,13 +79,13 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
-function rootCommit (commit,
-    ACTION_CONST, payload) {
+function rootCommit (commit, ACTION_CONST, payload) {
     commit(ACTION_CONST, payload, { root: true })
 }
 
@@ -121,6 +123,14 @@ export default {
     },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
+    },
+    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+
+        return request.get(url).then(response => {
+            commit(UPDATE_PIPELINE_INFO, response.data)
+            return response.data
+        })
     },
     toggleStageReviewPanel: actionCreator(TOGGLE_STAGE_REVIEW_PANEL),
 
@@ -178,10 +188,11 @@ export default {
                     ...atomProp[element.atomCode]
                 })
             })
-            dispatch('setPipeline', {
-                ...model,
-                version,
-                versionName: pipelineRes.data.versionName,
+            console.log(pipelineRes.data, 'fdsafdas')
+            dispatch('setPipeline', model)
+            commit(UPDATE_PIPELINE_INFO, {
+                yamlSupported: pipelineRes.data.yamlSupported,
+                yamlInvalidMsg: pipelineRes.data.yamlInvalidMsg,
                 baseVersion: pipelineRes.data.baseVersion,
                 baseVersionName: pipelineRes.data.baseVersionName
             })
@@ -189,10 +200,14 @@ export default {
                 ...model,
                 stages: model.stages.slice(1)
             })
-
             commit(PIPELINE_SETTING_MUTATION, setting)
-            commit(SET_PIPELINE_YAML, pipelineRes.data.yamlPreview.yaml)
-            return pipelineRes?.data.yamlPreview
+            if (!pipelineRes.data.yamlSupported) {
+                rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
+            }
+            if (pipelineRes?.data?.yamlPreview?.yaml) {
+                commit(SET_PIPELINE_YAML, pipelineRes?.data?.yamlPreview?.yaml)
+            }
+            return pipelineRes?.data?.yamlPreview
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -206,26 +221,39 @@ export default {
         })
     },
     async transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
-        const res = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
-            params: {
-                pipelineId,
-                actionType
+        try {
+            const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+                params: {
+                    pipelineId,
+                    actionType
+                }
+            })
+            if (!data.yamlSupported) {
+                rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             }
-        })
-        switch (actionType) {
-            case 'FULL_YAML2MODEL':
-                commit(SET_PIPELINE, res.data?.modelAndSetting?.model)
-                commit(SET_PIPELINE_WITHOUT_TRIGGER, {
-                    ...res.data?.modelAndSetting?.model,
-                    stages: res.data?.modelAndSetting?.model.stages.slice(1)
-                })
-                commit(PIPELINE_SETTING_MUTATION, res.data?.modelAndSetting?.setting)
-                break
-            case 'FULL_MODEL2YAML':
-                commit(SET_PIPELINE_YAML, res.data?.newYaml)
-                break
+
+            switch (actionType) {
+                case 'FULL_YAML2MODEL':
+                    commit(SET_PIPELINE, data?.modelAndSetting?.model)
+                    commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                        ...(data?.modelAndSetting?.model ?? {}),
+                        stages: data?.modelAndSetting?.model.stages.slice(1)
+                    })
+                    commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    break
+                case 'FULL_MODEL2YAML':
+                    commit(SET_PIPELINE_YAML, data?.newYaml)
+                    commit(UPDATE_PIPELINE_INFO, {
+                        yamlSupported: data.yamlSupported,
+                        yamlInvalidMsg: data.yamlInvalidMsg
+                    })
+                    break
+            }
+            return data
+        } catch (error) {
+            rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
+            throw error
         }
-        return res
     },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
