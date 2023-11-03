@@ -544,6 +544,7 @@ onMounted(async () => {
     padding: 24px;
     height: 100%;
     width: 100%;
+    overflow: auto;
   }
   .content-wrapper {
     flex: 1;
