@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service
 @Primary
 @Service
 class VoiceServiceImpl(
-    private val tofService: TOFService,
     private val voiceNotifyDao: VoiceNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
     private val configuration: TOFConfiguration,
@@ -51,7 +50,7 @@ class VoiceServiceImpl(
             return
         }
 
-        val tofResult = tofService.post(TOF4_VOICE_URL, voiceNotifyPost, tofConfig)
+        val tofResult = tof4Service.post(TOF4_VOICE_URL, voiceNotifyPost, tofConfig)
         val retryCount = voiceNotifyMessageWithOperation.retryCount
         val tofSuccess = tofResult.Ret == 0
         val id = voiceNotifyMessageWithOperation.id ?: UUIDUtil.generate()
