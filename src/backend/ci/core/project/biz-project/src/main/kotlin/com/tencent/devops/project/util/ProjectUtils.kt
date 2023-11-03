@@ -162,7 +162,9 @@ object ProjectUtils {
             authSecrecy = tProjectRecord.authSecrecy,
             afterAuthSecrecy = projectApprovalInfo?.authSecrecy ?: tProjectRecord.authSecrecy,
             projectType = tProjectRecord.projectType,
-            afterProjectType = projectApprovalInfo?.projectType
+            afterProjectType = projectApprovalInfo?.projectType,
+            productId = tProjectRecord.productId,
+            afterProductId = projectApprovalInfo?.productId
         )
     }
 }
