@@ -11,6 +11,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
+import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -148,6 +149,44 @@ class GitProxyService @Autowired constructor(
         }
         codeProxyDao.deleteCodeProxy(dslContext, record.id)
         return true
+    }
+
+    fun refreshCodeProxy(projectId: String) {
+        val proxys = gitproxyBkRepoClient.fetchRepo(
+            userId = "admin",
+            projectId = projectId,
+            page = 1,
+            pageSize = 100,
+            gitType = null,
+            category = BkRepoCategory.PROXY
+        )
+        val lfs = gitproxyBkRepoClient.fetchRepo(
+            userId = "admin",
+            projectId = projectId,
+            page = 1,
+            pageSize = 100,
+            gitType = null,
+            category = BkRepoCategory.REMOTE
+        ).records.associateBy { it.name }
+
+        val data = proxys.records.map { proxy ->
+            val lfsUrl = lfs["$LFS_REPONAME_PREFIX${proxy.name}"]?.configuration?.settings?.clientUrl
+            RefreshCodeProxyData(
+                projectId = proxy.projectId,
+                name = proxy.name,
+                type = proxy.type,
+                url = proxy.configuration.proxy?.url ?: "",
+                conf = CodeProxyConf(
+                    proxyUrl = proxy.configuration.settings?.clientUrl,
+                    lfsUrl
+                ),
+                desc = proxy.description,
+                creator = proxy.createdBy,
+                enableLfs = lfsUrl != null
+            )
+        }
+
+        codeProxyDao.batchAddProxy(dslContext, data)
     }
 
     private fun scmType2ProxyType(scmType: ScmType?): String? {

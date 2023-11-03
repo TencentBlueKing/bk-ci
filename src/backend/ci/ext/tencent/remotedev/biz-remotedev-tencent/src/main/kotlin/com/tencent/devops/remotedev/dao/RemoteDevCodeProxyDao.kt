@@ -5,6 +5,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemoteCodeProxy
 import com.tencent.devops.model.remotedev.tables.records.TRemoteCodeProxyRecord
 import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
+import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.springframework.stereotype.Repository
@@ -95,5 +98,36 @@ class RemoteDevCodeProxyDao {
         with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
             dslContext.deleteFrom(this).where(ID.eq(id)).execute()
         }
+    }
+
+    fun batchAddProxy(
+        dslContext: DSLContext,
+        data: List<RefreshCodeProxyData>
+    ) {
+        dslContext.batch(data.map {
+            with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    NAME,
+                    TYPE,
+                    URL,
+                    CONF,
+                    DESC,
+                    CREATOR,
+                    ENABLE_LFS
+                ).values(
+                    it.projectId,
+                    it.name,
+                    it.type,
+                    it.url,
+                    JSON.json(JsonUtil.toJson(it.conf, false)),
+                    it.desc,
+                    it.creator,
+                    it.enableLfs
+                )
+            }
+        }
+        ).execute()
     }
 }

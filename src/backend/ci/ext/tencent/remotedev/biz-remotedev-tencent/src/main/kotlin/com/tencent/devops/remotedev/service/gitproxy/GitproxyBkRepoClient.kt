@@ -80,7 +80,8 @@ class GitproxyBkRepoClient @Autowired constructor(
                 url = when (category) {
                     BkRepoCategory.PROXY -> null
                     BkRepoCategory.REMOTE -> url
-                }
+                },
+                settings = null
             ),
             display = false
         )
@@ -93,9 +94,16 @@ class GitproxyBkRepoClient @Autowired constructor(
         return doRequest(request).resolveResponse<Response<CreateRepoRespData>>()?.data
     }
 
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: ScmType?): Page<RepoInfo> {
+    fun fetchRepo(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        gitType: ScmType?,
+        category: BkRepoCategory
+    ): Page<RepoInfo> {
         var url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
-                "?category=PROXY&display=false"
+                "?category=${category.name}&display=false"
         if (gitType != null) {
             url = "$url&${
                 when (gitType) {

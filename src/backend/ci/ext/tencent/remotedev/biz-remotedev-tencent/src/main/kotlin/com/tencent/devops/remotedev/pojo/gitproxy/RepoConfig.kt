@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class RepoConfig(
     val type: String,
     val proxy: CreateRepoDataConfigProxy?,
-    val url: String?
+    val url: String?,
+    val settings: CreateRepoRespDataConfSettings?
 )
 
 data class CreateRepoDataConfigProxy(

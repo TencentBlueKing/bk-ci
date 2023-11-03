@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +26,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val workspaceService: WorkspaceService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val desktopWorkspaceService: DesktopWorkspaceService
+    private val desktopWorkspaceService: DesktopWorkspaceService,
+    private val gitProxyService: GitProxyService
 ) : OpProjectWorkspaceResource {
     override fun assignWorkspace(
         userId: String,
@@ -73,5 +75,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun updateCCHost(userId: String, data: OpUpdateCCHostData): Result<Boolean> {
         return Result(desktopWorkspaceService.updateCCHost(data))
+    }
+
+    override fun refreshCodeProxy(userId: String, projectId: String) {
+        gitProxyService.refreshCodeProxy(projectId)
     }
 }
