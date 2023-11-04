@@ -10,6 +10,7 @@ import com.tencent.devops.auth.common.Constants.ALL_ACTION
 import com.tencent.devops.auth.common.Constants.PROJECT_VIEW
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.IamCacheService
@@ -200,6 +201,10 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             roleList.add(role)
         }
         return roleList
+    }
+
+    override fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO {
+        return ProjectPermissionInfoVO("", "", "", emptyList(), emptyList())
     }
 
     fun getProjectId(projectCode: String): Int {
