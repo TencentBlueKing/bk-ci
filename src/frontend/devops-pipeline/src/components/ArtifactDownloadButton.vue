@@ -97,30 +97,27 @@
                 this.visible = visible
             },
             async downLoadFile () {
-                if (this.btnDisabled) return
                 try {
                     if (this.signingMap.get(this.path)) {
+                        // this.apkSigningDialogVisible = true
                         this.setVisible(true)
                         return
                     }
-                    
-                    const [isDevnet, res] = await Promise.all([
-                        this.$store.dispatch('common/requestDevnetGateway'),
-                        this.$store.dispatch('common/requestDownloadUrl', {
+                    const { url2 } = await this.$store
+                        .dispatch('common/requestDownloadUrl', {
                             projectId: this.$route.params.projectId,
                             artifactoryType: this.artifactoryType,
                             path: this.path
                         })
-                    ])
-                    const url = isDevnet ? res.url : res.url2
-                    const result = await this.checkApkSigned(url)
+                    
+                    const result = await this.checkApkSigned(url2)
                     if (result) {
-                        window.location.href = url
+                        window.location.href = url2
                         return
                     } else {
                         this.signingMap.set(this.path, true)
                         this.setVisible(true)
-                        const result = await this.pollingCheckSignedApk(url)
+                        const result = await this.pollingCheckSignedApk(url2)
                         if (result) {
                             this.setVisible(false)
                             this.$bkMessage({
@@ -128,7 +125,7 @@
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
                             
-                            window.location.href = url
+                            window.location.href = url2
                         }
                         this.signingMap.delete(this.path)
                     }
