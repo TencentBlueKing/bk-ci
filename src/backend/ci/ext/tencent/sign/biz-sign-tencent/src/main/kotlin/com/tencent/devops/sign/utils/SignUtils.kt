@@ -377,16 +377,35 @@ object SignUtils {
         }
         if (!subDict.containsKey(keyLevels.last())) {
             println("[replaceKey: $key] Could not find this key in $infoPlistPath")
-        } else {
-            val boolValue = boolConvert(value)
-            val cmd = if (boolValue == null) {
-                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
-            } else {
-                "plutil -replace $key -bool $boolValue ${fixPath(infoPlistPath)}"
-            }
-            logger.info("[replaceKey: ] $cmd")
-            runtimeExec(cmd)
+            return
         }
+        val cmd = when {
+            boolConvert(value) != null -> {
+                "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
+            }
+            integerConvert(value) != null -> {
+                "plutil -replace $key -integer $value ${fixPath(infoPlistPath)}"
+            }
+            floatConvert(value) != null -> {
+                "plutil -replace $key -float $value ${fixPath(infoPlistPath)}"
+            }
+            value.startsWith('[') && value.endsWith(']') -> {
+                "plutil -replace $key -array '$value' ${fixPath(infoPlistPath)}"
+            }
+            value.startsWith('{') && value.endsWith('}') -> {
+                "plutil -replace $key -dict '$value' ${fixPath(infoPlistPath)}"
+            }
+            else -> {
+                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+            }
+        }
+        logger.info("[replaceKey: ] $cmd")
+        try {
+            runtimeExec(cmd)
+        } catch (ignore: Throwable) {
+            logger.warn("[replace key with error: ] $cmd")
+        }
+
     }
 
     private fun codesignFile(
@@ -495,6 +514,22 @@ object SignUtils {
             value.equals("true", true) -> true
             value.equals("false", true) -> false
             else -> null
+        }
+    }
+
+    private fun integerConvert(value: String?): Int? {
+        return try {
+            value?.toInt()
+        } catch (ignore: Throwable) {
+            null
+        }
+    }
+
+    private fun floatConvert(value: String?): Float? {
+        return try {
+            value?.toFloat()
+        } catch (ignore: Throwable) {
+            null
         }
     }
 
