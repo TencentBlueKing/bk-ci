@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
 import com.tencent.devops.remotedev.pojo.expertSupport.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportConfigType
 import com.tencent.devops.remotedev.service.expertSupport.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -16,18 +17,22 @@ class UserExpertSupportResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-//    override fun fetchExpertSup(
-//        userId: String,
-//        projectId: String,
-//        hostIp: String,
-//        status: ExpertSupportStatus?
-//    ): Result<List<FetchSupportResp>> {
-//        return Result(
-//            expertSupportService.fetchSupport(
-//                projectId = projectId,
-//                hostIp = hostIp,
-//                status = status ?: ExpertSupportStatus.CREATE
-//            )
-//        )
-//    }
+    override fun fetchExpertSup(userId: String): Result<List<String>> {
+        return Result(expertSupportService.fetchSupportConfig(ExpertSupportConfigType.ERROR).map { it.content })
+    }
+
+    //    override fun fetchExpertSup(
+    //        userId: String,
+    //        projectId: String,
+    //        hostIp: String,
+    //        status: ExpertSupportStatus?
+    //    ): Result<List<FetchSupportResp>> {
+    //        return Result(
+    //            expertSupportService.fetchSupport(
+    //                projectId = projectId,
+    //                hostIp = hostIp,
+    //                status = status ?: ExpertSupportStatus.CREATE
+    //            )
+    //        )
+    //    }
 }
