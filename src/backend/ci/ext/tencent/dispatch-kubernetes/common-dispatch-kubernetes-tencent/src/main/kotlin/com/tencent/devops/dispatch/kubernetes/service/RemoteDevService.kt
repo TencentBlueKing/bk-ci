@@ -44,6 +44,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -80,7 +81,7 @@ class RemoteDevService @Autowired constructor(
         )
 
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(mountType)
-            .waitTaskFinish(userId, result.taskId)
+            .waitTaskFinish(userId, result.taskId, UpdateEventType.CREATE)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
@@ -181,7 +182,7 @@ class RemoteDevService @Autowired constructor(
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .startWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId)
+            .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
@@ -222,7 +223,7 @@ class RemoteDevService @Autowired constructor(
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .stopWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId)
+            .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
@@ -247,7 +248,7 @@ class RemoteDevService @Autowired constructor(
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .restartWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId)
+            .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
@@ -272,7 +273,7 @@ class RemoteDevService @Autowired constructor(
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .deleteWorkspace(event.userId, event.workspaceName)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId)
+            .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
@@ -315,7 +316,7 @@ class RemoteDevService @Autowired constructor(
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId)
+            .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
