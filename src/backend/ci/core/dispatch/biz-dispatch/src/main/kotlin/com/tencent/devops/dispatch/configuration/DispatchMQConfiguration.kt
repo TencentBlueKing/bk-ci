@@ -59,7 +59,7 @@ class DispatchMQConfiguration @Autowired constructor() {
      * 第三方构建机启动交换机
      */
     @Bean
-    fun thirdAgentDispatchExchange(): DirectExchange {
+    fun dispatchExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, true, false)
         directExchange.isDelayed = true
         return directExchange
@@ -71,9 +71,9 @@ class DispatchMQConfiguration @Autowired constructor() {
     @Bean
     fun thirdAgentDispatchStartQueueBind(
         @Autowired thirdAgentDispatchStartQueue: Queue,
-        @Autowired thirdAgentDispatchExchange: DirectExchange
+        @Autowired dispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(thirdAgentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(dispatchExchange)
             .with(MQ.ROUTE_AGENT_STARTUP)
     }
 
@@ -109,9 +109,9 @@ class DispatchMQConfiguration @Autowired constructor() {
     @Bean
     fun thirdAgentDispatchShutdownQueueBind(
         @Autowired thirdAgentDispatchShutdownQueue: Queue,
-        @Autowired thirdAgentDispatchExchange: DirectExchange
+        @Autowired dispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(thirdAgentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(dispatchExchange)
             .with(MQ.ROUTE_AGENT_SHUTDOWN)
     }
 
