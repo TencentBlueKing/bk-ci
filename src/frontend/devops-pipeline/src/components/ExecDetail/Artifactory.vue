@@ -129,9 +129,7 @@
                             = res.records.map((item) => ({
                                 ...item,
                                 icon: item.folder ? 'folder' : extForFile(item.name),
-                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size),
-                                disabled: item.folder && this.sizeFormatter(this.getFolderSize(item)).includes('GB') && this.sizeFormatter(this.getFolderSize(item)).split(' ')[0] > 10,
-                                disabledTips: this.$t('downloadDisabledTips')
+                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
                         if (this.artifactories.length <= 0) {

@@ -40,7 +40,7 @@
                             <artifact-download-button
                                 v-if="output.downloadable"
                                 :output="output"
-                                icon
+                                download-icon
                                 :has-permission="hasPermission"
                                 :path="output.fullPath"
                                 :name="output.name"
