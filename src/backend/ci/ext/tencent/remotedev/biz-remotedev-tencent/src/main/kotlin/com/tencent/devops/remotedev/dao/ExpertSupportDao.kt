@@ -72,13 +72,18 @@ class ExpertSupportDao {
         dslContext: DSLContext,
         projectId: String,
         hostIp: String,
-        status: ExpertSupportStatus
+        creator: String,
+        status: ExpertSupportStatus,
+        content: String? = null
     ): List<TRemotedevExpertSupportRecord> {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(HOST_IP.eq(hostIp))
+                .and(CREATOR.eq(creator))
                 .and(STATUS.eq(status.name))
+                .let { if (content != null) it.and(CONTENT.eq(content)) else it }
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }

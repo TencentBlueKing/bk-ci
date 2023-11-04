@@ -1,10 +1,12 @@
 package com.tencent.devops.remotedev.service.expertSupport
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.pojo.expertSupport.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expertSupport.CreateSupportData
@@ -17,7 +19,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-
+import java.time.Duration
+import java.time.LocalDateTime
 @Service
 class ExpertSupportService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -36,6 +39,27 @@ class ExpertSupportService @Autowired constructor(
     fun createSupport(
         data: CreateSupportData
     ) {
+        val fetchExpertSupportData = expertSupportDao.fetchSupports(
+            dslContext = dslContext,
+            projectId = data.projectId,
+            hostIp = data.hostIp,
+            creator = data.creator,
+            status = ExpertSupportStatus.CREATE,
+            content = data.content
+            )
+
+            if (
+                fetchExpertSupportData.isNotEmpty() &&
+                Duration.between(
+                    fetchExpertSupportData.first().createTime, LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
+                    params = arrayOf(data.content)
+                )
+            }
+
         val id = expertSupportDao.addSupport(
             dslContext = dslContext,
             projectId = data.projectId,
@@ -121,5 +145,6 @@ class ExpertSupportService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
+        private const val DEFAULT_WAIT_TIME = 3600
     }
 }
