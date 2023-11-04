@@ -98,21 +98,6 @@ class ExpertSupportService @Autowired constructor(
         )
     }
 
-//    fun fetchSupport(
-//        projectId: String,
-//        hostIp: String,
-//        status: ExpertSupportStatus
-//    ): List<FetchSupportResp> {
-//        return expertSupportDao.fetchSupports(dslContext, projectId, hostIp, status).map {
-//            FetchSupportResp(
-//                id = it.id,
-//                creator = it.creator,
-//                content = it.content,
-//                createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
-//            )
-//        }
-//    }
-
     fun fetchSupportConfig(
         type: ExpertSupportConfigType
     ): List<FetchExpertSupResp> {
