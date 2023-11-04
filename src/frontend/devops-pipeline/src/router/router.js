@@ -149,7 +149,7 @@ const routes = [
                         component: templateInstance
                     },
                     {
-                        path: 'createInstance/:curVersionId/:pipelineName?',
+                        path: 'createInstance/:curVersionId/:type?/:pipelineName?',
                         name: 'createInstance',
                         component: templateInstanceCreate
                     }

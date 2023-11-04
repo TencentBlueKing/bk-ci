@@ -203,6 +203,20 @@ export default {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
                 },
+                ...(pipeline.templateId
+                    ? [{
+                        text: this.$t('copyAsTemplateInstance'),
+                        handler: () => this.copyAsTemplateInstance(pipeline),
+                        hasPermission: this.hasTemplatePermission,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: pipeline.projectId,
+                            resourceType: 'project',
+                            resourceCode: pipeline.projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }]
+                    : []),
                 {
                     text: this.$t('newlist.copyAs'),
                     handler: this.copyAs,
@@ -219,7 +233,7 @@ export default {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
                     hasPermission: this.hasTemplatePermission,
-                    disablePermissionApi: false,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'project',
@@ -485,6 +499,12 @@ export default {
                     })
                 }
             })
+        },
+        copyAsTemplateInstance (pipeline) {
+            const type = 'copy_instance'
+            const pipelineName = pipeline.pipelineName + '_copy'
+            const { templateId, projectId, version } = pipeline
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${type}/${pipelineName}`
         }
     }
 }

@@ -144,6 +144,23 @@
                             }
                         },
                         {
+                            ...(pipeline.templateId
+                                ? {
+                                    label: 'copyAsTemplateInstance',
+                                    handler: () => this.copyAsTemplateInstance(pipeline),
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'project',
+                                        resourceCode: projectId,
+                                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                                    }
+                                }
+                                : {
+                                
+                                })
+                            
+                        },
+                        {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
                             permissionData: {
@@ -261,6 +278,12 @@
                         theme
                     })
                 }
+            },
+            copyAsTemplateInstance (pipeline) {
+                const type = 'copy_instance'
+                const pipelineName = pipeline.pipelineName + '_copy'
+                const { templateId, projectId, version } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${type}/${pipelineName}`
             }
         }
     }

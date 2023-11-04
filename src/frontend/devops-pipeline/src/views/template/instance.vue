@@ -59,9 +59,10 @@
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('operate')" width="150">
+                    <bk-table-column :label="$t('operate')" width="250">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
+                            <bk-button class="mr10" theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
+                            <bk-button class="mr10" theme="primary" text @click="copyAsTemplateInstance(props.row)">{{ $t('copyAsTemplateInstance') }}</bk-button>
                             <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
                         </template>
                     </bk-table-column>
@@ -397,6 +398,19 @@
             toPipelineHistory (pipelineId) {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/history`
                 window.open(url, '_blank')
+            },
+            copyAsTemplateInstance (row) {
+                const route = {
+                    name: 'createInstance',
+                    params: {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        curVersionId: this.currentVersionId,
+                        pipelineName: row.pipelineName + '_copy',
+                        type: 'copy_instance'
+                    }
+                }
+                this.$router.push(route)
             }
         }
     }
