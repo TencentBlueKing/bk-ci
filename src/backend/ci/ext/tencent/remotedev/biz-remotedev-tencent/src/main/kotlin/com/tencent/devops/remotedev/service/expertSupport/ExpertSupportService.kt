@@ -19,8 +19,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 @Service
 class ExpertSupportService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -45,15 +43,10 @@ class ExpertSupportService @Autowired constructor(
             hostIp = data.hostIp,
             creator = data.creator,
             status = ExpertSupportStatus.CREATE,
-            content = data.content
+            content = data.content,
+            internalTime = DEFAULT_WAIT_TIME
             )
-
-            if (
-                fetchExpertSupportData.isNotEmpty() &&
-                Duration.between(
-                    fetchExpertSupportData.first().createTime, LocalDateTime.now()
-                ).seconds < DEFAULT_WAIT_TIME
-                ) {
+            if (fetchExpertSupportData.isNotEmpty()) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
                     params = arrayOf(data.content)

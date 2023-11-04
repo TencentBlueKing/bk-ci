@@ -7,7 +7,11 @@ import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupport
 import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportStatus
 import org.jooq.DSLContext
+import org.jooq.DatePart
+import org.jooq.Field
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
@@ -68,13 +72,20 @@ class ExpertSupportDao {
         }
     }
 
+    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
+        return DSL.field(
+            "timestampdiff({0}, {1}, NOW())",
+            Int::class.java, DSL.keyword(part.toSQL()), t1
+        )
+    }
     fun fetchSupports(
         dslContext: DSLContext,
         projectId: String,
         hostIp: String,
         creator: String,
         status: ExpertSupportStatus,
-        content: String? = null
+        content: String? = null,
+        internalTime: Int? = null
     ): List<TRemotedevExpertSupportRecord> {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             return dslContext.selectFrom(this)
@@ -83,6 +94,16 @@ class ExpertSupportDao {
                 .and(CREATOR.eq(creator))
                 .and(STATUS.eq(status.name))
                 .let { if (content != null) it.and(CONTENT.eq(content)) else it }
+                .let {
+                    if (internalTime != null) {
+                    it.and(
+                        timestampDiff(DatePart.SECOND, CREATE_TIME.cast(java.sql.Timestamp::class.java))
+                                                            .lessOrEqual(internalTime)
+                    )
+                } else {
+                    it
+                }
+                }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
