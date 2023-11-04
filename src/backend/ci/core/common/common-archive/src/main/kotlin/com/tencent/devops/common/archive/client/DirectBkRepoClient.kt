@@ -56,7 +56,8 @@ class DirectBkRepoClient {
         path: String,
         file: File,
         metadata: Map<String, String> = mapOf(),
-        override: Boolean = true
+        override: Boolean = true,
+        headers: Map<String, String> = mapOf()
     ) {
         logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
             "file: ${file.canonicalPath}, metadata: $metadata, override: $override")
@@ -68,8 +69,8 @@ class DirectBkRepoClient {
             .header(BK_REPO_UID, userId)
             .header(BK_REPO_METADATA, Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray()))
             .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        headers.forEach { (key, value) -> request.header(key, value) }
+        OkhttpUtils.doHttp(request.build()).use { response ->
             if (!response.isSuccessful) {
                 throw RemoteServiceException("upload file failed: ${response.body!!.string()}", response.code)
             }
