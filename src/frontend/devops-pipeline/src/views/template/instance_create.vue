@@ -62,6 +62,8 @@
                                     <bk-input
                                         class="pipeline-name-input"
                                         v-model="displayName"
+                                        :maxlength="128"
+                                        :placeholder="$t('pipelineNameInputTips')"
                                     />
                                     <div class="edit-tools">
                                         <i
