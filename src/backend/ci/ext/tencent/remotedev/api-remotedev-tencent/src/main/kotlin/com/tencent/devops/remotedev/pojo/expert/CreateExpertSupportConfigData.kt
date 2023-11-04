@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.pojo.expertSupport
+package com.tencent.devops.remotedev.pojo.expert
 
 data class CreateExpertSupportConfigData(
     val type: ExpertSupportConfigType,

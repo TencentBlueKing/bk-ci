@@ -4,8 +4,8 @@ import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupportConfig
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportConfigRecord
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportRecord
-import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportConfigType
-import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportStatus
+import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
+import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field

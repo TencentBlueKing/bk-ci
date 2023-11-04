@@ -3,8 +3,8 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
-import com.tencent.devops.remotedev.pojo.expertSupport.CreateSupportData
-import com.tencent.devops.remotedev.pojo.expertSupport.ExpertSupportConfigType
+import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.service.expertSupport.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 

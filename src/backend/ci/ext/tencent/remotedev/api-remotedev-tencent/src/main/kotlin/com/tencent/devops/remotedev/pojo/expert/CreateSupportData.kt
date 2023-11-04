@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.pojo.expertSupport
+package com.tencent.devops.remotedev.pojo.expert
 
 data class CreateSupportData(
     val projectId: String,
@@ -13,7 +13,7 @@ data class CreateSupportData(
 enum class ExpertSupportStatus {
     CREATE,
     RUNNING,
-    DONE;
+    DONE
 }
 
 data class UpdateSupportData(

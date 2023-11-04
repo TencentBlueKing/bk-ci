@@ -27,7 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.remotedev.pojo.expertSupport.FetchSupportResp
+import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
