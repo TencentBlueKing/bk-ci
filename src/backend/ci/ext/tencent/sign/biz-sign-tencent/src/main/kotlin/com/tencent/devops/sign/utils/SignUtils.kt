@@ -405,7 +405,6 @@ object SignUtils {
         } catch (ignore: Throwable) {
             logger.warn("[replace key with error: ] $cmd")
         }
-
     }
 
     private fun codesignFile(
