@@ -5,7 +5,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserExpertSupportResource
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
-import com.tencent.devops.remotedev.service.expertSupport.ExpertSupportService
+import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.service.expertSupport
+package com.tencent.devops.remotedev.service.expert
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
