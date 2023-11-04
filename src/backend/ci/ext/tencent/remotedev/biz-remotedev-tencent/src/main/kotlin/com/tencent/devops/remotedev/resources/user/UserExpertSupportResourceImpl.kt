@@ -20,19 +20,4 @@ class UserExpertSupportResourceImpl @Autowired constructor(
     override fun fetchExpertSup(userId: String): Result<List<String>> {
         return Result(expertSupportService.fetchSupportConfig(ExpertSupportConfigType.ERROR).map { it.content })
     }
-
-    //    override fun fetchExpertSup(
-    //        userId: String,
-    //        projectId: String,
-    //        hostIp: String,
-    //        status: ExpertSupportStatus?
-    //    ): Result<List<FetchSupportResp>> {
-    //        return Result(
-    //            expertSupportService.fetchSupport(
-    //                projectId = projectId,
-    //                hostIp = hostIp,
-    //                status = status ?: ExpertSupportStatus.CREATE
-    //            )
-    //        )
-    //    }
 }

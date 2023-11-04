@@ -32,24 +32,6 @@ interface UserExpertSupportResource {
         data: CreateSupportData
     ): Result<Boolean>
 
-    //    @ApiOperation("查询专家协助单据")
-    //    @GET
-    //    @Path("/fetch")
-    //    fun fetchExpertSup(
-    //        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-    //        @HeaderParam(AUTH_HEADER_USER_ID)
-    //        userId: String,
-    //        @ApiParam("项目 id")
-    //        @QueryParam("projectId")
-    //        projectId: String,
-    //        @ApiParam("hostIp")
-    //        @QueryParam("hostIp")
-    //        hostIp: String,
-    //        @ApiParam("单据状态")
-    //        @QueryParam("status")
-    //        status: ExpertSupportStatus? = ExpertSupportStatus.CREATE
-    //    ): Result<List<FetchSupportResp>>
-
     @ApiOperation("查询专家协助原因")
     @GET
     @Path("/config/list")
