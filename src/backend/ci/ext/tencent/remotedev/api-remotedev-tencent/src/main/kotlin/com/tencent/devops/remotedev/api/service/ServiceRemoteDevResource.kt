@@ -61,4 +61,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevCvmData>>
+
+    @ApiOperation("校验是否是当前项目下的云桌面")
+    @GET
+    @Path("/checkWorkspaceProject")
+    fun checkWorkspaceProject(
+        @ApiParam("projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }

@@ -424,6 +424,24 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CVM` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='云研发CVM';
 
 -- ----------------------------
+-- Table structure for T_REMOTE_CODE_PROXY CODE—PROXY数据
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_CODE_PROXY` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	`NAME` varchar(255)  NOT NULL COMMENT 'proxy名称',
+	`TYPE` varchar(32)  NOT NULL COMMENT 'proxy类型',
+	`URL` varchar(1024)  NOT NULL COMMENT 'proxy地址',
+	`CONF` json NOT NULL COMMENT 'proxy配置',
+	`DESC` varchar(1024) NULL COMMENT 'proxy 描述',
+	`CREATOR` varchar(100) NOT NULL COMMENT 'proxy创建人',
+    `ENABLE_LFS` BIT(1) NOT NULL COMMENT '是否开启lfs',
+	`UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+	`CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
 -- Table structure for T_REMOTEDEV_EXPERT_SUPPORT 专家支持通知表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (

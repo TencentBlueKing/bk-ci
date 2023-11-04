@@ -253,7 +253,7 @@ class BcsRemoteDevService @Autowired constructor(
 
         override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
             val environmentStatus = workspaceBcsClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
-            val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
+            val podInfo = environmentStatus.containerStatuses?.firstOrNull { it.name == workspaceName }
             return WorkspaceInfo(
                 status = environmentStatus.status,
                 hostIP = environmentStatus.hostIP,
@@ -261,8 +261,8 @@ class BcsRemoteDevService @Autowired constructor(
                 clusterId = environmentStatus.clusterId,
                 namespace = environmentStatus.namespace,
                 environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
-                ready = podInfo?.ready,
-                started = podInfo?.started
+                ready = podInfo?.ready ?: false,
+                started = podInfo?.started ?: false
             )
         }
 
