@@ -457,12 +457,12 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `MACHINE_TYPE` varchar(16) NOT NULL COMMENT '机型',
 	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
 	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
-    PRIMARY KEY (`ID`)
-    KEY `idx_project_id` (`PROJECT_ID`)
-    KEY `idx_host_ip` (`HOST_IP`)
-    KEY `idx_workspace_name` (`WORKSPACE_NAME`)
-    KEY `idx_creator` (`CREATOR`)
-    KEY `idx_status` (`STATUS`)
+    PRIMARY KEY (`ID`),
+    KEY `idx_project_id` (`PROJECT_ID`),
+    KEY `idx_host_ip` (`HOST_IP`),
+    KEY `idx_workspace_name` (`WORKSPACE_NAME`),
+    KEY `idx_creator` (`CREATOR`),
+    KEY `idx_status` (`STATUS`),
     KEY `idx_content` (`CONTENT`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10000 DEFAULT CHARSET=utf8mb4;
 
