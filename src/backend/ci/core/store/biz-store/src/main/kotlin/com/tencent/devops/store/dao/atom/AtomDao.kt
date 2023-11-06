@@ -525,16 +525,17 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
+        val field = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
             thirdVersion,
-            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
+            field
         ).from(t)
             .orderBy(
-                tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG).desc(),
+                field.desc(),
                 firstVersion.plus(0).desc(),
                 secondVersion.plus(0).desc(),
                 thirdVersion.plus(0).desc()
