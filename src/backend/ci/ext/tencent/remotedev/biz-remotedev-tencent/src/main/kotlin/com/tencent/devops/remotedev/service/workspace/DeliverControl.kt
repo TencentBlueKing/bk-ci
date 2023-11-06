@@ -29,7 +29,7 @@ package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.annotations.AuditRequestBody
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -58,12 +58,12 @@ import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -151,7 +151,6 @@ class DeliverControl @Autowired constructor(
         userId: String,
         projectId: String,
         workspaceName: String,
-        @AuditRequestBody
         assigns: List<ProjectWorkspaceAssign>
     ) {
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
@@ -160,6 +159,9 @@ class DeliverControl @Autowired constructor(
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
 
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.CONTENT_TEMPLATE, projectId)
+            .addAttribute("@ASSIGNS", assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {
                 val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -235,7 +237,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(

@@ -4,7 +4,8 @@ import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_ID
 import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_NAME
 
 object ActionAuditContent {
-    private const val CONTENT_TEMPLATE = "[{{$INSTANCE_NAME}}]({{$INSTANCE_ID}})"
+    const val CONTENT_TEMPLATE = "[{{$INSTANCE_NAME}}]({{$INSTANCE_ID}})"
+    const val PROJECT_CODE_TEMPLATE = "[{{@PROJECT_CODE}}]"
 
     // 项目
     const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE"
@@ -49,26 +50,27 @@ object ActionAuditContent {
     const val CREDENTIAL_USE_CONTENT = "use credential $CONTENT_TEMPLATE"
 
     // 云桌面
-    const val CGS_CREATE_CONTENT = "create work space $CONTENT_TEMPLATE"
-    const val CGS_LIST_CONTENT = "list work space $CONTENT_TEMPLATE"
-    const val CGS_VIEW_CONTENT = "get work space $CONTENT_TEMPLATE"
-    const val CGS_STOP_CONTENT = "stop work space $CONTENT_TEMPLATE"
-    const val CGS_START_CONTENT = "start work space $CONTENT_TEMPLATE"
-    const val CGS_RESTART_CONTENT = "restart work space $CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_USER_CONTENT = "assign work space to users $CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_PROJECT_CONTENT = "assign work space to projects $CONTENT_TEMPLATE"
-    const val CGS_EDIT_TYPE_CONTENT = "modify work space type $CONTENT_TEMPLATE"
-    const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild work space system disk $CONTENT_TEMPLATE"
-    const val CGS_MAKE_IMAGE_CONTENT = "make work space image  $CONTENT_TEMPLATE"
-    const val CGS_EXPAND_DISK_CONTENT = "expand work space disk $CONTENT_TEMPLATE"
-    const val CGS_DELETE_CONTENT = "delete work space $CONTENT_TEMPLATE"
-    const val CGS_SHARE_CONTENT = "share work space $CONTENT_TEMPLATE"
-    const val CGS_EDIT_CONTENT = "edit work space $CONTENT_TEMPLATE"
+    const val CGS_CREATE_CONTENT = "create workspace $CONTENT_TEMPLATE"
+    const val CGS_LIST_CONTENT = "list workspace $CONTENT_TEMPLATE"
+    const val CGS_VIEW_CONTENT = "get workspace $CONTENT_TEMPLATE"
+    const val CGS_STOP_CONTENT = "stop workspace $CONTENT_TEMPLATE"
+    const val CGS_START_CONTENT = "start workspace $CONTENT_TEMPLATE"
+    const val CGS_RESTART_CONTENT = "restart workspace $CONTENT_TEMPLATE"
+    const val CGS_ASSIGN_USER_CONTENT = "assign workspace $CONTENT_TEMPLATE " +
+        "to [{{@ASSIGNS}}] from $PROJECT_CODE_TEMPLATE"
+    const val CGS_ASSIGN_PROJECT_CONTENT = "assign workspace $CONTENT_TEMPLATE to project $PROJECT_CODE_TEMPLATE"
+    const val CGS_EDIT_TYPE_CONTENT = "modify workspace type $CONTENT_TEMPLATE"
+    const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild workspace system disk $CONTENT_TEMPLATE"
+    const val CGS_MAKE_IMAGE_CONTENT = "make workspace image  $CONTENT_TEMPLATE"
+    const val CGS_EXPAND_DISK_CONTENT = "expand workspace disk $CONTENT_TEMPLATE"
+    const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE"
+    const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE"
+    const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE"
 
     // 云桌面镜像
-    const val IMAGE_LIST_CONTENT = "list work space image $CONTENT_TEMPLATE"
-    const val IMAGE_DELETE_CONTENT = "delete work space image $CONTENT_TEMPLATE"
-    const val IMAGE_EDIT_CONTENT = "modify work space image $CONTENT_TEMPLATE"
+    const val IMAGE_LIST_CONTENT = "list workspace image $CONTENT_TEMPLATE"
+    const val IMAGE_DELETE_CONTENT = "delete workspace image $CONTENT_TEMPLATE"
+    const val IMAGE_EDIT_CONTENT = "modify workspace image $CONTENT_TEMPLATE"
 
     // 代理仓库
     const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE"

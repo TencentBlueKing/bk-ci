@@ -54,13 +54,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
             // 审计
-            ActionAuditContext.current().addInstanceInfo(
-                cgs.cgsId,
-                cgs.cgsId,
-                null,
-                null
-            ).addExtendData("projectId", data.projectId)
-
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
+                )
+                .addAttribute("@PROJECT_CODE", data.projectId)
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
                 machineType = cgs.machineType
