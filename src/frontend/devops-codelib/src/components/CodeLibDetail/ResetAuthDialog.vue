@@ -448,9 +448,7 @@
                         authIdentity: ''
                     }
                     this.newRepoInfo.authType = 'OAUTH'
-                    this.$nextTick(() => {
-                        this.handleUpdateRepo()
-                    })
+                    this.handleUpdateRepo()
                 }
             }
         },

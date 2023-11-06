@@ -78,6 +78,10 @@
             curRepo: {
                 type: Object,
                 default: () => {}
+            },
+            scmType: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -105,11 +109,12 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            triggerType () {
-                return this.curRepo.type || ''
-            },
             searchList () {
                 const list = [
+                    {
+                        name: this.$t('codelib.事件ID'),
+                        id: 'eventId'
+                    },
                     {
                         name: this.$t('codelib.触发器类型'),
                         id: 'triggerType',
@@ -138,6 +143,9 @@
                     return false
                 }
                 return this.daterange[0] || this.searchValue.length
+            },
+            eventId () {
+                return this.$route.query.eventId || ''
             }
         },
         watch: {
@@ -168,13 +176,16 @@
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
+            },
+            scmType (val, oldVal) {
+                if (!oldVal) {
+                    this.getEventTypeList()
+                    this.getTriggerTypeList()
+                }
             }
         },
         created () {
             this.catchRepoId = this.repoId
-            this.getEventTypeList()
-            this.getTriggerTypeList()
-            this.setDefaultDaterange()
             this.shortcuts = [
                 {
                     text: this.$t('codelib.今天'),
@@ -212,6 +223,21 @@
                     }
                 }
             ]
+            if (this.scmType) {
+                this.getEventTypeList()
+                this.getTriggerTypeList()
+            }
+            if (this.eventId) {
+                this.searchValue.push({
+                    id: 'eventId',
+                    name: this.$t('codelib.事件ID'),
+                    values: [{
+                        id: this.eventId,
+                        name: this.eventId
+                    }]
+                })
+            }
+            this.setDefaultDaterange()
         },
         methods: {
             ...mapActions('codelib', [
@@ -227,7 +253,7 @@
             },
             getEventTypeList () {
                 this.fetchEventType({
-                    scmType: this.triggerType
+                    scmType: this.scmType
                 }).then(res => {
                     this.eventTypeList = res.map(i => {
                         return {
@@ -239,7 +265,7 @@
             },
             getTriggerTypeList () {
                 this.fetchTriggerType({
-                    scmType: this.triggerType
+                    scmType: this.scmType
                 }).then(res => {
                     this.triggerTypeList = res.map(i => {
                         return {
@@ -266,6 +292,7 @@
                 this.searchValue.forEach(i => {
                     params[`${i.id}`] = (i.values && i.values[0].id) || i.name
                 })
+                console.log(params, 1111111)
                 
                 this.fetchTriggerEventList({
                     projectId: this.projectId,
@@ -273,7 +300,7 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     ...params,
-                    triggerType: params.triggerType || this.triggerType,
+                    triggerType: params.triggerType || this.scmType,
                     startTime: daterange[0],
                     endTime: daterange[1]
                 }).then(res => {

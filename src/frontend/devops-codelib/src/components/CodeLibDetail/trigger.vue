@@ -131,6 +131,10 @@
             curRepo: {
                 type: Object,
                 default: () => {}
+            },
+            scmType: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -156,9 +160,6 @@
             },
             projectId () {
                 return this.$route.params.projectId
-            },
-            scmType () {
-                return this.curRepo.type || ''
             },
             searchList () {
                 const list = [

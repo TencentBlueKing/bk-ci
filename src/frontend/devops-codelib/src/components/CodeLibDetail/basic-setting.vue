@@ -751,7 +751,7 @@
             display: inline-flex;
             line-height: 16px;
             width: 280px;
-            margin-right: 200px;
+            margin-right: 150px;
             margin-bottom: 16px;
             .label {
                 width: 120px;

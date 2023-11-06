@@ -441,13 +441,14 @@ const actions = {
         page,
         pageSize,
         triggerType,
+        eventId = '',
         eventType = '',
         triggerUser = '',
         pipelineName = '',
         startTime = '',
         endTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
     },
 
     /**

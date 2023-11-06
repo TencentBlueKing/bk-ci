@@ -159,7 +159,7 @@
     "请选择凭证": "Please select a ticket",
     "详情": "Detail",
     "触发条件": "Trigger Conditions",
-    "确认以此事件重新触发流水线 X 吗？": "确认以此事件重新触发流水线 {0} 吗？",
+    "确认以此事件重新触发流水线 X 吗？": "确认以此事件重新触发流水线[{0}]吗？",
     "确认重放此事件吗？": "确认重放此事件吗？",
     "自定义触发控制": "Custom Control option",
     "满足基础过滤条件后，根据第三方接口返回判断是否能够触发": "After meeting the basic filter conditions, judge whether it can be triggered according to the return of the third-party interface",
@@ -178,5 +178,6 @@
     "确认以此事件重新触发流水线X吗？": "Re-trigger the pipeline [{0}] with this event？",
     "展开": "Expand",
     "收起": "Collapse",
-    "重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。": "Caution: Resetting authorization may cause running pipelines to fail."
+    "重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。": "Caution: Resetting authorization may cause running pipelines to fail.",
+    "事件ID": "Event ID"
 }

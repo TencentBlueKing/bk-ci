@@ -15,7 +15,7 @@
                         }" @click="handleShowDetail(item, index)">
                         <div class="title">
                             <StatusIcon class="icon" :status="item.total === item.success ? 'normal' : 'error'"></StatusIcon>
-                            <span class="desc" :title="item.eventDesc" v-html="item.eventDesc"></span>
+                            <span class="desc" :title="getEventDescTitle(item.eventDesc)" v-html="item.eventDesc"></span>
                             <span class="trigger-time">
                                 {{ new Date(item.eventTime).toLocaleString().split('.').join('-') }}
                             </span>
@@ -46,7 +46,7 @@
                     </div>
                     <div
                         class="trigger-list-table"
-                        v-if="activeIndex === index"
+                        v-if="activeIndex === index && eventDetailList.length"
                     >
                         <table
                             :class="{
@@ -89,6 +89,17 @@
                             @limit-change="handleChangeLimit">
                         </bk-pagination>
                     </div>
+                    <div
+                        class="trigger-list-table"
+                        v-else-if="activeIndex === index && !eventDetailList.length">
+                        <table
+                            :class="{
+                                'is-show-table': activeIndex === index
+                            }"
+                            v-bkloading="{ isLoading }">
+                            <EmptyTableStatusVue class="empty-table" type="empty" />
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,10 +111,12 @@
         mapActions
     } from 'vuex'
     import StatusIcon from '../status-icon.vue'
+    import EmptyTableStatusVue from '../empty-table-status.vue'
     export default {
         name: 'timeline-collapse',
         components: {
-            StatusIcon
+            StatusIcon,
+            EmptyTableStatusVue
         },
         props: {
             data: {
@@ -226,6 +239,9 @@
             handleChangePage (page) {
                 this.pagination.current = page
                 this.getEventDetail()
+            },
+            getEventDescTitle (str) {
+                return str.replace(/(<\/?font.*?>)|(<\/?span.*?>)|(<\/?a.*?>)/gi, '')
             }
         }
     }
@@ -363,6 +379,14 @@
     .replay-dialog {
         .bk-dialog-header-inner {
             white-space: pre-wrap !important;
+        }
+    }
+    .empty-table {
+        .part-img {
+            margin-top: 0 !important;
+        }
+        .part-text {
+            margin-bottom: 50px !important;
         }
     }
 </style>

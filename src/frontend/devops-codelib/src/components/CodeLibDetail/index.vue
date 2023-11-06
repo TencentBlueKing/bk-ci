@@ -90,6 +90,7 @@
                     :repo-info="repoInfo"
                     :cur-repo="curRepo"
                     :type="repoInfo['@type']"
+                    :scm-type="repoInfo.scmType"
                     :fetch-repo-detail="fetchRepoDetail"
                     :refresh-codelib-list="refreshCodelibList"
                     @updateList="updateList"
@@ -188,6 +189,9 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            eventId () {
+                return this.$route.query.eventId || ''
             }
         },
         watch: {
@@ -214,8 +218,16 @@
             }
         },
         created () {
-            const { tab } = this.$route.query
-            if (tab) this.active = tab || 'basic'
+            const tab = this.$route.query.tab || (this.eventId ? 'triggerEvent' : 'basic')
+            if (tab) {
+                this.active = tab
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        tab: tab
+                    }
+                })
+            }
         },
         methods: {
             ...mapActions('codelib', [

@@ -87,7 +87,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-height: calc(50vh - 50px);
+            max-height: calc(60vh);
         }
         .using-pipeline-warning-icon {
             display: inline-flex;
