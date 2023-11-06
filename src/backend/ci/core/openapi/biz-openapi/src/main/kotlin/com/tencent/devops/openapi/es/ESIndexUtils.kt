@@ -48,7 +48,7 @@ object ESIndexUtils {
             .startObject("properties")
             .startObject("api").field("type", "keyword").endObject()
             .startObject("apiType").field("type", "keyword").endObject()
-            .startObject("timestamp").field("type", "long").endObject()
+            .startObject("timestamp").field("type", "date").endObject()
             .startObject("appCode").field("type", "keyword").endObject()
             .startObject("userId").field("type", "keyword").endObject()
             .startObject("projectId").field("type", "keyword")
