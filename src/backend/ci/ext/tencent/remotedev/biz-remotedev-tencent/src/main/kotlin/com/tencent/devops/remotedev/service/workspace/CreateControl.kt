@@ -339,7 +339,8 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp
+                    event.environmentIp,
+                    event.macAddress
                 )
             }
 
