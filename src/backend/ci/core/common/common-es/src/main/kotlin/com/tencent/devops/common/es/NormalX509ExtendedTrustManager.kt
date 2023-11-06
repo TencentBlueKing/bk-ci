@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.common.es
 
 import java.net.Socket
 import javax.net.ssl.SSLEngine

@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.openapi.es.config
 
-import org.elasticsearch.client.RestHighLevelClient
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.openapi.es.mq.ESEvent
+import com.tencent.devops.openapi.es.mq.MQDispatcher
+import com.tencent.devops.openapi.es.mq.MQListenerService
+import java.util.function.Consumer
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import org.springframework.messaging.Message
 
-data class ESClient(
-    val clusterName: String,
-    val restClient: RestHighLevelClient,
-    val shards: Int,
-    val replicas: Int,
-    val shardsPerNode: Int,
-    val requestTimeout: Long,
-    val mainCluster: Boolean? = false,
-    val writable: Boolean? = true
-)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class MQConfiguration @Autowired constructor() {
+
+    @Bean
+    fun openapiMQDispatcher(
+        streamBridge: StreamBridge
+    ) = MQDispatcher(streamBridge)
+
+    @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT_IN)
+    fun openapiLogEventIn(
+        listenerService: MQListenerService
+    ): Consumer<Message<ESEvent>> {
+        return Consumer { event: Message<ESEvent> ->
+            listenerService.handleEvent(event.payload)
+        }
+    }
+}

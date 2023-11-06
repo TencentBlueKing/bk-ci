@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.common.es
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.es.client.LogClient
+import com.tencent.devops.common.es.client.impl.LogClientImpl
 import com.tencent.devops.common.web.WebAutoConfiguration
-import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.client.impl.LogClientImpl
-import com.tencent.devops.log.jmx.CreateIndexBean
-import com.tencent.devops.log.jmx.LogStorageBean
-import com.tencent.devops.log.service.BuildLogPrintService
-import com.tencent.devops.log.service.IndexService
-import com.tencent.devops.log.service.LogService
-import com.tencent.devops.log.service.LogStatusService
-import com.tencent.devops.log.service.LogTagService
-import com.tencent.devops.log.service.impl.LogServiceESImpl
-import com.tencent.devops.log.util.ESConfigUtils
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
+import javax.net.ssl.SSLContext
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -57,10 +51,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
-import javax.net.ssl.SSLContext
 
 @Suppress("ALL")
 @Configuration
@@ -71,6 +61,7 @@ import javax.net.ssl.SSLContext
 class ESAutoConfiguration : DisposableBean {
     @Value("\${log.elasticsearch.ip}")
     private val host: String? = null
+
     @Value("\${log.elasticsearch.port}")
     private val port: Int? = null
 
@@ -222,30 +213,6 @@ class ESAutoConfiguration : DisposableBean {
     }
 
     @Bean
-    fun esLogService(
-        @Autowired logESClient: LogClient,
-        @Autowired indexService: IndexService,
-        @Autowired logStatusService: LogStatusService,
-        @Autowired logTagService: LogTagService,
-        @Autowired defaultKeywords: List<String>,
-        @Autowired createIndexBean: CreateIndexBean,
-        @Autowired logStorageBean: LogStorageBean,
-        @Autowired redisOperation: RedisOperation,
-        @Autowired buildLogPrintService: BuildLogPrintService
-    ): LogService {
-        return LogServiceESImpl(
-            logClient = logESClient,
-            indexService = indexService,
-            logStatusService = logStatusService,
-            logTagService = logTagService,
-            logStorageBean = logStorageBean,
-            createIndexBean = createIndexBean,
-            buildLogPrintService = buildLogPrintService,
-            redisOperation = redisOperation
-        )
-    }
-
-    @Bean
     @ConditionalOnMissingBean
     fun logClient(@Autowired transportClient: ESClient): LogClient =
         LogClientImpl(transportClient)
@@ -264,8 +231,8 @@ class ESAutoConfiguration : DisposableBean {
 
     private fun hasCertificateConfig(): Boolean {
         return !keystoreFilePath.isNullOrBlank() ||
-            !truststoreFilePath.isNullOrBlank() ||
-            !keystorePassword.isNullOrBlank() ||
-            !truststorePassword.isNullOrBlank()
+                !truststoreFilePath.isNullOrBlank() ||
+                !keystorePassword.isNullOrBlank() ||
+                !truststorePassword.isNullOrBlank()
     }
 }

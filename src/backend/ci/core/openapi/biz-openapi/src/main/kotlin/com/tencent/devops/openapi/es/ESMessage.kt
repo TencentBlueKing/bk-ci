@@ -25,13 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.openapi.es
 
-import com.tencent.devops.log.es.ESClient
-
-interface LogClient {
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
-}
+/**
+ *
+ * Powered By Tencent
+ */
+data class ESMessage(
+    val api: String,
+    val apiType: String = "",
+    val appCode: String = "",
+    val userId: String = "",
+    val projectId: String = "",
+    var timestamp: Long = 0
+)

@@ -25,14 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.common.es
 
-import com.tencent.devops.common.log.constant.LogMessageCode.FILE_NOT_FOUND_CHECK_PATH
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
 import org.apache.http.HeaderElementIterator
@@ -42,7 +36,6 @@ import org.apache.http.client.CredentialsProvider
 import org.apache.http.message.BasicHeaderElementIterator
 import org.apache.http.protocol.HTTP
 import org.apache.http.protocol.HttpContext
-import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.slf4j.LoggerFactory
@@ -108,40 +101,6 @@ object ESConfigUtils {
             requestConfigBuilder.setConnectTimeout(connectTimeout)
             requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeout)
         }
-    }
-
-    fun getSSLContext(
-        keystoreFilePath: String,
-        truststoreFilePath: String,
-        keystorePassword: String,
-        truststorePassword: String
-    ): SSLContext {
-        val keystoreFile = File(keystoreFilePath)
-        if (!keystoreFile.exists()) {
-            throw IllegalArgumentException(
-                I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_FOUND_CHECK_PATH, params = arrayOf("keystore")) +
-                        keystoreFilePath
-            )
-        }
-        val truststoreFile = File(truststoreFilePath)
-        if (!truststoreFile.exists()) {
-            throw IllegalArgumentException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = FILE_NOT_FOUND_CHECK_PATH,
-                    params = arrayOf("truststore")
-                ) + truststoreFilePath
-            )
-        }
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        val keystorePasswordCharArray = keystorePassword.toCharArray()
-        keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
-        val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
-        val truststorePasswordCharArray = truststorePassword.toCharArray()
-        truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
-        return SSLContexts.custom()
-            .loadTrustMaterial(truststore, null)
-            .loadKeyMaterial(keyStore, keystorePasswordCharArray)
-            .build()
     }
 
     private val logger = LoggerFactory.getLogger(ESConfigUtils::class.java)

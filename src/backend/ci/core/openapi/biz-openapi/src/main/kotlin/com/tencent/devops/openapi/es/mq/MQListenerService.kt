@@ -25,18 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client.impl
+package com.tencent.devops.openapi.es.mq
 
-import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.openapi.es.ESServiceImpl
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
+@Component
+class MQListenerService @Autowired constructor(
+    private val logService: ESServiceImpl,
+    private val dispatcher: MQDispatcher
+) {
 
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
+    fun handleEvent(event: ESEvent) {
+        var result = false
+        try {
+            logService.esAddMessage(event)
+            result = true
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to add the log batch event [${event.logs}|${event.retryTime}]", ignored)
+        } finally {
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to add log batch event [${event.logs}|${event.retryTime}]")
+                with(event) {
+                    dispatcher.dispatchEvent(
+                        ESEvent(
+                            logs = logs,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
+                }
+            }
+        }
     }
 
-    override fun hashClient(buildId: String): ESClient {
-        return getActiveClients().first()
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MQListenerService::class.java)
     }
 }
