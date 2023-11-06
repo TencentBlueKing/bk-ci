@@ -29,15 +29,19 @@ package com.tencent.devops.log.cron
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.impl.MultiESLogClient
-import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.IndexNameUtils
+import java.io.IOException
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.delete.DeleteRequest
@@ -50,10 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.io.IOException
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
@@ -84,7 +84,9 @@ class ESDetectionJob @Autowired constructor(
                             logger.warn("[${it.clusterName}] Fail to insert data")
                             logClient.markESInactive(it.clusterName)
                         } else {
-                            executor.submit(Deletion(it, index, buildId, documentIds))
+                            executor.submit(
+                                Deletion(it, index, buildId, documentIds)
+                            )
                         }
                     } catch (t: Throwable) {
                         logger.warn("[${it.clusterName}] Fail to detect es status", t)
@@ -139,11 +141,13 @@ class ESDetectionJob @Autowired constructor(
         logger.info("[${esClient.clusterName}|$index] Create the index: shards[${esClient.shards}] replicas[${esClient.replicas}] shardsPerNode[${esClient.shardsPerNode}]")
         try {
             val request = CreateIndexRequest(index)
-                .settings(getIndexSettings(
-                    shards = esClient.shards,
-                    replicas = esClient.replicas,
-                    shardsPerNode = esClient.shardsPerNode
-                ))
+                .settings(
+                    getIndexSettings(
+                        shards = esClient.shards,
+                        replicas = esClient.replicas,
+                        shardsPerNode = esClient.shardsPerNode
+                    )
+                )
                 .mapping(getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(20))
             val response = esClient.restClient
