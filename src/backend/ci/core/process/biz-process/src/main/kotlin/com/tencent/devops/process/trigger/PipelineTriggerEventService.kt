@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -184,41 +185,92 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val count = pipelineTriggerEventDao.countRepoTriggerEvent(
+        // 事件ID to 总数
+        val (eventIds, count) = if (pipelineName.isNullOrBlank() || pipelineId.isNullOrBlank()) {
+            val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            val count = pipelineTriggerEventDao.getCountByEvent(
+                dslContext = dslContext,
+                eventId = eventId,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventType = eventType,
+                triggerType = triggerType,
+                triggerUser = triggerUser,
+                startTime = startTime,
+                endTime = endTime
+            )
+            eventIds to count
+        } else {
+            // 满足事件要求的EventIds
+            val baseEventIds = pipelineTriggerEventDao.getEventIdsByEvent(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime
+            )
+            // 根据pipelineName进行EventId二次筛选
+            val eventIds = pipelineTriggerEventDao.getDetailEventIds(
+                dslContext = dslContext,
+                baseEventIds = baseEventIds,
+                pipelineName = pipelineName,
+                pipelineId = pipelineId,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            val count = pipelineTriggerEventDao.getCountByDetail(
+                dslContext = dslContext,
+                eventIds = baseEventIds,
+                projectId = projectId,
+                pipelineName = pipelineName,
+                pipelineId = pipelineId
+            )
+            eventIds to count
+        }
+        // 事件信息
+        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEvent(
             dslContext = dslContext,
-            projectId = projectId,
-            eventSource = repoHashId,
-            eventType = eventType,
-            triggerType = triggerType,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            eventId = eventId,
-            pipelineName = pipelineName,
-            startTime = startTime,
-            endTime = endTime
+            eventIds = eventIds
         )
-        val records = pipelineTriggerEventDao.listRepoTriggerEvent(
+        // 触发详情记录（总数，成功数）
+        val eventDetailsMap = pipelineTriggerEventDao.listRepoTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
-            eventSource = repoHashId,
-            eventType = eventType,
-            triggerType = triggerType,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            eventId = eventId,
+            eventIds = eventIds,
             pipelineName = pipelineName,
-            startTime = startTime,
-            endTime = endTime,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
-        ).map {
-            it.eventDesc = try {
-                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                it.eventDesc
-            }
-            it
+            pipelineId = pipelineId
+        ).associateBy { it.eventId }
+        val records = triggerEvent.map {
+            RepoTriggerEventVo(
+                projectId = it.projectId,
+                eventId = it.eventId,
+                repoHashId = it.eventSource,
+                eventDesc = try {
+                    JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+                } catch (ignored: Exception) {
+                    logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
+                    it.eventDesc
+                },
+                eventTime = it.createTime.timestampmilli(),
+                total = eventDetailsMap[it.eventId]?.total ?: 0,
+                success = eventDetailsMap[it.eventId]?.success ?: 0
+            )
         }
         return SQLPage(count = count, records = records)
     }
