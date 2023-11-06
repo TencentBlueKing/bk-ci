@@ -160,6 +160,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132030",
         formatErrorMessage = "update BkCC fail."
+    ),
+    REAPPLY_EXPERT_SUPPORT_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132031",
+        formatErrorMessage = "Please do not submit duplicate issue requests within 1 hour[{0}]."
     );
 
     fun getErrorMessage(): String {

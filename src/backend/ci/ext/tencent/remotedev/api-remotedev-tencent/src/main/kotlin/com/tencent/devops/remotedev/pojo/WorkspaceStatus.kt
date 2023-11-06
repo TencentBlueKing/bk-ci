@@ -59,7 +59,7 @@ enum class WorkspaceStatus {
 
     fun checkDistributing() = this == DISTRIBUTING
 
-    fun workspaceInitializing() = checkDelivering() || checkDistributing()
+    fun workspaceInitializing() = checkDelivering()
 
     fun checkInUse() = !checkDeleted() && !checkException()
 

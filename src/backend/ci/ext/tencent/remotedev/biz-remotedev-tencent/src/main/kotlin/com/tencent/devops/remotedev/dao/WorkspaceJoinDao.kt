@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -43,7 +44,8 @@ class WorkspaceJoinDao {
         owner: String?,
         status: WorkspaceStatus?,
         zoneId: String?,
-        machineType: String?
+        machineType: String?,
+        expertSupId: Long?
     ): Long {
         return dslContext.fetchCount(
             genFetchProjectWorkspaceCond(
@@ -56,7 +58,8 @@ class WorkspaceJoinDao {
                 owner = owner,
                 status = status,
                 zoneId = zoneId,
-                machineType = machineType
+                machineType = machineType,
+                expertSupId = expertSupId
             )
         ).toLong()
     }
@@ -75,25 +78,27 @@ class WorkspaceJoinDao {
         owner: String?,
         status: WorkspaceStatus?,
         zoneId: String?,
-        machineType: String?
+        machineType: String?,
+        expertSupId: Long?
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             // 没有包含其他表的条件
             if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
                 return (
-                    genFetchProjectWorkspaceCond(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        workspaceName = workspaceName,
-                        systemType = systemType,
-                        queryType = queryType,
-                        ips = ips,
-                        owner = owner,
-                        status = status,
-                        zoneId = zoneId,
-                        machineType = machineType
-                    ) as SelectConditionStep<TWorkspaceRecord>
-                    ).orderBy(CREATE_TIME.desc(), ID.desc())
+                        genFetchProjectWorkspaceCond(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            workspaceName = workspaceName,
+                            systemType = systemType,
+                            queryType = queryType,
+                            ips = ips,
+                            owner = owner,
+                            status = status,
+                            zoneId = zoneId,
+                            machineType = machineType,
+                            expertSupId = expertSupId
+                        ) as SelectConditionStep<TWorkspaceRecord>
+                        ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(WorkspaceDao.workspaceMapper)
             }
@@ -110,7 +115,8 @@ class WorkspaceJoinDao {
                     owner = owner,
                     status = status,
                     zoneId = zoneId,
-                    machineType = machineType
+                    machineType = machineType,
+                    expertSupId = expertSupId
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
                     .fetch(workspaceWithDetailMapper)
@@ -127,7 +133,8 @@ class WorkspaceJoinDao {
                 owner = owner,
                 status = status,
                 zoneId = zoneId,
-                machineType = machineType
+                machineType = machineType,
+                expertSupId = expertSupId
             ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch(workspaceFieldMapper)
@@ -144,7 +151,8 @@ class WorkspaceJoinDao {
         owner: String?,
         status: WorkspaceStatus?,
         zoneId: String?,
-        machineType: String?
+        machineType: String?,
+        expertSupId: Long?
     ): SelectConditionStep<*> {
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -243,9 +251,9 @@ class WorkspaceJoinDao {
         // owner 条件查询
         if (owner != null) {
             val sql = (
-                TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                    .and(TWorkspace.T_WORKSPACE.CREATOR.like("%$owner%"))
-                )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.like("%$owner%"))
+                    )
                 .or(
                     TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
                         .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
@@ -258,13 +266,19 @@ class WorkspaceJoinDao {
             conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(machineType))
         }
 
+        // expertSup
+        if (expertSupId != null) {
+            conditions.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.eq(expertSupId))
+        }
+
         // 添加连表查询条件以及获得连表
         val tables = joinTablesAndItems(
             conditions = conditions,
             ips = ips,
             owner = owner,
             zoneId = zoneId,
-            machineType = machineType
+            machineType = machineType,
+            expertSupId = expertSupId
         )
 
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
@@ -282,7 +296,8 @@ class WorkspaceJoinDao {
         ips: List<String>?,
         owner: String?,
         zoneId: String?,
-        machineType: String?
+        machineType: String?,
+        expertSupId: Long?
     ): List<TableImpl<*>> {
         var offset = 0
         val result = mutableListOf<TableImpl<*>>()
@@ -307,6 +322,14 @@ class WorkspaceJoinDao {
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
                     TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
                 )
+            )
+            offset++
+        }
+        if (expertSupId != null) {
+            result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
+            conditions.add(
+                offset,
+                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
             )
         }
 
