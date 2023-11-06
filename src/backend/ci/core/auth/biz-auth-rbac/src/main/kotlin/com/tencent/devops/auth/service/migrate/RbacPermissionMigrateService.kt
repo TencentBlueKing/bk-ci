@@ -34,6 +34,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -74,6 +75,7 @@ class RbacPermissionMigrateService constructor(
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
     private val migratePermissionHandoverService: MigratePermissionHandoverService,
+    private val permissionGradeManagerService: PermissionGradeManagerService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
     private val authMonitorSpaceDao: AuthMonitorSpaceDao
@@ -203,14 +205,6 @@ class RbacPermissionMigrateService constructor(
             resourceType = resourceType,
             projectCreator = projectCreator
         )
-        // 若迁移流水线模板权限，需要修改项目的properties字段
-        if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
-            val properties = client.get(ServiceProjectResource::class).get(projectCode).data!!.properties
-                ?: ProjectProperties()
-            properties.enableTemplatePermissionManage = true
-            logger.info("update project($projectCode) properties|$properties")
-            client.get(ServiceProjectResource::class).updateProjectProperties(projectCode, properties)
-        }
         return true
     }
 
@@ -234,20 +228,69 @@ class RbacPermissionMigrateService constructor(
                 resourceCode = it.englishName
             )
             if (!async) {
-                migrateResourceService.migrateProjectMonitorResource(
-                    projectCode = it.englishName,
+                permissionGradeManagerService.modifyGradeManager(
                     gradeManagerId = projectInfo.relationId,
-                    projectName = projectInfo.resourceName
+                    projectCode = it.englishName,
+                    projectName = projectInfo.resourceName,
+                    registerMonitorPermission = true
                 )
             }
             migrateProjectsExecutorService.submit {
                 MDC.put(TraceTag.BIZID, traceId)
-                migrateResourceService.migrateMonitorResource(
+                migrateResourceService.migrateProjectResource(
                     projectCode = it.englishName,
                     projectName = projectInfo.resourceName,
                     gradeManagerId = projectInfo.relationId,
-                    async = async
+                    async = async,
+                    registerMonitorPermission = true
                 )
+            }
+        }
+        return true
+    }
+
+    override fun migrateResourcesOfNewResourceType(
+        resourceType: String,
+        projectCodes: List<String>
+    ): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        client.get(ServiceProjectResource::class).listByProjectCode(
+            projectCodes = projectCodes.toSet()
+        ).data?.filter {
+            // 仅迁移已迁移成功的项目
+            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+        }?.forEach {
+            val gradeManagerId = authResourceService.get(
+                projectCode = it.englishName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = it.englishName
+            ).relationId
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateResourceService.migrateProjectResource(
+                    projectCode = it.englishName,
+                    projectName = it.projectName,
+                    gradeManagerId = gradeManagerId,
+                    async = true,
+                    registerMonitorPermission = false
+                )
+                migrateResourceService.migrateResource(
+                    projectCode = it.englishName,
+                    resourceType = resourceType,
+                    projectCreator = migrateCreatorFixService.getProjectCreator(
+                        projectCode = it.projectCode,
+                        authSystemType = AuthSystemType.V0_AUTH_TYPE,
+                        projectCreator = it.creator!!,
+                        projectUpdator = it.updator!!
+                    )!!
+                )
+                // 若迁移流水线模板权限，需要修改项目的properties字段
+                if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
+                    val properties = it.properties ?: ProjectProperties()
+                    properties.enableTemplatePermissionManage = true
+                    logger.info("update project(${it.englishName}) properties|$properties")
+                    client.get(ServiceProjectResource::class).updateProjectProperties(it.englishName, properties)
+                }
             }
         }
         return true

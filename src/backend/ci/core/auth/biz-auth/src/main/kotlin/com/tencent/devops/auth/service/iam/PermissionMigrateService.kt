@@ -87,4 +87,12 @@ interface PermissionMigrateService {
         projectCodes: List<String>,
         async: Boolean = true
     ): Boolean
+
+    /**
+     * 迁移新增资源类型的资源
+     */
+    fun migrateResourcesOfNewResourceType(
+        resourceType: String,
+        projectCodes: List<String>
+    ): Boolean
 }

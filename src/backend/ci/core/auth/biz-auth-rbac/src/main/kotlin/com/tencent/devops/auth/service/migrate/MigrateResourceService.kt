@@ -283,31 +283,19 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
-    fun migrateProjectMonitorResource(
-        projectCode: String,
-        gradeManagerId: String,
-        projectName: String
-    ) {
-        // 注册分级管理员监控权限资源
-        permissionGradeManagerService.modifyGradeManager(
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            projectName = projectName,
-            registerMonitorPermission = true
-        )
-    }
-
-    fun migrateMonitorResource(
+    fun migrateProjectResource(
         projectCode: String,
         projectName: String,
         gradeManagerId: String,
-        async: Boolean
+        async: Boolean,
+        registerMonitorPermission: Boolean
     ) {
         if (async) {
-            migrateProjectMonitorResource(
-                projectCode = projectCode,
+            permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = gradeManagerId,
-                projectName = projectName
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
             )
         }
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
@@ -332,7 +320,8 @@ class MigrateResourceService @Autowired constructor(
                 groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
                 resourceName = projectName,
-                iamGroupId = resourceGroupInfo.relationId.toInt()
+                iamGroupId = resourceGroupInfo.relationId.toInt(),
+                registerMonitorPermission = registerMonitorPermission
             )
         }
     }

@@ -90,4 +90,12 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
+
+    override fun migrateResourcesOfNewResourceType(resourceType: String, projectCodes: List<String>): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateResourcesOfNewResourceType(
+                resourceType = resourceType, projectCodes = projectCodes
+            )
+        )
+    }
 }
