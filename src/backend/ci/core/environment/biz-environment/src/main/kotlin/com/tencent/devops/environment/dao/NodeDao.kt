@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvNode
@@ -47,6 +48,24 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun getNodesFromHostList(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        hostList.map {
+            with(TNode.T_NODE) {
+                dslContext.selectFrom(this)
+                    .where(HOST_ID.eq(it.bkHostId))
+                    .and(NODE_IP.eq(it.ip))
+                    .and(CLOUD_AREA_ID.eq(it.bkCloudId))
+                    .and(PROJECT_ID.eq(projectId))
+                    .orderBy(NODE_ID.desc())
+                    .fetch()
+            }.map {
+                if (it != null) nodeRecords.add(it)
+            }
+        }
+        return nodeRecords
+    }
+
     fun getNodesFromNodeHashList(dslContext: DSLContext, projectId: String, nodeHashIdList: List<String>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

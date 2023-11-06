@@ -34,7 +34,7 @@ class JobDao {
                 PROJECT_ID,
                 JOB_INSTANCE_ID,
                 CREATED_USER,
-                CREATED_TIME,
+                CREATED_TIME
             ).values(
                 projectId,
                 jobInstanceId,

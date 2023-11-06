@@ -66,7 +66,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         checkParamBlank(userId, projectId)
-        val jobResult = jobService.executeScript(projectId, scriptExecuteReq)
+        val jobResult = jobService.executeScript(userId, projectId, scriptExecuteReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }
@@ -77,7 +77,7 @@ class ServiceJobResourceImpl @Autowired constructor(
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
         checkParamBlank(userId, projectId)
-        val jobResult = jobService.distributeFile(projectId, fileDistributeReq)
+        val jobResult = jobService.distributeFile(userId, projectId, fileDistributeReq)
         jobResult.data?.let { recordJobInsToProj(projectId, it.jobInstanceId, userId) }
         return jobResult
     }

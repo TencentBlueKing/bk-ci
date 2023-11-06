@@ -50,14 +50,17 @@ import org.springframework.stereotype.Service
 
 @Service("JobService")
 class JobService @Autowired constructor(
+    private val apigwJobCloudApi: ApigwJobCloudApi,
     private val parseHashListService: ParseHashListService,
-    private val apigwJobCloudApi: ApigwJobCloudApi
+    private val permissionManageService: PermissionManageService
 ) {
     fun executeScript(
         projectId: String,
+        userId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         val allHostList: List<Host> = parseHashListService.getAllHostList(projectId, scriptExecuteReq.executeTarget)
+        permissionManageService.isUserHasAllUsePermission(userId, projectId, allHostList)
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -101,16 +104,19 @@ class JobService @Autowired constructor(
 
     fun distributeFile(
         projectId: String,
+        userId: String,
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
         val allExecuteTargetHostList: List<Host> = parseHashListService.getAllHostList(
             projectId, fileDistributeReq.executeTarget
         )
+        permissionManageService.isUserHasAllUsePermission(userId, projectId, allExecuteTargetHostList)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 val allFileSourceHostList: List<Host> = parseHashListService.getAllHostList(
                     projectId, fileSource.sourceFileServer
                 )
+                permissionManageService.isUserHasAllUsePermission(userId, projectId, allFileSourceHostList)
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
