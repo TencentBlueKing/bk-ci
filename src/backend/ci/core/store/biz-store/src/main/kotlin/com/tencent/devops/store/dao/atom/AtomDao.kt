@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_ALL
+import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -36,7 +37,6 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
-import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -482,7 +482,8 @@ class AtomDao : AtomBaseDao() {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val baseStep = dslContext.select(
             tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
         ).from(tAtom)
         val t = if (defaultFlag) {
             val conditions = generateGetPipelineAtomCondition(
@@ -524,7 +525,7 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        val field = DSL.`when`((t.field(KEY_VERSION) as Field<String>).startsWith(TEST), 1)
+        val field = DSL.`when`((t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>).eq(true), 1)
             .otherwise(0) as Field<Int>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),

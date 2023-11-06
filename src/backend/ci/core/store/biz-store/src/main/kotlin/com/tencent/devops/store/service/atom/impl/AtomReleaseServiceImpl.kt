@@ -633,7 +633,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
-                val extra = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
+                val extra = if (atomVersion.startsWith("$TEST-$atomVersion-")) {
+                    "$IN_READY_TEST($atomVersion)"
+                } else {
+                    IN_READY_TEST
+                }
                 try {
                     client.get(ServiceQualityIndicatorMarketResource::class)
                         .deleteTestIndicator(atomCode, extra)
@@ -679,7 +683,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     ) {
         client.get(ServiceQualityControlPointMarketResource::class).setTestControlPoint(
             userId = userId,
-            tag = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST,
+            tag =
+            if (atomVersion.startsWith("$TEST-$atomVersion-")) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST,
             controlPoint = QualityControlPoint(
                 hashId = "",
                 type = atomCode,
@@ -708,7 +713,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         metadataResultMap: Map<String, Long>,
         indicators: Map<String, Any>
     ) {
-        val tag = if (atomVersion.startsWith(TEST)) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
+        val tag =
+            if (atomVersion.startsWith("$TEST-$atomVersion-")) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
         val indicatorsList = indicators.map {
             val map = it.value as Map<String, Any>
             val type = map["type"] as String?
@@ -1357,7 +1363,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap, formatted = false)
-            if (newVersionFlag) {
+            if (!newVersionFlag) {
                 updateMarketAtom(
                     context = context,
                     userId = userId,

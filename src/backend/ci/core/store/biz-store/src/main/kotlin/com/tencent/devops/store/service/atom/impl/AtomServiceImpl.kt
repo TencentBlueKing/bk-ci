@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -714,7 +715,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
-            if (tmpVersionPrefix != versionPrefix && !atomVersion.startsWith(TEST)) {
+            if (tmpVersionPrefix != versionPrefix && !(it[KEY_BRANCH_TEST_FLAG] as Boolean)) {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
