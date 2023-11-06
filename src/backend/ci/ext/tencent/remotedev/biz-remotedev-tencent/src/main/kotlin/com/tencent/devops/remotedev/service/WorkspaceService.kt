@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.display
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
@@ -1091,7 +1092,7 @@ class WorkspaceService @Autowired constructor(
             val row = sheet.createRow(offset)
             row.createCell(0).setCellValue(record.projectId)
             row.createCell(1).setCellValue(record.workspaceName)
-            row.createCell(2).setCellValue(record.status?.name)
+            row.createCell(2).setCellValue(record.status?.display())
             row.createCell(3).setCellValue(record.hostName)
             row.createCell(4).setCellValue(record.workspaceSystemType.name)
             row.createCell(5).setCellValue(record.winConfig?.size)
