@@ -107,7 +107,7 @@ function _M:get_prebuild_ticket(bk_ticket)
         return
     end
     user_info_http:set_timeout(3000)
-    local res, err = user_info_http:request_uri("http://login.o.woa.com/user/get_info?bk_ticket=" .. bk_ticket,
+    local res, err = user_info_http:request_uri("http://login.o.woa.com/user/get_info/?bk_ticket=" .. bk_ticket,
         { method = "GET" })
     if not res then
         ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
