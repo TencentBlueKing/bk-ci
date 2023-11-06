@@ -27,6 +27,8 @@
 
 package com.tencent.devops.openapi.es
 
+import java.util.Date
+
 /**
  *
  * Powered By Tencent
@@ -37,5 +39,5 @@ data class ESMessage(
     val appCode: String = "",
     val userId: String = "",
     val projectId: String = "",
-    var timestamp: Long = 0
+    var date: Date
 )
