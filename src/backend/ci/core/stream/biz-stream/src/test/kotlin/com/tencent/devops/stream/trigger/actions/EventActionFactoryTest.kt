@@ -55,7 +55,7 @@ internal class EventActionFactoryTest {
         mockk(),
         mockk(),
         mockk(),
-        RedisOperation(mockk()),
+        RedisOperation(mockk(), mockk(), mockk()),
         mockk()
     )
 
