@@ -77,7 +77,6 @@ import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
@@ -312,12 +311,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun validateUpdateMarketAtomReq(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomRecord: TAtomRecord
+        repositoryHashId: String?
     ): Result<Boolean> {
         logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
         val frontendType = marketAtomUpdateRequest.frontendType
-        val repositoryHashId = atomRecord.repositoryHashId
-        val branch = atomRecord.branch
+        val branch = marketAtomUpdateRequest.branch
         if (frontendType != FrontendTypeEnum.SPECIAL || repositoryHashId.isNullOrBlank()) {
             return Result(true)
         }
@@ -1057,19 +1055,21 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = marketAtomUpdateRequest.branch
+            ),
             version = version
         )
         val validateResult = validateUpdateMarketAtomReq(
             userId = userId,
             marketAtomUpdateRequest = marketAtomUpdateRequest,
-            atomRecord = atomRecord
+            repositoryHashId = atomRecord.repositoryHashId
         )
         logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
         if (validateResult.isNotOk()) {
