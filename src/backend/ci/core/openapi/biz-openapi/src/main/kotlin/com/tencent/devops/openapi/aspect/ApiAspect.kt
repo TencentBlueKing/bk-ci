@@ -44,7 +44,6 @@ import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.swagger.annotations.ApiOperation
-import java.util.Date
 import javax.ws.rs.core.Response
 import kotlin.reflect.jvm.kotlinFunction
 import org.aspectj.lang.JoinPoint
@@ -117,7 +116,7 @@ class ApiAspect(
                 appCode = appCode ?: "",
                 userId = userId ?: "",
                 projectId = projectId ?: "",
-                date = Date()
+                timestamp = System.currentTimeMillis()
             )
         )
 

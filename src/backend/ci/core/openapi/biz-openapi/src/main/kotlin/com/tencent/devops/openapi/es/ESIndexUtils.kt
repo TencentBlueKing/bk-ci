@@ -48,7 +48,7 @@ object ESIndexUtils {
             .startObject("properties")
             .startObject("api").field("type", "keyword").endObject()
             .startObject("apiType").field("type", "keyword").endObject()
-            .startObject("date").field("type", "date").endObject()
+            .startObject("timestamp").field("type", "long").endObject()
             .startObject("appCode").field("type", "keyword").endObject()
             .startObject("userId").field("type", "keyword").endObject()
             .startObject("projectId").field("type", "keyword")
@@ -68,7 +68,7 @@ object ESIndexUtils {
             .field("appCode", logMessage.appCode)
             .field("userId", logMessage.userId)
             .field("projectId", logMessage.projectId)
-            .field("date", logMessage.date)
+            .field("timestamp", logMessage.timestamp)
             .endObject()
     }
 }
