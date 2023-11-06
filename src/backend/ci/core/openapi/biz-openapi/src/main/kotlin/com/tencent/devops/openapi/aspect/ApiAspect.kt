@@ -253,7 +253,7 @@ class ApiAspect(
                 ?.interfaces
                 ?.first()
                 ?.getDeclaredMethod(
-                    method.name
+                    method.name, *method.parameterTypes
                 )
                 ?.getAnnotation(ApiOperation::class.java)
                 ?.tags
