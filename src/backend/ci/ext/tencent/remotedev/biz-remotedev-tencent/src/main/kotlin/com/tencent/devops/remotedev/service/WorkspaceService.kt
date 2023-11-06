@@ -80,8 +80,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
-import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -663,7 +663,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -733,7 +733,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1115,7 +1115,6 @@ class WorkspaceService @Autowired constructor(
         ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
     }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
