@@ -52,7 +52,6 @@ object ESIndexUtils {
             .startObject("appCode").field("type", "keyword").endObject()
             .startObject("userId").field("type", "keyword").endObject()
             .startObject("projectId").field("type", "keyword")
-            .field("analyzer", "standard")
             .endObject()
             .endObject()
             .endObject()
