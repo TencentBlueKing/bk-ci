@@ -102,6 +102,7 @@ import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
@@ -521,13 +522,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repoId))
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = taskJsonMap.toMutableMap(),
-            fileDir = "$atomCode/$atomVersion",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-            repositoryHashId = repoId,
-            branch = branch,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$atomVersion",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+                repositoryHashId = repoId,
+                branch = branch,
+            ),
             version = atomVersion
         )
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)

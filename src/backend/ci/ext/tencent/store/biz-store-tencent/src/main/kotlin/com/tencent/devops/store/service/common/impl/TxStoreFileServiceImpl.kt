@@ -34,7 +34,6 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -49,7 +48,6 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.utils.StoreUtils
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -74,22 +72,19 @@ class TxStoreFileServiceImpl : StoreFileService() {
         val pathList = localDirectoryInfo.pathList
         pathList.forEach { pathInfo ->
             val file = File("${localDirectoryInfo.fileDirPath}$fileSeparator${pathInfo.relativePath}")
-            try {
-                if (file.exists()) {
-                    val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoStaticResource::class)
-                    val fileUrl = serviceUploadFile(
-                        userId = userId,
-                        serviceUrlPrefix = serviceUrlPrefix,
-                        file = file
-                    ).data
-                    fileUrl?.let { result[pathInfo.relativePath] = StoreUtils.removeUrlHost(fileUrl) }
-                } else {
-                    logger.warn("Resource file does not exist:${file.path}")
-                }
-            } finally {
-                file.delete()
+            if (file.exists()) {
+                val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoStaticResource::class)
+                val fileUrl = serviceUploadFile(
+                    userId = userId,
+                    serviceUrlPrefix = serviceUrlPrefix,
+                    file = file
+                ).data
+                fileUrl?.let { result[pathInfo.relativePath] = StoreUtils.removeUrlHost(fileUrl) }
+            } else {
+                logger.warn("Resource file does not exist:${file.path}")
             }
         }
+        logger.info("uploadFileToPath result:$result")
         return result
     }
 
@@ -122,15 +117,10 @@ class TxStoreFileServiceImpl : StoreFileService() {
 
     override fun textReferenceFileDownload(
         userId: String,
-        textReferenceFileCache: BkDiskLruFileCache,
-        fileCacheKey: String,
+        fileDirPath: String,
         request: TextReferenceFileDownloadRequest
-    ): File? {
+    ): String? {
         val separator = File.separator
-        val fileDirPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(
-            userId = userId,
-            atomDir = request.fileDir
-        )
         val zipFile = File("$fileDirPath${separator}file.zip")
         try {
             downloadFile(
@@ -141,12 +131,11 @@ class TxStoreFileServiceImpl : StoreFileService() {
             )
             if (zipFile.exists()) {
                 ZipUtil.unZipFile(zipFile, fileDirPath, true)
-                textReferenceFileCache.put(fileCacheKey, zipFile)
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
         }
-        return File("$fileDirPath${fileSeparator}file")
+        return "$fileDirPath${fileSeparator}file"
     }
 
     override fun downloadFile(
