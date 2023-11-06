@@ -47,10 +47,8 @@ object ESIndexUtils {
             .startObject()
             .startObject("properties")
             .startObject("api").field("type", "keyword").endObject()
-            .startObject("apiType").field("type", "keyword").endObject()
             .startObject("timestamp").field("type", "date").endObject()
-            .startObject("appCode").field("type", "keyword").endObject()
-            .startObject("userId").field("type", "keyword").endObject()
+            .startObject("key").field("type", "keyword").endObject()
             .startObject("projectId").field("type", "keyword")
             .endObject()
             .endObject()
@@ -63,9 +61,12 @@ object ESIndexUtils {
         return XContentFactory.jsonBuilder()
             .startObject()
             .field("api", logMessage.api)
-            .field("apiType", logMessage.apiType)
-            .field("appCode", logMessage.appCode)
-            .field("userId", logMessage.userId)
+            .let {
+                when {
+                    logMessage.apiType.contains("user") -> it.field("key", "user:" + logMessage.userId)
+                    else -> it.field("key", "app:" + logMessage.appCode)
+                }
+            }
             .field("projectId", logMessage.projectId)
             .field("timestamp", logMessage.timestamp)
             .endObject()
