@@ -74,8 +74,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -96,12 +94,12 @@ import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
-import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.StoreI18nConfig
+import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
@@ -1023,12 +1021,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte()
         } ?: false
-        val atomId: String
-        if (newVersionFlag) {
-            atomId = versionRecord!!.id
+        val atomId = if (newVersionFlag) {
+            versionRecord!!.id
         } else {
             version = "$version${LocalDateTime.now().hour}"
-            atomId = UUIDUtil.generate()
+            UUIDUtil.generate()
         }
         marketAtomUpdateRequest.version = version
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
@@ -1049,127 +1046,25 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 language = I18nUtil.getLanguage(userId)
             )
         }
+        marketAtomUpdateRequest.isBranchTestVersion = true
         val taskJsonMap = getAtomConfResult.taskDataMap
         val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
         val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
-        val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
+
+        return updateAtomVersionInfo(
             userId = userId,
-            jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
-            storeI18nConfig = StoreI18nConfig(
-                projectCode = projectCode,
-                fileDir = "$atomCode/$version",
-                i18nDir = i18nDir,
-                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-                repositoryHashId = atomRecord.repositoryHashId,
-                branch = marketAtomUpdateRequest.branch
-            ),
-            version = version
-        )
-        val validateResult = validateUpdateMarketAtomReq(
-            userId = userId,
-            marketAtomUpdateRequest = marketAtomUpdateRequest,
-            repositoryHashId = atomRecord.repositoryHashId
-        )
-        logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
-        if (validateResult.isNotOk()) {
-            return Result(validateResult.status, validateResult.message, null)
-        }
-        // 解析quality.json
-        val getAtomQualityResult = getAtomQualityConfig(
             projectCode = projectCode,
-            atomCode = atomCode,
-            atomName = marketAtomUpdateRequest.name,
-            atomVersion = version,
-            userId = userId,
-            i18nDir = i18nDir,
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch
-        )
-        logger.info("update market atom, getAtomQualityResult: $getAtomQualityResult")
-        if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
-            logger.info("quality.json not found , skip...")
-        } else if (getAtomQualityResult.errorCode != "0") {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = getAtomQualityResult.errorCode,
-                params = getAtomQualityResult.errorParams,
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-
-        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
-            messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-            params = arrayOf(KEY_EXECUTION),
-            language = I18nUtil.getLanguage(userId)
-        )
-
-        val packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String
-        val classType = if (packagePath.isNullOrBlank() && atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
-            // 没有可执行文件的插件是老的内置插件，插件的classType为插件标识
-            atomCode
-        } else if (marketAtomUpdateRequest.os.isEmpty()) {
-            MarketBuildLessAtomElement.classType
-        } else {
-            MarketBuildAtomElement.classType
-        }
-        val propsMap = mutableMapOf<String, Any?>()
-        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
-        if (marketAtomUpdateRequest.frontendType == FrontendTypeEnum.HISTORY) {
-            inputDataMap?.let { propsMap.putAll(inputDataMap) }
-        } else {
-            propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
-            propsMap[KEY_INPUT] = inputDataMap
-            propsMap[KEY_OUTPUT] = taskDataMap[KEY_OUTPUT]
-            propsMap[KEY_CONFIG] = taskDataMap[KEY_CONFIG]
-        }
-        marketAtomUpdateRequest.os.sort() // 给操作系统排序
-        val atomStatus = AtomStatusEnum.TESTING
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            val props = JsonUtil.toJson(propsMap, formatted = false)
-            if (newVersionFlag) {
-                updateMarketAtom(
-                    context = context,
-                    userId = userId,
-                    atomId = atomId,
-                    atomStatus = atomStatus,
-                    classType = classType,
-                    props = props,
-                    releaseType = marketAtomUpdateRequest.releaseType.releaseType.toByte(),
-                    marketAtomUpdateRequest = marketAtomUpdateRequest,
-                    atomEnvRequests = atomEnvRequests,
-                    repositoryHashId = atomRecord.repositoryHashId
-                )
-            } else {
-                upgradeMarketAtom(
-                    marketAtomUpdateRequest = marketAtomUpdateRequest,
-                    context = context,
-                    userId = userId,
-                    atomId = atomId,
-                    atomStatus = atomStatus,
-                    classType = classType,
-                    props = props,
-                    atomEnvRequests = atomEnvRequests,
-                    atomRecord = atomRecord
-                )
-            }
-            // 更新红线标识
-            val qualityFlag = getAtomQualityResult.errorCode == "0"
-            marketAtomFeatureDao.updateAtomFeature(
-                dslContext = context,
-                userId = userId,
-                atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
-            )
-            asyncHandleUpdateAtom(
-                context = context,
+            newVersionFlag = newVersionFlag,
+            updateAtomPackageInfo = UpdateAtomPackageInfo(
                 atomId = atomId,
-                userId = userId,
-                branch = marketAtomUpdateRequest.branch,
-                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
-                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
-            )
-        }
-        return Result(atomId)
+                i18nDir = i18nDir,
+                packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String,
+                atomPackageSourceType = atomPackageSourceType
+            ),
+            convertUpdateRequest = marketAtomUpdateRequest,
+            getAtomConfResult = getAtomConfResult
+        )
     }
 
     override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
