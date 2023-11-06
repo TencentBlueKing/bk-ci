@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -12,19 +13,25 @@ import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @Provider
 @PreMatching
 @RequestFilter
 class ClientVersionFilter constructor(
-    private val cacheService: RedisCacheService
+    private val cacheService: RedisCacheService,
+    private val clientVersionDao: ClientVersionDao,
+    private val dslContext: DSLContext
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private val MINIMUM_VERSION = listOf(0, 3, 0)
+        private const val HEADER_IP = "x-client-ip"
     }
+
+    lateinit var clientVersion: MutableMap<String, String>
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
@@ -59,19 +66,26 @@ class ClientVersionFilter constructor(
         val apiType = ApiType.parseType(path) ?: return true
         // 如果是op的接口访问直接跳过jwt认证
         if (!apiType.verify) return true
-
-        val version = requestContext.headers[BK_CI_CLIENT_VERSION]?.get(0)?.split(".") ?: kotlin.run {
+        val version = requestContext.headers[BK_CI_CLIENT_VERSION]?.get(0)
+        val split = version?.split(".") ?: kotlin.run {
             logger.info(
                 "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
                         " $path not have $BK_CI_CLIENT_VERSION,return error."
             )
             return false
         }
+        kotlin.runCatching {
+            recordClientVersion(
+                requestContext.headers[HEADER_IP]?.get(0).toString(),
+                requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString(),
+                version.toString()
+            )
+        }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
         MINIMUM_VERSION.forEachIndexed { index, s ->
-            if (version.lastIndex < index) {
+            if (split.lastIndex < index) {
                 return false
             }
-            val v = version[index].toIntOrNull()
+            val v = split[index].toIntOrNull()
             when {
                 v == null -> return false
                 v < s -> return false
@@ -80,6 +94,45 @@ class ClientVersionFilter constructor(
             }
         }
         return true
+    }
+
+    private fun recordClientVersion(ip: String, user: String, version: String) {
+        if (!this::clientVersion.isInitialized) {
+            clientVersion = clientVersionDao.fetchAll(dslContext)
+                .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
+        }
+        val recordVersion = clientVersion["$ip-$user"]
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion")
+        when {
+            recordVersion == null -> {
+                val count = clientVersionDao.create(
+                    dslContext = dslContext,
+                    ip = ip,
+                    userId = user,
+                    version = version
+                )
+                logger.info("init client version record|$ip|$user|$version|$count")
+                clientVersion["$ip-$user"] = version
+            }
+
+            recordVersion != version -> {
+                val count = clientVersionDao.update(
+                    dslContext = dslContext,
+                    ip = ip,
+                    userId = user,
+                    version = version,
+                    lastVersion = recordVersion
+                )
+                logger.info("client update now|$ip|$user|$version|$recordVersion|$count")
+                if (count > 0) {
+                    clientVersion["$ip-$user"] = version
+                } else {
+                    clientVersion["$ip-$user"] = clientVersionDao.fetch(
+                        dslContext = dslContext, ip = ip, userId = user
+                    )!!
+                }
+            }
+        }
     }
 
     override fun filter(requestContext: ContainerRequestContext) {

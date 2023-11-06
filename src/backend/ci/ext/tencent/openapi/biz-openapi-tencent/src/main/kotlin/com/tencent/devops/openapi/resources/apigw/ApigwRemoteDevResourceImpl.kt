@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
@@ -48,5 +49,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun queryWorkspaceProjects(appCode: String?, apigwType: String?): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects()
+    }
+
+    override fun queryProjectRemoteDevCvm(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<List<RemotedevCvmData>> {
+        logger.info("Get  project cvm")
+        return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
     }
 }

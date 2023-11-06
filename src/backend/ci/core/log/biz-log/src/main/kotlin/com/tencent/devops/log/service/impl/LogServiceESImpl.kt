@@ -43,6 +43,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -55,6 +56,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
+import com.tencent.devops.log.util.IndexNameUtils
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -1093,7 +1095,7 @@ class LogServiceESImpl constructor(
             indexCache.put(index, true)
             true
         } else {
-            true
+            false
         }
     }
 
@@ -1121,10 +1123,16 @@ class LogServiceESImpl constructor(
     }
 
     private fun createIndex(buildId: String, index: String): Boolean {
+        val createClient = logClient.hashClient(buildId)
+        // 提前创建第二天的索引备用
+        createESIndex(createClient, IndexNameUtils.getNextIndexName())
+        return createESIndex(createClient, index)
+    }
+
+    private fun createESIndex(createClient: ESClient, index: String): Boolean {
         logger.info("[$index] Create index")
         var success = false
         val startEpoch = System.currentTimeMillis()
-        val createClient = logClient.hashClient(buildId)
         return try {
             logger.info(
                 "[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
