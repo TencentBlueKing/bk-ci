@@ -334,6 +334,10 @@ class RedisOperation(
     }
 
     fun zremoveRangeByScore(key: String, min: Double, max: Double, isDistinguishCluster: Boolean? = false): Long? {
+        // 双写
+        writeSlaveIfNeed {
+            slaveRedisTemplate!!.opsForZSet().removeRangeByScore(getFinalKey(key, isDistinguishCluster), min, max)
+        }
         return masterRedisTemplate.opsForZSet().removeRangeByScore(getFinalKey(key, isDistinguishCluster), min, max)
     }
 
