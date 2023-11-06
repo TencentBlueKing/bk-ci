@@ -145,7 +145,7 @@ class DeliverControl @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_RESTART_CONTENT
+        content = ActionAuditContent.CGS_ASSIGN_USER_CONTENT
     )
     fun assignUser2Workspace(
         userId: String,
