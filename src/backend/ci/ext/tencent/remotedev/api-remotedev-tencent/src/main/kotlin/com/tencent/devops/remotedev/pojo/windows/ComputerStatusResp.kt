@@ -15,20 +15,46 @@ data class ComputerStatusResp(
 
 @ApiModel("机器状态信息")
 data class ComputerStatusData(
-    val value: Int,
-    val type: ComputerStatusEnum
+    var value: Int,
+    val type: ComputerStatusEnum,
+    val msg: String
 )
 
-enum class ComputerStatusEnum {
-    NORMAL,
-    ABNORMAL,
+enum class ComputerStatusEnum(val status: Int, val message: String) {
+    NORMAL(1, "正常"),
+    DISK_IO_ERROR(-1, "磁盘IO异常"),
+    AGENT_HEART_LOSE(-2, "Agent心跳丢失"),
+    CPU_HIGH(-3, "CPU使用率过高"),
+    RESTART(-4, "主机重启"),
+    DISK_HIGH(-5, "磁盘使用率过高"),
+    PING_NOT_FOUND(-6, "Ping不可达"),
+    UNKNOWN(-100, "未知异常");
 
-    // 关机
-    SHUTDOWN
+    companion object {
+        // <= 0的都是异常，然后没有定义的就是未知异常
+        fun getEnumFromStatus(status: Int): ComputerStatusEnum? {
+            return when (status) {
+                1 -> NORMAL
+                -1 -> DISK_IO_ERROR
+                -2 -> AGENT_HEART_LOSE
+                -3 -> CPU_HIGH
+                -4 -> RESTART
+                -5 -> DISK_HIGH
+                -6 -> PING_NOT_FOUND
+                else -> {
+                    if (status < 0 || status == 0) {
+                        UNKNOWN
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
+    }
 }
 
 data class ComputerUserData(
-    val value: Int,
+    var value: Int,
     val type: ComputerUserEnum
 )
 

@@ -50,6 +50,10 @@ data class ProjectImage(
     val sourceCgsType: String,
     @ApiModelProperty("区域")
     val sourceCgsZone: String,
+    @ApiModelProperty("展示区域")
+    val sourceCgsZoneName: String,
+    @ApiModelProperty("区域简写")
+    val sourceCgsZoneShortName: String,
     @ApiModelProperty("状态")
     val status: ImageStatus,
     @ApiModelProperty("创建人")
