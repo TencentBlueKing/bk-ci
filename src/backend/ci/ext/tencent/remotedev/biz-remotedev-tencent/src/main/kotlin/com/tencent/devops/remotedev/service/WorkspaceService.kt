@@ -1104,7 +1104,7 @@ class WorkspaceService @Autowired constructor(
         return Response.ok(
             StreamingOutput { output -> workbook.write(output) },
             MediaType.APPLICATION_OCTET_STREAM_TYPE
-        ).header("content-disposition", "attachment; filename = 实例管理.xlsx")
+        ).header("content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
     }
 
