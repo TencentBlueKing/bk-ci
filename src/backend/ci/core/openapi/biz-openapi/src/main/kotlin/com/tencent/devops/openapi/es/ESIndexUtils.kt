@@ -49,8 +49,8 @@ object ESIndexUtils {
             .startObject("api").field("type", "keyword").endObject()
             .startObject("timestamp").field("type", "date").endObject()
             .startObject("key").field("type", "keyword").endObject()
-            .startObject("projectId").field("type", "keyword")
-            .endObject()
+            .startObject("path").field("type", "text").endObject()
+            .startObject("projectId").field("type", "keyword").endObject()
             .endObject()
             .endObject()
     }
@@ -68,6 +68,7 @@ object ESIndexUtils {
                 }
             }
             .field("projectId", logMessage.projectId)
+            .field("path", logMessage.path)
             .field("timestamp", logMessage.timestamp)
             .endObject()
     }

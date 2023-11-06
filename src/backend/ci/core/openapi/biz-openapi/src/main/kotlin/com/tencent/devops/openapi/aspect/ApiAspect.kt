@@ -54,6 +54,8 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Aspect
 @Component
@@ -108,7 +110,7 @@ class ApiAspect(
                 else -> Unit
             }
         }
-
+        val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
         esServiceImpl.addMessage(
             ESMessage(
                 api = getApiTag(jp = jp, apiType = apigwType?.split("-")?.getOrNull(1) ?: ""),
@@ -116,6 +118,7 @@ class ApiAspect(
                 appCode = appCode ?: "",
                 userId = userId ?: "",
                 projectId = projectId ?: "",
+                path = request.requestURI,
                 timestamp = System.currentTimeMillis()
             )
         )

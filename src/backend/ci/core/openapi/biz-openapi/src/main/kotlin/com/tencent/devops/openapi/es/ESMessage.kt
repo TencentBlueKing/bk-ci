@@ -37,5 +37,6 @@ data class ESMessage(
     val appCode: String = "",
     val userId: String = "",
     val projectId: String = "",
+    val path: String = "",
     var timestamp: Long = 0
 )
