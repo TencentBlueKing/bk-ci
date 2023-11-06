@@ -527,7 +527,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 i18nDir = i18nDir,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
                 repositoryHashId = repoId,
-                branch = branch,
+                branch = branch
             ),
             version = atomVersion
         )
