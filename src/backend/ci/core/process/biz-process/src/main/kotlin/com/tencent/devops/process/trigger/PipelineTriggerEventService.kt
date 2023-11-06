@@ -213,8 +213,7 @@ class PipelineTriggerEventService @Autowired constructor(
             )
             eventIds to count
         } else {
-            // 满足事件要求的EventIds
-            val baseEventIds = pipelineTriggerEventDao.getEventIdsByEvent(
+            val eventIds = pipelineTriggerEventDao.getDetailEventIds(
                 dslContext = dslContext,
                 projectId = projectId,
                 eventSource = repoHashId,
@@ -223,12 +222,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 triggerUser = triggerUser,
                 triggerType = triggerType,
                 startTime = startTime,
-                endTime = endTime
-            )
-            // 根据pipelineName进行EventId二次筛选
-            val eventIds = pipelineTriggerEventDao.getDetailEventIds(
-                dslContext = dslContext,
-                baseEventIds = baseEventIds,
+                endTime = endTime,
                 pipelineName = pipelineName,
                 pipelineId = pipelineId,
                 limit = sqlLimit.limit,
@@ -236,8 +230,14 @@ class PipelineTriggerEventService @Autowired constructor(
             )
             val count = pipelineTriggerEventDao.getCountByDetail(
                 dslContext = dslContext,
-                eventIds = baseEventIds,
                 projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime,
                 pipelineName = pipelineName,
                 pipelineId = pipelineId
             )

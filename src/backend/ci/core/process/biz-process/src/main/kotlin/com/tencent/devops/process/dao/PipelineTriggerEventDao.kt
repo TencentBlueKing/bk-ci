@@ -48,6 +48,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL.count
+import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -317,53 +318,79 @@ class PipelineTriggerEventDao {
 
     fun getCountByDetail(
         dslContext: DSLContext,
-        eventIds: Set<Long>,
-        projectId: String,
         pipelineName: String,
-        pipelineId: String?
+        pipelineId: String?,
+        eventId: Long? = null,
+        eventSource: String? = null,
+        projectId: String,
+        eventType: String? = null,
+        triggerType: String? = null,
+        triggerUser: String? = null,
+        startTime: Long? = null,
+        endTime: Long? = null
     ): Long {
-        return with(T_PIPELINE_TRIGGER_DETAIL) {
-            dslContext.selectCount()
-                .from(this)
-                .where(
-                    PROJECT_ID.eq(projectId).and(
-                        EVENT_ID.`in`(eventIds)
-                    ).and(
-                        PIPELINE_NAME.like("%$pipelineName%")
-                    ).and(
-                        PIPELINE_ID.eq(pipelineId)
-                    )
-                ).fetchOne(0, Long::class.java)!!
-        }
+        val t1 = T_PIPELINE_TRIGGER_EVENT.`as`("t1")
+        val t2 = T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
+        val conditions = buildConditions(
+            t1 = t1,
+            t2 = t2,
+            projectId = projectId,
+            eventSource = eventSource,
+            eventId = eventId,
+            eventType = eventType,
+            triggerUser = triggerUser,
+            triggerType = triggerType,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            startTime = startTime,
+            endTime = endTime
+        )
+        return dslContext.select(countDistinct(t2.EVENT_ID))
+            .from(t2).leftJoin(t1)
+            .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
+            .where(conditions)
+            .fetchOne(0, Long::class.java)!!
     }
 
     fun getDetailEventIds(
         dslContext: DSLContext,
-        baseEventIds: Set<Long>,
         pipelineName: String,
         pipelineId: String?,
+        eventId: Long? = null,
+        eventSource: String? = null,
+        projectId: String,
+        eventType: String? = null,
+        triggerType: String? = null,
+        triggerUser: String? = null,
+        startTime: Long? = null,
+        endTime: Long? = null,
         limit: Int,
         offset: Int
     ): Set<Long> {
-        return with(T_PIPELINE_TRIGGER_DETAIL) {
-            val conditions = mutableListOf<Condition>()
-            if (baseEventIds.isNotEmpty()) {
-                conditions.add(EVENT_ID.`in`(baseEventIds))
-            }
-            if (pipelineName.isNotBlank()) {
-                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
-            }
-            if (!pipelineId.isNullOrBlank()) {
-                conditions.add(PIPELINE_ID.eq(pipelineId))
-            }
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(CREATE_TIME.desc())
-                .limit(limit)
-                .offset(offset)
-                .fetch(EVENT_ID)
-                .toSet()
-        }
+        val t1 = T_PIPELINE_TRIGGER_EVENT.`as`("t1")
+        val t2 = T_PIPELINE_TRIGGER_DETAIL.`as`("t2")
+        val conditions = buildConditions(
+            t1 = t1,
+            t2 = t2,
+            projectId = projectId,
+            eventSource = eventSource,
+            eventId = eventId,
+            eventType = eventType,
+            triggerUser = triggerUser,
+            triggerType = triggerType,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            startTime = startTime,
+            endTime = endTime
+        )
+        return dslContext.select()
+            .from(t2).leftJoin(t1)
+            .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
+            .where(conditions)
+            .limit(limit)
+            .offset(offset)
+            .fetch(t2.EVENT_ID)
+            .toSet()
     }
 
     fun listRepoTriggerEvent(
