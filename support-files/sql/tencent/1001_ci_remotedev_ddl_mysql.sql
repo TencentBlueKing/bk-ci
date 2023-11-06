@@ -423,4 +423,57 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CVM` (
     KEY `idx_version` (`AVAILABLE_REGION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='云研发CVM';
 
+-- ----------------------------
+-- Table structure for T_REMOTE_CODE_PROXY CODE—PROXY数据
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_CODE_PROXY` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	`NAME` varchar(255)  NOT NULL COMMENT 'proxy名称',
+	`TYPE` varchar(32)  NOT NULL COMMENT 'proxy类型',
+	`URL` varchar(1024)  NOT NULL COMMENT 'proxy地址',
+	`CONF` json NOT NULL COMMENT 'proxy配置',
+	`DESC` varchar(1024) NULL COMMENT 'proxy 描述',
+	`CREATOR` varchar(100) NOT NULL COMMENT 'proxy创建人',
+    `ENABLE_LFS` BIT(1) NOT NULL COMMENT '是否开启lfs',
+	`UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+	`CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT 专家支持通知表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`PROJECT_ID` varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
+    `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
+	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
+	`SUPPORTER` varchar(32)  NULL COMMENT '协助人',
+	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
+    `CITY` varchar(32) NOT NULL COMMENT '城市',
+    `MACHINE_TYPE` varchar(16) NOT NULL COMMENT '机型',
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_project_id` (`PROJECT_ID`),
+    KEY `idx_host_ip` (`HOST_IP`),
+    KEY `idx_workspace_name` (`WORKSPACE_NAME`),
+    KEY `idx_creator` (`CREATOR`),
+    KEY `idx_status` (`STATUS`),
+    KEY `idx_content` (`CONTENT`)
+) ENGINE=InnoDB AUTO_INCREMENT=10000 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT_CONFIG 专家支持配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`TYPE` varchar(16)  NOT NULL COMMENT '配置类型',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;

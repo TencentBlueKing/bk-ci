@@ -9,11 +9,13 @@ import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoDataConfigProxy
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.RepoInfo
 import okhttp3.Headers.Companion.toHeaders
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.IOException
 
+@Suppress("ALL")
 @Component
 class GitproxyBkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper
@@ -43,42 +46,64 @@ class GitproxyBkRepoClient @Autowired constructor(
         repoName: String,
         url: String,
         desc: String?,
-        gitType: ScmType
-    ) {
-        logger.info("createRepo, userId: $userId, projectId: $projectId")
+        gitType: ScmType,
+        category: BkRepoCategory,
+        enableLfs: Boolean
+    ): CreateRepoRespData? {
         val requestData = CreateRepoData(
             projectId = projectId,
             name = repoName,
-            type = when (gitType) {
-                ScmType.CODE_SVN -> "SVN"
-                else -> "GIT"
+            type = if (enableLfs) {
+                "LFS"
+            } else {
+                when (gitType) {
+                    ScmType.CODE_SVN -> "SVN"
+                    else -> "GIT"
+                }
             },
-            category = "PROXY",
+            category = category.name,
             public = false,
             description = desc,
             configuration = RepoConfig(
-                type = "proxy",
-                proxy = CreateRepoDataConfigProxy(
-                    public = false,
-                    name = "CloudDeskGroup-$repoName-proxy",
-                    url = url
-                ),
-                url = null
+                type = category.type,
+                proxy = when (category) {
+                    BkRepoCategory.PROXY -> {
+                        CreateRepoDataConfigProxy(
+                            public = false,
+                            name = "CloudDeskGroup-$repoName-proxy",
+                            url = url
+                        )
+                    }
+
+                    BkRepoCategory.REMOTE -> null
+                },
+                url = when (category) {
+                    BkRepoCategory.PROXY -> null
+                    BkRepoCategory.REMOTE -> url
+                },
+                settings = null
             ),
             display = false
         )
+        logger.debug("createRepo request body {}", JsonUtil.toJson(requestData))
         val request = Request.Builder()
             .url("$bkrepoDevxUrl/repository/api/repo/create")
             .headers(getCommonHeaders(userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        doRequest(request).resolveResponse<Response<Void>>()
+        return doRequest(request).resolveResponse<Response<CreateRepoRespData>>()?.data
     }
 
-    fun fetchRepo(userId: String, projectId: String, page: Int, pageSize: Int, gitType: ScmType?): Page<RepoInfo> {
-        logger.info("fetchRepo, userId: $userId, projectId: $projectId, page: $page, pageSize: $pageSize")
+    fun fetchRepo(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        gitType: ScmType?,
+        category: BkRepoCategory
+    ): Page<RepoInfo> {
         var url = "$bkrepoDevxUrl/repository/api/repo/page/$projectId/$page/$pageSize" +
-                "?category=PROXY&display=false"
+                "?category=${category.name}&display=false"
         if (gitType != null) {
             url = "$url&${
                 when (gitType) {
@@ -107,7 +132,6 @@ class GitproxyBkRepoClient @Autowired constructor(
     }
 
     fun existProject(userId: String, projectId: String): Boolean? {
-        logger.info("existProject, userId: $userId, projectId: $projectId")
         val url = "$bkrepoDevxUrl/repository/api/project/exist/$projectId"
         val request = Request.Builder()
             .url(url)
@@ -118,7 +142,6 @@ class GitproxyBkRepoClient @Autowired constructor(
     }
 
     fun createProject(userId: String, projectId: String) {
-        logger.info("createProject, userId: $userId, projectId: $projectId")
         val requestData = CreateProjectData(
             name = projectId,
             displayName = projectId,
@@ -150,6 +173,7 @@ class GitproxyBkRepoClient @Autowired constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
+            logger.debug("gitproxy request bkrepo {} resp {}", this.request.url, responseContent)
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
@@ -172,4 +196,9 @@ class GitproxyBkRepoClient @Autowired constructor(
         private val JSON_MEDIA_TYPE = MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()
         private const val BKREPO_ROOT_USERID = "admin"
     }
+}
+
+enum class BkRepoCategory(val type: String) {
+    PROXY("proxy"),
+    REMOTE("remote")
 }
