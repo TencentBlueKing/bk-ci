@@ -38,7 +38,9 @@ data class UpdateAtomPackageInfo(
     @ApiModelProperty("国际化资源目录路径")
     val i18nDir: String,
     @ApiModelProperty("包路径")
-    val packagePath: String,
-    @ApiModelProperty("插件包资源类型）")
-    val atomPackageSourceType: PackageSourceTypeEnum
+    val packagePath: String?,
+    @ApiModelProperty("插件包资源类型")
+    val atomPackageSourceType: PackageSourceTypeEnum,
+    @ApiModelProperty("是否属于分支测试版本）")
+    val isBranchTestVersion: Boolean
 )
