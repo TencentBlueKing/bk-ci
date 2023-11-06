@@ -69,7 +69,7 @@ class UndertowThreadMetrics : MeterBinder {
     }
 
     companion object {
-        private const val OBJECT_NAME = "org.xnio:type=Xnio,provider=\"nio\",worker=\"XNIO-1\""
+        private const val OBJECT_NAME = "org.xnio:type=Xnio,provider=\"nio\",worker=\"XNIO-2\""
         private const val GAUGE_NAME_WORKER_QUEUE_SIZE = "undertow.worker.queue.size"
         private const val GAUGE_NAME_WORKER_POOL_SIZE = "undertow.worker.pool.size"
         private const val GAUGE_NAME_MAX_WORKER_POOL_SIZE = "undertow.worker.pool.max"
