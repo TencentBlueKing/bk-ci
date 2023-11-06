@@ -2,11 +2,13 @@ package com.tencent.devops.remotedev.resources.op
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
@@ -38,6 +40,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     )
     @ActionAuditRecord(
         actionId = ActionId.CGS_ASSIGN,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
         content = ActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
     )
     override fun assignWorkspace(
@@ -54,7 +59,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 cgs.cgsId,
                 null,
                 null
-            )
+            ).addExtendData("projectId", data.projectId)
 
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
