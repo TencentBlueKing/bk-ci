@@ -25,15 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.common.es
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import org.elasticsearch.client.RestHighLevelClient
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "log.elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
+data class ESClient(
+    val clusterName: String,
+    val restClient: RestHighLevelClient,
+    val shards: Int,
+    val replicas: Int,
+    val shardsPerNode: Int,
+    val requestTimeout: Long,
+    val mainCluster: Boolean? = false,
+    val writable: Boolean? = true
 )
