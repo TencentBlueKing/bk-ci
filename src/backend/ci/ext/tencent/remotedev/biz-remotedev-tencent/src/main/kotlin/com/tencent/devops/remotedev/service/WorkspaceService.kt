@@ -1100,6 +1100,11 @@ class WorkspaceService @Autowired constructor(
             row.createCell(8).setCellValue(record.viewers?.joinToString(","))
             offset++
         }
+        // 调整宽度
+        titleList.forEachIndexed { index, _ ->
+            sheet.trackAllColumnsForAutoSizing()
+            sheet.autoSizeColumn(index)
+        }
 
         return Response.ok(
             StreamingOutput { output ->
