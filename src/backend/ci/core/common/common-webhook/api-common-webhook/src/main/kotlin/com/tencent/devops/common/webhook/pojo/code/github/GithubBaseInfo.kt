@@ -23,53 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.common.webhook.pojo.code.github
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun migrateMonitorResource(projectCodes: List<String>, async: Boolean): Boolean {
-        return true
+@ApiModel("Github 基础信息")
+open class GithubBaseInfo(
+    @ApiModelProperty("ID")
+    open val id: Long,
+    @ApiModelProperty("链接[API链接]")
+    open val url: String? = "",
+    @JsonProperty("html_url")
+    @ApiModelProperty("链接[网页链接]")
+    open val htmlUrl: String? = "",
+    @JsonProperty("node_id")
+    open val nodeId: String,
+    @JsonProperty("created_at")
+    open val createdAt: String? = "", // 2022-06-21T08:45:41Z
+    @JsonProperty("updated_at")
+    open val updatedAt: String? = ""
+) {
+    companion object {
+        // github主页地址
+        const val GITHUB_HOME_PAGE_URL = "https://github.com"
     }
 }

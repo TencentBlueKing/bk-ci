@@ -23,53 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
+@CodeWebhookHandler
+@Suppress("TooManyFunctions")
+class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubCommitCommentEvent> {
+    companion object {
+        const val SHORT_COMMIT_SHA_LENGTH = 8
     }
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
+    override fun eventClass(): Class<GithubCommitCommentEvent> {
+        return GithubCommitCommentEvent::class.java
     }
 
-    override fun allToRbacAuth(): Boolean {
-        return true
-    }
-
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
-        return true
-    }
-
-    override fun compareResult(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        return true
-    }
-
-    override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        return true
-    }
-
-    override fun migrateMonitorResource(projectCodes: List<String>, async: Boolean): Boolean {
-        return true
+    override fun getCommentParam(event: GithubCommitCommentEvent): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        with(event.comment) {
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
+            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
+        }
+        return startParams
     }
 }
