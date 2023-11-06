@@ -509,7 +509,8 @@ class MarketAtomDao : AtomBaseDao() {
                 PUBLISHER,
                 WEIGHT,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                BRANCH_TEST_FLAG
             )
                 .values(id,
                     atomRequest.name,
@@ -542,7 +543,8 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.publisher,
                     atomRecord.weight,
                     userId,
-                    userId
+                    userId,
+                    atomRequest.isBranchTestVersion
                 )
                 .execute()
         }
