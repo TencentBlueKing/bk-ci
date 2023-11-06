@@ -201,7 +201,7 @@ function _M:get_prebuild_ticket(bk_ticket)
             end
 
             red:set(red_key, cjson.encode(result.data))
-            red:expire(red_key, 29 * 24 * 60 * 60) -- 缓存29天
+            red:expire(red_key, 179 * 24 * 60 * 60) -- 缓存29天
 
             prebuild_ticket = result.data
         else
