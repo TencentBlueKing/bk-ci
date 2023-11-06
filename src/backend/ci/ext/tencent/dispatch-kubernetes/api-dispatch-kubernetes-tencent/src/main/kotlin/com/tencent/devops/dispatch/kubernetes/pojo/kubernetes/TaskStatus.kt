@@ -1,7 +1,5 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-
 data class TaskStatus(
     val uid: String,
     val createdAt: String? = null,
@@ -20,8 +18,7 @@ enum class TaskStatusEnum {
     abort
 }
 
- @JsonIgnoreProperties(ignoreUnknown = true)
- data class VmCreateResp(
+data class VmCreateResp(
     val cgsIp: String,
     val cloudZoneId: String,
     val existed: Boolean,
