@@ -51,7 +51,7 @@ object ESIndexUtils {
             .startObject("timestamp").field("type", "long").endObject()
             .startObject("appCode").field("type", "keyword").endObject()
             .startObject("userId").field("type", "keyword").endObject()
-            .startObject("projectId").field("type", "keyword").endObject()
+            .startObject("projectId").field("type", "keyword")
             .field("analyzer", "standard")
             .endObject()
             .endObject()
