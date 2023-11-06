@@ -74,5 +74,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty(value = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false,
     @ApiModelProperty("分支", required = false)
-    val branch: String? = null
+    val branch: String? = null,
+    @ApiModelProperty("是否属于分支测试版本", required = false)
+    var isBranchTestVersion: Boolean = false
 )
