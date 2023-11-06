@@ -82,14 +82,18 @@ object TextReferenceFileAnalysisUtil {
         result: MutableMap<String, String>,
         text: String
     ): String {
+        val fileSeparator = File.separator
         var content = text
         // 替换资源路径
-        result.forEach {
-            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
+        for (entry in result.entries) {
+            val key = entry.key
+            val value = entry.value.replace(fileSeparator, "\\$fileSeparator")
+            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"$key\"\\)}})")
             val analysisMatcher: Matcher = analysisPattern.matcher(content)
-            content = analysisMatcher.replaceFirst(
-                "![${it.key}](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
-            )
+            while (analysisMatcher.find()) {
+                val match = analysisMatcher.group()
+                content = content.replace(match, "![$key]($value)")
+            }
         }
         return content
     }

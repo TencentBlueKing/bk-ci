@@ -85,6 +85,7 @@ import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -375,14 +376,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
         val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = jsonMap,
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            propertiesKeyPrefix = KEY_RELEASE_INFO,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = branch,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                propertiesKeyPrefix = KEY_RELEASE_INFO,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = branch,
+            ),
             version = version
         ).toMutableMap()
         updateRequestDataMap[versionContentFieldName] =
@@ -413,13 +416,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = branch,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = branch,
+            ),
             version = version
         )
         // 校验插件发布类型
@@ -707,13 +712,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
                 val qualityDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
                     userId = userId,
-                    projectCode = projectCode,
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),
-                    fileDir = "$atomCode/$atomVersion",
-                    i18nDir = i18nDir,
-                    dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-                    repositoryHashId = repositoryHashId,
-                    branch = branch,
+                    storeI18nConfig = StoreI18nConfig(
+                        projectCode = projectCode,
+                        fileDir = "$atomCode/$atomVersion",
+                        i18nDir = i18nDir,
+                        dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+                        repositoryHashId = repositoryHashId,
+                        branch = branch,
+                    ),
                     version = atomVersion
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
