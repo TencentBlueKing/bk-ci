@@ -93,7 +93,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -1078,7 +1078,7 @@ class WorkspaceService @Autowired constructor(
         val records = parseWorkspaceList(result, true)
 
         // 创建表
-        val workbook = XSSFWorkbook()
+        val workbook = SXSSFWorkbook()
         val sheet = workbook.createSheet("实例管理")
         // 创建标题
         val titleRow = sheet.createRow(0)
@@ -1102,9 +1102,12 @@ class WorkspaceService @Autowired constructor(
         }
 
         return Response.ok(
-            StreamingOutput { output -> workbook.write(output) },
-            MediaType.APPLICATION_OCTET_STREAM_TYPE
-        ).header("content-disposition", "attachment;filename=InstanceManagement.xlsx")
+            StreamingOutput { output ->
+                workbook.write(output)
+                workbook.dispose()
+            },
+            MediaType.APPLICATION_OCTET_STREAM
+        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
     }
 
