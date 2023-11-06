@@ -39,11 +39,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.regex.Matcher
@@ -79,16 +82,16 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     override fun parseJsonMapI18nInfo(
         userId: String,
-        projectCode: String,
+        storeI18nConfig: StoreI18nConfig,
         jsonMap: MutableMap<String, Any>,
-        fileDir: String,
-        i18nDir: String,
-        propertiesKeyPrefix: String?,
-        dbKeyPrefix: String?,
-        repositoryHashId: String?,
-        branch: String?,
         version: String
     ): Map<String, Any> {
+        val projectCode = storeI18nConfig.projectCode
+        val fileDir = storeI18nConfig.fileDir
+        val i18nDir = storeI18nConfig.i18nDir
+        val propertiesKeyPrefix = storeI18nConfig.propertiesKeyPrefix
+        val dbKeyPrefix = storeI18nConfig.dbKeyPrefix
+        val repositoryHashId = storeI18nConfig.repositoryHashId
         logger.info(
             "parseJsonMap params:[$userId|$projectCode|$fileDir|$i18nDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
                     "$repositoryHashId]"
@@ -105,7 +108,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             i18nDir = i18nDir,
             fileName = fileName,
             repositoryHashId = repositoryHashId,
-            branch = branch
+            branch = storeI18nConfig.branch
         )
         val fieldLocaleInfos = if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
@@ -131,15 +134,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         // 异步解析处理国际化资源文件信息
         fieldLocaleInfos?.let {
             asyncHandleI18nMessage(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                i18nDir = i18nDir,
-                repositoryHashId = repositoryHashId,
-                fieldLocaleInfos = fieldLocaleInfos,
-                dbKeyPrefix = dbKeyPrefix,
                 userId = userId,
-                branch = branch,
-                version = version
+                version = version,
+                fieldLocaleInfos = fieldLocaleInfos,
+                storeI18nConfig = storeI18nConfig
             )
         }
         return jsonMap
@@ -165,15 +163,17 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         }
         // 异步解析处理国际化资源文件信息
         asyncHandleI18nMessage(
-            projectCode = projectCode,
-            fileDir = fileDir,
-            i18nDir = i18nDir,
-            repositoryHashId = repositoryHashId,
-            fieldLocaleInfos = fieldLocaleInfos,
-            dbKeyPrefix = keyPrefix,
             userId = userId,
-            branch = branch,
-            version = version
+            fieldLocaleInfos = fieldLocaleInfos,
+            version = version,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = fileDir,
+                i18nDir = i18nDir,
+                repositoryHashId = repositoryHashId,
+                dbKeyPrefix = keyPrefix,
+                branch = branch,
+            )
         )
     }
 
@@ -214,24 +214,19 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     }
 
     private fun asyncHandleI18nMessage(
-        projectCode: String,
-        fileDir: String,
-        i18nDir: String,
-        repositoryHashId: String?,
-        fieldLocaleInfos: MutableList<FieldLocaleInfo>,
-        dbKeyPrefix: String?,
         userId: String,
-        branch: String?,
+        storeI18nConfig: StoreI18nConfig,
+        fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         version: String
     ) {
         executors.submit {
             // 获取资源文件名称列表
             val propertiesFileNames = storeFileService.getFileNames(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                i18nDir = i18nDir,
-                repositoryHashId = repositoryHashId,
-                branch = branch
+                projectCode = storeI18nConfig.projectCode,
+                fileDir = storeI18nConfig.fileDir,
+                i18nDir = storeI18nConfig.i18nDir,
+                repositoryHashId = storeI18nConfig.repositoryHashId,
+                branch = storeI18nConfig.branch
             )
             logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
             val regex = MESSAGE_NAME_TEMPLATE.format("(.*)").toRegex()
@@ -240,34 +235,38 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 // 根据资源文件名称获取资源文件的语言信息
                 val language = matchResult?.groupValues?.get(1) ?: return@forEach
                 val fileProperties = getMessageProperties(
-                    projectCode = projectCode,
-                    fileDir = fileDir,
-                    i18nDir = i18nDir,
+                    projectCode = storeI18nConfig.projectCode,
+                    fileDir = storeI18nConfig.fileDir,
+                    i18nDir = storeI18nConfig.i18nDir,
                     fileName = propertiesFileName,
-                    repositoryHashId = repositoryHashId,
-                    branch = branch
+                    repositoryHashId = storeI18nConfig.repositoryHashId,
+                    branch = storeI18nConfig.branch
                 ) ?: return@forEach
                 val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
-                logger.info("textReferenceContentMap:$textReferenceContentMap")
-                var textReferenceFileDir: File? = null
+                var textReferenceFileDirPath: String? = null
                 if (textReferenceContentMap.isNotEmpty()) {
-                    textReferenceFileDir = storeFileService.getTextReferenceFileDir(
+                    textReferenceFileDirPath = storeFileService.getTextReferenceFileDir(
                         userId = userId,
                         version = version,
                         request = TextReferenceFileDownloadRequest(
-                            projectCode = projectCode,
-                            fileDir = fileDir,
-                            repositoryHashId = repositoryHashId
+                            projectCode = storeI18nConfig.projectCode,
+                            fileDir = storeI18nConfig.fileDir,
+                            repositoryHashId = storeI18nConfig.repositoryHashId
                         )
                     )
                 }
-                if (textReferenceFileDir != null && textReferenceFileDir.exists()) {
-                    textReferenceContentMap.forEach { (k, v) ->
-                        fileProperties[k] = getTextReferenceFileParsing(
-                            userId = userId,
-                            fileDir = textReferenceFileDir.path,
-                            content = v
-                        )
+                val isDirectoryNotEmpty = isDirectoryNotEmpty(textReferenceFileDirPath)
+                if (isDirectoryNotEmpty) {
+                    try {
+                        textReferenceContentMap.forEach { (key, content) ->
+                            fileProperties[key] = getTextReferenceFileParsing(
+                                userId = userId,
+                                fileDir = textReferenceFileDirPath!!,
+                                content = content
+                            )
+                        }
+                    } finally {
+                        File(textReferenceFileDirPath!!).deleteRecursively()
                     }
                 }
 
@@ -275,7 +274,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
                     language = language,
-                    dbKeyPrefix = dbKeyPrefix
+                    dbKeyPrefix = storeI18nConfig.dbKeyPrefix
                 )
                 // 按批次保存字段的国际化信息
                 ListUtils.partition(i18nMessages, BATCH_HANDLE_NUM).forEach { partitionMessages ->
@@ -379,11 +378,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 // 文本文件引用只允许引用一层，防止循环引用
                 if (!isStatic && !recursionFlag) {
                     val textFile = File("$fileDir${File.separator}$fileName")
-                    result = textFile.readText()
                     return getTextReferenceFileParsing(
                         userId = userId,
                         fileDir = fileDir,
-                        content = result,
+                        content = textFile.readText(),
                         recursionFlag = true
                     )
                 }
@@ -403,5 +401,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             logger.info("failed to parse text reference")
         }
         return result
+    }
+
+    private fun isDirectoryNotEmpty(path: String?): Boolean {
+        if (path == null) {
+            return false
+        }
+        val directory = Paths.get(path)
+        return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
 }

@@ -95,7 +95,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     override fun validateUpdateMarketAtomReq(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomRecord: TAtomRecord
+        repositoryHashId: String?
     ): Result<Boolean> {
         // 开源版升级插件暂无特殊参数需要校验
         return Result(true)

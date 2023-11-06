@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
+
 @Suppress("LongParameterList")
 interface StoreI18nMessageService {
 
@@ -44,14 +46,8 @@ interface StoreI18nMessageService {
      */
     fun parseJsonMapI18nInfo(
         userId: String,
-        projectCode: String,
+        storeI18nConfig: StoreI18nConfig,
         jsonMap: MutableMap<String, Any>,
-        fileDir: String,
-        i18nDir: String,
-        propertiesKeyPrefix: String? = null,
-        dbKeyPrefix: String? = null,
-        repositoryHashId: String? = null,
-        branch: String? = null,
         version: String
     ): Map<String, Any>
 
