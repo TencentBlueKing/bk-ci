@@ -28,7 +28,6 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO.PI
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
