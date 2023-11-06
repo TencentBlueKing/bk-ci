@@ -68,5 +68,7 @@ data class ProjectWorkspace(
     val memory: Int = 32,
     val disk: Int = 100,
     @ApiModelProperty("专家协助")
-    val expertSupportList: List<FetchSupportResp>?
+    val expertSupportList: List<FetchSupportResp>?,
+    @ApiModelProperty("云桌面对应的mac地址")
+    val macAddress: String? = null
 )
