@@ -1017,9 +1017,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val versionRecord =
             atomDao.getAtomTestVersion(dslContext, atomCode, "test-${marketAtomUpdateRequest.branch}")
         val newVersionFlag = versionRecord?.let {
-            it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
+            !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
-                    it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte()
+                    it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
         } ?: false
         val atomId = if (newVersionFlag) {
             versionRecord!!.id
