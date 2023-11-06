@@ -421,7 +421,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             UUIDUtil.generate()
         }
         val newVersionFlag = !(releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)
-
         return updateAtomVersionInfo(
             userId = userId,
             projectCode = projectCode,
@@ -430,8 +429,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomId = if (newVersionFlag) atomId else newestAtomRecord.id,
                 i18nDir = i18nDir,
                 packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String,
-                atomPackageSourceType = atomPackageSourceType,
-                isBranchTestVersion = false
+                atomPackageSourceType = atomPackageSourceType
             ),
             convertUpdateRequest = convertUpdateRequest,
             getAtomConfResult = getAtomConfResult
@@ -1287,7 +1285,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             ),
             version = version
         )
-        if (!updateAtomPackageInfo.isBranchTestVersion) {
+        if (!convertUpdateRequest.isBranchTestVersion) {
             // 校验插件发布类型
             marketAtomCommonService.validateReleaseType(
                 atomId = atomRecord.id,
@@ -1386,7 +1384,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomRecord = atomRecord
                 )
             }
-            if (!updateAtomPackageInfo.isBranchTestVersion && atomStatus == AtomStatusEnum.TESTING) {
+            if (!convertUpdateRequest.isBranchTestVersion && atomStatus == AtomStatusEnum.TESTING) {
                 // 插件大版本内有测试版本则写入缓存
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1396,7 +1394,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             }
             // 更新标签信息
             val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
-            if (!updateAtomPackageInfo.isBranchTestVersion && null != labelIdList) {
+            if (!convertUpdateRequest.isBranchTestVersion && null != labelIdList) {
                 atomLabelRelDao.deleteByAtomId(context, atomId)
                 if (labelIdList.isNotEmpty()) {
                     atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
