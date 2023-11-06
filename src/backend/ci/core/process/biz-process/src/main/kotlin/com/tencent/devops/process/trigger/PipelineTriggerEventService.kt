@@ -391,7 +391,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 eventId = replayEventId,
-                replayRequestId = triggerEvent.requestId,
+                replayRequestId = replayRequestId,
                 scmType = scmType,
                 pipelineId = pipelineId
             )
