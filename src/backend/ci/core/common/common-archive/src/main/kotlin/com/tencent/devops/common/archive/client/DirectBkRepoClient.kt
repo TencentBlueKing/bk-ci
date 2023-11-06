@@ -61,7 +61,6 @@ class DirectBkRepoClient {
     ) {
         logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
             "file: ${file.canonicalPath}, metadata: $metadata, override: $override")
-        buildMetadataHeader(metadata)
         val request = Request.Builder()
             .url("${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}")
             .header(AUTHORIZATION, bkrepoAuth)
@@ -92,7 +91,6 @@ class DirectBkRepoClient {
     ): String {
         logger.info("uploadByteArray, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
             "metadata: $metadata, override: $override")
-        buildMetadataHeader(metadata)
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}"
         val request = Request.Builder()
             .url(url)
