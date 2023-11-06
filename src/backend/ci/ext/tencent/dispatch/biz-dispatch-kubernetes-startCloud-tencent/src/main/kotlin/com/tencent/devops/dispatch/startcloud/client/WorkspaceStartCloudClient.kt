@@ -8,6 +8,8 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
@@ -35,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
+import java.util.UUID
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -72,8 +75,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
+        val id = UUID.randomUUID()
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeBcsHeaders().toHeaders())
@@ -83,7 +87,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -94,7 +98,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
-                logger.info("createWorkspace rsp: $environmentRsp")
+                logger.info("$id|createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data
@@ -175,7 +179,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
         val url = "$apiUrl/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -189,7 +194,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -220,7 +225,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("User $userId create environment get SocketTimeoutException", e)
+            logger.error("$id|User $userId create environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -233,7 +238,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun shareWorkspace(userId: String, environment: EnvironmentShare): String {
         val url = "$apiUrl/openapi/computer/share"
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -247,7 +253,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId share environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId share environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -443,6 +449,53 @@ class WorkspaceStartCloudClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getWorkspaceInfo(
+        userId: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/status"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId get workspace info body: $body response: $responseContent")
+                val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == environmentInfoRsp.code) {
+                    return environmentInfoRsp.data!!
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentInfoRsp.code}-${environmentInfoRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get workspace info SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
