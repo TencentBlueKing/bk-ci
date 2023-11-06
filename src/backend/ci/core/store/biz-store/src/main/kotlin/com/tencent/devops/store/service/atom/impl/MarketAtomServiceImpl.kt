@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.constant.OR
 import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.SINGLE_SELECTOR
-import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.TIMETOSELECT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -70,8 +69,8 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.AtomDao
