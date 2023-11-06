@@ -414,7 +414,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (validateAtomVersionResult.isNotOk()) {
             return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
         }
-        var atomId = if (atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
+        val atomId = if (atomPackageSourceType == PackageSourceTypeEnum.UPLOAD) {
             redisOperation.get("$ATOM_UPLOAD_ID_KEY_PREFIX:$atomCode:$version")
                 ?: throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
         } else {
@@ -1260,7 +1260,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
-    private fun updateAtomVersionInfo(
+    protected fun updateAtomVersionInfo(
         userId: String,
         projectCode: String,
         newVersionFlag: Boolean,
