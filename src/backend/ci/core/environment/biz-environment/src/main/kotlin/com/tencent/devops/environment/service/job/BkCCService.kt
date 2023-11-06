@@ -10,7 +10,7 @@ class BkCCService {
         private val logger = LoggerFactory.getLogger(BkCCService::class.java)
     }
 
-    fun getOperatorAndBakFromBkHostId(ccListHostWithoutBizReq: CCListHostWithoutBizReq) {
-
+    fun <T> getOperatorAndBakFromBkHostId(ccListHostWithoutBizReq: CCListHostWithoutBizReq<T>) {
+        //TODO
     }
 }
