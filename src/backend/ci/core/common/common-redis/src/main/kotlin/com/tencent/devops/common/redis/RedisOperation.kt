@@ -63,6 +63,12 @@ class RedisOperation(
     ): String? {
         val finalKey = getFinalKey(key, isDistinguishCluster)
         val value = masterRedisTemplate.opsForValue().getAndSet(finalKey, defaultValue)
+        // 双写
+        writeSlaveIfNeed {
+            if (slaveRedisTemplate!!.opsForValue().getAndSet(finalKey, defaultValue) == null) {
+                slaveRedisTemplate.opsForValue().getAndSet(finalKey, defaultValue)
+            }
+        }
         if (value == null) {
             masterRedisTemplate.expire(finalKey, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
         }
@@ -320,6 +326,10 @@ class RedisOperation(
     }
 
     fun zremoveRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Long? {
+        // 双写
+        writeSlaveIfNeed {
+            slaveRedisTemplate!!.opsForZSet().removeRange(getFinalKey(key, isDistinguishCluster), start, end)
+        }
         return masterRedisTemplate.opsForZSet().removeRange(getFinalKey(key, isDistinguishCluster), start, end)
     }
 
