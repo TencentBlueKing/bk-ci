@@ -585,7 +585,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         var processingVersionInfoMap: MutableMap<String, MutableList<AtomBaseInfo>>? = null
         processingAtomRecords?.forEach { processingAtomRecord ->
             if (processingAtomRecord.version == INIT_VERSION || processingAtomRecord.version.isNullOrBlank() ||
-                processingAtomRecord.version.startsWith(TEST)) {
+                processingAtomRecord.branchTestFlag) {
                 return@forEach
             }
             if (processingVersionInfoMap == null) {
