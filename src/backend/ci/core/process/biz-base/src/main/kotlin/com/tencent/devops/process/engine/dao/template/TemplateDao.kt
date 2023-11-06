@@ -479,7 +479,7 @@ class TemplateDao {
         if (templateType != null) {
             conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
-        if (templateIdList != null && templateIdList.isNotEmpty()) {
+        if (templateIdList != null) {
             conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {
