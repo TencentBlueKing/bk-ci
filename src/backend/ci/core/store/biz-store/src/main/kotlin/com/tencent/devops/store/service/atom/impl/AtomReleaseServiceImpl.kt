@@ -1406,13 +1406,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val releaseType = convertUpdateRequest.releaseType
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
-            fileDir = "$atomCode/$version",
-            i18nDir = updateAtomPackageInfo.i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = branch,
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = updateAtomPackageInfo.i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = branch
+            ),
             version = version
         )
         // 校验插件发布类型

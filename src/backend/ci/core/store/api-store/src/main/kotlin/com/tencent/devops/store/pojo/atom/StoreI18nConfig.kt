@@ -43,5 +43,7 @@ data class StoreI18nConfig(
     @ApiModelProperty("map字段在db中key的前缀")
     val dbKeyPrefix: String? = null,
     @ApiModelProperty("代码库哈希ID")
-    val repositoryHashId: String? = null
+    val repositoryHashId: String? = null,
+    @ApiModelProperty("代码库分支")
+    val branch: String? = null
 )

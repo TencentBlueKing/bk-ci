@@ -108,7 +108,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             i18nDir = i18nDir,
             fileName = fileName,
             repositoryHashId = repositoryHashId,
-            branch = branch
+            branch = storeI18nConfig.branch
         )
         val fieldLocaleInfos = if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
@@ -137,14 +137,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 userId = userId,
                 version = version,
                 fieldLocaleInfos = fieldLocaleInfos,
-                storeI18nConfig = StoreI18nConfig(
-                    projectCode = projectCode,
-                    fileDir = fileDir,
-                    i18nDir = i18nDir,
-                    repositoryHashId = repositoryHashId,
-                    dbKeyPrefix = dbKeyPrefix,
-                    branch = branch,
-                )
+                storeI18nConfig = storeI18nConfig
             )
         }
         return jsonMap
