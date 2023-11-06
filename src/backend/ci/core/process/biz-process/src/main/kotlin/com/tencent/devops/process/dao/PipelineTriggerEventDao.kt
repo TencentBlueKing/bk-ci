@@ -404,7 +404,7 @@ class PipelineTriggerEventDao {
             )
                 .from(this)
                 .where(conditions)
-                .orderBy(PIPELINE_NAME)
+                .groupBy(PROJECT_ID, EVENT_ID)
                 .fetch().map {
                     RepoTriggerEventDetail(
                         projectId = it.value1(),
