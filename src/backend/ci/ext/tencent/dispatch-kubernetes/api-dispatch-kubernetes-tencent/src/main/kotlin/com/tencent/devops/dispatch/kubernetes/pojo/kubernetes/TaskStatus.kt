@@ -18,6 +18,7 @@ enum class TaskStatusEnum {
     abort
 }
 
+// @JsonIgnoreProperties(ignoreUnknown = true)
 data class VmCreateResp(
     val cgsIp: String,
     val cloudZoneId: String,
