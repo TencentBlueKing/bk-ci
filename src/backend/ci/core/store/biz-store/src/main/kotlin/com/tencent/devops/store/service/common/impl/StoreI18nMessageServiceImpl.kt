@@ -172,7 +172,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 i18nDir = i18nDir,
                 repositoryHashId = repositoryHashId,
                 dbKeyPrefix = keyPrefix,
-                branch = branch,
+                branch = branch
             )
         )
     }

@@ -384,7 +384,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 propertiesKeyPrefix = KEY_RELEASE_INFO,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
                 repositoryHashId = atomRecord.repositoryHashId,
-                branch = branch,
+                branch = branch
             ),
             version = version
         ).toMutableMap()
