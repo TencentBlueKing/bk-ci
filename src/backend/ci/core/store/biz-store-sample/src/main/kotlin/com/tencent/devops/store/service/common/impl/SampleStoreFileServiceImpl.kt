@@ -36,9 +36,11 @@ import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.isDirectoryNotEmpty
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
@@ -58,10 +60,13 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         branch: String?,
         format: String?
     ) {
-        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
-                "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
-        logger.info("downloadFile filePath:$filePath")
-        OkhttpUtils.downloadFile(url, file)
+        try {
+            val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                    "/service/artifactories/atom/file/download?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+            OkhttpUtils.downloadFile(url, file)
+        } catch (ignore: Throwable) {
+            logger.warn("FAIL|Download file from $filePath")
+        }
     }
 
     override fun getFileNames(
@@ -87,22 +92,26 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         fileDirPath: String,
         request: TextReferenceFileDownloadRequest
     ): String? {
-        val separator = File.separator
         val fileNameList = getFileNames(
             projectCode = request.projectCode,
-            fileDir = "${request.fileDir}${separator}file"
+            fileDir = "${request.fileDir}${fileSeparator}file"
         )
         if (fileNameList.isNullOrEmpty()) {
             logger.warn("get text reference file list fail")
             return null
         }
-        val downloadPath = "$fileDirPath${separator}file"
+        val downloadPath = "$fileDirPath${fileSeparator}file"
         fileNameList.forEach {
             downloadFile(
-                "${request.projectCode}$separator${request.fileDir}${separator}file$separator$it",
+                "${request.projectCode}$fileSeparator${request.fileDir}${fileSeparator}file$fileSeparator$it",
                 File(downloadPath, it)
             )
         }
+        if (!isDirectoryNotEmpty(downloadPath)) {
+            logger.warn(" FAIL|Download file from ${request.storeCode} fail")
+            return null
+        }
+        ZipUtil.zipDir(File(downloadPath), "$fileDirPath${fileSeparator}file.zip")
         return downloadPath
     }
 

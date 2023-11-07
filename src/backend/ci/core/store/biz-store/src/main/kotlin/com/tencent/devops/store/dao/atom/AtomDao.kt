@@ -525,8 +525,7 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        val field = DSL.`when`((t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>).eq(true), 1)
-            .otherwise(0) as Field<Int>
+        val field = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),

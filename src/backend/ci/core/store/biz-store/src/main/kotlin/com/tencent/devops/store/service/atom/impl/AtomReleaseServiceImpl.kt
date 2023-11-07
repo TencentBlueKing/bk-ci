@@ -379,6 +379,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             jsonMap = jsonMap,
             storeI18nConfig = StoreI18nConfig(
                 projectCode = projectCode,
+                storeCode = atomCode,
                 fileDir = "$atomCode/$version",
                 i18nDir = i18nDir,
                 propertiesKeyPrefix = KEY_RELEASE_INFO,
@@ -536,14 +537,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     )
                 storeI18nMessageService.parseErrorCodeI18nInfo(
                     userId = userId,
-                    projectCode = projectCode,
                     errorCodes = errorCodes,
-                    fileDir = "$atomCode/$atomVersion",
-                    i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
-                    keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
-                    repositoryHashId = repositoryHashId,
-                    branch = branch,
-                    version = atomVersion
+                    version = atomVersion,
+                    storeI18nConfig = StoreI18nConfig(
+                        projectCode = projectCode,
+                        storeCode = atomCode,
+                        fileDir = "$atomCode/$atomVersion",
+                        i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
+                        dbKeyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
+                        repositoryHashId = repositoryHashId,
+                        branch = branch
+                    )
                 )
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
@@ -583,6 +587,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),
                     storeI18nConfig = StoreI18nConfig(
                         projectCode = projectCode,
+                        storeCode = atomCode,
                         fileDir = "$atomCode/$atomVersion",
                         i18nDir = i18nDir,
                         dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
@@ -1283,6 +1288,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
             storeI18nConfig = StoreI18nConfig(
                 projectCode = projectCode,
+                storeCode = atomCode,
                 fileDir = "$atomCode/$version",
                 i18nDir = updateAtomPackageInfo.i18nDir,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
