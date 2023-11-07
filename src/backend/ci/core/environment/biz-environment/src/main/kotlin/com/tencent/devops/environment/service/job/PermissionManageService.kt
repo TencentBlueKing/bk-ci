@@ -44,8 +44,8 @@ class PermissionManageService @Autowired constructor(
 
     fun isUserHasAllPermission(userId: String, projectId: String, allHostList: List<Host>) {
         // 用户有使用该节点的权限
-        val nodeRecords = nodeDao.getNodesFromHostList(dslContext, projectId, allHostList) //所有host对应的T_NODE表中的记录
-        val nodeIdList: List<Long> = nodeRecords.map { it.nodeId } //所有host对应的T_NODE表中的host_id
+        val nodeRecords = nodeDao.getNodesFromHostList(dslContext, projectId, allHostList) // 所有host对应的T_NODE表中的记录
+        val nodeIdList: List<Long> = nodeRecords.map { it.nodeId } // 所有host对应的T_NODE表中的host_id
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId, projectId, AuthPermission.USE
         ) // 用户所有有权限使用的节点记录

@@ -3,7 +3,7 @@ package com.tencent.devops.environment.pojo.job.cmdbreq
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class CmdbPagingInfo (
+data class CmdbPagingInfo(
     @ApiModelProperty(value = "起始索引", required = true)
     @JsonProperty("start_index")
     val startIndex: Int?,

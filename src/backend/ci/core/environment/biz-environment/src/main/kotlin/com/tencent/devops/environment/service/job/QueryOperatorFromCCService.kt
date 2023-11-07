@@ -56,7 +56,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
                     CCRules(
                         field = "bk_host_id",
                         operator = "equal",
-                        value = it,
+                        value = it
                     )
                 }
             )

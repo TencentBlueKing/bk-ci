@@ -3,7 +3,7 @@ package com.tencent.devops.environment.pojo.job.ccres
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class CCData (
+data class CCData(
     @ApiModelProperty(value = "记录条数", required = true)
     @JsonProperty("count")
     val count: Int,
