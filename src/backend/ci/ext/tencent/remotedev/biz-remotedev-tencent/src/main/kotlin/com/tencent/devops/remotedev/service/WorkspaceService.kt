@@ -109,7 +109,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
 @Service
-@Suppress("LongMethod")
+@Suppress("ALL")
 class WorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
