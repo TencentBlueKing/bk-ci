@@ -64,13 +64,9 @@ interface StoreI18nMessageService {
      */
     fun parseErrorCodeI18nInfo(
         userId: String,
-        projectCode: String,
         errorCodes: Set<Int>,
-        fileDir: String,
-        i18nDir: String,
-        keyPrefix: String? = null,
-        repositoryHashId: String? = null,
-        version: String
+        version: String,
+        storeI18nConfig: StoreI18nConfig
     )
 
     /**

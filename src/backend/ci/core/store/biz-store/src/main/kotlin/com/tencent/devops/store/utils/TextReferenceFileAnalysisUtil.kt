@@ -36,6 +36,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -147,4 +149,12 @@ object TextReferenceFileAnalysisUtil {
     fun buildAtomArchivePath(userId: String, atomDir: String) =
         "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator" +
                 "$userId$fileSeparator$atomDir"
+
+    fun isDirectoryNotEmpty(path: String?): Boolean {
+        if (path == null) {
+            return false
+        }
+        val directory = Paths.get(path)
+        return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
+    }
 }
