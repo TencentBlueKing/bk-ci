@@ -81,11 +81,18 @@
             }
         },
         data () {
+            const setDefaultDaterange = () => {
+                const endTime = new Date()
+                const startTime = new Date()
+                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
+                return [startTime, endTime]
+            }
+            
             return {
                 eventList: [],
                 timelineMap: {},
                 searchValue: [],
-                daterange: ['', ''],
+                daterange: setDefaultDaterange(),
                 eventTypeList: [],
                 triggerTypeList: [],
                 page: 1,
@@ -95,7 +102,8 @@
                 hasLoadEnd: false,
                 pageLoading: false,
                 isInitTime: true,
-                shortcuts: []
+                shortcuts: [],
+                setDefaultDaterange
             }
         },
         computed: {
@@ -149,7 +157,7 @@
         },
         watch: {
             async repoId (id) {
-                await this.setDefaultDaterange()
+                this.daterange = this.setDefaultDaterange()
                 await this.triggerRepo()
                 this.catchRepoId = id
                 this.isInitTime = true
@@ -233,7 +241,6 @@
                     }]
                 })
             }
-            this.setDefaultDaterange()
         },
         methods: {
             ...mapActions('codelib', [
@@ -241,12 +248,7 @@
                 'fetchEventType',
                 'fetchTriggerType'
             ]),
-            setDefaultDaterange () {
-                const endTime = new Date()
-                const startTime = new Date()
-                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
-                this.daterange = [startTime, endTime]
-            },
+         
             getEventTypeList () {
                 this.fetchEventType({
                     scmType: this.scmType
