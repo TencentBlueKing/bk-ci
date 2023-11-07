@@ -215,7 +215,7 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        val (model, _) = getModelAndBuildLevel(projectId, pipelineId, version)
+        val (model, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
@@ -252,7 +252,8 @@ class PipelineBuildFacadeService(
         }
 
         // #2902 默认增加构建信息
-        val params = mutableListOf(
+        val params = mutableListOf<BuildFormProperty>()
+        if (!debug) params.add(
             BuildFormProperty(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
