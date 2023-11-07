@@ -25,6 +25,8 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShareRep
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.pojo.ListCgsResp
+import com.tencent.devops.dispatch.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.dispatch.startcloud.pojo.Page
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -579,6 +581,51 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun listCgs(): List<ListCgsRespData> {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/listcgs"
+        val body = JsonUtil.toJson("", false)
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get cgs list response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${response.code}"
+                    )
+                }
+
+                val resp: ListCgsResp = jacksonObjectMapper().readValue(responseContent)
+                when (resp.code) {
+                    OK -> return resp.data
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get listcgs SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                errorCode = ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                errorMessage = " 获取listcgs接口超时, url: $url"
             )
         }
     }
