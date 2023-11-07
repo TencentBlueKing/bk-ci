@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.cmdbres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.environment.pojo.job.ccres.CCData
 import io.swagger.annotations.ApiModelProperty
 
 data class CmdbResp(
