@@ -1021,7 +1021,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
-        } ?: false
+        } ?: true
         val atomId = if (newVersionFlag) {
             version = "$version${LocalDateTime.now().hour}"
             UUIDUtil.generate()
