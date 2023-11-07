@@ -494,7 +494,7 @@ class ESServiceImpl constructor(
 
             for (keyBucket in keyAggregation.buckets) {
                 val keyName: String = keyBucket.keyAsString
-                val projectAggregation: Terms = apiBucket.aggregations.get(ESMessage::projectId.name)
+                val projectAggregation: Terms = keyBucket.aggregations.get(ESMessage::projectId.name)
 
                 for (projectBucket in projectAggregation.buckets) {
                     val projectName: String = projectBucket.keyAsString
