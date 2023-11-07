@@ -1230,5 +1230,6 @@
   "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute.",
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
-  "unAccessUser": "User {0} is not a member of the current project."
+  "unAccessUser": "User {0} is not a member of the current project.",
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository."
 }

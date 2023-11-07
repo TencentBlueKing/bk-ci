@@ -39,7 +39,8 @@
                             />
                             <artifact-download-button
                                 v-if="output.downloadable"
-                                icon
+                                :output="output"
+                                download-icon
                                 :has-permission="hasPermission"
                                 :path="output.fullPath"
                                 :name="output.name"
@@ -81,6 +82,7 @@
                         <p class="pipeline-exec-output-actions">
                             <artifact-download-button
                                 v-if="activeOutput.downloadable"
+                                :output="activeOutput"
                                 :has-permission="hasPermission"
                                 :path="activeOutput.fullPath"
                                 :name="activeOutput.name"

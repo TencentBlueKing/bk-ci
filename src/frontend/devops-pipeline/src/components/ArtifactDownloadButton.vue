@@ -1,27 +1,29 @@
 <template>
-    <span
-        v-if="artifactoryType !== 'IMAGE'"
-        v-bk-tooltips="{
-            content: disabledTips || $t('details.noDownloadPermTips'),
-            disabled: hasPermission || !disabled,
-            allowHTML: false
-        }">
-        <i
-            v-if="icon"
-            :class="['devops-icon icon-download', {
-                'artifactory-download-icon-disabled': btnDisabled
-            }]"
-            @click.stop="downLoadFile"
-        />
-        <bk-button
-            v-else
-            text
-            @click="downLoadFile"
-            :disabled="btnDisabled"
-                    
+    <div v-if="artifactoryType !== 'IMAGE'">
+        <bk-popover
+            :disabled="!hasPermission || !disabled"
         >
-            {{ $t("download") }}
-        </bk-button>
+            <i
+                v-if="downloadIcon"
+                :class="['devops-icon icon-download', {
+                    'artifactory-download-icon-disabled': btnDisabled
+                }]"
+                @click.stop="downLoadFile"
+            />
+            <bk-button
+                v-else
+                text
+                @click="downLoadFile"
+                :disabled="btnDisabled"
+            >
+                {{ $t("download") }}
+            </bk-button>
+            <template slot="content">
+                <template v-if="disabled">
+                    <p>{{ disabled ? $t('downloadDisabledTips') : $t('details.noDownloadPermTips') }}</p>
+                </template>
+            </template>
+        </bk-popover>
         <bk-dialog
             width="500"
             v-model="visible"
@@ -42,15 +44,15 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-    </span>
+    </div>
 </template>
 
 <script>
+    import { convertFileSize } from '@/utils/util'
     export default {
         props: {
-            icon: Boolean,
+            downloadIcon: Boolean,
             hasPermission: Boolean,
-            disabled: Boolean,
             disabledTips: {
                 type: String,
                 default: ''
@@ -65,6 +67,10 @@
             path: {
                 type: String,
                 required: true
+            },
+            output: {
+                type: Object,
+                required: true
             }
         },
         data () {
@@ -74,6 +80,14 @@
             }
         },
         computed: {
+            disabled () {
+                // 目录超10Gb 禁用状态
+                if (this.output) {
+                    const size = this.output.folder ? this.convertFileSize(this.getFolderSize(this.output), 'B') : this.output.size > 0 ? this.convertFileSize(this.output.size, 'B') : '--'
+                    return this.output.folder ? size.includes('GB') && size.split(' ')[0] > 1 : false
+                }
+                return false
+            },
             btnDisabled () {
                 return !this.hasPermission || this.disabled
             }
@@ -82,6 +96,7 @@
             this.cancelDownloading()
         },
         methods: {
+            convertFileSize,
             setVisible (visible) {
                 this.visible = visible
             },
@@ -156,6 +171,17 @@
                 this.resolve?.(false)
                 this.resolve = null
                 this.setVisible(false)
+            },
+            getFolderSize (payload) {
+                if (!payload.folder) return '0'
+                return this.getValuesByKey(payload.properties, 'size')
+            },
+            getValuesByKey (data, key) {
+                for (const item of data) {
+                    if (key.includes(item.key)) {
+                        return item.value
+                    }
+                }
             }
         }
     }
