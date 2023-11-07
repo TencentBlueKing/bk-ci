@@ -72,6 +72,7 @@ enum class WorkspaceStatus {
             this == STARTING || this == SLEEPING || this == DELETING
 }
 
+@Suppress("ALL")
 fun WorkspaceStatus.display(): String {
     return when (this) {
         WorkspaceStatus.PREPARING -> "准备中"
