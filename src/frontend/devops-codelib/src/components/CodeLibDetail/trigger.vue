@@ -5,6 +5,7 @@
             v-model="searchValue"
             :data="searchList"
             clearable
+            :key="repoId"
             :show-condition="false"
             :placeholder="$t('codelib.触发器类型/事件类型')"
         >
@@ -131,10 +132,6 @@
             curRepo: {
                 type: Object,
                 default: () => {}
-            },
-            scmType: {
-                type: String,
-                default: ''
             }
         },
         data () {
@@ -151,7 +148,8 @@
                 },
                 eventType: '',
                 triggerType: '',
-                curAtom: {}
+                curAtom: {},
+                catchRepoId: ''
             }
         },
         computed: {
@@ -177,39 +175,41 @@
                 return list.filter((data) => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            scmType () {
+                return this.$route.query.scmType || ''
             }
         },
         watch: {
-            repoId (val) {
-                this.pagination.current = 1
-                this.getTriggerData()
+            async repoId (id) {
+                await this.triggerRepo()
+                this.catchRepoId = id
             },
             searchValue (val) {
-                const paramsMap = {}
-                val.forEach(item => {
-                    const id = item.id
-                    const value = item.values[0].id
-                    paramsMap[id] = value
-                })
-                this.pagination.current = 1
-                this.triggerType = paramsMap.triggerType || ''
-                this.eventType = paramsMap.eventType || ''
-                this.getTriggerData()
-            },
-            scmType (val, oldVal) {
-                if (!oldVal) {
-                    this.getEventTypeList()
-                    this.getTriggerTypeList()
+                if (this.catchRepoId === this.repoId) {
+                    const paramsMap = {}
+                    val.forEach(item => {
+                        const id = item.id
+                        const value = item.values[0].id
+                        paramsMap[id] = value
+                    })
+                    this.pagination.current = 1
+                    this.triggerType = paramsMap.triggerType || ''
+                    this.eventType = paramsMap.eventType || ''
                     this.getTriggerData()
                 }
+            },
+            scmType: {
+                handler (val) {
+                    this.getEventTypeList()
+                    this.getTriggerTypeList()
+                },
+                immediate: true
             }
         },
         created () {
-            if (this.scmType) {
-                this.getEventTypeList()
-                this.getTriggerTypeList()
-                this.getTriggerData()
-            }
+            this.catchRepoId = this.repoId
+            this.getTriggerData()
         },
         methods: {
             ...mapActions('codelib', [
@@ -217,6 +217,13 @@
                 'fetchTriggerType',
                 'fetchTriggerData'
             ]),
+            triggerRepo () {
+                this.catchRepoId = ''
+                this.searchValue = []
+                this.pagination.current = 1
+                this.triggerData = []
+                this.getTriggerData()
+            },
             /**
              * 获取触发器数据
              */

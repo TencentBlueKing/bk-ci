@@ -90,7 +90,6 @@
                     :repo-info="repoInfo"
                     :cur-repo="curRepo"
                     :type="repoInfo['@type']"
-                    :scm-type="repoInfo.scmType"
                     :fetch-repo-detail="fetchRepoDetail"
                     :refresh-codelib-list="refreshCodelibList"
                     @updateList="updateList"
@@ -417,6 +416,8 @@
         }
         .codelib-name {
             width: 100%;
+            height: 48px;
+            line-height: 48px;
             font-size: 16px;
             color: #313238;
             margin-right: 30px;

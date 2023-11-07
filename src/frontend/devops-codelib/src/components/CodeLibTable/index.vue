@@ -215,6 +215,7 @@
 
         data () {
             return {
+                scmType: '',
                 selectId: '',
                 tableHeight: '',
                 selectedTableColumn: [],
@@ -412,16 +413,19 @@
                 this.$emit('update:curRepo', row)
                 if (this.isListFlod) {
                     this.selectId = row.repositoryHashId
+                    this.scmType = row.type
                     this.$router.push({
                         query: {
                             ...this.$route.query,
                             id: row.repositoryHashId,
                             page: this.page,
+                            scmType: row.type,
                             limit: this.pagination.limit
                         }
                     })
                     localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
-                        id: this.selectId,
+                        scmType: row.type,
+                        id: row.repositoryHashId,
                         page: this.page,
                         limit: this.pagination.limit
                     }))
@@ -463,6 +467,7 @@
                 this.switchPage(1, limit)
 
                 localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
+                    scmType: this.scmType,
                     id: this.selectId,
                     page: this.page,
                     limit: this.pagination.limit

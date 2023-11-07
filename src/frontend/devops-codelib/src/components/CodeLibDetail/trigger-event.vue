@@ -78,10 +78,6 @@
             curRepo: {
                 type: Object,
                 default: () => {}
-            },
-            scmType: {
-                type: String,
-                default: ''
             }
         },
         data () {
@@ -146,14 +142,15 @@
             },
             eventId () {
                 return this.$route.query.eventId || ''
+            },
+            scmType () {
+                return this.$route.query.scmType || ''
             }
         },
         watch: {
             async repoId (id) {
-                await this.getEventTypeList()
-                await this.getTriggerTypeList()
-                await this.triggerRepo()
                 await this.setDefaultDaterange()
+                await this.triggerRepo()
                 this.catchRepoId = id
                 this.isInitTime = true
             },
@@ -164,6 +161,7 @@
                 this.eventList = []
                 this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
+                    console.log(this.scmType, 'scmType -------- daterange')
                     this.getListData()
                 }
             },
@@ -174,14 +172,16 @@
                 this.eventList = []
                 this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
+                    console.log(this.scmType, 'scmType -------- searchValue')
                     this.getListData()
                 }
             },
-            scmType (val, oldVal) {
-                if (!oldVal) {
+            scmType: {
+                handler (val) {
                     this.getEventTypeList()
                     this.getTriggerTypeList()
-                }
+                },
+                immediate: true
             }
         },
         created () {
@@ -223,10 +223,6 @@
                     }
                 }
             ]
-            if (this.scmType) {
-                this.getEventTypeList()
-                this.getTriggerTypeList()
-            }
             if (this.eventId) {
                 this.searchValue.push({
                     id: 'eventId',
@@ -292,7 +288,6 @@
                 this.searchValue.forEach(i => {
                     params[`${i.id}`] = (i.values && i.values[0].id) || i.name
                 })
-                console.log(params, 1111111)
                 
                 this.fetchTriggerEventList({
                     projectId: this.projectId,
@@ -340,6 +335,7 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
+                console.log(this.scmType, 'scmType -------- resetFilter')
             },
             triggerRepo () {
                 this.catchRepoId = ''
@@ -349,6 +345,7 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
+                console.log(this.scmType, 'scmType -------- triggerRepo')
             },
 
             handleMenuChildSelect () {
@@ -364,6 +361,7 @@
                 this.hasLoadEnd = false
                 this.page = 1
                 await this.getListData()
+                console.log(this.scmType, 'scmType -------- handleRefresh')
             },
 
             replayEvent () {

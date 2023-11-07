@@ -222,6 +222,7 @@
 
                 this.aliasName = query.searchName || ''
                 const id = query.id || (cache && cache.id) || ''
+                const scmType = query.scmType || (cache && cache.scmType) || ''
                 const page = (cache && cache.page) || 1
                 const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
@@ -232,6 +233,7 @@
                     this.$router.push({
                         query: {
                             ...this.$route.query,
+                            scmType,
                             id,
                             page,
                             limit
