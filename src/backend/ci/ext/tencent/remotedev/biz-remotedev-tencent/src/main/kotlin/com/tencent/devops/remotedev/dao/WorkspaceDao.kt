@@ -427,7 +427,7 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
-        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal)))
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
         }
