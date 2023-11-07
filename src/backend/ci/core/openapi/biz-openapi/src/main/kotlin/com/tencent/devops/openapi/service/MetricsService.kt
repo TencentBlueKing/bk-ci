@@ -69,6 +69,7 @@ class MetricsService(
             apiDao.batchGet(dslContext).associateByTo(keyMap) { "${it.api}@${it.key}" }
             val between = Duration.between(LocalTime.of(0, 0), LocalTime.now()).toMinutes().toInt() / 5
             val dayMod = between % EACH_DAY
+            logger.info("openapi metrics job dayMod=$dayMod")
             esServiceImpl.executeElasticsearchQueryS(keyMap = keyMap, newDay = dayMod == MOD_DAY)
             // 每小时
             if (between % EACH_HOUR == MOD_HOUR) {
