@@ -101,5 +101,7 @@ data class OpProjectUpdateInfoRequest(
     @ApiModelProperty(value = "流水线数量上限", required = false)
     val pipelineLimit: Int? = 500,
     @ApiModelProperty("项目相关配置")
-    val properties: ProjectProperties? = null
+    val properties: ProjectProperties? = null,
+    @ApiModelProperty("运营产品id")
+    val productId: Int? = null
 )
