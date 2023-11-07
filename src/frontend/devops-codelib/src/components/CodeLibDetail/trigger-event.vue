@@ -192,7 +192,9 @@
         },
         created () {
             this.catchRepoId = this.repoId
-            this.getListData()
+            if (!this.eventId) {
+                this.getListData()
+            }
             this.shortcuts = [
                 {
                     text: this.$t('codelib.今天'),
