@@ -52,6 +52,7 @@ spec:
               done
               # 导入数据库
               cat << EOF > iam.sql
+              DELETE FROM T_AUTH_IAM_CALLBACK WHERE RESOURCE IN ("experience_task", "experience_group");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (1,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (2,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (3,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
