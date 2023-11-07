@@ -37,7 +37,7 @@ data class I18Variable(
     @ApiModelProperty("国际化变量名")
     val code: String,
     @ApiModelProperty("国际化参数")
-    val params: List<String>,
+    val params: List<String>? = emptyList(),
     @ApiModelProperty("默认信息")
     val defaultMessage: String? = null
 ) {

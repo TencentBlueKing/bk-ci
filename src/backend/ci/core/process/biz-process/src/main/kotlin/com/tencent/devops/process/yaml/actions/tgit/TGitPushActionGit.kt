@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 class TGitPushActionGit(
-    private val apiService: TGitApiService,
+    private val apiService: TGitApiService
 ) : TGitActionGit(apiService), GitBaseAction {
 
     companion object {
@@ -133,7 +133,7 @@ class TGitPushActionGit(
         return changeFileList
     }
 
-    override fun getRemoveFiles(): Set<String>? {
+    override fun getDeleteYamlFiles(): Set<String>? {
         return event().commits?.flatMap {
             if (it.removed != null) {
                 it.removed!!.asIterable()

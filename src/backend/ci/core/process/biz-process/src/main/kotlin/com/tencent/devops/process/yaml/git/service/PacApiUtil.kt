@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.process.yaml.common.exception.ErrorCodeEnum
+import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import org.slf4j.Logger
 
@@ -14,7 +14,7 @@ object PacApiUtil {
         logger: Logger,
         retry: ApiRequestRetryInfo,
         log: String,
-        apiErrorCode: ErrorCodeEnum,
+        errorCode: String,
         action: () -> T
     ): T {
         return if (retry.retry) {
@@ -22,7 +22,7 @@ object PacApiUtil {
                 retry = retry,
                 logger = logger,
                 log = log,
-                apiErrorCode = apiErrorCode
+                errorCode = errorCode
             ) {
                 action()
             }
@@ -35,7 +35,7 @@ object PacApiUtil {
         retry: ApiRequestRetryInfo,
         logger: Logger,
         log: String,
-        apiErrorCode: ErrorCodeEnum,
+        errorCode: String,
         action: () -> T
     ): T {
         try {
@@ -47,27 +47,27 @@ object PacApiUtil {
             }
         } catch (e: ClientException) {
             logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
-            throw ErrorCodeException(errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString())
+            throw ErrorCodeException(errorCode = PipelineYamlMessageCode.DEVNET_TIMEOUT_ERROR)
         } catch (e: RemoteServiceException) {
             logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
+                errorCode = errorCode,
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
             logger.warn("TGitApiService|retryFun|GIT_SCM_ERROR $log", e)
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
+                errorCode = errorCode,
                 defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
             logger.error("TGitApiService|retryFun|retryFun error $log", e)
             throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
+                errorCode = errorCode,
                 defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.getErrorMessage()}"
+                    "$log: $errorCode"
                 } else {
                     "$log: ${e.message}"
                 }

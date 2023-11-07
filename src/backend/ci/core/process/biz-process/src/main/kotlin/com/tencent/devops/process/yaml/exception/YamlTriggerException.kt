@@ -23,43 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.process.yaml.exception
 
-import com.tencent.devops.process.yaml.PipelineYamlSyncService
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.yaml.actions.BaseAction
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
-/**
- * pac触发统一异常处理
- */
-@Service
-class PacTriggerExceptionHandler(
-    private val pipelineYamlSyncService: PipelineYamlSyncService
-) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PacTriggerExceptionHandler::class.java)
-    }
-
-    fun <T> handle(
-        action: BaseAction,
-        f: () -> T?
-    ): T? {
-        try {
-            return f()
-        } catch (e: Throwable) {
-            return try {
-                logger.error("PacTriggerExceptionHandler|action|${action.format()}", e)
-                null
-            } catch (e: Throwable) {
-                // 防止Hanlder处理过程中报错，兜底
-                logger.error("BKSystemErrorMonitor|PacTriggerExceptionHandler|action|${action.format()}", e)
-                null
-            }
-        }
-    }
-}
+class YamlTriggerException(
+    val action: BaseAction,
+    val reason: PipelineTriggerReason,
+    errorCode: String,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, params = params)

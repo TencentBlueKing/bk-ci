@@ -82,6 +82,6 @@ class PipelineYamlBuildService @Autowired constructor(
             matcher = matcher,
             builder = builder
         )
-        pipelineTriggerEventService.saveTriggerEventDetail(triggerDetail = builder.build())
+        pipelineTriggerEventService.saveTriggerDetail(triggerDetail = builder.build())
     }
 }

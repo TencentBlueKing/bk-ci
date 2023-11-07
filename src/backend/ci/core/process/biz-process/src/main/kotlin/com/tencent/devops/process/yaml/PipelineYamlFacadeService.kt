@@ -173,7 +173,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             logger.warn("pac yaml trigger not found ci yaml from git|$projectId|$repoHashId")
             return
         }
-        val removeFiles = action.getRemoveFiles()
+        val removeFiles = action.getDeleteYamlFiles()
         // 在默认分支上删除文件需要删除流水线
         if (action.data.context.defaultBranch == action.data.eventCommon.branch && !removeFiles.isNullOrEmpty()) {
             removeFiles.forEach { removeFile ->
@@ -199,6 +199,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             requestId = requestId,
             createTime = eventTime
         )
+        action.data.context.eventId = eventId
         pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
@@ -304,6 +305,14 @@ class PipelineYamlFacadeService @Autowired constructor(
             content = content,
             commitMessage = commitMessage,
             targetAction = targetAction
+        )
+        // 发布只记录yaml流水线信息，不记录yaml版本信息，因为此时还不能确定yaml文件的blob_id,等yaml文件提交后,产生webhook事件就可以创建
+        pipelineYamlService.saveYamlPipeline(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            pipelineId = pipelineId,
+            userId = userId
         )
     }
 }

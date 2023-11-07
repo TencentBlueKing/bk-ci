@@ -66,5 +66,5 @@ interface BaseAction {
      */
     fun getChangeSet(): Set<String>?
 
-    fun getRemoveFiles(): Set<String>?
+    fun getDeleteYamlFiles(): Set<String>?
 }

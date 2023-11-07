@@ -127,7 +127,7 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-    fun saveTriggerEventDetail(triggerDetail: PipelineTriggerDetail) {
+    fun saveTriggerDetail(triggerDetail: PipelineTriggerDetail) {
         pipelineTriggerEventDao.saveDetail(
             dslContext = dslContext,
             triggerDetail = triggerDetail

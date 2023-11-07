@@ -227,7 +227,7 @@ object I18nUtil {
         return getCodeLanMessage(
             language = language,
             messageCode = code,
-            params = params.toTypedArray()
+            params = params?.toTypedArray()
         )
     }
 

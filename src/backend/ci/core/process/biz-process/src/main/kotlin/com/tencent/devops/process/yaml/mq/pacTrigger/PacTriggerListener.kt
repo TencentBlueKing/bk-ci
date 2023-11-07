@@ -34,7 +34,7 @@ import com.tencent.devops.process.yaml.PipelineYamlBuildService
 import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.EventActionFactory
-import com.tencent.devops.process.yaml.exception.PacTriggerExceptionHandler
+import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,7 +45,7 @@ class PacTriggerListener @Autowired constructor(
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlBuildService: PipelineYamlBuildService,
-    private val exceptionHandler: PacTriggerExceptionHandler
+    private val exceptionHandler: YamlTriggerExceptionHandler
 ) : BaseListener<BasePacYamlEvent>(
     pipelineEventDispatcher = pipelineEventDispatcher
 ) {
