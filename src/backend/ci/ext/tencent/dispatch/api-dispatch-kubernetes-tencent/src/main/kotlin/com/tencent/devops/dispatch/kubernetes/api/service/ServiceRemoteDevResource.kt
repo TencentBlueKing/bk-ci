@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -47,6 +48,7 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "远程开发接口模块")
 @Path("/service/remotedev")
+@ServiceInterface("dispatch") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRemoteDevResource {
