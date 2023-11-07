@@ -35,6 +35,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
+import com.tencent.devops.openapi.pojo.MetricsApiData
+import com.tencent.devops.openapi.pojo.MetricsProjectData
 import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -42,11 +44,20 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.core.TimeValue
+import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.search.aggregations.AggregationBuilders
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval
+import org.elasticsearch.search.aggregations.bucket.terms.Terms
+import org.elasticsearch.search.aggregations.metrics.Avg
+import org.elasticsearch.search.aggregations.metrics.Max
+import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.slf4j.LoggerFactory
 
 class ESServiceImpl constructor(
@@ -284,5 +295,208 @@ class ESServiceImpl constructor(
         return builder.build()
     }
 
-//    fun
+
+    /*
+    * 每5分钟执行一次
+    * 根据"api"字段进行分组，然后在每个分组内根据"key"字段进行进一步的分组。
+    * 在每个"key"分组内，使用"date_histogram"聚合，按照"timestamp"字段的时间间隔（1秒）进行分桶。
+    * 最后，在每个时间桶内，使用"value_count"聚合计算"timestamp"值的数量，即并发请求数量。
+    */
+    fun executeElasticsearchQueryS(keyMap: MutableMap<String, MetricsApiData>, newDay: Boolean) {
+        val indexName = IndexNameUtils.getIndexName()
+
+        val searchRequest = SearchRequest(indexName)
+            .source(
+                SearchSourceBuilder()
+                    .query(
+                        // 设置查询条件
+                        QueryBuilders.rangeQuery(ESMessage::timestamp.name)
+                            .from("now-5m")
+                            .to("now")
+                    )
+                    .aggregation(
+                        // 设置聚合
+                        AggregationBuilders.terms(ESMessage::api.name).field(ESMessage::api.name)
+                            .subAggregation(
+                                AggregationBuilders.terms(ESMessage::key.name).field(ESMessage::key.name)
+                                    .subAggregation(
+                                        AggregationBuilders.dateHistogram("concurrency")
+                                            .field(ESMessage::timestamp.name)
+                                            .calendarInterval(DateHistogramInterval.SECOND)
+                                            .minDocCount(1)
+                                            .subAggregation(
+                                                AggregationBuilders.count("count").field(ESMessage::timestamp.name)
+                                            )
+                                    )
+                                    .subAggregation(AggregationBuilders.max("max_concurrency").field("count"))
+                                    .subAggregation(AggregationBuilders.avg("avg_concurrency").field("count"))
+                            )
+                    )
+                    // 不返回任何文档，只返回聚合结果。
+                    .size(0)
+            )
+
+        val response: SearchResponse = logClient.hashClient(indexName)
+            .restClient
+            .search(searchRequest, RequestOptions.DEFAULT)
+
+        // 处理聚合结果
+        val apiAggregation: Terms = response.aggregations.get(ESMessage::api.name)
+
+        for (apiBucket in apiAggregation.buckets) {
+            val apiName = apiBucket.keyAsString
+            val keyAggregation: Terms = apiBucket.aggregations.get(ESMessage::key.name)
+
+            for (keyBucket in keyAggregation.buckets) {
+                val keyName: String = keyBucket.keyAsString
+                val max = keyBucket.aggregations.get<Max>("max_concurrency").value.toInt()
+                val avg = keyBucket.aggregations.get<Avg>("avg_concurrency").value.toInt()
+                val count = keyBucket.docCount.toInt()
+                keyMap["$apiName@$keyName"]?.apply {
+                    secondLevelConcurrency = avg
+                    peakConcurrency = if (newDay) max else max.coerceAtLeast(peakConcurrency ?: 0)
+                    call5m = count
+                } ?: kotlin.run {
+                    keyMap["$apiName@$keyName"] = MetricsApiData(
+                        api = apiName,
+                        key = keyName,
+                        secondLevelConcurrency = avg,
+                        peakConcurrency = max,
+                        call5m = count
+                    )
+                }
+            }
+        }
+    }
+
+    /*
+    * 查询时间间隔为time(1h、1d、7d)
+    * 根据"api"字段进行分组，然后在每个分组内根据"key"字段进行进一步的分组。
+    * 得到每组内的计数
+    */
+    fun executeElasticsearchQueryM(
+        keyMap: MutableMap<String, MetricsApiData>,
+        time: String,
+        f: (count: Int, data: MetricsApiData) -> MetricsApiData
+    ) {
+        val indexName = IndexNameUtils.getIndexName()
+
+        val searchRequest = SearchRequest(indexName)
+            .source(
+                SearchSourceBuilder()
+                    .query(
+                        // 设置查询条件
+                        QueryBuilders.rangeQuery(ESMessage::timestamp.name)
+                            .from("now-$time")
+                            .to("now")
+                    )
+                    .aggregation(
+                        // 计数
+                        AggregationBuilders.terms(ESMessage::api.name).field(ESMessage::api.name)
+                            .subAggregation(
+                                AggregationBuilders.terms(ESMessage::key.name).field(ESMessage::key.name)
+                                    .subAggregation(
+                                        AggregationBuilders.count("count").field(ESMessage::timestamp.name)
+                                    )
+                            )
+                    )
+                    // 不返回任何文档，只返回聚合结果。
+                    .size(0)
+            )
+
+        val response: SearchResponse = logClient.hashClient(indexName)
+            .restClient
+            .search(searchRequest, RequestOptions.DEFAULT)
+
+        // 处理聚合结果
+        val apiAggregation: Terms = response.aggregations.get(ESMessage::api.name)
+
+        for (apiBucket in apiAggregation.buckets) {
+            val apiName = apiBucket.keyAsString
+            val keyAggregation: Terms = apiBucket.aggregations.get(ESMessage::key.name)
+
+            for (keyBucket in keyAggregation.buckets) {
+                val keyName: String = keyBucket.keyAsString
+                val count = keyBucket.docCount.toInt()
+                keyMap["$apiName@$keyName"]?.let {
+                    f(count, it)
+                } ?: kotlin.run {
+                    keyMap["$apiName@$keyName"] = f(
+                        count, MetricsApiData(
+                            api = apiName,
+                            key = keyName
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    /*
+    * 查询时间间隔为1h
+    * 查询api-key-project三重分组
+    * 得到每组内的计数
+    */
+    fun executeElasticsearchQueryP(
+        keyList: MutableList<MetricsProjectData>
+    ) {
+        val indexName = IndexNameUtils.getIndexName()
+
+        val searchRequest = SearchRequest(indexName)
+            .source(
+                SearchSourceBuilder()
+                    .query(
+                        // 设置查询条件
+                        QueryBuilders.rangeQuery(ESMessage::timestamp.name)
+                            .from("now-1h")
+                            .to("now")
+                    )
+                    .aggregation(
+                        // 计数
+                        AggregationBuilders.terms(ESMessage::api.name).field(ESMessage::api.name)
+                            .subAggregation(
+                                AggregationBuilders.terms(ESMessage::key.name).field(ESMessage::key.name)
+                                    .subAggregation(
+                                        AggregationBuilders.terms(ESMessage::projectId.name)
+                                            .field(ESMessage::projectId.name)
+                                            .subAggregation(
+                                                AggregationBuilders.count("count").field(ESMessage::timestamp.name)
+                                            )
+                                    )
+                            )
+                    )
+                    // 不返回任何文档，只返回聚合结果。
+                    .size(0)
+            )
+
+        val response: SearchResponse = logClient.hashClient(indexName)
+            .restClient
+            .search(searchRequest, RequestOptions.DEFAULT)
+
+        // 处理聚合结果
+        val apiAggregation: Terms = response.aggregations.get(ESMessage::api.name)
+
+        for (apiBucket in apiAggregation.buckets) {
+            val apiName = apiBucket.keyAsString
+            val keyAggregation: Terms = apiBucket.aggregations.get(ESMessage::key.name)
+
+            for (keyBucket in keyAggregation.buckets) {
+                val keyName: String = keyBucket.keyAsString
+                val projectAggregation: Terms = apiBucket.aggregations.get(ESMessage::projectId.name)
+
+                for (projectBucket in projectAggregation.buckets) {
+                    val projectName: String = projectBucket.keyAsString
+                    val count = projectBucket.docCount.toInt()
+                    keyList.add(
+                        MetricsProjectData(
+                            api = apiName,
+                            key = keyName,
+                            projectId = projectName,
+                            callHistory = count
+                        )
+                    )
+                }
+            }
+        }
+    }
 }

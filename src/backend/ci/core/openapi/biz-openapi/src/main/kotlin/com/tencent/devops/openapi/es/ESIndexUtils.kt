@@ -46,11 +46,11 @@ object ESIndexUtils {
         return XContentFactory.jsonBuilder()
             .startObject()
             .startObject("properties")
-            .startObject("api").field("type", "keyword").endObject()
-            .startObject("timestamp").field("type", "date").endObject()
-            .startObject("key").field("type", "keyword").endObject()
-            .startObject("path").field("type", "text").endObject()
-            .startObject("projectId").field("type", "keyword").endObject()
+            .startObject(ESMessage::api.name).field("type", "keyword").endObject()
+            .startObject(ESMessage::timestamp.name).field("type", "date").endObject()
+            .startObject(ESMessage::key.name).field("type", "keyword").endObject()
+            .startObject(ESMessage::path.name).field("type", "text").endObject()
+            .startObject(ESMessage::projectId.name).field("type", "keyword").endObject()
             .endObject()
             .endObject()
     }
@@ -60,16 +60,11 @@ object ESIndexUtils {
     ): XContentBuilder {
         return XContentFactory.jsonBuilder()
             .startObject()
-            .field("api", logMessage.api)
-            .let {
-                when {
-                    logMessage.apiType.contains("user") -> it.field("key", "user:" + logMessage.userId)
-                    else -> it.field("key", "app:" + logMessage.appCode)
-                }
-            }
-            .field("projectId", logMessage.projectId)
-            .field("path", logMessage.path)
-            .field("timestamp", logMessage.timestamp)
+            .field(ESMessage::api.name, logMessage.api)
+            .field(ESMessage::key.name, logMessage.key)
+            .field(ESMessage::projectId.name, logMessage.projectId)
+            .field(ESMessage::path.name, logMessage.path)
+            .field(ESMessage::timestamp.name, logMessage.timestamp)
             .endObject()
     }
 }

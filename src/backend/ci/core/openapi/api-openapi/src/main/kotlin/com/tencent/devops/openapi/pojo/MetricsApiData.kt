@@ -24,17 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.pojo
 
-package com.tencent.devops.openapi.es
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-data class ESMessage(
+@ApiModel("api度量数据")
+data class MetricsApiData(
+    @ApiModelProperty("接口代码")
     val api: String,
-    val key: String = "",
-    val projectId: String = "",
-    val path: String = "",
-    var timestamp: Long = 0
+    @ApiModelProperty("请求app code/ user id")
+    val key: String,
+    @ApiModelProperty("秒级并发量")
+    var secondLevelConcurrency: Int? = null,
+    @ApiModelProperty("峰值并发量")
+    var peakConcurrency: Int? = null,
+    @ApiModelProperty("5min调用量")
+    var call5m: Int? = null,
+    @ApiModelProperty("1h调用量")
+    var call1h: Int? = null,
+    @ApiModelProperty("24h调用量")
+    var call24h: Int? = null,
+    @ApiModelProperty("7d调用量")
+    var call7d: Int? = null
 )

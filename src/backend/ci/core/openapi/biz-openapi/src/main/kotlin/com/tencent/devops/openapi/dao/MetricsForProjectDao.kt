@@ -25,16 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.es
+package com.tencent.devops.openapi.dao
 
-/**
- *
- * Powered By Tencent
- */
-data class ESMessage(
-    val api: String,
-    val key: String = "",
-    val projectId: String = "",
-    val path: String = "",
-    var timestamp: Long = 0
-)
+import com.tencent.devops.model.openapi.tables.TOpenapiMetricsForProject
+import com.tencent.devops.openapi.pojo.MetricsProjectData
+import org.jooq.DSLContext
+import org.jooq.InsertOnDuplicateSetMoreStep
+import org.springframework.stereotype.Repository
+
+@Repository
+class MetricsForProjectDao {
+    fun createOrUpdate(
+        dslContext: DSLContext,
+        metricsApis: List<MetricsProjectData>,
+    ): Int {
+        return with(TOpenapiMetricsForProject.T_OPENAPI_METRICS_FOR_PROJECT) {
+            dslContext.batch(
+                metricsApis.mapNotNull { metricsApi ->
+                    dslContext.insertInto(
+                        this,
+                        PROJECT,
+                        API,
+                        KEY,
+                        CALL_HISTORY
+                    ).values(
+                        metricsApi.projectId ?: "",
+                        metricsApi.api,
+                        metricsApi.key,
+                        metricsApi.callHistory ?: 0
+                    ).onDuplicateKeyUpdate()
+                        .let { u ->
+                            metricsApi.callHistory?.let { i -> u.set(CALL_HISTORY, CALL_HISTORY + i) } ?: u
+                        }
+                        .let { if (it is InsertOnDuplicateSetMoreStep) it else return@mapNotNull null }
+                }
+            ).execute().sum()
+        }
+    }
+}

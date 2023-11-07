@@ -111,12 +111,15 @@ class ApiAspect(
             }
         }
         val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+        val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
         esServiceImpl.addMessage(
             ESMessage(
-                api = getApiTag(jp = jp, apiType = apigwType?.split("-")?.getOrNull(1) ?: ""),
-                apiType = apigwType ?: "",
-                appCode = appCode ?: "",
-                userId = userId ?: "",
+                api = getApiTag(jp = jp, apiType = apiType),
+                key = when {
+                    apiType.isBlank() -> "null"
+                    apiType.contains("user") -> "user:$userId"
+                    else -> "app:$appCode"
+                },
                 projectId = projectId ?: "",
                 path = request.requestURI,
                 timestamp = System.currentTimeMillis()
