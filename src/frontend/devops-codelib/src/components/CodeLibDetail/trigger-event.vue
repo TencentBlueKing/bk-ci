@@ -325,6 +325,15 @@
                 }).finally(() => {
                     this.pageLoading = false
                     this.isLoadingMore = false
+                    if (this.eventId) {
+                        const query = { ...this.$route.query }
+                        delete query.eventId
+                        this.$router.push({
+                            query: {
+                                ...query
+                            }
+                        })
+                    }
                 })
             },
             resetFilter () {
