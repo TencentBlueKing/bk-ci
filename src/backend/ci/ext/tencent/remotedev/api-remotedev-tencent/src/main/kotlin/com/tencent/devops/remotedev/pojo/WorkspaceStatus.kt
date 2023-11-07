@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.pojo
 /**
  * index 顺序不能改动，如要添加新状态，请在末尾添加。禁止直接删除某一状态字段。
  */
+@Suppress("ALL")
 enum class WorkspaceStatus {
     PREPARING, // 0
     RUNNING, // 1
