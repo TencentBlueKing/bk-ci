@@ -110,7 +110,8 @@ class RemoteDevService @Autowired constructor(
                     environmentUid = vmCreateResp?.envId ?: "",
                     environmentHost = vmCreateResp?.cgsIp ?: "",
                     environmentIp = vmCreateResp?.cgsIp ?: "",
-                    resourceId = vmCreateResp?.resourceId
+                    resourceId = vmCreateResp?.resourceId,
+                    macAddress = vmCreateResp?.macAddress ?: ""
                 )
             } else {
                 dslContext.transaction { t ->
