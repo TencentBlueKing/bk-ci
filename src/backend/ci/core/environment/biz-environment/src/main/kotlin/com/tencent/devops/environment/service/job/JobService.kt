@@ -60,7 +60,7 @@ class JobService @Autowired constructor(
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
         val allHostList: List<Host> = parseHashListService.getAllHostList(projectId, scriptExecuteReq.executeTarget)
-        permissionManageService.isUserHasAllUsePermission(userId, projectId, allHostList)
+        permissionManageService.isUserHasAllPermission(userId, projectId, allHostList)
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -110,13 +110,13 @@ class JobService @Autowired constructor(
         val allExecuteTargetHostList: List<Host> = parseHashListService.getAllHostList(
             projectId, fileDistributeReq.executeTarget
         )
-        permissionManageService.isUserHasAllUsePermission(userId, projectId, allExecuteTargetHostList)
+        permissionManageService.isUserHasAllPermission(userId, projectId, allExecuteTargetHostList)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
                 val allFileSourceHostList: List<Host> = parseHashListService.getAllHostList(
                     projectId, fileSource.sourceFileServer
                 )
-                permissionManageService.isUserHasAllUsePermission(userId, projectId, allFileSourceHostList)
+                permissionManageService.isUserHasAllPermission(userId, projectId, allFileSourceHostList)
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
