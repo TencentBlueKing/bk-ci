@@ -170,7 +170,7 @@
                         }).then(() => {
                             this.$bkMessage({
                                 theme: 'success',
-                                message: this.$t('codelib.触发成功')
+                                message: this.$t('codelib.重放成功')
                             })
                             this.$emit('replay')
                         })
@@ -196,7 +196,7 @@
                         }).then(() => {
                             this.$bkMessage({
                                 theme: 'success',
-                                message: this.$t('codelib.触发成功')
+                                message: this.$t('codelib.重放成功')
                             })
                             this.$emit('replay')
                         })

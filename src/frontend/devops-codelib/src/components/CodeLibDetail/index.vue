@@ -192,6 +192,9 @@
             },
             eventId () {
                 return this.$route.query.eventId || ''
+            },
+            userId () {
+                return this.$route.query.userId || ''
             }
         },
         watch: {
@@ -241,7 +244,7 @@
              * @params {String} id 仓库id
              */
             async fetchRepoDetail (id) {
-                this.isLoading = true
+                if (!this.userId) this.isLoading = true
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
                     .then((res) => {
                         this.repoInfo = res

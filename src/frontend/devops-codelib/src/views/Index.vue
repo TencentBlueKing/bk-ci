@@ -158,6 +158,9 @@
             },
             codelibList () {
                 return this.codelibs && this.codelibs.records
+            },
+            userId () {
+                return this.$route.query.userId || ''
             }
         },
 
@@ -255,7 +258,7 @@
                 sortBy = this.sortBy,
                 sortType = this.sortType
             ) {
-                this.isLoading = true
+                if (!this.userId) this.isLoading = true
                 await this.requestList({
                     projectId,
                     aliasName,
