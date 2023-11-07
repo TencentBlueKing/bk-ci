@@ -71,5 +71,7 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("项目性质")
     val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
     @ApiModelProperty("运营产品ID")
-    val productId: Int? = null
+    val productId: Int? = null,
+    @ApiModelProperty("运营产品名称")
+    val productName: String? = null
 )

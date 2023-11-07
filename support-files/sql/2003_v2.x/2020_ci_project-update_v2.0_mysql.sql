@@ -66,6 +66,15 @@ BEGIN
         ADD COLUMN `PRODUCT_ID` int(10) DEFAULT NULL comment '运营产品ID';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                    AND COLUMN_NAME = 'PRODUCT_NAME') THEN
+    ALTER TABLE `T_PROJECT_APPROVAL`
+        ADD COLUMN `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

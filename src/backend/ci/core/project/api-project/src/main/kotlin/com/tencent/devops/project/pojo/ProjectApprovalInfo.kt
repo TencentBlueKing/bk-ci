@@ -75,5 +75,7 @@ data class ProjectApprovalInfo(
     @ApiModelProperty("项目性质")
     val projectType: Int?,
     @ApiModelProperty("运营产品ID")
-    val productId: Int? = null
+    val productId: Int? = null,
+    @ApiModelProperty("运营产品名称")
+    val productName: String? = null
 )

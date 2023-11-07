@@ -140,8 +140,10 @@ class ItsmService @Autowired constructor(
         desc: String,
         organization: String,
         authSecrecy: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        subjectScopes: List<SubjectScopeInfo>,
+        productName: String
     ): ItsmContentDTO {
+        logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName")
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
@@ -156,7 +158,9 @@ class ItsmService @Autowired constructor(
             ItsmColumn.builder().key("authSecrecy")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("subjectScopes")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build()
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("productName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
@@ -167,6 +171,7 @@ class ItsmService @Autowired constructor(
         value["projectId"] = ItsmStyle.builder().value(projectId).build()
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
+        value["productName"] = ItsmStyle.builder().value(productName).build()
         value["authSecrecy"] =
             ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
