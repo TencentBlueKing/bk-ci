@@ -94,6 +94,8 @@ data class ModelRecord(
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
+    @ApiModelProperty("是否为调试构建", required = false)
+    val debug: Boolean? = false,
     @ApiModelProperty("触发信息（包括代码库等）", required = false)
     val webhookInfo: WebhookInfo?
 )
