@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiModelProperty
 data class OperationalProductVO(
     @ApiModelProperty("产品ID")
     @JsonProperty(value = "ProductId", required = true)
-    val productId: String,
+    val productId: Int,
     @ApiModelProperty("产品ID")
     @JsonProperty(value = "ProductName", required = true)
     val productName: String

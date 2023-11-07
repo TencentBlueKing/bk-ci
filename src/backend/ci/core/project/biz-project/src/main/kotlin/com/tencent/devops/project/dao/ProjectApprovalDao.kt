@@ -75,7 +75,9 @@ class ProjectApprovalDao {
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
                 TIPS_STATUS,
-                PROJECT_TYPE
+                PROJECT_TYPE,
+                PRODUCT_ID,
+                PRODUCT_NAME
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -95,7 +97,9 @@ class ProjectApprovalDao {
                 JsonUtil.toJson(subjectScopes, false),
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 tipsStatus,
-                projectCreateInfo.projectType
+                projectCreateInfo.projectType,
+                projectCreateInfo.productId,
+                projectCreateInfo.productName
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -113,6 +117,8 @@ class ProjectApprovalDao {
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
                 .set(PROJECT_TYPE, projectCreateInfo.projectType)
+                .set(PRODUCT_ID, projectCreateInfo.productId)
+                .set(PRODUCT_NAME, projectCreateInfo.productName)
                 .execute()
         }
     }
@@ -144,6 +150,7 @@ class ProjectApprovalDao {
                 .set(TIPS_STATUS, tipsStatus)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
+                .set(PRODUCT_NAME, projectUpdateInfo.productName)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -172,6 +179,7 @@ class ProjectApprovalDao {
                 .set(TIPS_STATUS, projectApprovalInfo.tipsStatus)
                 .set(PROJECT_TYPE, projectApprovalInfo.projectType)
                 .set(PRODUCT_ID, projectApprovalInfo.productId)
+                .set(PRODUCT_NAME, projectApprovalInfo.productName)
                 .where(ENGLISH_NAME.eq(projectApprovalInfo.englishName))
                 .execute()
         }
@@ -269,7 +277,8 @@ class ProjectApprovalDao {
                 approver = approver,
                 tipsStatus = tipsStatus,
                 projectType = projectType,
-                productId = productId
+                productId = productId,
+                productName = productName
             )
         }
     }
