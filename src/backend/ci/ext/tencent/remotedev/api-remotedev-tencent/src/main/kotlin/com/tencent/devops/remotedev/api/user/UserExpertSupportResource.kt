@@ -16,7 +16,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXPERTSUPPORT"], description = "用户-ExpertSupport")
-@Path("/user/expertSup")
+@Path("/{apiType:user|desktop}/expertSup")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExpertSupportResource {

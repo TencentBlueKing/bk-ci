@@ -50,12 +50,14 @@ class WorkspaceWindowsDao {
         dslContext: DSLContext,
         workspaceName: String,
         resourceId: String? = "",
-        hostIp: String? = ""
+        hostIp: String? = "",
+        macAddress: String? = ""
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
                 .set(RESOURCE_ID, resourceId ?: "")
                 .set(HOST_IP, hostIp ?: "")
+                .set(MAC_ADDRESS, macAddress ?: "")
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
