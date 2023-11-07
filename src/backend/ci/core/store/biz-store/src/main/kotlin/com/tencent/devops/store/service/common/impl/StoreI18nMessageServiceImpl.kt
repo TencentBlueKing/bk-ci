@@ -44,9 +44,8 @@ import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.isDirectoryNotEmpty
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.regex.Matcher
@@ -136,13 +135,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 userId = userId,
                 version = version,
                 fieldLocaleInfos = fieldLocaleInfos,
-                storeI18nConfig = StoreI18nConfig(
-                    projectCode = projectCode,
-                    fileDir = fileDir,
-                    i18nDir = i18nDir,
-                    repositoryHashId = repositoryHashId,
-                    dbKeyPrefix = dbKeyPrefix
-                )
+                storeI18nConfig = storeI18nConfig
             )
         }
         return jsonMap
@@ -150,15 +143,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     override fun parseErrorCodeI18nInfo(
         userId: String,
-        projectCode: String,
         errorCodes: Set<Int>,
-        fileDir: String,
-        i18nDir: String,
-        keyPrefix: String?,
-        repositoryHashId: String?,
-        version: String
+        version: String,
+        storeI18nConfig: StoreI18nConfig
     ) {
-        logger.info("parseErrorCode params:[$userId|$projectCode|$fileDir|$i18nDir|$keyPrefix|$repositoryHashId]")
+        logger.info("parseErrorCode params:[$userId|${storeI18nConfig.projectCode}" +
+                "|${storeI18nConfig.fileDir}|${storeI18nConfig.i18nDir}|${storeI18nConfig.dbKeyPrefix}" +
+                "|${storeI18nConfig.repositoryHashId}]")
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         errorCodes.forEach { errorCode ->
             fieldLocaleInfos.add(FieldLocaleInfo(fieldName = errorCode.toString(), fieldValue = ""))
@@ -168,13 +159,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             userId = userId,
             fieldLocaleInfos = fieldLocaleInfos,
             version = version,
-            storeI18nConfig = StoreI18nConfig(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                i18nDir = i18nDir,
-                repositoryHashId = repositoryHashId,
-                dbKeyPrefix = keyPrefix
-            )
+            storeI18nConfig = storeI18nConfig
         )
     }
 
@@ -250,7 +235,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                         request = TextReferenceFileDownloadRequest(
                             projectCode = storeI18nConfig.projectCode,
                             fileDir = storeI18nConfig.fileDir,
-                            repositoryHashId = storeI18nConfig.repositoryHashId
+                            repositoryHashId = storeI18nConfig.repositoryHashId,
+                            storeCode = storeI18nConfig.storeCode
                         )
                     )
                 }
@@ -399,13 +385,5 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             logger.info("failed to parse text reference")
         }
         return result
-    }
-
-    private fun isDirectoryNotEmpty(path: String?): Boolean {
-        if (path == null) {
-            return false
-        }
-        val directory = Paths.get(path)
-        return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
 }
