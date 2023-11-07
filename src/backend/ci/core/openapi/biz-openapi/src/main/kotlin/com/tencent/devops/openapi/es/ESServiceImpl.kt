@@ -55,9 +55,8 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.aggregations.AggregationBuilders
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
-import org.elasticsearch.search.aggregations.metrics.Avg
-import org.elasticsearch.search.aggregations.metrics.Max
 import org.elasticsearch.search.aggregations.pipeline.AvgBucketPipelineAggregationBuilder
+import org.elasticsearch.search.aggregations.pipeline.BucketMetricValue
 import org.elasticsearch.search.aggregations.pipeline.MaxBucketPipelineAggregationBuilder
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.slf4j.LoggerFactory
@@ -361,8 +360,8 @@ class ESServiceImpl constructor(
 
             for (keyBucket in keyAggregation.buckets) {
                 val keyName: String = keyBucket.keyAsString
-                val max = keyBucket.aggregations.get<Max>("max_concurrency").value.toInt()
-                val avg = keyBucket.aggregations.get<Avg>("avg_concurrency").value.toInt()
+                val max = keyBucket.aggregations.get<BucketMetricValue>("max_concurrency").value().toInt()
+                val avg = keyBucket.aggregations.get<BucketMetricValue>("avg_concurrency").value().toInt()
                 val count = keyBucket.docCount.toInt()
                 keyMap["$apiName@$keyName"]?.apply {
                     secondLevelConcurrency = avg
