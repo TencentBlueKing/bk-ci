@@ -87,7 +87,7 @@ class ClientVersionFilter constructor(
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
         if (!this::clientVersionLimitList.isInitialized) {
-            clientVersionLimitList = clientVersionLimit.split(",").map { it.toInt() }
+            clientVersionLimitList = clientVersionLimit.split(".").map { it.toInt() }
         }
         clientVersionLimitList.forEachIndexed { index, s ->
             if (split.lastIndex < index) {
