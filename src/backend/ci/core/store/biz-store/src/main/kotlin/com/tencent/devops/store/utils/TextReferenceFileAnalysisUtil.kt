@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.service.common.StoreFileService
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -46,6 +47,7 @@ object TextReferenceFileAnalysisUtil {
     private const val BK_CI_ATOM_DIR = "bk-atom"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = System.getProperty("file.separator")
+    const val DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE = 209715200L
 
     fun getAtomBasePath(): String {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
@@ -157,4 +159,10 @@ object TextReferenceFileAnalysisUtil {
         val directory = Paths.get(path)
         return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
+
+    fun getFileCachePath(path: String) = "${System.getProperty("java.io.tmpdir")}${StoreFileService.fileSeparator}" +
+            "cache${StoreFileService.fileSeparator}$path"
+
+    fun getFileCacheKey(storeCode: String, version: String) = "$storeCode-$version-TextReference"
+
 }
