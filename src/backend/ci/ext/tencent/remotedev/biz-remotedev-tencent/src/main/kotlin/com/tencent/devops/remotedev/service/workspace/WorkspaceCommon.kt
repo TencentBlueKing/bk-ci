@@ -308,6 +308,11 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.SLEEP
             }
 
+            workspaceInfo.status == EnvStatusEnum.readyToRun -> {
+                sleepControl.doStopWS(true, userId, workspaceName)
+                return WorkspaceStatus.STOPPED
+            }
+
             workspaceInfo.status == EnvStatusEnum.deleted -> {
                 deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
