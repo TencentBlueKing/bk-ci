@@ -196,7 +196,7 @@ class PipelineBuildQualityListener @Autowired constructor(
             val pipelineId = event.pipelineId
             val buildId = event.buildId
             val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-            val historyIdList = mutableListOf<Long>()
+            val historyIdSet = mutableSetOf<Long>()
             val history = qualityHistoryService.batchServiceList(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -212,12 +212,12 @@ class PipelineBuildQualityListener @Autowired constructor(
             history.groupBy { it.ruleId }.forEach { (ruleId, list) ->
                 val historyId = list.findLast { it.ruleId == ruleId }?.id
                 if (historyId != null) {
-                    historyIdList.add(historyId)
+                    historyIdSet.add(historyId)
                 }
             }
-            logger.info("QUALITY|update history id: ${historyIdList.toSet()}")
+            logger.info("QUALITY|[${event.buildId}]update history id: $historyIdSet")
             val count = qualityHistoryDao.batchUpdateHistoryResultById(
-                historyIds = historyIdList.toSet(),
+                historyIds = historyIdSet,
                 result = action
             )
             logger.info("QUALITY|[${event.buildId}]history result update count: $count")
