@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class TextReferenceFileDownloadRequest(
     @ApiModelProperty("项目代码", required = true)
     val projectCode: String,
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
     @ApiModelProperty("插件包文件路径", required = true)
     val fileDir: String,
     @ApiModelProperty("仓库哈希ID", required = false)

@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class StoreI18nConfig(
     @ApiModelProperty("项目标识")
     val projectCode: String,
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
     @ApiModelProperty("资源文件目录")
     val fileDir: String,
     @ApiModelProperty("国际化目录")

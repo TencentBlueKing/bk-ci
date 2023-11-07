@@ -28,8 +28,10 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
+import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import java.io.File
@@ -58,10 +60,14 @@ abstract class StoreFileService {
 
     companion object {
         const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
-        val fileSeparator: String = System.getProperty("file.separator")
+        val fileSeparator: String = File.separator
         private val logger = LoggerFactory.getLogger(StoreFileService::class.java)
         private const val FILE_DEFAULT_SIZE = 1024
+        private const val DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE = 209715200L
     }
+
+    fun getFileCachePath(path: String) = "${System.getProperty("java.io.tmpdir")}${fileSeparator}cache" +
+            "$fileSeparator$path"
 
     fun getTextReferenceFileDir(
         userId: String,
@@ -72,11 +78,27 @@ abstract class StoreFileService {
             userId = userId,
             atomDir = request.fileDir
         ) + File.separator + UUIDUtil.generate()
-        return textReferenceFileDownload(
-            userId = userId,
-            fileDirPath = fileDirPath,
-            request = request
+        val fileCachePath = getFileCachePath("${request.storeCode}$fileSeparator$version")
+        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
+            fileCachePath,
+            DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
         )
+        val fileZip = File("$fileDirPath${fileSeparator}file.zip")
+        val cacheKey = getFileCacheKey(request.storeCode, version)
+        bkDiskLruFileCache.get(cacheKey, fileZip)
+        val fileDir: String?
+        if (!fileZip.exists() || fileZip.length() < 1) {
+            fileDir = textReferenceFileDownload(
+                userId = userId,
+                fileDirPath = fileDirPath,
+                request = request
+            )
+            bkDiskLruFileCache.put(cacheKey, File("$fileDirPath${fileSeparator}file.zip"))
+        } else {
+            fileDir = "$fileDirPath${fileSeparator}file"
+            ZipUtil.unZipFile(fileZip, fileDir)
+        }
+        return fileDir
     }
 
     abstract fun getFileNames(
@@ -93,7 +115,7 @@ abstract class StoreFileService {
         request: TextReferenceFileDownloadRequest
     ): String?
 
-    private fun getFileCacheKey(projectCode: String, version: String) = "$projectCode-$version-TextReference"
+    private fun getFileCacheKey(storeCode: String, version: String) = "$storeCode-$version-TextReference"
 
     @Suppress("NestedBlockDepth")
     fun textReferenceFileAnalysis(
