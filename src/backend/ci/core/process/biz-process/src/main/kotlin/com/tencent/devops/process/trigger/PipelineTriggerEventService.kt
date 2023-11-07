@@ -186,7 +186,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
         // 事件ID to 总数
-        val (eventIds, count) = if (pipelineName.isNullOrBlank() || pipelineId.isNullOrBlank()) {
+        val (eventIds, count) = if (pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank()) {
             val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
                 dslContext = dslContext,
                 projectId = projectId,

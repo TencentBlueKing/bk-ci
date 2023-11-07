@@ -318,7 +318,7 @@ class PipelineTriggerEventDao {
 
     fun getCountByDetail(
         dslContext: DSLContext,
-        pipelineName: String,
+        pipelineName: String?,
         pipelineId: String?,
         eventId: Long? = null,
         eventSource: String? = null,
@@ -354,7 +354,7 @@ class PipelineTriggerEventDao {
 
     fun getDetailEventIds(
         dslContext: DSLContext,
-        pipelineName: String,
+        pipelineName: String?,
         pipelineId: String?,
         eventId: Long? = null,
         eventSource: String? = null,
@@ -383,14 +383,14 @@ class PipelineTriggerEventDao {
             startTime = startTime,
             endTime = endTime
         )
-        return dslContext.select()
+        return dslContext.select(t2.EVENT_ID)
             .from(t2).leftJoin(t1)
             .on(t1.EVENT_ID.eq(t2.EVENT_ID)).and(t1.PROJECT_ID.eq(t2.PROJECT_ID))
             .where(conditions)
+            .orderBy(t2.CREATE_TIME.desc())
             .limit(limit)
             .offset(offset)
-            .fetch(t2.EVENT_ID)
-            .toSet()
+            .fetch().distinct().map { it.value1() }.toSet()
     }
 
     fun listRepoTriggerEvent(
