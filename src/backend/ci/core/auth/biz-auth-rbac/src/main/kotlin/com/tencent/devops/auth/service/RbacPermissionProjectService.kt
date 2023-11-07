@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -65,7 +67,6 @@ class RbacPermissionProjectService(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
         private const val expiredAt = 365L
-        private const val USER_TYPE = "user"
     }
 
     override fun getProjectUsers(
@@ -160,16 +161,6 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
-        members.forEach {
-            deptService.getUserInfo(
-                userId = "admin",
-                name = it
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(it),
-                defaultMessage = "user $it not exist"
-            )
-        }
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
             authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
@@ -191,10 +182,38 @@ class RbacPermissionProjectService(
             params = arrayOf(roleCode),
             defaultMessage = "group $roleCode not exist"
         )
-        val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
-        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
-        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
-        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
+        val pageInfoDTO = V2PageInfoDTO().apply {
+            pageSize = 1000
+            page = 1
+        }
+        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(
+            iamGroupId.toInt(),
+            pageInfoDTO
+        ).results.filter {
+            it.type == ManagerScopesEnum.USER.name
+        }.map { it.name }
+        val addMembers = mutableListOf<String>()
+        members.forEach {
+            deptService.getUserInfo(
+                userId = "admin",
+                name = it
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                params = arrayOf(it),
+                defaultMessage = "user $it not exist"
+            )
+            // 只添加没有在组的用户
+            if (!groupMemberInfoList.contains(it)) {
+                addMembers.add(it)
+            }
+        }
+        if (addMembers.isNotEmpty()) {
+            val iamMemberInfos = addMembers.map { ManagerMember(ManagerScopesEnum.USER.name, it) }
+            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+            val managerMemberGroup =
+                ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
+            iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
+        }
         return true
     }
 
