@@ -182,6 +182,7 @@ class RbacPermissionProjectService(
             params = arrayOf(roleCode),
             defaultMessage = "group $roleCode not exist"
         )
+        val type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
@@ -190,7 +191,7 @@ class RbacPermissionProjectService(
             iamGroupId.toInt(),
             pageInfoDTO
         ).results.filter {
-            it.type == ManagerScopesEnum.USER.name
+            it.type == type
         }.map { it.name }
         val addMembers = mutableListOf<String>()
         members.forEach {
@@ -208,7 +209,7 @@ class RbacPermissionProjectService(
             }
         }
         if (addMembers.isNotEmpty()) {
-            val iamMemberInfos = addMembers.map { ManagerMember(ManagerScopesEnum.USER.name, it) }
+            val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
             val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
