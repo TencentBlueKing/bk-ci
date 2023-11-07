@@ -400,7 +400,8 @@ class WorkspaceService @Autowired constructor(
                             cpu = it.cpu,
                             memory = it.memory,
                             disk = it.memory,
-                            expertSupportList = expertMap[it.workspaceName]
+                            expertSupportList = expertMap[it.workspaceName],
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
@@ -431,7 +432,8 @@ class WorkspaceService @Autowired constructor(
                             cpu = it.cpu,
                             memory = it.memory,
                             disk = it.memory,
-                            expertSupportList = expertMap[it.workspaceName]
+                            expertSupportList = expertMap[it.workspaceName],
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
