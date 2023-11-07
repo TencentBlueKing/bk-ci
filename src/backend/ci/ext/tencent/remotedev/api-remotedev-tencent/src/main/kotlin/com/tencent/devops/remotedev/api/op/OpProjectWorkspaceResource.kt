@@ -111,7 +111,7 @@ interface OpProjectWorkspaceResource {
     )
 
     @ApiOperation("导出实例页面查询结果")
-    @GET
+    @POST
     @Path("/list/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportProjectWorkspaceList(
