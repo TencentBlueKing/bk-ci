@@ -88,8 +88,7 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val txProjectServiceImpl: TxProjectServiceImpl,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val bkTag: BkTag,
-    private val authTokenApi: AuthTokenApi
+    private val bkTag: BkTag
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -288,10 +287,6 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
-        val projectId = getProjectIdInAuth(
-            projectCode, accessToken ?: authTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-        )
-
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -299,8 +294,8 @@ class ProjectLocalService @Autowired constructor(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
-                createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = projectId.isNullOrEmpty()),
-                defaultProjectId = projectId,
+                createExtInfo = ProjectCreateExtInfo(needValidate = false, needAuth = true),
+                defaultProjectId = null,
                 projectChannel = ProjectChannelCode.PREBUILD
             )
             success = true
