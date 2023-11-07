@@ -57,6 +57,8 @@ import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInter
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
 import org.elasticsearch.search.aggregations.metrics.Avg
 import org.elasticsearch.search.aggregations.metrics.Max
+import org.elasticsearch.search.aggregations.pipeline.AvgBucketPipelineAggregationBuilder
+import org.elasticsearch.search.aggregations.pipeline.MaxBucketPipelineAggregationBuilder
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.slf4j.LoggerFactory
 
@@ -328,8 +330,18 @@ class ESServiceImpl constructor(
                                                 AggregationBuilders.count("count").field(ESMessage::timestamp.name)
                                             )
                                     )
-                                    .subAggregation(AggregationBuilders.max("max_concurrency").field("count"))
-                                    .subAggregation(AggregationBuilders.avg("avg_concurrency").field("count"))
+                                    .subAggregation(
+                                        MaxBucketPipelineAggregationBuilder(
+                                            "max_concurrency",
+                                            "concurrency>count"
+                                        )
+                                    )
+                                    .subAggregation(
+                                        AvgBucketPipelineAggregationBuilder(
+                                            "avg_concurrency",
+                                            "concurrency>count"
+                                        )
+                                    )
                             )
                     )
                     // 不返回任何文档，只返回聚合结果。
