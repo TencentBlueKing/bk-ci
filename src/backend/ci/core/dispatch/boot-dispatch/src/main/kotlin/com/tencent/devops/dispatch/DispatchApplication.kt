@@ -27,21 +27,16 @@
 
 package com.tencent.devops.dispatch
 
-import com.tencent.devops.common.dispatch.sdk.config.MQConfiguration
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @MicroService
 @EnableScheduling
 @ComponentScan(
-    basePackages = [
-        "com.tencent.devops.plugin",
-        "com.tencent.devops.dispatch"
-    ],
-    excludeFilters = [ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = [MQConfiguration::class])]
+    "com.tencent.devops.plugin",
+    "com.tencent.devops.dispatch"
 )
 class DispatchApplication
 

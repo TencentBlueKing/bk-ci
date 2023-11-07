@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("dispatch-docker") // 指明接入到哪个微服务
+@ServiceInterface("dispatch") // 指明接入到哪个微服务
 interface ServiceDockerHostResource {
 
     @ApiOperation("获取dockerhost列表")
