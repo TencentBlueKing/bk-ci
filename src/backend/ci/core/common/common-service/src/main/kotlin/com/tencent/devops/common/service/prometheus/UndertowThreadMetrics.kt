@@ -20,9 +20,9 @@ class UndertowThreadMetrics : MeterBinder {
             registry
         )
         buildAndRegisterGauge(
-            GAUGE_NAME_WORKER_POOL_SIZE,
-            ATTR_WORKER_POOL_SIZE,
-            "Undertow worker pool size",
+            GAUGE_NAME_CORE_WORKER_POOL_SIZE,
+            ATTR_CORE_WORKER_POOL_SIZE,
+            "Undertow core worker pool size",
             registry
         )
         buildAndRegisterGauge(
@@ -47,6 +47,13 @@ class UndertowThreadMetrics : MeterBinder {
             GAUGE_NAME_SHUTDOWN_REQUESTED,
             ATTR_SHUTDOWN_REQUESTED,
             "Undertow shutdown request",
+            registry
+        )
+
+        buildAndRegisterGauge(
+            GAUGE_NAME_WORKER_POOL_SIZE,
+            ATTR_WORKER_POOL_SIZE,
+            "Undertow worker pool size",
             registry
         )
     }
@@ -83,17 +90,19 @@ class UndertowThreadMetrics : MeterBinder {
     companion object {
         private const val OBJECT_NAME = "org.xnio:type=Xnio,provider=\"nio\",worker=\"XNIO-2\""
         private const val GAUGE_NAME_WORKER_QUEUE_SIZE = "undertow.worker.queue.size"
-        private const val GAUGE_NAME_WORKER_POOL_SIZE = "undertow.worker.pool.size"
+        private const val GAUGE_NAME_CORE_WORKER_POOL_SIZE = "undertow.worker.core.pool.size"
         private const val GAUGE_NAME_MAX_WORKER_POOL_SIZE = "undertow.worker.pool.max"
         private const val GAUGE_NAME_IO_THREAD_COUNT = "undertow.io.thread-count"
         private const val GAUGE_NAME_BUSY_WORKER_THREAD_COUNT = "undertow.worker.busy.thread.count"
         private const val GAUGE_NAME_SHUTDOWN_REQUESTED = "undertow.shutdown.requested"
+        private const val GAUGE_NAME_WORKER_POOL_SIZE = "undertow.worker.pool.size"
         private const val ATTR_WORKER_QUEUE_SIZE = "WorkerQueueSize"
-        private const val ATTR_WORKER_POOL_SIZE = "CoreWorkerPoolSize"
+        private const val ATTR_CORE_WORKER_POOL_SIZE = "CoreWorkerPoolSize"
         private const val ATTR_MAX_WORKER_POOL_SIZE = "MaxWorkerPoolSize"
         private const val ATTR_IO_THREAD_COUNT = "IoThreadCount"
         private const val ATTR_BUSY_WORKER_THREAD_COUNT = "BusyWorkerThreadCount"
         private const val ATTR_SHUTDOWN_REQUESTED = "ShutdownRequested"
+        private const val ATTR_WORKER_POOL_SIZE = "WorkerPoolSize"
         private val logger = LoggerFactory.getLogger(UndertowThreadMetrics::class.java)
     }
 }
