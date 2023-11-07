@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.service
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
@@ -46,7 +45,6 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "START云桌面接口模块")
 @Path("/service/startCloud")
-@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStartCloudResource {
