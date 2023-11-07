@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_BASE_DEBUG"], description = "SERVICE_DISPATCH_BASE_DEBUG")
 @Path("/service/debug")
-@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
+@ServiceInterface("dispatch") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBaseDebugResource {
