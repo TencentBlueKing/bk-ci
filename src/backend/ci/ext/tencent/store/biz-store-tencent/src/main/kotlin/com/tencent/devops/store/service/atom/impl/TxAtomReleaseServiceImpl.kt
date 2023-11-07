@@ -1022,7 +1022,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
         } ?: false
-        val atomId = if (newVersionFlag) {
+        val atomId = if (!newVersionFlag) {
             versionRecord!!.id
         } else {
             version = "$version${LocalDateTime.now().hour}"
