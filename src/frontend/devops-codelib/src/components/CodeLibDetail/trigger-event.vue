@@ -169,7 +169,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
-                    console.log(this.scmType, 'scmType -------- daterange')
                     this.getListData()
                 }
             },
@@ -180,7 +179,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 if (this.catchRepoId === this.repoId) {
-                    console.log(this.scmType, 'scmType -------- searchValue')
                     this.getListData()
                 }
             },
@@ -194,6 +192,7 @@
         },
         created () {
             this.catchRepoId = this.repoId
+            this.getListData()
             this.shortcuts = [
                 {
                     text: this.$t('codelib.今天'),
@@ -337,7 +336,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
-                console.log(this.scmType, 'scmType -------- resetFilter')
             },
             triggerRepo () {
                 this.catchRepoId = ''
@@ -347,7 +345,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
-                console.log(this.scmType, 'scmType -------- triggerRepo')
             },
 
             handleMenuChildSelect () {
@@ -363,7 +360,6 @@
                 this.hasLoadEnd = false
                 this.page = 1
                 await this.getListData()
-                console.log(this.scmType, 'scmType -------- handleRefresh')
             },
 
             replayEvent () {
