@@ -521,6 +521,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             jsonMap = taskJsonMap.toMutableMap(),
             storeI18nConfig = StoreI18nConfig(
                 projectCode = projectCode,
+                storeCode = atomCode,
                 fileDir = "$atomCode/$atomVersion",
                 i18nDir = i18nDir,
                 dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
