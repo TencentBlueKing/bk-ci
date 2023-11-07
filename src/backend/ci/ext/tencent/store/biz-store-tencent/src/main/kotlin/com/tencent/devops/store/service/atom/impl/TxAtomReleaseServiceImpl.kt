@@ -1023,10 +1023,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
         } ?: false
         val atomId = if (newVersionFlag) {
-            versionRecord!!.id
-        } else {
             version = "$version${LocalDateTime.now().hour}"
             UUIDUtil.generate()
+        } else {
+            versionRecord!!.id
         }
         marketAtomUpdateRequest.version = version
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
