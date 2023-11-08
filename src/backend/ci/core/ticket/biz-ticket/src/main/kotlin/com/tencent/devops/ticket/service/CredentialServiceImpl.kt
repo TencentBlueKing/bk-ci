@@ -30,7 +30,6 @@ package com.tencent.devops.ticket.service
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.CustomException
