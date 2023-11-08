@@ -229,7 +229,10 @@ class TemplateFacadeService @Autowired constructor(
             )
             logger.info("Get the template version $version")
         }
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(template.name)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(template.name)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return templateId
     }
 
@@ -251,6 +254,8 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
 
         checkPermission(projectId, userId)
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         var latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, srcTemplateId)
         val template = latestTemplate
@@ -319,6 +324,8 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
 
         checkPermission(projectId, userId)
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
@@ -379,7 +386,10 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to delete the template $templateId by user $userId")
         checkPermission(projectId, userId)
         val template = templateDao.getLatestTemplate(dslContext, templateId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(template.templateName)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(template.templateName)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val instanceSize = templatePipelineDao.countByVersionFeat(
@@ -429,7 +439,10 @@ class TemplateFacadeService @Autowired constructor(
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
         checkPermission(projectId, userId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(templateId)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(templateId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -466,7 +479,10 @@ class TemplateFacadeService @Autowired constructor(
     fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
         checkPermission(projectId, userId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(templateId)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(templateId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -522,7 +538,10 @@ class TemplateFacadeService @Autowired constructor(
         }
         var version: Long = 0
         checkTemplateName(dslContext, template.name, projectId, templateId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(template.name)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(template.name)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         updateModelParam(template)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -587,7 +606,10 @@ class TemplateFacadeService @Autowired constructor(
     ): Boolean {
         logger.info("Start to update the template setting - [$projectId|$userId|$templateId]")
         checkPermission(projectId, userId)
-        ActionAuditContext.current().setInstanceId(templateId).setInstanceName(setting.pipelineName)
+        ActionAuditContext.current()
+            .setInstanceId(templateId)
+            .setInstanceName(setting.pipelineName)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(

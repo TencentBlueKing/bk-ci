@@ -154,6 +154,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw OperationException(
@@ -300,6 +302,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 watcher.stop()
             }
+            // 审计
+            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
             if (isPipelineExist(
                     projectId = projectId,
@@ -725,7 +729,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 )
             }
-
+            // 审计
+            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             if (isPipelineExist(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -878,6 +883,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -986,6 +993,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 watcher.stop()
             }
+
+            // 审计
+            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
             val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(

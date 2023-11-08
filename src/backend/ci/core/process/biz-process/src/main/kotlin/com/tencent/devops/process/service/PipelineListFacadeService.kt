@@ -209,6 +209,8 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             }
         }
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val buildPipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
             projectId = projectId,
@@ -1757,6 +1759,8 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
             projectId = projectId,
