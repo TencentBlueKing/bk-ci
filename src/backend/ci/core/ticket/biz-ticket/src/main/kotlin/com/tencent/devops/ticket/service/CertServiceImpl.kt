@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.service
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -137,7 +138,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (certCredentialId != null) {
             val use = AuthPermission.USE
             certPermissionService.validatePermission(
@@ -167,11 +169,11 @@ class CertServiceImpl @Autowired constructor(
         val mpFileContent = read(mpInputStream)
         if (p12FileContent.size > certMaxSize) {
             throw OperationException(
-                    MessageUtil.getMessageByLocale(
-                        FILE_SIZE_CANT_EXCEED,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf("p12", "64k")
-                    )
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("p12", "64k")
+                )
             )
         }
         if (mpFileContent.size > certMaxSize) {
@@ -274,6 +276,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(NAME_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -403,6 +407,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
@@ -524,6 +530,9 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -637,6 +646,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
@@ -777,7 +788,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
             ?: throw OperationException(
                 MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -921,6 +933,9 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(CERT_USED_BY_OTHERS, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -1071,6 +1086,9 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -1214,7 +1232,8 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         certPermissionService.deleteResource(projectId, certId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1340,6 +1359,8 @@ class CertServiceImpl @Autowired constructor(
                 params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
             certId = certId,
@@ -1361,6 +1382,8 @@ class CertServiceImpl @Autowired constructor(
     )
     override fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return CertEnterpriseInfo(
             certId = certId,
             mobileProvisionFileName = certRecord.certMpFileName,
@@ -1388,6 +1411,9 @@ class CertServiceImpl @Autowired constructor(
                 params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
             certId = certId,
@@ -1411,6 +1437,8 @@ class CertServiceImpl @Autowired constructor(
     override fun getTls(projectId: String, certId: String): CertTlsInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return CertTlsInfo(
             certId = certId,
             serverCrtFileName = certTlsRecord.certServerCrtFileName,
@@ -1431,6 +1459,8 @@ class CertServiceImpl @Autowired constructor(
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -1498,6 +1528,8 @@ class CertServiceImpl @Autowired constructor(
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise {
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         // 生成公钥和密钥
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
@@ -1526,6 +1558,8 @@ class CertServiceImpl @Autowired constructor(
     )
     override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
@@ -1574,6 +1608,8 @@ class CertServiceImpl @Autowired constructor(
         certId: String,
         publicKey: String
     ): CertAndroidWithCredential {
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
@@ -1635,6 +1671,8 @@ class CertServiceImpl @Autowired constructor(
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls {
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)

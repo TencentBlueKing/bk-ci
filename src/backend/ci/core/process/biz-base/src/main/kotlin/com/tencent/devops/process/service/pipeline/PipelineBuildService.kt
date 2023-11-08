@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -133,6 +134,8 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipeline.projectId)
 
         val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         val bucketSize = setting!!.maxConRunningQueueSize

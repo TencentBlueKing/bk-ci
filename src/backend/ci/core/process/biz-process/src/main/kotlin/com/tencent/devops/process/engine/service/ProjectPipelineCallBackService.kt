@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -267,7 +268,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn(
                 "Failure to send disable notify message for " +
-                        "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
+                    "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
             )
         }
     }
@@ -494,6 +495,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (!OkhttpUtils.validUrl(callbackInfo.callbackUrl)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }

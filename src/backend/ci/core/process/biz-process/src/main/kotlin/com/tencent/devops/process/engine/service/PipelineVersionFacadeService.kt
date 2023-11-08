@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.MessageUtil
@@ -87,7 +88,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             )
         }
-
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         pipelineRepositoryVersionService.deletePipelineVer(
             projectId = projectId,
             pipelineId = pipelineId,
