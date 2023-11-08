@@ -8,5 +8,7 @@ data class OuterLoginParam(
     @ApiModelProperty("用户名")
     val username: String,
     @ApiModelProperty("密码")
-    val password: String
+    val password: String,
+    @ApiModelProperty("类型 , 1--外部账户登录,2--太湖登录")
+    val type: Int = 1
 )

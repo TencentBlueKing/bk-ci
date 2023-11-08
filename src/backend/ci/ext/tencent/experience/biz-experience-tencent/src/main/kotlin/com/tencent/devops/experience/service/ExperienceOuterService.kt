@@ -7,6 +7,7 @@ import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -20,11 +21,15 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_I
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.RedisStringCommands
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.types.Expiration
@@ -41,7 +46,13 @@ class ExperienceOuterService @Autowired constructor(
     private val experienceOuterLoginRecordDao: ExperienceOuterLoginRecordDao,
     private val dslContext: DSLContext
 ) {
-    fun outerLogin(
+    @Value("\${esb.code:#{null}}")
+    val appCode: String? = null
+
+    @Value("\${esb.secret:#{null}}")
+    val appSecret: String? = null
+
+    fun bkOuterLogin(
         platform: Int,
         appVersion: String?,
         realIp: String,
@@ -62,7 +73,7 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = LOGIN_IP_FREQUENTLY
-                )
+            )
         }
 
         // 账号频率限制
@@ -75,40 +86,23 @@ class ExperienceOuterService @Autowired constructor(
         }
 
         try {
-            // 登录账号
-            val data = ProfileLogin()
-            data.username = params.username
-            data.password = params.password
-            data.domain = domain
-            val profile = loginApi.v1LoginLogin(data)
-
-            // 判断账号没有被封
-            if (profile.status != Profile.StatusEnum.NORMAL) {
-                logger.warn("profile status is not normal , status : {}", profile.status)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
-                )
+            val outerProfileVO = if (params.type == 1) {
+                bkOuterLogin(params)
+            } else {
+                taiLogin(params)
             }
 
-            // 设置token , 存放信息
-            val outerProfileVO = OuterProfileVO(
-                username = profile.username.replace("@$domain", ""),
-                logo = logo(),
-                email = profile.email
-            )
-
             // 设置token
-            val token = DigestUtils.md5Hex(profile.username + profile.id + UUIDUtil.generate())
+            val token = DigestUtils.md5Hex(outerProfileVO.username + outerProfileVO.email + UUIDUtil.generate())
             redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
 
             // 单token有效
-            singleTokenLogin(profile.username, token)
+            singleTokenLogin(outerProfileVO.username, token)
 
             // 记录登录历史
             experienceOuterLoginRecordDao.add(
                 dslContext = dslContext,
-                username = profile.username,
+                username = outerProfileVO.username,
                 realIp = realIp,
                 loginTime = LocalDateTime.now(),
                 appVersion = appVersion ?: "",
@@ -228,6 +222,55 @@ class ExperienceOuterService @Autowired constructor(
         }
     }
 
+    private fun bkOuterLogin(params: OuterLoginParam): OuterProfileVO {
+        // 登录账号
+        val data = ProfileLogin()
+        data.username = params.username
+        data.password = params.password
+        data.domain = domain
+        val profile = loginApi.v1LoginLogin(data)
+
+        // 判断账号没有被封
+        if (profile.status != Profile.StatusEnum.NORMAL) {
+            logger.warn("bkOuterLogin status is not normal , status : {}", profile.status)
+            throw ErrorCodeException(
+                statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                errorCode = ACCOUNT_HAS_BEEN_BLOCKED
+            )
+        }
+        return OuterProfileVO(
+            username = profile.username.replace("@$domain", ""),
+            logo = logo(),
+            email = profile.email
+        )
+    }
+
+    private fun taiLogin(params: OuterLoginParam): OuterProfileVO {
+        val authorization = """{"bk_app_code":"$appCode","bk_app_secret":"$appSecret"}"""
+        val requestBody = """{"account_id":"${params.username}","password":"${params.password}"}"""
+        val request = Request.Builder()
+            .url("https://bk-unity-user.apigw.o.woa.com/prod/api/v1/open/odc-tai/user-credentials/authenticate/")
+            .header("X-Bkapi-Authorization", authorization)
+            .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseBody = response.body?.string() ?: "null"
+            if (!response.isSuccessful) {
+                logger.warn("taiLogin failed , body is $responseBody")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    errorCode = ACCOUNT_INFORMATION_ABNORMAL
+                )
+            }
+            val taiLogin = JsonUtil.to(responseBody, TaiLogin::class.java)
+            return OuterProfileVO(
+                username = taiLogin.data.username,
+                logo = logo(),
+                email = ""
+            )
+        }
+    }
+
     private fun isIpLimit(realIp: String): Boolean {
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
         val limitKey = "e:out:l:ip:$realIp:${df.format(nowMinute)}"
@@ -250,6 +293,15 @@ class ExperienceOuterService @Autowired constructor(
 
     private fun tokenRedisKey(token: String) = "e:out:l:$token"
     private fun logo() = "${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
+
+    data class TaiLogin(
+        val data: Data
+    ) {
+        data class Data(
+            val matched: Boolean,
+            val username: String
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)

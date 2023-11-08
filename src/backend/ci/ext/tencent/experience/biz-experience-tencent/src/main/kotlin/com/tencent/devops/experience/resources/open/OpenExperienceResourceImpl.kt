@@ -21,7 +21,7 @@ class OpenExperienceResourceImpl @Autowired constructor(
         realIp: String,
         params: OuterLoginParam
     ): Result<String> {
-        return Result(experienceOuterService.outerLogin(platform, appVersion, realIp, params))
+        return Result(experienceOuterService.bkOuterLogin(platform, appVersion, realIp, params))
     }
 
     override fun outerAuth(token: String): Result<OuterProfileVO> {
