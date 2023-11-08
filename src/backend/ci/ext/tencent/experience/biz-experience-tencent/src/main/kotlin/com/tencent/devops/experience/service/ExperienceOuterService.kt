@@ -87,14 +87,29 @@ class ExperienceOuterService @Autowired constructor(
         }
 
         try {
-            val outerProfileVO = if (params.type == 1) {
-                bkOuterLogin(params)
-            } else {
-                taiLogin(params)
+            var exception: Exception? = null
+            var outerProfileVO: OuterProfileVO? = null
+            // 先用太湖登录
+            try {
+                outerProfileVO = taiLogin(params)
+            } catch (e: Exception) {
+                exception = e
+            }
+            // 再用蓝鲸外部登录
+            if (null == outerProfileVO) {
+                try {
+                    outerProfileVO = bkOuterLogin(params)
+                    exception = null
+                } catch (ignored: Exception) {
+                }
+            }
+            // 没有一个正常登录,则抛异常
+            if (null != exception) {
+                throw exception
             }
 
             // 设置token
-            val token = DigestUtils.md5Hex(outerProfileVO.username + outerProfileVO.email + UUIDUtil.generate())
+            val token = DigestUtils.md5Hex(outerProfileVO!!.username + outerProfileVO.email + UUIDUtil.generate())
             redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
 
             // 单token有效
