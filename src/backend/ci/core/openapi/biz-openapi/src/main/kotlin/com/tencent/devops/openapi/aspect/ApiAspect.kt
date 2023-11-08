@@ -110,21 +110,26 @@ class ApiAspect(
                 else -> Unit
             }
         }
-        val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
-        val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
-        esServiceImpl.addMessage(
-            ESMessage(
-                api = getApiTag(jp = jp, apiType = apiType),
-                key = when {
-                    apiType.isBlank() -> "null"
-                    apiType.contains("user") -> "user:$userId"
-                    else -> "app:$appCode"
-                },
-                projectId = projectId ?: "",
-                path = request.requestURI,
-                timestamp = System.currentTimeMillis()
+
+        kotlin.runCatching {
+            val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+            val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
+            esServiceImpl.addMessage(
+                ESMessage(
+                    api = getApiTag(jp = jp, apiType = apiType),
+                    key = when {
+                        apiType.isBlank() -> "null"
+                        apiType.contains("user") -> "user:$userId"
+                        else -> "app:$appCode"
+                    },
+                    projectId = projectId ?: "",
+                    path = request.requestURI,
+                    timestamp = System.currentTimeMillis()
+                )
             )
-        )
+        }.onFailure {
+            logger.error("es add message error ${it.message}", it)
+        }
 
         if (logger.isDebugEnabled) {
 
