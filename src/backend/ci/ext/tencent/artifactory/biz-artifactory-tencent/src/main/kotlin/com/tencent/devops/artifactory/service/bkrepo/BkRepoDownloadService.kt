@@ -669,10 +669,26 @@ open class BkRepoDownloadService @Autowired constructor(
                 repoName = repoName,
                 path = path
             )["pipelineId"]
+            val buildId = bkRepoClient.listMetadata(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                path = path
+            )["buildId"]
+            // 审计
+            ActionAuditContext.current()
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+                .addExtendData("projectId", projectId)
             if (!pipelineId.isNullOrEmpty()) {
+                val pipelineName = client.get(ServicePipelineResource::class)
+                    .getPipelineInfo(projectId, pipelineId, null).data?.pipelineName ?: ""
                 ActionAuditContext.current()
-                    .setInstanceName(pipelineId)
+                    .setInstanceName(pipelineName)
                     .setInstanceId(pipelineId)
+            }
+            if (!buildId.isNullOrEmpty()) {
+                ActionAuditContext.current()
+                    .addExtendData("buildId", buildId)
             }
         } catch (ignore: Exception) {
             logger.warn("audit download artifacts fail!$projectId|$repoName|$path")

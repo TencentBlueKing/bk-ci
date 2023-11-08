@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.service.gitproxy
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -36,6 +37,9 @@ class GitProxyService @Autowired constructor(
             gitproxyBkRepoClient.createProject(userId, data.projectId)
             redisOperation.set("REDIS_BKREPO_PROJECT:${data.projectId}", "", 10 * 60)
         }
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+
         gitproxyBkRepoClient.createRepo(
             userId = userId,
             projectId = data.projectId,
@@ -99,6 +103,8 @@ class GitProxyService @Autowired constructor(
         projectId: String,
         repoName: String
     ): Boolean {
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
         return true
     }

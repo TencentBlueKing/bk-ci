@@ -160,7 +160,7 @@ class DeliverControl @Autowired constructor(
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
 
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.CONTENT_TEMPLATE, projectId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             .addAttribute("@ASSIGNS", assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {

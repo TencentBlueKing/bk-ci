@@ -208,7 +208,7 @@ class CreateControl @Autowired constructor(
                 workspaceName,
                 null,
                 ws
-            )
+            ).addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
             val bizId = MDC.get(TraceTag.BIZID)
             // 发送给k8s
@@ -269,7 +269,7 @@ class CreateControl @Autowired constructor(
             workspace.workspaceName,
             null,
             workspace
-        )
+        ).addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(

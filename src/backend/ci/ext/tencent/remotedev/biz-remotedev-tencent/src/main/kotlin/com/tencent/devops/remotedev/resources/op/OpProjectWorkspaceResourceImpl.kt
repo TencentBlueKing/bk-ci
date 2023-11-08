@@ -61,7 +61,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     null,
                     null
                 )
-                .addAttribute("@PROJECT_CODE", data.projectId)
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
                 machineType = cgs.machineType
