@@ -71,17 +71,17 @@ class JooqConfiguration {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
 
-            if ((packageName.startsWith("com.tencent.devops.dispatch."))) {
-                val configuration = configurationMap["dispatchJooqConfiguration"]
-                    ?: throw NoSuchBeanDefinitionException("no dispatchJooqConfiguration")
-                LOG.info("dslContext_init|dispatchJooqConfiguration|${declaringClass.name}")
-                return DSL.using(configuration)
-            }
-
             if ((packageName == "com.tencent.devops.dispatch.kubernetes.service")) {
                 val configuration = configurationMap["dispatchKubernetesJooqConfiguration"]
                     ?: throw NoSuchBeanDefinitionException("no dispatchKubernetesJooqConfiguration")
                 LOG.info("dslContext_init|dispatchKubernetesJooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
+
+            if ((packageName.startsWith("com.tencent.devops.dispatch."))) {
+                val configuration = configurationMap["dispatchJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no dispatchJooqConfiguration")
+                LOG.info("dslContext_init|dispatchJooqConfiguration|${declaringClass.name}")
                 return DSL.using(configuration)
             }
         }
