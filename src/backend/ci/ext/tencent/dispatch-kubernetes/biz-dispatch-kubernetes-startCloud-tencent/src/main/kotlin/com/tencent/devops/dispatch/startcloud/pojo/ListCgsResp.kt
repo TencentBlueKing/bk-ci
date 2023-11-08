@@ -24,7 +24,7 @@ data class ListCgsRespDataBasic(
     val appName: String?,
     val zoneId: String?,
     val machineType: String?,
-    val projectId: String,
+    val projectId: String?,
     val ip: String?,
     val name: String?,
     val namespace: String?,
