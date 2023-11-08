@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.common.log.pojo.message.LogMessageToBulk
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.xcontent.XContentBuilder
@@ -63,12 +64,11 @@ object ESIndexUtils {
     }
 
     fun getDocumentObject(
-        buildId: String,
-        logMessage: LogMessageWithLineNo
+        logMessage: LogMessageToBulk
     ): XContentBuilder {
         return XContentFactory.jsonBuilder()
             .startObject()
-            .field("buildId", buildId)
+            .field("buildId", logMessage.buildId)
             .field("lineNo", logMessage.lineNo)
             .field("message", logMessage.message)
             .field("timestamp", logMessage.timestamp)

@@ -38,10 +38,12 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessageToBulk
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.log.buffer.LogBulkBuffer
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.event.LogOriginEvent
@@ -95,7 +97,7 @@ import kotlin.math.ceil
     "ReturnCount",
     "ComplexMethod"
 )
-class LogServiceESImpl constructor(
+class LogServiceESImpl(
     private val logClient: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
@@ -116,12 +118,18 @@ class LogServiceESImpl constructor(
         private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
         private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
         private const val INDEX_STORAGE_WARN_MILLIS = 1000
+        private const val LOG_UPLOAD_BUFFER_SIZE = 1000
     }
 
-    private val indexCache = Caffeine.newBuilder()
+    private val presentIndexCache = Caffeine.newBuilder()
         .maximumSize(INDEX_CACHE_MAX_SIZE)
         .expireAfterAccess(INDEX_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, Boolean/*Has created the index*/>()
+        .build<String/*IndexName*/, Boolean/*Has created the index*/>()
+
+    // 维护ES集群名与缓冲队列
+    private val storageQueueMap = logClient.getAllClients().associate { client ->
+        client.clusterName to LogBulkBuffer(LOG_UPLOAD_BUFFER_SIZE)
+    }
 
     override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
@@ -977,10 +985,9 @@ class LogServiceESImpl constructor(
         return countResponse.count
     }
 
-    private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
+    private fun doAddMultiLines(bulkClient: ESClient, logMessages: List<LogMessageToBulk>): Int {
+        val clusterName = bulkClient.clusterName
         val currentEpoch = System.currentTimeMillis()
-        val index = indexService.getIndexName(buildId)
-        val bulkClient = logClient.hashClient(buildId)
         var lines = 0
         var bulkLines = 0
         val bulkRequest = BulkRequest()
@@ -989,9 +996,7 @@ class LogServiceESImpl constructor(
             val logMessage = logMessages[i]
 
             val indexRequest = genIndexRequest(
-                buildId = buildId,
-                logMessage = logMessage,
-                index = index
+                logMessage = logMessage
             )
             if (indexRequest != null) {
                 bulkRequest.add(indexRequest)
@@ -1010,7 +1015,7 @@ class LogServiceESImpl constructor(
             val exString = ignore.toString()
             if (exString.contains("circuit_breaking_exception")) {
                 logger.warn(
-                    "$buildId|Add bulk lines failed|$exString, attempting to add index. [$logMessages]",
+                    "$clusterName|Add bulk lines failed|$exString, attempting to add index. [$logMessages]",
                     ignore
                 )
                 val bulkResponse = bulkClient.restClient.bulk(
@@ -1025,33 +1030,30 @@ class LogServiceESImpl constructor(
                     bulkLines
                 }
             } else {
-                logger.warn("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
+                logger.warn("[$clusterName] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
                 throw ignore
             }
         } finally {
             if (bulkLines != lines) {
-                logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
+                logger.warn("[$clusterName] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
             val elapse = System.currentTimeMillis() - currentEpoch
             logStorageBean.bulkRequest(elapse, bulkLines > 0)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= INDEX_STORAGE_WARN_MILLIS && logMessages.isNotEmpty()) logger.warn(
-                "[$buildId] doAddMultiLines spent too much time($elapse) with tag=${logMessages.first().tag}"
+                "[$clusterName] doAddMultiLines spent too much time($elapse) with tag=${logMessages.first().tag}"
             )
         }
     }
 
-    private fun genIndexRequest(
-        buildId: String,
-        logMessage: LogMessageWithLineNo,
-        index: String
-    ): IndexRequest? {
-        val builder = ESIndexUtils.getDocumentObject(buildId, logMessage)
+    private fun genIndexRequest(logMessage: LogMessageToBulk): IndexRequest? {
+        val builder = ESIndexUtils.getDocumentObject(logMessage)
+        val index = logMessage.index
         return try {
             IndexRequest(index).source(builder)
         } catch (e: IOException) {
-            logger.error("[$buildId] Convert logMessage to es document failure", e)
+            logger.error("[$index] Convert logMessage to es document failure", e)
             null
         } finally {
             builder.close()
@@ -1092,7 +1094,7 @@ class LogServiceESImpl constructor(
         val index = indexService.getIndexName(buildId)
         return if (!checkIndexCreate(buildId, index)) {
             createIndex(buildId, index)
-            indexCache.put(index, true)
+            presentIndexCache.put(index, true)
             true
         } else {
             false
@@ -1100,20 +1102,20 @@ class LogServiceESImpl constructor(
     }
 
     private fun checkIndexCreate(buildId: String, index: String): Boolean {
-        if (indexCache.getIfPresent(index) == true) {
+        if (presentIndexCache.getIfPresent(index) == true) {
             return true
         }
         val redisLock = RedisLock(redisOperation, "LOG:index:create:lock:key:$index", INDEX_LOCK_EXPIRE_SECONDS)
         try {
             redisLock.lock()
-            if (indexCache.getIfPresent(index) == true) {
+            if (presentIndexCache.getIfPresent(index) == true) {
                 return true
             }
 
             // Check from ES
             if (isExistIndex(buildId, index)) {
                 logger.info("[$buildId|$index] the index is already created")
-                indexCache.put(index, true)
+                presentIndexCache.put(index, true)
                 return true
             }
             return false

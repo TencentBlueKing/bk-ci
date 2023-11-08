@@ -42,4 +42,18 @@ data class LogMessageWithLineNo(
     val logType: LogType = LogType.LOG,
     var lineNo: Long = 0,
     var executeCount: Int? = 1
-)
+) {
+    fun toBulk(index: String, buildId: String) = LogMessageToBulk(
+        index = index,
+        buildId = buildId,
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        message = message,
+        timestamp = timestamp,
+        logType = logType,
+        lineNo = lineNo,
+        executeCount = executeCount
+    )
+}
+

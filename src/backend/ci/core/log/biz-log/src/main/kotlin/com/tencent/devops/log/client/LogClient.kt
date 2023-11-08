@@ -31,6 +31,8 @@ import com.tencent.devops.log.es.ESClient
 
 interface LogClient {
 
+    fun getAllClients(): List<ESClient>
+
     fun getActiveClients(): List<ESClient>
 
     fun hashClient(buildId: String): ESClient

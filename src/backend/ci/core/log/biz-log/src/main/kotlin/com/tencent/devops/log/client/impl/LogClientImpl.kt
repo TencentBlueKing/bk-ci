@@ -30,13 +30,17 @@ package com.tencent.devops.log.client.impl
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.es.ESClient
 
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
+class LogClientImpl(private val client: ESClient) : LogClient {
 
-    override fun getActiveClients(): List<ESClient> {
+    override fun getAllClients(): List<ESClient> {
         return listOf(client)
     }
 
+    override fun getActiveClients(): List<ESClient> {
+        return if (client.writable == true) listOf(client) else listOf()
+    }
+
     override fun hashClient(buildId: String): ESClient {
-        return getActiveClients().first()
+        return client
     }
 }

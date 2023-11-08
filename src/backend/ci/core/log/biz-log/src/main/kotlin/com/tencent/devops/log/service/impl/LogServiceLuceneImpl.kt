@@ -57,7 +57,7 @@ import javax.ws.rs.core.Response
 import kotlin.math.ceil
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")
-class LogServiceLuceneImpl constructor(
+class LogServiceLuceneImpl(
     private val indexMaxSize: Int,
     private val luceneClient: LuceneClient,
     private val indexService: IndexService,
