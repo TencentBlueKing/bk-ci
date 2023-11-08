@@ -67,6 +67,8 @@ class RbacPermissionProjectService(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
         private const val expiredAt = 365L
+        // 有效的过期时间,在30天内就是有效的
+        private const val VALID_EXPIRED_AT = 30L
     }
 
     override fun getProjectUsers(
@@ -187,14 +189,20 @@ class RbacPermissionProjectService(
             pageSize = 1000
             page = 1
         }
-        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(
+        val groupMemberMap = iamV2ManagerService.getRoleGroupMemberV2(
             iamGroupId.toInt(),
             pageInfoDTO
         ).results.filter {
             it.type == type
-        }.map { it.name }
+        }.associateBy { it.name }
         val addMembers = mutableListOf<String>()
+        // 预期的过期天数
+        val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         members.forEach {
+            // 如果用户已经在用户组,并且过期时间超过30天,则不再添加
+            if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
+                return@forEach
+            }
             deptService.getUserInfo(
                 userId = "admin",
                 name = it
@@ -203,10 +211,7 @@ class RbacPermissionProjectService(
                 params = arrayOf(it),
                 defaultMessage = "user $it not exist"
             )
-            // 只添加没有在组的用户
-            if (!groupMemberInfoList.contains(it)) {
-                addMembers.add(it)
-            }
+            addMembers.add(it)
         }
         if (addMembers.isNotEmpty()) {
             val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
