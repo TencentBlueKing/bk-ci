@@ -74,7 +74,7 @@ class WindowsGpuResourceDao {
                     it.status,
                     JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList),
                     ByteUtils.bool2Byte(it.locked ?: false),
-                    it.projectId,
+                    it.projectId ?: "",
                     it.disk,
                     it.hDisk
                 ).onDuplicateKeyUpdate()
