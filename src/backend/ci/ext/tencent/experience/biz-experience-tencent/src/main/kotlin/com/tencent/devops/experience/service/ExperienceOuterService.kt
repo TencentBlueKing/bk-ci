@@ -20,6 +20,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FRE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
+import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -190,6 +191,10 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
+    }
+
+    fun outerCanAdd(projectId: String, param: OuterCanAddParam): Int {
+        
     }
 
     // 一个账户只能占用一个token
