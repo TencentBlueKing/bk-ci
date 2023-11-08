@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.RedisStringCommands
-import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.types.Expiration
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -53,7 +52,7 @@ class ExperienceOuterService @Autowired constructor(
     @Value("\${esb.secret:#{null}}")
     val appSecret: String? = null
 
-    fun bkOuterLogin(
+    fun outerLogin(
         platform: Int,
         appVersion: String?,
         realIp: String,
@@ -154,7 +153,7 @@ class ExperienceOuterService @Autowired constructor(
 
         try {
             // 获取账号信息
-            val profileVO = JsonUtil.getObjectMapper().readValue<OuterProfileVO>(profileStr, OuterProfileVO::class.java)
+            val profileVO = JsonUtil.getObjectMapper().readValue(profileStr, OuterProfileVO::class.java)
 
             // TOKEN对应的账号是否正常
             checkNormal(token, profileVO)
@@ -203,15 +202,19 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     private fun checkNormal(token: String, profileVO: OuterProfileVO) {
+        if (profileVO.type == TYPE_TAI) {
+            // 太湖账户没有异常体系
+            return
+        }
         val checkKey = "e:out:check:$token"
-        val checkNow = redisOperation.execute(RedisCallback {
+        val checkNow = redisOperation.execute {
             it.stringCommands().set(
                 checkKey.toByteArray(),
                 "0".toByteArray(),
                 Expiration.seconds(30),
                 RedisStringCommands.SetOption.SET_IF_ABSENT
             )
-        })
+        }
         if (checkNow == true) {
             val profilesRead = try {
                 profileApi.v2ProfilesRead("${profileVO.username}@$domain", "status", "username")
@@ -257,7 +260,8 @@ class ExperienceOuterService @Autowired constructor(
         return OuterProfileVO(
             username = profile.username.replace("@$domain", ""),
             logo = logo(),
-            email = profile.email
+            email = profile.email,
+            type = TYPE_BK_OUTER
         )
     }
 
@@ -290,7 +294,8 @@ class ExperienceOuterService @Autowired constructor(
             return OuterProfileVO(
                 username = username,
                 logo = logo(),
-                email = ""
+                email = "",
+                type = TYPE_TAI
             )
         }
     }
@@ -332,5 +337,7 @@ class ExperienceOuterService @Autowired constructor(
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
         private const val domain = "app.devops"
+        private const val TYPE_BK_OUTER = 1
+        private const val TYPE_TAI = 2
     }
 }
