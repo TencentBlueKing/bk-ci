@@ -126,5 +126,5 @@ data class ProjectInfoResponse(
     @ApiModelProperty("项目其他设置")
     val properties: ProjectProperties?,
     @ApiModelProperty("产品运营ID")
-    val productId: String? = null
+    val productId: Int? = null
 )

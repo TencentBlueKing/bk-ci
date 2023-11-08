@@ -484,7 +484,7 @@ class ProjectTagService @Autowired constructor(
             enableIdc = projectData.enableIdc,
             pipelineLimit = projectData.pipelineLimit,
             properties = projectProperties,
-            productId = projectData.projectId
+            productId = projectData.productId
         )
     }
 
