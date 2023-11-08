@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
  **/
 @Suppress("ALL")
 @Service
-class DispatchService @Autowired constructor(
+class DispatchAgentService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
@@ -96,6 +96,6 @@ class DispatchService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DispatchService::class.java)
+        private val logger = LoggerFactory.getLogger(DispatchAgentService::class.java)
     }
 }
