@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketTemplateResource {
 
-    @ApiOperation("获取个人可以查看的模板列表")
+    @ApiOperation("获取个人可以查看的模板列表", tags = ["v1_app_market_getListByUser"])
     @GET
     @Path("/template/getListByUser/")
     fun list(

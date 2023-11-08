@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwLogResourceV2 {
-    @ApiOperation("根据构建ID获取初始化所有日志")
+    @ApiOperation("根据构建ID获取初始化所有日志", tags = ["v2_app_logs_all"])
     @GET
     @Path("/projectIds/{projectId}/pipelineIds/{pipelineId}/buildIds/{buildId}")
     fun getInitLogs(

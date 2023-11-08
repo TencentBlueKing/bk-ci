@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwAuthResourceV3 {
-    @ApiOperation("添加用户组")
+    @ApiOperation("添加用户组", tags = ["v3_app_auth_addGroup"])
     @POST
     @Path("/{projectId}/group/brach")
     fun batchCreateGroup(
@@ -48,7 +48,7 @@ interface ApigwAuthResourceV3 {
 
     @GET
     @Path("/projects/{projectId}/resource/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有action的权限", tags = ["v3_app_auth_validate"])
     fun validateUserResourcePermission(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -73,7 +73,7 @@ interface ApigwAuthResourceV3 {
         resourceType: String
     ): Result<Boolean>
 
-    @ApiOperation("黑名单操作")
+    @ApiOperation("黑名单操作", tags = ["v3_app_auth_blackList_create"])
     @POST
     @Path("/blackList/")
     fun blackListUser(
@@ -86,7 +86,7 @@ interface ApigwAuthResourceV3 {
         blackList: BlackListInfo
     ): WesecResult
 
-    @ApiOperation("黑名单列表")
+    @ApiOperation("黑名单列表", tags = ["v3_app_auth_blackList_get"])
     @GET
     @Path("/blackList/")
     fun blackListUser(
