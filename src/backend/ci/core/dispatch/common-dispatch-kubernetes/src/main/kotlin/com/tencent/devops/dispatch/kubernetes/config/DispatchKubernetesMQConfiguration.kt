@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
