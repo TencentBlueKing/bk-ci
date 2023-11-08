@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -210,7 +211,9 @@ class ExperienceOuterService @Autowired constructor(
                     userId = u
                 ).data ?: false
             }
-            if (bkOuters.contains(u) || isProjectUser.value) {
+            if (UserUtil.isTaiUser(u) && isProjectUser.value) {
+                successCount++
+            } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
                 successCount++
             } else {
                 failedCount++
