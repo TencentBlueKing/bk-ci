@@ -203,6 +203,7 @@ class ExperienceOuterService @Autowired constructor(
         val bkOuters = outerList(projectId)
         var successCount = 0
         var failedCount = 0
+        val successUserIds = mutableListOf<String>()
 
         for (u in userIds) {
             val isProjectUser = lazy {
@@ -213,19 +214,22 @@ class ExperienceOuterService @Autowired constructor(
             }
             if (UserUtil.isTaiUser(u) && isProjectUser.value) {
                 successCount++
+                successUserIds.add(u)
             } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
                 successCount++
+                successUserIds.add(u)
             } else {
                 failedCount++
             }
         }
 
         return if (successCount == userIds.size) {
-            OuterCanAddVO(true, "添加成功")
+            OuterCanAddVO(true, "添加成功", userIds)
         } else {
             OuterCanAddVO(
                 false,
-                "$successCount 个成员添加成功, $failedCount 个成员添加失败 , 请检查下面的成员列表"
+                "$successCount 个成员添加成功, $failedCount 个成员添加失败 , 请检查下面的成员列表",
+                successUserIds
             )
         }
     }
