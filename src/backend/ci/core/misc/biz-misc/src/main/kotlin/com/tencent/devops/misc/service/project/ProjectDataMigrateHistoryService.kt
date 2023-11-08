@@ -56,27 +56,27 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
     }
 
     /**
-     * 判断项目或者流水线的数据是否最近一次一次是否成功迁移至迁移库
+     * 判断项目或者流水线的数据是否能迁移
      * @param queryParam 查询参数
      * @return 布尔值
      */
-    fun isDataMigrated(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
+    fun isDataCanMigrate(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
         val projectId = queryParam.projectId
         val pipelineId = queryParam.pipelineId
-        // 判读项目或者流水线的数据是否已迁移成功但迁移成功记录暂未保存
-        val finishFlag = if (pipelineId.isNullOrBlank()) {
+        // 判读项目或者流水线的数据是否能迁移
+        val migratingFlag = if (pipelineId.isNullOrBlank()) {
             redisOperation.isMember(
-                key = MiscUtils.getUnRecordedMigratedProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
                 item = projectId
             )
         } else {
             redisOperation.isMember(
-                key = MiscUtils.getUnRecordedMigratedPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
                 item = pipelineId
             )
         }
-        // 判断项目或者流水线的数据是否已迁移成功
-        return finishFlag || projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
+        // 判断项目或者流水线的数据是否能迁移
+        return !migratingFlag && projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
             dslContext = dslContext,
             queryParam = queryParam
         ) != null

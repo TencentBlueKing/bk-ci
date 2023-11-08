@@ -219,6 +219,11 @@ class ProcessDataMigrateService @Autowired constructor(
         val semaphore = Semaphore(threadNum)
         // 根据流水线数量创建计数器
         val doneSignal = CountDownLatch(pipelineNum)
+        // 把项目加入正在迁移项目集合中
+        redisOperation.addSetValue(
+            key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+            item = projectId
+        )
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
         do {
             val pipelineIdList = processDao.getPipelineIdListByProjectId(
@@ -278,11 +283,6 @@ class ProcessDataMigrateService @Autowired constructor(
         try {
             // 等待所有任务执行完成
             doneSignal.await(migrationTimeout, TimeUnit.HOURS)
-            // 把项目加入未记录已迁移完成项目集合中
-            redisOperation.addSetValue(
-                key = MiscUtils.getUnRecordedMigratedProjectsRedisKey(SystemModuleEnum.PROCESS.name),
-                item = projectId
-            )
             logger.info("migrateProjectData all pipeline tasks have been completed|params:[$userId|$projectId]")
             // 执行迁移完成后的逻辑
             doAfterMigrationBus(
@@ -295,11 +295,6 @@ class ProcessDataMigrateService @Autowired constructor(
                 pipelineNum = pipelineNum,
                 migrationLock = migrationLock,
                 dataTag = dataTag
-            )
-            // 在未记录已迁移完成项目集合移除该项目
-            redisOperation.removeSetMember(
-                key = MiscUtils.getUnRecordedMigratedProjectsRedisKey(SystemModuleEnum.PROCESS.name),
-                item = projectId
             )
         } catch (ignored: Throwable) {
             val errorMsg = ignored.message
@@ -317,6 +312,11 @@ class ProcessDataMigrateService @Autowired constructor(
                 errorMsg = errorMsg
             )
         } finally {
+            // 从正在迁移的项目集合移除该项目
+            redisOperation.removeSetMember(
+                key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                item = projectId
+            )
             // 更新同时迁移的项目数量
             redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
         }

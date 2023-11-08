@@ -79,8 +79,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetClusterName = targetClusterName,
                 targetDataSourceName = targetDataSourceName
             )
-            // 项目已经迁移成功则不再删除db中数据
-            if (!projectDataMigrateHistoryService.isDataMigrated(queryParam)) {
+            // 判断是否能删除db中数据
+            if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
                 deleteProcessRelData(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -89,7 +89,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 )
             } else {
                 throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
+                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
                     params = arrayOf(projectId)
                 )
             }
@@ -229,12 +229,12 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetClusterName = targetClusterName,
                 targetDataSourceName = targetDataSourceName
             )
-            // 项目已经迁移成功则不再删除db中数据
-            if (!projectDataMigrateHistoryService.isDataMigrated(queryParam)) {
+            // 判断是否能删除db中数据
+            if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
                 deleteProjectRelData(dslContext, projectId)
             } else {
                 throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_HAS_BEEN_MIGRATED_SUCCESSFULLY,
+                    errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
                     params = arrayOf(projectId)
                 )
             }

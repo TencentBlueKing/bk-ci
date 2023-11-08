@@ -30,20 +30,20 @@ package com.tencent.devops.misc.utils
 object MiscUtils {
 
     /**
-     * 获取未记录已迁移完成项目的redis键
+     * 获取正在迁移项目列表的redis键
      * @param moduleCode 模块标识
-     * @return 未记录已迁移完成项目的redis键
+     * @return 正在迁移项目列表的redis键
      */
-    fun getUnRecordedMigratedProjectsRedisKey(moduleCode: String): String {
-        return "$moduleCode:unRecorded:migrated:projects"
+    fun getMigratingProjectsRedisKey(moduleCode: String): String {
+        return "$moduleCode:migrating:projects"
     }
 
     /**
-     * 获取未记录已迁移完成流水线的redis键
+     * 获取正在迁移流水线列表的redis键
      * @param moduleCode 模块标识
-     * @return 未记录已迁移完成流水线的redis键
+     * @return 正在迁移流水线列表的redis键
      */
-    fun getUnRecordedMigratedPipelinesRedisKey(moduleCode: String): String {
-        return "$moduleCode:unRecorded:migrated:pipelines"
+    fun getMigratingPipelinesRedisKey(moduleCode: String): String {
+        return "$moduleCode:migrating:pipelines"
     }
 }
