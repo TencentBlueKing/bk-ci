@@ -18,6 +18,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_ACCOUN
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_EXPIRED
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FREQUENTLY
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
@@ -263,8 +264,16 @@ class ExperienceOuterService @Autowired constructor(
                 )
             }
             val taiLogin = JsonUtil.to(responseBody, TaiLogin::class.java)
+            val username = taiLogin.data.username
+            if (!username.endsWith("@tai")) {
+                logger.warn("taiLogin is not support inner user , username: $username")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    errorCode = USER_NOT_PERMISSION
+                )
+            }
             return OuterProfileVO(
-                username = taiLogin.data.username,
+                username = username,
                 logo = logo(),
                 email = ""
             )
