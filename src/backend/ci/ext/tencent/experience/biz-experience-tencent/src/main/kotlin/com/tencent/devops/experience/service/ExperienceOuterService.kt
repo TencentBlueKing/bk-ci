@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -21,8 +22,10 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_I
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
+import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -41,6 +44,7 @@ import javax.ws.rs.core.Response
 
 @Service
 class ExperienceOuterService @Autowired constructor(
+    private val client: Client,
     private val redisOperation: RedisOperation,
     private val loginApi: V1Api,
     private val profileApi: ProfilesApi,
@@ -110,7 +114,7 @@ class ExperienceOuterService @Autowired constructor(
 
             // 设置token
             val token = DigestUtils.md5Hex(outerProfileVO!!.username + outerProfileVO.email + UUIDUtil.generate())
-            redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
+            redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), EXPIRE_SECS)
 
             // 单token有效
             singleTokenLogin(outerProfileVO.username, token)
@@ -170,16 +174,16 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     fun renewToken(token: String) {
-        redisOperation.expire(tokenRedisKey(token), expireSecs)
+        redisOperation.expire(tokenRedisKey(token), EXPIRE_SECS)
     }
 
     fun outerList(projectId: String): List<String> {
         return profileApi.v2ProfilesList(
-            null, null, 100000, listOf("username", "departments"), "domain", listOf(domain),
+            null, null, 100000, listOf("username", "departments"), "domain", listOf(DOMAIN),
             null, null, null, null, null, null, null, null
         ).results
-            .filter { it.departments?.filter { d -> d.fullName == projectId }?.any() ?: false }
-            .map { it.username.replace("@$domain", "") }
+            .filter { it.departments?.any { d -> d.fullName == projectId } ?: false }
+            .map { it.username.replace("@$DOMAIN", "") }
     }
 
     fun isBlackIp(realIp: String?): Boolean {
@@ -193,14 +197,40 @@ class ExperienceOuterService @Autowired constructor(
         return redisOperation.isMember("e:out:l:black:ip", realIp)
     }
 
-    fun outerCanAdd(projectId: String, param: OuterCanAddParam): Int {
-        
+    fun outerCanAdd(projectId: String, param: OuterCanAddParam): OuterCanAddVO {
+        val userIds = param.userIds.split(",")
+        val bkOuters = outerList(projectId)
+        var successCount = 0
+        var failedCount = 0
+
+        for (u in userIds) {
+            val isProjectUser = lazy {
+                client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+                    projectCode = projectId,
+                    userId = u
+                ).data ?: false
+            }
+            if (bkOuters.contains(u) || isProjectUser.value) {
+                successCount++
+            } else {
+                failedCount++
+            }
+        }
+
+        return if (successCount == userIds.size) {
+            OuterCanAddVO(true, "添加成功")
+        } else {
+            OuterCanAddVO(
+                false,
+                "$successCount 个成员添加成功, $failedCount 个成员添加失败 , 请检查下面的成员列表"
+            )
+        }
     }
 
     // 一个账户只能占用一个token
     private fun singleTokenLogin(username: String, token: String) {
         val redisKey = "e:o:l:single:$username"
-        val oldToken = redisOperation.getAndSet(redisKey, token, expireSecs + 300)
+        val oldToken = redisOperation.getAndSet(redisKey, token, EXPIRE_SECS + 300)
         if (null != oldToken) {
             redisOperation.delete(tokenRedisKey(oldToken))
         }
@@ -222,7 +252,7 @@ class ExperienceOuterService @Autowired constructor(
         }
         if (checkNow == true) {
             val profilesRead = try {
-                profileApi.v2ProfilesRead("${profileVO.username}@$domain", "status", "username")
+                profileApi.v2ProfilesRead("${profileVO.username}@$DOMAIN", "status", "username")
             } catch (e: Exception) {
                 null
             }
@@ -251,7 +281,7 @@ class ExperienceOuterService @Autowired constructor(
         val data = ProfileLogin()
         data.username = params.username
         data.password = params.password
-        data.domain = domain
+        data.domain = DOMAIN
         val profile = loginApi.v1LoginLogin(data)
 
         // 判断账号没有被封
@@ -263,7 +293,7 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
         return OuterProfileVO(
-            username = profile.username.replace("@$domain", ""),
+            username = profile.username.replace("@$DOMAIN", ""),
             logo = logo(),
             email = profile.email,
             type = TYPE_BK_OUTER
@@ -340,8 +370,8 @@ class ExperienceOuterService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)
         private val df = DateTimeFormatter.ofPattern("HHmmss")
-        private const val expireSecs: Long = 30 * 24 * 60 * 60
-        private const val domain = "app.devops"
+        private const val EXPIRE_SECS: Long = 30 * 24 * 60 * 60
+        private const val DOMAIN = "app.devops"
         private const val TYPE_BK_OUTER = 1
         private const val TYPE_TAI = 2
     }

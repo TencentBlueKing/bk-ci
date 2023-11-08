@@ -41,6 +41,7 @@ import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
+import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -245,5 +246,5 @@ interface UserExperienceResource {
         projectId: String,
         @ApiParam("入参")
         param: OuterCanAddParam
-    ): Result<Boolean>
+    ): Result<OuterCanAddVO>
 }
