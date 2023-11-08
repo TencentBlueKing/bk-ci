@@ -1,0 +1,38 @@
+{
+   "BuilderProcessWasKilled": {
+      "other": "业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，或解压 agent.zip 还原安装后重启agent再重试。"
+   },
+   "BuildProcessErr": {
+      "other": "构建进程运行错误, 进程号: {{.pid}}, 错误: {{.err}}."
+   },
+   "WorkerExit": {
+      "other": "构建进程 {{.pid}} 退出"
+   },
+   "ExecutableFileMissing": {
+      "other": "\n{{.filename}} 执行文件丢失，请到 {{.dir}} 目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"
+   },
+   "CreateTmpDirectoryFailed": {
+      "other": "创建临时目录失败: {{.err}}"
+   },
+   "CreateStartScriptFailed": {
+      "other": "准备构建脚本生成失败: {{.err}}"
+   },
+   "StartWorkerProcessFailed": {
+      "other": "启动构建进程失败: {{.err}}"
+   },
+   "EC_BuildProcessRunError": {
+      "other": "构建进程执行错误"
+   },
+   "EC_LoseRunFileError": {
+      "other": "丢失执行文件失败错误"
+   },
+   "EC_MakeTmpDirError": {
+      "other": "创建临时目录失败"
+   },
+   "EC_BuildProcessStartError": {
+      "other": "启动构建进程失败"
+   },
+   "EC_PrepareScriptCreateError": {
+      "other": "预构建脚本创建失败"
+   }
+}
