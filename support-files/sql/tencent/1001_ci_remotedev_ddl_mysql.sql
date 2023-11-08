@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
+    `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`)
