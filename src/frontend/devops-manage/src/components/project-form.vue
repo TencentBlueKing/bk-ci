@@ -17,7 +17,7 @@ import http from '@/http/api';
 const {
   t,
 } = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange']);
 
 const props = defineProps({
   data: Object,
@@ -309,6 +309,15 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
   deep: true,
 });
 
+watch(() => projectData.value.productId, (id) => {
+  emits('productIdChange', {
+    id,
+    list: operationalList.value,
+  });
+}, {
+  deep: true,
+});
+
 onMounted(async () => {
   await fetchUserDetail();
   await fetchDepartmentList();
@@ -443,12 +452,15 @@ onBeforeUnmount(() => {
     </bk-form-item>
     <bk-form-item :label="t('项目所属运营产品')" property="productId" :required="true">
       <bk-select
+        class="product-select"
         v-model="projectData.productId"
         :placeholder="t('请选择所属运营产品')"
+        :scroll-height="160"
         name="center"
         filterable
-        :list="operationalList"
         enable-virtual-render
+        :list="operationalList"
+        :input-search="false"
         :loading="deptLoading.product"
         searchable
         @change="handleChangeForm"

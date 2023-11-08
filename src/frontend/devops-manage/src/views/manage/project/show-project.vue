@@ -177,7 +177,7 @@ const fetchOperationalList = async () => {
 };
 
 const getOperational = (id) => {
-  return operationalList.value.find(i => i.ProductId === String(id))
+  return operationalList.value.find(i => String(i.ProductId) === String(id))
 }
 
 /**
@@ -395,7 +395,7 @@ onMounted(async () => {
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || '123' }}</span>
+                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || projectData.productId }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">

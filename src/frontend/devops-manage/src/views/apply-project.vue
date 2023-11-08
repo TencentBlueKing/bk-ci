@@ -21,6 +21,7 @@ const projectData = ref({
   projectTypes: '',
   logoAddr: '',
   productId: '',
+  productName: '',
   bgId: 0,
   bgName: '',
   deptId: '',
@@ -74,6 +75,9 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const productIdChange = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
+};
 const handleCancel = () => {
   router.back();
 };
@@ -92,6 +96,7 @@ const handleCancel = () => {
           type="apply"
           :data="projectData"
           @initProjectForm="initProjectForm"
+          @productIdChange="productIdChange"
         >
           <bk-form-item>
             <bk-button

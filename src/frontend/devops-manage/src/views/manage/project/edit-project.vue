@@ -38,20 +38,22 @@ const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
     englishName: projectCode,
-  }).then((res) => {
-    projectData.value = res;
-    if (projectData.value.centerId === '0') projectData.value.centerId = ''
-    if (projectData.value.projectType === 0) projectData.value.projectType = ''
-  }).catch((err) => {
-    if (err.code === 403) {
-      hasPermission.value = false
-    } else {
-      Message({
-        theme: 'error',
-        message: err.message || err,
-      })
-    }
-  });
+  })
+    .then((res) => {
+      projectData.value = res;
+      if (projectData.value.centerId === '0') projectData.value.centerId = '';
+      if (projectData.value.projectType === 0) projectData.value.projectType = '';
+    })
+    .catch((err) => {
+      if (err.code === 403) {
+        hasPermission.value = false
+      } else {
+        Message({
+          theme: 'error',
+          message: err.message || err,
+        });
+      }
+    });
   isLoading.value = false;
 };
 
@@ -163,6 +165,10 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const productIdChange = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
+};
+
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
     action: RESOURCE_ACTION.VIEW,
@@ -186,6 +192,7 @@ onMounted(() => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
+        @productIdChange="productIdChange"
         @initProjectForm="initProjectForm"
         @approvedChange="handleApprovedChange">
         <bk-form-item>
