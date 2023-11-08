@@ -105,19 +105,21 @@ class StartControl @Autowired constructor(
     )
     fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
-        permissionService.checkOwnerPermission(userId, workspaceName)
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+        // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
+        permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             // 校验状态
             when {
                 workspace.status.checkRunning() -> {

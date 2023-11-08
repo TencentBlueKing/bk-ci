@@ -93,8 +93,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = false,
-                checkDeleteImmediately = false
+                needPermission = false
             )
         )
     }

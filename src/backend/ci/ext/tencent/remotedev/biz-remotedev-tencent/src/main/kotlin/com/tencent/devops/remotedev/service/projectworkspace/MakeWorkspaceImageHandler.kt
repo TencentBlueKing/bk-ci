@@ -31,12 +31,15 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ImageManageDao
@@ -45,13 +48,13 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -72,6 +75,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class MakeWorkspaceImageHandler @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -204,12 +208,21 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             params = arrayOf(event.workspaceName)
         )
 
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
+
+        val workspaceStatus = if (workspaceInfo.status == EnvStatusEnum.running) {
+            WorkspaceStatus.RUNNING
+        } else {
+            WorkspaceStatus.STOPPED
+        }
+
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.STOPPED,
+                    status = workspaceStatus,
                     dslContext = transactionContext
                 )
 
@@ -221,7 +234,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.STOPPED.name
+                        workspaceStatus.name
                     )
                 )
 
@@ -246,7 +259,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = event.workspaceName,
                 operator = event.userId,
-                action = WorkspaceAction.STOP,
+                action = WorkspaceAction.MAKE_IMAGE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status.name,
@@ -271,7 +284,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             errorMsg = event.errorMsg,
             type = WebSocketActionType.WORKSPACE_MAKE_IMAGE,
             status = event.status,
-            action = WorkspaceAction.STOP,
+            action = WorkspaceAction.MAKE_IMAGE,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,

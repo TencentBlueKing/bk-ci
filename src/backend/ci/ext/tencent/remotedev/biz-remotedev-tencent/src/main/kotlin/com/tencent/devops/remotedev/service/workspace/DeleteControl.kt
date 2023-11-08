@@ -116,8 +116,15 @@ class DeleteControl @Autowired constructor(
         checkDeleteImmediately: Boolean? = null
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
         RedisCallLimit(
             redisOperation,
@@ -125,13 +132,6 @@ class DeleteControl @Autowired constructor(
             expiredTimeInSeconds
         ).tryLock().use {
 
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             // 校验状态以及处理异常的情况
             val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
 

@@ -34,7 +34,9 @@ data class Devfile(
     @ApiModelProperty("指定云桌面Id")
     val cgsId: String? = null,
     @ApiModelProperty("团队空间是否自动分配")
-    val autoAssign: Boolean? = false
+    val autoAssign: Boolean? = false,
+    @ApiModelProperty("start自定义镜像地址")
+    val imageCosFile: String? = ""
 
 ) {
     fun checkWorkspaceMountType(): WorkspaceMountType {

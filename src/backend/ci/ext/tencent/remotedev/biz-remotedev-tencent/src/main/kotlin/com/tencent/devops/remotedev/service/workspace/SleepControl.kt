@@ -94,8 +94,15 @@ class SleepControl @Autowired constructor(
     )
     fun stopWorkspace(userId: String, workspaceName: String, needPermission: Boolean = true): Boolean {
         logger.info("$userId stop workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
         RedisCallLimit(
             redisOperation,
@@ -103,13 +110,6 @@ class SleepControl @Autowired constructor(
             expiredTimeInSeconds
         ).tryLock().use {
 
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             // 校验状态以及处理异常的情况
             checkWorkspaceStatus(workspace, userId)
 
