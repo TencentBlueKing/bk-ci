@@ -124,5 +124,7 @@ data class ProjectInfoResponse(
     @ApiModelProperty("流水线数量上限")
     val pipelineLimit: Int? = 500,
     @ApiModelProperty("项目其他设置")
-    val properties: ProjectProperties?
+    val properties: ProjectProperties?,
+    @ApiModelProperty("产品运营ID")
+    val productId: String? = null
 )
