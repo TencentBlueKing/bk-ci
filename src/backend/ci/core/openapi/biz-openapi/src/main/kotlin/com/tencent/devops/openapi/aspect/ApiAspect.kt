@@ -54,6 +54,8 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Aspect
 @Component
@@ -109,16 +111,25 @@ class ApiAspect(
             }
         }
 
-        esServiceImpl.addMessage(
-            ESMessage(
-                api = getApiTag(jp = jp, apiType = apigwType?.split("-")?.getOrNull(1) ?: ""),
-                apiType = apigwType ?: "",
-                appCode = appCode ?: "",
-                userId = userId ?: "",
-                projectId = projectId ?: "",
-                timestamp = System.currentTimeMillis()
+        kotlin.runCatching {
+            val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+            val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
+            esServiceImpl.addMessage(
+                ESMessage(
+                    api = getApiTag(jp = jp, apiType = apiType),
+                    key = when {
+                        apiType.isBlank() -> "null"
+                        apiType.contains("user") -> "user:$userId"
+                        else -> "app:$appCode"
+                    },
+                    projectId = projectId ?: "",
+                    path = request.requestURI,
+                    timestamp = System.currentTimeMillis()
+                )
             )
-        )
+        }.onFailure {
+            logger.error("es add message error ${it.message}", it)
+        }
 
         if (logger.isDebugEnabled) {
 
@@ -253,7 +264,7 @@ class ApiAspect(
                 ?.interfaces
                 ?.first()
                 ?.getDeclaredMethod(
-                    method.name
+                    method.name, *method.parameterTypes
                 )
                 ?.getAnnotation(ApiOperation::class.java)
                 ?.tags

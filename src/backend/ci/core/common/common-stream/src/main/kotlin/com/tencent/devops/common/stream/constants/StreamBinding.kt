@@ -41,6 +41,6 @@ object StreamBinding {
     const val BINDING_LOG_STATUS_EVENT_OUT = "logStatusEventOut"
 
     // openapi审计日志预处理事件
-    const val BINDING_OPENAPI_LOG_EVENT_IN = "logOriginEventIn"
-    const val BINDING_OPENAPI_LOG_EVENT_OUT = "logOriginEventOut"
+    const val BINDING_OPENAPI_LOG_EVENT_IN = "openapiLogOriginEventIn"
+    const val BINDING_OPENAPI_LOG_EVENT_OUT = "openapiLogOriginEventOut"
 }
