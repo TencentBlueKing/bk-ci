@@ -107,14 +107,6 @@ class RbacProjectPermissionService(
                 subjectScopes = subjectScopes,
                 tipsStatus = tipsStatus
             )
-            if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
-                // 创建兼容的权限中心项目
-                authProjectId = projectExtService.createOldAuthProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectCreateInfo = projectCreateInfo
-                ) ?: ""
-            }
         }
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
