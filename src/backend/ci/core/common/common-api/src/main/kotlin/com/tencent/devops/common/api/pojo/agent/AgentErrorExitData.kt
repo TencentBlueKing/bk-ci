@@ -5,6 +5,6 @@ data class AgentErrorExitData(
     val message: String?
 )
 
-enum class AgentErrorExitErrorEnum(val i18code: String) {
-    NOT_WORKER("THIRD_AGENT_EXIT_NOT_WORKER")
+enum class AgentErrorExitErrorEnum() {
+    THIRD_AGENT_EXIT_NOT_WORKER
 }
