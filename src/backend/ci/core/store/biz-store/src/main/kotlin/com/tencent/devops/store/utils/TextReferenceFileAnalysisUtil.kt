@@ -164,5 +164,4 @@ object TextReferenceFileAnalysisUtil {
             "cache${StoreFileService.fileSeparator}$path"
 
     fun getFileCacheKey(storeCode: String, version: String) = "$storeCode-$version-TextReference"
-
 }

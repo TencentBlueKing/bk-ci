@@ -92,7 +92,6 @@ abstract class StoreFileService {
                 request = request
             )
             bkDiskFileCache.put(cacheKey, File("$fileDirPath${fileSeparator}file.zip"))
-
         } else {
             fileDir = "$fileDirPath${fileSeparator}file"
             ZipUtil.unZipFile(fileZip, fileDir)
