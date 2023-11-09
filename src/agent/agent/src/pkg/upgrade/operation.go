@@ -34,7 +34,6 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 
 	"github.com/pkg/errors"
 
@@ -125,23 +124,6 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		", jdk agent changed: ", changeItems.JdkChanged,
 		", docker init file changed: ", changeItems.DockerInitFile,
 	)
-
-	if changeItems.checkNoChange() {
-		logs.Info("[agentUpgrade]|no change to upgrade, skip")
-		return nil
-	}
-
-	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
-	job.BuildTotalManager.Lock.Lock()
-	defer func() {
-		job.BuildTotalManager.Lock.Unlock()
-	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
-		job.GBuildDockerManager.GetInstanceCount() > 0 {
-		logs.Infof("agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
-			job.GBuildManager.GetPreInstancesCount(), job.GBuildManager.GetInstanceCount(), job.GBuildDockerManager.GetInstanceCount())
-		return nil
-	}
 
 	if changeItems.JdkChanged {
 		logs.Info("[agentUpgrade]|jdk changed, replace jdk file")
