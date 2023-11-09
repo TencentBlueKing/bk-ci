@@ -477,10 +477,10 @@ onMounted(async () => {
                   </Popover>
 
                   <Popover
+                    v-if="[4].includes(projectData.approvalStatus)"
                     :content="t('仅更新人可撤销更新')"
                     :disabled="userName !== projectData.updator">
                     <bk-button
-                      v-if="[4].includes(projectData.approvalStatus)"
                       class="btn"
                       theme="default"
                       :disabled="userName !== projectData.updator"
