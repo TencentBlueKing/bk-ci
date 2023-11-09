@@ -293,27 +293,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-    override fun downloadGitRepoLfsFile(
-        repoId: String,
-        repositoryType: RepositoryType?,
-        ref: String,
-        tokenType: TokenTypeEnum,
-        filePath: String,
-        response: HttpServletResponse
-    ) {
-        val repo = repositoryService.serviceGet(
-            "",
-            RepositoryConfigUtils.buildConfig(repoId, repositoryType)
-        )
-        repoFileService.downloadGitRepoLfsFile(
-            repo = repo,
-            ref = ref,
-            tokenType = tokenType,
-            filePath = filePath,
-            response = response
-        )
-    }
-
     override fun getMergeRequestReviewersInfo(
         repoName: String,
         mrId: Long,

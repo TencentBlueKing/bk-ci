@@ -41,5 +41,7 @@ data class TextReferenceFileDownloadRequest(
     @ApiModelProperty("仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
     @ApiModelProperty("分支", required = false)
-    val branch: String? = null
+    val branch: String? = null,
+    @ApiModelProperty("引用文件路径列表", required = true)
+    val filePaths: List<String>
 )

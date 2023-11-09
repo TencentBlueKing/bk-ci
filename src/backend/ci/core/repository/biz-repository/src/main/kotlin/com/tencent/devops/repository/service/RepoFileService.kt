@@ -368,26 +368,6 @@ class RepoFileService @Autowired constructor(
         )
     }
 
-    fun downloadGitRepoLfsFile(
-        repo: Repository,
-        ref: String?,
-        tokenType: TokenTypeEnum,
-        filePath: String?,
-        response: HttpServletResponse
-    ) {
-        val token = client.get(ServiceOauthResource::class).gitGet(repo.userName).data?.accessToken ?: ""
-        gitService.downloadGitRepoLfsFile(
-            token = token,
-            tokenType = tokenType,
-            request = DownloadGitRepoFileRequest(
-                repoName = repo.projectName,
-                sha = ref,
-                filePath = filePath
-            ),
-            response = response
-        )
-    }
-
     private fun getTGitSingleFile(
         repo: CodeTGitRepository,
         filePath: String,
