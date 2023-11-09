@@ -143,6 +143,41 @@ class PipelineYamlService(
         }
     }
 
+    fun saveFailed(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        pipelineId: String,
+        userId: String,
+        blobId: String,
+        ref: String?,
+        reason: String,
+        reasonDetail: String
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.update(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                userId = userId
+            )
+            pipelineYamlVersionDao.saveFailed(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = blobId,
+                ref = ref,
+                pipelineId = pipelineId,
+                reason = reason,
+                reasonDetail = reasonDetail,
+                userId = userId
+            )
+        }
+    }
+
     fun getPipelineYamlInfo(
         projectId: String,
         repoHashId: String,

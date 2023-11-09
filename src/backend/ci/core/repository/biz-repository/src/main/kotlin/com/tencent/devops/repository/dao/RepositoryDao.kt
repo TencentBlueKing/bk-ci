@@ -450,22 +450,6 @@ class RepositoryDao {
         }
     }
 
-    fun updatePacSyncInfo(
-        dslContext: DSLContext,
-        repositoryId: Long,
-        syncStatus: String,
-        ciDirId: String?
-    ) {
-        with(TRepository.T_REPOSITORY) {
-            dslContext.update(this)
-                .set(PAC_SYNC_STATUS, syncStatus)
-                .set(PAC_SYNC_CI_DIR_ID, ciDirId)
-                .set(PAC_SYNC_TIME, LocalDateTime.now())
-                .where(REPOSITORY_ID.eq(repositoryId))
-                .execute()
-        }
-    }
-
     fun updatePacSyncStatus(
         dslContext: DSLContext,
         repositoryId: Long,
@@ -473,7 +457,7 @@ class RepositoryDao {
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
-                .set(PAC_SYNC_STATUS, syncStatus)
+                .set(YAML_SYNC_STATUS, syncStatus)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }

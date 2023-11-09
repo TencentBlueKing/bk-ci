@@ -34,14 +34,16 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelinePacResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.dao.RepoPacSyncDetailDao
+import com.tencent.devops.repository.dao.RepositoryYamlSyncDao
 import com.tencent.devops.repository.dao.RepositoryDao
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -53,9 +55,10 @@ import org.springframework.stereotype.Service
 class RepositoryPacService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,
-    private val repoPacSyncDetailDao: RepoPacSyncDetailDao,
+    private val repositoryYamlSyncDao: RepositoryYamlSyncDao,
     private val repositoryService: RepositoryService,
-    private val client: Client
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -99,17 +102,17 @@ class RepositoryPacService @Autowired constructor(
             userId = userId,
             repository = repository
         )
-        repositoryDao.enablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
         client.get(ServicePipelinePacResource::class).enable(
             userId = userId,
             projectId = projectId,
             repoHashId = repositoryHashId,
             scmType = ScmType.valueOf(repository.type)
         )
+        repositoryDao.enablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
     }
 
-    fun refresh(userId: String, projectId: String, repositoryHashId: String) {
-        logger.info("refresh pac|$userId|$projectId|$repositoryHashId")
+    fun retry(userId: String, projectId: String, repositoryHashId: String) {
+        logger.info("retry pac|$userId|$projectId|$repositoryHashId")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         // 权限校验
         repositoryService.validatePermission(
@@ -194,86 +197,84 @@ class RepositoryPacService @Autowired constructor(
         )
     }
 
-    fun initPacSyncDetail(
+    fun initYamlSync(
         projectId: String,
         repositoryHashId: String,
-        ciDirId: String?,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
+        syncFileInfoList: List<RepoYamlSyncInfo>
     ) {
+        logger.info("init yaml sync status|$projectId|$repositoryHashId")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            repositoryDao.updatePacSyncInfo(
+            repositoryDao.updatePacSyncStatus(
                 dslContext = context,
                 repositoryId = repositoryId,
-                syncStatus = if (ciDirId == null) {
-                    RepoPacSyncStatusEnum.SUCCEED.name
-                } else {
-                    RepoPacSyncStatusEnum.SYNC.name
-                },
-                ciDirId = ciDirId
+                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
             )
-            if (ciDirId != null) {
-                repoPacSyncDetailDao.batchAdd(
-                    dslContext = context,
-                    projectId = projectId,
-                    ciDirId = ciDirId,
-                    repositoryId = repositoryId,
-                    syncFileInfoList = syncFileInfoList
-                )
-            }
+            repositoryYamlSyncDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                repositoryId = repositoryId
+            )
+            repositoryYamlSyncDao.batchAdd(
+                dslContext = context,
+                projectId = projectId,
+                repositoryId = repositoryId,
+                syncFileInfoList = syncFileInfoList
+            )
         }
     }
 
-    fun updatePacSyncStatus(
+    fun updateYamlSyncStatus(
         projectId: String,
         repositoryHashId: String,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
+        syncFileInfo: RepoYamlSyncInfo
     ) {
-        logger.info("update pac sync status|$projectId|$repositoryHashId|$ciDirId|${syncFileInfo.filePath}")
+        logger.info("update yaml sync status|$projectId|$repositoryHashId|${syncFileInfo.filePath}")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        repoPacSyncDetailDao.updateSyncStatus(
+        repositoryYamlSyncDao.updateSyncStatus(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
-            ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
-        // 统计同步状态的文件
-        val count = repoPacSyncDetailDao.countPacSyncDetail(
-            dslContext = dslContext,
-            projectId = projectId,
-            repositoryId = repositoryId,
-            ciDirId = ciDirId,
-            syncStatus = RepoPacSyncStatusEnum.SYNC.name
-        )
-        if (count == 0) {
-            logger.info("update repo pac sync status to success|$projectId|$repositoryHashId")
+        val lock = RedisLock(redisOperation, "repo:yaml:sync:$projectId:$repositoryId", 60L)
+        // 修改代码库整体同步状态
+        lock.use {
+            lock.lock()
+            val syncStatusList = repositoryYamlSyncDao.listYamlSync(
+                dslContext = dslContext,
+                projectId = projectId,
+                repositoryId = repositoryId,
+                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+            ).map { it.syncStatus }
+            // 还有正在同步的文件,不修改状态
+            if (syncStatusList.contains(RepoYamlSyncStatusEnum.SYNC)) {
+                return
+            }
+            val syncStatus = if (syncStatusList.contains(RepoYamlSyncStatusEnum.FAILED)) {
+                RepoYamlSyncStatusEnum.FAILED.name
+            } else {
+                RepoYamlSyncStatusEnum.SUCCEED.name
+            }
             repositoryDao.updatePacSyncStatus(
                 dslContext = dslContext,
                 repositoryId = repositoryId,
-                syncStatus = RepoPacSyncStatusEnum.SUCCEED.name
+                syncStatus = syncStatus
             )
         }
     }
 
-    fun getPacSyncDetail(
+    fun listYamlSync(
         projectId: String,
         repositoryHashId: String
-    ): List<RepoPacSyncFileInfo> {
+    ): List<RepoYamlSyncInfo> {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        val repository = repositoryDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            repositoryId = repositoryId
-        )
-        val commitId = repository.pacSyncCiDirId ?: return emptyList()
-        return repoPacSyncDetailDao.getPacSyncDetail(
+        return repositoryYamlSyncDao.listYamlSync(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
-            ciDirId = commitId
+            syncStatus = RepoYamlSyncStatusEnum.FAILED.name
         )
     }
 

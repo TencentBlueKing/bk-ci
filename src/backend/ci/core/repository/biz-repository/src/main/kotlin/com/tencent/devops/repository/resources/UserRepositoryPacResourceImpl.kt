@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.service.RepositoryPacService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -66,8 +66,8 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun refresh(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
-        repositoryPacService.refresh(
+    override fun retry(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+        repositoryPacService.retry(
             userId = userId,
             projectId = projectId,
             repositoryHashId = repositoryHashId
@@ -103,13 +103,13 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPacSyncDetail(
+    override fun listYamlSync(
         userId: String,
         projectId: String,
         repositoryHashId: String
-    ): Result<List<RepoPacSyncFileInfo>> {
+    ): Result<List<RepoYamlSyncInfo>> {
         return Result(
-            repositoryPacService.getPacSyncDetail(
+            repositoryPacService.listYamlSync(
                 projectId = projectId,
                 repositoryHashId = repositoryHashId
             )

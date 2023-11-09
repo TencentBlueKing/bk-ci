@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.yaml.mq.pacTrigger
+package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
@@ -85,13 +85,11 @@ class PacTriggerListener @Autowired constructor(
         }
         exceptionHandler.handle(action = action) {
             pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
-            val ciDirId = action.data.context.ciDirId!!
             val repoHashId = action.data.setting.repoHashId
             val filePath = action.data.context.yamlFile!!.yamlPath
             pipelineYamlSyncService.syncSuccess(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                ciDirId = ciDirId,
                 filePath = filePath
             )
         }

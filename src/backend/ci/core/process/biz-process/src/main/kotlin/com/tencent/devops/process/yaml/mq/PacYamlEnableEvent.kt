@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.yaml.mq.pacTrigger
+package com.tencent.devops.process.yaml.mq
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -35,9 +35,9 @@ import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_DISABLE_PIPELINE_EVENT)
-data class PacYamlDisableEvent(
-    override val source: String = "PacYamlDisable",
+@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
+data class PacYamlEnableEvent(
+    override val source: String = "PacYamlEnable",
     override val projectId: String,
     override val yamlPath: String,
     override val userId: String,

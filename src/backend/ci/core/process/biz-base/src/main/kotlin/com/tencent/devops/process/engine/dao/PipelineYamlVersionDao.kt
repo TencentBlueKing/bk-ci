@@ -31,7 +31,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
-import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -78,7 +78,7 @@ class PipelineYamlVersionDao {
                 blobId,
                 ref,
                 pipelineId,
-                RepoPacSyncStatusEnum.SUCCEED.name,
+                RepoYamlSyncStatusEnum.SUCCEED.name,
                 version,
                 versionName,
                 userId,
@@ -95,6 +95,7 @@ class PipelineYamlVersionDao {
         repoHashId: String,
         filePath: String,
         blobId: String,
+        ref: String?,
         pipelineId: String,
         reason: String,
         reasonDetail: String,
@@ -108,6 +109,7 @@ class PipelineYamlVersionDao {
                 REPO_HASH_ID,
                 FILE_PATH,
                 BLOB_ID,
+                REF,
                 PIPELINE_ID,
                 STATUS,
                 REASON,
@@ -121,8 +123,9 @@ class PipelineYamlVersionDao {
                 repoHashId,
                 filePath,
                 blobId,
+                ref,
                 pipelineId,
-                RepoPacSyncStatusEnum.FAILED.name,
+                RepoYamlSyncStatusEnum.FAILED.name,
                 reason,
                 reasonDetail,
                 userId,

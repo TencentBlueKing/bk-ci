@@ -30,7 +30,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -60,11 +60,8 @@ interface ServiceRepositoryPacResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam("ciDirId", required = true)
-        @QueryParam("ciDirId")
-        ciDirId: String?,
         @ApiParam("文件同步详情", required = true)
-        syncFileInfoList: List<RepoPacSyncFileInfo>
+        syncFileInfoList: List<RepoYamlSyncInfo>
     ): Result<Boolean>
 
     @ApiOperation("更新pac同步状态")
@@ -77,11 +74,8 @@ interface ServiceRepositoryPacResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam("ciDirId", required = true)
-        @QueryParam("ciDirId")
-        ciDirId: String,
         @ApiParam("文件同步详情", required = true)
-        syncFileInfo: RepoPacSyncFileInfo
+        syncFileInfo: RepoYamlSyncInfo
     ): Result<Boolean>
 
     @ApiOperation("根据第三方代码库平台ID获取代码库")

@@ -26,36 +26,20 @@
  *
  */
 
-package com.tencent.devops.process.yaml.mq.pacTrigger
+package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.process.yaml.actions.data.ActionMetaData
-import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
-import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
-data class PacYamlTriggerEvent(
-    override val source: String = "PacYamlTrigger",
-    override val projectId: String,
-    override val yamlPath: String,
-    override val userId: String,
-    override val eventStr: String,
-    override val metaData: ActionMetaData,
-    override val actionCommonData: EventCommonData,
-    override val actionContext: PacTriggerContext,
-    override val actionSetting: PacRepoSetting,
-    val scmType: ScmType
-) : BasePacYamlEvent(
-    source = source,
-    projectId = projectId,
-    yamlPath = yamlPath,
-    userId = userId,
-    eventStr = eventStr,
-    metaData = metaData,
-    actionCommonData = actionCommonData,
-    actionContext = actionContext,
-    actionSetting = actionSetting
+@ApiModel("pac同步文件信息")
+data class RepoYamlSyncInfo(
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("同步状态", required = true)
+    val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
+    @ApiModelProperty("原因", required = false)
+    var reason: String? = null,
+    @ApiModelProperty("原因详情", required = false)
+    var reasonDetail: String? = null,
 )

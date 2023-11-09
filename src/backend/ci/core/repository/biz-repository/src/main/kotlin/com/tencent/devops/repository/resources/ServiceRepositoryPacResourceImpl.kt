@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.RepositoryPacService
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,13 +45,11 @@ class ServiceRepositoryPacResourceImpl @Autowired constructor(
     override fun initPacSyncDetail(
         projectId: String,
         repositoryHashId: String,
-        ciDirId: String?,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
+        syncFileInfoList: List<RepoYamlSyncInfo>
     ): Result<Boolean> {
-        repositoryPacService.initPacSyncDetail(
+        repositoryPacService.initYamlSync(
             projectId = projectId,
             repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
             syncFileInfoList = syncFileInfoList
         )
         return Result(true)
@@ -60,13 +58,11 @@ class ServiceRepositoryPacResourceImpl @Autowired constructor(
     override fun updatePacSyncStatus(
         projectId: String,
         repositoryHashId: String,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
+        syncFileInfo: RepoYamlSyncInfo
     ): Result<Boolean> {
-        repositoryPacService.updatePacSyncStatus(
+        repositoryPacService.updateYamlSyncStatus(
             projectId = projectId,
             repositoryHashId = repositoryHashId,
-            ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
         return Result(true)

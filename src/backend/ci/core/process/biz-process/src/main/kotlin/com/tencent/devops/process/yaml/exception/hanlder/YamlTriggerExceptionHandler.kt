@@ -34,8 +34,10 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.BaseAction
+import com.tencent.devops.process.yaml.actions.pacActions.PacEnableAction
 import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 import org.slf4j.LoggerFactory
@@ -47,7 +49,8 @@ import org.springframework.stereotype.Service
 @Service
 class YamlTriggerExceptionHandler(
     private val pipelineYamlSyncService: PipelineYamlSyncService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineYamlService: PipelineYamlService,
 ) {
 
     companion object {
@@ -105,14 +108,43 @@ class YamlTriggerExceptionHandler(
      */
     private fun handleYamlTriggerException(e: YamlTriggerException) {
         val action = e.action
+        val projectId = action.data.setting.projectId
+        val repoHashId = action.data.setting.repoHashId
+        val yamlFile = action.data.context.yamlFile!!
+        val pipeline = action.data.context.pipeline
+        val reason = e.reason.name
+        val reasonDetail = I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr()
         val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
             .projectId(action.data.setting.projectId)
             .detailId(pipelineTriggerEventService.getDetailId())
             .status(PipelineTriggerStatus.FAILED.name)
             .pipelineId(action.data.context.pipeline?.filePath ?: "")
-            .reason(e.reason.name)
-            .reasonDetail(I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr())
+            .reason(reason)
+            .reasonDetail(reasonDetail)
             .build()
         pipelineTriggerEventService.saveTriggerDetail(pipelineTriggerDetail)
+        // 如果开启pac异常,需要把同步结果写回代码库
+        if (action is PacEnableAction) {
+            pipelineYamlSyncService.syncFailed(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = action.data.context.yamlFile!!.yamlPath,
+                reason = reason,
+                reasonDetail = reasonDetail
+            )
+        }
+        if (pipeline != null) {
+            pipelineYamlService.saveFailed(
+                projectId = projectId,
+                repoHashId = action.data.setting.repoHashId,
+                filePath = yamlFile.yamlPath,
+                blobId = yamlFile.blobId!!,
+                ref = action.data.eventCommon.branch,
+                pipelineId = pipeline.pipelineId,
+                reason = reason,
+                reasonDetail = reasonDetail,
+                userId = action.data.getUserId()
+            )
+        }
     }
 }

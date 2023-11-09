@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -82,10 +82,10 @@ interface UserRepositoryPacResource {
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("刷新pac")
+    @ApiOperation("重试")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/refresh")
-    fun refresh(
+    fun retry(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -130,7 +130,7 @@ interface UserRepositoryPacResource {
     @ApiOperation("获取同步详情")
     @GET
     @Path("/{projectId}/{repositoryHashId}/getPacSyncDetail")
-    fun getPacSyncDetail(
+    fun listYamlSync(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -140,7 +140,7 @@ interface UserRepositoryPacResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
-    ): Result<List<RepoPacSyncFileInfo>>
+    ): Result<List<RepoYamlSyncInfo>>
 
     @ApiOperation("获取支持的pac代码库类型")
     @GET

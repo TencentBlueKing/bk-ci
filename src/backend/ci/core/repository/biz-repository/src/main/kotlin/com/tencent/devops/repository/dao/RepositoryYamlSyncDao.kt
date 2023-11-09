@@ -28,34 +28,32 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryPacSyncDetail
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
+import com.tencent.devops.model.repository.tables.TRepositoryYamlSync
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class RepoPacSyncDetailDao {
+class RepositoryYamlSyncDao {
 
     fun batchAdd(
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        ciDirId: String,
-        syncFileInfoList: List<RepoPacSyncFileInfo>
+        syncFileInfoList: List<RepoYamlSyncInfo>
     ) {
         if (syncFileInfoList.isEmpty()) {
             return
         }
         val now = LocalDateTime.now()
         dslContext.batch(syncFileInfoList.map {
-            with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
+            with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
                     REPOSITORY_ID,
-                    CI_DIR_ID,
                     FILE_PATH,
                     SYNC_STATUS,
                     CREATE_TIME,
@@ -63,7 +61,6 @@ class RepoPacSyncDetailDao {
                 ).values(
                     projectId,
                     repositoryId,
-                    ciDirId,
                     it.filePath,
                     it.syncStatus.name,
                     now,
@@ -77,36 +74,48 @@ class RepoPacSyncDetailDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        ciDirId: String,
-        syncFileInfo: RepoPacSyncFileInfo
+        syncFileInfo: RepoYamlSyncInfo
     ) {
-        with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
+        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
             dslContext.update(this)
                 .set(SYNC_STATUS, syncFileInfo.syncStatus.name)
                 .set(REASON, syncFileInfo.reason)
                 .set(REASON_DETAIL, syncFileInfo.reasonDetail)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(CI_DIR_ID.eq(ciDirId))
+                .and(FILE_PATH.eq(syncFileInfo.filePath))
                 .execute()
         }
     }
 
-    fun getPacSyncDetail(
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun listYamlSync(
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        ciDirId: String
-    ): List<RepoPacSyncFileInfo> {
-        with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
+        syncStatus: String? = null
+    ): List<RepoYamlSyncInfo> {
+        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(CI_DIR_ID.eq(ciDirId))
+                .let { if (syncStatus == null) it else it.and(SYNC_STATUS.eq(syncStatus)) }
                 .fetch().map {
-                    RepoPacSyncFileInfo(
+                    RepoYamlSyncInfo(
                         filePath = it.filePath,
-                        syncStatus = RepoPacSyncStatusEnum.valueOf(it.syncStatus),
+                        syncStatus = RepoYamlSyncStatusEnum.valueOf(it.syncStatus),
                         reason = it.reason,
                         reasonDetail = it.reasonDetail
                     )
@@ -114,18 +123,16 @@ class RepoPacSyncDetailDao {
         }
     }
 
-    fun countPacSyncDetail(
+    fun countYamlSync(
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
-        ciDirId: String,
         syncStatus: String
     ): Int {
-        with(TRepositoryPacSyncDetail.T_REPOSITORY_PAC_SYNC_DETAIL) {
+        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
-                .and(CI_DIR_ID.eq(ciDirId))
                 .and(SYNC_STATUS.eq(syncStatus))
                 .fetchOne(0, Int::class.java) ?: 0
         }

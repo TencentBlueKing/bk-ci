@@ -26,14 +26,34 @@
  *
  */
 
-package com.tencent.devops.repository.pojo.enums
+package com.tencent.devops.process.yaml.mq
 
-enum class RepoPacSyncStatusEnum {
-    // 同步中
-    SYNC,
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.process.yaml.actions.data.ActionMetaData
+import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
+import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-    // 同步成功
-    SUCCEED,
-    // 同步失败
-    FAILED;
-}
+@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_DISABLE_PIPELINE_EVENT)
+data class PacYamlDisableEvent(
+    override val source: String = "PacYamlDisable",
+    override val projectId: String,
+    override val yamlPath: String,
+    override val userId: String,
+    override val eventStr: String,
+    override val metaData: ActionMetaData,
+    override val actionCommonData: EventCommonData,
+    override val actionContext: PacTriggerContext,
+    override val actionSetting: PacRepoSetting
+) : BasePacYamlEvent(
+    source = source,
+    projectId = projectId,
+    yamlPath = yamlPath,
+    userId = userId,
+    eventStr = eventStr,
+    metaData = metaData,
+    actionCommonData = actionCommonData,
+    actionContext = actionContext,
+    actionSetting = actionSetting
+)

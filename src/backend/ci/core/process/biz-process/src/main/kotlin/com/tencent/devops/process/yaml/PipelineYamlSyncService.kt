@@ -31,8 +31,8 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoPacSyncFileInfo
-import com.tencent.devops.repository.pojo.enums.RepoPacSyncStatusEnum
+import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,15 +44,13 @@ class PipelineYamlSyncService @Autowired constructor(
     fun initPacSyncDetail(
         projectId: String,
         repoHashId: String,
-        ciDirId: String,
         yamlPathList: List<YamlPathListEntry>
     ) {
         val syncFileInfoList =
-            yamlPathList.map { RepoPacSyncFileInfo(filePath = it.yamlPath, syncStatus = RepoPacSyncStatusEnum.SYNC) }
+            yamlPathList.map { RepoYamlSyncInfo(filePath = it.yamlPath, syncStatus = RepoYamlSyncStatusEnum.SYNC) }
         client.get(ServiceRepositoryPacResource::class).initPacSyncDetail(
             projectId = projectId,
             repositoryHashId = repoHashId,
-            ciDirId = ciDirId,
             syncFileInfoList = syncFileInfoList
         )
     }
@@ -60,12 +58,11 @@ class PipelineYamlSyncService @Autowired constructor(
     /**
      * 同步成功
      */
-    fun syncSuccess(projectId: String, repoHashId: String, ciDirId: String, filePath: String) {
-        val syncFileInfo = RepoPacSyncFileInfo(filePath = filePath, syncStatus = RepoPacSyncStatusEnum.SUCCEED)
+    fun syncSuccess(projectId: String, repoHashId: String, filePath: String) {
+        val syncFileInfo = RepoYamlSyncInfo(filePath = filePath, syncStatus = RepoYamlSyncStatusEnum.SUCCEED)
         client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
             projectId = projectId,
             repositoryHashId = repoHashId,
-            ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
     }
@@ -76,21 +73,19 @@ class PipelineYamlSyncService @Autowired constructor(
     fun syncFailed(
         projectId: String,
         repoHashId: String,
-        ciDirId: String,
         filePath: String,
         reason: String,
         reasonDetail: String
     ) {
-        val syncFileInfo = RepoPacSyncFileInfo(
+        val syncFileInfo = RepoYamlSyncInfo(
             filePath = filePath,
-            syncStatus = RepoPacSyncStatusEnum.FAILED,
+            syncStatus = RepoYamlSyncStatusEnum.FAILED,
             reason = reason,
             reasonDetail = reasonDetail
         )
         client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
             projectId = projectId,
             repositoryHashId = repoHashId,
-            ciDirId = ciDirId,
             syncFileInfo = syncFileInfo
         )
     }
