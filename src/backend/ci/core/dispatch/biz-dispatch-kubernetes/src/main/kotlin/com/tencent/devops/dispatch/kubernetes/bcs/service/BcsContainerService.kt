@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.service
+package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -34,9 +34,24 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsBuilderClient
+import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsTaskClient
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsBuilder
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsBuilderStatusEnum
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsDeleteBuilderParams
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsStartBuilderParams
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsStopBuilderParams
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.canReStart
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.getCodeMessage
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.hasException
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isFailed
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isRunning
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isStarting
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isSuccess
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.readyToStart
+import com.tencent.devops.dispatch.kubernetes.bcs.utils.BcsCommonUtils
+import com.tencent.devops.dispatch.kubernetes.common.BUILDER_NAME
 import com.tencent.devops.dispatch.kubernetes.common.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
@@ -46,23 +61,16 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
-import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
-import com.tencent.devops.dispatch.kubernetes.pojo.Builder
-import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_BCS_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BCS_BUILD_CONTAINER_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_THIRD_SERVICE_BCS_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
-import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
-import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
+import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
-import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
@@ -72,70 +80,53 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.canReStart
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
-import com.tencent.devops.dispatch.kubernetes.pojo.hasException
-import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
-import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
-import com.tencent.devops.dispatch.kubernetes.pojo.isStarting
-import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
-import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.DispatchKubernetesCommonUtils
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.*
-import java.util.stream.Collectors
 
-class KubernetesContainerService @Autowired constructor(
+class BcsContainerService @Autowired constructor(
+    private val bcsBuilderClient: BcsBuilderClient,
     private val logsPrinter: LogsPrinter,
-    private val commonConfig: CommonConfig,
-    private val kubernetesTaskClient: KubernetesTaskClient,
-    private val kubernetesBuilderClient: KubernetesBuilderClient,
-    private val kubernetesJobClient: KubernetesJobClient
+    private val bcsTaskClient: BcsTaskClient,
+    private val commonConfig: CommonConfig
 ) : ContainerService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
-
-        // kubernetes构建机默认request配置
-        private const val DEFAULT_REQUEST_CPU = 1
-        private const val DEFAULT_REQUEST_MEM = 1024
-        private const val DEFAULT_REQUEST_DISK = 100
+        private val logger = LoggerFactory.getLogger(BcsContainerService::class.java)
     }
 
-    override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
+    override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
     override fun getLog() = DispatchBuildLog(
-        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
+        readyStartLog =
+        I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
         startContainerError =
-        I18nUtil.getCodeLanMessage(messageCode = BK_START_BUILD_CONTAINER_FAIL, params = arrayOf("kubernetes")),
-        troubleShooting =
-        I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_ERROR, params = arrayOf("kubernetes"))
+        I18nUtil.getCodeLanMessage(BK_START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            BK_THIRD_SERVICE_BCS_BUILD_ERROR,
+            I18nUtil.getDefaultLocaleLanguage()
+        )
     )
 
-    @Value("\${kubernetes.resources.builder.cpu}")
+    @Value("\${bcs.resources.builder.cpu}")
     override var cpu: Double = 32.0
 
-    @Value("\${kubernetes.resources.builder.memory}")
+    @Value("\${bcs.resources.builder.memory}")
     override var memory: String = "65535"
 
-    @Value("\${kubernetes.resources.builder.disk}")
+    @Value("\${bcs.resources.builder.disk}")
     override var disk: String = "500"
 
-    @Value("\${kubernetes.entrypoint}")
-    override val entrypoint: String = "kubernetes_init.sh"
+    @Value("\${bcs.entrypoint}")
+    override val entrypoint: String = "bcs_init.sh"
 
-    @Value("\${kubernetes.sleepEntrypoint}")
+    @Value("\${bcs.sleepEntrypoint}")
     override val sleepEntrypoint: String = "sleep.sh"
 
     override val helpUrl: String? = ""
-
-    @Value("\${kubernetes.gateway.webConsoleProxy}")
-    val webConsoleProxy: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -144,7 +135,7 @@ class KubernetesContainerService @Autowired constructor(
         builderName: String,
         retryTime: Int
     ): Result<DispatchBuildBuilderStatus> {
-        val result = kubernetesBuilderClient.getBuilderDetail(
+        val result = bcsBuilderClient.getBuilderDetail(
             buildId = buildId,
             vmSeqId = vmSeqId,
             userId = userId,
@@ -152,7 +143,7 @@ class KubernetesContainerService @Autowired constructor(
             retryTime = retryTime
         )
         if (result.isNotOk()) {
-            return Result(result.status, result.message)
+            return Result(result.code, result.message)
         }
 
         val status = when {
@@ -174,18 +165,18 @@ class KubernetesContainerService @Autowired constructor(
         builderName: String,
         param: DispatchBuildOperateBuilderParams
     ): String {
-        return kubernetesBuilderClient.operateBuilder(
+        return bcsBuilderClient.operateBuilder(
             buildId = buildId,
             vmSeqId = vmSeqId,
             userId = userId,
             name = builderName,
             param = when (param.type) {
-                DispatchBuildOperateBuilderType.DELETE -> DeleteBuilderParams()
-                DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
-                DispatchBuildOperateBuilderType.START_SLEEP -> StartBuilderParams(
+                DispatchBuildOperateBuilderType.START_SLEEP -> BcsStartBuilderParams(
                     env = param.env,
                     command = listOf("/bin/sh", sleepEntrypoint)
                 )
+                DispatchBuildOperateBuilderType.DELETE -> BcsDeleteBuilderParams()
+                DispatchBuildOperateBuilderType.STOP -> BcsStopBuilderParams()
             }
         )
     }
@@ -202,60 +193,73 @@ class KubernetesContainerService @Autowired constructor(
             val (host, name, tag) = DispatchKubernetesCommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
-            val registry = if (host.isBlank() || userName.isNullOrBlank() || password.isNullOrBlank()) {
-                null
-            } else {
-                KubernetesDockerRegistry(host, userName, password)
-            }
 
-            val builderName = getBuilderName()
-            val taskId = kubernetesBuilderClient.createBuilder(
+            val builderName = BcsCommonUtils.getOnlyName(userId)
+            val bcsTaskId = bcsBuilderClient.createBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
-                builder = Builder(
+                bcsBuilder = BcsBuilder(
                     name = builderName,
                     image = "$host/$name:$tag",
-                    registry = registry,
-                    resource = KubernetesResource(
-                        requestCPU = DEFAULT_REQUEST_CPU.toString(),
-                        requestDisk = "${DEFAULT_REQUEST_DISK}G",
-                        requestDiskIO = "0",
-                        requestMem = "${DEFAULT_REQUEST_MEM}Mi",
-                        limitCpu = cpu.toString(),
-                        limitDisk = "${disk}G",
-                        limitDiskIO = "0",
-                        limitMem = "${memory}Mi"
-                    ),
+                    registry = DockerRegistry(host, userName, password),
+                    cpu = cpu,
+                    mem = mem,
+                    disk = disk,
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
                         ENV_KEY_AGENT_ID to id,
                         ENV_KEY_AGENT_SECRET_KEY to secretKey,
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        SLAVE_ENVIRONMENT to "Bcs",
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
+                        BUILDER_NAME to builderName,
                         ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
-                    command = listOf("/bin/sh", entrypoint),
-                    nfs = null,
-                    privateBuilder = null,
-                    specialBuilder = null
+                    command = listOf("/bin/sh", entrypoint)
                 )
             )
             logger.info(
                 "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createBuilder, " +
-                    "taskId:($taskId)"
+                    "taskId:($bcsTaskId)"
             )
             logsPrinter.printLogs(
                 this,
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
-                    params = arrayOf(builderName),
+                    messageCode = BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                )
+                ) + " builderName: $builderName "
             )
-            return Pair(taskId, builderName)
+
+            val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
+
+            if (taskStatus == BcsTaskStatusEnum.SUCCEEDED) {
+                // 启动成功
+                logger.info(
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo create bcs " +
+                        "vm success, wait vm start..."
+                )
+                logsPrinter.printLogs(
+                    this,
+                    I18nUtil.getCodeLanMessage(
+                        BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
+                        I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
+            } else {
+                // 清除构建异常容器，并重新置构建池为空闲
+                clearExceptionBuilder(builderName)
+                throw BuildFailureException(
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode,
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode.toString()),
+                    I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
+                    ":${failedMsg ?: taskStatus.message}"
+                )
+            }
+            return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
         }
     }
 
@@ -268,20 +272,21 @@ class KubernetesContainerService @Autowired constructor(
         disk: String
     ): String {
         with(dispatchMessages) {
-            return kubernetesBuilderClient.operateBuilder(
+            return bcsBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
                 name = builderName,
-                param = StartBuilderParams(
+                param = BcsStartBuilderParams(
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
                         ENV_KEY_AGENT_ID to id,
                         ENV_KEY_AGENT_SECRET_KEY to secretKey,
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        SLAVE_ENVIRONMENT to "Bcs",
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
+                        BUILDER_NAME to builderName,
                         ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
@@ -290,34 +295,49 @@ class KubernetesContainerService @Autowired constructor(
         }
     }
 
+    private fun DispatchMessage.clearExceptionBuilder(builderName: String) {
+        try {
+            // 下发删除，不管成功失败
+            logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
+            bcsBuilderClient.operateBuilder(
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                userId = userId,
+                name = builderName,
+                param = BcsDeleteBuilderParams()
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
+        }
+    }
+
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
-        val startResult = kubernetesTaskClient.waitTaskFinish(userId, taskId)
-        return if (startResult.first == TaskStatusEnum.SUCCEEDED) {
-            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+        val startResult = bcsTaskClient.waitTaskFinish(userId, taskId)
+        if (startResult.first == BcsTaskStatusEnum.SUCCEEDED) {
+            return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
         } else {
-            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
+            return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
         }
     }
 
     override fun getTaskStatus(userId: String, taskId: String): DispatchBuildStatusResp {
-        val taskResponse = kubernetesTaskClient.getTasksStatus(userId, taskId)
-        val status = TaskStatusEnum.realNameOf(taskResponse.data?.status)
+        val taskResponse = bcsTaskClient.getTasksStatus(userId, taskId)
+        val status = BcsTaskStatusEnum.realNameOf(taskResponse.data?.status)
         if (taskResponse.isNotOk() || taskResponse.data == null) {
             // 创建失败
             val msg = "${taskResponse.message ?: taskResponse.getCodeMessage()}"
-            logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.status}, msg: $msg")
+            logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.code}, msg: $msg")
             return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, msg)
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data.detail)
+            return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, taskResponse.data.message)
         }
         return when {
             status!!.isRunning() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.running.name)
             status.isSuccess() -> {
                 DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
             }
-
             else -> DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status.message)
         }
     }
@@ -330,7 +350,7 @@ class KubernetesContainerService @Autowired constructor(
         userId: String,
         builderName: String
     ): DispatchBuilderDebugStatus {
-        val status = kubernetesBuilderClient.waitContainerRunning(
+        val status = bcsBuilderClient.waitContainerRunning(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -339,11 +359,10 @@ class KubernetesContainerService @Autowired constructor(
             containerName = builderName
         )
         return when (status) {
-            KubernetesBuilderStatusEnum.READY_TO_RUN, KubernetesBuilderStatusEnum.SUCCEEDED ->
+            BcsBuilderStatusEnum.READY_TO_RUN, BcsBuilderStatusEnum.STOP_FAILED ->
                 DispatchBuilderDebugStatus.CAN_RESTART
-
-            KubernetesBuilderStatusEnum.RUNNING -> DispatchBuilderDebugStatus.RUNNING
-            KubernetesBuilderStatusEnum.PENDING -> DispatchBuilderDebugStatus.STARTING
+            BcsBuilderStatusEnum.RUNNING -> DispatchBuilderDebugStatus.RUNNING
+            BcsBuilderStatusEnum.STARTING -> DispatchBuilderDebugStatus.STARTING
             else -> DispatchBuilderDebugStatus.UNKNOWN
         }
     }
@@ -354,22 +373,7 @@ class KubernetesContainerService @Autowired constructor(
         staffName: String,
         builderName: String
     ): String {
-        if (webConsoleProxy.isEmpty()) {
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorType,
-                errorCode = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
-                formatErrorMessage = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.getErrorMessage(),
-                errorMessage = "webConsoleProxy is empty"
-            )
-        }
-        val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
-        val list = websocketUrl.split("/").toList()
-        val targetHost = list[2]
-        val newWsUrl = StringBuilder(webConsoleProxy)
-            .append("/")
-            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
-            .append("?targetHost=$targetHost")
-        return newWsUrl.toString()
+        return bcsBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
     }
 
     override fun buildAndPushImage(
@@ -383,42 +387,10 @@ class KubernetesContainerService @Autowired constructor(
                 JsonUtil.toJson(dispatchBuildImageReq)
         )
 
-        val info = with(dispatchBuildImageReq) {
-            BuildAndPushImage(
-                name = jobName,
-                resource = KubernetesResource(
-                    requestCPU = cpu.toString(),
-                    requestDisk = "${disk}G",
-                    requestDiskIO = "1",
-                    requestMem = "${memory}Mi",
-                    limitCpu = cpu.toString(),
-                    limitDisk = "${disk}G",
-                    limitDiskIO = "1",
-                    limitMem = "${memory}Mi"
-                ),
-                podNameSelector = PodNameSelector(podName, true),
-                activeDeadlineSeconds = null,
-                info = BuildAndPushImageInfo(
-                    dockerFilePath = dockerFile,
-                    contextPath = workPath,
-                    destinations = imageName,
-                    buildArgs = buildArgs.map { it.key to it.value.toString() }.toMap(),
-                    registries = registry.map {
-                        KubernetesDockerRegistry(
-                            server = it.host,
-                            username = it.username,
-                            password = it.password
-                        )
-                    }
-                )
+        return DispatchTaskResp(
+            bcsBuilderClient.buildAndPushImage(
+                userId, dispatchBuildImageReq
             )
-        }
-
-        return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
-    }
-
-    private fun getBuilderName(): String {
-        return "build${System.currentTimeMillis()}-" +
-            RandomStringUtils.randomAlphabetic(8).lowercase(Locale.getDefault())
+        )
     }
 }

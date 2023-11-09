@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.pojo.resp
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
-) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
-        }
-    }
-}
+/**
+ * bcs任务状态
+ * @param status 任务状态
+ * @param message 请求成功但是结果失败时的错误信息
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class BcsTaskStatusResp(
+    val status: String,
+    val message: String?
+)

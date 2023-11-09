@@ -25,62 +25,61 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.client
+package com.tencent.devops.dispatch.kubernetes.bcs.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_EXECUTE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_EXCEPTION
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
-import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusResp
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsResult
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.getCodeMessage
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isFailed
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isRunning
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.isSuccess
+import com.tencent.devops.dispatch.kubernetes.bcs.pojo.resp.BcsTaskStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_EXECUTION_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
-import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
-import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
-import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.SocketTimeoutException
 
-class KubernetesTaskClient @Autowired constructor(
+class BcsTaskClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val clientCommon: KubernetesClientCommon
+    private val clientCommon: BcsClientCommon
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(KubernetesBuilderClient::class.java)
+        private val logger = LoggerFactory.getLogger(BcsBuilderClient::class.java)
     }
 
     fun getTasksStatus(
         userId: String,
         taskId: String,
         retryFlag: Int = 3
-    ): KubernetesResult<TaskStatusResp> {
-        val url = "/api/tasks/$taskId/status"
+    ): BcsResult<BcsTaskStatusResp> {
+        val url = "/api/v1/devops/taskstatus/$taskId"
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (response.isSuccessful) {
-                    logger.info("Get task: $taskId status response: ${JsonUtil.toJson(responseContent)}")
                     return objectMapper.readValue(responseContent)
                 }
 
-                logger.error("Get task: $taskId status failed, responseCode: ${response.code}")
+                logger.error("Get task status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
                     ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
-                        messageCode = BK_KUBERNETES_TASK_STATUS_API_EXCEPTION,
-                        params = arrayOf(taskId)
-                    ) + "：http response code: ${response.code}"
+                        ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                    ),
+                    MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_STATUS_ERROR, I18nUtil.getLanguage(userId)) +
+                    "：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -93,51 +92,57 @@ class KubernetesTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
+                    formatErrorMessage = I18nUtil.getCodeLanMessage(
+                        ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                    ),
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        BK_GET_BCS_TASK_STATUS_TIMEOUT,
+                        I18nUtil.getLanguage(userId)
+                    ) + ", url: $url"
                 )
             }
         }
     }
 
-    fun waitTaskFinish(userId: String, taskId: String): Pair<TaskStatusEnum, String?> {
+    fun waitTaskFinish(userId: String, taskId: String): Pair<BcsTaskStatusEnum, String?> {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                logger.error("$taskId kubernetes task timeout")
+                logger.error("$taskId bcs task timeout")
                 return Pair(
-                    TaskStatusEnum.TIME_OUT,
-                    "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_EXECUTE_TIMEOUT)}（10min）"
+                    BcsTaskStatusEnum.TIME_OUT,
+                    MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_EXECUTION_TIMEOUT, I18nUtil.getLanguage(userId)) +
+                            "（10min）"
                 )
             }
             Thread.sleep(1 * 1000)
             val (status, errorMsg) = getTaskResult(userId, taskId).apply {
                 if (first == null) {
-                    return Pair(TaskStatusEnum.FAILED, second)
+                    return Pair(BcsTaskStatusEnum.FAILED, second)
                 }
             }
             return when {
                 status!!.isRunning() -> continue@loop
                 status.isSuccess() -> {
-                    Pair(TaskStatusEnum.SUCCEEDED, null)
+                    Pair(BcsTaskStatusEnum.SUCCEEDED, null)
                 }
                 else -> Pair(status, errorMsg)
             }
         }
     }
 
-    private fun getTaskResult(userId: String, taskId: String): Pair<TaskStatusEnum?, String?> {
+    private fun getTaskResult(userId: String, taskId: String): Pair<BcsTaskStatusEnum?, String?> {
         val taskResponse = getTasksStatus(userId, taskId)
-        val status = TaskStatusEnum.realNameOf(taskResponse.data?.status)
+        val status = BcsTaskStatusEnum.realNameOf(taskResponse.data?.status)
         if (taskResponse.isNotOk() || taskResponse.data == null) {
             // 创建失败
             val msg = "${taskResponse.message ?: taskResponse.getCodeMessage()}"
-            logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.status}, msg: $msg")
+            logger.error("Execute task: $taskId failed, actionCode is ${taskResponse.code}, msg: $msg")
             return Pair(status, msg)
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return Pair(status, taskResponse.data.detail)
+            return Pair(status, taskResponse.data.message)
         }
 
         return Pair(status, null)

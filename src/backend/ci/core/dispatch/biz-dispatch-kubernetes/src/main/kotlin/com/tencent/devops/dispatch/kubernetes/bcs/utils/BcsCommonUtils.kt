@@ -25,24 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.utils
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
+import org.apache.commons.lang3.RandomStringUtils
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
-) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
-        }
-    }
+object BcsCommonUtils {
+
+    fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}-" +
+        RandomStringUtils.randomAlphabetic(16)
 }

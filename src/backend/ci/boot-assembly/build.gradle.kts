@@ -34,7 +34,6 @@ dependencies {
     implementation(project(":core:artifactory:biz-artifactory"))
     implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
-    implementation(project(":core:dispatch:biz-dispatch-docker-sample"))
     implementation(project(":core:environment:biz-environment"))
     implementation(project(":core:image:biz-image"))
     implementation(project(":core:log:biz-log-sample"))

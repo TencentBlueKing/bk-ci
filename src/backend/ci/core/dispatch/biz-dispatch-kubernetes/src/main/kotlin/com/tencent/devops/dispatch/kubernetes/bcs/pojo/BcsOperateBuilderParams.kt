@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.pojo
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
-) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
-        }
-    }
-}
+interface BcsOperateBuilderParams
+
+class BcsDeleteBuilderParams(
+    @JsonProperty("ProjectID")
+    val projectId: String = "landun"
+) : BcsOperateBuilderParams
+
+class BcsStopBuilderParams : BcsOperateBuilderParams
+
+data class BcsStartBuilderParams(
+    val env: Map<String, String>?,
+    val command: List<String>?
+) : BcsOperateBuilderParams

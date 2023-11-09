@@ -25,24 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.pojo
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
+enum class BcsTaskStatusEnum(
+    val realName: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsTaskStatus", reusePrefixFlag = false)
+    val message: String
 ) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
+    WAITING("waiting", "waiting"), // 任务初始化
+    RUNNING("running", "running"), // 任务正在执行
+    FAILED("failed", "failed"), // 任务执行失败
+    SUCCEEDED("succeeded", "succeeded"), // 任务执行成功
+    UNKNOWN("unknown", "unknown"), // 未知状态
+    // 下面的为自定义状态，非bcs返回
+    TIME_OUT("time_out", "timeOut"); // 超时
+
+    companion object {
+        fun realNameOf(realName: String?): BcsTaskStatusEnum? {
+            if (realName.isNullOrBlank()) {
+                return null
+            }
+            return values().firstOrNull { it.realName == realName }
         }
     }
 }
+
+fun BcsTaskStatusEnum.isRunning() =
+    this == BcsTaskStatusEnum.RUNNING || this == BcsTaskStatusEnum.WAITING
+
+fun BcsTaskStatusEnum.isSuccess() = this == BcsTaskStatusEnum.SUCCEEDED
+
+fun BcsTaskStatusEnum.isFailed() = this == BcsTaskStatusEnum.FAILED || this == BcsTaskStatusEnum.UNKNOWN
