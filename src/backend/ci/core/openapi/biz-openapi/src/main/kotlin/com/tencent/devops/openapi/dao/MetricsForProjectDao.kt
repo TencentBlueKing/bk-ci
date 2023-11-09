@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository
 class MetricsForProjectDao {
     fun createOrUpdate(
         dslContext: DSLContext,
-        metricsApis: List<MetricsProjectData>,
+        metricsApis: List<MetricsProjectData>
     ): Int {
         return with(TOpenapiMetricsForProject.T_OPENAPI_METRICS_FOR_PROJECT) {
             dslContext.batch(

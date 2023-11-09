@@ -298,7 +298,6 @@ class ESServiceImpl constructor(
         return builder.build()
     }
 
-
     /*
     * 每5分钟执行一次
     * 根据"api"字段进行分组，然后在每个分组内根据"key"字段进行进一步的分组。
