@@ -37,7 +37,7 @@ data class DownloadGitRepoFileRequest(
     @ApiParam("限定为下载指定路径的文件", required = false)
     val filePath: String?,
     @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
-    val format: String?,
+    val format: String? = null,
     @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
-    val isProjectPathWrapped: Boolean?
+    val isProjectPathWrapped: Boolean? = null
 )

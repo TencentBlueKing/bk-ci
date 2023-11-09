@@ -1201,6 +1201,23 @@ class GitService @Autowired constructor(
         }, retryTime = 3, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
+    override fun downloadGitRepoLfsFile(
+        token: String,
+        tokenType: TokenTypeEnum,
+        request: DownloadGitRepoFileRequest,
+        response: HttpServletResponse
+    ) {
+        logger.info(
+            "downloadGitRepoLfsFile  repoName is:${request.repoName},sha is:${request.sha},tokenType is:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(request.repoName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/lfs/file")
+        setToken(tokenType, url, token)
+        url.append("&ref=${request.sha}")
+        url.append("&file_paths=${request.filePath}")
+        OkhttpUtils.downloadFile(url.toString(), response)
+    }
+
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
     fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
         if (TokenTypeEnum.OAUTH == tokenType) {

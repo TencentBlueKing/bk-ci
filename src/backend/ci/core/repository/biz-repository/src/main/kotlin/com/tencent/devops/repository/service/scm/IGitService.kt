@@ -183,6 +183,13 @@ interface IGitService {
         response: HttpServletResponse
     )
 
+    fun downloadGitRepoLfsFile(
+        token: String,
+        tokenType: TokenTypeEnum,
+        request: DownloadGitRepoFileRequest,
+        response: HttpServletResponse
+    )
+
     fun getMrReviewInfo(
         repoName: String,
         mrId: Long,
