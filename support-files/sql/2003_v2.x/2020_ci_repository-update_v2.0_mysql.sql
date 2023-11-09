@@ -33,27 +33,9 @@ BEGIN
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_REPOSITORY'
-                        AND COLUMN_NAME = 'PAC_SYNC_STATUS') THEN
+                        AND COLUMN_NAME = 'YAML_SYNC_STATUS') THEN
         ALTER TABLE `T_REPOSITORY`
-            ADD COLUMN `PAC_SYNC_STATUS` VARCHAR(10) NULL COMMENT 'pac同步状态';
-        END IF;
-
-        IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_REPOSITORY'
-                        AND COLUMN_NAME = 'PAC_SYNC_CI_DIR_ID') THEN
-        ALTER TABLE `T_REPOSITORY`
-            ADD COLUMN `PAC_SYNC_CI_DIR_ID` VARCHAR(64) NULL COMMENT 'pac同步的commitId';
-        END IF;
-
-        IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_REPOSITORY'
-                        AND COLUMN_NAME = 'PAC_SYNC_TIME') THEN
-        ALTER TABLE `T_REPOSITORY`
-            ADD COLUMN `PAC_SYNC_TIME` timestamp NULL COMMENT 'pac同步时间';
+            ADD COLUMN `YAML_SYNC_STATUS` VARCHAR(10) NULL COMMENT 'pac同步状态';
         END IF;
 
     COMMIT;
