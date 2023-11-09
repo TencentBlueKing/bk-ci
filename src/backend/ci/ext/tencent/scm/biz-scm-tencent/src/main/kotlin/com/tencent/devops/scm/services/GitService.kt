@@ -1749,23 +1749,6 @@ class GitService @Autowired constructor(
         }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
-    fun downloadGitRepoLfsFile(
-        repoName: String,
-        ref: String,
-        token: String,
-        tokenType: TokenTypeEnum,
-        filePath: String,
-        response: HttpServletResponse
-    ) {
-        logger.info("downloadGitRepoLfsFile repoName is:$repoName,sha is:$ref,tokenType is:$tokenType")
-        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/lfs/file")
-        setToken(tokenType, url, token)
-        url.append("&sha=$ref")
-        url.append("&file_paths=$filePath")
-        OkhttpUtils.downloadFile(url.toString(), response)
-    }
-
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")
     fun addCommitCheck(request: CommitCheckRequest) {
         val startEpoch = System.currentTimeMillis()
