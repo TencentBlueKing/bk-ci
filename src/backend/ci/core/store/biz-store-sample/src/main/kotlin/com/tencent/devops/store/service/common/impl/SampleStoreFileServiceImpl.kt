@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
@@ -90,18 +91,12 @@ class SampleStoreFileServiceImpl : StoreFileService() {
     override fun textReferenceFileDownload(
         userId: String,
         fileDirPath: String,
+        cacheKey: String,
+        bkDiskLruFileCache: BkDiskLruFileCache,
         request: TextReferenceFileDownloadRequest
     ): String? {
-        val fileNameList = getFileNames(
-            projectCode = request.projectCode,
-            fileDir = "${request.fileDir}${fileSeparator}file"
-        )
-        if (fileNameList.isNullOrEmpty()) {
-            logger.warn("get text reference file list fail")
-            return null
-        }
         val downloadPath = "$fileDirPath${fileSeparator}file"
-        fileNameList.forEach {
+        request.filePaths.forEach {
             downloadFile(
                 "${request.projectCode}$fileSeparator${request.fileDir}${fileSeparator}file$fileSeparator$it",
                 File(downloadPath, it)
@@ -111,7 +106,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
             logger.warn(" FAIL|Download file from ${request.storeCode} fail")
             return null
         }
-        ZipUtil.zipDir(File(downloadPath), "$fileDirPath${fileSeparator}file.zip")
+        val zipFile = ZipUtil.zipDir(File(downloadPath), "$fileDirPath${fileSeparator}file.zip")
+        bkDiskLruFileCache.put(cacheKey, zipFile)
         return downloadPath
     }
 

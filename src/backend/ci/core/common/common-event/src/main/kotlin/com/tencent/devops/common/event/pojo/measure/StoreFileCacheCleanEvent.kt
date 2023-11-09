@@ -25,19 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.common.event.pojo.measure
 
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.annotations.ApiModelProperty
 
-data class DownloadGitRepoFileRequest(
-    @ApiParam("仓库名称", required = true)
-    val repoName: String,
-    @ApiParam("commit hash值、分支名或tag", required = false)
-    val sha: String?,
-    @ApiParam("限定为下载指定路径的文件", required = false)
-    val filePath: String?,
-    @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
-    val format: String?,
-    @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
-    val isProjectPathWrapped: Boolean?
+@Event(exchange = MQ.EXCHANGE_STORE_FILE_CACHE_CLEAN_FANOUT, routeKey = MQ.ROUTE_STORE_FILE_CACHE_CLEAN_EXCHANGE_FANOUT)
+data class StoreFileCacheCleanEvent(
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
+    @ApiModelProperty("版本号")
+    val version: String,
+    @ApiModelProperty("磁盘缓存目录路径")
+    val fileCachePath: String,
+    @ApiModelProperty("磁盘缓存key")
+    val fileCacheKey: String
 )

@@ -28,14 +28,14 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.getFileCachePath
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -81,24 +81,36 @@ abstract class StoreFileService {
             atomDir = request.fileDir
         ) + File.separator + UUIDUtil.generate()
         val fileCachePath = getFileCachePath("${request.storeCode}$fileSeparator$version")
-        val bkDiskFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
+        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
             fileCachePath,
             DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
         )
-        val fileZip = File("$fileDirPath${fileSeparator}file.zip")
-        val cacheKey = TextReferenceFileAnalysisUtil.getFileCacheKey(request.storeCode, version)
-        bkDiskFileCache.get(cacheKey, fileZip)
-        val fileDir: String?
-        if (!fileZip.exists() || fileZip.length() < 1) {
+        val cacheKey = getFileCacheKey(request.storeCode, version)
+        logger.info("getTextReferenceFileDir cache file is exist:${bkDiskLruFileCache.isCacheExist(cacheKey)}")
+        var fileDir: String? = null
+        if (!bkDiskLruFileCache.isCacheExist(cacheKey)) {
+            logger.info("getTextReferenceFileDir fileDirPath:$fileDirPath")
             fileDir = textReferenceFileDownload(
                 userId = userId,
                 fileDirPath = fileDirPath,
+                cacheKey = cacheKey,
+                bkDiskLruFileCache = bkDiskLruFileCache,
                 request = request
             )
-            bkDiskFileCache.put(cacheKey, File("$fileDirPath${fileSeparator}file.zip"))
         } else {
-            fileDir = "$fileDirPath${fileSeparator}file"
-            ZipUtil.unZipFile(fileZip, fileDir)
+            try {
+                val fileZip = File(fileDirPath, "file.zip")
+                bkDiskLruFileCache.get(cacheKey, fileZip)
+                logger.info("getTextReferenceFileDir fileZip is exists:${fileZip.exists()}")
+                if (fileZip.exists()) {
+                    fileDir = "$fileDirPath${fileSeparator}file"
+                    ZipUtil.unZipFile(fileZip, fileDir)
+                } else {
+                    logger.warn("getTextReferenceFileDir fileZip not exists， file cache is exists:${bkDiskLruFileCache.isCacheExist(cacheKey)}")
+                }
+            } catch (ignored: Throwable) {
+                logger.warn("getTextReferenceFileDir unZipFile fail message:${ignored.message}")
+            }
         }
         return fileDir
     }
@@ -114,8 +126,12 @@ abstract class StoreFileService {
     abstract fun textReferenceFileDownload(
         userId: String,
         fileDirPath: String,
+        cacheKey: String,
+        bkDiskLruFileCache: BkDiskLruFileCache,
         request: TextReferenceFileDownloadRequest
     ): String?
+
+    fun getFileCacheKey(storeCode: String, version: String) = "$storeCode-$version-TextReference"
 
     @Suppress("NestedBlockDepth")
     fun textReferenceFileAnalysis(
@@ -206,5 +222,23 @@ abstract class StoreFileService {
         val allowedExtensions = defaultStaticFileFormat.split(",").toSet()
         val extension = path.substringAfterLast(".")
         return extension.lowercase(Locale.getDefault()) in allowedExtensions.map { it.lowercase(Locale.getDefault()) }
+    }
+
+    fun storeFileCacheClean(event: StoreFileCacheCleanEvent) {
+        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
+            event.fileCachePath,
+            DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
+        )
+        try {
+            if (bkDiskLruFileCache.isCacheExist(event.fileCacheKey)) {
+                logger.info("storeFileCacheClean file cache clean success key[${event.fileCacheKey}]")
+                bkDiskLruFileCache.remove(event.fileCacheKey)
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("file cache clean fail! key[${event.fileCacheKey}] msg:${ignore.message}")
+        } finally {
+            logger.info("storeFileCacheClean key[${event.fileCacheKey}]")
+            bkDiskLruFileCache.close()
+        }
     }
 }

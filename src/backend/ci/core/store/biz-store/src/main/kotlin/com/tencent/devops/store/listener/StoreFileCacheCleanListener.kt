@@ -25,19 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.store.listener
 
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
+import com.tencent.devops.store.service.common.StoreFileService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-data class DownloadGitRepoFileRequest(
-    @ApiParam("仓库名称", required = true)
-    val repoName: String,
-    @ApiParam("commit hash值、分支名或tag", required = false)
-    val sha: String?,
-    @ApiParam("限定为下载指定路径的文件", required = false)
-    val filePath: String?,
-    @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
-    val format: String?,
-    @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
-    val isProjectPathWrapped: Boolean?
-)
+@Component
+class StoreFileCacheCleanListener @Autowired constructor(
+    private val storeFileService: StoreFileService
+) : Listener<StoreFileCacheCleanEvent> {
+
+    override fun execute(event: StoreFileCacheCleanEvent) {
+        try {
+            logger.info("StoreFileCacheCleanListener event:$event")
+            storeFileService.storeFileCacheClean(event)
+        } catch (ignored: Throwable) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(StoreFileCacheCleanListener::class.java)
+    }
+}

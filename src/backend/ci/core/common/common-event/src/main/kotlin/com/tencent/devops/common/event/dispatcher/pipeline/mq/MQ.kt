@@ -304,4 +304,9 @@ object MQ {
 
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
+
+    // 研发商店组件引用文件缓存清理事件
+    const val QUEUE_STORE_FILE_CACHE_CLEAN = "q.store.file.cache.clean.queue"
+    const val EXCHANGE_STORE_FILE_CACHE_CLEAN_FANOUT = "e.store.file.cache.clean.fanout"
+    const val ROUTE_STORE_FILE_CACHE_CLEAN_EXCHANGE_FANOUT = "r.store.file.cache.clean.exchange.fanout"
 }
