@@ -27,16 +27,27 @@
 
 package com.tencent.devops.image.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.utils.CommonUtils
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,11 +66,19 @@ class InspectImageService @Autowired constructor(
 
     private val dockerCli = DockerClientBuilder.getInstance(config).build()
 
+    @Value("\${image.checkImageUrl:}")
+    var checkImageUrl: String? = null
+
     fun checkDockerImage(
         userId: String,
         checkDockerImageRequestList: List<CheckDockerImageRequest>
     ): List<CheckDockerImageResponse> {
         logger.info("checkImage userId: $userId, checkDockerImageRequestList: $checkDockerImageRequestList")
+
+        if (!checkImageUrl.isNullOrBlank()) {
+            return checkRemoteDockerImage(userId, checkDockerImageRequestList)
+        }
+
         val imageInspectList = mutableListOf<CheckDockerImageResponse>()
         checkDockerImageRequestList.parallelStream().forEach {
             // 判断用户录入的镜像信息是否能正常拉取到镜像
@@ -127,6 +146,40 @@ class InspectImageService @Autowired constructor(
         logger.info("imageInspectList: $imageInspectList")
 
         return imageInspectList
+    }
+
+    fun checkRemoteDockerImage(
+        userId: String,
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): List<CheckDockerImageResponse> {
+        try {
+            val url = "$checkImageUrl/api/service/docker-image/checkDockerImage"
+            val request = Request
+                .Builder()
+                .url(url)
+                .headers(mutableMapOf(AUTH_HEADER_USER_ID to userId).toHeaders())
+                .post(
+                    JsonUtil.toJson(checkDockerImageRequestList)
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+                )
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$userId check remoteImage: $responseContent")
+                if (!response.isSuccessful) {
+                    logger.error("Check remoteImage fail. $responseContent")
+                    throw RuntimeException("Check remoteImage fail. $responseContent")
+                }
+
+                val responseMap: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+                return JsonUtil.to(JsonUtil.toJson(responseMap["data"] ?: ""),
+                    object : TypeReference<List<CheckDockerImageResponse>>() {})
+            }
+        } catch (e: Exception) {
+            logger.error("Check remoteImage error: ${e.message}")
+            throw RuntimeException("Check remoteImage error: ${e.message}")
+        }
     }
 
     inner class MyPullImageResultCallback internal constructor(

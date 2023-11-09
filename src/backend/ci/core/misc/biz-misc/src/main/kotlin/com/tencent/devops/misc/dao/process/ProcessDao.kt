@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.misc.pojo.project.PipelineVersionSimple
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
@@ -85,6 +86,17 @@ class ProcessDao {
                 ).onDuplicateKeyUpdate()
                 .set(PIPELINE_ID, pipelineId)
                 .execute()
+        }
+    }
+
+    fun getPipelineNumByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TPipelineInfo.T_PIPELINE_INFO) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -231,6 +243,28 @@ class ProcessDao {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
             return baseStep.orderBy(BUILD_ID).fetch()
+        }
+    }
+
+    fun getHistoryInfoList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int,
+        statusList: List<BuildStatus>? = null
+    ): Result<out Record>? {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (!statusList.isNullOrEmpty()) {
+                conditions.add(STATUS.`in`(statusList.map { it.ordinal }))
+            }
+            return dslContext.select(BUILD_ID, CHANNEL, START_USER)
+                .from(this)
+                .where(conditions)
+                .orderBy(BUILD_ID).limit(limit).offset(offset).fetch()
         }
     }
 

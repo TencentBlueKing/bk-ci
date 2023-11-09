@@ -31,6 +31,7 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
@@ -41,6 +42,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -70,8 +72,10 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao
 ) : PermissionMigrateService {
 
     companion object {
@@ -201,9 +205,72 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
+    override fun migrateMonitorResource(
+        projectCodes: List<String>,
+        async: Boolean
+    ): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        client.get(ServiceProjectResource::class).listByProjectCode(
+            projectCodes = projectCodes.toSet()
+        ).data?.filter {
+            // 仅迁移已迁移成功的项目
+            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+        }?.forEach {
+            // 若已迁移监控资源，直接跳过
+            if (authMonitorSpaceDao.get(dslContext, it.englishName) != null)
+                return@forEach
+            val projectInfo = authResourceService.get(
+                projectCode = it.englishName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = it.englishName
+            )
+            if (!async) {
+                migrateResourceService.migrateProjectMonitorResource(
+                    projectCode = it.englishName,
+                    gradeManagerId = projectInfo.relationId,
+                    projectName = projectInfo.resourceName
+                )
+            }
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateResourceService.migrateMonitorResource(
+                    projectCode = it.englishName,
+                    projectName = projectInfo.resourceName,
+                    gradeManagerId = projectInfo.relationId,
+                    async = async
+                )
+            }
+        }
+        return true
+    }
+
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        logger.info("handover permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
+        return true
+    }
+
+    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        logger.info("fit sec to rbac:$migrateProjectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        migrateProjectConditionDTO.projectCodes?.forEach { projectCode ->
+            toRbacExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migratePermissionHandoverService.fitSecToRbacAuth(
+                    projectCode = projectCode,
+                    projectCreator = migrateProjectConditionDTO.projectCreator!!,
+                    resourceType = migrateProjectConditionDTO.resourceType!!
+                )
+            }
+        }
         return true
     }
 

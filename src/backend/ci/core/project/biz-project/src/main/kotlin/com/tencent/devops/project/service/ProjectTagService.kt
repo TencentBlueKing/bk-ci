@@ -344,7 +344,7 @@ class ProjectTagService @Autowired constructor(
         }
         // 容器化项目需要将本地tag中的kubernetes-去掉来比较
         val localTag = bkTag.getLocalTag()
-        val clusterTag = if (isContainerProject) localTag.replace("kubernetes-", "") else localTag
+        val clusterTag = localTag.replace("kubernetes-", "")
         // 默认集群是不会有routerTag的信息
         if (projectTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
@@ -384,7 +384,8 @@ class ProjectTagService @Autowired constructor(
         limit: Int,
         grayFlag: Boolean,
         codeCCGrayFlag: Boolean,
-        repoGrayFlag: Boolean
+        repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean
     ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
@@ -410,7 +411,8 @@ class ProjectTagService @Autowired constructor(
             offset = offset,
             limit = limit,
             routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -422,7 +424,8 @@ class ProjectTagService @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps
+            otherRouterTagMaps = otherRouterTagMaps,
+            remoteDevFlag = remoteDevFlag
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 
