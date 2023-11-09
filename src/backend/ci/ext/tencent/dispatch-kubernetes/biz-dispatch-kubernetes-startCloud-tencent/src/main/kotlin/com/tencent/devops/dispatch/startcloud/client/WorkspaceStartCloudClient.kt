@@ -51,7 +51,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val HAS_BEEN_DELETED = 32006
         const val APP_NOT_BIND_CGS = 32004
         const val NO_CGS_CHOOSE = 32005
-        private const val DEFAULT_CGS_PER_PAGE = 500
+        private const val DEFAULT_CGS_PER_PAGE = 10000
         private const val DEFAULT_CGS_PAGE = 0
     }
 
