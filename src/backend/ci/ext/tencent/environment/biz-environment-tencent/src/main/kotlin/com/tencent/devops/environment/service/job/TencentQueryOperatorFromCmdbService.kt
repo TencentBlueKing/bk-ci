@@ -39,6 +39,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
      */
     override fun isOperatorOrBakOperator(userId: String, nodeRecords: List<TNodeRecord>) {
         val nodeIpList: List<String> = nodeRecords.map { it.nodeIp } // 所有host对应的ip
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] nodeIpList: $nodeIpList")
         val nodeIpToNodeMap = nodeRecords.associateBy { it.nodeIp } // 所有host的：ip - 记录 映射
 
         val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
