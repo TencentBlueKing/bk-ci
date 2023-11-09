@@ -306,6 +306,7 @@ class MultiESLogClient constructor(
         }
     }
 
+    @Suppress("MaxLineLength")
     private fun getEmailBody(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val date = simpleDateFormat.format(Date())
