@@ -63,16 +63,20 @@ class MetricsService(
     @Scheduled(cron = "0 0/5 * * * ?")
     fun job() {
         logger.info("Start to openapi metrics job")
-        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 60).use {
+        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 60).run {
+            if (!this.tryLock()) {
+                return
+            }
             val begin = System.currentTimeMillis()
             val keyMap = mutableMapOf<String, MetricsApiData>()
             apiDao.batchGet(dslContext).associateByTo(keyMap) { "${it.api}@${it.key}" }
             val between = Duration.between(LocalTime.of(0, 0), LocalTime.now()).toMinutes().toInt() / 5
+            val hourMod = between % EACH_HOUR
             val dayMod = between % EACH_DAY
             logger.info("openapi metrics job dayMod=$dayMod")
             esServiceImpl.executeElasticsearchQueryS(keyMap = keyMap, newDay = dayMod == MOD_DAY)
             // 每小时
-            if (between % EACH_HOUR == MOD_HOUR) {
+            if (hourMod == MOD_HOUR) {
                 logger.info("Start to openapi metrics job for 1H")
                 jobFor1H(keyMap)
             }
@@ -82,7 +86,12 @@ class MetricsService(
                 jobFor24H(keyMap)
                 jobFor7D(keyMap)
             }
-            apiDao.createOrUpdate(dslContext, keyMap.values.toList())
+            apiDao.createOrUpdate(
+                dslContext = dslContext,
+                metricsApis = keyMap.values.toList(),
+                perHour = hourMod == MOD_HOUR,
+                perDay = dayMod == MOD_DAY
+            )
 
             logger.info("execution time ${System.currentTimeMillis() - begin} millisecond")
         }
