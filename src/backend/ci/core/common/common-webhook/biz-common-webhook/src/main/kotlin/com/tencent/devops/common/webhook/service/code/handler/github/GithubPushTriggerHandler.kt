@@ -54,6 +54,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -107,9 +108,9 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
 
     override fun getEventDesc(event: GithubPushEvent): String {
         val linkUrl = if (event.headCommit != null) {
-            "https://github.com/${event.repository.fullName}/commit/${event.headCommit?.id}"
+            "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/commit/${event.headCommit?.id}"
         } else {
-            "https://github.com/${event.repository.fullName}/commit/${getBranchName(event)}"
+            "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/commit/${getBranchName(event)}"
         }
         val revision = getRevision(event)
         val commitId = if (revision.isNotBlank()) {
