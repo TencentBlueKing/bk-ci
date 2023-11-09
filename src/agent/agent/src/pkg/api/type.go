@@ -27,6 +27,8 @@
 
 package api
 
+import exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+
 type ThirdPartyAgentStartInfo struct {
 	HostName      string `json:"hostname"`
 	HostIp        string `json:"hostIp"`
@@ -118,6 +120,7 @@ type AgentHeartbeatInfo struct {
 	Props                   AgentPropsInfo             `json:"props"`
 	DockerParallelTaskCount int                        `json:"dockerParallelTaskCount"`
 	DockerTaskList          []ThirdPartyDockerTaskInfo `json:"dockerTaskList"`
+	ErrorExitData           *exitcode.ExitErrorType    `json:"errorExitData"`
 }
 
 type ThirdPartyTaskInfo struct {

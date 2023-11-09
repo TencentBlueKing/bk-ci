@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 
 	"github.com/pkg/errors"
@@ -46,8 +47,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
-const DAEMON_EXIT_CODE = 88
-
 // UninstallAgent 卸载
 func UninstallAgent() {
 	logs.Info("start uninstall agent")
@@ -58,7 +57,7 @@ func UninstallAgent() {
 		// 错误了也不退出，最少也要干掉daemon
 	}
 	logs.Warn("agent process exiting")
-	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
 }
 
 // runUninstallUpgrader 卸载的区分开，方便进行退出处理
@@ -85,7 +84,7 @@ func runUninstallUpgrader(action string) error {
 	logs.Info("[agentUpgrade]|start uninstall process success, pid: ", pid)
 
 	logs.Warn("[agentUpgrade]|agent uninstall process exiting")
-	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
 	return nil
 }
 
