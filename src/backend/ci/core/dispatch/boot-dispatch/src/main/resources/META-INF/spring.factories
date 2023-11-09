@@ -1,6 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.dispatch.kubernetes.service.CoreCommonService,\
-com.tencent.devops.dispatch.docker.service.DockerHostProxyServiceImpl,\
-com.tencent.devops.dispatch.docker.service.ExtDebugServiceImpl,\
-com.tencent.devops.dispatch.docker.service.ExtDockerResourceOptionsServiceImpl,\
-com.tencent.devops.dispatch.service.JobQuotaInterfaceImpl
