@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 
 @Provider
 @PreMatching
@@ -27,9 +28,13 @@ class ClientVersionFilter constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
-        private val MINIMUM_VERSION = listOf(0, 3, 0)
         private const val HEADER_IP = "x-client-ip"
     }
+
+    @Value("\${remoteDev.clientVersionLimit:0.3.0}")
+    val clientVersionLimit: String = "0.3.0"
+
+    lateinit var clientVersionLimitList: List<Int>
 
     lateinit var clientVersion: MutableMap<String, String>
 
@@ -67,10 +72,10 @@ class ClientVersionFilter constructor(
         // 如果是op的接口访问直接跳过jwt认证
         if (!apiType.verify) return true
         val version = requestContext.headers[BK_CI_CLIENT_VERSION]?.get(0)
-        val split = version?.split(".") ?: kotlin.run {
+        val split = version?.substringBefore("-")?.split(".") ?: kotlin.run {
             logger.info(
                 "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
-                        " $path not have $BK_CI_CLIENT_VERSION,return error."
+                    " $path not have $BK_CI_CLIENT_VERSION,return error."
             )
             return false
         }
@@ -81,7 +86,10 @@ class ClientVersionFilter constructor(
                 version.toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
-        MINIMUM_VERSION.forEachIndexed { index, s ->
+        if (!this::clientVersionLimitList.isInitialized) {
+            clientVersionLimitList = clientVersionLimit.split(".").map { it.toInt() }
+        }
+        clientVersionLimitList.forEachIndexed { index, s ->
             if (split.lastIndex < index) {
                 return false
             }
