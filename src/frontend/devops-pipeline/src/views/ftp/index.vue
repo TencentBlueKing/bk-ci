@@ -99,7 +99,12 @@
                     link.rel = 'stylesheet'
                     link.href = href
                     name && (link.setAttribute('data-name', name))
-                    link.onload = () => resolve(link)
+                    link.onload = () => {
+                        if (window.__ftp_content__) {
+                            window.__ftp_content__(this)
+                        }
+                        resolve(link)
+                    }
                     link.onerror = reject
                     parent.appendChild(link)
                 })
