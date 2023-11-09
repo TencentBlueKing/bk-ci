@@ -412,6 +412,29 @@ interface ServiceGitResource {
         response: HttpServletResponse
     )
 
+    @ApiOperation("下载git仓库lfs文件")
+    @GET
+    @Path("/download/lfsFile")
+    fun downloadGitRepoLfsFile(
+        @ApiParam(value = "仓库id")
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("commit hash值、分支名或tag", required = true)
+        @QueryParam("ref")
+        ref: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam("限定为下载指定路径的文件", required = true)
+        @QueryParam("filePath")
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
+
     @ApiOperation("获取mr信息")
     @GET
     @Path("/getMergeRequestReviewersInfo")

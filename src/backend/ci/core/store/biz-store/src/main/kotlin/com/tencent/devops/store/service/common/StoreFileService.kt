@@ -34,6 +34,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.getFileCachePath
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -79,13 +81,13 @@ abstract class StoreFileService {
             atomDir = request.fileDir
         ) + File.separator + UUIDUtil.generate()
         val fileCachePath = getFileCachePath("${request.storeCode}$fileSeparator$version")
-        val bkDiskLruFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
+        val bkDiskFileCache = BkDiskLruFileCacheFactory.getDiskLruFileCache(
             fileCachePath,
             DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE
         )
         val fileZip = File("$fileDirPath${fileSeparator}file.zip")
-        val cacheKey = getFileCacheKey(request.storeCode, version)
-        bkDiskLruFileCache.get(cacheKey, fileZip)
+        val cacheKey = TextReferenceFileAnalysisUtil.getFileCacheKey(request.storeCode, version)
+        bkDiskFileCache.get(cacheKey, fileZip)
         val fileDir: String?
         if (!fileZip.exists() || fileZip.length() < 1) {
             fileDir = textReferenceFileDownload(
@@ -93,7 +95,7 @@ abstract class StoreFileService {
                 fileDirPath = fileDirPath,
                 request = request
             )
-            bkDiskLruFileCache.put(cacheKey, File("$fileDirPath${fileSeparator}file.zip"))
+            bkDiskFileCache.put(cacheKey, File("$fileDirPath${fileSeparator}file.zip"))
         } else {
             fileDir = "$fileDirPath${fileSeparator}file"
             ZipUtil.unZipFile(fileZip, fileDir)
@@ -114,8 +116,6 @@ abstract class StoreFileService {
         fileDirPath: String,
         request: TextReferenceFileDownloadRequest
     ): String?
-
-    private fun getFileCacheKey(storeCode: String, version: String) = "$storeCode-$version-TextReference"
 
     @Suppress("NestedBlockDepth")
     fun textReferenceFileAnalysis(

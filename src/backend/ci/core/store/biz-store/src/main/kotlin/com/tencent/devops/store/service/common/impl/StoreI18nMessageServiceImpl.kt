@@ -364,8 +364,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 val fileName = it.groupValues[2].replace("\"", "")
                 val isStatic = storeFileService.isStaticFile(fileName)
                 // 文本文件引用只允许引用一层，防止循环引用
-                if (!isStatic && !recursionFlag) {
-                    val textFile = File("$fileDir${File.separator}$fileName")
+                val textFile = File("$fileDir${File.separator}$fileName")
+                if (!isStatic && !recursionFlag && textFile.exists()) {
                     return getTextReferenceFileParsing(
                         userId = userId,
                         fileDir = fileDir,
@@ -377,6 +377,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileNames.add(fileName)
                 }
             }
+            logger.info("debug getTextReferenceFileParsing fileNames:$fileNames")
             if (fileNames.isNotEmpty()) {
                 result = storeFileService.getStaticFileReference(
                     userId = userId,
