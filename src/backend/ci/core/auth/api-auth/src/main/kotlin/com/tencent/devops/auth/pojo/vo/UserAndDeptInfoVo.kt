@@ -6,7 +6,7 @@ import com.tencent.devops.auth.pojo.BkUserExtras
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("用户和组织信息返回")
+@ApiModel("用户和组织信息返回实体")
 data class UserAndDeptInfoVo(
     @ApiModelProperty("id")
     val id: Int,
@@ -21,5 +21,7 @@ data class UserAndDeptInfoVo(
     @ApiModelProperty("用户额外详细信息")
     val extras: BkUserExtras? = null,
     @ApiModelProperty("水印信息")
-    val waterMark: String? = null
+    val waterMark: String? = null,
+    @ApiModelProperty("是否是项目成员")
+    val belongProjectMember: Boolean? = null,
 )
