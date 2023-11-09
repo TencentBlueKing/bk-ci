@@ -23,40 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
 
-@ApiModel("代码库模型-多态基类")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = CodeSvnRepository::class, name = CodeSvnRepository.classType),
-    JsonSubTypes.Type(value = CodeGitRepository::class, name = CodeGitRepository.classType),
-    JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
-    JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
-    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
-)
-interface Repository {
-    val aliasName: String
-    val url: String
-    val credentialId: String
-    val projectName: String
-    var userName: String
-    val projectId: String?
-    val repoHashId: String?
-    val scmType: ScmType
-    val enablePac: Boolean?
-    val yamlSyncStatus: String?
+object TriggerElementPropUtils {
 
-    fun isLegal() = url.startsWith(getStartPrefix())
+    fun vuexInput(name: String, value: String?): ElementProp? {
+        if (value.isNullOrBlank()) return null
+        return ElementProp(name = name, value = value.split(","), type = ElementPropType.VUEX_INPUT)
+    }
 
-    fun getStartPrefix(): String
+    fun staffInput(name: String, value: List<String>?): ElementProp? {
+        if (value.isNullOrEmpty()) return null
+        return ElementProp(name = name, value = value, type = ElementPropType.STAFF_INPUT)
+    }
 
-    fun getFormatURL() = url
+    fun selector(name: String, value: List<String>?): ElementProp? {
+        if (value.isNullOrEmpty()) return null
+        return ElementProp(name = name, value = value, type = ElementPropType.SELECTOR)
+    }
 }

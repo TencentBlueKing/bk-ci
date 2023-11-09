@@ -52,6 +52,7 @@ import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -426,7 +427,8 @@ class RepositoryService @Autowired constructor(
                         dslContext = context,
                         repositoryId = repositoryId,
                         aliasName = gitProjectInfo.namespaceName,
-                        url = gitProjectInfo.repositoryUrl
+                        url = gitProjectInfo.repositoryUrl,
+                        updateUser = userId
                     )
                     repositoryCodeGitDao.edit(
                         dslContext = context,
@@ -631,7 +633,10 @@ class RepositoryService @Autowired constructor(
                 updatedTime = repository.updatedTime.timestamp(),
                 canEdit = true,
                 canDelete = true,
-                authType = authType
+                authType = authType,
+                createUser = repository.userId,
+                createTime = repository.createdTime.timestamp(),
+                updatedUser = repository.updatedUser
             )
         }.toList()
     }
@@ -714,6 +719,9 @@ class RepositoryService @Autowired constructor(
                 authType = repoDetailInfo?.authType ?: RepoAuthType.HTTP.name,
                 svnType = repoDetailInfo?.svnType,
                 authIdentity = repoDetailInfo?.credentialId?.ifBlank { it.userId },
+                createTime = it.createdTime.timestamp(),
+                createUser = it.userId,
+                updatedUser = it.updatedUser ?: it.userId,
                 enablePac = it.enablePac
             )
         }
@@ -858,7 +866,7 @@ class RepositoryService @Autowired constructor(
         }
 
         deleteResource(projectId, repositoryId)
-        repositoryDao.delete(dslContext, repositoryId)
+        repositoryDao.delete(dslContext, repositoryId, userId)
     }
 
     fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
@@ -1093,6 +1101,35 @@ class RepositoryService @Autowired constructor(
             ref = ref,
             token = token,
             tokenType = finalTokenType
+        )
+    }
+
+    fun rename(userId: String, projectId: String, repositoryHashId: String, repoRename: RepoRename) {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        // 权限校验
+        validatePermission(
+            user = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            authPermission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
+        if (hasAliasName(projectId, repositoryHashId, repoRename.name)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repoRename.name)
+            )
+        }
+        repositoryDao.rename(
+            dslContext = dslContext,
+            projectId = projectId,
+            updateUser = userId,
+            hashId = repositoryHashId,
+            newName = repoRename.name
         )
     }
 

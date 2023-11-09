@@ -23,40 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.common.pipeline.pojo.element
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-
-@ApiModel("代码库模型-多态基类")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = CodeSvnRepository::class, name = CodeSvnRepository.classType),
-    JsonSubTypes.Type(value = CodeGitRepository::class, name = CodeGitRepository.classType),
-    JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
-    JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
-    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
+/**
+ * 插件属性
+ */
+data class ElementProp(
+    val name: String,
+    val value: Any,
+    val type: ElementPropType
 )
-interface Repository {
-    val aliasName: String
-    val url: String
-    val credentialId: String
-    val projectName: String
-    var userName: String
-    val projectId: String?
-    val repoHashId: String?
-    val scmType: ScmType
-    val enablePac: Boolean?
-    val yamlSyncStatus: String?
 
-    fun isLegal() = url.startsWith(getStartPrefix())
-
-    fun getStartPrefix(): String
-
-    fun getFormatURL() = url
+/**
+ * 属性类型
+ */
+enum class ElementPropType(val value: String) {
+    VUEX_INPUT("vuex-input"),
+    STAFF_INPUT("staff-input"),
+    SELECTOR("selector");
 }

@@ -144,7 +144,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId: Long? = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
             logger.info(
@@ -164,7 +164,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitDao.edit(
                 dslContext = transactionContext,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -51,6 +52,8 @@ data class CodeSvnRepository(
     override val repoHashId: String?,
     @ApiModelProperty("SVN类型", required = false)
     val svnType: String? = SVN_TYPE_SSH, // default is ssh svn type
+    @ApiModelProperty("代码库类型", required = false)
+    override val scmType: ScmType = ScmType.CODE_SVN,
     @ApiModelProperty("仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @ApiModelProperty("yaml同步状态", required = false)

@@ -23,40 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.api.op
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("代码库模型-多态基类")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = CodeSvnRepository::class, name = CodeSvnRepository.classType),
-    JsonSubTypes.Type(value = CodeGitRepository::class, name = CodeGitRepository.classType),
-    JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
-    JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
-    JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
-)
-interface Repository {
-    val aliasName: String
-    val url: String
-    val credentialId: String
-    val projectName: String
-    var userName: String
-    val projectId: String?
-    val repoHashId: String?
-    val scmType: ScmType
-    val enablePac: Boolean?
-    val yamlSyncStatus: String?
+@RestResource
+class OpPipelineRepoRefResourceImpl @Autowired constructor(
+    private val repoPipelineRefService: RepoPipelineRefService
+) : OpPipelineRepoRefResource {
 
-    fun isLegal() = url.startsWith(getStartPrefix())
+    override fun updateRepoPipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        repoPipelineRefService.updatePipelineRef(userId, projectId, pipelineId)
+        return Result(true)
+    }
 
-    fun getStartPrefix(): String
-
-    fun getFormatURL() = url
+    override fun updateAllRepoPipelineRef(): Result<Boolean> {
+        repoPipelineRefService.updateAllPipelineRef()
+        return Result(true)
+    }
 }

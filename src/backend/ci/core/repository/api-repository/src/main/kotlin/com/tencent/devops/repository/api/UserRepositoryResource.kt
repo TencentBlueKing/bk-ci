@@ -31,8 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.repository.pojo.RepoRename
+import com.tencent.devops.repository.pojo.RepoTriggerRefVo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -177,7 +181,7 @@ interface UserRepositoryResource {
         @ApiParam("仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @ApiParam("仓库类型", required = false)
+        @ApiParam("仓库别名", required = false)
         @QueryParam("aliasName")
         aliasName: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
@@ -276,6 +280,71 @@ interface UserRepositoryResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("关联代码库的流水线列表")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/listRepoPipelineRef")
+    fun listRepoPipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>>
+
+    @ApiOperation("关联代码库的流水线列表")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}/listTriggerRef")
+    fun listTriggerRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @ApiParam("触发类型", required = false)
+        @QueryParam("triggerType")
+        triggerType: String?,
+        @ApiParam("事件类型", required = false)
+        @QueryParam("eventType")
+        eventType: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepoTriggerRefVo>>
+
+    @ApiOperation("重命名")
+    @PUT
+    @Path("/{projectId}/{repositoryHashId}/rename")
+    fun rename(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @ApiParam("代码库重命名")
+        repoRename: RepoRename
     ): Result<Boolean>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
