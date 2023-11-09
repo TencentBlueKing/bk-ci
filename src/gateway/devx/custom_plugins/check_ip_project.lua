@@ -55,7 +55,7 @@
 
         if body.data == false then
             core.log.error("data is false , project : "..project.." , ip : "..ip)
-            return 401 , "check project and ip failed"
+            return 401 , '{"status": 500,"data": "IP error","result":true,"message": "该机器无法访问该项目"}'
         end
     end
     return _M
