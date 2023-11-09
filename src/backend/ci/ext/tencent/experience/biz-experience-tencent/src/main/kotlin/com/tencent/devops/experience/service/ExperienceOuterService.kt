@@ -201,9 +201,8 @@ class ExperienceOuterService @Autowired constructor(
     fun outerCanAdd(projectId: String, param: OuterCanAddParam): OuterCanAddVO {
         val userIds = param.userIds.split(",")
         val bkOuters = outerList(projectId)
-        var successCount = 0
-        var failedCount = 0
         val successUserIds = mutableListOf<String>()
+        val failedUserIds = mutableListOf<String>()
 
         for (u in userIds) {
             val isProjectUser = lazy {
@@ -213,25 +212,15 @@ class ExperienceOuterService @Autowired constructor(
                 ).data ?: false
             }
             if (UserUtil.isTaiUser(u) && isProjectUser.value) {
-                successCount++
                 successUserIds.add(u)
             } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
-                successCount++
                 successUserIds.add(u)
             } else {
-                failedCount++
+                failedUserIds.add(u)
             }
         }
 
-        return if (successCount == userIds.size) {
-            OuterCanAddVO(true, "添加成功", userIds)
-        } else {
-            OuterCanAddVO(
-                false,
-                "$successCount 个成员添加成功, $failedCount 个成员添加失败 , 请检查下面的成员列表",
-                successUserIds
-            )
-        }
+        return OuterCanAddVO(successUserIds, failedUserIds)
     }
 
     // 一个账户只能占用一个token
