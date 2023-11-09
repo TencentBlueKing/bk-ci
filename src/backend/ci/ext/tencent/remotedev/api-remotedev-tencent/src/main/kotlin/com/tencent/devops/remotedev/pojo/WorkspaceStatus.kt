@@ -55,7 +55,9 @@ enum class WorkspaceStatus {
 
     fun checkException() = this == EXCEPTION
 
-    fun checkDelivering() = this == DELIVERING || this == DELIVERING_FAILED
+    fun checkDelivering() = this == DELIVERING || checkDeliveringFailed()
+
+    fun checkDeliveringFailed() = this == DELIVERING_FAILED
 
     fun checkDistributing() = this == DISTRIBUTING
 
