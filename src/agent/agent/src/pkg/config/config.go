@@ -46,6 +46,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -480,7 +481,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 
-	err := os.WriteFile(filePath, []byte(content.String()), 0666)
+	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")

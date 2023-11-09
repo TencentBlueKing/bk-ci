@@ -378,7 +378,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := os.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	err := exitcode.WriteFileWithCheck(scriptFile, []byte(scriptContent), os.ModePerm)
 	defer func() {
 		_ = systemutil.Chmod(scriptFile, os.ModePerm)
 		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
@@ -387,7 +387,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		return "", err
 	} else {
 		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
-		err := os.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
+		err := exitcode.WriteFileWithCheck(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {

@@ -28,7 +28,6 @@
 package upgrade
 
 import (
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -167,7 +166,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 
 		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
 		go func() {
-			files, err := ioutil.ReadDir(workDir)
+			files, err := os.ReadDir(workDir)
 			if err != nil {
 				logs.Error("upgrade jdk remove old jdk file error", err)
 				return
