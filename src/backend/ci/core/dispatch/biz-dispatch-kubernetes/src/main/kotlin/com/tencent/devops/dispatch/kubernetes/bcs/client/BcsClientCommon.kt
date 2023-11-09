@@ -25,24 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.client
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
+@Component
+class BcsClientCommon @Autowired constructor(
+    private val commonService: CommonService
 ) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
+
+    companion object {
+        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
+    }
+
+    @Value("\${bcs.token}")
+    val bcsToken: String = ""
+
+    @Value("\${bcs.apiUrl}")
+    val bcsApiUrl: String = ""
+
+    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
+        return Request.Builder().url(commonService.getProxyUrl(bcsApiUrl + url)).headers(headers(headers))
+    }
+
+    fun headers(otherHeaders: Map<String, String>? = null): Headers {
+        val result = mutableMapOf<String, String>()
+
+        val bcsHeaders = mapOf(BCS_TOKEN_KEY to bcsToken)
+        result.putAll(bcsHeaders)
+
+        if (!otherHeaders.isNullOrEmpty()) {
+            result.putAll(otherHeaders)
         }
+
+        return result.toHeaders()
     }
 }

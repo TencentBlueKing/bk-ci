@@ -73,7 +73,6 @@ class JooqConfiguration {
 
             if ((packageName.startsWith("com.tencent.devops.dispatch.kubernetes")) ||
                 (packageName.startsWith("com.tencent.devops.dispatch.startcloud")) ||
-                (packageName.startsWith("com.tencent.devops.dispatch.bcs")) ||
                 (packageName.startsWith("com.tencent.devops.dispatch.devcloud"))) {
                 val configuration = configurationMap["dispatchKubernetesJooqConfiguration"]
                     ?: throw NoSuchBeanDefinitionException("no dispatchKubernetesJooqConfiguration")

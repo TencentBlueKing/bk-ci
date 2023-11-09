@@ -37,6 +37,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,4 +86,9 @@ class SDKConfiguration {
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
         return MQEventDispatcher(rabbitTemplate)
     }
+
+    @Bean
+    fun channelUtils(
+        @Autowired bkTag: BkTag
+    ) = ChannelUtils(bkTag)
 }

@@ -1,11 +1,11 @@
 # 服务配置文件模板
 spring:
   datasource:
-    project:
+    dispatch:
       url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
-    repository:
+    dispatchKubernetes:
       url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch_kubernetes?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
@@ -28,11 +28,6 @@ dispatch:
   # 默认的构建容器集群类型：VM, KUBERNETES, BCS
   defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
 
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
-
 # kubernetes-dispatch集群配置
 kubernetes:
   apiUrl: __BK_CI_KUBERNETES_HOST__
@@ -51,6 +46,7 @@ kubernetes:
   gateway:
     webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
 
+# 对接蓝鲸BCS容器调度集群需要用到的配置
 bcs:
   apiUrl: __BK_CI_BCS_HOST__
   token: __BK_CI_BCS_TOKEN__

@@ -25,24 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.utils
+package com.tencent.devops.dispatch.kubernetes.bcs.pojo
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
-@Suppress("ALL")
-class ChannelUtils @Autowired constructor(
-    private val bkTag: BkTag
+/**
+ * Bcs job 状态信息
+ * @param status job 状态
+ * @param deleted true代表job已删除，false代表未被删除
+ */
+data class BcsJobStatus(
+    val status: String,
+    val deleted: Boolean
+)
+
+enum class BcsJobStatusEnum(
+    val realName: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsJobStatus", reusePrefixFlag = false)
+    val message: String
 ) {
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else {
-            ChannelCode.BS
+    PENDING("pending", "pending"), // job正在创建
+    RUNNING("running", "running"), // job正在运行
+    FAILED("failed", "failed"), // job失败
+    SUCCEEDED("succeeded", "succeeded"); // job成功
+
+    companion object {
+        fun realNameOf(realName: String?): BcsTaskStatusEnum? {
+            if (realName.isNullOrBlank()) {
+                return null
+            }
+            return BcsTaskStatusEnum.values().firstOrNull { it.realName == realName }
         }
     }
 }
+
+fun BcsJobStatusEnum.isRunning() = this == BcsJobStatusEnum.RUNNING || this == BcsJobStatusEnum.PENDING
+
+fun BcsJobStatusEnum.isSucceeded() = this == BcsJobStatusEnum.SUCCEEDED
