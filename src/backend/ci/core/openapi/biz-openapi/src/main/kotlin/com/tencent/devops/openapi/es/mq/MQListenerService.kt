@@ -61,7 +61,6 @@ class MQListenerService @Autowired constructor(
         }
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(MQListenerService::class.java)
     }
