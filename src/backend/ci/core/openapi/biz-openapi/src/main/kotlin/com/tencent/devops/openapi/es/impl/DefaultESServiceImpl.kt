@@ -33,6 +33,6 @@ import com.tencent.devops.openapi.es.mq.ESEvent
 
 class DefaultESServiceImpl : IESService {
 
-    override fun addMessage(message: ESMessage) {}
-    override fun esAddMessage(event: ESEvent) {}
+    override fun addMessage(message: ESMessage) = Unit
+    override fun esAddMessage(event: ESEvent) = Unit
 }
