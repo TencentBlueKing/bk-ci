@@ -49,12 +49,39 @@ import java.time.LocalDateTime
 @Repository
 class NodeDao {
     fun getNodesFromHostList(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
+        val getRecordByHostIdList = mutableListOf<Host>()
+        val getRecordByIpAndBkCloudId = mutableListOf<Host>()
+        hostList.map {
+            if (null != it.bkHostId) getRecordByHostIdList.add(it)
+            else getRecordByIpAndBkCloudId.add(it)
+        }
+        return getNodesFromHostListByBkHostId(dslContext, projectId, getRecordByHostIdList).plus(
+            getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
+        )
+    }
+
+    private fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {
             with(TNode.T_NODE) {
                 dslContext.selectFrom(this)
                     .where(HOST_ID.eq(it.bkHostId))
-                    .and(NODE_IP.eq(it.ip))
+                    .and(PROJECT_ID.eq(projectId))
+                    .orderBy(NODE_ID.desc())
+                    .fetch()
+            }.map {
+                if (it != null) nodeRecords.add(it)
+            }
+        }
+        return nodeRecords
+    }
+
+    private fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        hostList.map {
+            with(TNode.T_NODE) {
+                dslContext.selectFrom(this)
+                    .where(NODE_IP.eq(it.ip))
                     .and(CLOUD_AREA_ID.eq(it.bkCloudId))
                     .and(PROJECT_ID.eq(projectId))
                     .orderBy(NODE_ID.desc())
