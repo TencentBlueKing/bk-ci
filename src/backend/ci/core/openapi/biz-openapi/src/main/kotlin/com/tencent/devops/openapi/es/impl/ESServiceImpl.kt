@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.es
+package com.tencent.devops.openapi.es.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
@@ -33,6 +33,10 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.openapi.es.ESIndexUtils
+import com.tencent.devops.openapi.es.ESMessage
+import com.tencent.devops.openapi.es.IESService
+import com.tencent.devops.openapi.es.IndexNameUtils
 import com.tencent.devops.openapi.es.config.ESAutoConfiguration
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
@@ -69,7 +73,7 @@ class ESServiceImpl constructor(
     private val redisOperation: RedisOperation,
     private val dispatcher: MQDispatcher,
     private val configuration: ESAutoConfiguration
-) {
+) : IESService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ESServiceImpl::class.java)
@@ -98,7 +102,7 @@ class ESServiceImpl constructor(
         }
     }
 
-    fun addMessage(message: ESMessage) {
+    override fun addMessage(message: ESMessage) {
         if (queue.size >= maxQueueSize) {
             dispatcher.dispatchEvent(ESEvent(message)) // 将消息推送到es
         } else {
@@ -106,7 +110,9 @@ class ESServiceImpl constructor(
         }
     }
 
-    fun esAddMessage(event: ESEvent) {
+    override fun esReady() = true
+
+    override fun esAddMessage(event: ESEvent) {
         queue.put(event.logs)
     }
 

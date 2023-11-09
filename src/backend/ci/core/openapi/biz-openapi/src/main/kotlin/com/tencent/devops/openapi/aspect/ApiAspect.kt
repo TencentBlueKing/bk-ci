@@ -39,7 +39,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.es.ESMessage
-import com.tencent.devops.openapi.es.ESServiceImpl
+import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -65,7 +65,7 @@ class ApiAspect(
     private val redisOperation: RedisOperation,
     private val bkTag: BkTag,
     private val permissionService: OpenapiPermissionService,
-    private val esServiceImpl: ESServiceImpl
+    private val esService: IESService
 ) {
 
     companion object {
@@ -112,21 +112,23 @@ class ApiAspect(
         }
 
         kotlin.runCatching {
-            val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
-            val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
-            esServiceImpl.addMessage(
-                ESMessage(
-                    api = getApiTag(jp = jp, apiType = apiType),
-                    key = when {
-                        apiType.isBlank() -> "null"
-                        apiType.contains("user") -> "user:$userId"
-                        else -> "app:$appCode"
-                    },
-                    projectId = projectId ?: "",
-                    path = request.requestURI,
-                    timestamp = System.currentTimeMillis()
+            if (esService.esReady()) {
+                val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+                val apiType = apigwType?.split("-")?.getOrNull(1) ?: ""
+                esService.addMessage(
+                    ESMessage(
+                        api = getApiTag(jp = jp, apiType = apiType),
+                        key = when {
+                            apiType.isBlank() -> "null"
+                            apiType.contains("user") -> "user:$userId"
+                            else -> "app:$appCode"
+                        },
+                        projectId = projectId ?: "",
+                        path = request.requestURI,
+                        timestamp = System.currentTimeMillis()
+                    )
                 )
-            )
+            }
         }.onFailure {
             logger.error("es add message error ${it.message}", it)
         }

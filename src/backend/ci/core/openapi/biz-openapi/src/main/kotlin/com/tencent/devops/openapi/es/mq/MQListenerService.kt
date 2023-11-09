@@ -27,14 +27,14 @@
 
 package com.tencent.devops.openapi.es.mq
 
-import com.tencent.devops.openapi.es.ESServiceImpl
+import com.tencent.devops.openapi.es.IESService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class MQListenerService @Autowired constructor(
-    private val logService: ESServiceImpl,
+    private val logService: IESService,
     private val dispatcher: MQDispatcher
 ) {
 
