@@ -2,23 +2,33 @@ package com.tencent.devops.log.buffer
 
 import com.tencent.devops.common.log.pojo.message.LogMessageToBulk
 import java.util.LinkedList
+import java.util.concurrent.locks.ReentrantLock
 
 class LogBulkBuffer(private val maxSize: Int) {
 
     private val storageQueue: LinkedList<LogMessageToBulk> = LinkedList()
+    private val lock = ReentrantLock(false)
 
-    @Synchronized
     fun <T> enqueue(item: List<LogMessageToBulk>, bulkAction: () -> T) {
-        if (storageQueue.size >= maxSize) {
-            flushBuffer(bulkAction)
+        lock.lock()
+        try {
+            if (storageQueue.size >= maxSize) {
+                flushBuffer(bulkAction)
+            }
+            storageQueue.addAll(item)
+        } finally {
+            lock.unlock()
         }
-        storageQueue.addAll(item)
     }
 
-    @Synchronized
-    fun <T> flushBuffer(bulkAction: () -> T) {
-        if (storageQueue.isEmpty()) return
-        bulkAction()
-        storageQueue.clear()
+    private fun <T> flushBuffer(bulkAction: () -> T) {
+        lock.lock()
+        try {
+            if (storageQueue.isEmpty()) return
+            bulkAction()
+            storageQueue.clear()
+        } finally {
+            lock.unlock()
+        }
     }
 }
