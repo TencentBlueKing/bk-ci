@@ -7,9 +7,11 @@ import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service("PUBLIC_DEVCLOUD_BUILD_CLUSTER_RESULT")
+@Primary
 class DevcloudDebugServiceImpl @Autowired constructor(
     private val client: Client
 ) : ExtDebugService {

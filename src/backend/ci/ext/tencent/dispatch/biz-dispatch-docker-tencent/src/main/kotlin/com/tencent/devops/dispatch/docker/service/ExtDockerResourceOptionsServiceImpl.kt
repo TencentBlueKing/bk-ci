@@ -11,9 +11,11 @@ import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsSho
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
     private val client: Client
 ) : ExtDockerResourceOptionsService {

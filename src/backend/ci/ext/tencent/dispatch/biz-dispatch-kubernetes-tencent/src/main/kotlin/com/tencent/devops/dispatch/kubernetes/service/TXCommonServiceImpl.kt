@@ -30,10 +30,12 @@ package com.tencent.devops.dispatch.kubernetes.service
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
 @Service
+@Primary
 class TXCommonServiceImpl @Autowired constructor(
     private val commonConfig: CommonConfig
 ) : CommonService {
