@@ -71,8 +71,9 @@
                 </div>
             </div>
         </div>
+        
         <!-- PAC 模式 -->
-        <!-- <div
+        <div
             class="form-item"
             v-if="isGit"
         >
@@ -84,25 +85,52 @@
                 <div class="pac-mode">
                     <div
                         class="switcher-item"
-                        :class="{ 'disabled-pac': !repoInfo.enablePac && pacProjectName }"
+                        :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || repoInfo.yamlSyncStatus === 'ASYNC' }"
                         @click="handleTogglePacStatus">
                     </div>
                    
                     <bk-switcher
                         v-model="repoInfo.enablePac"
                         theme="primary"
-                        :disabled="!repoInfo.enablePac && pacProjectName"
+                        :disabled="(!repoInfo.enablePac && pacProjectName) || repoInfo.yamlSyncStatus === 'ASYNC'"
                     >
                     </bk-switcher>
-                    <div class="pac-enable">
-                        {{ repoInfo.enablePac ? $t('codelib.已开启 PAC 模式') : $t('codelib.未开启 PAC 模式') }}
-                    </div>
+
                     <span v-if="!repoInfo.enablePac && pacProjectName">
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
                     </span>
+
+                    <div class="pac-enable">
+                        {{ repoInfo.yamlSyncStatus === 'ASYNC' ? $t('codelib.PAC 模式开启中') : repoInfo.enablePac ?
+                            $t('codelib.已开启 PAC 模式')
+                            : $t('codelib.未开启 PAC 模式') }}
+                    </div>
+                    
+                    <!-- 同步中 -->
+                    <span class="async-status" v-if="repoInfo.yamlSyncStatus === 'ASYNC'">
+                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
+                            <div class="rotate rotate1"></div>
+                            <div class="rotate rotate2"></div>
+                            <div class="rotate rotate3"></div>
+                            <div class="rotate rotate4"></div>
+                            <div class="rotate rotate5"></div>
+                            <div class="rotate rotate6"></div>
+                            <div class="rotate rotate7"></div>
+                            <div class="rotate rotate8"></div>
+                        </div>
+                        <span class="ml5">{{ $t('codelib.正在同步代码库流水线任务') }}</span>
+                    </span>
+
+                    <!-- 同步失败 -->
+                    <template v-if="repoInfo.yamlSyncStatus === 'FAILED'">
+                        <i class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation failed-icon"></i>
+                        <span class="ml5">{{ $t('codelib.代码库部分 YAML 文件同步失败') }}</span>
+                        <a class="ml10" text @click="handleShowSyncFailedDetail">{{ $t('codelib.查看失败详情') }}</a>
+                        <a class="ml10" text @click="handleRefreshSync">{{ $t('codelib.重试') }}</a>
+                    </template>
                 </div>
             </div>
-        </div> -->
+        </div>
         <!-- 通用设置 -->
         <!-- <div
             class="form-item"
@@ -179,40 +207,58 @@
             ext-cls="close-repo-confirm-dialog"
             :value="showClosePac"
             :show-footer="false"
-            @value-change="handlceToggleShowClosePac"
+            @value-change="handleToggleShowClosePac"
         >
-            <span class="toggle-pac-warning-icon">
-                <i class="devops-icon icon-exclamation" />
-            </span>
             <span class="close-confirm-title">
-                {{ $t('codelib.关闭 PAC 模式失败') }}
+                {{ $t('codelib.关闭 PAC 模式') }}
             </span>
             <span class="close-confirm-tips">
-                <p>
-                    {{ $t('codelib.检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将') }}
-                    <span>{{ $t('codelib.不再同步到蓝盾流水线') }}</span>
-                    {{ $t('codelib.。') }}
-                </p>
+                <p>{{ $t('codelib.检测到默认分支仍存在ci 文件目录，关闭 PAC 模式后该目录下的文件修改将') }}</p>
                 <p>
                     {{ $t('codelib.请先将目录') }}
                     <span>{{ $t('codelib.改名或删除') }}</span>
-                    {{ $t('codelib.后重试，避免项目其他成员进行无效的YAML文件修改') }}
-                    {{ $t('codelib.。') }}
+                    {{ $t('codelib.避免项目成员从代码库查看时误认为 YAML 文件仍生效') }}
                 </p>
             </span>
+            <div class="ci-status-warpper">
+                <div v-if="hasCiFolder" class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
+                    <div class="rotate rotate1"></div>
+                    <div class="rotate rotate2"></div>
+                    <div class="rotate rotate3"></div>
+                    <div class="rotate rotate4"></div>
+                    <div class="rotate rotate5"></div>
+                    <div class="rotate rotate6"></div>
+                    <div class="rotate rotate7"></div>
+                    <div class="rotate rotate8"></div>
+                </div>
+                <div v-else class="success-icon">
+                    <i class="bk-icon import-status-icon icon-check-1 success-icon"></i>
+                </div>
+                <div class="operate-btn">
+                    <p>{{ hasCiFolder ? $t('codelib.等待处理') : $t('codelib.文件目录已清空') }}</p>
+                    <a :href="repoInfo.url" target="_blank">
+                        <icon name="tiaozhuan" size="14" class="jump-icon" />
+                        {{ $t('codelib.前往代码库') }}
+                    </a>
+                    <div class="split-line"></div>
+                    <a @click="handleCheckHasCiFolder">
+                        <icon name="refresh" size="14" class="refresh-icon" />
+                        {{ $t('codelib.刷新') }}
+                    </a>
+                </div>
+            </div>
             <span class="close-confirm-footer">
-                <bk-checkbox
-                    v-model="isDeleted"
-                >
-                    {{ $t('codelib.ci目录已改名或删除') }}
-                </bk-checkbox>
                 <bk-button
-                    class="ml10"
+                    class="mr10"
                     theme="primary"
-                    :disabled="!isDeleted"
+                    :disabled="hasCiFolder"
                     @click="handleClosePac"
                 >
-                    {{ $t('codelib.继续关闭') }}
+                    {{ $t('codelib.关闭PAC') }}
+                </bk-button>
+                <bk-button
+                    @click="showClosePac = !showClosePac">
+                    {{ $t('codelib.取消') }}
                 </bk-button>
             </span>
         </bk-dialog>
@@ -222,7 +268,7 @@
             :width="500"
             :value="showOauthDialog"
             :show-footer="false"
-            @value-change="handlceToggleShowOauthDialog"
+            @value-change="handleToggleShowOauthDialog"
         >
             <span class="toggle-pac-warning-icon">
                 <i class="devops-icon icon-exclamation" />
@@ -261,6 +307,30 @@
             :fetch-repo-detail="fetchRepoDetail"
             @updateList="updateList"
         />
+
+        <bk-dialog
+            v-model="showSyncFailedDetail"
+            ext-cls="failed-detail-dialog"
+            header-position="left"
+            :border="true"
+            width="720"
+            :title="$t('codelib.代码库同步失败')">
+
+            <div class="title-tips">{{ $t('codelib.检测到代码库中以下流水线 YAML 文件同步失败，请处理后重试') }}</div>
+            <bk-table
+                :data="syncFailedPipelineList"
+            >
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220">
+
+                </bk-table-column>
+                <bk-table-column :label="$t('codelib.失败详情')">
+
+                </bk-table-column>
+            </bk-table>
+            <template slot="footer">
+                <bk-button @click="showSyncFailedDetail = !showSyncFailedDetail">{{ $t('codelib.关闭') }}</bk-button>
+            </template>
+        </bk-dialog>
     </section>
 </template>
 <script>
@@ -309,8 +379,7 @@
         data () {
             return {
                 isEditing: false,
-                isDeleted: false,
-                hasCiFolder: true,
+                hasCiFolder: false,
                 showClosePac: false,
                 showEnablePac: false,
                 showOauthDialog: false,
@@ -322,7 +391,9 @@
                 isGitLab: false,
                 pacProjectName: '',
                 codelibTypeConstants: '',
-                userId: ''
+                userId: '',
+                showSyncFailedDetail: false,
+                syncFailedPipelineList: []
             }
         },
         computed: {
@@ -370,7 +441,7 @@
             'repoInfo.url': {
                 handler (val) {
                     setTimeout(async () => {
-                        // await this.handleCheckPacProject(val)
+                        await this.handleCheckPacProject(val)
                         const { resetType, userId } = this.$route.query
                         if (['checkGitOauth', 'checkTGitOauth', 'checkGithubOauth'].includes(resetType)) {
                             await this.handleTogglePacStatus()
@@ -410,6 +481,11 @@
                         })
                         break
                 }
+            },
+            showSyncFailedDetail (val) {
+                if (val) {
+                    console.log(1111)
+                }
             }
         },
         methods: {
@@ -421,7 +497,8 @@
                 'enablePac',
                 'changeMrBlock',
                 'checkHasCiFolder',
-                'checkPacProject'
+                'checkPacProject',
+                'refreshSyncRepository'
             ]),
             prettyDateTimeFormat,
 
@@ -441,6 +518,7 @@
                         repoUrl,
                         repositoryType: this.repositoryType
                     }).then((res) => {
+                        console.log(res, 111)
                         this.pacProjectName = res
                     })
                 }
@@ -470,6 +548,15 @@
             handleResetAuth () {
                 this.$refs.resetAuth.isShow = true
             },
+
+            async handleCheckHasCiFolder () {
+                await this.checkHasCiFolder({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoInfo.repoHashId
+                }).then(res => {
+                    this.hasCiFolder = res
+                })
+            },
         
             /**
              * 开启/关闭PAC模式
@@ -478,15 +565,10 @@
              *  false -> 不存在.ci文件夹
              */
             async handleTogglePacStatus () {
-                if (!this.repoInfo.enablePac && this.pacProjectName) return
+                if ((!this.repoInfo.enablePac && this.pacProjectName) || this.repoInfo.yamlSyncStatus === 'ASYNC') return
                 if (this.repoInfo.enablePac) {
                     this.pacProjectName = ''
-                    await this.checkHasCiFolder({
-                        projectId: this.projectId,
-                        repositoryHashId: this.repoInfo.repoHashId
-                    }).then(res => {
-                        this.hasCiFolder = !res
-                    })
+                    await this.handleCheckHasCiFolder()
                     if (this.hasCiFolder) {
                         this.showClosePac = true
                     } else {
@@ -576,6 +658,11 @@
                     this.showClosePac = false
                     await this.fetchRepoDetail(this.repoInfo.repoHashId)
                     await this.refreshCodelibList()
+                }).catch(e => {
+                    this.$bkMessage({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
                 })
             },
             /**
@@ -608,14 +695,13 @@
                 })
             },
 
-            handlceToggleShowClosePac (val) {
+            handleToggleShowClosePac (val) {
                 if (!val) {
                     this.showClosePac = val
-                    this.isDeleted = false
                 }
             },
 
-            handlceToggleShowOauthDialog (val) {
+            handleToggleShowOauthDialog (val) {
                 if (!val) {
                     this.showOauthDialog = val
                 }
@@ -627,6 +713,33 @@
 
             updateList () {
                 this.$emit('updateList')
+            },
+
+            /**
+             * 查看代码库同步失败详情
+             */
+            handleShowSyncFailedDetail () {
+                this.showSyncFailedDetail = true
+            },
+
+            /**
+             * 代码库同步 -- 重试
+             */
+            handleRefreshSync () {
+                this.refreshSyncRepository({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoInfo.repoHashId
+                }).then(res => {
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('codelib.重试成功，正在同步')
+                    })
+                }).catch(e => {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                })
             }
         }
     }
@@ -685,6 +798,17 @@
             }
             .pac-enable {
                 margin: 0 24px 0 8px;
+            }
+            .async-status {
+                display: flex;
+            }
+            .failed-icon {
+                background-color: #ff9c01;
+                width: 16px;
+                height: 16px;
+                line-height: 16px;
+                color: #fff;
+                border-radius: 50%;
             }
             .help-icon {
                 cursor: pointer;
@@ -786,17 +910,75 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
-        .oauth-confirm-title,
-        .close-confirm-title {
+        .oauth-confirm-title {
             font-size: 20px;
             color: #313238;
             margin: 20px 0 8px;
         }
+        .close-confirm-title {
+            font-size: 20px;
+            color: #313238;
+            margin-bottom: 15px;
+        }
+        .ci-status-warpper {
+            display: flex;
+            align-items: center;
+        }
+        .success-icon {
+            width: 35px;
+            height: 35px;
+            background: rgba(63, 192, 109, 0.1);
+            border-radius: 50%;
+            i {
+                font-size: 35px;
+                color: #3FC06D;
+            }
+        }
+        .bk-spin-loading {
+            width: 30px;
+            height: 30px;
+        }
+        .rotate {
+            height: 8px !important;
+            transform-origin: 50% -6px !important;
+            width: 4px !important;
+        }
+        .operate-btn {
+            text-align: left;
+            margin-left: 20px;
+            p {
+                font-weight: 700;
+                font-size: 14px;
+                color: #63656E;
+                margin-bottom: 5px;
+            }
+            a {
+                font-size: 12px;
+            }
+            .jump-icon,
+            .refresh-icon {
+                position: relative;
+                top: 2px;
+            }
+        }
+
+        .split-line {
+            display: inline-block;
+            width: 1px;
+            height: 16px;
+            background: #DCDEE5;
+            margin: 0 5px;
+            position: relative;
+            top: 3px;
+        }
+        
         .close-confirm-tips {
             text-align: left;
             color: #63656E;
-            font-size: 14px;
+            font-size: 12px;
             margin-bottom: 30px;
+            padding: 10px 20px;
+            background: #F5F7FA;
             span {
                 color: #FF9C01;
             }
@@ -809,8 +991,13 @@
             color: #979BA5;
         }
         .close-confirm-footer {
-            position: relative;
-            left: 50px;
+            margin-top: 24px;
+        }
+    }
+    .failed-detail-dialog {
+        .title-tips {
+            font-size: 12px;
+            margin-bottom: 10px;
         }
     }
 </style>

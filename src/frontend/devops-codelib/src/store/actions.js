@@ -343,7 +343,7 @@ const actions = {
         repoUrl,
         repositoryType
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
     },
 
     /**
@@ -397,7 +397,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/checkCiDirExists`)
     },
 
     /**
@@ -407,7 +407,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/disable`)
     },
 
     /**
@@ -417,7 +417,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/enablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/enable`)
     },
 
     /**
@@ -520,6 +520,13 @@ const actions = {
         queryOfflineFlag = false
     }) {
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
+    },
+
+    refreshSyncRepository ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/refresh`)
     }
 }
 
