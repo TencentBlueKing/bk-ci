@@ -106,7 +106,8 @@ abstract class StoreFileService {
                     fileDir = "$fileDirPath${fileSeparator}file"
                     ZipUtil.unZipFile(fileZip, fileDir)
                 } else {
-                    logger.warn("getTextReferenceFileDir fileZip not exists， file cache is exists:${bkDiskLruFileCache.isCacheExist(cacheKey)}")
+                    logger.warn("getTextReferenceFileDir fileZip not exists， " +
+                            "file cache is exists:${bkDiskLruFileCache.isCacheExist(cacheKey)}")
                 }
             } catch (ignored: Throwable) {
                 logger.warn("getTextReferenceFileDir unZipFile fail message:${ignored.message}")
