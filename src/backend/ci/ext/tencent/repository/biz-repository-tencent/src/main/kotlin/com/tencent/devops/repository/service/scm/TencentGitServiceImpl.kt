@@ -333,6 +333,19 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         OkhttpUtils.downloadFile(serviceUrl, response)
     }
 
+    override fun downloadGitRepoLfsFile(
+        token: String,
+        tokenType: TokenTypeEnum,
+        request: DownloadGitRepoFileRequest,
+        response: HttpServletResponse
+    ) {
+        val serviceUrlPrefix = client.getScmUrl(ServiceGitResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/git/download/lfsFile" +
+                "?repoName=${request.repoName}&ref=${request.sha}&token=$token&tokenType=$tokenType" +
+                "&filePath=${request.filePath}"
+        OkhttpUtils.downloadFile(serviceUrl, response)
+    }
+
     override fun getMrReviewInfo(
         repoName: String,
         mrId: Long,
