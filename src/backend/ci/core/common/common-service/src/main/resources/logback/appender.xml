@@ -61,7 +61,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${service.log.dir}/audit_event.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>1GB</maxFileSize>
-            <maxHistory>10</maxHistory>
+            <maxHistory>3</maxHistory>
             <totalSizeCap>5GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
