@@ -368,17 +368,17 @@ object SignUtils {
     }
 
     private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
-        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
-        val keyLevels = key.split('.')
-        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
-        var subDict = rootDict
-        keyPrefix.forEach {
-            subDict = getSubDictionary(subDict, it) ?: return@forEach
-        }
-        if (!subDict.containsKey(keyLevels.last())) {
-            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
-            return
-        }
+//        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
+//        val keyLevels = key.split('.')
+//        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
+//        var subDict = rootDict
+//        keyPrefix.forEach {
+//            subDict = getSubDictionary(subDict, it) ?: return@forEach
+//        }
+//        if (!subDict.containsKey(keyLevels.last())) {
+//            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
+//            return
+//        }
         val cmd = when {
             boolConvert(value) != null -> {
                 "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
