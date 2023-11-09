@@ -70,15 +70,15 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -653,7 +653,6 @@ class RepositoryService @Autowired constructor(
         projectId: String,
         repositoryType: ScmType?,
         aliasName: String?,
-        repoKeyWordRef: String? = null,
         offset: Int,
         limit: Int,
         sortBy: String? = null,
@@ -676,7 +675,6 @@ class RepositoryService @Autowired constructor(
                 projectIds = setOf(projectId),
                 repositoryTypes = repositoryType?.let { listOf(it) },
                 aliasName = aliasName,
-                repoKeyWordRef = repoKeyWordRef,
                 repositoryIds = hasListPermissionRepoList.toSet()
             )
         val repositoryRecordList = repositoryDao.listByProject(
@@ -684,7 +682,6 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = aliasName,
-            repoKeyWordRef = repoKeyWordRef,
             repositoryIds = hasListPermissionRepoList.toSet(),
             offset = offset,
             limit = limit,

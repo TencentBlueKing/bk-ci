@@ -182,9 +182,6 @@ interface UserRepositoryResource {
         @ApiParam("仓库别名", required = false)
         @QueryParam("aliasName")
         aliasName: String?,
-        @ApiParam("仓库关键字[可取代码库别名/HashId/gitProjectId],此值存在时[aliasName]参数无效", required = false)
-        @QueryParam("repoKeyWordRef")
-        repoKeyWordRef: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
