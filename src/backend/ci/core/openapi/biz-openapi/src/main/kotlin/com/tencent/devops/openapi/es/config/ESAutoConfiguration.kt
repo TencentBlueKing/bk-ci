@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.openapi.es.ESServiceImpl
 import com.tencent.devops.openapi.es.mq.MQDispatcher
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -49,6 +50,9 @@ import org.springframework.core.Ordered
 @AutoConfigureAfter(ESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class ESAutoConfiguration {
+
+    @Value("\${log.elasticsearch.consumerCount:1}")
+    val consumerCount: Int = 1
     @Bean
     fun esLogService(
         @Autowired logESClient: LogClient,

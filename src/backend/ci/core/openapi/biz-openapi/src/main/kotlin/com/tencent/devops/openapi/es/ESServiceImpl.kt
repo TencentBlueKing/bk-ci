@@ -33,6 +33,7 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.openapi.es.config.ESAutoConfiguration
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
 import com.tencent.devops.openapi.pojo.MetricsApiData
@@ -65,15 +66,13 @@ import org.slf4j.LoggerFactory
 class ESServiceImpl constructor(
     private val logClient: LogClient,
     private val redisOperation: RedisOperation,
-    private val dispatcher: MQDispatcher
+    private val dispatcher: MQDispatcher,
+    private val configuration: ESAutoConfiguration
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ESServiceImpl::class.java)
-        private const val LONG_SEARCH_TIME: Long = 64000
-        private const val SHORT_SEARCH_TIME: Long = 32000
         private const val SEARCH_TIMEOUT_SECONDS = 60L
-        private const val SEARCH_FRAGMENT_SIZE = 100000
         private const val INDEX_CACHE_MAX_SIZE = 10L
         private const val INDEX_CACHE_EXPIRE_DAY = 1L
         private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
@@ -93,7 +92,9 @@ class ESServiceImpl constructor(
     private val executor = Executors.newCachedThreadPool()
 
     init {
-        executor.submit(BulkSend())
+        repeat(configuration.consumerCount) {
+            executor.submit(BulkSend())
+        }
     }
 
     fun addMessage(message: ESMessage) {
@@ -112,7 +113,7 @@ class ESServiceImpl constructor(
         val buf = mutableListOf<ESMessage>()
         override fun run() {
             while (true) {
-                val message = queue.poll() ?: continue
+                val message = queue.take() ?: continue
                 buf.add(message)
                 if (buf.size == BULK_BUFFER_SIZE) {
                     val currentEpoch = System.currentTimeMillis()
