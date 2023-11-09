@@ -49,6 +49,7 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
+import com.tencent.devops.log.util.Constants.BULK_BUFFER_SIZE
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -95,7 +96,7 @@ class LogServiceLuceneImpl(
             val buf = mutableListOf<LogMessageWithLineNo>()
             logMessages.forEach {
                 buf.add(it)
-                if (buf.size == Constants.BULK_BUFFER_SIZE) {
+                if (buf.size == BULK_BUFFER_SIZE) {
                     doAddMultiLines(buf, event.buildId)
                     buf.clear()
                 }

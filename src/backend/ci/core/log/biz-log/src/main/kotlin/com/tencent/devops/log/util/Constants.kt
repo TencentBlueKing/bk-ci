@@ -42,6 +42,7 @@ object Constants {
     const val NORMAL_MAX_LINES = 10000
     const val BULK_BUFFER_SIZE = 1000
     const val SCROLL_MAX_TIMES = 6
+    const val SEARCH_TIMEOUT_SECONDS = 60L
 
     const val INDEX_LOG_STATUS = "index-log-status"
     const val TYPE_LOG_STATUS = "type-log-status"

@@ -28,7 +28,8 @@
 package com.tencent.devops.log.util
 
 import com.tencent.devops.common.log.pojo.message.LogMessageToBulk
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import org.elasticsearch.client.HttpAsyncResponseConsumerFactory
+import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.xcontent.XContentBuilder
 import org.elasticsearch.xcontent.XContentFactory
@@ -78,5 +79,13 @@ object ESIndexUtils {
             .field("logType", logMessage.logType.name)
             .field("executeCount", logMessage.executeCount)
             .endObject()
+    }
+
+    fun genLargeSearchOptions(): RequestOptions {
+        val builder = RequestOptions.DEFAULT.toBuilder()
+        builder.setHttpAsyncResponseConsumerFactory(
+            HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(Constants.RESPONSE_ENTITY_MAX_SIZE)
+        )
+        return builder.build()
     }
 }

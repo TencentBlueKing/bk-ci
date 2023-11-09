@@ -28,7 +28,6 @@
 package com.tencent.devops.log.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
@@ -38,12 +37,11 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.log.pojo.message.LogMessageToBulk
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.buffer.LogBulkBuffer
+import com.tencent.devops.log.buffer.ESBulkBuffer
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.event.LogOriginEvent
@@ -57,15 +55,14 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
+import com.tencent.devops.log.util.Constants.BULK_BUFFER_SIZE
+import com.tencent.devops.log.util.Constants.SEARCH_TIMEOUT_SECONDS
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
-import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchScrollRequest
-import org.elasticsearch.client.HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
@@ -112,13 +109,10 @@ class LogServiceESImpl(
         private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
         private const val LONG_SEARCH_TIME: Long = 64000
         private const val SHORT_SEARCH_TIME: Long = 32000
-        private const val SEARCH_TIMEOUT_SECONDS = 60L
         private const val SEARCH_FRAGMENT_SIZE = 100000
         private const val INDEX_CACHE_MAX_SIZE = 100000L
         private const val INDEX_CACHE_EXPIRE_MINUTES = 30L
         private const val INDEX_LOCK_EXPIRE_SECONDS = 10L
-        private const val INDEX_STORAGE_WARN_MILLIS = 1000
-        private const val LOG_UPLOAD_BUFFER_SIZE = 1000
     }
 
     private val presentIndexCache = Caffeine.newBuilder()
@@ -128,7 +122,7 @@ class LogServiceESImpl(
 
     // 维护ES集群名与缓冲队列
     private val storageQueueMap = logClient.getAllClients().associate { client ->
-        client.clusterName to LogBulkBuffer(LOG_UPLOAD_BUFFER_SIZE)
+        client.clusterName to ESBulkBuffer(BULK_BUFFER_SIZE)
     }
 
     override fun addLogEvent(event: LogOriginEvent) {
@@ -143,37 +137,27 @@ class LogServiceESImpl(
         var success = false
         try {
             prepareIndex(event.buildId)
-            val logMessages = event.logs
-            val buf = mutableListOf<LogMessageWithLineNo>()
-            logMessages.forEach {
-                buf.add(it)
-                if (buf.size == Constants.BULK_BUFFER_SIZE) {
-                    if (doAddMultiLines(buf, event.buildId) == 0) {
-                        throw ExecuteException(
-                            "None of lines is inserted successfully to ES " +
-                                "[${event.buildId}|${event.retryTime}]"
-                        )
-                    } else {
-                        buf.clear()
-                    }
-                }
-            }
-            if (buf.isNotEmpty()) {
-                if (doAddMultiLines(buf, event.buildId) == 0) {
-                    throw ExecuteException(
-                        "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
-                    )
-                }
+            val client = logClient.hashClient(event.buildId)
+            val index = indexService.getIndexName(event.buildId)
+            val queue = storageQueueMap[client.clusterName]
+            val logMessageToBulk = event.logs.map { it.toBulk(index, event.buildId) }
+            if (queue != null) {
+                queue.enqueue(
+                    items = logMessageToBulk,
+                    bulkClient = client,
+                    logStorageBean = logStorageBean
+                )
+            } else {
+                ESBulkBuffer.doBulkMultiLines(
+                    logMessages = logMessageToBulk,
+                    bulkClient = client,
+                    logStorageBean = logStorageBean
+                )
             }
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
             logStorageBean.batchWrite(elapse, success)
-
-            // #4265 当日志消息处理时间过长时打印消息内容
-            if (elapse >= INDEX_STORAGE_WARN_MILLIS && event.logs.isNotEmpty()) logger.warn(
-                "[${event.buildId}] addBatchLogEvent spent too much time($elapse) with tag=${event.logs.first().tag}"
-            )
         }
     }
 
@@ -356,7 +340,7 @@ class LogServiceESImpl(
         var scrollResp = try {
             scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
         } catch (ignore: IOException) {
-            scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+            scrollClient.restClient.search(searchRequest, ESIndexUtils.genLargeSearchOptions())
         }
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
@@ -579,7 +563,7 @@ class LogServiceESImpl(
         var searchResponse = try {
             logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
         } catch (ignore: IOException) {
-            logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            logClient.hashClient(buildId).restClient.search(searchRequest, ESIndexUtils.genLargeSearchOptions())
         }
         do {
             queryLogs.logs.addAll(parseResponse(searchResponse.hits))
@@ -780,7 +764,7 @@ class LogServiceESImpl(
             val searchResponse = try {
                 scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
             } catch (ignore: IOException) {
-                scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+                scrollClient.restClient.search(searchRequest, ESIndexUtils.genLargeSearchOptions())
             }
 
             var scrollId = searchResponse.scrollId
@@ -795,7 +779,7 @@ class LogServiceESImpl(
                 val searchScrollResponse = try {
                     scrollClient.restClient.scroll(scrollRequest, RequestOptions.DEFAULT)
                 } catch (ignore: IOException) {
-                    scrollClient.restClient.scroll(scrollRequest, genLargeSearchOptions())
+                    scrollClient.restClient.scroll(scrollRequest, ESIndexUtils.genLargeSearchOptions())
                 }
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
@@ -903,7 +887,7 @@ class LogServiceESImpl(
         val searchResponse = try {
             logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
         } catch (ignore: IOException) {
-            logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            logClient.hashClient(buildId).restClient.search(searchRequest, ESIndexUtils.genLargeSearchOptions())
         }
         return parseResponse(searchResponse.hits)
     }
@@ -983,81 +967,6 @@ class LogServiceESImpl(
         val countRequest = CountRequest(index).query(query)
         val countResponse = logClient.hashClient(buildId).restClient.count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
-    }
-
-    private fun doAddMultiLines(bulkClient: ESClient, logMessages: List<LogMessageToBulk>): Int {
-        val clusterName = bulkClient.clusterName
-        val currentEpoch = System.currentTimeMillis()
-        var lines = 0
-        var bulkLines = 0
-        val bulkRequest = BulkRequest()
-            .timeout(TimeValue.timeValueMillis(bulkClient.requestTimeout))
-        for (i in logMessages.indices) {
-            val logMessage = logMessages[i]
-
-            val indexRequest = genIndexRequest(
-                logMessage = logMessage
-            )
-            if (indexRequest != null) {
-                bulkRequest.add(indexRequest)
-                lines++
-            }
-        }
-        try {
-            val bulkResponse = bulkClient.restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
-            bulkLines = bulkResponse.count()
-            return if (bulkResponse.hasFailures()) {
-                throw ExecuteException(bulkResponse.buildFailureMessage())
-            } else {
-                bulkLines
-            }
-        } catch (ignore: Exception) {
-            val exString = ignore.toString()
-            if (exString.contains("circuit_breaking_exception")) {
-                logger.warn(
-                    "$clusterName|Add bulk lines failed|$exString, attempting to add index. [$logMessages]",
-                    ignore
-                )
-                val bulkResponse = bulkClient.restClient.bulk(
-                    bulkRequest.timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
-                    genLargeSearchOptions()
-                )
-                bulkLines = bulkResponse.count()
-                return if (bulkResponse.hasFailures()) {
-                    logger.error(bulkResponse.buildFailureMessage())
-                    0
-                } else {
-                    bulkLines
-                }
-            } else {
-                logger.warn("[$clusterName] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
-                throw ignore
-            }
-        } finally {
-            if (bulkLines != lines) {
-                logger.warn("[$clusterName] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
-            }
-            val elapse = System.currentTimeMillis() - currentEpoch
-            logStorageBean.bulkRequest(elapse, bulkLines > 0)
-
-            // #4265 当日志消息处理时间过长时打印消息内容
-            if (elapse >= INDEX_STORAGE_WARN_MILLIS && logMessages.isNotEmpty()) logger.warn(
-                "[$clusterName] doAddMultiLines spent too much time($elapse) with tag=${logMessages.first().tag}"
-            )
-        }
-    }
-
-    private fun genIndexRequest(logMessage: LogMessageToBulk): IndexRequest? {
-        val builder = ESIndexUtils.getDocumentObject(logMessage)
-        val index = logMessage.index
-        return try {
-            IndexRequest(index).source(builder)
-        } catch (e: IOException) {
-            logger.error("[$index] Convert logMessage to es document failure", e)
-            null
-        } finally {
-            builder.close()
-        }
     }
 
     private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {
@@ -1197,13 +1106,5 @@ class LogServiceESImpl(
         query.must(QueryBuilders.matchQuery("executeCount", executeCount ?: 1).operator(Operator.AND))
             .must(QueryBuilders.matchQuery("buildId", buildId).operator(Operator.AND))
         return query
-    }
-
-    private fun genLargeSearchOptions(): RequestOptions {
-        val builder = RequestOptions.DEFAULT.toBuilder()
-        builder.setHttpAsyncResponseConsumerFactory(
-            HeapBufferedResponseConsumerFactory(Constants.RESPONSE_ENTITY_MAX_SIZE)
-        )
-        return builder.build()
     }
 }
