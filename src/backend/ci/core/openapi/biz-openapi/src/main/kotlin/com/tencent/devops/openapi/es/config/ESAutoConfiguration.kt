@@ -33,11 +33,11 @@ import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.openapi.dao.MetricsForApiDao
 import com.tencent.devops.openapi.dao.MetricsForProjectDao
+import com.tencent.devops.openapi.es.IESService
+import com.tencent.devops.openapi.es.MetricsService
 import com.tencent.devops.openapi.es.impl.DefaultESServiceImpl
 import com.tencent.devops.openapi.es.impl.ESServiceImpl
-import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.MQDispatcher
-import com.tencent.devops.openapi.es.MetricsService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -95,8 +95,7 @@ class ESAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(IESService::class)
-    fun defaultLogService(
-    ): DefaultESServiceImpl {
+    fun defaultLogService(): DefaultESServiceImpl {
         return DefaultESServiceImpl()
     }
 }
