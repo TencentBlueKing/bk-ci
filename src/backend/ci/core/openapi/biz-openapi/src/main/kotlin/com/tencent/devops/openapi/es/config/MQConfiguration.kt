@@ -28,6 +28,7 @@
 package com.tencent.devops.openapi.es.config
 
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.ESEvent
 import com.tencent.devops.openapi.es.mq.MQDispatcher
 import com.tencent.devops.openapi.es.mq.MQListenerService
@@ -50,15 +51,21 @@ class MQConfiguration @Autowired constructor() {
 
     @Bean
     fun openapiMQDispatcher(
-        streamBridge: StreamBridge
+        @Autowired streamBridge: StreamBridge
     ) = MQDispatcher(streamBridge)
 
     @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT_IN)
     fun openapiLogEventIn(
-        listenerService: MQListenerService
+        @Autowired listenerService: MQListenerService
     ): Consumer<Message<ESEvent>> {
         return Consumer { event: Message<ESEvent> ->
             listenerService.handleEvent(event.payload)
         }
     }
+
+    @Bean
+    fun mqListenerService(
+        @Autowired logService: IESService,
+        @Autowired dispatcher: MQDispatcher
+    ) = MQListenerService(logService, dispatcher)
 }
