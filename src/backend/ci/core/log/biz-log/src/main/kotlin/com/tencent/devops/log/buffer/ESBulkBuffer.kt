@@ -29,7 +29,7 @@ class ESBulkBuffer(private val maxSize: Int) {
         }
     }
 
-    private fun flushBuffer(bulkClient: ESClient, logStorageBean: LogStorageBean) {
+    fun flushBuffer(bulkClient: ESClient, logStorageBean: LogStorageBean) {
         lock.lock()
         try {
             if (storageQueue.isEmpty()) return

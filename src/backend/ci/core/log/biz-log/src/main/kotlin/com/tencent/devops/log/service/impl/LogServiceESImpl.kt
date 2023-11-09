@@ -76,6 +76,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -123,6 +124,13 @@ class LogServiceESImpl(
     // 维护ES集群名与缓冲队列
     private val storageQueueMap = logClient.getAllClients().associate { client ->
         client.clusterName to ESBulkBuffer(BULK_BUFFER_SIZE)
+    }
+
+    @Scheduled(initialDelay = 5000, fixedDelay = 5000)
+    fun flushBufferJob() {
+        logClient.getAllClients().forEach { esClient ->
+            storageQueueMap[esClient.clusterName]?.flushBuffer(esClient, logStorageBean)
+        }
     }
 
     override fun addLogEvent(event: LogOriginEvent) {
