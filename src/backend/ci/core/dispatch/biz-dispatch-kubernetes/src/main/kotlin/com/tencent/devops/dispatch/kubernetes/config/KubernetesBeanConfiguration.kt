@@ -41,9 +41,11 @@ import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import com.tencent.devops.dispatch.kubernetes.service.CoreCommonService
 import com.tencent.devops.dispatch.kubernetes.service.KubernetesContainerService
 import com.tencent.devops.dispatch.kubernetes.service.KubernetesJobService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -56,6 +58,10 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class KubernetesBeanConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(CommonService::class)
+    fun commonService() = CoreCommonService()
 
     @Bean
     @Primary
