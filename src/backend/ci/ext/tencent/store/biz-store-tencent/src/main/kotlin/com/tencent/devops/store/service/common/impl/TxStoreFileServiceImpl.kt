@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -118,10 +119,11 @@ class TxStoreFileServiceImpl : StoreFileService() {
     override fun textReferenceFileDownload(
         userId: String,
         fileDirPath: String,
+        cacheKey: String,
+        bkDiskLruFileCache: BkDiskLruFileCache,
         request: TextReferenceFileDownloadRequest
     ): String? {
-        val separator = File.separator
-        val zipFile = File("$fileDirPath${separator}file.zip")
+        val zipFile = File(fileDirPath, "file.zip")
         try {
             downloadFile(
                 filePath = "file",
@@ -130,10 +132,12 @@ class TxStoreFileServiceImpl : StoreFileService() {
                 branch = request.branch
             )
             if (zipFile.exists()) {
+                bkDiskLruFileCache.put(cacheKey, zipFile)
                 ZipUtil.unZipFile(zipFile, fileDirPath, true)
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
+            return null
         }
         return "$fileDirPath${fileSeparator}file"
     }
