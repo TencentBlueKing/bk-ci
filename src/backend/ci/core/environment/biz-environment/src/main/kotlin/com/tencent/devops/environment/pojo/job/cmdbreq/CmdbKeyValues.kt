@@ -5,6 +5,5 @@ import io.swagger.annotations.ApiModelProperty
 
 data class CmdbKeyValues(
     @ApiModelProperty(value = "主机ip")
-    @JsonProperty("svr_ip")
     val svrIp: String
 )

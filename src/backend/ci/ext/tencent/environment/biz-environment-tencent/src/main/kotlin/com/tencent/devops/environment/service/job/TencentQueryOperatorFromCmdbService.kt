@@ -52,12 +52,12 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
             pagingInfo = CmdbPagingInfo(1000, 0, 1)
         )
         val requestContent = jacksonObjectMapper().writeValueAsString(cmdbGetQueryInfoReq)
-        if (logger.isDebugEnabled) logger.debug("requestContent: $requestContent")
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
         val cmdbGetQueryInfoRes = OkhttpUtils.doPost(cmdbGetQueryInfoReqUrl, requestContent, headers)
         val responseBody = cmdbGetQueryInfoRes.body?.string()
         val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("cmdbResp: $cmdbResp")
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] cmdbResp: $cmdbResp")
         val cmdbData = cmdbResp.data.data
         val cmdbIpToCmdbDataMap: Map<String, CmdbDataIns> = cmdbData?.associateBy { it.SvrIp } ?: mapOf() // ip - 记录 映射
 

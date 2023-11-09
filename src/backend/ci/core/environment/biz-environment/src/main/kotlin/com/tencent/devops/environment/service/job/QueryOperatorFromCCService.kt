@@ -62,11 +62,12 @@ class QueryOperatorFromCCService : QueryOperatorService {
             )
         )
         val requestContent = jacksonObjectMapper().writeValueAsString(ccListHostWithoutBizReq)
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
         val ccListHostWithoutBizRes = OkhttpUtils.doPost(bkccListHostWithoutBizReqUrl, requestContent, headers)
         val responseBody = ccListHostWithoutBizRes.body?.string()
         val ccResp = jacksonObjectMapper().readValue<CCResp>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("ccResp: $ccResp")
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] ccResp: $ccResp")
         val ccData = ccResp.data.info
         val ccIpToNodeMap = ccData.associateBy { it.bkHostInnerip }
         val invalidIpList = nodeIpList.filter {
@@ -76,7 +77,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
                 ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
             !isOperator && !isBakOpertor
         }
-        if (logger.isDebugEnabled) logger.debug("invalidIpList: $invalidIpList")
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] invalidIpList: $invalidIpList")
 
         if (invalidIpList.isNotEmpty()) {
             throw ErrorCodeException(
