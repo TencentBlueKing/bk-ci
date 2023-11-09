@@ -391,7 +391,7 @@ class ESServiceImpl constructor(
         time: String,
         f: (count: Int, data: MetricsApiData) -> MetricsApiData
     ) {
-        val indexName = IndexNameUtils.getIndexName()
+        val indexName = IndexNameUtils.getIndexNamePrefix()
 
         val searchRequest = SearchRequest(indexName)
             .source(

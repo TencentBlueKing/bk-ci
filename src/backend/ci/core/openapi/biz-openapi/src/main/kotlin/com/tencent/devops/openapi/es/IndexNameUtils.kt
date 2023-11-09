@@ -37,6 +37,10 @@ object IndexNameUtils {
         return LOG_INDEX_PREFIX + formatter.format(LocalDateTime.now())
     }
 
+    fun getIndexNamePrefix(): String {
+        return "$LOG_INDEX_PREFIX*"
+    }
+
     fun getNextIndexName(): String {
         val formatter = DateTimeFormatter.ofPattern(LOG_INDEX_DATE_FORMAT)
         return LOG_INDEX_PREFIX + formatter.format(LocalDateTime.now().plusDays(1))

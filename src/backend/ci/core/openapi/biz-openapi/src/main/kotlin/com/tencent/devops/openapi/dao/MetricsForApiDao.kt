@@ -31,14 +31,15 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.openapi.tables.TOpenapiMetricsForApi
 import com.tencent.devops.openapi.pojo.MetricsApiData
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
 import org.springframework.stereotype.Repository
 
 @Repository
 class MetricsForApiDao {
     fun createOrUpdate(
         dslContext: DSLContext,
-        metricsApis: List<MetricsApiData>
+        metricsApis: List<MetricsApiData>,
+        perHour: Boolean,
+        perDay: Boolean
     ): Int {
         return with(TOpenapiMetricsForApi.T_OPENAPI_METRICS_FOR_API) {
             dslContext.batch(
@@ -64,24 +65,27 @@ class MetricsForApiDao {
                         metricsApi.call7d ?: 0
                     ).onDuplicateKeyUpdate()
                         .let { u ->
-                            metricsApi.secondLevelConcurrency?.let { i -> u.set(SECOND_LEVEL_CONCURRENCY, i) } ?: u
+                            metricsApi.secondLevelConcurrency?.let { i ->
+                                u.set(SECOND_LEVEL_CONCURRENCY, i)
+                            } ?: u.set(SECOND_LEVEL_CONCURRENCY, 0)
                         }
                         .let { u ->
-                            metricsApi.peakConcurrency?.let { i -> u.set(PEAK_CONCURRENCY, i) } ?: u
+                            metricsApi.peakConcurrency?.let { i ->
+                                u.set(PEAK_CONCURRENCY, i)
+                            } ?: u.set(PEAK_CONCURRENCY, 0)
                         }
                         .let { u ->
-                            metricsApi.call5m?.let { i -> u.set(CALL_5M, i) } ?: u
+                            metricsApi.call5m?.let { i -> u.set(CALL_5M, i) } ?: u.set(CALL_5M, 0)
                         }
                         .let { u ->
-                            metricsApi.call1h?.let { i -> u.set(CALL_1H, i) } ?: u
+                            metricsApi.call1h?.let { i -> u.set(CALL_1H, i) } ?: if (perHour) u.set(CALL_1H, 0) else u
                         }
                         .let { u ->
-                            metricsApi.call24h?.let { i -> u.set(CALL_24H, i) } ?: u
+                            metricsApi.call24h?.let { i -> u.set(CALL_24H, i) } ?: if (perDay) u.set(CALL_24H, 0) else u
                         }
                         .let { u ->
-                            metricsApi.call7d?.let { i -> u.set(CALL_7D, i) } ?: u
+                            metricsApi.call7d?.let { i -> u.set(CALL_7D, i) } ?: if (perDay) u.set(CALL_7D, 0) else u
                         }
-                        .let { if (it is InsertOnDuplicateSetMoreStep) it else return@mapNotNull null }
                 }
             ).execute().sum()
         }
