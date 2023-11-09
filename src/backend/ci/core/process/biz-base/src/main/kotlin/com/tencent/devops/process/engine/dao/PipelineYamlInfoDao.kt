@@ -144,6 +144,19 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun countYamlPipeline(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+    ): Long {
+        return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
     fun convert(record: TPipelineYamlInfoRecord): PipelineYamlInfo {
         return with(record) {
             PipelineYamlInfo(

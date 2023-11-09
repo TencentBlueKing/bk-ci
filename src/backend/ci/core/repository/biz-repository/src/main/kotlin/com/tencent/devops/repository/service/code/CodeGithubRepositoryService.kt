@@ -139,7 +139,8 @@ class CodeGithubRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId.toLong(),
-            enablePac = repository.enablePac
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 

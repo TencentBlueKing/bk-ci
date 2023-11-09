@@ -111,6 +111,20 @@ class RepositoryPacService @Autowired constructor(
         repositoryDao.enablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
     }
 
+    fun getYamlSyncStatus(projectId: String, repositoryHashId: String): String? {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
+        return repository.yamlSyncStatus
+    }
+
+    fun countPipelineYaml(userId: String, projectId: String, repoHashId: String): Long {
+        return client.get(ServicePipelinePacResource::class).countYamlPipeline(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId
+        ).data ?: 0L
+    }
+
     fun retry(userId: String, projectId: String, repositoryHashId: String) {
         logger.info("retry pac|$userId|$projectId|$repositoryHashId")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)

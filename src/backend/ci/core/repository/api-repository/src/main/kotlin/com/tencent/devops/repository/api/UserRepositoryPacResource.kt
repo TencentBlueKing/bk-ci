@@ -82,6 +82,36 @@ interface UserRepositoryPacResource {
         repositoryHashId: String
     ): Result<Boolean>
 
+    @ApiOperation("获取yaml同步状态")
+    @GET
+    @Path("/{projectId}/{repositoryHashId}")
+    fun getYamlSyncStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String
+    ): Result<String?>
+
+    @ApiOperation("获取开启pac的流水线数量")
+    @GET
+    @Path("/{projectId}/{repoHashId}/count")
+    fun countYamlPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<Long>
+
     @ApiOperation("重试")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/refresh")

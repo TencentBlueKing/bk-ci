@@ -258,4 +258,15 @@ class PipelineYamlService(
             version = version
         )
     }
+
+    fun countPipelineYaml(
+        projectId: String,
+        repoHashId: String
+    ): Long {
+        return pipelineYamlInfoDao.countYamlPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+    }
 }

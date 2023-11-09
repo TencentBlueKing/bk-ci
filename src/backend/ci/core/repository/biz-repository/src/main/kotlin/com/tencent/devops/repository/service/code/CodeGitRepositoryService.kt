@@ -38,6 +38,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GET_GIT_PROJECT_ID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_OAUTH_ENABLED_PAC
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
@@ -189,7 +190,8 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            enablePac = repository.enablePac
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -286,6 +288,9 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: TRepositoryRecord
     ) {
         val codeGitRepository = compose(repository)
+        if (codeGitRepository.authType != RepoAuthType.OAUTH) {
+            throw ErrorCodeException(errorCode = NOT_OAUTH_ENABLED_PAC)
+        }
         val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
         // 获取工蜂ID
         val gitProjectInfo = getGitProjectInfo(

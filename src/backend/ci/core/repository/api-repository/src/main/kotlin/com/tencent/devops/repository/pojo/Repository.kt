@@ -50,6 +50,7 @@ interface Repository {
     val projectId: String?
     val repoHashId: String?
     val enablePac: Boolean?
+    val yamlSyncStatus: String?
 
     fun isLegal() = url.startsWith(getStartPrefix())
 

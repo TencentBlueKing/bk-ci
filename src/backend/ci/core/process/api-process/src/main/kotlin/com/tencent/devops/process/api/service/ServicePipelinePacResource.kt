@@ -31,10 +31,12 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -84,4 +86,19 @@ interface ServicePipelinePacResource {
         @QueryParam("scmType")
         scmType: ScmType
     )
+
+    @ApiOperation("获取开启pac的流水线数量")
+    @GET
+    @Path("/{projectId}/{repoHashId}/count")
+    fun countYamlPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<Long>
 }

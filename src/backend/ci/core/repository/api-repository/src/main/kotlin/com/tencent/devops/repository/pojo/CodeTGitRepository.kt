@@ -52,7 +52,9 @@ data class CodeTGitRepository(
     @ApiModelProperty("TGit仓库ID", required = false)
     val gitProjectId: Long?,
     @ApiModelProperty("仓库是否开启pac", required = false)
-    override val enablePac: Boolean? = false
+    override val enablePac: Boolean? = false,
+    @ApiModelProperty("yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
     companion object {
         const val classType = "codeTGit"

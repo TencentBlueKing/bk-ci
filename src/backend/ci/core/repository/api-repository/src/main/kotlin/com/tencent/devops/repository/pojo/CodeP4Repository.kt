@@ -47,7 +47,9 @@ data class CodeP4Repository(
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
     @ApiModelProperty("仓库是否开启pac", required = false)
-    override val enablePac: Boolean? = false
+    override val enablePac: Boolean? = false,
+    @ApiModelProperty("yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
 
     companion object {

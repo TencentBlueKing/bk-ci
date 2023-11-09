@@ -29,13 +29,16 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.yaml.PipelineYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelineYamlService: PipelineYamlService
 ) : ServicePipelinePacResource {
     override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
         pipelineYamlFacadeService.enablePac(
@@ -52,6 +55,15 @@ class ServicePipelinePacResourceImpl @Autowired constructor(
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
+        )
+    }
+
+    override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
+        return Result(
+            pipelineYamlService.countPipelineYaml(
+                projectId = projectId,
+                repoHashId = repoHashId
+            )
         )
     }
 }

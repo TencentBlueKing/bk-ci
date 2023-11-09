@@ -145,7 +145,8 @@ class CodeSvnRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             svnType = record.svnType,
-            enablePac = repository.enablePac
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 

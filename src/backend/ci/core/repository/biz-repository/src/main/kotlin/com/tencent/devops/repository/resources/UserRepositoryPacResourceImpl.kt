@@ -66,6 +66,25 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun getYamlSyncStatus(userId: String, projectId: String, repositoryHashId: String): Result<String?> {
+        return Result(
+            repositoryPacService.getYamlSyncStatus(
+                projectId = projectId,
+                repositoryHashId = repositoryHashId
+            )
+        )
+    }
+
+    override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
+        return Result(
+            repositoryPacService.countPipelineYaml(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId
+            )
+        )
+    }
+
     override fun retry(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         repositoryPacService.retry(
             userId = userId,
