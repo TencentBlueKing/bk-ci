@@ -41,9 +41,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 class BcsJobClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val clientCommon: BcsClientCommon

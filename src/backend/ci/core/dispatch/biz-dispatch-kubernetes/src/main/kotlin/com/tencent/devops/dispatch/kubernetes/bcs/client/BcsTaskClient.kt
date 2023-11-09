@@ -44,12 +44,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_EXECUTION_TIM
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
-import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 
-@Component
 class BcsTaskClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val clientCommon: BcsClientCommon

@@ -27,9 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.bcs.service
 
-import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsJobClient
-import com.tencent.devops.dispatch.kubernetes.bcs.client.BcsTaskClient
 import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.kubernetes.bcs.pojo.BcsJobStatusEnum
 import com.tencent.devops.dispatch.kubernetes.bcs.pojo.NfsConfig
@@ -43,21 +41,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service("bcsJobService")
 class BcsJobService @Autowired constructor(
-    private val bcsJobClient: BcsJobClient,
-    private val bcsTaskClient: BcsTaskClient,
-    private val bcsBuilderClient: BcsBuilderClient
+    private val bcsJobClient: BcsJobClient
 ) : JobService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BcsJobService::class.java)
-    }
 
     @Value("\${bcs.resources.job.cpu}")
     var cpu: Double = 32.0

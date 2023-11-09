@@ -27,8 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.common
 
-const val BUILD_NODE_ENVIRONMENT = "devops.build.node.environment"
-
 const val ENV_KEY_PROJECT_ID = "devops_project_id"
 const val ENV_KEY_AGENT_ID = "devops_agent_id"
 const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
@@ -36,8 +34,3 @@ const val ENV_KEY_GATEWAY = "devops_gateway"
 
 const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
 const val ENV_DEFAULT_LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE"
-
-const val CONFIG_VOLUME_NAME = "config-volume"
-const val DATA_VOLUME_NAME = "data-volume"
-const val DATA_VOLUME_MOUNT_PATH = "/data"
-const val NFS_VOLUME_NAME_PREFIX = "nfs-volume"

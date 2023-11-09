@@ -33,23 +33,21 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_EXECUTE_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_EXCEPTION
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
-import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 
-@Component
 class KubernetesTaskClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val clientCommon: KubernetesClientCommon

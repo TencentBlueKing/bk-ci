@@ -33,9 +33,7 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
 class BcsClientCommon @Autowired constructor(
     private val commonService: CommonService
 ) {

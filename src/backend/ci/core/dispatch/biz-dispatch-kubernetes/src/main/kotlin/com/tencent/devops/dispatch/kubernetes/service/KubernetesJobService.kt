@@ -45,9 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isSucceeded
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service("kubernetesJobService")
 class KubernetesJobService @Autowired constructor(
     private val kubernetesJobClient: KubernetesJobClient
 ) : JobService {

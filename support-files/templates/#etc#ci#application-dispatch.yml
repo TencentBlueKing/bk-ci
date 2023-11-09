@@ -30,6 +30,7 @@ dispatch:
 
 # kubernetes-dispatch集群配置
 kubernetes:
+  enable: true
   apiUrl: __BK_CI_KUBERNETES_HOST__
   token: __BK_CI_KUBERNETES_TOKEN__
   entrypoint: /data/devops/config/init.sh
@@ -48,6 +49,7 @@ kubernetes:
 
 # 对接蓝鲸BCS容器调度集群需要用到的配置
 bcs:
+  enable: false
   apiUrl: __BK_CI_BCS_HOST__
   token: __BK_CI_BCS_TOKEN__
   entrypoint: /tools/bcs_init.sh
