@@ -16,7 +16,7 @@
 
     function _M.rewrite(conf, ctx)
         local project = core.request.header(ctx, "X-DEVOPS-PROJECT-ID")
-        local ip = core.request.header(ctx, "X-Real-IP")
+        local ip = core.request.header(ctx, "X-BK-NGGW-CLIENT-ADDRESS")
 
         if project == nil then
             core.log.error("project is null")

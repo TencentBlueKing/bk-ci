@@ -10,6 +10,7 @@ dashboard:
       users: [{"password":"Devops@2023","username":"bkci"}]
 apisix:
   plugins:
+    - proxy-rewrite
     - check-ip-project
   customPlugins:
     enabled: true
