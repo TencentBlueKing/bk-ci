@@ -34,7 +34,7 @@
         httpc:set_timeout(3000)
         local ok, err = httpc:connect(conf.host, 80)
         if not ok then
-            return false, "failed to connect to host[" .. host .. "], " .. err
+            return 500 , '{"status": 500,"data": "IP error","result":true,"message": "无法连接鉴权服务器"}'
         end
 
         local httpc_res, httpc_err = httpc:request({
@@ -44,18 +44,18 @@
 
         if not httpc_res then
             core.log.error("empty http res , ".. httpc_err)
-            return 401 , "check project and ip failed, "..httpc_err
+            return 500 , '{"status": 500,"data": "IP error","result":true,"message": "该机器无法访问该项目"}'
         end
 
         local body,body_err = core.json.decode(httpc_res:read_body())
         if not body then
             core.log.error("decode json error , "..body_err)
-            return 401 , "check project and ip failed, "..body_err
+            return 500 , '{"status": 500,"data": "IP error","result":true,"message": "该机器无法访问该项目"}'
         end
 
         if body.data == false then
             core.log.error("data is false , project : "..project.." , ip : "..ip)
-            return 401 , '{"status": 500,"data": "IP error","result":true,"message": "该机器无法访问该项目"}'
+            return 500 , '{"status": 500,"data": "IP error","result":true,"message": "该机器无法访问该项目"}'
         end
     end
     return _M
