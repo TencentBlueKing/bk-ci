@@ -446,6 +446,24 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun downloadGitRepoLfsFile(
+        repoName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        filePath: String,
+        response: HttpServletResponse
+    ) {
+        gitService.downloadGitRepoLfsFile(
+            repoName = repoName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType,
+            filePath = filePath,
+            response = response
+        )
+    }
+
     override fun getMergeRequestReviewersInfo(
         repoName: String,
         mrId: Long,
