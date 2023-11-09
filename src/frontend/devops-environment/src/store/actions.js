@@ -401,6 +401,9 @@ const actions = {
 
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
+    },
+    fetchJobInstanceStatus (_, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_job_instance_status`)
     }
 }
 

@@ -51,42 +51,42 @@
     </div>
 </template>
 <script>
-    import _ from 'lodash';
-    import TaskExecuteService from '@service/task-execute';
-    import {
-        getOffset,
-    } from '@utils/assist';
-    import mixins from '../../mixins';
-    import FileItem from './log-item';
+    // import _ from 'lodash'
+    // // import TaskExecuteService from '@service/task-execute'
+    // import {
+    //     getOffset
+    // } from '@utils/assist'
+    // import mixins from '../../mixins'
+    import FileItem from './log-item'
 
     export default {
         name: '',
         components: {
-            FileItem,
+            FileItem
         },
-        mixins: [
-            mixins,
-        ],
+        // mixins: [
+        //     mixins
+        // ],
         props: {
             name: String,
             stepInstanceId: {
                 type: Number,
-                required: true,
+                required: true
             },
             ip: {
-                type: String,
+                type: String
             },
             batch: {
-                type: [Number, String],
+                type: [Number, String]
             },
             retryCount: {
                 type: Number,
-                required: true,
+                required: true
             },
             mode: {
                 type: String,
-                required: true,
-            },
+                required: true
+            }
         },
         data () {
             return {
@@ -104,16 +104,16 @@
                 // 被展开的日志记录
                 openMemo: {},
                 // 被展开的文件具体日志内容
-                renderContentMap: {},
-            };
+                renderContentMap: {}
+            }
         },
         computed: {
             renderNums () {
-                return this.onePageNums + this.pageSize * this.page;
+                return this.onePageNums + this.pageSize * this.page
             },
             renderList () {
-                return this.contentList.slice(0, this.renderNums);
-            },
+                return this.contentList.slice(0, this.renderNums)
+            }
         },
         watch: {
             /**
@@ -121,32 +121,32 @@
              */
             name: {
                 handler () {
-                    this.isLoading = true;
-                    this.isMemoChange = false;
-                    this.page = 0;
+                    this.isLoading = true
+                    this.isMemoChange = false
+                    this.page = 0
 
-                    this.fetchData();
+                    this.fetchData()
                     if (this.$refs.contentBox) {
-                        this.$refs.contentBox.scrollTop = 0;
+                        this.$refs.contentBox.scrollTop = 0
                     }
                 },
-                immediate: true,
-            },
+                immediate: true
+            }
         },
         created () {
             // 缓存是否有展开日志的操作
-            this.isMemoChange = false;
+            this.isMemoChange = false
             // 前端分页加载器，控制触发频率
-            this.timer = null;
+            this.timer = null
             // 日志列表中是否包含日志内容标记，如果不包含需要异步获取日志内容
-            this.includingLogContent = '';
+            this.includingLogContent = ''
         },
         mounted () {
-            this.calcFirstPageNums();
-            window.addEventListener('resize', this.handleScroll);
+            this.calcFirstPageNums()
+            window.addEventListener('resize', this.handleScroll)
             this.$once('hook:beforeDestroy', () => {
-                window.removeEventListener('resize', this.handleScroll);
-            });
+                window.removeEventListener('resize', this.handleScroll)
+            })
         },
         methods: {
             /**
@@ -157,114 +157,113 @@
              */
             fetchData () {
                 if (!this.ip) {
-                    this.isLoading = false;
-                    this.contentList = [];
-                    return;
+                    this.isLoading = false
+                    this.contentList = []
                 }
-                TaskExecuteService.fetchFileLogOfIp({
-                    stepInstanceId: this.stepInstanceId,
-                    retryCount: this.retryCount,
-                    ip: this.ip,
-                    batch: this.batch,
-                    mode: this.mode,
-                }).then((data) => {
-                    const {
-                        fileDistributionDetails,
-                        includingLogContent,
-                        finished,
-                    } = data;
-                    this.contentList = Object.freeze(fileDistributionDetails);
-                    this.includingLogContent = includingLogContent;
-                    // 初始展开第一个
-                    if (this.contentList.length > 0 && !this.isMemoChange) {
-                        this.openMemo = {
-                            [this.contentList[0].taskId]: true,
-                        };
-                        this.isMemoChange = true;
-                    }
-                    // 日志量大异步获取展开的文件
-                    this.fetchFileLogOfFile();
-                    // 主机还在执行轮询日志
-                    if (!finished) {
-                        this.$pollingQueueRun(this.fetchData);
-                    }
-                })
-                    .finally(() => {
-                        this.isLoading = false;
-                    });
+                // TaskExecuteService.fetchFileLogOfIp({
+                //     stepInstanceId: this.stepInstanceId,
+                //     retryCount: this.retryCount,
+                //     ip: this.ip,
+                //     batch: this.batch,
+                //     mode: this.mode
+                // }).then((data) => {
+                //     const {
+                //         fileDistributionDetails,
+                //         includingLogContent,
+                //         finished
+                //     } = data
+                //     this.contentList = Object.freeze(fileDistributionDetails)
+                //     this.includingLogContent = includingLogContent
+                //     // 初始展开第一个
+                //     if (this.contentList.length > 0 && !this.isMemoChange) {
+                //         this.openMemo = {
+                //             [this.contentList[0].taskId]: true
+                //         }
+                //         this.isMemoChange = true
+                //     }
+                //     // 日志量大异步获取展开的文件
+                //     this.fetchFileLogOfFile()
+                //     // 主机还在执行轮询日志
+                //     if (!finished) {
+                //         this.$pollingQueueRun(this.fetchData)
+                //     }
+                // })
+                //     .finally(() => {
+                //         this.isLoading = false
+                //     })
             },
             /**
              * @desc 异步获取文件内容
              *
              * 如果日志列表中包含日志内容则不用重复获取
              */
-            fetchFileLogOfFile: _.throttle(function () {
-                if (this.includingLogContent) {
-                    return;
-                }
-                this.isAsyncContentLoading = true;
-                TaskExecuteService.fetchFileLogOfFile({
-                    stepInstanceId: this.stepInstanceId,
-                    retryCount: this.retryCount,
-                    taskIds: Object.keys(this.openMemo),
-                }).then((data) => {
-                    this.renderContentMap = Object.freeze(data.reduce((result, item) => {
-                        result[item.taskId] = item.logContent;
-                        return result;
-                    }, {}));
-                })
-                    .finally(() => {
-                        this.isAsyncContentLoading = false;
-                    });
-            }, 500),
+            // fetchFileLogOfFile: _.throttle(function () {
+            //     if (this.includingLogContent) {
+            //         return
+            //     }
+            //     this.isAsyncContentLoading = true
+            //     TaskExecuteService.fetchFileLogOfFile({
+            //         stepInstanceId: this.stepInstanceId,
+            //         retryCount: this.retryCount,
+            //         taskIds: Object.keys(this.openMemo)
+            //     }).then((data) => {
+            //         this.renderContentMap = Object.freeze(data.reduce((result, item) => {
+            //             result[item.taskId] = item.logContent
+            //             return result
+            //         }, {}))
+            //     })
+            //         .finally(() => {
+            //             this.isAsyncContentLoading = false
+            //         })
+            // }, 500),
             /**
              * @desc 外部调用
              */
             resize () {
-                this.handleScroll();
+                this.handleScroll()
             },
             /**
              * @desc 计算首屏需要渲染的文件数
              */
             calcFirstPageNums () {
-                const windowHeight = window.innerHeight;
-                const { top } = getOffset(this.$refs.contentBox);
-                this.onePageNums = Math.ceil((windowHeight - top) / 34) + 3;
+                // const windowHeight = window.innerHeight
+                // const { top } = getOffset(this.$refs.contentBox)
+                // this.onePageNums = Math.ceil((windowHeight - top) / 34) + 3
             },
             /**
              * @desc 滚动分页加载
              */
-            handleScroll: _.throttle(function () {
-                if (!this.$refs.load) {
-                    return;
-                }
-                const windowHeight = window.innerHeight;
-                const { top } = this.$refs.load.getBoundingClientRect();
-                if (windowHeight + 50 > top && !this.timer) {
-                    // 本地日志加载器
-                    this.timer = setTimeout(() => {
-                        this.page += 1;
-                        this.timer = 0;
-                    }, 350);
-                }
-            }, 80),
+            // handleScroll: _.throttle(function () {
+            //     if (!this.$refs.load) {
+            //         return
+            //     }
+            //     const windowHeight = window.innerHeight
+            //     const { top } = this.$refs.load.getBoundingClientRect()
+            //     if (windowHeight + 50 > top && !this.timer) {
+            //         // 本地日志加载器
+            //         this.timer = setTimeout(() => {
+            //             this.page += 1
+            //             this.timer = 0
+            //         }, 350)
+            //     }
+            // }, 80),
             /**
              * @desc 文件日志展开收起
              *
              * 展开时需要重新获取一次日志
              */
             handleToggle (taskId, toggle) {
-                const openMemo = { ...this.openMemo };
-                openMemo[taskId] = toggle;
-                this.openMemo = Object.freeze(openMemo);
+                const openMemo = { ...this.openMemo }
+                openMemo[taskId] = toggle
+                this.openMemo = Object.freeze(openMemo)
                 if (toggle) {
-                    this.fetchFileLogOfFile();
+                    this.fetchFileLogOfFile()
                 }
-            },
-        },
-    };
+            }
+        }
+    }
 </script>
-<style lang='postcss'>
+<style lang='scss'>
     @keyframes file-log-loading-ani {
         0% {
             transform: rotateZ(0);

@@ -39,6 +39,9 @@ const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/n
 // 节点详情
 const extPageContainer = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/extPageContainer')
 
+// 脚本执行详情/文件分发详情
+const executionDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/execution-detail/index.vue')
+
 const routes = [
     {
         path: 'environment/:projectId?',
@@ -113,6 +116,11 @@ const routes = [
                 }
             }
         ]
+    },
+    {
+        path: 'environment/:projectId?/execute/detail/:jobInstanceId/:jobInstanceType',
+        name: 'executionDetail',
+        component: executionDetail
     }
 ]
 

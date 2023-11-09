@@ -29,10 +29,10 @@
     <div
         class="step-execute-script-log"
         v-bkloading="{
-            isLoading, opacity: .1,
+            isLoading, opacity: .1
         }">
         <div class="log-wraper">
-            <div v-once id="executeScriptLog" style="height: 100%;" />
+            <div id="executeScriptLog" style="height: 100%;" />
         </div>
         <div class="log-status" v-if="ip && isRunning">
             <div class="log-loading">{{ $t('history.执行中') }}</div>
@@ -48,40 +48,44 @@
     </div>
 </template>
 <script>
-    import ace from 'ace/ace'
-    import 'ace/mode-text'
-    import 'ace/theme-monokai'
-    import 'ace/ext-searchbox'
+    import ace from 'ace-builds/src-noconflict/ace'
+    import 'ace-builds/src-noconflict/mode-text'
+    import 'ace-builds/src-noconflict/theme-monokai'
+    import 'ace-builds/src-noconflict/ext-searchbox'
+    // import mixins from '../../mixins'
 
     export default {
+        // mixins: [
+        //     mixins
+        // ],
         props: {
             name: String,
             stepInstanceId: {
                 type: Number,
-                required: true,
+                required: true
             },
             ip: {
-                type: String,
+                type: String
             },
             batch: {
-                type: [Number, String],
+                type: [Number, String]
             },
             retryCount: {
                 type: Number,
-                required: true,
+                required: true
             },
             logFilter: {
                 type: String,
-                default: '',
+                default: ''
             },
             fontSize: {
                 type: Number,
-                default: 12,
+                default: 12
             },
             lineFeed: {
                 type: Boolean,
-                default: true,
-            },
+                default: true
+            }
         },
         data () {
             return {
@@ -90,8 +94,8 @@
                 // 是否执行中
                 isRunning: false,
                 // 自动动滚动到底部
-                isWillAutoScroll: true,
-            };
+                isWillAutoScroll: true
+            }
         },
         watch: {
             /**
@@ -102,91 +106,90 @@
             name: {
                 handler () {
                     // 日志自动滚动
-                    this.isLoading = true;
-                    this.autoScrollTimeout();
-                    this.fetchLogContent();
+                    this.isLoading = true
+                    this.autoScrollTimeout()
+                    this.fetchLogContent()
                 },
-                immediate: true,
+                immediate: true
             },
             /**
              * @desc 字体大小改变时虚拟滚动重新计算
              */
             fontSize: {
                 handler (fontSize) {
-                    this.editor.setFontSize(fontSize);
-                },
+                    this.editor.setFontSize(fontSize)
+                }
             },
             lineFeed: {
                 handler (lineFeed) {
                     setTimeout(() => {
                         this.editor && this.editor.setOptions({
-                            wrap: lineFeed ? 'free' : 'none',
-                        });
-                    });
+                            wrap: lineFeed ? 'free' : 'none'
+                        })
+                    })
                 },
-                immediate: true,
-            },
+                immediate: true
+            }
         },
         created () {
             this.backTopTips = {
-                content: I18n.t('history.回到顶部'),
+                content: this.$t('history.回到顶部'),
                 placements: [
-                    'top',
+                    'top'
                 ],
-                theme: 'light',
-            };
+                theme: 'light'
+            }
             this.backBottomTips = {
-                content: I18n.t('history.前往底部'),
+                content: this.$t('history.前往底部'),
                 placements: [
-                    'top',
+                    'top'
                 ],
-                theme: 'light',
-            };
+                theme: 'light'
+            }
         },
         mounted () {
-            this.initEditor();
+            this.initEditor()
         },
         methods: {
             /**
              * @desc 获取脚本日志
              */
-            // fetchLogContent () {
-            //     if (!this.ip) {
-            //         this.isLoading = false;
-            //         if (this.editor) {
-            //             this.editor.setValue('');
-            //             this.editor.clearSelection();
-            //         }
-            //         return;
-            //     }
-            //     TaskExecuteService.fetchLogContentOfIp({
-            //         stepInstanceId: this.stepInstanceId,
-            //         retryCount: this.retryCount,
-            //         ip: this.ip,
-            //         batch: this.batch,
-            //     })
-            //         .then(({
-            //             finished,
-            //             logContent,
-            //         }) => {
-            //             this.isRunning = !finished;
-            //             this.$nextTick(() => {
-            //                 this.editor.setValue(_.trim(logContent || '', '\n'));
-            //                 this.editor.clearSelection();
-            //             });
-            //             // 当前主机执行结束
-            //             if (!finished) {
-            //                 this.$pollingQueueRun(this.fetchLogContent);
-            //             }
-            //         })
-            //         .finally(() => {
-            //             this.isLoading = false;
-            //         });
-            // },
+            fetchLogContent () {
+                if (!this.ip) {
+                    this.isLoading = false
+                    if (this.editor) {
+                        this.editor.setValue('')
+                        this.editor.clearSelection()
+                    }
+                }
+                // TaskExecuteService.fetchLogContentOfIp({
+                //     stepInstanceId: this.stepInstanceId,
+                //     retryCount: this.retryCount,
+                //     ip: this.ip,
+                //     batch: this.batch
+                // })
+                //     .then(({
+                //         finished,
+                //         logContent
+                //     }) => {
+                //         this.isRunning = !finished
+                //         this.$nextTick(() => {
+                //             // this.editor.setValue(_.trim(logContent || '', '\n'))
+                //             this.editor.clearSelection()
+                //         })
+                //         // 当前主机执行结束
+                //         if (!finished) {
+                //             this.$pollingQueueRun(this.fetchLogContent)
+                //         }
+                //     })
+                //     .finally(() => {
+                //         this.isLoading = false
+                //     })
+            },
             initEditor () {
-                const editor = ace.edit('executeScriptLog');
-                editor.getSession().setMode('ace/mode/text');
-                editor.setTheme('ace/theme/monokai');
+                const editor = ace.edit('executeScriptLog')
+                editor.getSession().setMode('ace/mode/text')
+                editor.setTheme('ace/theme/monokai')
                 editor.setOptions({
                     fontSize: this.fontSize,
                     wrapBehavioursEnabled: true,
@@ -196,62 +199,62 @@
                     printMargin: 80,
                     showPrintMargin: false,
                     scrollPastEnd: 0.05,
-                    fixedWidthGutter: true,
-                });
-                editor.$blockScrolling = Infinity;
-                editor.setReadOnly(true);
-                const editorSession = editor.getSession();
+                    fixedWidthGutter: true
+                })
+                editor.$blockScrolling = Infinity
+                editor.setReadOnly(true)
+                const editorSession = editor.getSession()
                 // 自动换行时不添加缩进
-                editorSession.$indentedSoftWrap = false;
+                editorSession.$indentedSoftWrap = false
                 editorSession.on('changeScrollTop', (scrollTop) => {
                     const {
                         height,
-                        maxHeight,
-                    } = editor.renderer.layerConfig;
-                    this.isWillAutoScroll = height + scrollTop + 30 >= maxHeight;
-                });
-                this.editor = editor;
+                        maxHeight
+                    } = editor.renderer.layerConfig
+                    this.isWillAutoScroll = height + scrollTop + 30 >= maxHeight
+                })
+                this.editor = editor
                 this.$once('hook:beforeDestroy', () => {
-                    editor.destroy();
-                    editor.container.remove();
-                });
+                    editor.destroy()
+                    editor.container.remove()
+                })
             },
             /**
              * @desc 外部调用
              */
             resize () {
                 this.$nextTick(() => {
-                    this.editor.resize();
-                });
+                    this.editor.resize()
+                })
             },
             /**
              * @desc 日志滚动定时器
              */
             autoScrollTimeout () {
                 if (this.isWillAutoScroll && !this.isLoading) {
-                    this.handleScrollBottom();
+                    this.handleScrollBottom()
                 }
                 setTimeout(() => {
-                    this.autoScrollTimer = this.autoScrollTimeout();
-                }, 1000);
+                    this.autoScrollTimer = this.autoScrollTimeout()
+                }, 1000)
             },
             /**
              * @desc 回到日志顶部
              */
             handleScrollTop () {
-                this.editor.scrollToLine(0);
+                this.editor.scrollToLine(0)
             },
             /**
              * @desc 回到日志底部
              */
             handleScrollBottom () {
-                this.isWillAutoScroll = true;
-                this.editor.scrollToLine(Infinity);
-            },
-        },
-    };
+                this.isWillAutoScroll = true
+                this.editor.scrollToLine(Infinity)
+            }
+        }
+    }
 </script>
-<style lang='postcss'>
+<style lang='scss'>
     @keyframes script-execute-loading {
         0% {
             content: ".";

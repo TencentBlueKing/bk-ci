@@ -304,6 +304,7 @@
     "installingTips": "正在安装 Gse Agent，请稍等",
     "installSuccessTips": "Gse Agent 安装成功",
     "installFailTips": "Gse Agent 安装失败",
-    "retry": "Retry"
-
+    "retry": "Retry",
+    "scriptExecution": "Script Execution",
+    "fileTransfer": "File Transfer"
 }

@@ -31,39 +31,39 @@
         2: 'uploading',
         3: 'downloading',
         4: 'finished',
-        5: 'failed',
-    };
+        5: 'failed'
+    }
 
     export default {
         functional: true,
         render (h, context) {
-            const { props, listeners, parent } = context;
+            const { props, listeners, parent } = context
             const {
                 data,
                 openMemo,
                 renderContentMap,
-                isContentLoading,
-            } = props;
-            const isContentOpen = Boolean(openMemo[data.taskId]);
+                isContentLoading
+            } = props
+            const isContentOpen = Boolean(openMemo[data.taskId])
 
             const classes = {
                 'step-detail-file-log-block': true,
                 [statusMap[data.status]]: true,
-                toggle: isContentOpen,
-            };
+                toggle: isContentOpen
+            }
             // 异步获取日志的loading状态
-            const logContent = renderContentMap[data.taskId] || data.logContent;
+            const logContent = renderContentMap[data.taskId] || data.logContent
             if (isContentLoading && !logContent) {
-                classes['content-loading'] = true;
+                classes['content-loading'] = true
             }
             const renderProgress = () => {
-                const wholeProgress = '*******************************************************************************************';
-                const process = parseInt(data.progress, 10) / 100;
-                return wholeProgress.slice(0, Math.floor(process * wholeProgress.length) || 1);
-            };
+                const wholeProgress = '*******************************************************************************************'
+                const process = parseInt(data.progress, 10) / 100
+                return wholeProgress.slice(0, Math.floor(process * wholeProgress.length) || 1)
+            }
             const handleToggle = () => {
-                listeners['on-toggle'](data.taskId, !isContentOpen);
-            };
+                listeners['on-toggle'](data.taskId, !isContentOpen)
+            }
             return (
             <div class={classes}>
                 <div class="log-header" onClick={handleToggle}>
@@ -84,11 +84,11 @@
                     )
                 }
             </div>
-            );
-        },
-    };
+            )
+        }
+    }
 </script>
-<style lang='postcss'>
+<style lang='scss'>
     @keyframes file-loading-ani {
         0% {
             content: "*";

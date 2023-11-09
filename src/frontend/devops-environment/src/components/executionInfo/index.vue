@@ -1,30 +1,3 @@
-<!--
- * Tencent is pleased to support the open source community by making BK-JOB蓝鲸智云作业平台 available.
- *
- * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-JOB蓝鲸智云作业平台 is licensed under the MIT License.
- *
- * License for BK-JOB蓝鲸智云作业平台:
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
- * the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
--->
-
 <template>
     <div ref="infoBox" class="step-execution-info-box" :style="boxStyles">
         <div class="tab-container">
@@ -87,7 +60,7 @@
                     @click="handleExitFullscreen">
                     <Icon type="un-full-screen" />
                 </div>
-                <div
+                <!-- <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
                     style="padding-left: 16px; border-left: 1px solid #262626;">
@@ -97,7 +70,7 @@
                         size="small"
                         @change="handleScriptLogLineFeedChange" />
                     <span style="padding-left: 7px; font-size: 12px; color: #979ba5;">{{ $t('history.自动换行') }}</span>
-                </div>
+                </div> -->
             </div>
         </div>
         <div class="tab-content-wraper" :style="contentStyles">
@@ -144,14 +117,11 @@
     </div>
 </template>
 <script>
-    import I18n from '@/i18n';
-    import TaskExecuteService from '@service/task-execute';
-    import ScriptLog from './script-log';
-    import FileLog from './file-log';
-    import VariableView from './variable-view';
+    import ScriptLog from './script-log'
+    import FileLog from './file-log'
 
-    const STEP_FONT_SIZE_KEY = 'step_execution_font_size';
-    const SCRIPT_LOG_AUTO_LINE_FEED = 'script_log_line_feed';
+    const STEP_FONT_SIZE_KEY = 'step_execution_font_size'
+    const SCRIPT_LOG_AUTO_LINE_FEED = 'script_log_line_feed'
 
     export default {
         name: '',
@@ -160,30 +130,30 @@
             name: String,
             host: {
                 type: Object,
-                required: true,
+                required: true
             },
             stepInstanceId: {
-                type: Number,
+                type: Number
             },
             retryCount: {
                 type: Number,
-                required: true,
+                required: true
             },
             isTask: {
                 type: Boolean,
-                default: false,
+                default: false
             },
             isFile: {
                 type: Boolean,
-                default: false, // 展示文件日志
-            },
+                default: false // 展示文件日志
+            }
         },
         data () {
-            let fontSize = parseInt(localStorage.getItem(STEP_FONT_SIZE_KEY), 10);
+            let fontSize = parseInt(localStorage.getItem(STEP_FONT_SIZE_KEY), 10)
             if (!fontSize || fontSize < 12) {
-                fontSize = 12;
+                fontSize = 12
             } else if (fontSize > 14) {
-                fontSize = 14;
+                fontSize = 14
             }
 
             return {
@@ -191,18 +161,17 @@
                 isFullscreen: false,
                 isFontSet: false,
                 fontSize,
-                isScriptLogLineFeed: Boolean(localStorage.getItem(SCRIPT_LOG_AUTO_LINE_FEED)),
-            };
+                isScriptLogLineFeed: Boolean(localStorage.getItem(SCRIPT_LOG_AUTO_LINE_FEED))
+            }
         },
         computed: {
             renderCom () {
                 const comMap = {
                     scriptLog: ScriptLog,
                     download: FileLog,
-                    upload: FileLog,
-                    variable: VariableView,
-                };
-                return comMap[this.activePanel];
+                    upload: FileLog
+                }
+                return comMap[this.activePanel]
             },
             boxStyles () {
                 if (this.isFullscreen) {
@@ -212,39 +181,39 @@
                         right: 0,
                         bottom: 0,
                         left: 0,
-                        zIndex: window.__bk_zIndex_manager.nextZIndex(), // eslint-disable-line no-underscore-dangle
-                    };
+                        zIndex: window.__bk_zIndex_manager.nextZIndex() // eslint-disable-line no-underscore-dangle
+                    }
                 }
-                return {};
+                return {}
             },
             contentStyles () {
                 const lineHeightMap = {
                     12: 20,
                     13: 21,
-                    14: 22,
-                };
+                    14: 22
+                }
                 return {
                     fontSize: `${this.fontSize}px`,
-                    lineHeight: `${lineHeightMap[this.fontSize]}px`,
-                };
-            },
+                    lineHeight: `${lineHeightMap[this.fontSize]}px`
+                }
+            }
         },
         watch: {
             isFile: {
                 handler (isFile) {
-                    this.activePanel = isFile ? 'download' : 'scriptLog';
+                    this.activePanel = isFile ? 'download' : 'scriptLog'
                 },
-                immediate: true,
-            },
+                immediate: true
+            }
         },
         beforeDestroy () {
-            this.handleExitFullscreen();
+            this.handleExitFullscreen()
         },
         mounted () {
-            window.addEventListener('keyup', this.handleExitByESC);
+            window.addEventListener('keyup', this.handleExitByESC)
             this.$once('hook:beforeDestroy', () => {
-                window.removeEventListener('keyup', this.handleExitByESC);
-            });
+                window.removeEventListener('keyup', this.handleExitByESC)
+            })
         },
         methods: {
             /**
@@ -252,70 +221,70 @@
              * @param {String} panel 选中的面板
              */
             handleTogglePanel (panel) {
-                this.activePanel = panel;
+                this.activePanel = panel
             },
             /**
              * @desc 下载主机日志
              */
             handleDownload () {
-                TaskExecuteService.fetchStepExecutionLogFile({
-                    id: this.stepInstanceId,
-                    ip: this.host.ip,
-                }).then(() => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: I18n.t('history.导出日志操作成功'),
-                    });
-                });
+                // TaskExecuteService.fetchStepExecutionLogFile({
+                //     id: this.stepInstanceId,
+                //     ip: this.host.ip
+                // }).then(() => {
+                //     this.$bkMessage({
+                //         theme: 'success',
+                //         message: this.$t('history.导出日志操作成功')
+                //     })
+                // })
             },
             /**
              * @desc 显示字体大小设置面板
              */
             handleShowSetFont () {
-                this.isFontSet = true;
+                this.isFontSet = true
             },
             /**
              * @desc 隐藏字体大小设置面板
              */
             handleHideSetFont () {
-                this.isFontSet = false;
+                this.isFontSet = false
             },
             /**
              * @desc 更新日志字体大小
              */
             handleFontChange (fontSize) {
-                this.fontSize = fontSize;
-                localStorage.setItem(STEP_FONT_SIZE_KEY, fontSize);
+                this.fontSize = fontSize
+                localStorage.setItem(STEP_FONT_SIZE_KEY, fontSize)
             },
             /**
              * @desc 日志全屏
              */
             handleFullscreen () {
-                this.isFullscreen = true;
-                this.messageInfo(I18n.t('history.按 Esc 即可退出全屏模式'));
-                this.infoBoxParentNode = this.$refs.infoBox.parentNode;
-                document.body.appendChild(this.$refs.infoBox);
-                this.$refs.view && this.$refs.view.resize();
+                this.isFullscreen = true
+                this.messageInfo(this.$t('history.按 Esc 即可退出全屏模式'))
+                this.infoBoxParentNode = this.$refs.infoBox.parentNode
+                document.body.appendChild(this.$refs.infoBox)
+                this.$refs.view && this.$refs.view.resize()
             },
             /**
              * @desc 退出日志全屏
              */
             handleExitFullscreen (event) {
-                this.isFullscreen = false;
+                this.isFullscreen = false
                 if (this.infoBoxParentNode) {
-                    this.infoBoxParentNode.appendChild(this.$refs.infoBox);
-                    this.infoBoxParentNode = null;
+                    this.infoBoxParentNode.appendChild(this.$refs.infoBox)
+                    this.infoBoxParentNode = null
                 }
                 setTimeout(() => {
-                    this.$refs.view && this.$refs.view.resize();
-                });
+                    this.$refs.view && this.$refs.view.resize()
+                })
             },
             /**
              * @desc esc键退出日志全屏
              */
             handleExitByESC (event) {
                 if (event.keyCode === 27) {
-                    this.handleExitFullscreen();
+                    this.handleExitFullscreen()
                 }
             },
             /**
@@ -323,17 +292,17 @@
              * @param {Boolean} lineFeed
              */
             handleScriptLogLineFeedChange  (lineFeed) {
-                this.isScriptLogLineFeed = lineFeed;
+                this.isScriptLogLineFeed = lineFeed
                 if (lineFeed) {
-                    localStorage.setItem(SCRIPT_LOG_AUTO_LINE_FEED, true);
+                    localStorage.setItem(SCRIPT_LOG_AUTO_LINE_FEED, true)
                 } else {
-                    localStorage.removeItem(SCRIPT_LOG_AUTO_LINE_FEED);
+                    localStorage.removeItem(SCRIPT_LOG_AUTO_LINE_FEED)
                 }
-            },
-        },
-    };
+            }
+        }
+    }
 </script>
-<style lang='postcss'>
+<style lang='scss'>
     .step-execution-info-box {
         position: relative;
         height: 100%;
