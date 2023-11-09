@@ -116,7 +116,9 @@ class RedisAutoConfiguration {
             slaveConfiguration.password = RedisPassword.of(redisSplitProperties.password!!)
             slaveConfiguration.database = redisSplitProperties.database!!
 
-            LettuceConnectionFactory(slaveConfiguration, masterClientConfiguration)
+            val lettuceConnectionFactory = LettuceConnectionFactory(slaveConfiguration, masterClientConfiguration)
+            lettuceConnectionFactory.afterPropertiesSet()
+            lettuceConnectionFactory
         } else {
             throw RuntimeException("Redis split just support lettuce")
         }
