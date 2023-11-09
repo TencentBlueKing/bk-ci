@@ -47,7 +47,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
             operator = DEFAULT_SYTEM_USER,
             reqColumn = listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
             keyValues = CmdbKeyValues(
-                SvrIp = nodeIpList.joinToString(separator = ";")
+                svrIp = nodeIpList.joinToString(separator = ";")
             ),
             pagingInfo = CmdbPagingInfo(1000, 0, 1)
         )
