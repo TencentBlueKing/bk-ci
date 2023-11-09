@@ -25,23 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.common.event.pojo.measure
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("文本引用文件下载请求")
-data class TextReferenceFileDownloadRequest(
-    @ApiModelProperty("项目代码", required = true)
-    val projectCode: String,
+@Event(exchange = MQ.EXCHANGE_STORE_FILE_CACHE_CLEAN_FANOUT, routeKey = MQ.ROUTE_STORE_FILE_CACHE_CLEAN_EXCHANGE_FANOUT)
+data class StoreFileCacheCleanEvent(
     @ApiModelProperty("组件标识")
     val storeCode: String,
-    @ApiModelProperty("插件包文件路径", required = true)
-    val fileDir: String,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String? = null,
-    @ApiModelProperty("分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("引用文件路径列表", required = true)
-    val filePaths: List<String>
+    @ApiModelProperty("版本号")
+    val version: String,
+    @ApiModelProperty("磁盘缓存目录路径")
+    val fileCachePath: String,
+    @ApiModelProperty("磁盘缓存key")
+    val fileCacheKey: String
 )

@@ -25,23 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.listener
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
+import com.tencent.devops.store.service.common.StoreFileService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@ApiModel("文本引用文件下载请求")
-data class TextReferenceFileDownloadRequest(
-    @ApiModelProperty("项目代码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("组件标识")
-    val storeCode: String,
-    @ApiModelProperty("插件包文件路径", required = true)
-    val fileDir: String,
-    @ApiModelProperty("仓库哈希ID", required = false)
-    val repositoryHashId: String? = null,
-    @ApiModelProperty("分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("引用文件路径列表", required = true)
-    val filePaths: List<String>
-)
+@Component
+class StoreFileCacheCleanListener @Autowired constructor(
+    private val storeFileService: StoreFileService
+) : Listener<StoreFileCacheCleanEvent> {
+
+    override fun execute(event: StoreFileCacheCleanEvent) {
+        try {
+            logger.info("StoreFileCacheCleanListener event:$event")
+            storeFileService.storeFileCacheClean(event)
+        } catch (ignored: Throwable) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(StoreFileCacheCleanListener::class.java)
+    }
+}
