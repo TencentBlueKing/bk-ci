@@ -24,13 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.service
+package com.tencent.devops.openapi.es
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.openapi.dao.MetricsForApiDao
 import com.tencent.devops.openapi.dao.MetricsForProjectDao
-import com.tencent.devops.openapi.es.ESServiceImpl
+import com.tencent.devops.openapi.es.impl.ESServiceImpl
 import com.tencent.devops.openapi.pojo.MetricsApiData
 import com.tencent.devops.openapi.pojo.MetricsProjectData
 import java.time.Duration
@@ -38,9 +38,8 @@ import java.time.LocalTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Service
 
-@Service
+
 class MetricsService(
     private val dslContext: DSLContext,
     private val apiDao: MetricsForApiDao,

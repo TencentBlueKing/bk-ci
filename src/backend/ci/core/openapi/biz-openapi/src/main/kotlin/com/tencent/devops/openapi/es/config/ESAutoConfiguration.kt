@@ -31,12 +31,19 @@ import com.tencent.devops.common.es.ESAutoConfiguration
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.openapi.es.ESServiceImpl
+import com.tencent.devops.openapi.dao.MetricsForApiDao
+import com.tencent.devops.openapi.dao.MetricsForProjectDao
+import com.tencent.devops.openapi.es.impl.DefaultESServiceImpl
+import com.tencent.devops.openapi.es.impl.ESServiceImpl
+import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.MQDispatcher
+import com.tencent.devops.openapi.es.MetricsService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -45,7 +52,6 @@ import org.springframework.core.Ordered
 
 @Suppress("ALL")
 @Configuration
-@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureAfter(ESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
@@ -53,7 +59,9 @@ class ESAutoConfiguration {
 
     @Value("\${log.elasticsearch.consumerCount:1}")
     val consumerCount: Int = 1
+
     @Bean
+    @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
     fun esLogService(
         @Autowired logESClient: LogClient,
         @Autowired redisOperation: RedisOperation,
@@ -65,5 +73,30 @@ class ESAutoConfiguration {
             dispatcher = openapiMQDispatcher,
             configuration = this
         )
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
+    fun metricsService(
+        @Autowired dslContext: DSLContext,
+        @Autowired apiDao: MetricsForApiDao,
+        @Autowired projectDao: MetricsForProjectDao,
+        @Autowired esServiceImpl: ESServiceImpl,
+        @Autowired redisOperation: RedisOperation
+    ): MetricsService {
+        return MetricsService(
+            dslContext = dslContext,
+            apiDao = apiDao,
+            projectDao = projectDao,
+            esServiceImpl = esServiceImpl,
+            redisOperation = redisOperation
+        )
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IESService::class)
+    fun defaultLogService(
+    ): DefaultESServiceImpl {
+        return DefaultESServiceImpl()
     }
 }

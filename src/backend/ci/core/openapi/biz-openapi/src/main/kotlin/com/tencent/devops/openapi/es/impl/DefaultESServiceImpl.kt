@@ -25,40 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.es.config
+package com.tencent.devops.openapi.es.impl
 
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.openapi.es.ESMessage
+import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.es.mq.ESEvent
-import com.tencent.devops.openapi.es.mq.MQDispatcher
-import com.tencent.devops.openapi.es.mq.MQListenerService
-import java.util.function.Consumer
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.cloud.stream.function.StreamBridge
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import org.springframework.messaging.Message
 
-@Configuration
-@ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class MQConfiguration @Autowired constructor() {
+class DefaultESServiceImpl : IESService {
 
-    @Bean
-    fun openapiMQDispatcher(
-        streamBridge: StreamBridge
-    ) = MQDispatcher(streamBridge)
-
-    @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT_IN)
-    fun openapiLogEventIn(
-        listenerService: MQListenerService
-    ): Consumer<Message<ESEvent>> {
-        return Consumer { event: Message<ESEvent> ->
-            listenerService.handleEvent(event.payload)
-        }
-    }
+    override fun addMessage(message: ESMessage) {}
+    override fun esAddMessage(event: ESEvent) {}
 }
