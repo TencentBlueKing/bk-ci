@@ -62,7 +62,8 @@ class ESAutoConfiguration {
         return ESServiceImpl(
             logClient = logESClient,
             redisOperation = redisOperation,
-            dispatcher = openapiMQDispatcher
+            dispatcher = openapiMQDispatcher,
+            configuration = this
         )
     }
 }
