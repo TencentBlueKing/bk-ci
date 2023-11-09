@@ -24,7 +24,8 @@ data class VmCreateResp(
     val existed: Boolean,
     val resourceId: String,
     val envId: String? = "",
-    val curLaunchId: String
+    val curLaunchId: String,
+    val macAddress: String? = ""
 )
 
 data class Image(

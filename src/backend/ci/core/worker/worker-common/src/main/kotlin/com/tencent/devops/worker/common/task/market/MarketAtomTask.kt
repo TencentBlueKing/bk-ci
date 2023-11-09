@@ -416,8 +416,8 @@ open class MarketAtomTask : ITask() {
             // 如果是第三方构建机，插件包缓存放入构建机的公共区域
             System.getProperty("user.dir")
         } else {
-            // 如果是公共构建机，插件包缓存放入流水线的工作空间中
-            workspace.absolutePath
+            // 如果是公共构建机，插件包缓存放入流水线的工作空间上一级目录中
+            workspace.parentFile.absolutePath
         }
         val fileCacheDir = "$cacheDirPrefix${File.separator}$atomExecuteFileDir"
         // 获取构建机缓存文件区域大小

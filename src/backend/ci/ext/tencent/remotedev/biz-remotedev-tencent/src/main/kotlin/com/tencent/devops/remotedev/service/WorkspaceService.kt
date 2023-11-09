@@ -45,16 +45,19 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -76,6 +79,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -94,6 +99,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -106,6 +112,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
+    private val remoteDevCvmService: RemoteDevCvmService,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
@@ -117,7 +124,9 @@ class WorkspaceService @Autowired constructor(
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val expertSupportDao: ExpertSupportDao
 ) {
 
     companion object {
@@ -248,16 +257,20 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countProjectWorkspace(
+        val count = workspaceJoinDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             workspaceName = null,
             systemType = null,
             queryType = QueryType.WEB,
             ips = null,
-            owner = null
+            owner = null,
+            status = null,
+            zoneId = null,
+            machineType = null,
+            expertSupId = null
         )
-        val result = workspaceDao.limitFetchProjectWorkspace(
+        val result = workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             workspaceName = null,
@@ -265,42 +278,48 @@ class WorkspaceService @Autowired constructor(
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
             ips = null,
-            owner = null
+            owner = null,
+            status = null,
+            zoneId = null,
+            machineType = null,
+            expertSupId = null
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
     }
 
     fun getProjectWorkspaceList4Op(
-        projectId: String?,
-        workspaceName: String?,
-        systemType: WorkspaceSystemType?,
-        ips: List<String>?,
-        page: Int?,
-        pageSize: Int?,
-        owner: String?
+        data: ProjectWorkspaceFetchData
     ): Page<ProjectWorkspace> {
-        logger.info("op get project $projectId workspace list")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countProjectWorkspace(
+        logger.info("op get project ${data.projectId} workspace list {}", data)
+        val pageNotNull = data.page ?: 1
+        val pageSizeNotNull = data.pageSize ?: 6666
+        val count = workspaceJoinDao.countProjectWorkspace(
             dslContext = dslContext,
-            projectId = projectId,
-            workspaceName = workspaceName,
-            systemType = systemType,
+            projectId = data.projectId,
+            workspaceName = data.workspaceName,
+            systemType = data.systemType,
             queryType = QueryType.OP,
-            ips = ips,
-            owner = owner
+            ips = data.ips,
+            owner = data.owner,
+            status = data.status,
+            zoneId = data.zoneId,
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
         )
-        val result = workspaceDao.limitFetchProjectWorkspace(
+        val result = workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
-            projectId = projectId,
-            workspaceName = workspaceName,
-            systemType = systemType,
+            projectId = data.projectId,
+            workspaceName = data.workspaceName,
+            systemType = data.systemType,
             queryType = QueryType.OP,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = ips,
-            owner = owner
+            ips = data.ips,
+            owner = data.owner,
+            status = data.status,
+            zoneId = data.zoneId,
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
         ) ?: emptyList()
 
         return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
@@ -335,6 +354,22 @@ class WorkspaceService @Autowired constructor(
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
 
+        // 专家协助
+        val expertMap = mutableMapOf<String, MutableList<FetchSupportResp>>()
+        expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet()).forEach {
+            val resp = FetchSupportResp(
+                id = it.id,
+                creator = it.creator,
+                content = it.content,
+                createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+            )
+            if (expertMap[it.workspaceName] != null) {
+                expertMap[it.workspaceName]?.add(resp)
+            } else {
+                expertMap[it.workspaceName] = mutableListOf(resp)
+            }
+        }
+
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             when (it) {
@@ -364,7 +399,9 @@ class WorkspaceService @Autowired constructor(
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
-                            disk = it.memory
+                            disk = it.memory,
+                            expertSupportList = expertMap[it.workspaceName],
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
@@ -394,7 +431,9 @@ class WorkspaceService @Autowired constructor(
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
-                            disk = it.memory
+                            disk = it.memory,
+                            expertSupportList = expertMap[it.workspaceName],
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
@@ -443,6 +482,11 @@ class WorkspaceService @Autowired constructor(
                 projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
             )
         }
+    }
+
+    fun getRemotedevCvm(projectId: String?): List<RemotedevCvmData> {
+        logger.debug("get remotedev cvm list")
+        return remoteDevCvmService.getAllRemotedevCvm(projectId)
     }
 
     private fun parsingWorkspace(

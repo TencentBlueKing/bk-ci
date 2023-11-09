@@ -201,7 +201,8 @@ class CreateControl @Autowired constructor(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
                         cgsId = cgsId,
-                        autoAssign = autoAssign
+                        autoAssign = autoAssign,
+                        imageCosFile = workspaceCreate.imageCosFile
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -338,7 +339,8 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp
+                    event.environmentIp,
+                    event.macAddress
                 )
             }
 
