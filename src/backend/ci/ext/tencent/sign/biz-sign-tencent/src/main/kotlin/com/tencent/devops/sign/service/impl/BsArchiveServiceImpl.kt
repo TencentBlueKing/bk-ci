@@ -90,7 +90,8 @@ class BsArchiveServiceImpl @Autowired constructor(
                 path = path,
                 file = signedIpaFile,
                 metadata = properties ?: mapOf(),
-                override = true
+                override = true,
+                headers = mapOf(BKREPO_EXPIRES to IPA_EXPIRED_IN_DAYS.toString())
             )
         } catch (e: SocketTimeoutException) {
             logger.error("bk repo upload file with timeout, need retry", e)
@@ -120,8 +121,7 @@ class BsArchiveServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BsArchiveServiceImpl::class.java)
-
-        private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
-        private const val BKREPO_UID = "X-BKREPO-UID"
+        private const val BKREPO_EXPIRES = "X-BKREPO-EXPIRES"
+        private const val IPA_EXPIRED_IN_DAYS = 7
     }
 }
