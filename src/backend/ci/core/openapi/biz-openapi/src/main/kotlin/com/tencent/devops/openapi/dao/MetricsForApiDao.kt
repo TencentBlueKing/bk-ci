@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class MetricsForApiDao {
+    @Suppress("ComplexMethod")
     fun createOrUpdate(
         dslContext: DSLContext,
         metricsApis: List<MetricsApiData>,
