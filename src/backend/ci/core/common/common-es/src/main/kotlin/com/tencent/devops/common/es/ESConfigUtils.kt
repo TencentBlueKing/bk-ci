@@ -40,7 +40,7 @@ import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.slf4j.LoggerFactory
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "ComplexMethod")
 object ESConfigUtils {
 
     fun getClientBuilder(
