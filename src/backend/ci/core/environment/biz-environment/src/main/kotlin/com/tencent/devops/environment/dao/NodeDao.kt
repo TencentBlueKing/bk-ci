@@ -42,12 +42,16 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    companion object {
+        private val logger = LoggerFactory.getLogger(NodeDao::class.java)
+    }
     fun getNodesFromHostList(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
         val getRecordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
@@ -64,6 +68,10 @@ class NodeDao {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {
             with(TNode.T_NODE) {
+                if (logger.isDebugEnabled) logger.debug("----HOST_ID----: $HOST_ID")
+                if (logger.isDebugEnabled) logger.debug("----it.bkHostId----: $it.bkHostId")
+                if (logger.isDebugEnabled) logger.debug("****PROJECT_ID****: $PROJECT_ID")
+                if (logger.isDebugEnabled) logger.debug("****projectId****: $projectId")
                 dslContext.selectFrom(this)
                     .where(HOST_ID.eq(it.bkHostId))
                     .and(PROJECT_ID.eq(projectId))
