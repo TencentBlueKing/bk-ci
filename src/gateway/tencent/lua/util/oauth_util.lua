@@ -152,7 +152,7 @@ function _M:get_prebuild_ticket(bk_ticket)
             httpc:set_timeout(3000)
             httpc:connect(config.oauth.ip, config.oauth.port)
             local requestBody = {
-                env_name = "prod",
+                env_name = config.oauth.env,
                 app_code = "bk-preci",
                 app_secret = "SjJBvBR5iCJBXRa1n5z26YFgqIjJVZIIkMzD8GeEVQHH90LWAp",
                 grant_type = "authorization_code",
