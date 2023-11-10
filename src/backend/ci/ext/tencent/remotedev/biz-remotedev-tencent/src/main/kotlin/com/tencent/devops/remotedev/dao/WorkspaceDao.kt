@@ -77,10 +77,12 @@ class WorkspaceDao {
                 dslContext.insertInto(
                     this,
                     WORKSPACE_NAME,
-                    WIN_CONFIG_ID
+                    WIN_CONFIG_ID,
+                    IMAGE_ID
                 ).values(
                     workspace.workspaceName,
-                    workspace.winConfigId
+                    workspace.winConfigId,
+                    workspace.imageId
                 ).execute()
             }
         }
