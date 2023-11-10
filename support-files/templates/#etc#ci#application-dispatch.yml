@@ -64,6 +64,7 @@ bcs:
       memory: __BK_CI_BCS_MEMORY__
       disk: 100
 
+# 基础镜像源配置信息
 registry:
   host: __BK_CI_DOCKER_REGISTRY_URL__
   userName: __BK_CI_DOCKER_REGISTRY_USER__
