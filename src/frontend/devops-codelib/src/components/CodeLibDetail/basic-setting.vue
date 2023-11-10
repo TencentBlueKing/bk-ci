@@ -507,15 +507,15 @@
             'repoInfo.yamlSyncStatus': {
                 handler (val) {
                     this.syncStatus = val
-                    if (val === 'SYNC') {
-                        this.fetchYamlSyncStatus()
-                    }
                 },
                 deep: true
             },
             syncStatus (val) {
                 if (val === 'SUCCEED') {
                     this.fetchPacPipelineCount()
+                }
+                if (val === 'SYNC') {
+                    this.fetchYamlSyncStatus()
                 }
             }
         },
@@ -748,6 +748,8 @@
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId
                 }).then(res => {
+                    this.time = 5000
+                    this.syncStatus = 'SYNC'
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('codelib.重试成功，正在同步')
