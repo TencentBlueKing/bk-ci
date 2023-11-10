@@ -48,8 +48,6 @@ import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.isDirectoryN
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.Executors
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -228,6 +226,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 ) ?: return@forEach
                 val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
                 var textReferenceFileDirPath: String? = null
+                val allFileNames = textReferenceContentMap.values.flatten().toSet()
                 if (textReferenceContentMap.isNotEmpty()) {
                     textReferenceFileDirPath = storeFileService.getTextReferenceFileDir(
                         userId = userId,
@@ -237,17 +236,17 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             fileDir = storeI18nConfig.fileDir,
                             repositoryHashId = storeI18nConfig.repositoryHashId,
                             storeCode = storeI18nConfig.storeCode,
-                            fileNames = textReferenceContentMap.values.toList()
+                            fileNames = allFileNames
                         )
                     )
                 }
                 val isDirectoryNotEmpty = isDirectoryNotEmpty(textReferenceFileDirPath)
                 if (isDirectoryNotEmpty) {
-                    textReferenceContentMap.forEach { (key, content) ->
+                    textReferenceContentMap.forEach { (key, _) ->
                         fileProperties[key] = getTextReferenceFileParsing(
                             userId = userId,
                             fileDir = textReferenceFileDirPath!!,
-                            content = content
+                            content = fileProperties[key] as String
                         )
                     }
                 }
@@ -328,16 +327,21 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     /**
      * 获取存在文件引用的配置
      */
-    fun getTextReferenceFileContent(properties: Properties): Map<String, String> {
-    val map = mutableMapOf<String, String>()
-    val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-    properties.keys.map { it as String }.forEach { key ->
-        val text = properties[key].toString()
-        val matcher: Matcher = pattern.matcher(text)
-        if (matcher.find()) {
-            map[key] = text
+    fun getTextReferenceFileContent(properties: Properties): Map<String, List<String>> {
+        val map = mutableMapOf<String, List<String>>()
+        val regex = Regex(pattern = BK_CI_PATH_REGEX)
+        properties.keys.map { it as String }.forEach { key ->
+            val text = properties[key].toString()
+            val matchResult = regex.findAll(text)
+            val fileNames = mutableListOf<String>()
+            matchResult.forEach {
+                val fileName = it.groupValues[2].replace("\"", "")
+                fileNames.add(fileName)
+            }
+            if (fileNames.isNotEmpty()) {
+                map[key] = fileNames
+            }
         }
-    }
         return map
     }
 
@@ -378,7 +382,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 )
             }
         } catch (ignored: Throwable) {
-            logger.info("failed to parse text reference")
+            logger.warn("failed to parse text reference message:${ignored.message}")
         }
         return result
     }

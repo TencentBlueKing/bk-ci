@@ -166,6 +166,7 @@ abstract class StoreFileService {
     }
 
     abstract fun downloadFile(
+        userId: String,
         filePath: String,
         file: File,
         repositoryHashId: String? = null,

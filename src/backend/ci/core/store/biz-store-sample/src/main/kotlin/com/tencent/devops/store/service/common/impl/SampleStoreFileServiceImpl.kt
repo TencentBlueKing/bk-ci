@@ -54,6 +54,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
     }
 
     override fun downloadFile(
+        userId: String,
         filePath: String,
         file: File,
         repositoryHashId: String?,
@@ -95,6 +96,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         val fileNameList = request.fileNames
         fileNameList.forEach {
             downloadFile(
+                userId,
                 "${request.projectCode}$fileSeparator${request.fileDir}${fileSeparator}file$fileSeparator$it",
                 File(fileDirPath, it)
             )

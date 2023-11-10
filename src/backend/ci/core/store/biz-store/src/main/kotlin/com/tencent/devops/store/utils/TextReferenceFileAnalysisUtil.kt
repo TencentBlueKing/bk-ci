@@ -46,7 +46,6 @@ object TextReferenceFileAnalysisUtil {
     private const val BK_CI_ATOM_DIR = "bk-atom"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = System.getProperty("file.separator")
-    const val DEFAULT_PUBLIC_HOST_MAX_FILE_CACHE_SIZE = 209715200L
 
     fun getAtomBasePath(): String {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
@@ -157,5 +156,4 @@ object TextReferenceFileAnalysisUtil {
         val directory = Paths.get(path)
         return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
-
 }
