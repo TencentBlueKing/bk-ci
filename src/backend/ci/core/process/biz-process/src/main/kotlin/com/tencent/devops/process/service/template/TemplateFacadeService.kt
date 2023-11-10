@@ -676,6 +676,7 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         page: Int?,
         pageSize: Int?,
+        includePublicFlag: Boolean? = null
     ): Triple<List<String>?, Result<out Record>?, Int> {
         val offset = if (null != page && null != pageSize) (page - 1) * pageSize else null
         // 若不开启模板权限或者不检查列表权限的，直接返回列表数据。
@@ -684,7 +685,7 @@ class TemplateFacadeService @Autowired constructor(
             val templateRecord = templateDao.listTemplate(
                 dslContext = dslContext,
                 projectId = projectId,
-                includePublicFlag = null,
+                includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 templateIdList = null,
                 storeFlag = storeFlag,
@@ -695,7 +696,7 @@ class TemplateFacadeService @Autowired constructor(
             val count = templateDao.countTemplate(
                 dslContext = dslContext,
                 projectId = projectId,
-                includePublicFlag = null,
+                includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 templateName = null,
                 storeFlag = storeFlag
@@ -719,7 +720,7 @@ class TemplateFacadeService @Autowired constructor(
             val templatesWithListPerm = templateDao.listTemplate(
                 dslContext = dslContext,
                 projectId = projectId,
-                includePublicFlag = null,
+                includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 templateIdList = templatesWithListPermIds,
                 storeFlag = storeFlag,
@@ -727,7 +728,9 @@ class TemplateFacadeService @Autowired constructor(
                 limit = pageSize,
                 queryModelFlag = true
             )
-            Triple(templatesWithViewPermIds, templatesWithListPerm, templatesWithListPermIds?.size ?: 0)
+            // 若包含空白流水线，需要数量加1
+            val count = (templatesWithListPermIds?.size ?: 0) + if (includePublicFlag == true) 1 else 0
+            Triple(templatesWithViewPermIds, templatesWithListPerm, count)
         }
     }
 
@@ -969,6 +972,7 @@ class TemplateFacadeService @Autowired constructor(
                 checkPermission = checkPermission,
                 page = page,
                 pageSize = pageSize,
+                includePublicFlag = true
             )
 
         if (templates == null || templates.isEmpty()) {
