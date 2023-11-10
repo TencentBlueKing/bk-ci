@@ -36,12 +36,12 @@ data class TextReferenceFileDownloadRequest(
     val projectCode: String,
     @ApiModelProperty("组件标识")
     val storeCode: String,
+    @ApiModelProperty("引用文件名列表")
+    val fileNames: Set<String>,
     @ApiModelProperty("插件包文件路径", required = true)
     val fileDir: String,
     @ApiModelProperty("仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
     @ApiModelProperty("分支", required = false)
-    val branch: String? = null,
-    @ApiModelProperty("引用文件路径列表", required = true)
-    val filePaths: List<String>
+    val branch: String? = null
 )

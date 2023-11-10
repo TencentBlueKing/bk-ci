@@ -48,8 +48,6 @@ import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil.isDirectoryN
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.Executors
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -231,6 +229,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 ) ?: return@forEach
                 val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
                 var textReferenceFileDirPath: String? = null
+                val allFileNames = textReferenceContentMap.values.flatten().toSet()
                 if (textReferenceContentMap.isNotEmpty()) {
                     textReferenceFileDirPath = storeFileService.getTextReferenceFileDir(
                         userId = userId,
@@ -240,22 +239,18 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             fileDir = storeI18nConfig.fileDir,
                             repositoryHashId = storeI18nConfig.repositoryHashId,
                             storeCode = storeI18nConfig.storeCode,
-                            filePaths = textReferenceContentMap.values.toList()
+                            fileNames = allFileNames
                         )
                     )
                 }
                 val isDirectoryNotEmpty = isDirectoryNotEmpty(textReferenceFileDirPath)
                 if (isDirectoryNotEmpty) {
-                    try {
-                        textReferenceContentMap.forEach { (key, content) ->
-                            fileProperties[key] = getTextReferenceFileParsing(
-                                userId = userId,
-                                fileDir = textReferenceFileDirPath!!,
-                                content = content
-                            )
-                        }
-                    } finally {
-                        File(textReferenceFileDirPath!!).parentFile.deleteRecursively()
+                    textReferenceContentMap.forEach { (key, _) ->
+                        fileProperties[key] = getTextReferenceFileParsing(
+                            userId = userId,
+                            fileDir = textReferenceFileDirPath!!,
+                            content = fileProperties[key] as String
+                        )
                     }
                 }
 
@@ -337,16 +332,21 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     /**
      * 获取存在文件引用的配置
      */
-    fun getTextReferenceFileContent(properties: Properties): Map<String, String> {
-    val map = mutableMapOf<String, String>()
-    val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-    properties.keys.map { it as String }.forEach { key ->
-        val text = properties[key].toString()
-        val matcher: Matcher = pattern.matcher(text)
-        if (matcher.find()) {
-            map[key] = text
+    fun getTextReferenceFileContent(properties: Properties): Map<String, List<String>> {
+        val map = mutableMapOf<String, List<String>>()
+        val regex = Regex(pattern = BK_CI_PATH_REGEX)
+        properties.keys.map { it as String }.forEach { key ->
+            val text = properties[key].toString()
+            val matchResult = regex.findAll(text)
+            val fileNames = mutableListOf<String>()
+            matchResult.forEach {
+                val fileName = it.groupValues[2].replace("\"", "")
+                fileNames.add(fileName)
+            }
+            if (fileNames.isNotEmpty()) {
+                map[key] = fileNames
+            }
         }
-    }
         return map
     }
 
@@ -364,8 +364,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             matchResult.forEach {
                 val fileName = it.groupValues[2].replace("\"", "")
                 val isStatic = storeFileService.isStaticFile(fileName)
-                val textFile = File("$fileDir${File.separator}$fileName")
                 // 文本文件引用只允许引用一层，防止循环引用
+                val textFile = File("$fileDir${File.separator}$fileName")
                 if (!isStatic && !recursionFlag && textFile.exists()) {
                     return getTextReferenceFileParsing(
                         userId = userId,
@@ -378,7 +378,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileNames.add(fileName)
                 }
             }
-            logger.info("debug getTextReferenceFileParsing fileNames:$fileNames")
             if (fileNames.isNotEmpty()) {
                 result = storeFileService.getStaticFileReference(
                     userId = userId,

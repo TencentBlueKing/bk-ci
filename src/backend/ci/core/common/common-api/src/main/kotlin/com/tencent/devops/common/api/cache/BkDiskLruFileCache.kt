@@ -2,11 +2,11 @@ package com.tencent.devops.common.api.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
 import com.tencent.devops.common.api.util.ShaUtils
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import org.slf4j.LoggerFactory
 
 /**
  * 蓝盾文件磁盘缓存
@@ -76,13 +76,6 @@ class BkDiskLruFileCache(
             }
         }
     }
-
-    /**
-     * 判断磁盘缓存中缓存对象是否存在
-     * @param key 磁盘缓存key
-     */
-    @Throws(IOException::class)
-    fun isCacheExist(key: String): Boolean = diskCache[ShaUtils.sha256(key)] != null
 
     /**
      * 从磁盘缓存中移除缓存对象
