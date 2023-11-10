@@ -19,7 +19,8 @@ import org.jooq.tools.jdbc.MockConnection
 import org.junit.jupiter.api.BeforeAll
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.data.redis.core.RedisCallback
+import org.springframework.data.redis.core.script.DefaultRedisScript
+import org.springframework.data.redis.core.script.RedisScript
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 
@@ -95,12 +96,15 @@ open class BkCiAbstractTest {
         @BeforeAll
         @SuppressWarnings("TooGenericExceptionThrown")
         fun mockRedisOperation() {
-            every { redisOperation.execute(any<RedisCallback<*>>()) } answers {
-                val argStr = args[0]!!::class.toString()
-                if (argStr.contains("RedisLock")) {
-                    return@answers true
+            every { redisOperation.setNxEx(any(), any(), any()) } answers {
+                true
+            }
+            every { redisOperation.execute(any<RedisScript<*>>(), any(), any()) } answers {
+                val scriptObject = args[0]!!
+                if (scriptObject is DefaultRedisScript<*> && scriptObject.resultType == Long::class.java) {
+                    return@answers 1
                 } else {
-                    throw Exception("redisOperation.execute must mock by self")
+                    throw RuntimeException("redisOperation.execute must mock by self")
                 }
             }
         }

@@ -173,6 +173,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun modifyProjectAuthResource(
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
+        logger.info("modify project auth resource:$resourceUpdateInfo")
         projectPermissionService.modifyResource(
             resourceUpdateInfo = resourceUpdateInfo
         )
