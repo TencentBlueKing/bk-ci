@@ -117,6 +117,7 @@
                         :repo-info="repoInfo"
                         :cur-repo="curRepo"
                         :type="repoInfo['@type']"
+                        :pac-project-name.sync="pacProjectName"
                         :fetch-repo-detail="fetchRepoDetail"
                         :event-type-list="eventTypeList"
                         :trigger-type-list="triggerTypeList"
@@ -228,7 +229,8 @@
                 },
                 eventTypeList: [],
                 triggerTypeList: [],
-                errorCode: 0
+                errorCode: 0,
+                pacProjectName: ''
             }
         },
         computed: {
@@ -303,6 +305,7 @@
         methods: {
             ...mapActions('codelib', [
                 'deleteRepo',
+                'checkPacProject',
                 'renameAliasName',
                 'fetchUsingPipelinesList',
                 'fetchEventType',
@@ -341,7 +344,8 @@
             async fetchRepoDetail (id, loading = true) {
                 this.isLoading = true
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
-                    .then((res) => {
+                    .then(async (res) => {
+                        await this.handleCheckPacProject()
                         this.repoInfo = res
                         this.$router.push({
                             query: {
@@ -507,6 +511,23 @@
                     resourceCode: this.urlRepoId,
                     action: RESOURCE_ACTION.VIEW
                 })
+            },
+
+            /**
+             * 校验仓库是否已经在其他项目开启了PAC
+             */
+            handleCheckPacProject () {
+                if (this.repoInfo.scmType === 'CODE_GIT') {
+                    this.isLoading = true
+                    this.checkPacProject({
+                        repoUrl: this.repoInfo.url,
+                        repositoryType: this.repoInfo.scmType
+                    }).then((res) => {
+                        this.pacProjectName = res
+                    }).finally(() => {
+                        this.isLoading = false
+                    })
+                }
             }
         }
     }
