@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
-@Primary
 class TencentQueryOperatorFromCmdbService : QueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
@@ -31,6 +30,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentQueryOperatorFromCmdbService::class.java)
+        const val PAGE_SIZE = 1000
     }
 
     /*
@@ -50,7 +50,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
             keyValues = CmdbKeyValues(
                 svrIp = nodeIpList.joinToString(separator = ";")
             ),
-            pagingInfo = CmdbPagingInfo(0, 1000, 1)
+            pagingInfo = CmdbPagingInfo(0, PAGE_SIZE, 1)
         )
         val requestContent = jacksonObjectMapper().writeValueAsString(cmdbGetQueryInfoReq)
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")

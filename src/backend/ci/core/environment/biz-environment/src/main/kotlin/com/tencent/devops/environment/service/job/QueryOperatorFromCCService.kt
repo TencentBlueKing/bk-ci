@@ -14,9 +14,11 @@ import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class QueryOperatorFromCCService : QueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
@@ -32,6 +34,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QueryOperatorFromCCService::class.java)
+        const val PAGE_LIMIT = 3
     }
 
     /*
@@ -48,7 +51,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
             bkAppSecret = bkAppSecret,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
             bkSupplierAccount = bkSupplierAccount,
-            page = CCPage(0, 3),
+            page = CCPage(0, PAGE_LIMIT),
             fields = listOf("bk_host_id", "bk_cloud_id", "bk_host_innerip", "operator", "bk_bak_operator"),
             hostPropertyFilter = CCHostPropertyFilter(
                 condition = "OR",
