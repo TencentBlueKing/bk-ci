@@ -30,11 +30,9 @@ package com.tencent.devops.store.configuration
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.store.listener.StoreFileCacheCleanListener
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -64,9 +62,6 @@ class StoreMQConfiguration {
     @Bean
     fun pipelineBuildAtomMarketQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET)
 
-    @Bean
-    fun storeFileCacheCleanQueue() = Queue(MQ.QUEUE_STORE_FILE_CACHE_CLEAN)
-
     /**
      * 构建结束广播交换机
      */
@@ -78,29 +73,12 @@ class StoreMQConfiguration {
     }
 
     @Bean
-    fun storeFileCacheCleanExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_STORE_FILE_CACHE_CLEAN_FANOUT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
     fun pipelineBuildAtomMarketQueueBind(
         @Autowired pipelineBuildAtomMarketQueue: Queue,
         @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
     ): Binding {
         return BindingBuilder.bind(pipelineBuildAtomMarketQueue)
             .to(pipelineBuildFinishFanoutExchange)
-    }
-
-    @Bean
-    fun storeFileCacheCleanQueueBind(
-        @Autowired storeFileCacheCleanQueue: Queue,
-        @Autowired storeFileCacheCleanExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(storeFileCacheCleanQueue)
-            .to(storeFileCacheCleanExchange)
-            .with(MQ.ROUTE_STORE_FILE_CACHE_CLEAN_EXCHANGE_FANOUT)
     }
 
     @Bean
@@ -117,27 +95,6 @@ class StoreMQConfiguration {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
             queue = pipelineBuildAtomMarketQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 120000,
-            consecutiveActiveTrigger = 10,
-            concurrency = marketConcurrency!!,
-            maxConcurrency = 10
-        )
-    }
-
-    @Bean
-    fun storeFileCacheCleanListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired storeFileCacheCleanQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: StoreFileCacheCleanListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = storeFileCacheCleanQueue,
             rabbitAdmin = rabbitAdmin,
             buildListener = listener,
             messageConverter = messageConverter,
