@@ -57,6 +57,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
         val cmdbGetQueryInfoRes = OkhttpUtils.doPost(cmdbGetQueryInfoReqUrl, requestContent, headers)
         val responseBody = cmdbGetQueryInfoRes.body?.string()
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] responseBody: $responseBody")
         val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] cmdbResp: $cmdbResp")
         val cmdbData = cmdbResp.data.data
