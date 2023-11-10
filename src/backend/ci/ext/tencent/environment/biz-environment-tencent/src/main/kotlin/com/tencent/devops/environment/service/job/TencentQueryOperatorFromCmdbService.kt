@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TencentQueryOperatorFromCmdbService : QueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""

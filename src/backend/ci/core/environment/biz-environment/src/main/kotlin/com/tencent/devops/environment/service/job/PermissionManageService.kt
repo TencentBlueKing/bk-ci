@@ -8,6 +8,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.job.req.Host
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,9 +45,7 @@ class PermissionManageService @Autowired constructor(
 
     fun isUserHasAllPermission(userId: String, projectId: String, allHostList: List<Host>) {
         // 用户有使用该节点的权限
-        val nodeRecords = nodeDao.getNodesFromHostList(
-            dslContext, projectId, allHostList
-        ).toSet() // 所有host对应的T_NODE表中的记录
+        val nodeRecords = getNodesFromHostList(dslContext, projectId, allHostList).toSet() // 所有host对应的T_NODE表中的记录
         val getRecordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
         allHostList.map {
@@ -63,13 +62,29 @@ class PermissionManageService @Autowired constructor(
             canUseNodeIds.contains(it)
         } // 传进来的host 不在用户有权限使用的记录列表中的（用node_id来筛选）
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] unauthorizedNodeIds: $unauthorizedNodeIds")
-        if (unauthorizedNodeIds.isNotEmpty()) { // unauthorizedNodeIds - 为空：用户有所有传进来的host节点的权限；- 不为空：其中的节点用户没权限，抛出异常。
+        if (unauthorizedNodeIds.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
-        }
+        } // unauthorizedNodeIds - 为空：用户有所有传进来的host节点的权限；- 不为空：其中的节点用户没权限，抛出异常。
         // 判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
         queryOperatorService.isOperatorOrBakOperator(userId, nodeRecords)
+    }
+
+    private fun getNodesFromHostList(
+        dslContext: DSLContext,
+        projectId: String,
+        hostList: List<Host>
+    ): List<TNodeRecord> {
+        val getRecordByHostIdList = mutableListOf<Host>()
+        val getRecordByIpAndBkCloudId = mutableListOf<Host>()
+        hostList.map {
+            if (null != it.bkHostId) getRecordByHostIdList.add(it)
+            else getRecordByIpAndBkCloudId.add(it)
+        }
+        return nodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, getRecordByHostIdList).plus(
+            nodeDao.getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
+        )
     }
 }

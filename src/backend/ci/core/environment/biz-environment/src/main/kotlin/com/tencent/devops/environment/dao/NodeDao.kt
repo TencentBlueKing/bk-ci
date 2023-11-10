@@ -42,36 +42,16 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 class NodeDao {
-    companion object {
-        private val logger = LoggerFactory.getLogger(NodeDao::class.java)
-    }
-    fun getNodesFromHostList(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
-        val getRecordByHostIdList = mutableListOf<Host>()
-        val getRecordByIpAndBkCloudId = mutableListOf<Host>()
-        hostList.map {
-            if (null != it.bkHostId) getRecordByHostIdList.add(it)
-            else getRecordByIpAndBkCloudId.add(it)
-        }
-        return getNodesFromHostListByBkHostId(dslContext, projectId, getRecordByHostIdList).plus(
-            getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
-        )
-    }
-
-    private fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
+    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {
             with(TNode.T_NODE) {
-                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--1--: $HOST_ID")
-                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--2--: ${it.bkHostId}")
-                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--3--: $PROJECT_ID")
-                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--4--: $projectId")
                 dslContext.selectFrom(this)
                     .where(HOST_ID.eq(it.bkHostId))
                     .and(PROJECT_ID.eq(projectId))
@@ -84,7 +64,7 @@ class NodeDao {
         return nodeRecords
     }
 
-    private fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
+    fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {
             with(TNode.T_NODE) {
