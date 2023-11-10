@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.utils.TOF4Service
 import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_VOICE_URL
 import com.tencent.devops.common.notify.utils.TOFConfiguration
-import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_VOICE
 import com.tencent.devops.notify.dao.VoiceNotifyDao
