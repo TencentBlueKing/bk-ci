@@ -235,4 +235,25 @@ class WorkspaceCheckJob @Autowired constructor(
             logger.error("sync START resource list failed", e)
         }
     }
+
+    /**
+     * 23:50 定时统计云桌面数据快照
+     */
+    @Scheduled(cron = "0 50 23 * * ?")
+    fun backupDailyCgsData() {
+        logger.info("=========>> start to back up cgs data <<=========")
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
+            return
+        }
+        val redisLock = RedisLock(redisOperation, syncJobLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("sync backup cgs data get lock.")
+                workspaceCommon.syncStartCloudResourceList()
+            }
+        } catch (e: Throwable) {
+            logger.error("sync START resource list failed", e)
+        }
+    }
 }

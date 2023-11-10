@@ -762,6 +762,11 @@ class WorkspaceDao {
             .map { Triple(it["PROJECT_ID"] as String, it["IP"] as String?, (it["REG_ID"] as String?)?.toInt()) }
     }
 
+    // 备份个人和团队云桌面快照数据
+    fun backupDailyCsgData(){
+
+    }
+
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
     }
