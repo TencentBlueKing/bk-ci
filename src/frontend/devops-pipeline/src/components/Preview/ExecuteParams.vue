@@ -1,6 +1,6 @@
 <template>
     <bk-collapse class="execute-params-collapse" v-model="activeName">
-        <bk-collapse-item v-if="buildList.length" custom-trigger-area name="1">
+        <bk-collapse-item v-if="!isDebug && buildList.length" custom-trigger-area name="1">
             <header class="params-collapse-trigger">
                 {{ $t('preview.build') }}
                 <i class="devops-icon icon-arrow-right" />

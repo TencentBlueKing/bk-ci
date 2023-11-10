@@ -113,7 +113,6 @@
                 })
             },
             editTriggerAtom (index) {
-                if (!this.clickable) return
                 this.element = this.triggerList[index]
                 this.togglePropertyPanel({
                     isShow: true,

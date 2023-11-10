@@ -4,8 +4,14 @@
         :width="800"
         @showen="showReleaseSlider"
         @hidden="hideReleaseSlider"
-        :title="$t('releasePipeline')"
     >
+        <header slot="header" class="release-pipeline-side-slider-header">
+            {{ $t('releasePipeline') }}
+            <bk-tag radius="10px">{{ $t('releasePipelineVersion', [versionName]) }}</bk-tag>
+            <span>
+                {{ $t('releasePipelineBaseVersion', [baseVersionName]) }}
+            </span>
+        </header>
         <section slot="content" v-bkloading="{ isLoading }" class="release-pipeline-pac-form">
             <div class="release-pipeline-pac-conf">
                 <aside class="release-pipeline-pac-conf-leftside">
@@ -21,10 +27,10 @@
                     <bk-radio-group v-model="releaseParams.scmType">
                         <bk-radio
                             v-for="item in pacSupportScmTypeList"
-                            :key="item"
-                            :value="item"
+                            :key="item.id"
+                            :value="item.value"
                         >
-                            {{ $t(item) }}
+                            {{ $t(item.value) }}
                         </bk-radio>
                     </bk-radio-group>
                 </aside>
@@ -191,6 +197,14 @@
                 type: Boolean,
                 default: false
             },
+            baseVersionName: {
+                type: String,
+                default: '--'
+            },
+            versionName: {
+                type: String,
+                default: '--'
+            },
             version: {
                 type: [String, Number],
                 required: true
@@ -279,7 +293,7 @@
             },
             pacSupportScmTypeList (val) {
                 if (val.length && !this.releaseParams.scmType) {
-                    this.releaseParams.scmType = val[0]
+                    this.releaseParams.scmType = val[0].id
                     this.$nextTick(() => {
                         this.fetchPacEnableCodelibList()
                     })
@@ -503,6 +517,15 @@
 
 <style lang="scss">
 @import '@/scss/conf';
+.release-pipeline-side-slider-header {
+    display: flex;
+    align-items: center;
+    grid-gap: 12px;
+    > span {
+        color: #979BA5;
+        font-size: 12px;
+    }
+}
 .release-pipeline-pac-form {
     height: calc(100vh - 114px);
     overflow: auto;

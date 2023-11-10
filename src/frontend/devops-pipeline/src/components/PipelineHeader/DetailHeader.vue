@@ -1,8 +1,8 @@
 <template>
     <div class="pipeline-detail-header">
-        <pipeline-bread-crumb>
+        <pipeline-bread-crumb :show-record-entry="isDebugExec">
             <span class="build-num-switcher-wrapper">
-                {{ $t("pipelinesDetail") }}
+                {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
@@ -17,16 +17,17 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
-            <bk-button
-                v-else
-                :disabled="loading || isCurPipelineLocked || !canManualStartup"
-                :icon="loading ? 'loading' : ''"
-                outline
-                @click="handleClick"
-            >
-                {{ $t("history.reBuild") }}
-            </bk-button>
-            <span class="exec-deatils-operate-divider"></span>
+            <template v-else-if="!isDebugExec">
+                <bk-button
+                    :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                    :icon="loading ? 'loading' : ''"
+                    outline
+                    @click="handleClick"
+                >
+                    {{ $t("history.reBuild") }}
+                </bk-button>
+                <span class="exec-deatils-operate-divider"></span>
+            </template>
             <router-link :to="editRouteName">
                 <bk-button>{{ $t("edit") }}</bk-button>
             </router-link>
@@ -35,7 +36,7 @@
                 :loading="executeStatus"
                 @click="goExecPreview"
             >
-                {{ $t("exec") }}
+                {{ $t(isDebugExec ? "debug" : "exec") }}
             </bk-button>
             <more-actions />
         </aside>
@@ -76,6 +77,9 @@
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1
                 }
+            },
+            isDebugExec () {
+                return this.execDetail?.debug ?? false
             },
             editRouteName () {
                 return {
@@ -174,6 +178,9 @@
             goExecPreview () {
                 this.$router.push({
                     name: 'executePreview',
+                    query: {
+                        ...(this.isDebugExec ? { debug: '' } : {})
+                    },
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.version

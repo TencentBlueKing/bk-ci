@@ -20,6 +20,9 @@
             BreadCrumb,
             BreadCrumbItem
         },
+        props: {
+            showRecordEntry: Boolean
+        },
         data () {
             return {
                 searchName: '',
@@ -61,7 +64,18 @@
                         handleSelected: this.doSelectPipeline,
                         searching: this.pipelineListSearching,
                         handleSearch: debounce(this.handleSearchPipeline, 300)
-                    }, {
+                    }, ...(this.showRecordEntry
+                    ? [{
+                        selectedValue: this.$t('draftExecRecords'),
+                        to: {
+                            name: 'draftDebugRecord',
+                            params: {
+                                ...this.$route.params,
+                                version: this.pipelineInfo?.version
+                            }
+                        }
+                    }]
+                    : []), {
                     selectedValue: ''
                 }]
             }

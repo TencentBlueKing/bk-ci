@@ -41,7 +41,12 @@
                 {{ $t('release') }}
             </span>
         </aside>
-        <ReleasePipelineSideSlider :version="currentVersion" v-model="isReleaseSliderShow" />
+        <ReleasePipelineSideSlider
+            :version="currentVersion"
+            :base-version-name="baseVersionName"
+            :version-name="versionName"
+            v-model="isReleaseSliderShow"
+        />
     </div>
 </template>
 
@@ -98,11 +103,14 @@
             baseVersionName () {
                 return this.pipelineInfo?.baseVersionName ?? '--'
             },
+            versionName () {
+                return this.pipelineInfo?.versionName ?? '--'
+            },
             currentVersionName () {
                 if (this.pipelineInfo?.canDebug) {
                     return this.$t('editPage.draftVersion', [this.baseVersionName ?? '--'])
                 }
-                return this.pipelineInfo?.versionName ?? '--'
+                return this.versionName
             },
             pipelineName () {
                 return this.pipelineInfo?.name ?? '--'

@@ -123,7 +123,6 @@
                         component: 'triggerTab',
                         props: {
                             editable: false,
-                            clickable: false,
                             pipeline: this.templatePipeline
                         }
                     },
