@@ -318,6 +318,13 @@ class ExperienceOuterService @Autowired constructor(
             }
             val taiLogin = JsonUtil.to(responseBody, TaiLogin::class.java)
             val username = taiLogin.data.username
+            if(!taiLogin.data.matched){
+                logger.warn("password error , username: ${params.username}")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    errorCode = ACCOUNT_INFORMATION_ABNORMAL
+                )
+            }
             if (!username.endsWith("@tai")) {
                 logger.warn("taiLogin is not support inner user , username: $username")
                 throw ErrorCodeException(
