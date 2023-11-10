@@ -68,10 +68,10 @@ class NodeDao {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {
             with(TNode.T_NODE) {
-                if (logger.isDebugEnabled) logger.debug("----HOST_ID----: $HOST_ID")
-                if (logger.isDebugEnabled) logger.debug("----it.bkHostId----: ${it.bkHostId}")
-                if (logger.isDebugEnabled) logger.debug("----PROJECT_ID----: $PROJECT_ID")
-                if (logger.isDebugEnabled) logger.debug("*----projectId----: $projectId")
+                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--1--: $HOST_ID")
+                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--2--: ${it.bkHostId}")
+                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--3--: $PROJECT_ID")
+                if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--4--: $projectId")
                 dslContext.selectFrom(this)
 //                    .where(HOST_ID.eq(it.bkHostId))
                     .where(PROJECT_ID.eq(projectId))
