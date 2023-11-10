@@ -143,13 +143,6 @@ const actions = {
     requestUserGroup ({ commit }, { projectId }) {
         return vue.$ajax.get(`${prefix}/user/groups/${projectId}/projectGroupAndUsers`)
     },
-
-    /**
-     * 获取外部体验人员
-     */
-    fetchOutersList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/experiences/outer/list?projectId=${projectId}`)
-    },
     updateCurSelectedFile ({ commit }, { selectFile }) {
         commit(UPDATE_SELECTED_FILE, {
             fileInfo: selectFile
@@ -170,6 +163,11 @@ const actions = {
     },
     requestOrgs ({ commit }, id) {
         return vue.$ajax.get(`project/api/user/organizations/types/dept/ids/${id ?? 0}`)
+    },
+    isCpValid (_, userIds = '') {
+        return vue.$ajax.post('experience/api/user/experiences/outer/canAdd', {
+            userIds
+        })
     }
     
 }
