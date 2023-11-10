@@ -32,7 +32,6 @@ import com.tencent.devops.repository.api.ExternalRepoResource
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import com.tencent.devops.repository.tapd.service.ITapdOauthService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -62,10 +61,5 @@ class ExternalRepoResourceImpl @Autowired constructor(
             )
         ).build()
         return Response.temporaryRedirect(uri).build()
-    }
-
-    companion object {
-        const val GIT_OAUTH_USER_KEY = "gitOauthUserId" // GIT授权用户,GIT认证界面的登录用户
-        private val logger = LoggerFactory.getLogger(ExternalRepoResourceImpl::class.java)
     }
 }
