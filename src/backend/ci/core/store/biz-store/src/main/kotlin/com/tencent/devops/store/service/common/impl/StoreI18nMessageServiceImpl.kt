@@ -236,8 +236,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             projectCode = storeI18nConfig.projectCode,
                             fileDir = storeI18nConfig.fileDir,
                             repositoryHashId = storeI18nConfig.repositoryHashId,
-                            storeCode = storeI18nConfig.storeCode,
-                            filePaths = textReferenceContentMap.values.toList()
+                            storeCode = storeI18nConfig.storeCode
                         )
                     )
                 }
@@ -252,7 +251,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             )
                         }
                     } finally {
-                        File(textReferenceFileDirPath!!).parentFile.deleteRecursively()
+                        File(textReferenceFileDirPath!!).deleteRecursively()
                     }
                 }
 
@@ -359,8 +358,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             matchResult.forEach {
                 val fileName = it.groupValues[2].replace("\"", "")
                 val isStatic = storeFileService.isStaticFile(fileName)
-                val textFile = File("$fileDir${File.separator}$fileName")
                 // 文本文件引用只允许引用一层，防止循环引用
+                val textFile = File("$fileDir${File.separator}$fileName")
                 if (!isStatic && !recursionFlag && textFile.exists()) {
                     return getTextReferenceFileParsing(
                         userId = userId,
@@ -383,7 +382,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("failed to parse text reference message:${ignored.message}")
+            logger.info("failed to parse text reference")
         }
         return result
     }

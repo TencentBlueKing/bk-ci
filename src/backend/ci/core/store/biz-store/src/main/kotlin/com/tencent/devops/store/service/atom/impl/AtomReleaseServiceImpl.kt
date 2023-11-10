@@ -43,7 +43,6 @@ import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
@@ -77,7 +76,6 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
-import com.tencent.devops.store.event.StoreFileCacheCleanDispatch
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
@@ -122,12 +120,10 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
-import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import java.io.File
 import java.time.LocalDateTime
 import java.util.Locale
 import org.jooq.DSLContext
@@ -183,10 +179,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var client: Client
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
-    @Autowired
-    lateinit var storeFileService: StoreFileService
-    @Autowired
-    lateinit var storeFileCacheCleanDispatch: StoreFileCacheCleanDispatch
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -1143,7 +1135,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomId = atomReleaseRequest.atomId
         val atomCode = atomReleaseRequest.atomCode
         val atomStatus = atomReleaseRequest.atomStatus
-        val version = atomReleaseRequest.version
         if (releaseFlag) {
             // 处理插件发布逻辑
             doAtomReleaseBus(userId, atomReleaseRequest)
@@ -1226,14 +1217,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
-        storeFileCacheCleanDispatch.dispatch(
-            StoreFileCacheCleanEvent(
-                storeCode = atomCode,
-                version = version,
-                fileCachePath = storeFileService.getFileCachePath("$atomCode${File.separator}$version"),
-                fileCacheKey = storeFileService.getFileCacheKey(atomCode, version)
-            )
-        )
         return Result(true)
     }
 
