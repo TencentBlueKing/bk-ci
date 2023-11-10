@@ -22,7 +22,6 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FRE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.OUTER_LOGIN_WRONG_PASSWORD
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_TAI_ACCOUNT
-import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
@@ -320,7 +319,7 @@ class ExperienceOuterService @Autowired constructor(
             }
             val taiLogin = JsonUtil.to(responseBody, TaiLogin::class.java)
             val username = taiLogin.data.username
-            if(!taiLogin.data.matched){
+            if (!taiLogin.data.matched) {
                 logger.warn("password error , username: ${params.username}")
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
