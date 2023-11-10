@@ -73,8 +73,8 @@ class NodeDao {
                 if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--3--: $PROJECT_ID")
                 if (logger.isDebugEnabled) logger.debug("----dfdsagagsg--4--: $projectId")
                 dslContext.selectFrom(this)
-//                    .where(HOST_ID.eq(it.bkHostId))
-                    .where(PROJECT_ID.eq(projectId))
+                    .where(HOST_ID.eq(it.bkHostId))
+                    .and(PROJECT_ID.eq(projectId))
                     .orderBy(NODE_ID.desc())
                     .fetch()
             }.map {
@@ -89,9 +89,9 @@ class NodeDao {
         hostList.map {
             with(TNode.T_NODE) {
                 dslContext.selectFrom(this)
-//                    .where(NODE_IP.eq(it.ip))
-//                    .and(CLOUD_AREA_ID.eq(it.bkCloudId))
-                    .where(PROJECT_ID.eq(projectId))
+                    .where(NODE_IP.eq(it.ip))
+                    .and(CLOUD_AREA_ID.eq(it.bkCloudId))
+                    .and(PROJECT_ID.eq(projectId))
                     .orderBy(NODE_ID.desc())
                     .fetch()
             }.map {

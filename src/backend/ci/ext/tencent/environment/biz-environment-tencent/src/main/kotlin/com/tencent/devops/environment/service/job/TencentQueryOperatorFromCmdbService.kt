@@ -37,7 +37,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
      *  ext中实现：从cmdb中 用ip查询机器的主备负责人
      */
-    override fun isOperatorOrBakOperator(userId: String, nodeRecords: List<TNodeRecord>) {
+    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<TNodeRecord>) {
         val nodeIpList: List<String> = nodeRecords.map { it.nodeIp } // 所有host对应的ip
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] nodeIpList: $nodeIpList")
         val nodeIpToNodeMap = nodeRecords.associateBy { it.nodeIp } // 所有host的：ip - 记录 映射

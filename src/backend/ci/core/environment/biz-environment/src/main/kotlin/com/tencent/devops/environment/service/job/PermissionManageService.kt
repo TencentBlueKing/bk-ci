@@ -44,14 +44,13 @@ class PermissionManageService @Autowired constructor(
 
     fun isUserHasAllPermission(userId: String, projectId: String, allHostList: List<Host>) {
         // 用户有使用该节点的权限
-        val nodeRecords = nodeDao.getNodesFromHostList(dslContext, projectId, allHostList) // 所有host对应的T_NODE表中的记录
+        val nodeRecords = nodeDao.getNodesFromHostList(dslContext, projectId, allHostList).toSet() // 所有host对应的T_NODE表中的记录
         val getRecordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
         allHostList.map {
             if (null != it.bkHostId) getRecordByHostIdList.add(it)
             else getRecordByIpAndBkCloudId.add(it)
         }
-        if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] projectId: $projectId")
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] getRecordByHostIdList: $getRecordByHostIdList")
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] getRecordByIpAndBkCloudId: $getRecordByIpAndBkCloudId")
         
