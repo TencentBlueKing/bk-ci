@@ -29,7 +29,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
     @Value("\${job.bkSupplierAccount:}")
     private val bkSupplierAccount = ""
 
-    @Value("\${job.bkccListHostWithoutBizReq:}")
+    @Value("\${job.bkccListHostWithoutBizReqUrl:}")
     private val bkccListHostWithoutBizReqUrl = ""
 
     companion object {
@@ -66,6 +66,7 @@ class QueryOperatorFromCCService : QueryOperatorService {
         )
         val requestContent = jacksonObjectMapper().writeValueAsString(ccListHostWithoutBizReq)
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
+        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] Url: $bkccListHostWithoutBizReqUrl")
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
         val ccListHostWithoutBizRes = OkhttpUtils.doPost(bkccListHostWithoutBizReqUrl, requestContent, headers)
         val responseBody = ccListHostWithoutBizRes.body?.string()
