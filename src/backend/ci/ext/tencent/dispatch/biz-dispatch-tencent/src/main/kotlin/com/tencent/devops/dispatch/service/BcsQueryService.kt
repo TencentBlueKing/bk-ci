@@ -46,10 +46,12 @@ class BcsQueryService @Autowired constructor() {
         bcsUrl: String,
         token: String
     ): Result<Deployment> {
-        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName,deploymentName is: $deploymentName")
+        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName," +
+                "deploymentName is: $deploymentName")
         logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
         val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
-        val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
+        val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName)
+            .withName(deploymentName).get()
         logger.info("getBcsDeploymentInfo deployment is: $deployment")
         return Result(deployment)
     }
@@ -61,7 +63,8 @@ class BcsQueryService @Autowired constructor() {
         bcsUrl: String,
         token: String
     ): Result<Map<String, Deployment>> {
-        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName,deploymentNames is: $deploymentNames")
+        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName," +
+                "deploymentNames is: $deploymentNames")
         logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
         val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
         val deploymentNameList = deploymentNames.split(",")
