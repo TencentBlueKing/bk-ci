@@ -665,7 +665,10 @@ class WorkspaceCommon @Autowired constructor(
                 templateCode = notifyTemplateCode,
                 bodyParams = mapOf(
                     WorkspaceRecord::workspaceName.name to workspace.workspaceName,
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                    WorkspaceRecord::projectId.name to workspace.projectId,
+                    WorkspaceRecord::createUserId.name to workspace.createUserId,
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!,
+
                 ),
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 markdownContent = false
