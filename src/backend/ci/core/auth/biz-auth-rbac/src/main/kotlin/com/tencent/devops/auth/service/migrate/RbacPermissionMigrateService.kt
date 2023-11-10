@@ -260,7 +260,7 @@ class RbacPermissionMigrateService constructor(
             // 仅迁移已迁移成功的项目
             it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
         }?.forEach {
-            logger.info("migrate resources of new resource type:$resourceType|$projectCodes")
+
             val gradeManagerId = authResourceService.get(
                 projectCode = it.englishName,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -276,6 +276,7 @@ class RbacPermissionMigrateService constructor(
                     async = true,
                     registerMonitorPermission = false
                 )
+                logger.info("migrate resources of new resource type:$resourceType|$projectCodes")
                 migrateResourceService.migrateResource(
                     projectCode = it.englishName,
                     resourceType = resourceType,

@@ -290,6 +290,7 @@ class MigrateResourceService @Autowired constructor(
         async: Boolean,
         registerMonitorPermission: Boolean
     ) {
+        logger.info("migrate project resources:$projectCode|$projectName|$gradeManagerId")
         if (async) {
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = gradeManagerId,
