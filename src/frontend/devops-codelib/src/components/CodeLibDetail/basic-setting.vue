@@ -85,29 +85,29 @@
                 <div class="pac-mode">
                     <div
                         class="switcher-item"
-                        :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || repoInfo.yamlSyncStatus === 'ASYNC' }"
+                        :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC' }"
                         @click="handleTogglePacStatus">
                     </div>
                    
                     <bk-switcher
                         v-model="repoInfo.enablePac"
                         theme="primary"
-                        :disabled="(!repoInfo.enablePac && pacProjectName) || repoInfo.yamlSyncStatus === 'ASYNC'"
+                        :disabled="(!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC'"
                     >
                     </bk-switcher>
 
-                    <span v-if="!repoInfo.enablePac && pacProjectName">
+                    <span class="ml10" v-if="!repoInfo.enablePac && pacProjectName">
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
                     </span>
 
                     <div class="pac-enable">
-                        {{ repoInfo.yamlSyncStatus === 'ASYNC' ? $t('codelib.PAC 模式开启中') : repoInfo.enablePac ?
+                        {{ syncStatus === 'SYNC' ? $t('codelib.PAC 模式开启中') : repoInfo.enablePac ?
                             $t('codelib.已开启 PAC 模式')
                             : $t('codelib.未开启 PAC 模式') }}
                     </div>
                     
                     <!-- 同步中 -->
-                    <span class="async-status" v-if="repoInfo.yamlSyncStatus === 'ASYNC'">
+                    <span class="async-status" v-if="syncStatus === 'SYNC'">
                         <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
                             <div class="rotate rotate1"></div>
                             <div class="rotate rotate2"></div>
@@ -122,7 +122,7 @@
                     </span>
 
                     <!-- 同步失败 -->
-                    <template v-if="repoInfo.yamlSyncStatus === 'FAILED'">
+                    <template v-if="syncStatus === 'FAILED'">
                         <i class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation failed-icon"></i>
                         <span class="ml5">{{ $t('codelib.代码库部分 YAML 文件同步失败') }}</span>
                         <a class="ml10" text @click="handleShowSyncFailedDetail">{{ $t('codelib.查看失败详情') }}</a>
@@ -320,11 +320,8 @@
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220">
-
-                </bk-table-column>
-                <bk-table-column :label="$t('codelib.失败详情')">
-
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath"></bk-table-column>
+                <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail">
                 </bk-table-column>
             </bk-table>
             <template slot="footer">
@@ -369,6 +366,10 @@
                 type: Object,
                 default: () => {}
             },
+            pacProjectName: {
+                type: String,
+                default: ''
+            },
             fetchRepoDetail: {
                 type: Function
             },
@@ -378,6 +379,9 @@
         },
         data () {
             return {
+                syncStatus: '',
+                time: 1000,
+                loopTimer: null,
                 isEditing: false,
                 hasCiFolder: false,
                 showClosePac: false,
@@ -389,7 +393,6 @@
                 isTGit: false,
                 isGithub: false,
                 isGitLab: false,
-                pacProjectName: '',
                 codelibTypeConstants: '',
                 userId: '',
                 showSyncFailedDetail: false,
@@ -441,7 +444,7 @@
             'repoInfo.url': {
                 handler (val) {
                     setTimeout(async () => {
-                        await this.handleCheckPacProject(val)
+                        if (!val) return
                         const { resetType, userId } = this.$route.query
                         if (['checkGitOauth', 'checkTGitOauth', 'checkGithubOauth'].includes(resetType)) {
                             await this.handleTogglePacStatus()
@@ -454,7 +457,7 @@
                 deep: true
             },
             repoId () {
-                this.pacProjectName = ''
+                this.$emit('update:pacProjectName', '')
             },
             codelibTypeConstants (val) {
                 // 校验是否已经授权了OAUTh
@@ -484,8 +487,27 @@
             },
             showSyncFailedDetail (val) {
                 if (val) {
-                    console.log(1111)
+                    this.getListYamlSync({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    }).then(res => {
+                        this.syncFailedPipelineList = res
+                    }).catch((e) => {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: e.message || e
+                        })
+                    })
                 }
+            },
+            'repoInfo.yamlSyncStatus': {
+                handler (val) {
+                    if (val === 'SYNC') {
+                        this.syncStatus = val
+                        this.fetchYamlSyncStatus()
+                    }
+                },
+                deep: true
             }
         },
         methods: {
@@ -498,7 +520,9 @@
                 'changeMrBlock',
                 'checkHasCiFolder',
                 'checkPacProject',
-                'refreshSyncRepository'
+                'refreshSyncRepository',
+                'getListYamlSync',
+                'getYamlSyncStatus'
             ]),
             prettyDateTimeFormat,
 
@@ -507,21 +531,6 @@
              */
             handleEditCommon () {
                 this.isEditing = true
-            },
-
-            /**
-             * 校验仓库是否已经在其他项目开启了PAC
-             */
-            handleCheckPacProject (repoUrl) {
-                if (this.isGit && repoUrl) {
-                    this.checkPacProject({
-                        repoUrl,
-                        repositoryType: this.repositoryType
-                    }).then((res) => {
-                        console.log(res, 111)
-                        this.pacProjectName = res
-                    })
-                }
             },
 
             /**
@@ -565,9 +574,9 @@
              *  false -> 不存在.ci文件夹
              */
             async handleTogglePacStatus () {
-                if ((!this.repoInfo.enablePac && this.pacProjectName) || this.repoInfo.yamlSyncStatus === 'ASYNC') return
+                if ((!this.repoInfo.enablePac && this.pacProjectName) || this.repoInfo.yamlSyncStatus === 'SYNC') return
                 if (this.repoInfo.enablePac) {
-                    this.pacProjectName = ''
+                    this.$emit('update:pacProjectName', '')
                     await this.handleCheckHasCiFolder()
                     if (this.hasCiFolder) {
                         this.showClosePac = true
@@ -740,6 +749,28 @@
                         message: e.message || e
                     })
                 })
+            },
+
+            fetchYamlSyncStatus () {
+                clearTimeout(this.loopTimer)
+                
+                if (this.syncStatus === 'SYNC') {
+                    this.loopTimer = setTimeout(() => {
+                        this.getYamlSyncStatus({
+                            projectId: this.projectId,
+                            repositoryHashId: this.repoInfo.repoHashId
+                        }).then(res => {
+                            this.syncStatus = res
+                            this.time = 10000
+                            this.fetchYamlSyncStatus()
+                        }).catch((e) => {
+                            this.$bkMessage({
+                                message: e.message || e,
+                                theme: 'error'
+                            })
+                        })
+                    }, this.time)
+                }
             }
         }
     }

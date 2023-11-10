@@ -522,11 +522,44 @@ const actions = {
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     },
 
+    /**
+     * PAC - 重试同步YAML
+     */
     refreshSyncRepository ({ commit }, {
         projectId,
         repositoryHashId
     }) {
         return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/refresh`)
+    },
+
+    /**
+     * PAC - 获取Yaml同步状态
+     */
+    getYamlSyncStatus ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/getYamlSyncStatus`)
+    },
+
+    /**
+     * PAC - 获取开启pac的流水线数量
+     */
+    getPacPipelineCount ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/count`)
+    },
+
+    /**
+     * PAC - 获取同步失败的流水线列表
+     */
+    getListYamlSync ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/listYamlSync`)
     }
 }
 
