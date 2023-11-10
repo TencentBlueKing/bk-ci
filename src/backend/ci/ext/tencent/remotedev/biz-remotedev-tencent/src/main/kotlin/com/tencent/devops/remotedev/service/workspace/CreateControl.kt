@@ -152,6 +152,24 @@ class CreateControl @Autowired constructor(
             errorCode = PROJECT_NOT_EXIST
         )
 
+        // 检查项目配额
+        val projectLimit = projectInfo.properties?.cloudDesktopNum
+            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
+            ?: 20
+        val count = workspaceDao.countUserWorkspace(
+            dslContext = dslContext,
+            projectId = projectInfo.englishName,
+            ownerType = WorkspaceOwnerType.PROJECT,
+            unionShared = false
+        )
+        if (count + workspaceCreate.count > projectLimit) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(projectLimit.toString())
+            )
+        }
+
+        // 检查自定义和非自定义镜像额度
         if (workspaceCreate.imageCosFile.isNotBlank()) {
             val resource = client.get(ServiceStartCloudResource::class).getResourceVm(
                 ResourceVmReq(
@@ -172,16 +190,15 @@ class CreateControl @Autowired constructor(
                     )
                 )
             }
+        } else {
+            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
+            if (cgsId == null && resourceCount < workspaceCreate.count) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(resourceCount.toString())
+                )
+            }
         }
-
-        // 检查配额
-        projectWinCreateCheck(
-            projectInfo = projectInfo,
-            createCount = workspaceCreate.count,
-            type = workspaceCreate.windowsType,
-            zone = workspaceCreate.windowsZone,
-            adHoc = cgsId != null
-        )
 
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
@@ -655,37 +672,6 @@ class CreateControl @Autowired constructor(
                 systemType = WorkspaceSystemType.WINDOWS_GPU
             )
         )
-    }
-
-    private fun projectWinCreateCheck(
-        projectInfo: ProjectVO,
-        createCount: Int,
-        type: String,
-        zone: String,
-        adHoc: Boolean = false
-    ) {
-        val resourceCount = startCloudResourceCountCheck(type, zone)
-        if (!adHoc && resourceCount < createCount) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                params = arrayOf(resourceCount.toString())
-            )
-        }
-        val projectLimit = projectInfo.properties?.cloudDesktopNum
-            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
-            ?: 20
-        val count = workspaceDao.countUserWorkspace(
-            dslContext = dslContext,
-            projectId = projectInfo.englishName,
-            ownerType = WorkspaceOwnerType.PROJECT,
-            unionShared = false
-        )
-        if (count + createCount > projectLimit) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                params = arrayOf(projectLimit.toString())
-            )
-        }
     }
 
     private fun startCloudResourceCountCheck(type: String, zone: String) =
