@@ -38,7 +38,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -51,6 +50,7 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -109,7 +109,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     zoneId = resource.zoneId,
                     machineType = resource.machineType,
                     cgsId = event.devFile.cgsId,
-                    projectId = event.projectId
+                    projectId = event.projectId,
+                    image = event.devFile.imageCosFile
                 )
             )
         )
@@ -210,13 +211,17 @@ class StartCloudRemoteDevService @Autowired constructor(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
+        val workspaceStatus = workspaceClient.getWorkspaceInfo(
+            userId = userId,
+            environmentOperate = EnvironmentOperate(getEnvironmentUid(workspaceName))
+        )
         return WorkspaceInfo(
-            status = EnvStatusEnum.running,
-            hostIP = "",
-            environmentIP = "",
-            clusterId = "",
-            namespace = "",
-            environmentHost = "",
+            status = workspaceStatus.status,
+            hostIP = workspaceStatus.hostIP,
+            environmentIP = workspaceStatus.environmentIP,
+            clusterId = workspaceStatus.clusterId,
+            namespace = workspaceStatus.namespace,
+            environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
             curLaunchId = curLaunchId,
@@ -224,12 +229,17 @@ class StartCloudRemoteDevService @Autowired constructor(
         )
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
+        val timeout = if (type == UpdateEventType.CREATE) START_CREATE_TIMEOUT else START_OTHER_TIMEOUT
         loop@ while (true) {
-            if (System.currentTimeMillis() - startTime > START_CREATE_TIMEOUT) {
-                logger.error("Wait task: $taskId finish timeout(10min)")
+            if (System.currentTimeMillis() - startTime > timeout) {
+                logger.error("Wait task: $taskId finish timeout($timeout)")
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
                     I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
@@ -270,7 +280,8 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
-        private const val START_CREATE_TIMEOUT = 20 * 60 * 1000 // start生成资源最长轮训时间
+        private const val START_CREATE_TIMEOUT = 60 * 60 * 1000 // start生成资源最长轮训时间
+        private const val START_OTHER_TIMEOUT = 30 * 60 * 1000
         private const val START_CREATE_LOOP_INTERVAL = 1000L
     }
 }

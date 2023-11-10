@@ -67,6 +67,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun renewalExperienceDuration(userId: String, renewalTime: Int): Result<Boolean> {
+        return Result(remoteDevSettingService.renewalExperienceDuration(userId, renewalTime))
+    }
+
     override fun getUserSetting(userId: String): Result<RemoteDevUserSettings> {
         return Result(remoteDevSettingService.getUserSetting(userId))
     }
@@ -89,7 +93,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun addGPUWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
-        return Result(whiteListService.addGPUWhiteListUser(userId, whiteListUser))
+        return Result(
+            whiteListService.addGPUWhiteListUser(
+                userId = userId,
+                whiteListUser = whiteListUser,
+                override = true
+            )
+        )
     }
 
     override fun addImageSpec(spec: ImageSpec): Result<Boolean> {
@@ -134,10 +144,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val pageSizeNotNull = data.pageSize ?: 6666
         val filteredResources = resourceList.filter {
             (data.zoneId.isNullOrEmpty() || it.zoneId == data.zoneId) &&
-                    (data.machineType.isNullOrEmpty() || it.machineType == data.machineType) &&
-                    (data.ips.isNullOrEmpty() || data.ips?.contains(it.cgsIp) == true) &&
-                    (data.status == null || it.status == data.status) &&
-                    (data.lockedFlag == null || it.locked == data.lockedFlag)
+                (data.machineType.isNullOrEmpty() || it.machineType == data.machineType) &&
+                (data.ips.isNullOrEmpty() || data.ips?.contains(it.cgsIp) == true) &&
+                (data.status == null || it.status == data.status) &&
+                (data.lockedFlag == null || it.locked == data.lockedFlag)
         }
         val start = (pageNotNull - 1) * pageSizeNotNull
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)

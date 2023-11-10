@@ -51,7 +51,6 @@ import com.tencent.devops.common.web.RestResource
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
-import javax.ws.rs.BadRequestException
 import kotlin.math.ceil
 
 @Primary
@@ -204,9 +203,6 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
         return Result(
             bkRepoDownloadService.outerHtmlUrl4Download(
                 userId = userId,

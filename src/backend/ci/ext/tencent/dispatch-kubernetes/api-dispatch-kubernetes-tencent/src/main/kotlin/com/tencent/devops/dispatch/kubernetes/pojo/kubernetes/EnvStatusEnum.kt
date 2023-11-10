@@ -38,5 +38,14 @@ enum class EnvStatusEnum {
     stopped,
     unknow,
     deleted,
-    readyToRun
+    readyToRun,
+    creating,
+    error,
+    createFailed,
+    startFailed,
+    starting,
+    stopping,
+    stopFailed,
+    abnormalAfterReady,
+    abnormalAfterRunning
 }

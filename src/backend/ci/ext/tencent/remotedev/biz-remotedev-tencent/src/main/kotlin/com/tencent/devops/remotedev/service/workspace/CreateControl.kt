@@ -201,7 +201,8 @@ class CreateControl @Autowired constructor(
                         zoneId = windowsZone.zoneShortName,
                         machineType = windowsConfig.size,
                         cgsId = cgsId,
-                        autoAssign = autoAssign
+                        autoAssign = autoAssign,
+                        imageCosFile = workspaceCreate.imageCosFile
                     ),
                     settingEnvs = emptyMap(),
                     projectId = projectId,
@@ -225,7 +226,9 @@ class CreateControl @Autowired constructor(
 
         if (workspaceCreate.windowsResourceConfigId != null) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.NEED_UPDATED.errorCode
+                errorCode = ErrorCodeEnum.CLIENT_NEED_UPDATED.errorCode,
+                params = arrayOf(redisCache.get(RedisKeys.REDIS_CLIENT_INSTALL_URL).toString()),
+                defaultMessage = ErrorCodeEnum.CLIENT_NEED_UPDATED.formatErrorMessage
             )
         }
 
@@ -336,7 +339,8 @@ class CreateControl @Autowired constructor(
                     dslContext,
                     event.workspaceName,
                     event.resourceId,
-                    event.environmentIp
+                    event.environmentIp,
+                    event.macAddress
                 )
             }
 
