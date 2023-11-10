@@ -84,7 +84,7 @@ interface UserRepositoryPacResource {
 
     @ApiOperation("获取yaml同步状态")
     @GET
-    @Path("/{projectId}/{repositoryHashId}")
+    @Path("/{projectId}/{repositoryHashId}/getYamlSyncStatus")
     fun getYamlSyncStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
