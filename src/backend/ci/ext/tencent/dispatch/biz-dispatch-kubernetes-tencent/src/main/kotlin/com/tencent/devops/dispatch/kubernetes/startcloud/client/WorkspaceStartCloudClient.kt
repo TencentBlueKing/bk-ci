@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
-import java.util.UUID
+import java.util.*
 
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
@@ -77,7 +77,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
         val id = UUID.randomUUID()
         val body = JsonUtil.toJson(environment, false)
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId request url: $url, body: $body")
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeBcsHeaders().toHeaders())
@@ -87,7 +87,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -98,12 +98,12 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|createWorkspace rsp: $environmentRsp")
+                logger.info("$id|createWorkspace rsp: $environmentRsp")
                 when {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK == environmentRsp.code && environmentRsp.data != null
+                    OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data
 
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.APP_NOT_BIND_CGS == environmentRsp.code || com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.NO_CGS_CHOOSE == environmentRsp.code
+                    APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
                     -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -121,7 +121,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("User $userId create environment get SocketTimeoutException", e)
+            logger.error("User $userId create environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -133,7 +133,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun getLockedVmList(): List<String> {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/listvm"
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("request url: $url")
+        logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
             .headers(makeBcsHeaders().toHeaders())
@@ -143,7 +143,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("get locked vm list response: ${response.code} || $responseContent")
+                logger.info("get locked vm list response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
@@ -155,7 +155,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val environmentRsp: EnvironmentLockedVmRsp = jacksonObjectMapper().readValue(responseContent)
                 when (environmentRsp.code) {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK -> return environmentRsp.data.vmList
+                    OK -> return environmentRsp.data.vmList
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
@@ -166,7 +166,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("get locked vm list SocketTimeoutException", e)
+            logger.error("get locked vm list SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
@@ -180,7 +180,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val url = "$apiUrl/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId request url: $url, body: $body")
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -194,7 +194,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -206,8 +206,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val environmentRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
                 when (environmentRsp.code) {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK -> return true
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.USER_ALREADY_EXISTED -> throw BuildFailureException(
+                    OK -> return true
+                    USER_ALREADY_EXISTED -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
@@ -225,7 +225,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("$id|User $userId create environment get SocketTimeoutException", e)
+            logger.error("$id|User $userId create environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -239,7 +239,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val url = "$apiUrl/openapi/computer/share"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId request url: $url, body: $body")
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -253,7 +253,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$id|User $userId share environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId share environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -265,7 +265,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val environmentRsp: EnvironmentShareRep = jacksonObjectMapper().readValue(responseContent)
                 when (environmentRsp.code) {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK -> return environmentRsp.data.resourceId
+                    OK -> return environmentRsp.data.resourceId
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
@@ -276,7 +276,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("User $userId share environment get SocketTimeoutException", e)
+            logger.error("User $userId share environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -289,7 +289,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun unShareWorkspace(userId: String, unShare: EnvironmentUnShare): Boolean {
         val url = "$apiUrl/openapi/computer/unshare"
         val body = JsonUtil.toJson(unShare, false)
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("User $userId request url: $url, body: $body")
+        logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -303,7 +303,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("User $userId unShare environment response: ${response.code} || $responseContent")
+                logger.info("User $userId unShare environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -315,7 +315,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val environmentRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
                 when (environmentRsp.code) {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK -> return true
+                    OK -> return true
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
@@ -326,7 +326,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("User $userId unShare environment get SocketTimeoutException", e)
+            logger.error("User $userId unShare environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -343,7 +343,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     ) {
         val url = "$apiUrl/openapi/computer/destroy"
         val body = JsonUtil.toJson(environment, false)
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("deleteWorkspace User $userId request url: $url, body: $body")
+        logger.info("deleteWorkspace User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -368,9 +368,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         "${response.code}"
                     )
                 }
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("User $userId  environment response: $responseContent")
+                logger.info("User $userId  environment response: $responseContent")
                 val environmentOpRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
-                if (com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK == environmentOpRsp.code || environmentOpRsp.code == com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.HAS_BEEN_DELETED) {
+                if (OK == environmentOpRsp.code || environmentOpRsp.code == HAS_BEEN_DELETED) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
@@ -389,7 +389,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("User $userId environment get SocketTimeoutException.", e)
+            logger.error("User $userId environment get SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -407,7 +407,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     ): EnvironmentOperateRsp.EnvironmentOperateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/${action.action}"
         val body = JsonUtil.toJson(environmentOperate, false)
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$userId ${action.action} workspace url: $url, body: $body")
+        logger.info("$userId ${action.action} workspace url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeBcsHeaders().toHeaders())
@@ -425,9 +425,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         "${response.code}"
                     )
                 }
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$userId ${action.action} workspace response: $responseContent")
+                logger.info("$userId ${action.action} workspace response: $responseContent")
                 val environmentOpRsp: EnvironmentOperateRsp = jacksonObjectMapper().readValue(responseContent)
-                if (com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK == environmentOpRsp.code) {
+                if (OK == environmentOpRsp.code) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
@@ -448,7 +448,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
+            logger.error("$userId ${action.action} workspace get SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -481,9 +481,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         "${response.code}"
                     )
                 }
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("$userId get workspace info body: $body response: $responseContent")
+                logger.info("$userId get workspace info body: $body response: $responseContent")
                 val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
-                if (com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK == environmentInfoRsp.code) {
+                if (OK == environmentInfoRsp.code) {
                     return environmentInfoRsp.data!!
                 } else {
                     throw BuildFailureException(
@@ -495,7 +495,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("$userId get workspace info SocketTimeoutException.", e)
+            logger.error("$userId get workspace info SocketTimeoutException.", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -507,7 +507,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun getResourceList(): List<EnvironmentResourceData> {
         var cgsPage =
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.DEFAULT_CGS_PAGE
+            DEFAULT_CGS_PAGE
         val cgsData = mutableListOf<EnvironmentResourceData>()
         run outside@{
             while (true) {
@@ -516,13 +516,13 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     query = null,
                     page = Page(
                         start = cgsPage,
-                        limit = com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.DEFAULT_CGS_PER_PAGE,
+                        limit = DEFAULT_CGS_PER_PAGE,
                         sort = null
                     )
                 )
                 val cgsPageList = queryCgsPageList(request)
                 cgsData.addAll(cgsPageList)
-                if (cgsPageList.size < com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.DEFAULT_CGS_PER_PAGE) {
+                if (cgsPageList.size < DEFAULT_CGS_PER_PAGE) {
                     return@outside
                 }
                 cgsPage++
@@ -534,7 +534,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun queryCgsPageList(cgsQueryReq: CgsQueryReq): List<EnvironmentResourceData> {
         val url = "$apiUrl/openapi/cgs/list"
         val body = JsonUtil.toJson(cgsQueryReq, false)
-        com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("getResourceList request url: $url, body: $body")
+        logger.info("getResourceList request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -549,7 +549,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("getResourceList response: ${response.code} || $responseContent")
+                logger.info("getResourceList response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -560,9 +560,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentResourceDataRsp = jacksonObjectMapper().readValue(responseContent)
-                com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.info("createWorkspace rsp: $environmentRsp")
+                logger.info("createWorkspace rsp: $environmentRsp")
                 when {
-                    com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.OK == environmentRsp.code && environmentRsp.data != null
+                    OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data.rows
 
                     else -> throw BuildFailureException(
@@ -574,7 +574,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient.Companion.logger.error("getResourceList SocketTimeoutException", e)
+            logger.error("getResourceList SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,

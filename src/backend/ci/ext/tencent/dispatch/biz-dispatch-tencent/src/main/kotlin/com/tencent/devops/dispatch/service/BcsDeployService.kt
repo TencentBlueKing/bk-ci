@@ -266,20 +266,30 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val grayNamespaceName = stopApp.grayNamespaceName
         var deployment: Deployment?
         if (grayNamespaceName.isNotEmpty()) {
-            deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
+                .withName(deploymentName).get()
             if (deployment != null) {
                 // 删除deployment
-                bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).delete()
+                bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName)
+                    .withName(deploymentName).delete()
                 // 删除service
                 bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
                 // 更新ingress规则
-                deleteIngressRule(bcsKubernetesClient, grayNamespaceName, stopApp.grayHost, deploymentName, bcsUrl, token)
+                deleteIngressRule(
+                    bcsKubernetesClient = bcsKubernetesClient,
+                    namespaceName = grayNamespaceName,
+                    host = stopApp.grayHost,
+                    deploymentName = deploymentName,
+                    bcsUrl = bcsUrl,
+                    token = token
+                )
             }
         }
         // 停止正式命名空间的应用
         val namespaceName = stopApp.namespaceName
         if (namespaceName.isNotEmpty()) {
-            deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName)
+                .withName(deploymentName).get()
             if (deployment != null) {
                 // 删除deployment
                 bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
