@@ -525,11 +525,11 @@ const actions = {
     /**
      * PAC - 重试同步YAML
      */
-    refreshSyncRepository ({ commit }, {
+    retrySyncRepository ({ commit }, {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/refresh`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/retry`)
     },
 
     /**

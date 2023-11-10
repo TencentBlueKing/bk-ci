@@ -105,7 +105,7 @@
                             : $t('codelib.未开启 PAC 模式') }}
                     </div>
 
-                    <div v-if="syncStatus === 'SUCCESS'" class="pipeline-count">
+                    <div v-if="syncStatus === 'SUCCEED'" class="pipeline-count">
                         {{ $t('codelib.共N条流水线', [pipelineCount]) }}
                     </div>
                     
@@ -514,7 +514,7 @@
                 deep: true
             },
             syncStatus (val) {
-                if (val === 'SUCCESS') {
+                if (val === 'SUCCEED') {
                     this.fetchPacPipelineCount()
                 }
             }
@@ -529,7 +529,7 @@
                 'changeMrBlock',
                 'checkHasCiFolder',
                 'checkPacProject',
-                'refreshSyncRepository',
+                'retrySyncRepository',
                 'getListYamlSync',
                 'getYamlSyncStatus',
                 'getPacPipelineCount'
@@ -744,7 +744,7 @@
              * 代码库同步 -- 重试
              */
             handleRefreshSync () {
-                this.refreshSyncRepository({
+                this.retrySyncRepository({
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId
                 }).then(res => {
