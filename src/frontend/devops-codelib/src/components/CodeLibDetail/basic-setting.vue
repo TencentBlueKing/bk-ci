@@ -259,8 +259,8 @@
                         {{ $t('codelib.前往代码库') }}
                     </a>
                     <div class="split-line"></div>
-                    <a @click="handleCheckHasCiFolder">
-                        <icon name="refresh" size="14" class="refresh-icon" />
+                    <a @click="handleCheckHasCiFolder(true)">
+                        <icon name="refresh" size="14" :class="{ 'refresh-icon': true, 'refreshing': refreshLoading }" />
                         {{ $t('codelib.刷新') }}
                     </a>
                 </div>
@@ -421,7 +421,8 @@
                 userId: '',
                 showSyncFailedDetail: false,
                 syncFailedPipelineList: [],
-                pipelineCount: 0
+                pipelineCount: 0,
+                refreshLoading: false
             }
         },
         computed: {
@@ -589,12 +590,15 @@
                 this.$refs.resetAuth.isShow = true
             },
 
-            async handleCheckHasCiFolder () {
+            async handleCheckHasCiFolder (loading = false) {
+                this.refreshLoading = loading
                 await this.checkHasCiFolder({
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId
                 }).then(res => {
                     this.hasCiFolder = res
+                }).finally(() => {
+                    this.refreshLoading = false
                 })
             },
         
@@ -1038,6 +1042,10 @@
             .refresh-icon {
                 position: relative;
                 top: 2px;
+            }
+            .refreshing {
+                transition: all .5s linear;
+                transform: rotate(540deg);
             }
         }
 
