@@ -384,7 +384,7 @@ class OpAtomServiceImpl @Autowired constructor(
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        val atomPath = TextReferenceFileAnalysisUtil.buildAtomArchivePath(userId, atomCode) + "$fileSeparator$uuid"
+        val atomPath = TextReferenceFileAnalysisUtil.buildStoreArchivePath(atomCode) + "$fileSeparator$uuid"
         if (!File(atomPath).exists()) {
             ZipUtil.unZipFile(file, atomPath, false)
         }

@@ -120,6 +120,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
@@ -179,6 +180,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var client: Client
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+    @Autowired
+    lateinit var storeFileService: StoreFileService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -1054,6 +1057,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = params
             )
         }
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
         marketAtomDao.setAtomStatusById(
             dslContext = dslContext,
             atomId = atomId,
@@ -1136,6 +1140,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomCode = atomReleaseRequest.atomCode
         val atomStatus = atomReleaseRequest.atomStatus
         if (releaseFlag) {
+            storeFileService.cleanStoreVersionReferenceFile(atomCode, atomReleaseRequest.version)
             // 处理插件发布逻辑
             doAtomReleaseBus(userId, atomReleaseRequest)
             // 更新质量红线信息

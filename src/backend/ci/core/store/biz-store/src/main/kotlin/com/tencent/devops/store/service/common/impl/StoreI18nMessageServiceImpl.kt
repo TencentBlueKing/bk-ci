@@ -236,22 +236,19 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                             projectCode = storeI18nConfig.projectCode,
                             fileDir = storeI18nConfig.fileDir,
                             repositoryHashId = storeI18nConfig.repositoryHashId,
-                            storeCode = storeI18nConfig.storeCode
+                            storeCode = storeI18nConfig.storeCode,
+                            fileNames = textReferenceContentMap.values.toList()
                         )
                     )
                 }
                 val isDirectoryNotEmpty = isDirectoryNotEmpty(textReferenceFileDirPath)
                 if (isDirectoryNotEmpty) {
-                    try {
-                        textReferenceContentMap.forEach { (key, content) ->
-                            fileProperties[key] = getTextReferenceFileParsing(
-                                userId = userId,
-                                fileDir = textReferenceFileDirPath!!,
-                                content = content
-                            )
-                        }
-                    } finally {
-                        File(textReferenceFileDirPath!!).deleteRecursively()
+                    textReferenceContentMap.forEach { (key, content) ->
+                        fileProperties[key] = getTextReferenceFileParsing(
+                            userId = userId,
+                            fileDir = textReferenceFileDirPath!!,
+                            content = content
+                        )
                     }
                 }
 
@@ -372,7 +369,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fileNames.add(fileName)
                 }
             }
-            logger.info("debug getTextReferenceFileParsing fileNames:$fileNames")
             if (fileNames.isNotEmpty()) {
                 result = storeFileService.getStaticFileReference(
                     userId = userId,

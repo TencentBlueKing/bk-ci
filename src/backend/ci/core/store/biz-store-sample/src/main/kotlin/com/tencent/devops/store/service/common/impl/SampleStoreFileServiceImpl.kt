@@ -34,9 +34,9 @@ import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
@@ -91,28 +91,17 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         userId: String,
         fileDirPath: String,
         request: TextReferenceFileDownloadRequest
-    ): String? {
-        val fileNameList = getFileNames(
-            projectCode = request.projectCode,
-            fileDir = "${request.fileDir}${fileSeparator}file"
-        )
-        if (fileNameList.isNullOrEmpty()) {
-            logger.warn("get text reference file list fail")
-            return null
-        }
-        val downloadPath = "$fileDirPath${fileSeparator}file"
+    ) {
+        val fileNameList = request.fileNames
         fileNameList.forEach {
             downloadFile(
                 "${request.projectCode}$fileSeparator${request.fileDir}${fileSeparator}file$fileSeparator$it",
-                File(downloadPath, it)
+                File(fileDirPath, it)
             )
         }
-        if (!isDirectoryNotEmpty(downloadPath)) {
-            logger.warn(" FAIL|Download file from ${request.storeCode} fail")
-            return null
+        if (!isDirectoryNotEmpty(fileDirPath)) {
+            logger.warn(" FAIL|Download file from ${request.storeCode} fail, branch:${request.branch ?: MASTER}")
         }
-        ZipUtil.zipDir(File(downloadPath), "$fileDirPath${fileSeparator}file.zip")
-        return downloadPath
     }
 
     @Suppress("NestedBlockDepth")
