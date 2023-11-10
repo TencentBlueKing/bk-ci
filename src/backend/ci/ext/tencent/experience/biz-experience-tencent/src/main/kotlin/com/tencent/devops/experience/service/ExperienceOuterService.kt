@@ -19,7 +19,9 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.ACCOUNT_INFO
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_ACCOUNT_FREQUENT
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_EXPIRED
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FREQUENTLY
+import com.tencent.devops.experience.constant.ExperienceMessageCode.OUTER_LOGIN_WRONG_PASSWORD
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_TAI_ACCOUNT
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
@@ -322,14 +324,14 @@ class ExperienceOuterService @Autowired constructor(
                 logger.warn("password error , username: ${params.username}")
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = ACCOUNT_INFORMATION_ABNORMAL
+                    errorCode = OUTER_LOGIN_WRONG_PASSWORD
                 )
             }
             if (!username.endsWith("@tai")) {
                 logger.warn("taiLogin is not support inner user , username: $username")
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = USER_NOT_PERMISSION
+                    errorCode = USER_NEED_TAI_ACCOUNT
                 )
             }
             return OuterProfileVO(
