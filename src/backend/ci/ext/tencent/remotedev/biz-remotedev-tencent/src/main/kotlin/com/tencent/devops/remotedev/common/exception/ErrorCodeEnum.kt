@@ -169,7 +169,7 @@ enum class ErrorCodeEnum(
     ZONE_VM_RESOURCE_NOT_ENOUGH(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132032",
-        formatErrorMessage = "zone {0} machine {1} has {2} used {3} free {4} less than {5} currently applied for"
+        formatErrorMessage = "zone {0} machine {1} free {2} less than the {3} units that currently need to be produced."
     );
 
     fun getErrorMessage(): String {

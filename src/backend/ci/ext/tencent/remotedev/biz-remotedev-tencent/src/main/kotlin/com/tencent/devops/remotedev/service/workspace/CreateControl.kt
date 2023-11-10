@@ -183,8 +183,6 @@ class CreateControl @Autowired constructor(
                     params = arrayOf(
                         windowsZone.zone,
                         windowsConfig.size,
-                        resource.cap.toString(),
-                        resource.used.toString(),
                         resource.free.toString(),
                         workspaceCreate.count.toString()
                     )
