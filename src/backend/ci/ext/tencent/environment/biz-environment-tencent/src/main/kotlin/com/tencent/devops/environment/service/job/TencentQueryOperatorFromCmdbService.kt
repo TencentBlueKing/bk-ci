@@ -50,7 +50,7 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
             keyValues = CmdbKeyValues(
                 svrIp = nodeIpList.joinToString(separator = ";")
             ),
-            pagingInfo = CmdbPagingInfo(1000, 0, 1)
+            pagingInfo = CmdbPagingInfo(0, 1000, 1)
         )
         val requestContent = jacksonObjectMapper().writeValueAsString(cmdbGetQueryInfoReq)
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
