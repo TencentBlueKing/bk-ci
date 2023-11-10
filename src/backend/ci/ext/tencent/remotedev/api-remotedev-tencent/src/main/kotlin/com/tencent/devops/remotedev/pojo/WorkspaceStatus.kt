@@ -68,5 +68,6 @@ enum class WorkspaceStatus {
      */
     fun notOk2doNextAction(ws: WorkspaceRecord) =
         (this == PREPARING && ws.workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
-                this == STARTING || this == SLEEPING || this == DELETING
+                this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
+                this == RESTARTING || this == MAKING_IMAGE
 }
