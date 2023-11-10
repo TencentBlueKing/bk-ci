@@ -51,6 +51,7 @@ class PermissionManageService @Autowired constructor(
             if (null != it.bkHostId) getRecordByHostIdList.add(it)
             else getRecordByIpAndBkCloudId.add(it)
         }
+        if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] projectId: $projectId")
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] getRecordByHostIdList: $getRecordByHostIdList")
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] getRecordByIpAndBkCloudId: $getRecordByIpAndBkCloudId")
         
