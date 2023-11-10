@@ -260,6 +260,7 @@ class RbacPermissionMigrateService constructor(
             // 仅迁移已迁移成功的项目
             it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
         }?.forEach {
+            logger.info("migrate resources of new resource type:$resourceType|$projectCodes")
             val gradeManagerId = authResourceService.get(
                 projectCode = it.englishName,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -267,6 +268,7 @@ class RbacPermissionMigrateService constructor(
             ).relationId
             migrateProjectsExecutorService.submit {
                 MDC.put(TraceTag.BIZID, traceId)
+                // todo 需要查询数据，查询是否需要把监控空间权限也注册上
                 migrateResourceService.migrateProjectResource(
                     projectCode = it.englishName,
                     projectName = it.projectName,
@@ -281,7 +283,7 @@ class RbacPermissionMigrateService constructor(
                         projectCode = it.projectCode,
                         authSystemType = AuthSystemType.V0_AUTH_TYPE,
                         projectCreator = it.creator!!,
-                        projectUpdator = it.updator!!
+                        projectUpdator = it.updator
                     )!!
                 )
                 // 若迁移流水线模板权限，需要修改项目的properties字段
