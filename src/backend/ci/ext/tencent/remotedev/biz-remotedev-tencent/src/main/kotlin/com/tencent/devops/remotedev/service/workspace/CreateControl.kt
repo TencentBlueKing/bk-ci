@@ -33,8 +33,10 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
@@ -80,7 +82,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("LongMethod")
+@Suppress("ALL")
 class CreateControl @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
@@ -149,6 +151,28 @@ class CreateControl @Autowired constructor(
             .getOrElse { null }?.data ?: throw ErrorCodeException(
             errorCode = PROJECT_NOT_EXIST
         )
+
+        if (workspaceCreate.imageCosFile.isNotBlank()) {
+            val resource = client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size
+                )
+            ).data!!
+            if (resource.free < workspaceCreate.count) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                    params = arrayOf(
+                        windowsZone.zone,
+                        windowsConfig.size,
+                        resource.cap.toString(),
+                        resource.used.toString(),
+                        resource.free.toString(),
+                        workspaceCreate.count.toString()
+                    )
+                )
+            }
+        }
 
         // 检查配额
         projectWinCreateCheck(
