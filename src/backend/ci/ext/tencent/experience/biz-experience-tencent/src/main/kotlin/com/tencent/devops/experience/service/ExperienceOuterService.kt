@@ -6,7 +6,6 @@ import com.tencent.bkuser.api.V1Api
 import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -203,14 +202,10 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerCanAdd(projectId: String, param: OuterCanAddParam): OuterCanAddVO {
         val userIds = param.userIds.split(",")
-        val groupOuters = groupOuterDao.listByGroupIds(
-            dslContext, setOf(HashUtil.decodeIdToLong(param.groupHashId))
-        ).map { it.outer }
         val bkOuters = outerList(projectId)
 
-        val successUserIds = mutableListOf<String>()
-        val failedUserIds = mutableListOf<String>()
-        val existUserIds = mutableListOf<String>()
+        val legalUserIds = mutableListOf<String>()
+        val illegalUserIds = mutableListOf<String>()
 
         for (u in userIds) {
             val isProjectUser = lazy {
@@ -219,18 +214,16 @@ class ExperienceOuterService @Autowired constructor(
                     userId = u
                 ).data ?: false
             }
-            if (groupOuters.contains(u)) {
-                existUserIds.add(u)
-            } else if (UserUtil.isTaiUser(u) && isProjectUser.value) {
-                successUserIds.add(u)
+            if (UserUtil.isTaiUser(u) && isProjectUser.value) {
+                legalUserIds.add(u)
             } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
-                successUserIds.add(u)
+                legalUserIds.add(u)
             } else {
-                failedUserIds.add(u)
+                illegalUserIds.add(u)
             }
         }
 
-        return OuterCanAddVO(successUserIds, failedUserIds, existUserIds)
+        return OuterCanAddVO(legalUserIds, illegalUserIds)
     }
 
     // 一个账户只能占用一个token
