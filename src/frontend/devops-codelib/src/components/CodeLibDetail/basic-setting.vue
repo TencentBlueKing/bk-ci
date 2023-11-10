@@ -95,7 +95,6 @@
                         :disabled="(!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC'"
                     >
                     </bk-switcher>
-
                     <span class="ml10" v-if="!repoInfo.enablePac && pacProjectName">
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
                     </span>
@@ -104,6 +103,10 @@
                         {{ syncStatus === 'SYNC' ? $t('codelib.PAC 模式开启中') : repoInfo.enablePac ?
                             $t('codelib.已开启 PAC 模式')
                             : $t('codelib.未开启 PAC 模式') }}
+                    </div>
+
+                    <div v-if="syncStatus === 'SUCCESS'" class="pipeline-count">
+                        {{ $t('codelib.共N条流水线', [pipelineCount]) }}
                     </div>
                     
                     <!-- 同步中 -->
@@ -396,7 +399,8 @@
                 codelibTypeConstants: '',
                 userId: '',
                 showSyncFailedDetail: false,
-                syncFailedPipelineList: []
+                syncFailedPipelineList: [],
+                pipelineCount: 0
             }
         },
         computed: {
@@ -502,12 +506,17 @@
             },
             'repoInfo.yamlSyncStatus': {
                 handler (val) {
+                    this.syncStatus = val
                     if (val === 'SYNC') {
-                        this.syncStatus = val
                         this.fetchYamlSyncStatus()
                     }
                 },
                 deep: true
+            },
+            syncStatus (val) {
+                if (val === 'SUCCESS') {
+                    this.fetchPacPipelineCount()
+                }
             }
         },
         methods: {
@@ -522,7 +531,8 @@
                 'checkPacProject',
                 'refreshSyncRepository',
                 'getListYamlSync',
-                'getYamlSyncStatus'
+                'getYamlSyncStatus',
+                'getPacPipelineCount'
             ]),
             prettyDateTimeFormat,
 
@@ -614,6 +624,9 @@
                                 newRepoInfo.authType = 'OAUTH'
                                 newRepoInfo.enablePac = true
                                 await this.handleUpdateRepo(newRepoInfo)
+                                setTimeout(async () => {
+                                    await this.handleEnablePac()
+                                }, 500)
                             }
                         })
                     }
@@ -631,10 +644,6 @@
                 }).then(async () => {
                     await this.fetchRepoDetail(repo.repoHashId)
                     await this.refreshCodelibList()
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('codelib.开启成功')
-                    })
                 }).catch((e) => {
                     this.$bkMessage({
                         theme: 'error',
@@ -771,6 +780,15 @@
                         })
                     }, this.time)
                 }
+            },
+
+            fetchPacPipelineCount () {
+                this.getPacPipelineCount({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoInfo.repoHashId
+                }).then(res => {
+                    this.pipelineCount = res
+                })
             }
         }
     }
@@ -829,6 +847,13 @@
             }
             .pac-enable {
                 margin: 0 24px 0 8px;
+            }
+            .pipeline-count {
+                height: 24px;
+                line-height: 24px;
+                padding: 0 15px;
+                background: #F5F7FA;
+                border-radius: 12px;
             }
             .async-status {
                 display: flex;
