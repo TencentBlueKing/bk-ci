@@ -87,7 +87,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.*
+import java.util.Locale
 import java.util.stream.Collectors
 
 class KubernetesContainerService @Autowired constructor(
