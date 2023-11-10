@@ -488,14 +488,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomCode = atomRecord.atomCode
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
-        storeFileService.storeFileCacheClean(
-            StoreFileCacheCleanEvent(
-                storeCode = atomCode,
-                version = atomVersion,
-                fileCachePath = storeFileService.getFileCachePath("$atomCode${File.separator}$atomVersion"),
-                fileCacheKey = storeFileService.getFileCacheKey(atomCode, atomVersion)
-            )
-        )
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, atomVersion)
         val repoId = atomRecord.repositoryHashId
         val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val getAtomConfResult = getAtomConfig(
