@@ -153,6 +153,7 @@ class PipelineYamlInfoDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .and(DELETE.eq(false))
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }

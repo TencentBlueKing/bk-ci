@@ -283,8 +283,7 @@ class RepositoryPacService @Autowired constructor(
             val syncStatusList = repositoryYamlSyncDao.listYamlSync(
                 dslContext = dslContext,
                 projectId = projectId,
-                repositoryId = repositoryId,
-                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+                repositoryId = repositoryId
             ).map { it.syncStatus }
             // 还有正在同步的文件,不修改状态
             if (syncStatusList.contains(RepoYamlSyncStatusEnum.SYNC)) {

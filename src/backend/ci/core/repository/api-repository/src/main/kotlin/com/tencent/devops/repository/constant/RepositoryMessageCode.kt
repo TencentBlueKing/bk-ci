@@ -79,7 +79,9 @@ object RepositoryMessageCode {
     const val ERROR_GET_GIT_PROJECT_ID = "2115030" // 获取工蜂仓库({0})信息失败
     const val ERROR_REPO_URL_HAS_ENABLED_PAC = "2115031" // 代码库已在项目[{0}]开启pac
     const val ERROR_REPO_NOT_ENABLED_PAC = "2115032" // 代码库没有开启pac
-    const val NOT_OAUTH_ENABLED_PAC = "2115033"
+    const val ERROR_AUTH_TYPE_ENABLED_PAC = "2115033" // pac模式需要使用oauth
+    const val ERROR_MEMBER_NOT_FOUND = "2115034" // 仓库成员{0}不存在
+    const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

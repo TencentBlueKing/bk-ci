@@ -38,7 +38,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GET_GIT_PROJECT_ID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
-import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_OAUTH_ENABLED_PAC
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
@@ -46,6 +46,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.CredentialService
@@ -291,7 +292,7 @@ class CodeGitRepositoryService @Autowired constructor(
     ) {
         val codeGitRepository = compose(repository)
         if (codeGitRepository.authType != RepoAuthType.OAUTH) {
-            throw ErrorCodeException(errorCode = NOT_OAUTH_ENABLED_PAC)
+            throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
         }
         val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
         // 获取工蜂ID
@@ -300,6 +301,22 @@ class CodeGitRepositoryService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
+        val member = gitService.getProjectMembersAll(
+            gitProjectId = gitProjectInfo.id.toString(),
+            page = 1,
+            pageSize = 1,
+            search = userId,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = credentialInfo.token
+        ).data?.firstOrNull() ?: throw ErrorCodeException(
+            errorCode = RepositoryMessageCode.ERROR_MEMBER_NOT_FOUND,
+            params = arrayOf(userId)
+        )
+        if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
+            )
+        }
         // 重试不需要校验开启的pac仓库
         if (!retry) {
             getPacRepository(externalId = gitProjectInfo.id.toString())?.let {

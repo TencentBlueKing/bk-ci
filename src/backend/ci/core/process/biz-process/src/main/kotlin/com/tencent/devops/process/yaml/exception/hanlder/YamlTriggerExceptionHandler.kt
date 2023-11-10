@@ -29,7 +29,7 @@
 package com.tencent.devops.process.yaml.exception.hanlder
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
@@ -117,7 +117,7 @@ class YamlTriggerExceptionHandler(
         val reasonDetail = if (e.reason == PipelineTriggerReason.UNKNOWN_ERROR) {
             e.errorMessage ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
         } else {
-            I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr()
+            I18nUtil.getCodeLanMessage(messageCode = e.errorCode, params = e.params)
         }
         // 如果开启pac异常,需要把同步结果写回代码库
         if (action is PacEnableAction) {
