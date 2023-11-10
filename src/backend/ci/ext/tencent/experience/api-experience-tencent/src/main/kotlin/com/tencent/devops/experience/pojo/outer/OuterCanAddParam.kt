@@ -6,5 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("是否可以添加外部用户--请求")
 data class OuterCanAddParam(
     @ApiModelProperty("用户列表,用英文,分隔")
-    val userIds: String
+    val userIds: String,
+    @ApiModelProperty("组ID")
+    val groupHashId: String
 )

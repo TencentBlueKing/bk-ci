@@ -8,5 +8,7 @@ data class OuterCanAddVO(
     @ApiModelProperty("成功人员列表")
     val successUserIds: List<String>,
     @ApiModelProperty("失败人员列表")
-    val failedUserIds: List<String>
+    val failedUserIds: List<String>,
+    @ApiModelProperty("已经存在的人员列表")
+    val existUserIds: List<String>
 )

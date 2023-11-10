@@ -6,6 +6,7 @@ import com.tencent.bkuser.api.V1Api
 import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -21,6 +22,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_EXPIRE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.LOGIN_IP_FREQUENTLY
 import com.tencent.devops.experience.constant.ExperienceMessageCode.UNABLE_GET_IP
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
+import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
 import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
@@ -50,6 +52,7 @@ class ExperienceOuterService @Autowired constructor(
     private val loginApi: V1Api,
     private val profileApi: ProfilesApi,
     private val experienceOuterLoginRecordDao: ExperienceOuterLoginRecordDao,
+    private val groupOuterDao: ExperienceGroupOuterDao,
     private val dslContext: DSLContext
 ) {
     @Value("\${esb.code:#{null}}")
@@ -200,9 +203,14 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerCanAdd(projectId: String, param: OuterCanAddParam): OuterCanAddVO {
         val userIds = param.userIds.split(",")
+        val groupOuters = groupOuterDao.listByGroupIds(
+            dslContext, setOf(HashUtil.decodeIdToLong(param.groupHashId))
+        ).map { it.outer }
         val bkOuters = outerList(projectId)
+
         val successUserIds = mutableListOf<String>()
         val failedUserIds = mutableListOf<String>()
+        val existUserIds = mutableListOf<String>()
 
         for (u in userIds) {
             val isProjectUser = lazy {
@@ -211,7 +219,9 @@ class ExperienceOuterService @Autowired constructor(
                     userId = u
                 ).data ?: false
             }
-            if (UserUtil.isTaiUser(u) && isProjectUser.value) {
+            if (groupOuters.contains(u)) {
+                existUserIds.add(u)
+            } else if (UserUtil.isTaiUser(u) && isProjectUser.value) {
                 successUserIds.add(u)
             } else if (!UserUtil.isTaiUser(u) && bkOuters.contains(u)) {
                 successUserIds.add(u)
@@ -220,7 +230,7 @@ class ExperienceOuterService @Autowired constructor(
             }
         }
 
-        return OuterCanAddVO(successUserIds, failedUserIds)
+        return OuterCanAddVO(successUserIds, failedUserIds, existUserIds)
     }
 
     // 一个账户只能占用一个token
