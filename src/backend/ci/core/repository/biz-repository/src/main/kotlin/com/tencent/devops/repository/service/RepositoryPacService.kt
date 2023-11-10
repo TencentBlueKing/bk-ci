@@ -109,7 +109,12 @@ class RepositoryPacService @Autowired constructor(
             repoHashId = repositoryHashId,
             scmType = ScmType.valueOf(repository.type)
         )
-        repositoryDao.enablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
+        repositoryDao.enablePac(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repositoryId = repositoryId
+        )
     }
 
     fun getYamlSyncStatus(projectId: String, repositoryHashId: String): String? {
@@ -194,7 +199,20 @@ class RepositoryPacService @Autowired constructor(
                 errorCode = RepositoryMessageCode.ERROR_REPO_CI_DIR_EXISTS
             )
         }
-        repositoryDao.disablePac(dslContext = dslContext, userId = userId, repositoryId = repositoryId)
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            repositoryYamlSyncDao.delete(
+                dslContext = context,
+                projectId = projectId,
+                repositoryId = repositoryId
+            )
+            repositoryDao.disablePac(
+                dslContext = context,
+                userId = userId,
+                projectId = projectId,
+                repositoryId = repositoryId
+            )
+        }
     }
 
     fun checkCiDirExists(
@@ -225,7 +243,11 @@ class RepositoryPacService @Autowired constructor(
             repositoryDao.updatePacSyncStatus(
                 dslContext = context,
                 repositoryId = repositoryId,
-                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+                syncStatus = if (syncFileInfoList.isEmpty()) {
+                    RepoYamlSyncStatusEnum.SUCCEED.name
+                } else {
+                    RepoYamlSyncStatusEnum.SYNC.name
+                }
             )
             repositoryYamlSyncDao.delete(
                 dslContext = context,

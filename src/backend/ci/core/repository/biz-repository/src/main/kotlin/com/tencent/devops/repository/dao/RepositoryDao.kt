@@ -452,6 +452,7 @@ class RepositoryDao {
     fun enablePac(
         dslContext: DSLContext,
         userId: String,
+        projectId: String,
         repositoryId: Long
     ) {
         return with(TRepository.T_REPOSITORY) {
@@ -459,7 +460,8 @@ class RepositoryDao {
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .set(UPDATED_USER, userId)
                 .set(ENABLE_PAC, true)
-                .where(REPOSITORY_ID.eq(repositoryId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }
@@ -467,13 +469,17 @@ class RepositoryDao {
     fun disablePac(
         dslContext: DSLContext,
         userId: String,
+        projectId: String,
         repositoryId: Long
     ) {
         return with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
+                .set(ENABLE_PAC, false)
+                .setNull(YAML_SYNC_STATUS)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .set(UPDATED_USER, userId)
-                .where(REPOSITORY_ID.eq(repositoryId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }

@@ -112,21 +112,13 @@ class YamlTriggerExceptionHandler(
         val repoHashId = action.data.setting.repoHashId
         val yamlFile = action.data.context.yamlFile!!
         val pipeline = action.data.context.pipeline
+        val eventId = action.data.context.eventId
         val reason = e.reason.name
         val reasonDetail = if (e.reason == PipelineTriggerReason.UNKNOWN_ERROR) {
             e.errorMessage ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
         } else {
             I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr()
         }
-        val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
-            .projectId(action.data.setting.projectId)
-            .detailId(pipelineTriggerEventService.getDetailId())
-            .status(PipelineTriggerStatus.FAILED.name)
-            .pipelineId(action.data.context.pipeline?.filePath ?: "")
-            .reason(reason)
-            .reasonDetail(reasonDetail)
-            .build()
-        pipelineTriggerEventService.saveTriggerDetail(pipelineTriggerDetail)
         // 如果开启pac异常,需要把同步结果写回代码库
         if (action is PacEnableAction) {
             pipelineYamlSyncService.syncFailed(
@@ -136,6 +128,19 @@ class YamlTriggerExceptionHandler(
                 reason = reason,
                 reasonDetail = reasonDetail
             )
+        }
+        // 开启pac和关闭pac是没有eventId的，不需要报错触发事件
+        if (eventId != null) {
+            val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
+                .projectId(action.data.setting.projectId)
+                .detailId(pipelineTriggerEventService.getDetailId())
+                .eventId(action.data.context.eventId!!)
+                .status(PipelineTriggerStatus.FAILED.name)
+                .pipelineId(action.data.context.pipeline?.filePath ?: "")
+                .reason(reason)
+                .reasonDetail(reasonDetail)
+                .build()
+            pipelineTriggerEventService.saveTriggerDetail(pipelineTriggerDetail)
         }
         if (pipeline != null) {
             pipelineYamlService.saveFailed(
