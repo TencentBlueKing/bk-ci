@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitChangeFileInfo
@@ -82,7 +82,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
-            errorCode = PipelineYamlMessageCode.GET_PROJECT_INFO_ERROR
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_PROJECT_INFO
         ) {
             client.get(ServiceGitResource::class).getProjectInfo(
                 token = cred.toToken(),
@@ -105,7 +105,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
-            errorCode = PipelineYamlMessageCode.GET_GIT_MERGE_INFO
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_MERGE_INFO
         ) {
             client.get(ServiceGitResource::class).getMergeRequestInfo(
                 token = cred.toToken(),
@@ -132,7 +132,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
-            errorCode = PipelineYamlMessageCode.GET_GIT_MERGE_REVIEW_INFO
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_MERGE_REVIEW
         ) {
             client.get(ServiceGitResource::class).getMergeRequestReviewersInfo(
                 token = cred.toToken(),
@@ -153,7 +153,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
-            errorCode = PipelineYamlMessageCode.GET_GIT_MERGE_CHANGE_INFO
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_MERGE_CHANGE
         ) {
             client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
                 token = cred.toToken(),
@@ -182,7 +182,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
-            errorCode = PipelineYamlMessageCode.GET_GIT_FILE_TREE_ERROR
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_FILE_TREE
         ) {
             client.get(ServiceGitResource::class).getGitFileTree(
                 gitProjectId = gitProjectId,
@@ -207,7 +207,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
-            errorCode = PipelineYamlMessageCode.GET_YAML_CONTENT_ERROR
+            errorCode = ProcessMessageCode.ERROR_GET_YAML_CONTENT
         ) {
             client.get(ServiceGitResource::class).getGitFileContent(
                 token = cred.toToken(),
@@ -242,7 +242,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
-            errorCode = PipelineYamlMessageCode.GET_GIT_FILE_INFO_ERROR
+            errorCode = ProcessMessageCode.ERROR_GET_GIT_FILE_INFO
         ) {
             client.get(ServiceGitResource::class).getGitFileInfo(
                 gitProjectId = gitProjectId,

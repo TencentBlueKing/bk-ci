@@ -286,7 +286,8 @@ class CodeGitRepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        repository: TRepositoryRecord,
+        retry: Boolean
     ) {
         val codeGitRepository = compose(repository)
         if (codeGitRepository.authType != RepoAuthType.OAUTH) {
@@ -299,11 +300,14 @@ class CodeGitRepositoryService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
-        getPacRepository(externalId = gitProjectInfo.id.toString())?.let {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
-                params = arrayOf(it.projectId, it.aliasName)
-            )
+        // 重试不需要校验开启的pac仓库
+        if (!retry) {
+            getPacRepository(externalId = gitProjectInfo.id.toString())?.let {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
+                    params = arrayOf(it.projectId, it.aliasName)
+                )
+            }
         }
     }
 

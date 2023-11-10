@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import org.slf4j.Logger
 
@@ -47,7 +47,7 @@ object PacApiUtil {
             }
         } catch (e: ClientException) {
             logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
-            throw ErrorCodeException(errorCode = PipelineYamlMessageCode.DEVNET_TIMEOUT_ERROR)
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DEVNET_TIMEOUT)
         } catch (e: RemoteServiceException) {
             logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
             throw ErrorCodeException(

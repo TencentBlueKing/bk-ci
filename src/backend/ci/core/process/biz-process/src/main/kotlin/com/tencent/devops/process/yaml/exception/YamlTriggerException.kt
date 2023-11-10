@@ -35,5 +35,6 @@ class YamlTriggerException(
     val action: BaseAction,
     val reason: PipelineTriggerReason,
     errorCode: String,
-    params: Array<String>? = null
+    params: Array<String>? = null,
+    val errorMessage: String? = null
 ) : ErrorCodeException(errorCode = errorCode, params = params)

@@ -309,7 +309,8 @@ class CodeTGitRepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        repository: TRepositoryRecord,
+        retry: Boolean
     ) = Unit
 
     override fun checkCiDirExists(

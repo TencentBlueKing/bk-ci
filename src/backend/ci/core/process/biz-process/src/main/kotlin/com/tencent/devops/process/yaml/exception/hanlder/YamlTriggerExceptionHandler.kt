@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.exception.hanlder
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
@@ -38,7 +39,6 @@ import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.pacActions.PacEnableAction
-import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -74,8 +74,8 @@ class YamlTriggerExceptionHandler(
                             YamlTriggerException(
                                 action = action,
                                 reason = PipelineTriggerReason.UNKNOWN_ERROR,
-                                // TODO 后面补充错误信息
-                                errorCode = PipelineYamlMessageCode.UNKNOWN_ERROR
+                                errorCode = ProcessMessageCode.UNKNOWN_ERROR,
+                                errorMessage = e.message
                             )
                         )
                     }
@@ -113,7 +113,11 @@ class YamlTriggerExceptionHandler(
         val yamlFile = action.data.context.yamlFile!!
         val pipeline = action.data.context.pipeline
         val reason = e.reason.name
-        val reasonDetail = I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr()
+        val reasonDetail = if (e.reason == PipelineTriggerReason.UNKNOWN_ERROR) {
+            e.errorMessage ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
+        } else {
+            I18Variable(code = e.errorCode, params = e.params?.toList()).toJsonStr()
+        }
         val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
             .projectId(action.data.setting.projectId)
             .detailId(pipelineTriggerEventService.getDetailId())

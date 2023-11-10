@@ -100,7 +100,8 @@ class RepositoryPacService @Autowired constructor(
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            repository = repository
+            repository = repository,
+            retry = false
         )
         client.get(ServicePipelinePacResource::class).enable(
             userId = userId,
@@ -146,7 +147,8 @@ class RepositoryPacService @Autowired constructor(
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            repository = repository
+            repository = repository,
+            retry = true
         )
         client.get(ServicePipelinePacResource::class).enable(
             userId = userId,

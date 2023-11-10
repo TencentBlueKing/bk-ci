@@ -65,7 +65,7 @@ interface CodeRepositoryService<T> {
     /**
      * 开启pac校验
      */
-    fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord)
+    fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord, retry: Boolean)
 
     fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean
 

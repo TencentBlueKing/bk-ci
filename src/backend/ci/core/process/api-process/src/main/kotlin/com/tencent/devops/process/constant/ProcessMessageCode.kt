@@ -288,6 +288,17 @@ object ProcessMessageCode {
     const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
     const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
 
+    const val ERROR_GET_GIT_PROJECT_INFO = "2101186" // 获取git项目信息失败
+    const val ERROR_GET_GIT_MERGE_INFO = "2101187" // 获取mr信息失败
+    const val ERROR_GET_GIT_MERGE_REVIEW = "2101188" // 获取mr view信息失败
+    const val ERROR_GET_GIT_MERGE_CHANGE = "2101189" // 获取mr change信息失败
+    const val ERROR_GET_GIT_FILE_TREE = "2101190" // 获取git文件树失败
+    const val ERROR_GET_YAML_CONTENT = "2101191" // 获取yaml文件内容失败
+    const val ERROR_GET_GIT_FILE_INFO = "2101192" // 获取文件信息失败
+    const val ERROR_CI_YAML_NEED_MERGE_OR_REBASE = "2101193" //
+    const val ERROR_DEVNET_TIMEOUT = "2101194" //
+    const val UNKNOWN_ERROR = "2101195"
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

@@ -34,13 +34,13 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.common.PipelineYamlMessageCode
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
@@ -289,7 +289,7 @@ class TGitMrActionGit(
         throw YamlTriggerException(
             action = this,
             reason = PipelineTriggerReason.TRIGGER_FAILED,
-            errorCode = PipelineYamlMessageCode.CI_YAML_NEED_MERGE_OR_REBASE,
+            errorCode = ProcessMessageCode.ERROR_CI_YAML_NEED_MERGE_OR_REBASE,
             params = arrayOf(fileName)
         )
     }
