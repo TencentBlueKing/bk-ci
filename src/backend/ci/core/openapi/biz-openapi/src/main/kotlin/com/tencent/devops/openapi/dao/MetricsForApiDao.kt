@@ -35,6 +35,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class MetricsForApiDao {
+
+    companion object {
+        const val batchGetLimit = Short.MAX_VALUE
+    }
+
     @Suppress("ComplexMethod")
     fun createOrUpdate(
         dslContext: DSLContext,
@@ -96,7 +101,7 @@ class MetricsForApiDao {
         dslContext: DSLContext
     ): List<MetricsApiData> {
         return with(TOpenapiMetricsForApi.T_OPENAPI_METRICS_FOR_API) {
-            dslContext.select(API, KEY, PEAK_CONCURRENCY).from(this).skipCheck().fetch {
+            dslContext.select(API, KEY, PEAK_CONCURRENCY).from(this).limit(batchGetLimit).skipCheck().fetch {
                 MetricsApiData(
                     api = it.value1(),
                     key = it.value2(),
