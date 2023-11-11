@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -184,6 +185,8 @@ class PipelineListFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getBatchPipelinesWithModel(
@@ -209,8 +212,6 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             }
         }
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val buildPipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
             projectId = projectId,
@@ -1731,6 +1732,8 @@ class PipelineListFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getPipelineDetail(
@@ -1759,8 +1762,6 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
             projectId = projectId,

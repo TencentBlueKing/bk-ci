@@ -12,4 +12,9 @@ class BkAuditConfiguration {
     fun bkAuditRequestProvider(): AuditRequestProvider {
         return BkAuditRequestProvider()
     }
+
+    @Bean
+    fun bkAuditPostFilter(): BkAuditPostFilter {
+        return BkAuditPostFilter()
+    }
 }

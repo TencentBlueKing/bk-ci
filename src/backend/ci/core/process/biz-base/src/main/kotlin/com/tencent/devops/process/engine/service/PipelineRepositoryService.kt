@@ -1137,7 +1137,9 @@ class PipelineRepositoryService constructor(
                     pipelineModelVersion.pipelineId,
                     null,
                     pipelineModelVersion.model
-                ).addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
+                )
+                    .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, pipelineModelVersion.projectId)
+                    .scopeId = pipelineModelVersion.projectId
                 pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
             } finally {
                 lock.unlock()

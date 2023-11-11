@@ -28,8 +28,8 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -480,6 +480,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_EDIT_BIND_PIPELINE_CALLBACK_CONTENT
     )
     fun bindPipelineCallBack(
@@ -495,8 +497,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (!OkhttpUtils.validUrl(callbackInfo.callbackUrl)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }

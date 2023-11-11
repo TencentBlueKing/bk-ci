@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.template
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -128,12 +129,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -144,6 +139,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 
 @Suppress("ALL")
 @Service
@@ -197,6 +198,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_CREATE_CONTENT
     )
     fun createTemplate(projectId: String, userId: String, template: Model): String {
@@ -232,7 +235,6 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(template.name)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return templateId
     }
 
@@ -243,6 +245,8 @@ class TemplateFacadeService @Autowired constructor(
             instanceIds = "#srcTemplateId",
             instanceNames = "#copyTemplateReq?.templateName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_COPY_CONTENT
     )
     fun copyTemplate(
@@ -254,8 +258,6 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
 
         checkPermission(projectId, userId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         var latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, srcTemplateId)
         val template = latestTemplate
@@ -314,6 +316,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_SAVE_AS_CONTENT
     )
     fun saveAsTemplate(
@@ -324,8 +328,6 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
 
         checkPermission(projectId, userId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
@@ -380,6 +382,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
@@ -389,7 +393,6 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(template.templateName)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val instanceSize = templatePipelineDao.countByVersionFeat(
@@ -434,6 +437,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
@@ -442,7 +447,6 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(templateId)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -474,6 +478,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_DELETE_CONTENT
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
@@ -482,7 +488,6 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(templateId)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val instanceSize =
@@ -518,6 +523,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_CONTENT
     )
     fun updateTemplate(
@@ -541,7 +548,6 @@ class TemplateFacadeService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(templateId)
             .setInstanceName(template.name)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         updateModelParam(template)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -596,6 +602,8 @@ class TemplateFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE_TEMPLATE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT
     )
     fun updateTemplateSetting(
@@ -608,8 +616,7 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         ActionAuditContext.current()
             .setInstanceId(templateId)
-            .setInstanceName(setting.pipelineName)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+            .setInstanceName(templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(

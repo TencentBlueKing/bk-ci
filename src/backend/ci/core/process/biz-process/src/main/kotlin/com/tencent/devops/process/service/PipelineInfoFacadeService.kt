@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -133,6 +134,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             resourceType = ResourceTypeId.PIPELINE,
             instanceIds = "#pipelineId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_EDIT_EXPORT_PIPELINE_CONTENT
     )
     fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
@@ -154,8 +157,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw OperationException(
@@ -260,6 +261,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_CREATE_CONTENT
     )
     fun createPipeline(
@@ -302,8 +305,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 watcher.stop()
             }
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
             if (isPipelineExist(
                     projectId = projectId,
@@ -510,6 +511,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             resourceType = ResourceTypeId.PROJECT,
             instanceIds = "#pipelineId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT
     )
     fun restorePipeline(
@@ -689,6 +692,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.PIPELINE
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_EDIT_CONTENT
     )
     fun editPipeline(
@@ -729,8 +734,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 )
             }
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
             if (isPipelineExist(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -853,6 +856,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             instanceNames = "#$?.name",
             instanceIds = "#pipelineId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_VIEW_CONTENT
     )
     fun getPipeline(
@@ -882,9 +887,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
         }
-
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -959,6 +961,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             instanceNames = "#$?.pipelineName",
             instanceIds = "#pipelineId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.PIPELINE_DELETE_CONTENT
     )
     fun deletePipeline(
@@ -993,9 +997,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 watcher.stop()
             }
-
-            // 审计
-            ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
             val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(

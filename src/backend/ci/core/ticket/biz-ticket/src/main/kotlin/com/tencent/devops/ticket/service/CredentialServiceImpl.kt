@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
@@ -132,6 +133,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceIds = "#credential?.credentialId",
             instanceNames = "#credential?.credentialName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_CREATE_CONTENT
     )
     override fun userCreate(
@@ -156,8 +159,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_EXIST,
@@ -218,6 +219,8 @@ class CredentialServiceImpl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CREDENTIAL
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_EDIT_CONTENT
     )
     override fun userEdit(
@@ -247,7 +250,6 @@ class CredentialServiceImpl @Autowired constructor(
             .setInstanceId(credentialId)
             .setInstanceName(credential.credentialName)
             .setInstance(credential)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         serviceEdit(
             userId = userId,
             projectId = projectId,
@@ -263,6 +265,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceIds = "#credentialId",
             instanceNames = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_EDIT_SETTING_CONTENT
     )
     override fun userSettingEdit(
@@ -293,7 +297,6 @@ class CredentialServiceImpl @Autowired constructor(
             .setInstanceId(credentialId)
             .setInstanceName(credentialId)
             .setInstance(credentialSetting)
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return credentialDao.updateSetting(
             dslContext = dslContext,
             projectId = projectId,
@@ -309,6 +312,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceIds = "#credentialId",
             instanceNames = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_DELETE_CONTENT
     )
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
@@ -329,8 +334,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         logger.info("$userId delete credential $credentialId")
         credentialPermissionService.deleteResource(projectId, credentialId)
         credentialDao.delete(dslContext, projectId, credentialId)
@@ -478,6 +481,8 @@ class CredentialServiceImpl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CREDENTIAL
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun userShow(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
@@ -498,8 +503,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -533,6 +536,8 @@ class CredentialServiceImpl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CREDENTIAL
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun userGet(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
@@ -553,8 +558,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -591,6 +594,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceNames = "#credentialId",
             instanceIds = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun buildGet(
@@ -600,8 +605,6 @@ class CredentialServiceImpl @Autowired constructor(
         publicKey: String,
         taskId: String?
     ): CredentialInfo? {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -674,11 +677,11 @@ class CredentialServiceImpl @Autowired constructor(
             instanceNames = "#credentialId",
             instanceIds = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         return credentialInfo(publicKey, credentialRecord)
@@ -691,6 +694,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceNames = "#credentialId",
             instanceIds = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#targetProjectId")],
+        scopeId = "#targetProjectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun serviceGetAcrossProject(
@@ -698,8 +703,6 @@ class CredentialServiceImpl @Autowired constructor(
         credentialId: String,
         publicKey: String
     ): CredentialInfo? {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, targetProjectId)
         val credentialRecord = credentialDao.getOrNull(dslContext, targetProjectId, credentialId)?.let {
             if (!it.allowAcrossProject) {
                 throw CustomException(Response.Status.FORBIDDEN, "credential not allow across project")
@@ -757,6 +760,8 @@ class CredentialServiceImpl @Autowired constructor(
             instanceNames = "#credentialId",
             instanceIds = "#credentialId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun serviceGet(projectId: String, credentialId: String): Credential {
@@ -803,6 +808,8 @@ class CredentialServiceImpl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CREDENTIAL
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
     override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
