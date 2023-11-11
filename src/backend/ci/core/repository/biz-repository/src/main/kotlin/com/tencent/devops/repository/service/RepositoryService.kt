@@ -858,7 +858,14 @@ class RepositoryService @Autowired constructor(
         }
 
         deleteResource(projectId, repositoryId)
-        repositoryDao.delete(dslContext, repositoryId, userId)
+        val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
+        val deleteAliasName = "${record.aliasName}[$deleteTime]"
+        repositoryDao.delete(
+            dslContext = dslContext,
+            repositoryId = repositoryId,
+            deleteAliasName = deleteAliasName,
+            updateUser = userId
+        )
     }
 
     fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
