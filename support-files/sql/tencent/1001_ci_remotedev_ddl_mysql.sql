@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
-    KEY `ipKey`(`HOST_IP`)
+    KEY `ipKey`(`HOST_IP`),
     KEY `imageKey`(`IMAGE_ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
