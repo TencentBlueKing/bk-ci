@@ -681,8 +681,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
