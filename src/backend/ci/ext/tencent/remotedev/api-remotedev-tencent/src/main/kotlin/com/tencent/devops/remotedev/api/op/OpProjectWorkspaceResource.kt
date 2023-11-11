@@ -46,6 +46,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
 @Path("/op/project/workspace")
@@ -107,4 +108,16 @@ interface OpProjectWorkspaceResource {
         @QueryParam("projectId")
         projectId: String
     )
+
+    @ApiOperation("导出实例页面查询结果")
+    @POST
+    @Path("/list/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportProjectWorkspaceList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("查询参数")
+        data: ProjectWorkspaceFetchData
+    ): Response
 }
