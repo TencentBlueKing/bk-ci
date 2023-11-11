@@ -794,11 +794,8 @@ class WorkspaceDao {
             return dslContext.select(
                 OWNER_TYPE, DSL.count(ID).`as`("VALUE"),
                 DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
-            )
-                .from(this)
-                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name)
-                           .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-                           .and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal)))
+            ).from(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))))
                 .groupBy(OWNER_TYPE)
                 .fetch()
         }
