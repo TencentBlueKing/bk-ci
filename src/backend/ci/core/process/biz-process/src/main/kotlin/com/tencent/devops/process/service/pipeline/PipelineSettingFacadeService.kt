@@ -28,8 +28,8 @@
 package com.tencent.devops.process.service.pipeline
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -94,6 +94,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             instanceIds = "#setting?.pipelineId",
             instanceNames = "#setting?.pipelineName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#setting?.projectId")],
+        scopeId = "#setting?.projectId",
         content = ActionAuditContent.PIPELINE_EDIT_SAVE_SETTING_CONTENT
     )
     fun saveSetting(
@@ -124,8 +126,6 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, setting.projectId)
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,
             setting = setting,

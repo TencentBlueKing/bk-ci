@@ -10,7 +10,7 @@ object ActionAuditContent {
     const val PROJECT_CODE_TEMPLATE = "@PROJECT_CODE"
 
     // 项目
-    const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE"
+    const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 流水线
     const val PIPELINE_VIEW_CONTENT = "get pipeline info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

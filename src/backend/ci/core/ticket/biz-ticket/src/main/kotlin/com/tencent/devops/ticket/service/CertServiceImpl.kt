@@ -28,9 +28,9 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -109,6 +109,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_CREATE_CONTENT
     )
     override fun uploadIos(
@@ -138,8 +140,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (certCredentialId != null) {
             val use = AuthPermission.USE
             certPermissionService.validatePermission(
@@ -246,6 +246,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_EDIT_CONTENT
     )
     override fun updateIos(
@@ -276,8 +278,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(NAME_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -381,6 +381,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_CREATE_CONTENT
     )
     override fun uploadEnterprise(
@@ -407,8 +409,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
@@ -503,6 +503,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_EDIT_CONTENT
     )
     override fun updateEnterprise(
@@ -530,8 +532,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
@@ -617,6 +617,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_CREATE_CONTENT
     )
     override fun uploadAndroid(
@@ -646,8 +648,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
@@ -758,6 +758,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_EDIT_CONTENT
     )
     override fun updateAndroid(
@@ -788,8 +790,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
             ?: throw OperationException(
                 MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
@@ -901,6 +901,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_CREATE_CONTENT
     )
     override fun uploadTls(
@@ -933,8 +935,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
@@ -1053,6 +1053,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_EDIT_CONTENT
     )
     override fun updateTls(
@@ -1086,8 +1088,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
@@ -1212,6 +1212,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_DELETE_CONTENT
     )
     override fun delete(userId: String, projectId: String, certId: String) {
@@ -1232,8 +1234,6 @@ class CertServiceImpl @Autowired constructor(
                 )
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         certPermissionService.deleteResource(projectId, certId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1346,6 +1346,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo {
@@ -1359,8 +1361,6 @@ class CertServiceImpl @Autowired constructor(
                 params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
             certId = certId,
@@ -1378,12 +1378,12 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return CertEnterpriseInfo(
             certId = certId,
             mobileProvisionFileName = certRecord.certMpFileName,
@@ -1398,6 +1398,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo {
@@ -1411,8 +1413,6 @@ class CertServiceImpl @Autowired constructor(
                 params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
 
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
@@ -1432,13 +1432,13 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun getTls(projectId: String, certId: String): CertTlsInfo {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return CertTlsInfo(
             certId = certId,
             serverCrtFileName = certTlsRecord.certServerCrtFileName,
@@ -1456,11 +1456,11 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -1525,11 +1525,11 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         // 生成公钥和密钥
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
@@ -1554,12 +1554,12 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
@@ -1601,6 +1601,8 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryAndroidByProject(
@@ -1608,8 +1610,6 @@ class CertServiceImpl @Autowired constructor(
         certId: String,
         publicKey: String
     ): CertAndroidWithCredential {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certRecord = certDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
@@ -1668,11 +1668,11 @@ class CertServiceImpl @Autowired constructor(
             instanceIds = "#certId",
             instanceNames = "#certId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
     override fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls {
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
