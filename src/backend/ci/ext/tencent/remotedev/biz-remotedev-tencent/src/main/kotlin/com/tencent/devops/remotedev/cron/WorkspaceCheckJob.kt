@@ -48,6 +48,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
         private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
+        private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
 
     /**
@@ -245,12 +246,12 @@ class WorkspaceCheckJob @Autowired constructor(
         if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
             return
         }
-        val redisLock = RedisLock(redisOperation, syncJobLockKey, 60L)
+        val redisLock = RedisLock(redisOperation, backupCgsDataLockKey, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("sync backup cgs data get lock.")
-                workspaceCommon.syncStartCloudResourceList()
+                workspaceCommon.backupDailyCsgData()
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)

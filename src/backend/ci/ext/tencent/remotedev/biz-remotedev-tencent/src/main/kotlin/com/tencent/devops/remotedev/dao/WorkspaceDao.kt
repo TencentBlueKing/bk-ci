@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.model.remotedev.tables.TDailyCgsData
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceDetail
@@ -763,8 +764,44 @@ class WorkspaceDao {
     }
 
     // 备份个人和团队云桌面快照数据
-    fun backupDailyCsgData(){
+    fun backupDailyCsgData(dslContext: DSLContext) {
+        val cgsList = fetchDailyCgsData(dslContext)
+        if (cgsList.isNullOrEmpty()) {
+            return
+        }
+        dslContext.batch(cgsList.map {
+            with(TDailyCgsData.T_DAILY_CGS_DATA) {
+                dslContext.insertInto(
+                    this,
+                    DATE,
+                    OWNER_TYPE,
+                    NUMBER,
+                    CREATE_TIME
+                ).values(
+                    it["CUR_DATE"] as String,
+                    it["OWNER_TYPE"] as String,
+                    it["VALUE"] as Int,
+                    LocalDateTime.now()
+                ).onDuplicateKeyIgnore()
+            }
+        }).execute()
+    }
 
+    fun fetchDailyCgsData(
+        dslContext: DSLContext
+    ): Result<out Record>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(
+                OWNER_TYPE, DSL.count(ID).`as`("VALUE"),
+                DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
+            )
+                .from(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name)
+                           .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                           .and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal)))
+                .groupBy(OWNER_TYPE)
+                .fetch()
+        }
     }
 
     companion object {
