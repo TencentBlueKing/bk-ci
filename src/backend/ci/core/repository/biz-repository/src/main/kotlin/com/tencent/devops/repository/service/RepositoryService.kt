@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -858,7 +859,7 @@ class RepositoryService @Autowired constructor(
         }
 
         deleteResource(projectId, repositoryId)
-        val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
+        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
         val deleteAliasName = "${record.aliasName}[$deleteTime]"
         repositoryDao.delete(
             dslContext = dslContext,
