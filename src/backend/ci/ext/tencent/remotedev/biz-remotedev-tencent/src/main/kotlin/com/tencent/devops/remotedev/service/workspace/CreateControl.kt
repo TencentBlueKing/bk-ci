@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -121,6 +122,8 @@ class CreateControl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CGS_CREATE_CONTENT
     )
     fun asyncCreateWorkspace(
@@ -208,7 +211,7 @@ class CreateControl @Autowired constructor(
                 workspaceName,
                 null,
                 ws
-            ).addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+            )
 
             val bizId = MDC.get(TraceTag.BIZID)
             // 发送给k8s
@@ -241,6 +244,8 @@ class CreateControl @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CGS_CREATE_CONTENT
     )
     fun createWorkspace(
@@ -270,7 +275,7 @@ class CreateControl @Autowired constructor(
             workspace.workspaceName,
             null,
             workspace
-        ).addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
+        )
 
         // 发送给用户
         workspaceCommon.dispatchWebsocketPushEvent(

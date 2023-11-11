@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.service.gitproxy
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.bkrepo.common.api.pojo.Page
@@ -59,7 +60,9 @@ class GitProxyService @Autowired constructor(
             enableLfs = false
         )
         // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+            .scopeId = data.projectId
 
         var lfsRespData: CreateRepoRespData? = null
         val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
@@ -155,6 +158,8 @@ class GitProxyService @Autowired constructor(
             instanceNames = "#repoName",
             instanceIds = "#repoName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CODE_PROXY_DELETE_CONTENT
     )
     fun deleteRepo(
@@ -170,8 +175,6 @@ class GitProxyService @Autowired constructor(
             gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
             return true
         }
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
         if (record.enableLfs == true) {
             gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")

@@ -28,12 +28,12 @@
 package com.tencent.devops.remotedev.service.projectworkspace.image
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -93,12 +93,12 @@ class ImageManageService @Autowired constructor(
             instanceNames = "#imageId",
             instanceIds = "#imageId"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.IMAGE_DELETE_CONTENT
     )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         imageManageDao.deleteWorkspaceImage(projectId, imageId, dslContext)
         return true
     }

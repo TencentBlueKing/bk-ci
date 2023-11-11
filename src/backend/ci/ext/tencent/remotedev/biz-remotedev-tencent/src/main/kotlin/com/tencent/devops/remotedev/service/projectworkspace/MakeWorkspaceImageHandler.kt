@@ -28,13 +28,13 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -101,6 +101,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
         content = ActionAuditContent.CGS_MAKE_IMAGE_CONTENT
     )
     fun makeWorkspaceImage(
@@ -111,8 +113,6 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     ): WorkspaceResponse {
         logger.info("$userId make image ${makeImageReq.imageName} workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
-        // 审计
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

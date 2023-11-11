@@ -59,9 +59,11 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.audit.ActionAuditContent.BUILD_ID_TEMPLATE
+import com.tencent.devops.common.audit.ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+import com.tencent.devops.common.auth.api.ActionId.PIPELINE_DOWNLOAD
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.ResourceTypeId.PIPELINE
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
@@ -89,11 +91,11 @@ open class BkRepoDownloadService @Autowired constructor(
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun outerDownloadUrlByToken(
         creatorId: String?,
@@ -127,11 +129,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun outerPlistContent(
         userId: String,
@@ -236,11 +238,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun outerPlistUrl(
         userId: String,
@@ -270,11 +272,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun innerDownloadUrlByToken(
         userId: String,
@@ -328,11 +330,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun innerDownloadUrlByUser(
         userId: String,
@@ -362,11 +364,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun outerHtmlUrl4Download(
         userId: String,
@@ -416,11 +418,11 @@ open class BkRepoDownloadService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.PIPELINE_DOWNLOAD,
+        actionId = PIPELINE_DOWNLOAD,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE
+            resourceType = PIPELINE
         ),
-        content = ActionAuditContent.PIPELINE_DOWNLOAD_CONTENT
+        content = PIPELINE_DOWNLOAD_CONTENT
     )
     override fun sendNotifyWithInnerUrl(
         userId: String,
@@ -678,7 +680,7 @@ open class BkRepoDownloadService @Autowired constructor(
             // 审计
             ActionAuditContext.current()
                 .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
-                .addExtendData("projectId", projectId)
+                .scopeId = projectId
             if (!pipelineId.isNullOrEmpty()) {
                 val pipelineName = client.get(ServicePipelineResource::class)
                     .getPipelineInfo(projectId, pipelineId, null).data?.pipelineName ?: ""
@@ -689,6 +691,7 @@ open class BkRepoDownloadService @Autowired constructor(
             if (!buildId.isNullOrEmpty()) {
                 ActionAuditContext.current()
                     .addExtendData("buildId", buildId)
+                    .addAttribute(BUILD_ID_TEMPLATE, buildId)
             }
         } catch (ignore: Exception) {
             logger.warn("audit download artifacts fail!$projectId|$repoName|$path")

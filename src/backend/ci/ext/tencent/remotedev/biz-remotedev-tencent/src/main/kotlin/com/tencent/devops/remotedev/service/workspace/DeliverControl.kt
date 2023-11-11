@@ -28,10 +28,13 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.ActionAuditContent.ASSIGNS_TEMPLAT
+import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
@@ -145,7 +148,9 @@ class DeliverControl @Autowired constructor(
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_ASSIGN_USER_CONTENT
+        attributes = [AuditAttribute(name = PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = CGS_ASSIGN_USER_CONTENT
     )
     fun assignUser2Workspace(
         userId: String,
@@ -160,8 +165,7 @@ class DeliverControl @Autowired constructor(
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
 
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
-            .addAttribute("@ASSIGNS", assigns.joinToString(",") { it.userId })
+            .addAttribute(ASSIGNS_TEMPLAT, assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {
                 val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
