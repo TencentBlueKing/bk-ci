@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class OpProjectWorkspaceResourceImpl @Autowired constructor(
@@ -106,5 +107,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun refreshCodeProxy(userId: String, projectId: String) {
         gitProxyService.refreshCodeProxy(projectId)
+    }
+
+    override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
+        return workspaceService.exportProjectWorkspaceList(data)
     }
 }

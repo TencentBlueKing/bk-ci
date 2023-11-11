@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -168,5 +169,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(
             bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
         )
+    }
+
+    override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
+        return workspaceService.exportProjectWorkspaceListUser(userId, projectId, page, pageSize)
     }
 }
