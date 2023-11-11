@@ -108,7 +108,6 @@ class PipelineBuildService(
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#pipeline?.projectId")],
         scopeId = "#pipeline?.projectId",
-        scopeType = ResourceTypeId.PROJECT,
         content = ActionAuditContent.PIPELINE_EXECUTE_CONTENT
     )
     fun startPipeline(
