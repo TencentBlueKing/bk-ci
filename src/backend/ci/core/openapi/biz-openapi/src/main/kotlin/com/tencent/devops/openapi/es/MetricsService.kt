@@ -58,7 +58,7 @@ class MetricsService(
     /**
      * every 5m
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+//    @Scheduled(cron = "0 0/5 * * * ?")
     fun job() {
         logger.info("Start to openapi metrics job")
         RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 60).run {
