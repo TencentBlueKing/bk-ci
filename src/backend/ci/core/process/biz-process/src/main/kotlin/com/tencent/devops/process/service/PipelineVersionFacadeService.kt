@@ -117,7 +117,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         // TODO #8161 增加分支名称的保存
         var baseVersionBranch: String? = "master"
-        val canRelease = true
+        val canRelease = draftVersion != null
         var baseVersionStatus = VersionStatus.RELEASED
         draftVersion?.let { draft ->
             val baseVersion = draft.baseVersion?.let { base ->
