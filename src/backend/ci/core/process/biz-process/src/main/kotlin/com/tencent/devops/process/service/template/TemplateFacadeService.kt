@@ -191,7 +191,7 @@ class TemplateFacadeService @Autowired constructor(
 
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             permission = AuthPermission.CREATE
@@ -241,7 +241,7 @@ class TemplateFacadeService @Autowired constructor(
     ): String {
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
 
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = srcTemplateId,
@@ -374,7 +374,7 @@ class TemplateFacadeService @Autowired constructor(
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
         logger.info("Start to delete the template $templateId by user $userId")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -426,7 +426,7 @@ class TemplateFacadeService @Autowired constructor(
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -464,7 +464,7 @@ class TemplateFacadeService @Autowired constructor(
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -512,7 +512,7 @@ class TemplateFacadeService @Autowired constructor(
         template: Model
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -589,7 +589,7 @@ class TemplateFacadeService @Autowired constructor(
         setting: PipelineSetting
     ): Boolean {
         logger.info("Start to update the template setting - [$projectId|$userId|$templateId]")
-        pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -617,7 +617,12 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
-        val hasPermission = hasManagerPermission(projectId, userId)
+        val hasPermission = pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+            projectId = projectId,
+            userId = userId,
+            permission = AuthPermission.EDIT,
+            templateId = templateId
+        )
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
         val labels = ArrayList<String>()
         groups.forEach {
@@ -1172,7 +1177,12 @@ class TemplateFacadeService @Autowired constructor(
             logoUrl = if (isConstrainedFlag) latestTemplate.logoUrl ?: "" else {
                 if (template.logoUrl.isNullOrEmpty()) "" else template.logoUrl
             },
-            hasPermission = hasManagerPermission(projectId, userId),
+            hasPermission = pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.EDIT,
+                templateId = templateId
+            ),
             params = params,
             templateParams = templateParams
         )

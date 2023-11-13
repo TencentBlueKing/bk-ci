@@ -31,16 +31,18 @@ import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PipelineTemplatePermissionService {
     /**
-     * 校验是否有任意流水线模板存在指定的权限
+     * 校验有流水线模板权限
      * @param userId userId
      * @param projectId projectId
+     * @param templateId templateId
      * @param permission 权限
      * @return 有权限返回true
      */
     fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String? = null
     ): Boolean
 
     /**
@@ -51,11 +53,11 @@ interface PipelineTemplatePermissionService {
      * @param permission 权限
      * @return 有权限返回true
      */
-    fun checkPipelineTemplatePermission(
+    fun checkPipelineTemplatePermissionWithMessage(
         userId: String,
         projectId: String,
-        templateId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String? = null
     ): Boolean
 
     /**

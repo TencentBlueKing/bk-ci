@@ -38,37 +38,32 @@ abstract class AbstractPipelineTemplatePermissionService constructor(
     val authProjectApi: AuthProjectApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : PipelineTemplatePermissionService {
-
     override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String?
     ): Boolean {
-        if (!authProjectApi.checkProjectManager(
-                userId = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId
-            )) {
-            logger.warn("The manager users is empty of project $projectId")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
-            )
-        }
-        return true
+        return authProjectApi.checkProjectManager(
+            userId = userId,
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId
+        )
     }
 
-    override fun checkPipelineTemplatePermission(
+    override fun checkPipelineTemplatePermissionWithMessage(
         userId: String,
         projectId: String,
-        templateId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String?
     ): Boolean {
-        if (!authProjectApi.checkProjectManager(
+        if (!checkPipelineTemplatePermission(
                 userId = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId
+                projectId = projectId,
+                permission = permission,
+                templateId = templateId
             )) {
-            logger.warn("The manager users is empty of project $projectId")
+            logger.warn("userId has not manager permission $projectId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
             )
