@@ -73,6 +73,8 @@ class DispatchTransfer @Autowired(required = false) constructor(
 
     private val defaultRunsOn = JSONObject(
         RunsOn(
+            selfHosted = null,
+            poolType = null,
             poolName = JobRunsOnType.DOCKER.type,
             container = Container3(
                 image = inner.defaultImage,
