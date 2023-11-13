@@ -40,6 +40,7 @@ import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
+import com.tencent.devops.quality.service.v2.QualityHistoryService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -57,7 +58,8 @@ class PipelineBuildQualityListener @Autowired constructor(
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityHistoryDao: HistoryDao,
     private val qualityRuleReviewerDao: QualityRuleReviewerDao,
-    private val qualityHisMetadataDao: QualityHisMetadataDao
+    private val qualityHisMetadataDao: QualityHisMetadataDao,
+    private val qualityHistoryService: QualityHistoryService
 ) {
 
     companion object {
@@ -194,12 +196,29 @@ class PipelineBuildQualityListener @Autowired constructor(
             val pipelineId = event.pipelineId
             val buildId = event.buildId
             val ruleIds = event.ruleIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-            val count = qualityHistoryDao.batchUpdateHistoryResult(
+            val historyIdSet = mutableSetOf<Long>()
+            val history = qualityHistoryService.batchServiceList(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                result = action,
-                ruleIds = ruleIds
+                ruleIds = ruleIds,
+                result = RuleInterceptResult.WAIT.name,
+                checkTimes = null,
+                startTime = null,
+                endTime = null,
+                offset = null,
+                limit = null
+            )
+            history.groupBy { it.ruleId }.forEach { (ruleId, list) ->
+                val historyId = list.findLast { it.ruleId == ruleId }?.id
+                if (historyId != null) {
+                    historyIdSet.add(historyId)
+                }
+            }
+            logger.info("QUALITY|[${event.buildId}]update history id: $historyIdSet")
+            val count = qualityHistoryDao.batchUpdateHistoryResultById(
+                historyIds = historyIdSet,
+                result = action
             )
             logger.info("QUALITY|[${event.buildId}]history result update count: $count")
 
