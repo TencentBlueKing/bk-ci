@@ -85,8 +85,7 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        debugVersion: Int?
+        buildId: String
     ): Result<List<BuildParameters>> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -94,7 +93,7 @@ class UserBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.getBuildParameters(
-                userId, projectId, pipelineId, buildId, debugVersion != null
+                userId, projectId, pipelineId, buildId
             )
         )
     }

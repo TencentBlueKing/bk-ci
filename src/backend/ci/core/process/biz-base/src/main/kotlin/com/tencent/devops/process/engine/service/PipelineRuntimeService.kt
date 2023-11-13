@@ -1688,8 +1688,8 @@ class PipelineRuntimeService @Autowired constructor(
         return executeTime
     }
 
-    fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
-        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)
+    fun getLastTimeBuild(projectId: String, pipelineId: String, debug: Boolean): BuildInfo? {
+        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId, debug)
     }
 
     fun getPipelineBuildHistoryCount(
@@ -1811,7 +1811,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     // 获取流水线最后的构建号
     fun getLatestBuildId(projectId: String, pipelineId: String): String? {
-        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)?.buildId
+        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId, false)?.buildId
     }
 
     // 获取流水线最后完成的构建号

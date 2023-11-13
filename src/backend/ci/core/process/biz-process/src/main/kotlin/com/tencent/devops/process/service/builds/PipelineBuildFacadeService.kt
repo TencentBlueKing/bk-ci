@@ -234,20 +234,18 @@ class PipelineBuildFacadeService(
         }
 
         // 获取最后一次的构建id
-        val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
+        val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
         if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
             val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
             triggerContainer.params.forEach { param ->
                 val realValue = latestParamsMap[param.id]
-                if (realValue != null) {
-                    // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
-                    // 当值是boolean类型的时候，需要转为boolean类型
-                    if (param.defaultValue is Boolean) {
-                        param.value = realValue.toString().toBoolean()
-                    } else {
-                        param.value = realValue
-                    }
-                }
+                // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                // 当值是boolean类型的时候，需要转为boolean类型
+                param.value = if (param.defaultValue is Boolean) {
+                    realValue?.toString()?.toBoolean()
+                } else {
+                    realValue
+                } ?: param.defaultValue
             }
         }
 
@@ -324,10 +322,8 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        debug: Boolean?
+        buildId: String
     ): List<BuildParameters> {
-
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -339,7 +335,8 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, "")
             )
         )
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, debug)
+        val history = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+        return history?.buildParameters ?: listOf()
     }
 
     fun retry(
