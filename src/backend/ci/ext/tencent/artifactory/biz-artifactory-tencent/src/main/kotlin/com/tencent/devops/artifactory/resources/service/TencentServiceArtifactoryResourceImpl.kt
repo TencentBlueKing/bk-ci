@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import java.time.LocalDateTime
-import javax.ws.rs.BadRequestException
 import kotlin.math.ceil
 
 @Primary
@@ -109,9 +108,6 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         checkParam(projectId)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
         return Result(
             bkRepoDownloadService.outerDownloadUrlByToken(
                 creatorId = creatorId,
@@ -159,9 +155,6 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         checkParam(projectId)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
         return Result(
             bkRepoDownloadService.innerDownloadUrlByToken(
                 userId = userId,

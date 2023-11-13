@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -114,4 +116,11 @@ interface ServiceStartCloudResource {
         resourceId: String,
         receivers: List<String>
     ): Result<Boolean>
+
+    @ApiOperation("查询vm集群资源数")
+    @POST
+    @Path("/resource/vm")
+    fun getResourceVm(
+        data: ResourceVmReq
+    ): Result<ResourceVmRespData>
 }
