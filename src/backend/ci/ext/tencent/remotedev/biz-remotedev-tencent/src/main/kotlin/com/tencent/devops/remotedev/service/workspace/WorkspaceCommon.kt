@@ -72,7 +72,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -334,7 +333,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -346,11 +345,11 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-            workspace.status.notOk2doNextAction(workspace) && Duration.between(
-                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
+                workspace.status.notOk2doNextAction(workspace) && Duration.between(
+                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
     }
 
     fun updateStatusAndCreateHistory(
@@ -373,7 +372,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                "newStatus|$newStatus|action|$action"
+                    "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -672,8 +671,7 @@ class WorkspaceCommon @Autowired constructor(
                     WorkspaceRecord::workspaceName.name to workspace.workspaceName,
                     WorkspaceRecord::projectId.name to workspace.projectId,
                     WorkspaceRecord::createUserId.name to workspace.createUserId,
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!,
-
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
                 ),
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 markdownContent = false
