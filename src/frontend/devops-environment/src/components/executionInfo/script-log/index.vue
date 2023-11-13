@@ -39,10 +39,10 @@
         </div>
         <div class="log-action-box">
             <div class="action-item" v-bk-tooltips="backTopTips" @click="handleScrollTop">
-                <Icon type="up-to-top" />
+                <icon name="un-to-top" size="16" />
             </div>
             <div class="action-item action-bottom" v-bk-tooltips="backBottomTips" @click="handleScrollBottom">
-                <Icon type="up-to-top" />
+                <icon name="un-to-top" size="16" />
             </div>
         </div>
     </div>
@@ -133,14 +133,14 @@
         },
         created () {
             this.backTopTips = {
-                content: this.$t('history.回到顶部'),
+                content: this.$t('environment.回到顶部'),
                 placements: [
                     'top'
                 ],
                 theme: 'light'
             }
             this.backBottomTips = {
-                content: this.$t('history.前往底部'),
+                content: this.$t('environment.前往底部'),
                 placements: [
                     'top'
                 ],

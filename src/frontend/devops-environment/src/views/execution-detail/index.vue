@@ -1,38 +1,60 @@
 <template>
     <div class="execution-detail">
         <header class="header-wrapper">
-            步骤执行脚本_20210622113616939
+            <div>{{ jobInstanceData.jobInstance.name }}</div>
+            <div class="status-box">
+                <div class="status">
+                    <span>{{ $t('environment.状态') }}：</span>
+                    <span class="status-text">{{ stepStatusMap[jobInstanceData.jobInstance.status] }}</span>
+                </div>
+                <div class="time">
+                    <span>{{ $t('environment.总耗时') }}：</span>
+                    <span
+                        class="value"
+                    >
+                        {{ jobInstanceData.jobInstance.totalTime / 1000 }}s
+                    </span>
+                </div>
+                <div class="action">
+                    <slot />
+                </div>
+            </div>
         </header>
         <div class="task-step-detail">
             <div class="step-info-header">
                 <div class="step-info-wrapper">
                     <div class="step-type-text">{{ stepTypeText }}</div>
                     <div class="step-name-box">
-                        <div class="step-name-text">步骤执行脚本_20210622113616939</div>
+                        <div class="step-name-text">
+                            {{ jobInstanceData.jobInstance.name }}
+                        </div>
                     </div>
                 </div>
+                
             </div>
             <div class="step-execute-host-group">
                 <div class="group-tab">
                     <div class="tab-item active">
-                        <div class="group-name" v-bk-overflow-tips>执行成功</div>
-                        <div class="group-nums">{{ 1 }}</div>
+                        <div class="group-name" v-bk-overflow-tips>{{ stepStatusMap[jobInstanceData.jobInstance.status] }}</div>
+                        <div class="group-nums">{{ jobInstanceData.stepInstanceList.length }}</div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div
-                ref="detailContainer"
-                class="detail-container"
-                :style="defailContainerStyles">
-                <div class="container-left" v-bkloading="{ isLoading: isHostLoading }">
-                    <!-- 主机列表 -->
-                    <ip-list />
-                </div>
-                <div class="container-right">
-                    <!-- 执行日志 -->
-                    <execution-info />
-                </div>
+        <div
+            ref="detailContainer"
+            class="detail-container"
+            :style="defailContainerStyles">
+            <div class="container-left" v-bkloading="{ isLoading: isHostLoading }">
+                <!-- 主机列表 -->
+                <ip-list />
+            </div>
+            <div class="container-right">
+                <!-- 执行日志 -->
+                <execution-info
+                    :job-instance-type="jobInstanceType"
+                />
             </div>
         </div>
     </div>
@@ -41,10 +63,17 @@
 <script>
     import ipList from '@/components/ipList'
     import ExecutionInfo from '@/components/executionInfo'
+    import { mapActions } from 'vuex'
     export default {
         components: {
             ipList,
             ExecutionInfo
+        },
+        data () {
+            return {
+                jobInstanceData: {},
+                stepStatusMap: {}
+            }
         },
         computed: {
             projectId () {
@@ -54,6 +83,8 @@
                 return this.$route.params.jobInstanceId
             },
             jobInstanceType () {
+                // 脚本执行 - SCRIPT
+                // 文件分发 - FILE
                 return this.$route.params.jobInstanceType
             },
             stepTypeText () {
@@ -62,6 +93,83 @@
                     FILE: this.$t('environment.fileTransfer')
                 }
                 return typeTextMap[this.jobInstanceType]
+            }
+        },
+        created () {
+            this.stepStatusMap = {
+                1: this.$t('environment.未执行'),
+                2: this.$t('environment.正在执行'),
+                3: this.$t('environment.执行成功'),
+                4: this.$t('environment.执行失败'),
+                5: this.$t('environment.跳过'),
+                6: this.$t('environment.忽略错误'),
+                7: this.$t('environment.等待用户'),
+                8: this.$t('environment.手动结束'),
+                9: this.$t('environment.状态异常'),
+                10: this.$t('environment.步骤强制终止中'),
+                11: this.$t('environment.步骤强制终止成功')
+            }
+            this.fetchJobInstanceStatus()
+        },
+        methods: {
+            ...mapActions('environment', [
+                'getJobInstanceStatus'
+            ]),
+            fetchJobInstanceStatus () {
+                try {
+                    const { data } = this.getJobInstanceStatus({
+                        projectId: this.projectId,
+                        jobInstanceId: this.jobInstanceId
+                    })
+                    this.jobInstanceData = {
+                        finished: true,
+                        jobInstance: {
+                            name: '快速执行脚本_20231110150105256',
+                            status: 3,
+                            createTime: 1699599665256,
+                            startTime: 1699599665448,
+                            endTime: 1699599666663,
+                            totalTime: 1215,
+                            jobInstanceId: 20003562849,
+                            bkBizId: 2005000002,
+                            bkScopeType: 'biz',
+                            bkScopeId: '2005000002'
+                        },
+                        stepInstanceList: [
+                            {
+                                stepInstanceId: 20004250944,
+                                type: 1,
+                                name: '快速执行脚本_20231110150105256',
+                                stepStatus: 3,
+                                createTime: 1699599665256,
+                                startTime: 1699599665482,
+                                endTime: 1699599666647,
+                                totalTime: 1165,
+                                stepRetries: 0,
+                                stepIpResultList: [
+                                    {
+                                        ip: '9.146.98.67',
+                                        bkHostId: 2000000008,
+                                        bkCloudId: 0,
+                                        status: 9,
+                                        tag: '',
+                                        exitCode: 0,
+                                        errorCode: 0,
+                                        startTime: 1699599665627,
+                                        endTime: 1699599665871,
+                                        totalTime: 244
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    console.log(data, 1111111)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                }
             }
         }
     }
@@ -86,6 +194,32 @@
         right: 0;
         top: 50px;
         z-index: 1999;
+    }
+    .status-box {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        justify-content: center;
+        width: 500px;
+        transform: translateX(-50%);
+    }
+
+    .status {
+        margin-right: 30px;
+    }
+
+    .time {
+        min-width: 120px;
+        padding-right: 10px;
+
+        .value {
+            display: inline-block;
+            color: #313238;
+        }
     }
     .task-step-detail {
         width: 100%;
@@ -215,7 +349,7 @@
 
         .container-left {
             height: 100%;
-            width: 700px;
+            width: 50%;
             overflow: hidden;
             background: #fff;
             border: 1px solid #dcdee5;

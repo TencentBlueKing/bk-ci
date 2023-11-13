@@ -280,16 +280,18 @@
         overflow-y: scroll;
 
         &::-webkit-scrollbar {
-            width: 14px;
+            width: 14px !important;
+            background-color: #3b3c42 !important;
+            border: 1px solid #63656e !important;
         }
 
         &::-webkit-scrollbar-thumb {
-            background-color: #3b3c42;
-            border: 1px solid #63656e;
+            background-color: #3b3c42 !important;
+            border: 1px solid #63656e !important;
         }
 
         &::-webkit-scrollbar-corner {
-            background-color: transparent;
+            background-color: transparent !important;
         }
 
         .load-more {

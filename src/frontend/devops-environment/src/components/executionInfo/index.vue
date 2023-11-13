@@ -1,8 +1,8 @@
 <template>
     <div ref="infoBox" class="step-execution-info-box" :style="boxStyles">
         <div class="tab-container">
-            <div class="tab-title" :class="host.result">
-                <span class="host-ip">{{ host.displayIp || '--' }}</span>
+            <div class="tab-title">
+                <span class="host-ip">{{ isFile }}</span>
             </div>
             <div class="split-line" />
             <div
@@ -10,20 +10,20 @@
                 class="tab-item"
                 :class="{ active: activePanel === 'scriptLog' }"
                 @click="handleTogglePanel('scriptLog')">
-                {{ $t('history.执行日志') }}
+                {{ $t('environment.执行日志') }}
             </div>
             <template v-if="isFile">
                 <div
                     class="tab-item"
                     :class="{ active: activePanel === 'download' }"
                     @click="handleTogglePanel('download')">
-                    {{ $t('history.下载信息') }}
+                    {{ $t('environment.下载信息') }}
                 </div>
                 <div
                     class="tab-item"
                     :class="{ active: activePanel === 'upload' }"
                     @click="handleTogglePanel('upload')">
-                    {{ $t('history.上传源信息') }}
+                    {{ $t('environment.上传源信息') }}
                 </div>
             </template>
             <div
@@ -31,15 +31,15 @@
                 class="tab-item"
                 :class="{ active: activePanel === 'variable' }"
                 @click="handleTogglePanel('variable')">
-                {{ $t('history.变量明细') }}
+                {{ $t('environment.变量明细') }}
             </div>
             <div class="extend-box">
                 <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
-                    v-bk-tooltips="$t('history.下载日志')"
+                    v-bk-tooltips="$t('environment.下载日志')"
                     @click="handleDownload">
-                    <Icon type="download" />
+                    <icon name="download" size="16" />
                 </div>
                 <div
                     v-if="activePanel === 'scriptLog'"
@@ -49,18 +49,18 @@
                 <div
                     v-if="!isFullscreen"
                     class="extend-item"
-                    v-bk-tooltips="$t('history.全屏')"
+                    v-bk-tooltips="$t('environment.全屏')"
                     @click="handleFullscreen">
-                    <Icon type="full-screen" />
+                    <icon name="full-screen" size="16" />
                 </div>
                 <div
                     v-if="isFullscreen"
                     class="extend-item"
-                    v-bk-tooltips="$t('history.还原')"
+                    v-bk-tooltips="$t('environment.还原')"
                     @click="handleExitFullscreen">
-                    <Icon type="un-full-screen" />
+                    <icon name="un-full-screen" size="16" />
                 </div>
-                <!-- <div
+                <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
                     style="padding-left: 16px; border-left: 1px solid #262626;">
@@ -69,19 +69,19 @@
                         theme="primary"
                         size="small"
                         @change="handleScriptLogLineFeedChange" />
-                    <span style="padding-left: 7px; font-size: 12px; color: #979ba5;">{{ $t('history.自动换行') }}</span>
-                </div> -->
+                    <span style="padding-left: 7px; font-size: 12px; color: #979ba5;">{{ $t('environment.自动换行') }}</span>
+                </div>
             </div>
         </div>
-        <div class="tab-content-wraper" :style="contentStyles">
+        <div class="tab-content-wrapper" :style="contentStyles">
             <component
                 ref="view"
                 :key="activePanel"
                 :is="renderCom"
-                :name="`${stepInstanceId}_${host.ip}_${retryCount}`"
+                :name="`${stepInstanceId}_${'host.ip'}_${retryCount}`"
                 :step-instance-id="stepInstanceId"
-                :ip="host.ip"
-                :batch="host.batch"
+                :ip="123"
+                :batch="123"
                 :retry-count="retryCount"
                 :font-size="fontSize"
                 :mode="activePanel"
@@ -94,7 +94,7 @@
             :class="{ active: isFontSet }"
             @mouseenter="handleShowSetFont"
             @mouseleave="handleHideSetFont">
-            <div class="font-setting-wraper">
+            <div class="font-setting-wrapper">
                 <div
                     class="font-item"
                     :class="{ active: fontSize === 12 }"
@@ -143,9 +143,8 @@
                 type: Boolean,
                 default: false
             },
-            isFile: {
-                type: Boolean,
-                default: false // 展示文件日志
+            jobInstanceType: {
+                type: String
             }
         },
         data () {
@@ -165,6 +164,9 @@
             }
         },
         computed: {
+            isFile () {
+                return this.jobInstanceType === 'FILE'
+            },
             renderCom () {
                 const comMap = {
                     scriptLog: ScriptLog,
@@ -233,7 +235,7 @@
                 // }).then(() => {
                 //     this.$bkMessage({
                 //         theme: 'success',
-                //         message: this.$t('history.导出日志操作成功')
+                //         message: this.$t('environment.导出日志操作成功')
                 //     })
                 // })
             },
@@ -261,7 +263,7 @@
              */
             handleFullscreen () {
                 this.isFullscreen = true
-                this.messageInfo(this.$t('history.按 Esc 即可退出全屏模式'))
+                this.messageInfo(this.$t('environment.按 Esc 即可退出全屏模式'))
                 this.infoBoxParentNode = this.$refs.infoBox.parentNode
                 document.body.appendChild(this.$refs.infoBox)
                 this.$refs.view && this.$refs.view.resize()
@@ -319,7 +321,7 @@
             align-items: center;
 
             .tab-title {
-                width: 166px;
+                width: 40%;
                 font-size: 14px;
                 color: #dcdee5;
                 cursor: default;
@@ -408,7 +410,7 @@
             }
         }
 
-        .tab-content-wraper {
+        .tab-content-wrapper {
             flex: 1;
             height: calc(100% - 42px);
             background: #1d1d1d;
@@ -439,7 +441,7 @@
                 transform: translateY(0);
             }
 
-            .font-setting-wraper {
+            .font-setting-wrapper {
                 position: relative;
                 z-index: 1;
                 display: flex;
