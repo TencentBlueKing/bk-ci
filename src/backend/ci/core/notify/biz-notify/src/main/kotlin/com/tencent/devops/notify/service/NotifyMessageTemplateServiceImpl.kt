@@ -43,6 +43,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TVoiceNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
@@ -183,24 +184,40 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.updateTime = LocalDateTime.now()
                 }
             }
+            val tVoiceNotifyMessageTemplateRecord = template.voiceTemplate?.let {
+                val voiceTemplate = template.voiceTemplate!!
+                TVoiceNotifyMessageTemplateRecord().apply {
+                    this.id = voiceTemplate.id
+                    this.commonTemplateId = template.id
+                    this.creator = template.creator
+                    this.modifior = template.modifior
+                    this.taskName = voiceTemplate.taskName
+                    this.content = voiceTemplate.content
+                    this.createTime = LocalDateTime.now()
+                    this.updateTime = LocalDateTime.now()
+                }
+            }
 
-            dslContext.transaction { configuratin ->
-                val transactionContext = DSL.using(configuratin)
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
                 messageTemplateDao.crateCommonNotifyMessageTemplate(
                     transactionContext,
                     tCommonNotifyMessageTemplateRecord
                 )
                 tWechatNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateWechatNotifyMessageTemplate(transactionContext, record)
+                    messageTemplateDao.createWechatNotifyMessageTemplate(transactionContext, record)
                 }
                 tWeworkNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateWeworkNotifyMessageTemplate(transactionContext, record)
+                    messageTemplateDao.createWeworkNotifyMessageTemplate(transactionContext, record)
                 }
                 tWeworkGroupNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateWeworkGroupNotifyMessageTemplate(transactionContext, record)
+                    messageTemplateDao.createWeworkGroupNotifyMessageTemplate(transactionContext, record)
                 }
                 tEmailsNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateEmailsNotifyMessageTemplate(transactionContext, record)
+                    messageTemplateDao.createEmailsNotifyMessageTemplate(transactionContext, record)
+                }
+                tVoiceNotifyMessageTemplateRecord?.let { record ->
+                    messageTemplateDao.createVoiceNotifyMessageTemplate(transactionContext, record)
                 }
             }
         }

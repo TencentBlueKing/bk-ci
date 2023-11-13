@@ -28,11 +28,13 @@ package com.tencent.devops.notify.dao
 
 import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.TVoiceNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkGroupNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TVoiceNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
@@ -53,7 +55,7 @@ class MessageTemplateDao {
         }
     }
 
-    fun crateWechatNotifyMessageTemplate(dslContext: DSLContext, template: TWechatNotifyMessageTemplateRecord) {
+    fun createWechatNotifyMessageTemplate(dslContext: DSLContext, template: TWechatNotifyMessageTemplateRecord) {
         with(TWechatNotifyMessageTemplate.T_WECHAT_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(this)
                 .set(template)
@@ -66,7 +68,7 @@ class MessageTemplateDao {
         }
     }
 
-    fun crateWeworkGroupNotifyMessageTemplate(
+    fun createWeworkGroupNotifyMessageTemplate(
         dslContext: DSLContext,
         template: TWeworkGroupNotifyMessageTemplateRecord
     ) {
@@ -82,7 +84,7 @@ class MessageTemplateDao {
         }
     }
 
-    fun crateWeworkNotifyMessageTemplate(dslContext: DSLContext, template: TWeworkNotifyMessageTemplateRecord) {
+    fun createWeworkNotifyMessageTemplate(dslContext: DSLContext, template: TWeworkNotifyMessageTemplateRecord) {
         with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(this)
                 .set(template)
@@ -95,13 +97,26 @@ class MessageTemplateDao {
         }
     }
 
-    fun crateEmailsNotifyMessageTemplate(dslContext: DSLContext, template: TEmailsNotifyMessageTemplateRecord) {
+    fun createEmailsNotifyMessageTemplate(dslContext: DSLContext, template: TEmailsNotifyMessageTemplateRecord) {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(this)
                 .set(template)
                 .onDuplicateKeyUpdate()
                 .set(TITLE, template.title)
                 .set(BODY, template.body)
+                .set(MODIFIOR, template.modifior)
+                .set(UPDATE_TIME, template.updateTime)
+                .execute()
+        }
+    }
+
+    fun createVoiceNotifyMessageTemplate(dslContext: DSLContext, template: TVoiceNotifyMessageTemplateRecord) {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            dslContext.insertInto(this)
+                .set(template)
+                .onDuplicateKeyUpdate()
+                .set(TASK_NAME, template.taskName)
+                .set(CONTENT, template.content)
                 .set(MODIFIOR, template.modifior)
                 .set(UPDATE_TIME, template.updateTime)
                 .execute()
