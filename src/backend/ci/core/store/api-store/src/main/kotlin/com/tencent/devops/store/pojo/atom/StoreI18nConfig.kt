@@ -25,31 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.utils.StoreUtils
-import java.io.File
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
-
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
-            userId = userId,
-            serviceUrlPrefix = serviceUrlPrefix,
-            file = file,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
-        ).data
-        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
-        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
-    }
-}
+@ApiModel("研发商店组件国际化配置")
+data class StoreI18nConfig(
+    @ApiModelProperty("项目标识")
+    val projectCode: String,
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
+    @ApiModelProperty("资源文件目录")
+    val fileDir: String,
+    @ApiModelProperty("国际化目录")
+    val i18nDir: String,
+    @ApiModelProperty("map字段在properties中key的前缀")
+    val propertiesKeyPrefix: String? = null,
+    @ApiModelProperty("map字段在db中key的前缀")
+    val dbKeyPrefix: String? = null,
+    @ApiModelProperty("代码库哈希ID")
+    val repositoryHashId: String? = null
+)

@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.store.util
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.utils.StoreUtils
-import java.io.File
-import org.springframework.stereotype.Service
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
+class TextReferenceFileAnalysisUtilTest {
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
-            userId = userId,
-            serviceUrlPrefix = serviceUrlPrefix,
-            file = file,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
-        ).data
-        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
-        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        TextReferenceFileAnalysisUtil.regexAnalysis(
+            input = input,
+            fileDirPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
+        }
+        val filePathReplaceResult = TextReferenceFileAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
     }
 }
