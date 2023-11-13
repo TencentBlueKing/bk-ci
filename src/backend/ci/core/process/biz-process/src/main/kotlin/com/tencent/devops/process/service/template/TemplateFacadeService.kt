@@ -759,7 +759,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Triple<List<String>?, Result<out Record>?, Int> {
         var templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]?.toMutableList()
         var templatesWithListPermIds = templatesByPermissionMap[AuthPermission.LIST]?.toMutableList()
-        if (templateType == TemplateType.PUBLIC) {
+        if (includePublicFlag == true) {
             val blankPipelineTemplateId = templateDao.getTemplateByType(
                 dslContext = dslContext,
                 projectId = "",
@@ -783,7 +783,7 @@ class TemplateFacadeService @Autowired constructor(
             limit = pageSize,
             queryModelFlag = true
         )
-        return Triple(templatesWithViewPermIds, templatesWithListPermRecord, templatesWithListPermIds?.size ?: 0)
+        return Triple(templatesWithViewPermIds, templatesWithListPermRecord, templatesWithListPermRecord?.size ?: 0)
     }
 
     fun getSrcTemplateCodes(projectId: String): com.tencent.devops.common.api.pojo.Result<List<String>> {
