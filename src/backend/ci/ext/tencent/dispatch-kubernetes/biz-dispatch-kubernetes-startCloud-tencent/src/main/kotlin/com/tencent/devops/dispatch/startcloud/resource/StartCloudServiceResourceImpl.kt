@@ -33,13 +33,17 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startcloud.service.StartCloudInterfaceService
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class StartCloudServiceResourceImpl @Autowired constructor(
-    private val startCloudInterfaceService: StartCloudInterfaceService
+    private val startCloudInterfaceService: StartCloudInterfaceService,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) : ServiceStartCloudResource {
 
     override fun createStartCloudUser(user: String): Result<Boolean> {
@@ -75,5 +79,9 @@ class StartCloudServiceResourceImpl @Autowired constructor(
 
     override fun unShareWorkspace(operator: String, resourceId: String, receivers: List<String>): Result<Boolean> {
         return Result(startCloudInterfaceService.unShareWorkspace(operator, resourceId, receivers))
+    }
+
+    override fun getResourceVm(data: ResourceVmReq): Result<ResourceVmRespData> {
+        return Result(workspaceStartCloudClient.getResourceVm(data))
     }
 }
