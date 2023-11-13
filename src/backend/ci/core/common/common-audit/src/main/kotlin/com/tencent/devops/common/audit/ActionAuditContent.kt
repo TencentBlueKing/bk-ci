@@ -8,6 +8,8 @@ object ActionAuditContent {
     private const val CONTENT_TEMPLATE = "[{{$INSTANCE_NAME}}]({{$INSTANCE_ID}})"
     private const val PROJECT_CODE_CONTENT_TEMPLATE = "[{{@PROJECT_CODE}}]"
     const val PROJECT_CODE_TEMPLATE = "@PROJECT_CODE"
+    const val BUILD_ID_TEMPLATE = "@BUILD_ID"
+    const val ASSIGNS_TEMPLATE = "@ASSIGNS"
 
     // 项目
     const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -17,7 +19,8 @@ object ActionAuditContent {
     const val PIPELINE_SHARE_CONTENT = "share pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_CREATE_CONTENT = "create pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_LIST_CONTENT = "list pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val PIPELINE_DOWNLOAD_CONTENT = "download pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_DOWNLOAD_CONTENT = "download pipeline $CONTENT_TEMPLATE buildId [{{$BUILD_ID_TEMPLATE}}] " +
+        "in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_EDIT_CONTENT = "update pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_EDIT_SAVE_SETTING_CONTENT = "save pipeline setting $CONTENT_TEMPLATE " +
         "in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -66,7 +69,7 @@ object ActionAuditContent {
     const val CGS_START_CONTENT = "start workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_RESTART_CONTENT = "restart workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_ASSIGN_USER_CONTENT = "assign workspace $CONTENT_TEMPLATE " +
-        "to [{{@ASSIGNS}}] from $PROJECT_CODE_CONTENT_TEMPLATE"
+        "to [{{$ASSIGNS_TEMPLATE}}] from $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_ASSIGN_PROJECT_CONTENT = "assign workspace $CONTENT_TEMPLATE to project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EDIT_TYPE_CONTENT = "modify workspace type $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild workspace system disk $CONTENT_TEMPLATE " +
