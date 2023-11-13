@@ -301,8 +301,9 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     private fun taiLogin(params: OuterLoginParam): OuterProfileVO {
+        val accountId = params.username.removeSuffix("@tai")
         val authorization = """{"bk_app_code":"$appCode","bk_app_secret":"$appSecret"}"""
-        val requestBody = """{"account_id":"${params.username}","password":"${params.password}"}"""
+        val requestBody = """{"account_id":"$accountId","password":"${params.password}"}"""
         val request = Request.Builder()
             .url("https://bk-unity-user.apigw.o.woa.com/prod/api/v1/open/odc-tai/user-credentials/authenticate/")
             .header("X-Bkapi-Authorization", authorization)
@@ -320,7 +321,7 @@ class ExperienceOuterService @Autowired constructor(
             val taiLogin = JsonUtil.to(responseBody, TaiLogin::class.java)
             val username = taiLogin.data.username
             if (!taiLogin.data.matched) {
-                logger.warn("password error , username: ${params.username}")
+                logger.warn("password error , username: $accountId")
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = OUTER_LOGIN_WRONG_PASSWORD
