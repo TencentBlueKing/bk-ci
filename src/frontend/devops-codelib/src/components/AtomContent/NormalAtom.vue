@@ -33,13 +33,9 @@
         watch: {
             element: {
                 handler () {
-                    if (this.element.repositoryType === 'NAME') {
-                        this.atomPropsModel.repositoryName.hidden = false
-                        this.atomPropsModel.repositoryHashId.hidden = true
-                    } else {
-                        this.atomPropsModel.repositoryName.hidden = true
-                        this.atomPropsModel.repositoryHashId.hidden = false
-                    }
+                    const showName = this.element.repositoryType === 'NAME'
+                    this.atomPropsModel.repositoryName.hidden = !showName
+                    this.atomPropsModel.repositoryHashId.hidden = showName
                 },
                 deep: true,
                 immediate: true

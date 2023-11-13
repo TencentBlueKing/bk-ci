@@ -389,6 +389,7 @@
                     }
 
                     if (this.isGit) {
+                        console.log(val, 11)
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
                             this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
@@ -448,7 +449,9 @@
                         authIdentity: ''
                     }
                     this.newRepoInfo.authType = 'OAUTH'
-                    this.handleUpdateRepo()
+                    this.$nextTick(() => {
+                        this.handleUpdateRepo()
+                    })
                 }
             }
         },
