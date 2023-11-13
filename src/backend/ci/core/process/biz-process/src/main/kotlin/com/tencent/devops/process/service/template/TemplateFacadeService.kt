@@ -123,6 +123,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import okhttp3.internal.addHeaderLenient
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -680,34 +681,17 @@ class TemplateFacadeService @Autowired constructor(
     ): Triple<List<String>?, Result<out Record>?, Int> {
         val offset = if (null != page && null != pageSize) (page - 1) * pageSize else null
         // 若不开启模板权限或者不检查列表权限的，直接返回列表数据。
-        return if (!checkPermission || !pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId!!)) {
+        if (!checkPermission || !pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId!!)) {
             logger.info("get templates without permission :$projectId|$userId|$checkPermission")
-            val templateRecord = templateDao.listTemplate(
-                dslContext = dslContext,
+            return getTemplateListAndCountWithoutPermission(
                 projectId = projectId,
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
-                templateIdList = null,
                 storeFlag = storeFlag,
                 offset = offset,
-                limit = pageSize,
-                queryModelFlag = true
+                pageSize = pageSize,
+                hasManagerPermission = hasManagerPermission
             )
-            val count = templateDao.countTemplate(
-                dslContext = dslContext,
-                projectId = projectId,
-                includePublicFlag = includePublicFlag,
-                templateType = templateType,
-                templateName = null,
-                storeFlag = storeFlag
-            )
-            val tTemplate = TTemplate.T_TEMPLATE
-            val templatesWithViewPermIds = if (hasManagerPermission == true) {
-                templateRecord?.map { it[tTemplate.ID] }
-            } else {
-                emptyList()
-            }
-            Triple(templatesWithViewPermIds, templateRecord, count)
         } else {
             logger.info("get templates with permission :$projectId|$userId|$checkPermission")
             val templatesByPermissionMap = pipelineTemplatePermissionService.getResourcesByPermission(
@@ -715,23 +699,91 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 permissions = setOf(AuthPermission.VIEW, AuthPermission.LIST)
             )
-            val templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]
-            val templatesWithListPermIds = templatesByPermissionMap[AuthPermission.LIST]
-            val templatesWithListPerm = templateDao.listTemplate(
-                dslContext = dslContext,
+            return getTemplateListAndCountWithPermission(
                 projectId = projectId,
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
-                templateIdList = templatesWithListPermIds,
                 storeFlag = storeFlag,
                 offset = offset,
-                limit = pageSize,
-                queryModelFlag = true
+                pageSize = pageSize,
+                templatesByPermissionMap = templatesByPermissionMap
             )
-            // 若包含空白流水线，需要数量加1
-            val count = (templatesWithListPermIds?.size ?: 0) + if (includePublicFlag == true) 1 else 0
-            Triple(templatesWithViewPermIds, templatesWithListPerm, count)
         }
+    }
+
+    private fun getTemplateListAndCountWithoutPermission(
+        projectId: String?,
+        includePublicFlag: Boolean?,
+        templateType: TemplateType?,
+        storeFlag: Boolean?,
+        offset: Int?,
+        pageSize: Int?,
+        hasManagerPermission: Boolean?
+    ): Triple<List<String>?, Result<out Record>?, Int> {
+        val tTemplate = TTemplate.T_TEMPLATE
+        val templateRecord = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = includePublicFlag,
+            templateType = templateType,
+            templateIdList = null,
+            storeFlag = storeFlag,
+            offset = offset,
+            limit = pageSize,
+            queryModelFlag = true
+        )
+        val count = templateDao.countTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = includePublicFlag,
+            templateType = templateType,
+            templateName = null,
+            storeFlag = storeFlag
+        )
+        val templatesWithViewPermIds = if (hasManagerPermission == true) {
+            templateRecord?.map { it[tTemplate.ID] }
+        } else {
+            emptyList()
+        }
+        return Triple(templatesWithViewPermIds, templateRecord, count)
+    }
+
+    private fun getTemplateListAndCountWithPermission(
+        projectId: String,
+        includePublicFlag: Boolean?,
+        templateType: TemplateType?,
+        storeFlag: Boolean?,
+        offset: Int?,
+        pageSize: Int?,
+        templatesByPermissionMap: Map<AuthPermission, List<String>>
+    ): Triple<List<String>?, Result<out Record>?, Int> {
+        var templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]?.toMutableList()
+        var templatesWithListPermIds = templatesByPermissionMap[AuthPermission.LIST]?.toMutableList()
+        if (templateType == TemplateType.PUBLIC) {
+            val blankPipelineTemplateId = templateDao.getTemplateByType(
+                dslContext = dslContext,
+                projectId = "",
+                templateType = TemplateType.PUBLIC
+            ).id
+            templatesWithListPermIds = templatesWithListPermIds?.apply {
+                add(0, blankPipelineTemplateId)
+            }
+            templatesWithViewPermIds = templatesWithViewPermIds?.apply {
+                add(0, blankPipelineTemplateId)
+            }
+        }
+        val templatesWithListPermRecord = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = includePublicFlag,
+            templateType = templateType,
+            templateIdList = templatesWithListPermIds,
+            storeFlag = storeFlag,
+            offset = offset,
+            limit = pageSize,
+            queryModelFlag = true
+        )
+        return Triple(templatesWithViewPermIds, templatesWithListPermRecord, templatesWithListPermIds?.size ?: 0)
     }
 
     fun getSrcTemplateCodes(projectId: String): com.tencent.devops.common.api.pojo.Result<List<String>> {
