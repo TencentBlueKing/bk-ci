@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartb
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentMetricService
 import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
@@ -56,7 +57,8 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val importService: ImportService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val agentMetricService: AgentMetricService
 ) : BuildAgentThirdPartyAgentResource {
 
     override fun agentStartup(
@@ -95,7 +97,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
 
         val requestAgentId = agentStatusRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
-            logger.warn("getAgentStatus|$projectId|$agentId| request too frequently")
             return Result(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentStatusRequestLock_$agentId"
@@ -103,7 +104,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentStatusRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getAgentStatus|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -129,7 +129,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("agentHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -155,7 +154,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentHeartbeatRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("newHeartbeat|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -168,7 +166,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
 
         val requestAgentId = agentPipelineRequestCache.getIfPresent(agentId)
         if (requestAgentId != null) {
-            logger.warn("getPipelines|$projectId|$agentId| request too frequently")
             return Result(1, "request too frequently")
         } else {
             val lockKey = "environment:thirdPartyAgent:agentPipelineRequestLock_$agentId"
@@ -176,7 +173,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
             if (redisLock.tryLock()) {
                 agentPipelineRequestCache.put(agentId, agentId)
             } else {
-                logger.warn("getPipelines|$projectId|$agentId| get lock failed, skip")
                 return Result(1, "request too frequently")
             }
         }
@@ -192,6 +188,15 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(projectId, agentId, secretKey)
         return Result(thirdPartyAgentPipelineService.updatePipelineStatus(projectId, agentId, secretKey, response))
+    }
+
+    override fun reportAgentMetrics(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        data: String
+    ): Result<Boolean> {
+        return Result(agentMetricService.reportAgentMetrics(data))
     }
 
     private fun checkParam(

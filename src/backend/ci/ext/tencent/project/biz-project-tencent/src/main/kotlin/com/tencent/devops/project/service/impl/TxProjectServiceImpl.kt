@@ -51,9 +51,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.dao.ExtProjectDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -79,13 +79,13 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.support.api.service.ServiceFileResource
-import java.io.File
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Suppress("ALL")
 @Service
@@ -111,10 +111,10 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
+    private val profile: Profile,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
-    projectApprovalService: ProjectApprovalService,
-    private val extProjectDao: ExtProjectDao
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -134,9 +134,6 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
 
-    @Value("\${tag.v3:#{null}}")
-    private var v3Tag: String = ""
-
     @Value("\${tag.rbac:#{null}}")
     private var rbacTag: String = ""
 
@@ -148,6 +145,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
+
+    @Value("\${tag.devx:#{null}}")
+    private var devxTag: String = ""
 
     override fun getByEnglishName(
         userId: String,
@@ -261,7 +261,7 @@ class TxProjectServiceImpl @Autowired constructor(
             return emptyList()
         }
         return bkTag.invokeByTag(rbacTag) {
-            client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+            client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
                 action = permission.value
@@ -269,8 +269,9 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun isShowUserManageIcon(routerTag: String?): Boolean =
-        routerTag?.contains(rbacTag) ?: false
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return routerTag?.contains(rbacTag) == true || routerTag?.contains(devxTag) == true
+    }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
@@ -354,7 +355,12 @@ class TxProjectServiceImpl @Autowired constructor(
         projectTagService.updateTagByProject(
             projectTagUpdate
         )
-        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
+        updateProjectProperties(
+            userId = userId,
+            projectCode = projectCode,
+            properties = projectCreateInfo.properties
+                ?: ProjectProperties(PipelineAsCodeSettings(true))
+        )
         return projectVO
     }
 
@@ -402,15 +408,21 @@ class TxProjectServiceImpl @Autowired constructor(
         val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, I18nUtil.getCodeLanMessage(
+        val responseContent = request(
+            request, I18nUtil.getCodeLanMessage(
             messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-            language = I18nUtil.getLanguage(userId)))
+            language = I18nUtil.getLanguage(userId)
+        )
+        )
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-                language = I18nUtil.getLanguage(userId)))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         if (result.data == null) {
             return emptyList()
@@ -422,24 +434,18 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getIamUserProject(userId: String): List<String> {
-        if (v3Tag.isBlank() && rbacTag.isBlank()) {
+        if (rbacTag.isBlank()) {
             return emptyList()
         }
-        logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
+        logger.info("getUserProject tag: rbacTag=$rbacTag")
         val projectList = mutableListOf<String>()
         try {
-            getIamProjectList(
-                tag = v3Tag,
-                projectList = projectList,
-                userId = userId
-            )
-            logger.info("get v3 Project $projectList")
             getIamProjectList(
                 tag = rbacTag,
                 projectList = projectList,
                 userId = userId
             )
-            logger.info("get rbac+v3 Project $projectList")
+            logger.info("get rbac Project $projectList")
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")
@@ -455,7 +461,7 @@ class TxProjectServiceImpl @Autowired constructor(
     ): List<String> {
         if (!tag.isBlank()) {
             val iamProjectList = bkTag.invokeByTag(tag) {
-                client.get(ServiceProjectAuthResource::class).getUserProjects(
+                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
                     token = tokenService.getSystemToken(null)!!
                 ).data
@@ -488,25 +494,14 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectRouterTag(englishName: String) {
-        val tag = bkTag.getLocalTag()
-        // rbac环境创建的项目,需要指定到rbac集群
-        if (tag.contains(rbacTag)) {
-            projectTagService.updateTagByProject(projectCode = englishName, tag = bkTag.getLocalTag())
-        }
-    }
-
-    override fun getV0orV3Projects(
-        authType: AuthSystemType,
-        limit: Int,
-        offset: Int
-    ): List<ProjectVO> {
-        return extProjectDao.getV0orV3Projects(
-            dslContext = dslContext,
-            authType = authType,
-            limit = limit,
-            offset = offset
-        ).map {
-            ProjectUtils.packagingBean(it)
+        try {
+            val tag = bkTag.getLocalTag()
+            // rbac环境创建的项目,需要指定到rbac集群
+            if (tag.contains(rbacTag)) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update project router tag", ignore)
         }
     }
 

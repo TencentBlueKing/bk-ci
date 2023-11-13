@@ -40,12 +40,11 @@ dependencies {
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
 
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":core:common:common-wechatwork"))
-    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
+    api(project(":ext:tencent:common:common-pipeline-yaml-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:prebuild:api-prebuild-tencent"))

@@ -35,9 +35,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
-import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -173,7 +176,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
-            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, true)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(
+                userId = userId,
+                projectId = projectCode,
+                templateId = templateCode,
+                storeFlag = true
+            )
         }
         return Result(true)
     }
@@ -412,7 +420,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = template.templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
-            val addMarketTemplateRequest = AddMarketTemplateRequest(
+            val addMarketTemplateRequest = MarketTemplateRequest(
                 projectCodeList = arrayListOf(projectCode!!),
                 templateCode = template.templateCode,
                 templateName = template.templateName,
@@ -423,7 +431,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             )
             logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
             val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
-                .updateMarketTemplateReference("system", addMarketTemplateRequest)
+                .updateMarketTemplateReference("system", projectCode, addMarketTemplateRequest)
             logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
         }
     }
@@ -471,8 +479,9 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             )
             if (!queryFlag) {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
-                    language = I18nUtil.getLanguage(userId)
+                    messageCode = GET_INFO_NO_PERMISSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(templateCode)
                 )
             }
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
@@ -534,9 +543,10 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte()) ||
             creator == userId) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 data = false,
-                language = I18nUtil.getLanguage(userId)
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(templateCode)
             )
         }
         marketTemplateDao.updateTemplateStatusById(dslContext, templateId, status, userId, "cancel release")
@@ -556,8 +566,9 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         // 判断用户是否有权限下架模板
         if (! storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
-                language = I18nUtil.getLanguage(userId)
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(templateCode)
             )
         }
         if (!version.isNullOrEmpty()) {
@@ -570,8 +581,9 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 )
             if (TemplateStatusEnum.RELEASED.status.toByte() != templateRecord.templateStatus) {
                 return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PERMISSION_DENIED,
-                    language = I18nUtil.getLanguage(userId)
+                    messageCode = VERSION_PUBLISHED,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(templateCode, version)
                 )
             }
             dslContext.transaction { t ->

@@ -67,5 +67,10 @@ class DefaultDeptServiceImpl : DeptService {
         return emptySet()
     }
 
-    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? = null
+    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? =
+        UserAndDeptInfoVo(
+            id = 0,
+            name = name,
+            type = ManagerScopesEnum.USER
+        )
 }

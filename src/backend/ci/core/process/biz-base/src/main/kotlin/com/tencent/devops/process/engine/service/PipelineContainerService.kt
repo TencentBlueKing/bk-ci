@@ -307,8 +307,7 @@ class PipelineContainerService @Autowired constructor(
                 }
             }
             context.taskCount++
-            addBuildTaskToList(
-                buildTaskList = buildTaskList,
+            val buildTask = genBuildTaskToList(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -321,6 +320,7 @@ class PipelineContainerService @Autowired constructor(
                 executeCount = context.executeCount,
                 postParentIdMap = postParentIdMap
             )
+            buildTaskList.add(buildTask)
             resourceVersion?.let {
                 recordTaskList.add(
                     BuildRecordTask(
@@ -337,6 +337,7 @@ class PipelineContainerService @Autowired constructor(
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
                         timestamps = mapOf(),
+                        elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(
                             "@type" to MatrixStatusElement.classType,
@@ -433,7 +434,10 @@ class PipelineContainerService @Autowired constructor(
                         taskId = atomElement.id!!, classType = atomElement.getClassType(),
                         atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
-                        taskVar = mutableMapOf(), timestamps = mapOf()
+                        taskVar = mutableMapOf(), timestamps = mapOf(),
+                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
+                            info.parentElementId != atomElement.id
+                        }
                     )
                 )
                 return@nextElement
@@ -443,8 +447,7 @@ class PipelineContainerService @Autowired constructor(
             if (retryFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
-                    addBuildTaskToList(
-                        buildTaskList = buildTaskList,
+                    val buildTask = genBuildTaskToList(
                         projectId = context.projectId,
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
@@ -457,6 +460,7 @@ class PipelineContainerService @Autowired constructor(
                         executeCount = context.executeCount,
                         postParentIdMap = emptyMap()
                     )
+                    buildTaskList.add(buildTask)
                 }
                 needUpdateContainer = true
             } else {
@@ -480,13 +484,16 @@ class PipelineContainerService @Autowired constructor(
                 }
 
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
+                val skipWhenFailed = context.inSkipStage(stage, atomElement)
+                val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
+                val recordStatus = if (skipWhenFailed) BuildStatus.FAILED.name else null
                 val taskRecord = retryDetailModelStatus(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
                     retryStartTaskId = atomElement.id!!,
                     executeCount = context.executeCount,
                     atomElement = atomElement, // #4245 将失败跳过的插件置为跳过
-                    initialStatus = if (context.inSkipStage(stage, atomElement)) BuildStatus.SKIP else null
+                    initialStatus = buildStatus
                 )
 
                 if (taskRecord != null) {
@@ -506,6 +513,21 @@ class PipelineContainerService @Autowired constructor(
                             updateExistsTask.add(pair.first)
                         }
                     }
+                    // #8955 针对被跳过或重试插件单独保留原状态
+                    taskBuildRecords.add(
+                        BuildRecordTask(
+                            projectId = context.projectId, pipelineId = context.pipelineId,
+                            buildId = context.buildId, stageId = taskRecord.stageId,
+                            containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
+                            taskId = taskRecord.taskId, classType = taskRecord.taskType,
+                            atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
+                            executeCount = taskRecord.executeCount ?: 1, taskVar = mutableMapOf(),
+                            status = recordStatus, resourceVersion = context.resourceVersion,
+                            elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
+                                info.parentElementId != taskRecord.taskId
+                            }
+                        )
+                    )
                     needUpdateContainer = true
                 } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
@@ -562,6 +584,7 @@ class PipelineContainerService @Autowired constructor(
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
                                 "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -573,6 +596,7 @@ class PipelineContainerService @Autowired constructor(
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
                                 "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -824,8 +848,7 @@ class PipelineContainerService @Autowired constructor(
         return -1
     }
 
-    private fun addBuildTaskToList(
-        buildTaskList: MutableList<PipelineBuildTask>,
+    private fun genBuildTaskToList(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -837,41 +860,37 @@ class PipelineContainerService @Autowired constructor(
         status: BuildStatus,
         executeCount: Int,
         postParentIdMap: Map<String, String>
-    ) {
-        buildTaskList.add(
-            PipelineBuildTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stage.id!!,
-                containerId = container.id!!,
-                containerHashId = container.containerHashId ?: "",
-                containerType = container.getClassType(),
-                taskSeq = taskSeq,
-                taskId = atomElement.id!!,
-                taskName = atomElement.name.coerceAtMaxLength(ELEMENT_NAME_MAX_LENGTH),
-                taskType = atomElement.getClassType(),
-                taskAtom = atomElement.getTaskAtom(),
-                status = status,
-                taskParams = atomElement.genTaskParams(),
-                // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
-                additionalOptions = postParentIdMap[atomElement.id]?.let { self ->
-                    atomElement.additionalOptions?.copy(
-                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.copy(
-                            parentElementId = self
-                        )
-                    )
-                } ?: atomElement.additionalOptions,
-                executeCount = executeCount,
-                starter = userId,
-                approver = null,
-                subProjectId = null,
-                subBuildId = null,
-                atomCode = atomElement.getAtomCode(),
-                stepId = atomElement.stepId
+    ) = PipelineBuildTask(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        stageId = stage.id!!,
+        containerId = container.id!!,
+        containerHashId = container.containerHashId ?: "",
+        containerType = container.getClassType(),
+        taskSeq = taskSeq,
+        taskId = atomElement.id!!,
+        taskName = atomElement.name.coerceAtMaxLength(ELEMENT_NAME_MAX_LENGTH),
+        taskType = atomElement.getClassType(),
+        taskAtom = atomElement.getTaskAtom(),
+        status = status,
+        taskParams = atomElement.genTaskParams(),
+        // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
+        additionalOptions = postParentIdMap[atomElement.id]?.let { self ->
+            atomElement.additionalOptions?.copy(
+                elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.copy(
+                    parentElementId = self
+                )
             )
-        )
-    }
+        } ?: atomElement.additionalOptions,
+        executeCount = executeCount,
+        starter = userId,
+        approver = null,
+        subProjectId = null,
+        subBuildId = null,
+        atomCode = atomElement.getAtomCode(),
+        stepId = atomElement.stepId
+    )
 
     fun setUpTriggerContainer(
         stage: Stage,

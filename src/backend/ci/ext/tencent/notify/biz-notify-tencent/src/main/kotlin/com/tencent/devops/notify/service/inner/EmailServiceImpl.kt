@@ -66,8 +66,6 @@ class EmailServiceImpl @Autowired constructor(
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
-    private var tof4Host: String? = configuration.getDefaultSystem()?.get("host-tof4")
-    private var tof4EncryptKey: String? = configuration.getDefaultSystem()?.get("encrypt-key-tof4")
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
@@ -234,8 +232,8 @@ class EmailServiceImpl @Autowired constructor(
         contentMd5: String,
         frequencyLimit: Int
     ): Set<String> {
-        val filteredReceivers = HashSet(receivers)
-        val filteredOutReceivers = HashSet<String>()
+        val filteredReceivers = LinkedHashSet(receivers)
+        val filteredOutReceivers = LinkedHashSet<String>()
         if (frequencyLimit > 0) {
             val recordedReceivers = emailNotifyDao.getTosByContentMd5AndTime(
                 contentMd5, (frequencyLimit * 60).toLong()

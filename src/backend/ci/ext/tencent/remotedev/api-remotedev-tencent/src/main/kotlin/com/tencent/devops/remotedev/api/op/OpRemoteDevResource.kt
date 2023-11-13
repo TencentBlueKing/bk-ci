@@ -28,22 +28,27 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
+import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
+import javax.ws.rs.DELETE
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -121,6 +126,45 @@ interface OpRemoteDevResource {
         data: List<OPUserSetting>
     ): Result<Boolean>
 
+    @ApiOperation("续期体验时长")
+    @POST
+    @Path("/renewal_time")
+    fun renewalExperienceDuration(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "续期时长", required = true)
+        @QueryParam("renewalTime")
+        renewalTime: Int
+    ): Result<Boolean>
+
+    @ApiOperation("获取用户设置")
+    @GET
+    @Path("/get_user_setting")
+    fun getUserSetting(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<RemoteDevUserSettings>
+
+    @ApiOperation("获取所有用户设置列表")
+    @GET
+    @Path("/get_all_user_settings")
+    fun getAllUserSettings(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "指定查询的用户", required = false)
+        @QueryParam("queryUser")
+        queryUser: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<RemoteDevUserSettings>>
+
     @ApiOperation("更新用户组织架构")
     @POST
     @Path("/refresh/all")
@@ -134,6 +178,18 @@ interface OpRemoteDevResource {
     @POST
     @Path("/whiteList/add")
     fun addWhiteListUser(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @QueryParam("whiteListUser")
+        whiteListUser: String
+    ): Result<Boolean>
+
+    @ApiOperation("添加云桌面白名单用户")
+    @POST
+    @Path("/GPUWhiteList/add")
+    fun addGPUWhiteListUser(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -170,4 +226,46 @@ interface OpRemoteDevResource {
     @GET
     @Path("/image/spec")
     fun listImageSpec(): Result<List<ImageSpec>?>
+
+    @ApiOperation("休眠工作空间")
+    @GET
+    @Path("/workspace_stop")
+    fun stopWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("销毁工作空间")
+    @DELETE
+    @Path("/workspace_delete")
+    fun deleteWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("实时获取START云桌面资源池的机器")
+    @POST
+    @Path("/windows/pool/list")
+    fun getStartCloudResourceList(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("查询数据")
+        data: WindowsPoolListFetchData
+    ): Result<Page<Map<String, Any>>>
+
+    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @GET
+    @Path("/windows/pool/config")
+    fun getCgsConfig(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<CgsResourceConfig>
 }

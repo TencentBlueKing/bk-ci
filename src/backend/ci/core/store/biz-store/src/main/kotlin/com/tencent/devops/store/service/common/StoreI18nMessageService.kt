@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
+
 @Suppress("LongParameterList")
 interface StoreI18nMessageService {
 
@@ -36,6 +38,7 @@ interface StoreI18nMessageService {
      * @param projectCode 项目标识
      * @param jsonMap map集合
      * @param fileDir 资源文件目录
+     * @param i18nDir 国际化目录
      * @param propertiesKeyPrefix map字段在properties中key的前缀
      * @param dbKeyPrefix map字段在db中key的前缀
      * @param repositoryHashId 代码库哈希ID
@@ -43,12 +46,9 @@ interface StoreI18nMessageService {
      */
     fun parseJsonMapI18nInfo(
         userId: String,
-        projectCode: String,
+        storeI18nConfig: StoreI18nConfig,
         jsonMap: MutableMap<String, Any>,
-        fileDir: String,
-        propertiesKeyPrefix: String? = null,
-        dbKeyPrefix: String? = null,
-        repositoryHashId: String? = null
+        version: String
     ): Map<String, Any>
 
     /**
@@ -57,17 +57,16 @@ interface StoreI18nMessageService {
      * @param projectCode 项目标识
      * @param errorCodes map集合
      * @param fileDir 资源文件目录
+     * @param i18nDir 国际化目录
      * @param keyPrefix map字段key的前缀
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
     fun parseErrorCodeI18nInfo(
         userId: String,
-        projectCode: String,
         errorCodes: Set<Int>,
-        fileDir: String,
-        keyPrefix: String? = null,
-        repositoryHashId: String? = null
+        version: String,
+        storeI18nConfig: StoreI18nConfig
     )
 
     /**

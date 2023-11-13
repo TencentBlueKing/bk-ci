@@ -1,21 +1,23 @@
 package com.tencent.devops.remotedev.service.redis
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
-import com.tencent.devops.remotedev.service.redis.RedisKeys.WORKSPACE_CACHE_KEY_PREFIX
+import com.tencent.devops.remotedev.dao.WhiteListDao
+import com.tencent.devops.remotedev.pojo.WhiteListType
+import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class RedisCacheService @Autowired constructor(
+    private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    @Qualifier("redisStringHashOperation")
+    private val redisHashOperation: RedisOperation,
+    private val whiteListDao: WhiteListDao
 ) {
 
     companion object {
@@ -32,42 +34,32 @@ class RedisCacheService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
+    private val redisCacheHash = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Map<String, String>?> { key -> redisHashOperation.hentries(key) }
+
+    private val apiWhiteListCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Boolean> { key ->
+            whiteListDao.get(dslContext, key, WhiteListType.API) != null
+        }
+
+    private val windowsGpuWhiteListCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Int> { key ->
+            whiteListDao.get(dslContext, key, WhiteListType.WINDOWS_GPU)?.windowsGpuLimit ?: 0
+        }
+
     fun get(key: String) = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 
-    fun saveWorkspaceDetail(
-        workspaceName: String,
-        cache: WorkSpaceCacheInfo
-    ) {
-        logger.info("save workspace detail from redis|$workspaceName|$cache")
-        redisOperation.set(
-            key = "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName",
-            value = JsonUtil.toJson(cache)
-        )
-    }
+    fun hentries(key: String) = redisCacheHash.get(key)
 
-    fun deleteWorkspaceDetail(workspaceName: String) {
-        logger.info("delete workspace detail from redis|$workspaceName")
-        redisOperation.delete("$WORKSPACE_CACHE_KEY_PREFIX$workspaceName")
-    }
+    fun checkApiWhiteList(name: String) = apiWhiteListCache.get(name) ?: false
 
-    fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
-        return try {
-            val result = redisOperation.get(
-                "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName"
-            )
-            if (result != null) {
-                objectMapper.readValue<WorkSpaceCacheInfo>(result)
-            } else {
-                null
-            }
-        } catch (ignore: Exception) {
-            logger.warn(
-                "get workspace detail from redis error|$workspaceName",
-                ignore
-            )
-            null
-        }
-    }
+    fun checkWindowsGpuLimit(name: String) = windowsGpuWhiteListCache.get(name) ?: 0
 }

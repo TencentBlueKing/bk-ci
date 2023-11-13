@@ -32,13 +32,13 @@ import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.common.api.util.JsonUtil
 import io.mockk.justRun
 import io.mockk.spyk
-import java.nio.charset.Charset
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
+import java.nio.charset.Charset
 
 class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
 
@@ -55,7 +55,10 @@ class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
             authResourceCodeConverter = authResourceCodeConverter,
             permissionService = permissionService,
             rbacCacheService = rbacCacheService,
-            authMigrationDao = authMigrationDao
+            authMigrationDao = authMigrationDao,
+            deptService = deptService,
+            permissionGroupPoliciesService = permissionGroupPoliciesService,
+            groupService = groupService
         ),
         recordPrivateCalls = true
     )

@@ -41,8 +41,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -103,6 +103,16 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103018,
         "构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群："
+    ),
+    NO_CONTAINER_IS_READY_DEBUG(
+        ErrorType.USER,
+        2103019,
+        "pipeline({0})没有可用的容器进行登录调试"
+    ),
+    DEBUG_CONTAINER_URL_ERROR(
+        ErrorType.USER,
+        2103020,
+        "获取登录调试容器链接失败 ({0})"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

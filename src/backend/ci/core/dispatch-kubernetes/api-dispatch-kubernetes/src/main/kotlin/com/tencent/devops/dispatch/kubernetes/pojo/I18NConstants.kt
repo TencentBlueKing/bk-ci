@@ -74,3 +74,4 @@ const val BK_NO_CONTAINER_IS_READY_DEBUG = "bkNoContainerIsReadyDebug" // pipeli
 const val BK_CONTAINER_STATUS_EXCEPTION = "bkContainerStatusException" // pipeline({0})容器状态异常，请尝试重新构建流水线
 const val BK_FAIL_TO_GET_JOB_STATUS = "bkFailToGetJobStatus" // 查询Job status接口异常
 const val BK_WORKSPACE_STATE_NOT_RUNNING = "bkWorkspaceStateNotRunning" // 工作空间状态非RUNNING
+const val BK_CREATE_ENV_TIMEOUT = "bkCreateEnvTimeout" // 创建环境超时（10min）

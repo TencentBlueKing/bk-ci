@@ -6,6 +6,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -43,7 +44,7 @@ class AuthPipelineGroupService @Autowired constructor(
                 )
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
-                val ids = callBackInfo.filter.idList.map { it.toString().toLong() }
+                val ids = callBackInfo.filter.idList.map { HashUtil.decodeIdToLong(it.toString()) }
                 return getPipelineGroupInfo(ids.toSet(), token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
@@ -70,6 +71,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val pipelineGroupList = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
+            isProject = true,
             limit = limit,
             offset = offset
         )
@@ -81,7 +83,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupList.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -107,7 +109,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupList.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.iamApprover = arrayListOf(it.createUser)
             entity.displayName = it.name
             entityInfo.add(entity)
@@ -127,6 +129,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val pipelineGroupInfo = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
+            isProject = true,
             viewName = keyword,
             limit = limit,
             offset = offset
@@ -139,7 +142,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupInfo.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }

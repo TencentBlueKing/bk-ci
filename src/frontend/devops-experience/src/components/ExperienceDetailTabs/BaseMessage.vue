@@ -15,11 +15,20 @@
             </div>
             <div class="base-detail-item installation-package">
                 <label class="item-label">安装包：</label>
-                <div class="item-content"
-                    :class="{ 'installation-package-text': (curReleaseDetail.canExperience && !curReleaseDetail.expired && curReleaseDetail.online) }"
-                    @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online)">{{ curReleaseDetail.installation_package }}</div>
-                <div class="item-content installation-package-text" style="margin-left: 20px;" v-if="(curReleaseDetail.canExperience && !curReleaseDetail.expired && curReleaseDetail.online) && isApkOrIpa(curReleaseDetail) && isWindows && isMof"
-                    @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online, 'MoF')">{{ curReleaseDetail.installation_package }}（魔方有线安装）</div>
+                <ArtifactDownloadButton
+                    :experience-id="experienceHashId"
+                    :name="curReleaseDetail.installation_package"
+                    :disable="!curReleaseDetail.canExperience || !curReleaseDetail.expired || !curReleaseDetail.online"
+                >
+                    {{ curReleaseDetail.installation_package }}
+                </ArtifactDownloadButton>
+                <div
+                    class="item-content installation-package-text"
+                    style="margin-left: 20px;"
+                    v-if="(curReleaseDetail.canExperience && !curReleaseDetail.expired && curReleaseDetail.online) && isApkOrIpa(curReleaseDetail) && isWindows && isMof"
+                    @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online, 'MoF')">
+                    {{ curReleaseDetail.installation_package }}（魔方有线安装）
+                </div>
             </div>
             <div class="base-detail-item list-item">
                 <label class="item-label">体验名单：</label>
@@ -30,16 +39,8 @@
                             v-bind="panel"
                             :key="index"
                         >
-                            <div class="bk-tab2-pane" v-if="curTab === 'experienceGroups'">
-                                <div class="release-list-textarea">{{ curReleaseDetail.experienceGroups.join('; ') }}</div>
-                            </div>
-                            <div class="bk-tab2-pane" v-else-if="curTab === 'internal'">
-                                <div class="release-list-textarea">
-                                    {{ curReleaseDetail.internal_list.join(';') }}
-                                </div>
-                            </div>
-                            <div class="bk-tab2-pane" v-else-if="curTab === 'external'">
-                                <div class="release-list-textarea">{{ curReleaseDetail.external_list.join(',') }}</div>
+                            <div class="bk-tab2-pane">
+                                <div class="release-list-textarea">{{ curReleaseDetail[curTab].join('; ') }}</div>
                             </div>
                         </bk-tab-panel>
                     </bk-tab>
@@ -68,12 +69,15 @@
 </template>
 
 <script>
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import qrcode from '@/components/devops/qrcode'
     import { mapActions } from 'vuex'
+    
     export default {
         name: 'base-message',
         components: {
-            qrcode
+            qrcode,
+            ArtifactDownloadButton
         },
         props: {
             downloadInstallation: {
@@ -105,11 +109,11 @@
                         label: '体验组'
                     },
                     {
-                        name: 'internal',
+                        name: 'internal_list',
                         label: '附加内部人员'
                     },
                     {
-                        name: 'external',
+                        name: 'external_list',
                         label: '附加外部人员'
                     }
                 ]
@@ -170,13 +174,13 @@
             margin-right: 14px;
             width: 100px;
             text-align: right;
+            flex-shrink: 0;
         }
 
         .installation-package,
         .list-item,
         .version-desc-item {
             width: 90%;
-            white-space: pre-line;
             line-height: 20px;
         }
 

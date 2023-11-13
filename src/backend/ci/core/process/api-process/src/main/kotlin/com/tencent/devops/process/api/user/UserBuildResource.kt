@@ -279,6 +279,25 @@ interface UserBuildResource {
         buildNo: Int
     ): Result<ModelDetail>
 
+    @ApiOperation("获取构建详情")
+    @GET
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNo/{buildNo}/detail")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/record/{buildNum}")
+    fun getBuildRecordByBuildNum(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建序号（buildNum）", required = true)
+        @PathParam("buildNum")
+        buildNum: Int
+    ): Result<ModelRecord>
+
     @ApiOperation("获取已完成的最新构建详情")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/latestFinished")

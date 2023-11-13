@@ -30,7 +30,7 @@ interface PermissionApplyService {
     fun getGroupPermissionDetail(
         userId: String,
         groupId: Int
-    ): List<GroupPermissionDetailVo>
+    ): Map<String, List<GroupPermissionDetailVo>>
 
     fun getRedirectInformation(
         userId: String,

@@ -122,13 +122,14 @@ class ExperienceNotifyService @Autowired constructor(
                     id = appNotifyMessageWithOperation.messageId,
                     status = PushStatus.SUCCESS.status
                 )
+                val redPointKey = ExperienceConstant.redPointKey(appNotifyMessageWithOperation.receiver)
                 redisOperation.sadd(
-                    ExperienceConstant.redPointKey(
-                        appNotifyMessageWithOperation.receiver
-                    ),
+                    redPointKey,
                     HashUtil.decodeIdToLong(appNotifyMessageWithOperation.experienceHashId).toString()
                 )
+                redisOperation.expire(redPointKey, ExperienceConstant.RED_POINT_MAX_TIME)
             }
+
             else -> experiencePushHistoryDao.updatePushHistoryStatus(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,

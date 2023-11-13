@@ -30,7 +30,6 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.constant.ProjectMessageCode.T_ACTIVITY_PREFIX
 import com.tencent.devops.project.dao.ActivityDao
 import com.tencent.devops.project.pojo.ActivityInfo
 import com.tencent.devops.project.pojo.ActivityStatus
@@ -51,9 +50,9 @@ class ActivityService @Autowired constructor(
     fun list(type: ActivityType): List<ActivityInfo> {
         return activityDao.list(dslContext, type, ActivityStatus.ACTIVITY).map {
             ActivityInfo(
-                name = I18nUtil.getCodeLanMessage(T_ACTIVITY_PREFIX + it.englishName).ifBlank { it.name },
+                name = it.name,
                 link = it.link,
-                createTime = it.createTime.toLocalTime().toString()
+                createTime = DateTimeUtil.toDateTime(it.createTime)
             )
         }
     }

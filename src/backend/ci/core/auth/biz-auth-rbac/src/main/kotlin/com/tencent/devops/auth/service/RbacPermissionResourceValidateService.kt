@@ -31,19 +31,14 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 
 class RbacPermissionResourceValidateService(
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
-    private val client: Client
+    private val rbacCacheService: RbacCacheService
 ) : PermissionResourceValidateService {
 
     companion object {
@@ -124,38 +119,12 @@ class RbacPermissionResourceValidateService(
         resourceType: String,
         resourceCode: String
     ): Map<String, Boolean> {
-        val parents = mutableListOf<AuthResourceInstance>()
-        val projectInstance = AuthResourceInstance(
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
-        parents.add(projectInstance)
-        // 流水线需要添加流水线组父类
-        if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-            client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
-                userId = userId,
-                projectId = projectCode,
-                pipelineId = resourceCode
-            ).data?.forEach { viewId ->
-                parents.add(
-                    AuthResourceInstance(
-                        resourceType = AuthResourceType.PIPELINE_GROUP.value,
-                        resourceCode = HashUtil.encodeLongId(viewId),
-                        parents = listOf(projectInstance)
-                    )
-                )
-            }
-        }
-        val resourceInstance = AuthResourceInstance(
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            parents = parents
-        )
-        return permissionService.batchValidateUserResourcePermissionByInstance(
+        return permissionService.batchValidateUserResourcePermission(
             userId = userId,
             actions = actions,
             projectCode = projectCode,
-            resource = resourceInstance
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
     }
 }

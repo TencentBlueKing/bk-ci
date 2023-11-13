@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -42,12 +43,10 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -55,6 +54,8 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
@@ -63,6 +64,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import org.jooq.DSLContext
@@ -94,9 +96,10 @@ class PipelineTaskService @Autowired constructor(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelinePauseExtService: PipelinePauseExtService
 ) {
 
@@ -374,7 +377,8 @@ class PipelineTaskService @Autowired constructor(
                     taskId = updateTaskInfo.taskId,
                     additionalOptions = taskRecord?.additionalOptions,
                     executeCount = taskRecord?.executeCount
-                )) {
+                )
+            ) {
                 // 如果是自动重试则不重置task的时间
                 updateTaskInfo.startTime = LocalDateTime.now()
                 if (!userId.isNullOrBlank()) {
@@ -391,7 +395,6 @@ class PipelineTaskService @Autowired constructor(
     /**
      * 根据插件标识，获取使用插件的流水线详情
      */
-    @Suppress("UNCHECKED_CAST")
     fun listPipelinesByAtomCode(
         atomCode: String,
         projectCode: String?,
@@ -482,6 +485,31 @@ class PipelineTaskService @Autowired constructor(
             )
         }
         return isRry
+    }
+
+    fun taskRetryRecordSet(
+        projectId: String,
+        taskId: String,
+        buildId: String,
+        pipelineId: String,
+        containerId: String,
+        executeCount: Int
+    ) {
+        val lastContainerRecord = containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+        )
+        if (lastContainerRecord != null) {
+            lastContainerRecord.containerVar[JOB_RETRY_TASK_ID] = taskId
+            pipelineBuildRecordService.batchSave(
+                transactionContext = null, model = null, stageList = null,
+                containerList = listOf(lastContainerRecord), taskList = null
+            )
+        }
     }
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
@@ -640,10 +668,10 @@ class PipelineTaskService @Autowired constructor(
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         val projectId = task.projectId
-        val pipelineId = task.pipelineId
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
+        val executeCount = task.executeCount ?: 1
         logger.info(
             "${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode" +
                 "|opt_change=${task.additionalOptions?.change}"
@@ -655,6 +683,7 @@ class PipelineTaskService @Autowired constructor(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
+                executeCount = executeCount,
                 taskStatus = taskStatus,
                 errorType = errorType,
                 errorCode = errorCode,
@@ -665,17 +694,18 @@ class PipelineTaskService @Autowired constructor(
                 additionalOptions = task.additionalOptions?.takeIf { task.additionalOptions!!.change }
             )
         )
-        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
-        if (buildStatus.isRunning()) {
-            pipelineBuildSummaryDao.updateCurrentBuildTask(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                currentTaskId = taskId,
-                currentTaskName = taskName
-            )
-        }
+        // 卡片界面上 已经不再展示当前正在执行的插件任务名称,因此不需要更新,并减少热点流水线的该表锁竞争.
+//        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
+//        if (buildStatus.isRunning()) {
+//            pipelineBuildSummaryDao.updateCurrentBuildTask(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                currentTaskId = taskId,
+//                currentTaskName = taskName
+//            )
+//        }
     }
 
     /**

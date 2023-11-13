@@ -48,16 +48,22 @@ class MigrateIamApiService {
         private val logger = LoggerFactory.getLogger(MigrateIamApiService::class.java)
 
         private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+
         // 启动iam v3迁移任务
         private const val V3_IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/task/"
+
         // 启动iam v0迁移任务
         private const val V0_IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/legacy_task/"
+
         // 获取iam迁移数据
         private const val IAM_GET_MIGRATE_DATA = "api/v2/open/migration/bkci/data/"
+
         // 迁移成功状态
         const val SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS = "SUCCESS"
+
         // 轮询获取iam迁移状态睡眠时间
         const val SLEEP_LOOP_IAM_GET_MIGRATE_TASK = 30000L
+
         // ci通过iam接口创建的用户组
         const val GROUP_API_POLICY = "group_api_policy"
 
@@ -71,8 +77,9 @@ class MigrateIamApiService {
     // iam迁移的token
     @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
-    @Value("\${auth.url:}")
-    private val iamBaseUrl = ""
+
+    @Value("\${auth.webHost:}")
+    private val iamWebHost = ""
 
     /**
      * 启动v3迁移任务
@@ -83,7 +90,7 @@ class MigrateIamApiService {
         logger.info("start v3 migrate task $v3GradeManagerIds")
         val data = JsonUtil.toJson(v3GradeManagerIds).toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .post(data)
             .build()
         getBody(operation = "failed to start v3 migrate task", request = request)
@@ -91,7 +98,7 @@ class MigrateIamApiService {
 
     fun getV3MigrateTaskStatus(): String {
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V3_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .get()
             .build()
         return JsonUtil.to(
@@ -106,10 +113,10 @@ class MigrateIamApiService {
      * @param projectCodes v0项目ID
      */
     fun startV0MigrateTask(projectCodes: List<String>): Int {
-        logger.info("start v3 migrate task $projectCodes")
+        logger.info("start v0 migrate task $projectCodes")
         val data = JsonUtil.toJson(projectCodes).toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")
+            .url("$iamWebHost/$V0_IAM_MIGRATE_TASK?token=$migrateIamToken")
             .post(data)
             .build()
         return JsonUtil.to(
@@ -120,7 +127,7 @@ class MigrateIamApiService {
 
     fun getV0MigrateTaskStatus(migrateTaskId: Int): String {
         val request = Request.Builder()
-            .url("$iamBaseUrl/$V0_IAM_MIGRATE_TASK$migrateTaskId/?token=$migrateIamToken")
+            .url("$iamWebHost/$V0_IAM_MIGRATE_TASK$migrateTaskId/?token=$migrateIamToken")
             .get()
             .build()
         return JsonUtil.to(
@@ -138,13 +145,15 @@ class MigrateIamApiService {
     fun getMigrateData(
         projectCode: String,
         migrateType: String,
+        version: String,
         page: Int,
         pageSize: Int
     ): MigrateTaskDataResp {
         val request = Request.Builder()
             .url(
-                "$iamBaseUrl/$IAM_GET_MIGRATE_DATA?" +
-                    "token=$migrateIamToken&project_id=$projectCode&type=$migrateType&page=$page&page_size=$pageSize"
+                "$iamWebHost/$IAM_GET_MIGRATE_DATA?" +
+                    "token=$migrateIamToken&project_id=$projectCode&type=$migrateType" +
+                    "&version=$version&page=$page&page_size=$pageSize"
             )
             .get()
             .build()
@@ -157,7 +166,7 @@ class MigrateIamApiService {
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("request ${request.url} response|$responseContent")
+            logger.info("request iam migrate api ${request.url} response|$responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Failed to request(${request.url}), code ${response.code}, content: $responseContent")
                 throw RemoteServiceException(operation)

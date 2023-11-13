@@ -55,8 +55,8 @@ import java.io.BufferedReader
 import java.io.StringReader
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
+@Suppress("NestedBlockDepth")
 object CiYamlUtils {
 
     private val logger = LoggerFactory.getLogger(CiYamlUtils::class.java)
@@ -156,9 +156,7 @@ object CiYamlUtils {
         val yamlNormal = formatYamlCustom(yamlStr)
 
         // replace anchor tag
-        val yaml = Yaml()
-        val obj = yaml.load(yamlNormal) as Any
-        return YamlUtil.toYaml(obj)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
 
     fun checkYaml(originYaml: CIBuildYaml): List<Stage> {

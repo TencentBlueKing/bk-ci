@@ -31,6 +31,7 @@ package com.tencent.devops.auth.service.sample
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Pagination
+import java.time.LocalDateTime
 
 class SamplePermissionResourceService : PermissionResourceService {
     override fun resourceCreateRelation(
@@ -38,7 +39,8 @@ class SamplePermissionResourceService : PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        async: Boolean
     ) = true
 
     override fun resourceModifyRelation(
@@ -111,6 +113,10 @@ class SamplePermissionResourceService : PermissionResourceService {
         resourceName = "",
         iamResourceCode = "",
         enable = true,
-        relationId = ""
+        relationId = "",
+        createUser = "",
+        updateUser = "",
+        createTime = LocalDateTime.now(),
+        updateTime = LocalDateTime.now()
     )
 }

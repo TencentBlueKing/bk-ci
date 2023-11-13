@@ -109,7 +109,6 @@ class OpImageService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(MarketImageService::class.java)
 
     fun addImage(
-        accessToken: String,
         userId: String,
         imageCreateRequest: ImageCreateRequest,
         checkLatest: Boolean = false,
@@ -126,7 +125,6 @@ class OpImageService @Autowired constructor(
         // 判断是不是首次新增镜像
         val imageId = if (null == imageRecords || imageRecords.size == 0) {
             val addImageResult = imageReleaseService.addMarketImage(
-                accessToken = accessToken,
                 userId = userId,
                 imageCode = imageCode,
                 marketImageRelRequest = MarketImageRelRequest(

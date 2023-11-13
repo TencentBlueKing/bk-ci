@@ -34,11 +34,14 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
@@ -76,16 +79,20 @@ class RbacServiceConfiguration {
     @Bean
     fun permissionSubsetManagerService(
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        authAuthorizationScopesService: AuthAuthorizationScopesService,
         iamV2ManagerService: V2ManagerService,
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authResourceNameConverter: AuthResourceNameConverter
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
+        authAuthorizationScopesService = authAuthorizationScopesService,
         iamV2ManagerService = iamV2ManagerService,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceNameConverter = authResourceNameConverter
     )
 
     @Bean
@@ -94,42 +101,46 @@ class RbacServiceConfiguration {
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         iamV2ManagerService: V2ManagerService,
         iamConfiguration: IamConfiguration,
+        authMonitorSpaceDao: AuthMonitorSpaceDao,
         authItsmCallbackDao: AuthItsmCallbackDao,
         dslContext: DSLContext,
         authResourceService: AuthResourceService,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         traceEventDispatcher: TraceEventDispatcher,
-        itsmService: ItsmService
+        itsmService: ItsmService,
+        authAuthorizationScopesService: AuthAuthorizationScopesService
     ) = PermissionGradeManagerService(
         client = client,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         iamV2ManagerService = iamV2ManagerService,
         iamConfiguration = iamConfiguration,
+        authMonitorSpaceDao = authMonitorSpaceDao,
         authItsmCallbackDao = authItsmCallbackDao,
         dslContext = dslContext,
         authResourceService = authResourceService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         traceEventDispatcher = traceEventDispatcher,
-        itsmService = itsmService
+        itsmService = itsmService,
+        authAuthorizationScopesService = authAuthorizationScopesService
     )
 
     @Bean
     fun permissionGroupPoliciesService(
-        iamConfiguration: IamConfiguration,
         iamV2ManagerService: V2ManagerService,
         authActionDao: AuthActionDao,
         dslContext: DSLContext,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceGroupDao: AuthResourceGroupDao
+        authResourceGroupDao: AuthResourceGroupDao,
+        authAuthorizationScopesService: AuthAuthorizationScopesService
     ) = PermissionGroupPoliciesService(
-        iamConfiguration = iamConfiguration,
         iamV2ManagerService = iamV2ManagerService,
         authActionDao = authActionDao,
         dslContext = dslContext,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceGroupDao = authResourceGroupDao
+        authResourceGroupDao = authResourceGroupDao,
+        authAuthorizationScopesService = authAuthorizationScopesService
     )
 
     @Bean
@@ -158,4 +169,7 @@ class RbacServiceConfiguration {
         dslContext = dslContext,
         authResourceDao = authResourceDao
     )
+
+    @Bean
+    fun authResourceNameConverter() = AuthResourceNameConverter()
 }

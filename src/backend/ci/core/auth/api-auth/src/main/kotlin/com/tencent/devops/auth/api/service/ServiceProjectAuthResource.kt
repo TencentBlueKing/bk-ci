@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -52,7 +53,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {
-
     @GET
     @Path("/{projectCode}/users/byGroup")
     @ApiOperation("获取项目成员 (需要对接的权限中心支持该功能才可以)")
@@ -166,7 +166,7 @@ interface ServiceProjectAuthResource {
 
     @POST
     @Path("/{projectCode}/createUser")
-    @ApiOperation("添加用户到指定项目指定分组")
+    @ApiOperation("添加单个用户到指定项目指定分组")
     fun createProjectUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
@@ -180,6 +180,26 @@ interface ServiceProjectAuthResource {
         @QueryParam("roleCode")
         @ApiParam("用户组Code", required = true)
         roleCode: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("/{projectCode}/batchCreateProjectUser/{roleCode}")
+    @ApiOperation("批量添加用户到指定项目指定分组")
+    fun batchCreateProjectUser(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam(name = "用户组Code", required = true)
+        @PathParam("roleCode")
+        roleCode: String,
+        @ApiParam("添加用户集合", required = true)
+        members: List<String>
     ): Result<Boolean>
 
     @GET
@@ -196,4 +216,16 @@ interface ServiceProjectAuthResource {
         @ApiParam("项目Id", required = true)
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>>
+
+    @GET
+    @Path("/{projectCode}/getProjectPermissionInfo")
+    @ApiOperation("获取项目权限信息")
+    fun getProjectPermissionInfo(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String
+    ): Result<ProjectPermissionInfoVO>
 }

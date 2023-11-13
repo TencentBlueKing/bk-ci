@@ -43,7 +43,7 @@ data class PageQueryLogs(
     @ApiModelProperty("是否结束", required = true)
     var finished: Boolean,
     @ApiModelProperty("日志列表", required = true)
-    val logs: Page<LogLine>,
+    val logs: Page<LogLine>?,
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)

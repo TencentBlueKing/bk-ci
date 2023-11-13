@@ -38,6 +38,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class AuthResourceService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -188,7 +191,6 @@ class AuthResourceService @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("LongParameterList")
     fun list(
         projectCode: String,
         resourceType: String,
@@ -204,6 +206,40 @@ class AuthResourceService @Autowired constructor(
             limit = limit,
             offset = offset
         ).map { authResourceDao.convert(it) }
+    }
+
+    fun list(
+        resourceType: String,
+        startTime: Long?,
+        endTime: Long?,
+        limit: Int,
+        offset: Int
+    ): List<AuthResourceInfo> {
+        return authResourceDao.list(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            startTime = formatTimestamp(startTime),
+            endTime = formatTimestamp(endTime),
+            offset = offset,
+            limit = limit
+        ).map { authResourceDao.convert(it) }
+    }
+
+    private fun formatTimestamp(timestamp: Long?): LocalDateTime? =
+        if (timestamp == null) null
+        else LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
+
+    fun count(
+        projectCode: String,
+        resourceType: String,
+        resourceName: String?
+    ): Long {
+        return authResourceDao.count(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceName = resourceName,
+            resourceType = resourceType
+        )
     }
 
     fun listByProjectAndType(
@@ -237,6 +273,19 @@ class AuthResourceService @Autowired constructor(
         )
     }
 
+    fun countResourceByUpdateTime(
+        resourceType: String,
+        startTime: Long?,
+        endTime: Long?
+    ): Long {
+        return authResourceDao.countResourceByUpdateTime(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            startTime = formatTimestamp(startTime),
+            endTime = formatTimestamp(endTime)
+        )
+    }
+
     fun listByIamCodes(
         resourceType: String,
         iamResourceCodes: List<String>
@@ -245,6 +294,38 @@ class AuthResourceService @Autowired constructor(
             dslContext = dslContext,
             resourceType = resourceType,
             iamResourceCodes = iamResourceCodes
+        ).map { authResourceDao.convert(it) }
+    }
+
+    fun updateCreator(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        creator: String
+    ) {
+        authResourceDao.updateCreator(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            creator = creator
+        )
+    }
+
+    fun listByCreator(
+        resourceType: String,
+        projectCode: String? = null,
+        creator: String,
+        offset: Int,
+        limit: Int
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByCreator(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            creator = creator,
+            offset = offset,
+            limit = limit
         ).map { authResourceDao.convert(it) }
     }
 }

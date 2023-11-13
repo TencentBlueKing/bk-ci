@@ -5,7 +5,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
-import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
+import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import org.jooq.DSLContext
@@ -104,14 +104,14 @@ class ContainerStatusUpdateJob @Autowired constructor(
             }
 
             when (val status = statusResponse.optString("data")) {
-                "stopped", "stop" -> {
+                "stopped", "stop", "deleted" -> {
                     logger.info("Update status to idle, containerName: ${it.containerName}")
                     devCloudBuildDao.updateStatus(
                         dslContext = dslContext,
                         pipelineId = it.pipelineId,
                         vmSeqId = it.vmSeqId,
                         poolNo = it.poolNo,
-                        status = ContainerStatus.IDLE.status
+                        status = ContainerBuildStatus.IDLE.status
                     )
                 }
                 "running" -> {
@@ -138,7 +138,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
                             pipelineId = it.pipelineId,
                             vmSeqId = it.vmSeqId,
                             poolNo = it.poolNo,
-                            status = ContainerStatus.IDLE.status
+                            status = ContainerBuildStatus.IDLE.status
                         )
                     } else {
                         // 停不掉？尝试删除
@@ -173,7 +173,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
                 }
             }
         } catch (e: Throwable) {
-            logger.error(
+            logger.warn(
                 "clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|" +
                     "vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e
             )
@@ -182,7 +182,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
                 pipelineId = it.pipelineId,
                 vmSeqId = it.vmSeqId,
                 poolNo = it.poolNo,
-                status = ContainerStatus.IDLE.status
+                status = ContainerBuildStatus.IDLE.status
             )
         }
     }

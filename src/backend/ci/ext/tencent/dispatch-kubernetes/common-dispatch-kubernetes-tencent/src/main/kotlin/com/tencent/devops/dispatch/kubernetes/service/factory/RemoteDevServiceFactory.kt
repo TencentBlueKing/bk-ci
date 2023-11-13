@@ -30,8 +30,8 @@ package com.tencent.devops.dispatch.kubernetes.service.factory
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -39,19 +39,21 @@ import org.springframework.stereotype.Service
 class RemoteDevServiceFactory @Autowired constructor(
     private val dockerRoutingSdkService: DockerRoutingSdkService
 ) {
-    fun loadRemoteDevService(projectId: String): RemoteDevInterface {
-        val dockerRoutingType = DockerRoutingType.DEVCLOUD
+
+    companion object {
+        // 使用动态枚举加载了 STARTCLOUD 到 DockerRoutingType
+        const val START_CLOUD = "STARTCLOUD"
+    }
+
+    fun loadRemoteDevService(mountType: WorkspaceMountType): RemoteDevInterface {
+        val dockerRoutingType = when (mountType) {
+            WorkspaceMountType.START -> DockerRoutingType.valueOf(START_CLOUD)
+            WorkspaceMountType.BCS -> DockerRoutingType.BCS
+            else -> DockerRoutingType.DEVCLOUD
+        }
         return SpringContextUtil.getBean(
             RemoteDevInterface::class.java,
             dockerRoutingType.name.toLowerCase() + "RemoteDevService"
-        )
-    }
-
-    fun loadContainerService(projectId: String): ContainerService {
-        val dockerRoutingType = DockerRoutingType.DEVCLOUD
-        return SpringContextUtil.getBean(
-            ContainerService::class.java,
-            dockerRoutingType.name.toLowerCase() + "ContainerService"
         )
     }
 }

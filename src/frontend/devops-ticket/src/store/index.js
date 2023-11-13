@@ -251,7 +251,7 @@ const store = {
             {
                 id: 'ACCESSTOKEN',
                 name: 'accessToken',
-                desc: '一个访问令牌包含了此登陆会话的安全信息，用于关联Gitlab类型代码库，'
+                desc: '一个访问令牌包含了此登录会话的安全信息，用于关联Gitlab类型代码库，'
             },
             {
                 id: 'SECRETKEY',

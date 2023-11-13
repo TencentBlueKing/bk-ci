@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -71,7 +72,12 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (emptyGroup(setting.failSubscription.wechatGroup) || !setting.failSubscription.wechatGroupFlag) {
                 return
             }
-            groups.addAll(setting.failSubscription.wechatGroup.split("[,;]".toRegex()))
+            val group = EnvUtils.parseEnv(
+                command = setting.failSubscription.wechatGroup,
+                data = commandContext.variables,
+                replaceWithEmpty = true
+            )
+            groups.addAll(group.split("[,;]".toRegex()))
             content = "❌ " + commandContext.notifyValue["failContent"]!!
             markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
             detailFlag = setting.failSubscription.detailFlag
@@ -80,7 +86,12 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (emptyGroup(successSubscription.wechatGroup) || !successSubscription.wechatGroupFlag) {
                 return
             }
-            groups.addAll(successSubscription.wechatGroup.split("[,;]".toRegex()))
+            val group = EnvUtils.parseEnv(
+                command = successSubscription.wechatGroup,
+                data = commandContext.variables,
+                replaceWithEmpty = true
+            )
+            groups.addAll(group.split("[,;]".toRegex()))
             content = "✔️" + commandContext.notifyValue["successContent"]!!
             markerDownFlag = successSubscription.wechatGroupMarkdownFlag
             detailFlag = successSubscription.detailFlag
@@ -130,9 +141,12 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (detailFlag) {
                 richtextContentList.add(
                     RichtextView(
-                        RichtextViewLink(text = I18nUtil.getCodeLanMessage(
-                            messageCode = BK_VIEW_DETAILS
-                        ), key = detailUrl, browser = 1)
+                        RichtextViewLink(
+                            text = I18nUtil.getCodeLanMessage(
+                                messageCode = BK_VIEW_DETAILS
+                            ),
+                            key = detailUrl, browser = 1
+                        )
                     )
                 )
             }
@@ -165,7 +179,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         } else {
             val textContent = if (detailFlag) {
                 "$content\n\n" + I18nUtil.getCodeLanMessage(
-                        messageCode = BK_VIEW_DETAILS
+                    messageCode = BK_VIEW_DETAILS
                 ) + ": $detailUrl"
             } else content
             val msg = RobotTextSendMsg(

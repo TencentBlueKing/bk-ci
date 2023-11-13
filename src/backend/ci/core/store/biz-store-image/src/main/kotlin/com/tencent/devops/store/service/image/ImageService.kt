@@ -43,6 +43,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -110,9 +112,11 @@ import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.util.ImageUtil
 import java.time.LocalDateTime
 import java.util.Date
+import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -122,7 +126,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import kotlin.math.ceil
 
 @Suppress("ALL")
 @RefreshScope
@@ -203,7 +206,7 @@ abstract class ImageService @Autowired constructor() {
             )
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(imageCode)
             )
         }
@@ -341,6 +344,7 @@ abstract class ImageService @Autowired constructor() {
             )
             val classifyId = it[KEY_CLASSIFY_ID] as String
             val (imageSizeNum, imageSize) = getImageSizeInfoByStr(it.get(KEY_IMAGE_SIZE) as String)
+            val logoUrl = it[KEY_IMAGE_LOGO_URL] as? String
             results.add(
                 MarketImageItem(
                     id = it[KEY_IMAGE_ID] as String,
@@ -351,7 +355,9 @@ abstract class ImageService @Autowired constructor() {
                     imageSize = imageSize,
                     imageSizeNum = imageSizeNum,
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] ?: "" else "",
-                    logoUrl = it[KEY_IMAGE_LOGO_URL] as? String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     version = it[KEY_IMAGE_VERSION] as String,
                     summary = it[KEY_IMAGE_SUMMARY] as? String,
                     score = statistic?.score ?: 0.toDouble(),
@@ -440,6 +446,7 @@ abstract class ImageService @Autowired constructor() {
                 val categories = imageCategoryRelDao.getCategorysByImageId(dslContext, it.id)?.map { categoryRecord ->
                     categoryRecord.get(KEY_CATEGORY_CODE) as String
                 } ?: emptyList()
+                val logoUrl = it.logoUrl
                 MarketItem(
                     id = it.id,
                     name = it.name,
@@ -450,7 +457,9 @@ abstract class ImageService @Autowired constructor() {
                     rdType = it.rdType,
                     classifyCode = it.classifyCode,
                     category = categories.joinToString(","),
-                    logoUrl = it.logoUrl,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     publisher = it.publisher ?: "",
                     os = emptyList(),
                     downloads = it.downloads,
@@ -939,7 +948,9 @@ abstract class ImageService @Autowired constructor() {
             code = imageCode,
             imageName = imageRecord.imageName,
             name = imageRecord.imageName,
-            logoUrl = imageRecord.logoUrl ?: "",
+            logoUrl = imageRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            } ?: "",
             icon = icon ?: "",
             summary = imageRecord.summary ?: "",
             docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
@@ -960,7 +971,9 @@ abstract class ImageService @Autowired constructor() {
             imageSize = imageSize,
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
-            description = imageRecord.description ?: "",
+            description = imageRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            } ?: "",
             dockerFileType = imageRecord.dockerFileType ?: "INPUT",
             dockerFileContent = imageRecord.dockerFileContent ?: "",
             labelList = labelList ?: listOf(),
@@ -1007,7 +1020,7 @@ abstract class ImageService @Autowired constructor() {
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, imageCode, type)
         if (!isOwner) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -1158,7 +1171,7 @@ abstract class ImageService @Autowired constructor() {
         // 判断当前用户是否是该镜像的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, imageCode, StoreTypeEnum.IMAGE.type.toByte())) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = GET_INFO_NO_PERMISSION,
                 language = I18nUtil.getLanguage(userId)
             )
         }

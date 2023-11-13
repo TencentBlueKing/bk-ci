@@ -6,3 +6,6 @@ package-lock.json
 yarn-error.log
 devops-gitci/src/conf
 */webpack_cache
+.codecc
+.idea
+.vscode

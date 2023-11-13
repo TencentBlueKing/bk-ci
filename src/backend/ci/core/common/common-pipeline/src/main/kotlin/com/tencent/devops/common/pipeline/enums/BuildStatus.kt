@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.enums
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.api.util.MessageUtil
 
 /**
  * [statusName] 状态中文名
@@ -101,6 +102,13 @@ enum class BuildStatus(
     fun isPause(): Boolean = this == PAUSE
 
     fun isTimeout(): Boolean = this == QUEUE_TIMEOUT || this == EXEC_TIMEOUT || this == HEARTBEAT_TIMEOUT
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "buildStatus.${this.statusName}",
+            language = language
+        )
+    }
 
     companion object {
 

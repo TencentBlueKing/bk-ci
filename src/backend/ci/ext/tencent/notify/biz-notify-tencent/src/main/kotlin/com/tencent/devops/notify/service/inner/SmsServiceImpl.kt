@@ -51,10 +51,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
 
+@Suppress("NestedBlockDepth")
+@Primary
 @Service
 class SmsServiceImpl @Autowired constructor(
     private val tofService: TOFService,
@@ -79,7 +82,7 @@ class SmsServiceImpl @Autowired constructor(
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         val smsNotifyPosts = generateSmsNotifyPost(smsNotifyMessageWithOperation)
         if (smsNotifyPosts.isEmpty()) {
-            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: $smsNotifyMessageWithOperation")
+            logger.warn("List<SmsNotifyPost> is empty after being processed: $smsNotifyMessageWithOperation")
             return
         }
 
@@ -215,11 +218,7 @@ class SmsServiceImpl @Autowired constructor(
                     receiver = subReceivers.joinToString(",")
                     msgInfo = body
                     priority = smsNotifyMessage.priority.getValue()
-                    sender = if (smsNotifyMessage.sender.isEmpty()) {
-                        defaultSmsSender
-                    } else {
-                        smsNotifyMessage.sender
-                    }
+                    sender = smsNotifyMessage.sender.ifEmpty { defaultSmsSender }
                     this.contentMd5 = contentMd5
                     frequencyLimit = smsNotifyMessage.frequencyLimit
                     tofSysId = smsNotifyMessage.tofSysId
@@ -280,7 +279,9 @@ class SmsServiceImpl @Autowired constructor(
         )
     }
 
-    private fun parseFromTNotifySmsToResponse(record: TNotifySmsRecord): NotificationResponse<SmsNotifyMessageWithOperation> {
+    private fun parseFromTNotifySmsToResponse(
+        record: TNotifySmsRecord
+    ): NotificationResponse<SmsNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
         if (!record.receivers.isNullOrEmpty())
             receivers.addAll(record.receivers.split(";"))

@@ -28,7 +28,8 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 
 /**
  * 权限中心迁移服务
@@ -38,20 +39,54 @@ interface PermissionMigrateService {
     /**
      * v3批量迁移到rbac
      */
-    fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
-
-    /**
-     * v3全部迁移到rbac
-     */
-    fun allV3ToRbacAuth(): Boolean
+    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
 
     /**
      * v0批量迁移到rbac
      */
-    fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
+    fun v0ToRbacAuth(projectCodes: List<String>): Boolean
 
     /**
-     * v0全部迁移到rbac
+     * 全部迁移到rbac
      */
-    fun allV0ToRbacAuth(): Boolean
+    fun allToRbacAuth(): Boolean
+
+    /**
+     * 按条件升级到rbac权限
+     */
+    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+
+    /**
+     * 对比迁移鉴权结果
+     */
+    fun compareResult(projectCode: String): Boolean
+
+    /**
+     * 迁移特定资源类型资源
+     */
+    fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ): Boolean
+
+    /**
+     * 授予项目下自定义用户组RBAC新增的权限
+     */
+    fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
+
+    /**
+     * 权限交接
+     */
+    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
+
+    /**
+     * 迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目
+     */
+    fun migrateMonitorResource(
+        projectCodes: List<String>,
+        async: Boolean = true
+    ): Boolean
+
+    fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 }

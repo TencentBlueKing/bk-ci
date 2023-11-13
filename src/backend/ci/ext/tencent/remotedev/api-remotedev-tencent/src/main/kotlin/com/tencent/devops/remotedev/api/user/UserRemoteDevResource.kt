@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Watermark
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,9 +48,10 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.server.ChunkedOutput
 
-@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user/remotedev")
+@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
+@Path("/{apiType:user|desktop}/remotedev")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserRemoteDevResource {
@@ -88,6 +91,16 @@ interface UserRemoteDevResource {
         data: BKGPT
     ): ChunkedOutput<String>
 
+    @ApiOperation("watermark")
+    @POST
+    @Path("/watermark")
+    fun getWatermark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: Watermark
+    ): Result<Any>
+
     @ApiOperation("上报preci agent id")
     @POST
     @Path("/preci_agent")
@@ -102,4 +115,47 @@ interface UserRemoteDevResource {
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
+
+    @ApiOperation("根据bi_ticket或bk_token获取用户名称")
+    @GET
+    @Path("/get_user")
+    fun getUser(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
+
+    @ApiOperation("获取所有的WINDOWS GPU资源配置信息")
+    @GET
+    @Path("/get_all_windows_resource_config")
+    fun getAllWindowsResourceConfig(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceTypeConfig>>
+
+    @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
+    @GET
+    @Path("/get_all_windows_resource_zone")
+    fun getAllWindowsResourceZone(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WindowsResourceZoneConfig>>
+
+    @ApiOperation("获取所有的WINDOWS 配额")
+    @GET
+    @Path("/get_all_windows_resource_quota")
+    fun allWindowsQuota(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Map<String, Map<String, Int>>>
+
+    @ApiOperation("获取用户1Password")
+    @GET
+    @Path("/1Password")
+    fun onePassword(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
 }

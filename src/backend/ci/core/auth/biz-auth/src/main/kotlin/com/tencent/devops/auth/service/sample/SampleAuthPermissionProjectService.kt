@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service.sample
 
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -34,7 +35,18 @@ class SampleAuthPermissionProjectService : PermissionProjectService {
         return true
     }
 
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean = true
+
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return emptyList()
+    }
+
+    override fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO {
+        return ProjectPermissionInfoVO("", "", "", emptyList(), emptyList())
     }
 }

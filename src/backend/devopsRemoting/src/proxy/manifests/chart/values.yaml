@@ -3,15 +3,35 @@ backendImage:
   pullPolicy: IfNotPresent
 
 proxy:
+  # 网关类型：master 为主网关，域名绑定网关,child 为子网关，接受主网关流量
+  initroute:
+    # apisix后台界面的 host 限制
+    apisixDashboardHost: ""
+    # registryfacade 域名前词缀限制，因为 registryfacade 无法通过转发，只能区分域名，所以主从部署是 prefix 不同
+    registryfacadeHostPrefix: reg
+    # wsproxy ssh端口号
+    wsproxysshPort: 2200
+    # wsproxy 转发流量的限制
+    wsproxyHttpvars: ""
+    # 额外的路由，由外部 values 进行补充
+    extraRoutes: ""
   # 远程开发泛域名
-  domain: 
+  domain: ""
   https:
-    crt:
-    key:
+    crt: ""
+    key: ""
   # wsproxy service名称
   wsproxyName: wsproxy 
   # registry-facade service名称 
   registryFacadeName: registry-facade
+  initjob:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 150m
+        memory: 256Mi  
 
 apisix:
   initContainer:
@@ -25,6 +45,21 @@ apisix:
       tag: 3.2.0-debian
     replicaCount: 1
     timezone: "Asia/Shanghai"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi
+    waitEtcd:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 150m
+          memory: 256Mi    
 
   admin:
     credentials:
@@ -33,6 +68,7 @@ apisix:
 
   gateway:
     type: LoadBalancer
+    annotations: {}
     externalTrafficPolicy: Cluster
     http:
       enabled: true
@@ -71,12 +107,16 @@ apisix:
           endpoints:
             # 修改releasename时要在这里同步更改，因为是引用的chart无法从values中插入 {{ .Release.Name }}
             - proxy-etcd:2379
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi        
 
   etcd:
     image:
-      registry: mirrors.tencent.com
-      repository: ruotiantang/apisix
-      tag: etcd-3.5.7-debian-11-r14
       pullPolicy: IfNotPresent
     volumePermissions:
         image:
@@ -88,6 +128,13 @@ apisix:
       enabled: false
       size: 100Mi
     replicaCount: 3  
+    resources:
+      requests:
+        cpu: 500m
+        memory: 256Mi
+      limits:
+        cpu: 750m
+        memory: 512Mi
 
   apisix-ingress-controller:
     image:

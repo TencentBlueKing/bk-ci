@@ -208,6 +208,16 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }
 
+    override fun thirdPartyEnv2Nodes(
+        userId: String,
+        projectId: String,
+        envHashId: String?,
+        envName: String?
+    ): Result<List<NodeWithPermission>> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|third party env2nodes|$projectId|$envHashId|$envName")
+        return client.get(ServiceNodeResource::class).thirdPartyEnv2Nodes(userId, projectId, envHashId, envName)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwEnvironmentResourceV4Impl::class.java)
     }

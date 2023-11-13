@@ -32,5 +32,6 @@ data class PipelinePauseValue(
     val buildId: String,
     val taskId: String,
     val defaultValue: String,
-    val newValue: String
+    val newValue: String,
+    val executeCount: Int?
 )

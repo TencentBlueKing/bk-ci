@@ -41,5 +41,14 @@ data class WorkspaceCreate(
     @ApiModelProperty("工作空间模板ID")
     val wsTemplateId: Int?,
     @ApiModelProperty("是否使用官方devfile")
-    val useOfficialDevfile: Boolean?
+    val useOfficialDevfile: Boolean?,
+    @ApiModelProperty("当前运行客户端的OS")
+    val currentOS: String?,
+    @ApiModelProperty("windows 配置id")
+    @Deprecated("not use")
+    val windowsResourceConfigId: Int?,
+    @ApiModelProperty("windows 配置")
+    val windowsType: String?,
+    @ApiModelProperty("云桌面 地域")
+    val windowsZone: String?
 )

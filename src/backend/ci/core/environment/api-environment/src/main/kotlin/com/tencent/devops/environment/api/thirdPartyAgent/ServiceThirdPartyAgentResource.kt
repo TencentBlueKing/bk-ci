@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -66,6 +67,19 @@ interface ServiceThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/agents/{agentId}")
     fun getAgentById(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): AgentResult<ThirdPartyAgent?>
+
+    @ApiOperation("根据ID获取Agent信息,全局")
+    @GET
+    @Path("/projects/{projectId}/agents/{agentId}/global")
+    @Deprecated("getAgentById")
+    fun getAgentByIdGlobal(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -291,6 +305,11 @@ interface ServiceThirdPartyAgentResource {
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取Gateway列表")
+    @GET
+    @Path("/gateways")
+    fun getGateways(): Result<List<SlaveGateway>>
 
     @ApiOperation("获取构建机详情(by node id)")
     @GET

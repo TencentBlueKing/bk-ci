@@ -258,9 +258,9 @@ type DirectContentLayer struct {
 }
 
 // ReportGitCloneDone 上报拉代码完成
-func (r *RemoteDevClient) ReportGitCloneDone(ctx context.Context, workspaceId string) error {
+func (r *RemoteDevClient) ReportGitCloneDone(ctx context.Context, workspaceId string, wType WorkspaceActionType) error {
 	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	url := fmt.Sprintf("%s/remotedev/api/remotedev/workspace/complete_pull_code?workspaceName=%s&timestamp=%s", r.host, workspaceId, timestamp)
+	url := fmt.Sprintf("%s/remotedev/api/remotedev/workspace/complete_pull_code?workspaceName=%s&timestamp=%s&type=%s", r.host, workspaceId, timestamp, wType)
 	request, err := http.NewRequestWithContext(ctx, "POST", url, nil)
 	if err != nil {
 		return err
@@ -275,6 +275,13 @@ func (r *RemoteDevClient) ReportGitCloneDone(ctx context.Context, workspaceId st
 
 	return nil
 }
+
+type WorkspaceActionType string
+
+const (
+	WorkspaceActionCreate WorkspaceActionType = "WORKSPACE_CREATE"
+	WorkspaceActionStart  WorkspaceActionType = "WORKSPACE_START"
+)
 
 func hmacsha1Encrypt(keyStr, content string) string {
 	key := []byte(keyStr)

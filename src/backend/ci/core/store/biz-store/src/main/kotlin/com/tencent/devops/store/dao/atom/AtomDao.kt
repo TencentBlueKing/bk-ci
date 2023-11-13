@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -85,18 +86,18 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -520,7 +521,7 @@ class AtomDao : AtomBaseDao() {
         ).from(t)
             .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
         limitNum?.let { queryStep.limit(it) }
-        return queryStep.fetch()
+        return queryStep.skipCheck().fetch()
     }
 
     fun getPipelineAtoms(
@@ -633,9 +634,9 @@ class AtomDao : AtomBaseDao() {
         val t = queryAtomStep.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
@@ -1247,9 +1248,12 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun batchGetAtomName(dslContext: DSLContext, atomCodes: Collection<String>): Result<Record2<String, String>>? {
+    fun batchGetAtomName(
+        dslContext: DSLContext,
+        atomCodes: Collection<String>
+    ): Result<Record3<String, String, String>>? {
         return with(TAtom.T_ATOM) {
-            dslContext.select(ATOM_CODE, NAME).from(this)
+            dslContext.select(ATOM_CODE, NAME, VERSION).from(this)
                 .where(
                     LATEST_FLAG.eq(true)
                         .and(ATOM_CODE.`in`(atomCodes))

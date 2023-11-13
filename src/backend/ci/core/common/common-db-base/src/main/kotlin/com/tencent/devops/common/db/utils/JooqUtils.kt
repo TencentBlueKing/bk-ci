@@ -28,12 +28,15 @@
 package com.tencent.devops.common.db.utils
 
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
-import org.jooq.DatePart
-import org.jooq.Field
-import org.jooq.exception.DataAccessException
-import org.jooq.impl.DSL
 import java.math.BigDecimal
 import java.sql.Timestamp
+import org.jooq.DatePart
+import org.jooq.Field
+import org.jooq.Record
+import org.jooq.SelectOptionStep
+import org.jooq.SelectUnionStep
+import org.jooq.exception.DataAccessException
+import org.jooq.impl.DSL
 
 object JooqUtils {
 
@@ -73,16 +76,35 @@ object JooqUtils {
         )
     }
 
-    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+    /**
+     * 去掉双引号方便对比多数操作如 in，不然无法对比成功
+     */
+    fun jsonExtract(
+        t1: Field<String>,
+        t2: String,
+        lower: Boolean = false,
+        removeDoubleQuotes: Boolean = false
+    ): Field<String> {
+        var sql = "JSON_EXTRACT({0}, {1})"
+        if (removeDoubleQuotes) {
+            sql = "JSON_UNQUOTE($sql)"
+        }
+        if (lower) {
+            sql = "LOWER($sql)"
+        }
+        return DSL.field(sql, String::class.java, t1, t2)
+    }
+
+    inline fun <reified T> jsonExtractAny(t1: Field<String>, t2: String, lower: Boolean = false): Field<T> {
         return if (lower) {
             DSL.field(
                 "LOWER(JSON_EXTRACT({0}, {1}))",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         } else {
             DSL.field(
                 "JSON_EXTRACT({0}, {1})",
-                String::class.java, t1, t2
+                T::class.java, t1, t2
             )
         }
     }
@@ -90,6 +112,13 @@ object JooqUtils {
     fun <T> sum(data: Field<T>): Field<BigDecimal> {
         return DSL.field(
             "sum(${data.name})",
+            BigDecimal::class.java
+        )
+    }
+
+    fun <T> sum(data1: Field<T>, data2: Field<T>, operation: String): Field<BigDecimal> {
+        return DSL.field(
+            "sum(${data1.name}$operation${data2.name})",
             BigDecimal::class.java
         )
     }
@@ -108,3 +137,9 @@ object JooqUtils {
         )
     }
 }
+
+fun <R : Record> SelectOptionStep<R>.skipCheck(): SelectUnionStep<R> {
+    return this.option("/*$SKIP_CHECK*/")
+}
+
+const val SKIP_CHECK = "@skip_check@"

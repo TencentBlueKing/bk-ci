@@ -29,10 +29,10 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
+import com.tencent.devops.metrics.api.ServiceAtomMonitorDataResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -198,10 +198,10 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                 val storeCode = storeStatistic.value1()
                 logger.info("batchUpdateAtomDailyStatisticInfo storeCode:$storeCode")
                 val atomMonitorStatisticData =
-                    client.get(ServiceAtomMonitorResource::class).queryAtomMonitorStatisticData(
+                    client.get(ServiceAtomMonitorDataResource::class).queryAtomMonitorStatisticData(
                         atomCode = storeCode,
-                        startTime = startTime.timestampmilli(),
-                        endTime = endTime.timestampmilli()
+                        startTime = DateTimeUtil.toDateTime(startTime, DateTimeUtil.YYYY_MM_DD),
+                        endTime = DateTimeUtil.toDateTime(endTime, DateTimeUtil.YYYY_MM_DD)
                     ).data
                 val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
                     dslContext = dslContext,

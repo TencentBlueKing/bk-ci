@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
-import org.yaml.snakeyaml.Yaml
 
 @Component
 class YamlSchemaCheck @Autowired constructor() {
@@ -89,7 +88,7 @@ class YamlSchemaCheck @Autowired constructor() {
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
-            YamlUtil.toYaml(Yaml().load(originYaml))
+            YamlUtil.loadYamlRetryOnAccident(originYaml)
         } catch (ignored: Throwable) {
             logger.warn("YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")

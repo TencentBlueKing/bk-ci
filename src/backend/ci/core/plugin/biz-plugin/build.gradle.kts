@@ -35,6 +35,7 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:repository:api-repository"))
     api(project(":core:quality:api-quality"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
+    api(project(":core:common:common-codecc"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-pipeline"))
 }

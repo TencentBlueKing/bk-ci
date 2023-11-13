@@ -310,7 +310,7 @@
             font-size: 14px;
             padding-bottom: 10px;
             margin-bottom: 19px;
-            border-bottom: 1px solid fontLighterColor;
+            border-bottom: 1px solid $fontLighterColor;
             .cancel-release {
                 float: right;
                 color: $primaryColor;

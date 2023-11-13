@@ -58,7 +58,7 @@ class MqConfiguration {
     }
 
     @Bean
-    fun pipelinePauseTaskExecuteListenerContainer(
+    fun remoteDevUpdateListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired remoteDevUpdateQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

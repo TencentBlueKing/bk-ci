@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -95,9 +96,7 @@ interface OpAtomResource {
     @GET
     @Path("/")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listAllPipelineAtoms(
         @ApiParam("插件名称", required = false)
@@ -142,11 +141,7 @@ interface OpAtomResource {
     @ApiOperation("根据ID获取流水线插件信息")
     @GET
     @Path("/{id}")
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
+    @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getPipelineAtomById(
         @ApiParam("流水线插件ID", required = true)
         @QueryParam("id")
@@ -223,7 +218,16 @@ interface OpAtomResource {
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @ApiParam("发布者", required = false)
+        @QueryParam("publisher")
+        publisher: String? = null,
+        @ApiParam("发布类型", required = false)
+        @QueryParam("releaseType")
+        releaseType: ReleaseTypeEnum? = null,
+        @ApiParam("插件版本", required = false)
+        @QueryParam("version")
+        version: String? = null
     ): Result<Boolean>
 
     @ApiOperation("设置插件为默认插件")

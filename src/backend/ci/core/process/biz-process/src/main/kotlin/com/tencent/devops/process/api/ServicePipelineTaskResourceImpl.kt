@@ -32,14 +32,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.process.engine.pojo.ContainerStartInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContainerService: PipelineContainerService
 ) : ServicePipelineTaskResource {
 
     override fun list(
@@ -73,5 +76,28 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         ))
+    }
+
+    override fun getContainerStartupInfo(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        taskId: String
+    ): Result<ContainerStartInfo?> {
+        return Result(
+            ContainerStartInfo(
+                pipelineContainerService.getContainer(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = null,
+                    containerId = containerId
+                ),
+                pipelineTaskService.getByTaskId(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId
+                )
+            )
+        )
     }
 }

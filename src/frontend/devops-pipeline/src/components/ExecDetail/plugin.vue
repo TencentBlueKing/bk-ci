@@ -16,12 +16,16 @@
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
-            <plugin-log :id="currentElement.id"
+            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
+            <plugin-log
+                :id="currentElement.id"
+                :key="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
+                :exec-detail="execDetail"
                 :execute-count="currentElement.executeCount"
                 ref="log"
-                v-show="currentTab === 'log'"
+                v-if="currentTab === 'log'"
             />
             <component :is="value.component"
                 v-bind="value.bindData"
@@ -42,6 +46,7 @@
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
     import pluginLog from './log/pluginLog'
+    import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import Report from './Report'
     import Artifactory from './Artifactory'
 
@@ -49,7 +54,8 @@
         components: {
             detailContainer,
             ReferenceVariable,
-            pluginLog
+            pluginLog,
+            ErrorSummary
         },
         props: {
             execDetail: {
@@ -134,8 +140,37 @@
                 }
             },
 
+            activeErorr () {
+                return null
+                // try {
+                //     return this.execDetail.errorInfoList.find(error => error.taskId === this.currentElement.id)
+                // } catch (error) {
+                //     return null
+                // }
+            },
+
             showTab () {
                 return this.tabList[1].completeLoading && this.tabList[2].completeLoading
+            }
+        },
+
+        watch: {
+            'currentElement.id': function () {
+                this.tabList = [
+                    { name: 'log', show: true },
+                    { name: 'artifactory', show: true, completeLoading: false },
+                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'setting', show: true }
+                ]
+            },
+            tabList: {
+                handler (val) {
+                    const tab = val.find(tab => tab.name === this.currentTab)
+                    if (!tab.show) {
+                        this.currentTab = 'log'
+                    }
+                },
+                deep: true
             }
         },
 

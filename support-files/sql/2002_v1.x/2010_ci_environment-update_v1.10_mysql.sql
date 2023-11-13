@@ -37,6 +37,26 @@ BEGIN
         END IF;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENVIRONMENT_SLAVE_GATEWAY'
+                    AND COLUMN_NAME = 'FILE_GATEWAY') THEN
+
+        ALTER TABLE `T_ENVIRONMENT_SLAVE_GATEWAY`
+            ADD COLUMN `FILE_GATEWAY` varchar(127) DEFAULT NULL COMMENT '文件网关地址';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENVIRONMENT_SLAVE_GATEWAY'
+                    AND COLUMN_NAME = 'VISIBILITY') THEN
+
+        ALTER TABLE `T_ENVIRONMENT_SLAVE_GATEWAY`
+            ADD COLUMN `VISIBILITY` bit(1) DEFAULT b'0' COMMENT '是否在界面可见';
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>

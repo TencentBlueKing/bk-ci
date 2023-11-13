@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.MutexControl
@@ -41,6 +42,8 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.utils.BuildUtils
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -53,7 +56,8 @@ class UpdateStateContainerCmdFinally(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val dispatchQueueControl: DispatchQueueControl
+    private val dispatchQueueControl: DispatchQueueControl,
+    private val redisOperation: RedisOperation
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.FINALLY && !commandContext.container.status.isFinish()
@@ -69,6 +73,8 @@ class UpdateStateContainerCmdFinally(
             mutexRelease(commandContext = commandContext)
             // 释放互斥组
             dispatchDequeue(commandContext = commandContext)
+            // 释放redis中取消任务的缓存
+            canceledTaskCacheRelease(commandContext = commandContext)
         }
         // 发送回Stage
         if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
@@ -122,6 +128,18 @@ class UpdateStateContainerCmdFinally(
     private fun dispatchDequeue(commandContext: ContainerContext) {
         // 返回stage的时候，需要解锁
         dispatchQueueControl.dequeueDispatch(commandContext.container)
+    }
+
+    /**
+     * 清除redis中取消任务的缓存
+     */
+    private fun canceledTaskCacheRelease(commandContext: ContainerContext) {
+        // 清除redis中取消任务的缓存
+        val buildId = commandContext.event.buildId
+        val containerId = commandContext.event.containerId
+        redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
+        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId))
     }
 
     /**

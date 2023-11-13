@@ -57,7 +57,6 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
     }
 
     override fun changeMemberTestProjectCode(
-        accessToken: String,
         userId: String,
         storeMember: String,
         projectCode: String,
@@ -65,7 +64,6 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
         storeType: StoreTypeEnum
     ): Result<Boolean> {
         return getStoreMemberService(storeType).changeMemberTestProjectCode(
-            accessToken = accessToken,
             userId = userId,
             storeMember = storeMember,
             projectCode = projectCode,

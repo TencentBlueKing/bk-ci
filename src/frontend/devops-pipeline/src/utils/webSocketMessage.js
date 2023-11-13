@@ -21,10 +21,9 @@ export default {
 
     installWsMessage (callBack) {
         this.callBack = (res) => {
-            const data = res.data
-            const type = data.webSocketType
-            if (type === 'IFRAME') {
-                const message = JSON.parse(data.message)
+            const type = res?.data?.webSocketType
+            if (type === 'IFRAME' && res.data?.message) {
+                const message = JSON.parse(res.data.message)
                 callBack(message)
             }
         }

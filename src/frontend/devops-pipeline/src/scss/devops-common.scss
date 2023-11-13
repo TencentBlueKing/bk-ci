@@ -264,3 +264,10 @@ input[disabled="disabled"] {
     width: calc(100% - 36px);
     @include ellipsis();
 }
+.primary-link,
+.primary-link:visited {
+    color: $primaryColor;
+    &:hover {
+        color: #699df4;
+    }
+}

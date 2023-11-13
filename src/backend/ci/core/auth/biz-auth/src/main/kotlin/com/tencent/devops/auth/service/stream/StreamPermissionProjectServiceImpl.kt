@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.stream
 
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -79,11 +80,22 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         return false
     }
 
+    override fun batchCreateProjectUser(
+        userId: String,
+        projectCode: String,
+        roleCode: String,
+        members: List<String>
+    ): Boolean = true
+
     override fun getProjectRoles(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
+    }
+
+    override fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO {
+        return ProjectPermissionInfoVO("", "", "", emptyList(), emptyList())
     }
 }

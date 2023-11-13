@@ -1,7 +1,9 @@
 package com.tencent.devops.dispatch.devcloud.dao
 
 import com.tencent.devops.model.dispatch.devcloud.tables.TBuildContainerPoolNo
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TBuildContainerPoolNoRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -91,6 +93,25 @@ class BuildContainerPoolNoDao {
             }
         }
         return result
+    }
+
+    fun getBuildContainerPoolNo(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String?,
+        executeCount: Int
+    ): Result<TBuildContainerPoolNoRecord> {
+        with(TBuildContainerPoolNo.T_BUILD_CONTAINER_POOL_NO) {
+            val sql = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+
+            if (!vmSeqId.isNullOrBlank()) {
+                sql.and(VM_SEQ_ID.eq(vmSeqId))
+            }
+
+            return sql.fetch()
+        }
     }
 
     fun deleteDevCloudBuildLastContainerPoolNo(

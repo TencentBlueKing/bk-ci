@@ -306,7 +306,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomClassifyCode = it["classifyCode"] as? String
             val classifyName = it["classifyName"] as? String
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$atomClassifyCode",
                 defaultMessage = classifyName
             )
             val opIdeAtomItem = OpIdeAtomItem(

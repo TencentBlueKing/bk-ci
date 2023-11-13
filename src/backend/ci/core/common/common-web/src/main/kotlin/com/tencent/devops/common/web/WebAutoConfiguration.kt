@@ -28,10 +28,17 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
+import com.tencent.devops.common.web.runner.BkServiceInstanceApplicationRunner
+import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -42,6 +49,7 @@ import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
@@ -75,6 +83,12 @@ class WebAutoConfiguration {
 
     @Bean
     @Primary
+    fun jerseyTagsProvider(): JerseyTagsProvider {
+        return BkJerseyTagProvider()
+    }
+
+    @Bean
+    @Primary
     fun objectMapper() = JsonUtil.getObjectMapper()
 
     @Bean("jasyptStringEncryptor")
@@ -88,7 +102,22 @@ class WebAutoConfiguration {
     fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
 
     @Bean
-    fun bkWriterInterceptor() = BkWriterInterceptor()
+    fun bkWriterInterceptor(commonConfig: CommonConfig, client: Client) = BkWriterInterceptor(
+        commonConfig = commonConfig,
+        client = client
+    )
+
+    @Bean
+    fun bkServiceInstanceApplicationRunner(
+        compositeDiscoveryClient: CompositeDiscoveryClient,
+        bkTag: BkTag,
+        redisOperation: RedisOperation,
+        rabbitAdmin: RabbitAdmin
+    ) = BkServiceInstanceApplicationRunner(
+        compositeDiscoveryClient = compositeDiscoveryClient,
+        bkTag = bkTag,
+        redisOperation = redisOperation
+    )
 
     @Bean
     @ConditionalOnProperty(

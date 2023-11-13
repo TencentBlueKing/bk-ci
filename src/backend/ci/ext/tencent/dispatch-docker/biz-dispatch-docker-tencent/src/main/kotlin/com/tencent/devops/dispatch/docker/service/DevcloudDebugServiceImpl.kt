@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("PUBLIC_DEVCLOUD_BUILD_CLUSTER_RESULT")
 class DevcloudDebugServiceImpl @Autowired constructor(
     private val client: Client
 ) : ExtDebugService {
@@ -31,7 +31,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             buildId = buildId
         )
 
-        if (devCloudDebugResult.code != 0) {
+        if (devCloudDebugResult.status != 0) {
             val msg = devCloudDebugResult.message
             logger.error("[$pipelineId] get devcloud debugUrl failed, msg: $msg")
             throw DockerServiceException(

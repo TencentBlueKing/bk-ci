@@ -176,21 +176,23 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun getPreBuildAgent(
+    fun getPreBuildAgentIds(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        vmSeqId: String
-    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        vmSeqId: String,
+        size: Int
+    ): List<String> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
+            return dslContext.selectDistinct(AGENT_ID) // 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
+                .from(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(STATUS.eq(PipelineTaskStatus.DONE.status))
                 .orderBy(CREATED_TIME.desc())
-                .limit(10)
-                .fetch()
+                .limit(size)
+                .fetch(AGENT_ID, String::class.java)
         }
     }
 
@@ -271,6 +273,33 @@ class ThirdPartyAgentBuildDao {
             return dslContext.selectCount().from(this)
                 .where(AGENT_ID.eq(agentId))
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getLastDockerBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .orderBy(CREATED_TIME.desc())
+                .fetchAny()
+        }
+    }
+
+    fun getDockerBuild(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(DOCKER_INFO.isNotNull)
+                .fetchAny()
         }
     }
 }

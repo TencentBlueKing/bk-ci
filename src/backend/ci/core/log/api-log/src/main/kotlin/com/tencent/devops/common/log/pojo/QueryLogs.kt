@@ -49,6 +49,8 @@ data class QueryLogs(
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
+    @ApiModelProperty("日志子tag列表", required = false)
+    var subTags: List<String>? = null,
+    @ApiModelProperty("错误信息", required = false)
+    var message: String? = null
 )

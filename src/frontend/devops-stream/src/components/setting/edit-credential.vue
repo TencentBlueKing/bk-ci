@@ -1,6 +1,6 @@
 <template>
-    <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
-        <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" label-width="400">
+    <bk-sideslider :is-show="show" :before-close="hidden" :quick-close="true" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
+        <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" :label-width="400">
             <bk-form-item :label="$t('setting.ticket.credentialType')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
                 <bk-select v-model="formData.credentialType" :clearable="false" @change="changeCredentialType" :disabled="isEdit">
                     <bk-option v-for="option in ticketTypes"
@@ -11,16 +11,16 @@
                 </bk-select>
             </bk-form-item>
             <bk-form-item :label="$t('setting.ticket.credentialKey')" :required="true" :desc="{ content: $t('setting.ticket.credentialDesc'), width: '400px' }" :rules="[requireRule('Code'), idRule]" property="credentialId" error-display-type="normal">
-                <bk-input v-model="formData.credentialId" :placeholder="$t('setting.ticket.credentialIdPlaceholder')" :disabled="isEdit"></bk-input>
+                <bk-input v-model="formData.credentialId" @change="handleChange" :placeholder="$t('setting.ticket.credentialIdPlaceholder')" :disabled="isEdit"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" error-display-type="normal">
-                <bk-input v-model="formData.credentialName" :placeholder="$t('setting.ticket.credentialIdPlaceholder')"></bk-input>
+                <bk-input v-model="formData.credentialName" @change="handleChange" :placeholder="$t('setting.ticket.credentialIdPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="com.label" :required="com.required" :property="com.id" v-for="com in computedTicket.content" :key="com.id" error-display-type="normal" :rules="com.rules">
-                <bk-input v-model="formData[com.id]" :type="com.type" :placeholder="com.placeholder"></bk-input>
+                <bk-input v-model="formData[com.id]" @change="handleChange" :type="com.type" :placeholder="com.placeholder"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('description')" property="credentialRemark">
-                <bk-input type="textarea" v-model="formData.credentialRemark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
+                <bk-input type="textarea" v-model="formData.credentialRemark" @change="handleChange" :placeholder="$t('descriptionPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item>
                 <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isLoading">{{$t('submit')}}</bk-button>
@@ -249,6 +249,7 @@
             },
 
             changeCredentialType (credentialType) {
+                this.handleChange()
                 this.$refs.credentialForm.clearError()
                 this.formData.v1 = ''
                 this.formData.v2 = ''
@@ -261,8 +262,30 @@
                 })
             },
 
+            handleChange () {
+                window.changeFlag = true
+            },
+
             hidden () {
-                this.$emit('hidden')
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
+                        confirmFn: () => {
+                            window.changeFlag = false
+                            this.$emit('hidden')
+                        }
+                    })
+                } else {
+                    this.$emit('hidden')
+                }
             }
         }
     }

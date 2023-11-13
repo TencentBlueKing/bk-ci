@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.service.plugin
 
-import com.tencent.devops.misc.dao.plugin.PluginDataClearDao
 import com.tencent.devops.misc.dao.plugin.TxPluginDataClearDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,9 +35,8 @@ import org.springframework.stereotype.Service
 @Service
 class TxPluginDataClearServiceImpl @Autowired constructor(
     dslContext: DSLContext,
-    pluginDataClearDao: PluginDataClearDao,
     private val txPluginDataClearDao: TxPluginDataClearDao
-) : PluginDataClearService(dslContext, pluginDataClearDao) {
+) : PluginDataClearService(dslContext) {
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         txPluginDataClearDao.deletePluginJingangByBuildId(dslContext, buildId)

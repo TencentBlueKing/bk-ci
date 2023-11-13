@@ -112,7 +112,7 @@ class WindowsBuildListener @Autowired constructor(
                     errorType = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.getErrorMessage(),
-                    errorMessage = "Windows启动失败"
+                    errorMessage = "Windows failed to start"
                 )
             }
 
@@ -124,7 +124,7 @@ class WindowsBuildListener @Autowired constructor(
             buildId = dispatchMessage.buildId,
             containerHashId = dispatchMessage.containerHashId,
             vmSeqId = dispatchMessage.vmSeqId,
-            message = "Windows资源类型：$resourceType",
+            message = "Windows resource type：$resourceType",
             executeCount = dispatchMessage.executeCount
         )
         log(
@@ -132,7 +132,7 @@ class WindowsBuildListener @Autowired constructor(
             buildId = dispatchMessage.buildId,
             containerHashId = dispatchMessage.containerHashId,
             vmSeqId = dispatchMessage.vmSeqId,
-            message = "Windows构建机IP：${devCloudWindowsInfo?.ip}",
+            message = "Windows build machine IP：${devCloudWindowsInfo?.ip}",
             executeCount = dispatchMessage.executeCount
         )
 

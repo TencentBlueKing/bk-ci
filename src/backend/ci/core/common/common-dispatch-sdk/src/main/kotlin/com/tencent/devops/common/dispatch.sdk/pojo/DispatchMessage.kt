@@ -29,6 +29,7 @@ package com.tencent.devops.common.dispatch.sdk.pojo
 
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
 data class DispatchMessage(
     val id: String,
@@ -54,5 +55,6 @@ data class DispatchMessage(
     val stageId: String? = null,
     val dispatchType: DispatchType?,
     val customBuildEnv: Map<String, String>? = null,
-    val dockerRoutingType: String? = "VM"
+    val dockerRoutingType: String? = "VM",
+    val event: PipelineAgentStartupEvent? = null
 )

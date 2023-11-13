@@ -47,6 +47,7 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -251,13 +252,16 @@ class ExtServiceSearchService @Autowired constructor(
             val members = memberData?.get(serviceCode)
             val flag = storeCommonService.generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
             val classifyId = it["CLASSIFY_ID"] as String
+            val logoUrl = it["LOGO_URL"] as? String
             results.add(
                 ExtServiceItem(
                     id = it["SERVICE_ID"] as String,
                     name = it["SERVICE_NAME"] as String,
                     code = serviceCode,
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    logoUrl = it["LOGO_URL"] as? String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     publisher = it["PUBLISHER"] as String,
                     downloads = statistic?.downloads ?: 0,
                     score = statistic?.score ?: 0.toDouble(),

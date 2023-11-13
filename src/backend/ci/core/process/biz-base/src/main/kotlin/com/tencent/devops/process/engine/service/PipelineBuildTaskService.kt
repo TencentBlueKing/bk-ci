@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -90,6 +91,15 @@ class PipelineBuildTaskService @Autowired constructor(
                 // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
                 if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
                     logger.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
+                    // 将当前重试 task id 做记录
+                    pipelineTaskService.taskRetryRecordSet(
+                        projectId = projectId,
+                        taskId = taskId,
+                        buildId = buildId,
+                        pipelineId = pipelineId,
+                        containerId = containerId,
+                        executeCount = buildTask.executeCount ?: 1
+                    )
                     pipelineTaskService.updateTaskStatus(
                         task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                     )
@@ -123,7 +133,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     containerType = buildTask.containerType,
                     actionType = actionType,
                     errorCode = errorCode,
-                    errorTypeName = buildTask.errorType?.typeName,
+                    errorTypeName = buildTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     reason = buildTask.errorMsg
                 )
             )

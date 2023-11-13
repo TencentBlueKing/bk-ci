@@ -33,6 +33,7 @@ import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -43,6 +44,7 @@ import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import javax.ws.rs.NotSupportedException
 
 @Primary
@@ -186,7 +188,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             url = url,
             type = type,
             username = username,
-            password = password,
+            password = URLEncoder.encode(password, "UTF-8"),
             token = token,
             region = region,
             repoUsername = repoUsername
@@ -347,6 +349,22 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             url = url,
             type = type,
             token = token
+        ).data
+    }
+
+    override fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo? {
+        return client.getScm(ServiceScmResource::class).getCrReviewInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            crId = crId
         ).data
     }
 }

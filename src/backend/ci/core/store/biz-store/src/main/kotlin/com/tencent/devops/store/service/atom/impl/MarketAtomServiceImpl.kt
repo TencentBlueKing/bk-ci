@@ -69,6 +69,8 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -128,6 +130,7 @@ import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import java.time.LocalDateTime
@@ -333,6 +336,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     userDeptList = userDeptList)
                 val classifyId = it[tAtom.CLASSIFY_ID] as String
                 var logoUrl = it[tAtom.LOGO_URL]
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                }
                 logoUrl = if (logoUrl?.contains("?") == true) {
                     logoUrl.plus("&logo=true")
                 } else {
@@ -539,7 +545,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 根据用户和插件名称获取插件信息
      */
     override fun getMyAtoms(
-        accessToken: String,
         userId: String,
         atomName: String?,
         page: Int,
@@ -606,14 +611,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             if (releaseAtomNum > 0) {
                 releaseFlag = true
             }
+            val logoUrl = it[tAtom.LOGO_URL]
             myAtoms.add(
                 MyAtomRespItem(
                     atomId = it[tAtom.ID] as String,
                     name = it[tAtom.NAME] as String,
                     atomCode = atomCode,
-                    language = it[tAtomEnvInfo.LANGUAGE],
+                    language = it[tAtomEnvInfo.LANGUAGE]?.let { I18nUtil.getCodeLanMessage(it) },
                     category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                    logoUrl = it[tAtom.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     version = it[tAtom.VERSION] as String,
                     atomStatus = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
                     projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
@@ -682,7 +690,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         )
         if (!isStoreMember) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -777,12 +785,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val version = record[tAtom.VERSION]
             val osStr = record[tAtom.OS]
             val defaultAtomEnvRecord = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
+            val logoUrl = record[tAtom.LOGO_URL]
+            val description = record[tAtom.DESCRIPTION]
             Result(
                 AtomVersion(
                     atomId = atomId,
                     atomCode = atomCode,
                     name = record[tAtom.NAME] as String,
-                    logoUrl = record[tAtom.LOGO_URL],
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     classifyCode = classifyCode,
                     classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
@@ -795,12 +807,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         List::class.java
                     ) as List<String> else null,
                     summary = record[tAtom.SUMMARY],
-                    description = record[tAtom.DESCRIPTION],
+                    description = description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                    },
                     version = version,
                     atomStatus = atomStatus,
                     releaseType = releaseType?.name,
                     versionContent = record[tAtomVersionLog.CONTENT],
-                    language = defaultAtomEnvRecord?.language,
+                    language = defaultAtomEnvRecord?.language?.let { I18nUtil.getCodeLanMessage(it) },
                     codeSrc = record[tAtom.CODE_SRC],
                     publisher = record[tAtom.PUBLISHER] as String,
                     modifier = record[tAtom.MODIFIER] as String,
@@ -899,13 +913,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      */
     @BkTimed(extraTags = ["web_operation", "installAtom"], value = "store_web_operation")
     override fun installAtom(
-        accessToken: String,
         userId: String,
         channelCode: ChannelCode,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         // 判断插件标识是否合法
-        logger.info("installAtom params:[$accessToken|$userId|$channelCode|$installAtomReq]")
+        logger.info("installAtom params:[$userId|$channelCode|$installAtomReq]")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         if (null == atom || atom.deleteFlag == true) {
             return I18nUtil.generateResponseDataObject(
@@ -973,7 +986,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         ) {
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                errorCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(atomCode)
             )
         }
@@ -1016,7 +1029,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         records?.forEach {
             ret.add(
                 AtomDevLanguage(
-                    language = it.language
+                    language = it.language,
+                    name = I18nUtil.getCodeLanMessage(it.language)
                 )
             )
         }
@@ -1032,7 +1046,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)
         if (!isOwner) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                messageCode = NO_COMPONENT_ADMIN_PERMISSION,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
@@ -1058,10 +1072,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         }
         // 删除仓库插件包文件
-        val initProjectCode =
-            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        ) ?: ""
         val deleteAtomFileResult =
-            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode!!, atomCode)
+            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(userId, initProjectCode, atomCode)
         if (deleteAtomFileResult.isNotOk()) {
             return deleteAtomFileResult
         }

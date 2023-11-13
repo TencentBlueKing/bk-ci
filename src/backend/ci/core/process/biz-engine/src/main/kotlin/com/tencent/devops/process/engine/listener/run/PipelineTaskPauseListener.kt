@@ -105,7 +105,8 @@ class PipelineTaskPauseListener @Autowired constructor(
         val newElementRecord = pipelineTaskPauseService.getPauseTask(
             projectId = task.projectId,
             buildId = task.buildId,
-            taskId = task.taskId
+            taskId = task.taskId,
+            executeCount = task.executeCount
         )
         if (newElementRecord != null) {
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)

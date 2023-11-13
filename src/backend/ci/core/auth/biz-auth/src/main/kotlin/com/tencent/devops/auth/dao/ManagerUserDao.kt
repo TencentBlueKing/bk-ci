@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthManagerUser
 import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import org.jooq.DSLContext
@@ -70,13 +71,14 @@ class ManagerUserDao {
             return dslContext.selectFrom(this).where(
                 MANAGER_ID.eq(managerId)
                     .and(END_TIME.gt(LocalDateTime.now()))
-            ).orderBy(CREATE_TIME.desc()).fetch()
+            ).orderBy(CREATE_TIME.desc()).skipCheck().fetch()
         }
     }
 
     fun get(dslContext: DSLContext, managerId: Int, userId: String): TAuthManagerUserRecord? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).fetchOne()
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).skipCheck()
+                .fetchOne()
         }
     }
 
@@ -86,7 +88,7 @@ class ManagerUserDao {
                 MANAGER_ID.eq(managerId)
                     .and(USER_ID.eq(userId))
                     .and(END_TIME.sub(EXPIRE_TIME).le(currentLocalDateTime()))
-            ).fetchOne()
+            ).skipCheck().fetchOne()
         }
     }
 
@@ -94,7 +96,7 @@ class ManagerUserDao {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.selectFrom(this).where(
                 END_TIME.sub(EXPIRE_TIME).le(currentLocalDateTime())
-            ).fetch()
+            ).skipCheck().fetch()
         }
     }
 
@@ -107,7 +109,7 @@ class ManagerUserDao {
 
     fun getByUser(dslContext: DSLContext, userId: String): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where((USER_ID.eq(userId))).fetch()
+            return dslContext.selectFrom(this).where((USER_ID.eq(userId))).skipCheck().fetch()
         }
     }
 
@@ -116,20 +118,20 @@ class ManagerUserDao {
             return dslContext.selectCount().from(this).where(
                 MANAGER_ID.eq(managerId)
                     .and(END_TIME.gt(LocalDateTime.now()))
-            ).fetchOne(0, Int::class.java)!!
+            ).skipCheck().fetchOne(0, Int::class.java)!!
         }
     }
 
     fun allCount(dslContext: DSLContext): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectCount().from(this).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).skipCheck().fetchOne(0, Int::class.java)!!
         }
     }
 
     fun timeoutList(dslContext: DSLContext, limit: Int, offset: Int): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.selectFrom(this).where(END_TIME.le(LocalDateTime.now()))
-                .limit(limit).offset(offset).fetch()
+                .limit(limit).offset(offset).skipCheck().fetch()
         }
     }
 

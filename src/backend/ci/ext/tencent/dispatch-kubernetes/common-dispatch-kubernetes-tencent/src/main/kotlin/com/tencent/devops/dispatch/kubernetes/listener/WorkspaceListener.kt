@@ -52,9 +52,11 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
+            mountType = event.mountType ?: event.devFile.checkWorkspaceMountType(),
             type = UpdateEventType.CREATE,
             bkTicket = event.bkTicket,
-            status = false
+            status = false,
+            autoAssign = event.devFile.autoAssign
         )
         try {
             logger.info("Start to handle workspace create ($event)")
@@ -66,6 +68,8 @@ class WorkspaceListener @Autowired constructor(
             backEvent.environmentUid = workspaceResponse.environmentUid
             backEvent.environmentHost = workspaceResponse.environmentHost
             backEvent.environmentIp = workspaceResponse.environmentIp
+            backEvent.resourceId = workspaceResponse.resourceId
+            backEvent.macAddress = workspaceResponse.macAddress
             backEvent.status = true
         } catch (e: BuildFailureException) {
             backEvent.errorMsg = e.formatErrorMessage + e.message
@@ -87,6 +91,7 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
+            mountType = event.mountType,
             type = event.type,
             bkTicket = event.bkTicket,
             status = false,
@@ -94,17 +99,22 @@ class WorkspaceListener @Autowired constructor(
         )
         try {
             logger.info("Start to handle workspace operate ($event)")
-            backEvent.environmentIp = remoteDevService.getWorkspaceInfo(event.userId, event.workspaceName).environmentIP
             when (event.type) {
                 UpdateEventType.START -> {
-                    val workspaceResponse = remoteDevService.startWorkspace(event.userId, event.workspaceName)
+                    val workspaceResponse = remoteDevService.startWorkspace(event)
                     backEvent.environmentHost = workspaceResponse.environmentHost
                 }
                 UpdateEventType.STOP -> {
-                    remoteDevService.stopWorkspace(event.userId, event.workspaceName)
+                    remoteDevService.stopWorkspace(event)
                 }
                 UpdateEventType.DELETE -> {
-                    remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
+                    remoteDevService.deleteWorkspace(event)
+                }
+                UpdateEventType.RESTART -> {
+                    remoteDevService.restartWorkspace(event)
+                }
+                UpdateEventType.MAKE_IMAGE -> {
+                    backEvent.workspaceImageInfo = remoteDevService.makeWorkspaceImage(event)
                 }
                 else -> {
                 }

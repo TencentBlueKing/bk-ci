@@ -32,14 +32,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -77,20 +78,19 @@ interface ServiceProjectResource {
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
 
-    @GET
-    @Path("/getV0orV3Projects")
-    @ApiOperation("获取v0或者v3的项目")
-    fun getV0orV3Projects(
-        @ApiParam("权限版本", required = true)
-        @QueryParam("authType")
-        authType: AuthSystemType,
+    @POST
+    @Path("/listMigrateProjects/{offset}/{limit}")
+    @ApiOperation("条件迁移项目实体")
+    fun listMigrateProjects(
+        @ApiParam("条件迁移项目实体", required = false)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO,
         @ApiParam("limit", required = true)
-        @QueryParam("limit")
+        @PathParam("limit")
         limit: Int,
         @ApiParam("offset", required = true)
-        @QueryParam("offset")
+        @PathParam("offset")
         offset: Int
-    ): Result<List<ProjectVO>>
+    ): Result<List<ProjectWithPermission>>
 
     @POST
     @Path("/")

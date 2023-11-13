@@ -48,19 +48,18 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.environment.client.InfluxdbClient
-import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
+import com.tencent.devops.environment.dao.AgentShareProjectDao
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
@@ -95,6 +94,7 @@ import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentProps
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -125,18 +125,20 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
-    private val envShareProjectDao: EnvShareProjectDao
+    private val envShareProjectDao: EnvShareProjectDao,
+    private val commonConfig: CommonConfig,
+    private val agentMetricService: AgentMetricService,
+    private val agentShareProjectDao: AgentShareProjectDao
 ) {
 
     fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
         val id = HashUtil.decodeIdToLong(agentHashId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id, projectId = projectId) ?: return null
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id) ?: return null
 
         return getThirdPartyAgentDetail(agentRecord, userId, true)
     }
@@ -175,7 +177,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
             } else {
-                influxdbClient.queryHostInfo(agentHashId)
+                agentMetricService.queryHostInfo(nodeRecord.projectId, agentHashId)
             }
         } catch (e: Throwable) {
             logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
@@ -397,105 +399,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = agentActionCount, records = agentActions)
     }
 
-    fun queryCpuUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryMemoryUsageMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryDiskioMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
-    fun queryNetMetrix(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        timeRange: String
-    ): Map<String, List<Map<String, Any>>> {
-        val id = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
-            dslContext = dslContext,
-            nodeId = id,
-            projectId = projectId
-        ) ?: throw NotFoundException("The agent is not exist")
-
-        return try {
-            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
-                ?.loadQuery(
-                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                    timeRange = timeRange
-                ) ?: emptyMap()
-        } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            emptyMap()
-        }
-    }
-
     fun generateAgent(
         userId: String,
         projectId: String,
@@ -525,7 +428,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
             val agentRecord = unimportAgent[0]
-            logger.info("The agent(${agentRecord.id}) exist")
+            logger.debug("The agent(${agentRecord.id}) exist")
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(
                     dslContext = dslContext,
@@ -594,13 +497,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return emptyList()
         }
 
-        logger.info("Get the user can use node ids $canUseNodeIds")
+        logger.debug("Get the user can use node ids $canUseNodeIds")
 
         val agentInfo = ArrayList<ThirdPartyAgentInfo>()
 
         agents.forEach { agent ->
             if (agent.nodeId == null) {
-                logger.warn("The agent(${agent.id}) node id is empty")
+                logger.debug("The agent(${agent.id}) node id is empty")
                 return@forEach
             }
 
@@ -629,7 +532,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
-        logger.info("[$projectId|$displayName] Get the agent")
         val nodes = nodeDao.getByDisplayName(
             dslContext = dslContext,
             projectId = projectId,
@@ -669,14 +571,58 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
+    /**
+     * 兼容老的使用了其他项目构建机的 agent
+     * 如果没有共享，不被删除，但是也不被调用
+     */
     fun getAgent(
         projectId: String,
         agentId: String
     ): AgentResult<ThirdPartyAgent?> {
-        logger.info("Get the agent($agentId) of project($projectId)")
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id, projectId = projectId)
+        // 先去寻找当前项目下是否存在这个 agent
+        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
+        if (agentRecord != null) {
+            return getResultByRecord(projectId, agentId, agentRecord)
+        }
+        // 如果没有则去全局搜索这个 agent, 没有则说明被删除了
+        val agentGlobalRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: return AgentResult(AgentStatus.DELETE, null)
+        // 如果还有则搜索是否被共享给当前项目，没有被共享则不能使用
+        val isShared = agentShareProjectDao.selectSharedAgentCount(dslContext, id, projectId) > 0
+        if (isShared) {
+            return getResultByRecord(projectId, agentId, agentGlobalRecord)
+        }
+        // 没有则按 agent 的状态返回，但是不返回 agent 实例
+        logger.warn("not allow $projectId use agent $agentId")
+        return AgentResult(
+            status = 1,
+            message = "not allow use this agent",
+            agentStatus = AgentStatus.fromStatus(agentGlobalRecord.status),
+            data = null
+        )
+    }
+
+    /**
+     * 老的使用全局构建机的先走这个逻辑，未来评估慢慢下掉
+     *
+     */
+    @Deprecated("getAgent")
+    fun getAgentGlobal(
+        projectId: String,
+        agentId: String
+    ): AgentResult<ThirdPartyAgent?> {
+        val id = HashUtil.decodeIdToLong(agentId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
+            ?: return AgentResult(AgentStatus.DELETE, null)
+        return getResultByRecord(projectId, agentId, agentRecord)
+    }
+
+    private fun getResultByRecord(
+        projectId: String,
+        agentId: String,
+        agentRecord: TEnvironmentThirdpartyAgentRecord
+    ): AgentResult<ThirdPartyAgent?> {
         val status = AgentStatus.fromStatus(agentRecord.status)
         val nodeId = if (agentRecord.nodeId != null) {
             HashUtil.encodeLongId(agentRecord.nodeId)
@@ -703,7 +649,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
-        logger.info("[$projectId|$envName] Get the agents by env name")
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
@@ -805,7 +750,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -925,7 +870,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     ): AgentResult<Boolean> {
         logger.info("Checking if the agent($agentId) of project($projectId) can upgrade")
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id, projectId = projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
             ?: return AgentResult(AgentStatus.DELETE, false)
         val status = AgentStatus.fromStatus(agentRecord.status)
         if (status != AgentStatus.IMPORT_OK) {
@@ -990,7 +935,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     ): ThirdPartyAgentStatusWithInfo {
         val record = thirdPartyAgentDao.getAgent(
             dslContext,
-            HashUtil.decodeIdToLong(agentId), projectId
+            HashUtil.decodeIdToLong(agentId)
         ) ?: throw NotFoundException("The agent($agentId) is not exist")
         // #4686 优化导入流程之后构建机启动会自动导入，此web的导入界面需要继续展示让用户可见，以使之保持用户现有操作习惯，
         var fromStatus = AgentStatus.fromStatus(record.status)
@@ -1016,7 +961,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     ): AgentStatus {
         val id = HashUtil.decodeIdToLong(agentId)
         logger.info("The agent($id) is start up by ${startInfo.hostIp}")
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId) ?: return AgentStatus.DELETE
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id) ?: return AgentStatus.DELETE
 
         if (secretKey != SecurityUtil.decrypt(agentRecord.secretKey)) {
             throw AgentPermissionUnAuthorizedException("The secret key is not match")
@@ -1029,8 +974,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank())
+                    AgentStatus.isUnImport(status) ||
+                    agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1062,7 +1007,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1085,7 +1030,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     ): AgentStatus {
         val id = HashUtil.decodeIdToLong(agentId)
         logger.info("The agent($id) shutdown($shutdownNormal)")
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id, projectId = projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
             ?: return AgentStatus.DELETE
 
         if (secretKey != SecurityUtil.decrypt(agentRecord.secretKey)) {
@@ -1101,7 +1046,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         secretKey: String
     ): AgentStatus {
         val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id, projectId = projectId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
             ?: return AgentStatus.DELETE
         if (secretKey != SecurityUtil.decrypt(agentRecord.secretKey)) {
             throw AgentPermissionUnAuthorizedException("The secret key is not match")
@@ -1134,7 +1079,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ParallelTaskCount = -1,
                     envs = mapOf(),
                     props = mapOf(),
-                    dockerParallelTaskCount = -1
+                    dockerParallelTaskCount = -1,
+                    language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
@@ -1245,7 +1191,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 ParallelTaskCount = -1,
                                 envs = mapOf(),
                                 props = mapOf(),
-                                dockerParallelTaskCount = -1
+                                dockerParallelTaskCount = -1,
+                                language = commonConfig.devopsDefaultLocaleLanguage
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1281,7 +1228,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
+                language = commonConfig.devopsDefaultLocaleLanguage
             )
         }
     }
@@ -1402,7 +1350,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getOs(userId: String, projectId: String, agentId: String): String {
-        return thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId), projectId)?.os ?: "LINUX"
+        return thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.os ?: "LINUX"
     }
 
     fun enableThirdPartyAgent(projectId: String, enable: Boolean) =
@@ -1423,7 +1371,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     ): TEnvironmentThirdpartyAgentRecord? {
         val id = HashUtil.decodeIdToLong(agentId)
         val agentRecord =
-            thirdPartyAgentDao.getAgent(dslContext = context, id = id, projectId = projectId) ?: return null
+            thirdPartyAgentDao.getAgent(dslContext = context, id = id) ?: return null
         if (secretKey != SecurityUtil.decrypt(agentRecord.secretKey)) {
             throw AgentPermissionUnAuthorizedException("The secret key is not match")
         }

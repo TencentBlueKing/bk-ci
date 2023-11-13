@@ -40,6 +40,7 @@ export default {
         },
 
         changeParamValue (val) {
+            window.changeFlag = true
             this.$emit('value-change', this.paramKey, val)
         }
     }

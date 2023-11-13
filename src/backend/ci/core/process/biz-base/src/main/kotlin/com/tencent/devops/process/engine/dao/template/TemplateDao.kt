@@ -181,9 +181,18 @@ class TemplateDao {
         }
     }
 
-    fun updateStoreFlag(dslContext: DSLContext, userId: String, templateId: String, storeFlag: Boolean): Int {
+    fun updateStoreFlag(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        storeFlag: Boolean
+    ): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.update(this).set(STORE_FLAG, storeFlag).where(ID.eq(templateId)).execute()
+            return dslContext.update(this)
+                .set(STORE_FLAG, storeFlag)
+                .where(ID.eq(templateId).and(PROJECT_ID.eq(projectId)))
+                .execute()
         }
     }
 
@@ -305,7 +314,7 @@ class TemplateDao {
     fun getTemplate(
         dslContext: DSLContext,
         templateId: String,
-        versionName: String?,
+        versionName: String? = null,
         version: Long? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {

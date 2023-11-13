@@ -69,6 +69,7 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -80,11 +81,11 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.text.SimpleDateFormat
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
 
 @Service
 @Suppress("ALL")
@@ -97,6 +98,7 @@ class EnvService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val nodeService: NodeService,
     private val client: Client
 ) : IEnvService {
 
@@ -513,6 +515,22 @@ class EnvService @Autowired constructor(
         return resultMap
     }
 
+    fun thirdPartyEnv2Nodes(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): List<NodeWithPermission> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
+        }
+        val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
+        val nodes = nodeDao.listThirdpartyNodes(dslContext, projectId, envNodes.map { it.nodeId })
+        return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
+    }
+
     override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
@@ -700,6 +718,27 @@ class EnvService @Autowired constructor(
             pageSize = offset,
             page = limit
         )
+    }
+
+    fun getByName(projectId: String, envName: String): EnvWithPermission? {
+        return envDao.getByEnvName(dslContext, projectId, envName)?.let {
+            EnvWithPermission(
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = null,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = null,
+                projectName = null
+            )
+        }
     }
 
     private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {

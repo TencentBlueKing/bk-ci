@@ -142,7 +142,7 @@ class TGitMrTriggerHandler(
     }
 
     override fun getMessage(event: GitMergeRequestEvent): String {
-        return event.object_attributes.last_commit.message
+        return event.object_attributes.title
     }
 
     override fun getHookSourceUrl(event: GitMergeRequestEvent): String {
@@ -301,6 +301,7 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
 
         // 有覆盖风险的上下文做二次确认
+        startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_URL, event.object_attributes.url ?: "")
         startParams.putIfEmpty(PIPELINE_GIT_MR_IID, event.object_attributes.iid.toString())

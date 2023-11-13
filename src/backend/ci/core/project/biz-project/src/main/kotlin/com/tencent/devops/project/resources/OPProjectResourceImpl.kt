@@ -32,6 +32,7 @@ import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.SystemEnums
@@ -81,6 +82,12 @@ class OPProjectResourceImpl @Autowired constructor(
         return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
     }
 
+    override fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Result<Boolean> {
+        return Result(
+            projectService.updateProjectCreator(projectUpdateCreatorDtoList = projectUpdateCreatorDtoList)
+        )
+    }
+
     override fun getProjectList(
         projectName: String?,
         englishName: String?,
@@ -94,6 +101,7 @@ class OPProjectResourceImpl @Autowired constructor(
         grayFlag: Boolean,
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
         return projectTagService.getProjectListByFlag(
@@ -108,7 +116,8 @@ class OPProjectResourceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag
+            repoGrayFlag = repoGrayFlag,
+            remoteDevFlag = remoteDevFlag
         )
     }
 

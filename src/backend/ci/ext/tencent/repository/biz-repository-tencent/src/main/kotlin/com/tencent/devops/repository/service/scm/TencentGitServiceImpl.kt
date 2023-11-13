@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -50,6 +51,7 @@ import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
@@ -63,10 +65,10 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
+import javax.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import javax.servlet.http.HttpServletResponse
 
 @Primary
 @Service
@@ -318,19 +320,17 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     }
 
     override fun downloadGitRepoFile(
-        repoName: String,
-        sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        request: DownloadGitRepoFileRequest,
         response: HttpServletResponse
     ) {
-        client.getScm(ServiceGitResource::class).downloadGitRepoFile(
-            repoName = repoName,
-            sha = sha,
-            token = token,
-            tokenType = tokenType,
-            response = response
-        )
+        val serviceUrlPrefix = client.getScmUrl(ServiceGitResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/git/downloadGitRepoFile" +
+                "?repoName=${request.repoName}&sha=${request.sha}&token=$token&tokenType=$tokenType" +
+                "&filePath=${request.filePath}&format=${request.format}" +
+                "&isProjectPathWrapped=${request.isProjectPathWrapped}"
+        OkhttpUtils.downloadFile(serviceUrl, response)
     }
 
     override fun getMrReviewInfo(

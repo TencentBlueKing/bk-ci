@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomClassifyDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomDao
@@ -52,6 +51,7 @@ import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import com.tencent.devops.store.service.ideatom.MarketIdeAtomService
@@ -69,7 +69,6 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     private val marketIdeAtomFeatureDao: MarketIdeAtomFeatureDao,
     private val marketIdeAtomVersionLogDao: MarketIdeAtomVersionLogDao,
     private val ideAtomDao: IdeAtomDao,
-    private val storeStatisticDao: StoreStatisticDao,
     private val storeTotalStatisticService: StoreTotalStatisticService,
     private val classifyService: ClassifyService,
     private val ideAtomCategoryService: IdeAtomCategoryService,
@@ -143,29 +142,32 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
             val statistic = atomStatisticData[atomCode]
             val classifyId = it["CLASSIFY_ID"] as String
             val pubTime = it["PUB_TIME"] as? LocalDateTime
+            val logoUrl = it["LOGO_URL"] as? String
             results.add(
-                    MarketIdeAtomItem(
-                            id = it["ID"] as String,
-                            name = it["ATOM_NAME"] as String,
-                            code = atomCode,
-                            rdType = IdeAtomTypeEnum.getAtomTypeObj((it["ATOM_TYPE"] as Byte).toInt()),
-                            classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                            logoUrl = it["LOGO_URL"] as? String,
-                            summary = it["SUMMARY"] as? String,
-                            publisher = it["PUBLISHER"] as String,
-                            pubTime = if (pubTime == null) "" else DateTimeUtil.toDateTime(pubTime),
-                            latestFlag = it["LATEST_FLAG"] as Boolean,
-                            publicFlag = it["PUBLIC_FLAG"] as Boolean,
-                            recommendFlag = it["RECOMMEND_FLAG"] as Boolean,
-                            flag = true,
-                            creator = it["CREATOR"] as String,
-                            createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                            modifier = it["MODIFIER"] as String,
-                            updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
-                            downloads = statistic?.downloads ?: 0,
-                            score = statistic?.score ?: 0.toDouble(),
-                            weight = it["WEIGHT"] as? Int
-                    )
+                MarketIdeAtomItem(
+                    id = it["ID"] as String,
+                    name = it["ATOM_NAME"] as String,
+                    code = atomCode,
+                    rdType = IdeAtomTypeEnum.getAtomTypeObj((it["ATOM_TYPE"] as Byte).toInt()),
+                    classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
+                    summary = it["SUMMARY"] as? String,
+                    publisher = it["PUBLISHER"] as String,
+                    pubTime = if (pubTime == null) "" else DateTimeUtil.toDateTime(pubTime),
+                    latestFlag = it["LATEST_FLAG"] as Boolean,
+                    publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                    recommendFlag = it["RECOMMEND_FLAG"] as Boolean,
+                    flag = true,
+                    creator = it["CREATOR"] as String,
+                    createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
+                    downloads = statistic?.downloads ?: 0,
+                    score = statistic?.score ?: 0.toDouble(),
+                    weight = it["WEIGHT"] as? Int
+                )
             )
         }
         return MarketIdeAtomResp(count, page, pageSize, results)
@@ -182,41 +184,45 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         logger.info("[mainPageList]userId=$userId, page=$page, pageSize=$pageSize")
         val result = mutableListOf<MarketIdeAtomMainItem>()
 
-        result.add(MarketIdeAtomMainItem(
+        result.add(
+            MarketIdeAtomMainItem(
                 key = LATEST,
                 label = I18nUtil.getCodeLanMessage(messageCode = LATEST),
                 records = doList(
-                        userId = userId,
-                        keyword = null,
-                        categoryCode = null,
-                        classifyCode = null,
-                        labelCode = null,
-                        score = null,
-                        rdType = null,
-                        sortType = MarketIdeAtomSortTypeEnum.UPDATE_TIME,
-                        desc = true,
-                        page = page,
-                        pageSize = pageSize
+                    userId = userId,
+                    keyword = null,
+                    categoryCode = null,
+                    classifyCode = null,
+                    labelCode = null,
+                    score = null,
+                    rdType = null,
+                    sortType = MarketIdeAtomSortTypeEnum.UPDATE_TIME,
+                    desc = true,
+                    page = page,
+                    pageSize = pageSize
                 ).records
-        ))
+            )
+        )
 
-        result.add(MarketIdeAtomMainItem(
+        result.add(
+            MarketIdeAtomMainItem(
                 key = HOTTEST,
                 label = I18nUtil.getCodeLanMessage(messageCode = HOTTEST),
                 records = doList(
-                        userId = userId,
-                        keyword = null,
-                        categoryCode = null,
-                        classifyCode = null,
-                        labelCode = null,
-                        score = null,
-                        rdType = null,
-                        sortType = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
-                        desc = true,
-                        page = page,
-                        pageSize = pageSize
+                    userId = userId,
+                    keyword = null,
+                    categoryCode = null,
+                    classifyCode = null,
+                    labelCode = null,
+                    score = null,
+                    rdType = null,
+                    sortType = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
+                    desc = true,
+                    page = page,
+                    pageSize = pageSize
                 ).records
-        ))
+            )
+        )
 
         val classifyList = marketIdeAtomClassifyDao.getAllAtomClassify(dslContext)
         classifyList?.forEach {
@@ -226,23 +232,25 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
-            result.add(MarketIdeAtomMainItem(
+            result.add(
+                MarketIdeAtomMainItem(
                     key = classifyCode,
                     label = classifyLanName,
                     records = doList(
-                            userId = userId,
-                            keyword = null,
-                            categoryCode = null,
-                            classifyCode = classifyCode,
-                            labelCode = null,
-                            score = null,
-                            rdType = null,
-                            sortType = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
-                            desc = true,
-                            page = page,
-                            pageSize = pageSize
+                        userId = userId,
+                        keyword = null,
+                        categoryCode = null,
+                        classifyCode = classifyCode,
+                        labelCode = null,
+                        score = null,
+                        rdType = null,
+                        sortType = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
+                        desc = true,
+                        page = page,
+                        pageSize = pageSize
                     ).records
-            ))
+                )
+            )
         }
 
         return Result(result)
@@ -267,17 +275,17 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 "score=$score, sortType=$sortType, page=$page, pageSize=$pageSize")
 
         return doList(
-                userId = userId,
-                keyword = keyword,
-                categoryCode = categoryCode,
-                classifyCode = classifyCode,
-                labelCode = labelCode,
-                score = score,
-                rdType = rdType,
-                sortType = sortType,
-                desc = true,
-                page = page,
-                pageSize = pageSize
+            userId = userId,
+            keyword = keyword,
+            categoryCode = categoryCode,
+            classifyCode = classifyCode,
+            labelCode = labelCode,
+            score = score,
+            rdType = rdType,
+            sortType = sortType,
+            desc = true,
+            page = page,
+            pageSize = pageSize
         )
     }
 
@@ -287,10 +295,10 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     override fun getAtomByCode(userId: String, atomCode: String): Result<IdeAtomDetail?> {
         logger.info("[getAtomByCode]userId=$userId, atomCode=$atomCode")
         val record = ideAtomDao.getLatestAtomByCode(dslContext, atomCode)
-                ?: return Result(0, "atomCode=$atomCode, not exist", null)
+            ?: return Result(0, "atomCode=$atomCode, not exist", null)
 
         val atomFeatureRecord = marketIdeAtomFeatureDao.getIdeAtomFeature(dslContext, atomCode)
-                ?: return Result(0, "atomCode=$atomCode, feature not exist", null)
+            ?: return Result(0, "atomCode=$atomCode, feature not exist", null)
 
         val atomId = record["ID"] as String
         val atomReleaseRecord = marketIdeAtomVersionLogDao.getIdeAtomVersion(dslContext, atomId)
@@ -303,11 +311,14 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         val labelList = ideAtomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.IDE_ATOM)
         val pubTime = record.pubTime
-        return Result(IdeAtomDetail(
+        return Result(
+            IdeAtomDetail(
                 atomId = atomId,
                 atomCode = record.atomCode,
                 atomName = record.atomName,
-                logoUrl = record.logoUrl,
+                logoUrl = record.logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
                 classifyCode = classify?.classifyCode,
                 classifyName = classify?.classifyName,
                 downloads = storeStatistic.downloads,
@@ -315,7 +326,9 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 categoryList = ideAtomCategoryService.getCategorysByAtomId(atomId).data,
                 atomType = IdeAtomTypeEnum.getAtomType((atomFeatureRecord.atomType).toInt()),
                 summary = record.summary,
-                description = record.description,
+                description = record.description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
                 version = record.version,
                 atomStatus = IdeAtomStatusEnum.getIdeAtomStatusObj(record.atomStatus.toInt())!!,
                 releaseType = ReleaseTypeEnum.getReleaseType(atomReleaseRecord.releaseType.toInt()),
@@ -335,7 +348,8 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(record.createTime),
                 modifier = record.modifier,
                 updateTime = DateTimeUtil.toDateTime(record.updateTime)
-        ))
+            )
+        )
     }
 
     /**

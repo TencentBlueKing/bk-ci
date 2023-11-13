@@ -61,6 +61,14 @@
             }
         },
 
+        watch: {
+            taskId () {
+                this.$nextTick(() => {
+                    this.initData()
+                })
+            }
+        },
+
         created () {
             this.initData()
         },

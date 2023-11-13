@@ -42,11 +42,6 @@ import com.tencent.devops.misc.service.project.ProjectDataClearConfigService
 import com.tencent.devops.misc.service.project.ProjectMiscService
 import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -55,6 +50,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 
 @Component
 @Suppress("ALL")
@@ -235,9 +235,11 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignored)
             } finally {
                 // 释放redis集合中的线程编号
-                redisOperation.sremove(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
-                    values = threadNo.toString(),
-                    isDistinguishCluster = true)
+                redisOperation.sremove(
+                    PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
+                    threadNo.toString(),
+                    isDistinguishCluster = true
+                )
             }
             return@Callable true
         })

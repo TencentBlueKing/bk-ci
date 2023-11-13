@@ -37,5 +37,9 @@ data class SlaveGateway(
     @ApiModelProperty("展示名称")
     val showName: String,
     @ApiModelProperty("网关地址")
-    val gateway: String
+    val gateway: String,
+    @ApiModelProperty("文件网关地址")
+    val fileGateway: String?,
+    @ApiModelProperty("可见性")
+    val visibility: Boolean
 )

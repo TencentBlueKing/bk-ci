@@ -29,28 +29,33 @@ package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
-import com.tencent.devops.dispatch.devcloud.pojo.Container
-import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
-import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
-import com.tencent.devops.dispatch.devcloud.pojo.Environment
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpPatch
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
-import com.tencent.devops.dispatch.devcloud.pojo.HTTPGetAction
-import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
-import com.tencent.devops.dispatch.devcloud.pojo.PatchOp
-import com.tencent.devops.dispatch.devcloud.pojo.Probe
-import com.tencent.devops.dispatch.devcloud.pojo.ProbeHandler
-import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
-import com.tencent.devops.dispatch.devcloud.pojo.Volume
-import com.tencent.devops.dispatch.devcloud.pojo.VolumeMount
-import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
-import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
+import com.tencent.devops.dispatch.kubernetes.pojo.Container
+import com.tencent.devops.dispatch.kubernetes.pojo.DataDiskSource
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvVar
+import com.tencent.devops.dispatch.kubernetes.pojo.Environment
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentOpPatch
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentSpec
+import com.tencent.devops.dispatch.kubernetes.pojo.HTTPGetAction
+import com.tencent.devops.dispatch.kubernetes.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.kubernetes.pojo.PatchOp
+import com.tencent.devops.dispatch.kubernetes.pojo.Probe
+import com.tencent.devops.dispatch.kubernetes.pojo.ProbeHandler
+import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
+import com.tencent.devops.dispatch.kubernetes.pojo.Volume
+import com.tencent.devops.dispatch.kubernetes.pojo.VolumeMount
+import com.tencent.devops.dispatch.kubernetes.pojo.VolumeSource
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -59,12 +64,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
+    private val devcloudWorkspaceRedisUtils: WorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient,
     private val profile: Profile
@@ -97,7 +104,7 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${remotedev.idePort}")
     val idePort: String = ""
 
-    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.runsOn?.container?.credentials != null) {
             listOf(
@@ -163,7 +170,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             )
         )
 
-        return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
+        return CreateWorkspaceRes(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
@@ -221,6 +228,10 @@ class DevCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
         val resp = workspaceDevCloudClient.operatorWorkspace(
@@ -240,6 +251,10 @@ class DevCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+        TODO("Not yet implemented")
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
@@ -252,7 +267,7 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
-        val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
+        val podInfo = environmentStatus.containerStatuses?.firstOrNull { it.name == workspaceName }
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
@@ -260,9 +275,43 @@ class DevCloudRemoteDevService @Autowired constructor(
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
             environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
-            ready = podInfo?.ready,
-            started = podInfo?.started
+            ready = podInfo?.ready ?: false,
+            started = podInfo?.started ?: false
         )
+    }
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
+        // 将task放入缓存，等待回调
+        devcloudWorkspaceRedisUtils.refreshTaskStatus(
+            userId = userId,
+            taskUid = taskId,
+            taskStatus = TaskStatus(taskId)
+        )
+
+        // 轮训十分钟
+        val startTime = System.currentTimeMillis()
+        loop@ while (true) {
+            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+                logger.error("Wait task: $taskId finish timeout(10min)")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
+                )
+            }
+            Thread.sleep(1 * 1000)
+            val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
+            if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                return if (taskStatus.status == TaskStatusEnum.successed) {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+                } else {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
+                }
+            }
+        }
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

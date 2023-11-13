@@ -1,12 +1,24 @@
 package com.tencent.devops.common.auth.utils
 
+import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.slf4j.LoggerFactory
 
 object RbacAuthUtils {
+    private val logger = LoggerFactory.getLogger(RbacAuthUtils::class.java)
+
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
         return "${extResourceType(authResourceType)}_${authPermission.value}"
+    }
+
+    fun getRelationResourceType(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
+        return if (authPermission == AuthPermission.CREATE) {
+            AuthResourceType.PROJECT.value
+        } else {
+            authResourceType.value
+        }
     }
 
     fun extResourceType(authResourceType: AuthResourceType): String {
@@ -57,6 +69,20 @@ object RbacAuthUtils {
         }
     }
 
+    fun getAdditionalAction(): Map<String, List<Action>> {
+        return mapOf(
+            AuthResourceType.PROJECT.value to listOf(
+                "project_visit", "quality_group_create", "env_node_create",
+                "experience_task_create", "experience_group_create"
+            ),
+            AuthResourceType.QUALITY_RULE.value to listOf("rule_list"),
+            AuthResourceType.QUALITY_GROUP_NEW.value to listOf("quality_group_list"),
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value to listOf("env_node_list"),
+            AuthResourceType.EXPERIENCE_TASK_NEW.value to listOf("experience_task_list", "experience_task_view"),
+            AuthResourceType.EXPERIENCE_GROUP_NEW.value to listOf("experience_group_list", "experience_group_view")
+        ).mapValues { (_, actions) -> actions.map { Action(it) } }
+    }
+
     fun buildResultMap(
         instancesMap: Map<AuthPermission, List<String>>
     ): Map<AuthPermission, List<Long>> {
@@ -71,9 +97,5 @@ object RbacAuthUtils {
             resultMap[key] = instanceLongIds
         }
         return resultMap
-    }
-
-    fun addSuffixIfNeed(resourceName: String, suffix: Int): String {
-        return if (suffix == 0) resourceName else "$resourceName($suffix)"
     }
 }

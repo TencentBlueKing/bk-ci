@@ -31,17 +31,13 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
-import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
-    companion object {
-        private const val DEFAULT_I18N_FOLDER_NAME = "i18n"
-    }
-
-    override fun getPropertiesFileStr(
+    override fun getFileStr(
         projectCode: String,
         fileDir: String,
         fileName: String,
@@ -49,23 +45,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         branch: String?
     ): String? {
         val filePath =
-            URLEncoder.encode("$projectCode/$fileDir/$DEFAULT_I18N_FOLDER_NAME/$fileName", Charsets.UTF_8.name())
+            URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).getFileContent(
-            userId = BKREPO_DEFAULT_USER,
-            projectId = BKREPO_STORE_PROJECT_ID,
-            repoName = REPO_NAME_PLUGIN,
-            filePath = filePath
-        ).data
-    }
-
-    override fun getPropertiesFileNames(
-        projectCode: String,
-        fileDir: String,
-        repositoryHashId: String?,
-        branch: String?
-    ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir/$DEFAULT_I18N_FOLDER_NAME", Charsets.UTF_8.name())
-        return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,

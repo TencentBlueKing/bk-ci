@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
@@ -50,6 +49,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,7 +61,7 @@ import org.springframework.stereotype.Service
 class DevcloudContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val dslContext: DSLContext,
-    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils
+    private val devcloudWorkspaceRedisUtils: WorkspaceRedisUtils
 ) : ContainerService {
 
     companion object {
@@ -163,6 +163,7 @@ class DevcloudContainerService @Autowired constructor(
             val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                devcloudWorkspaceRedisUtils.deleteTask(taskId)
                 return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
                 } else {

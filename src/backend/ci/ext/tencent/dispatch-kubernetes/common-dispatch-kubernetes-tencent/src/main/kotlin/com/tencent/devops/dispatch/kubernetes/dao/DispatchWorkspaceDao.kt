@@ -47,28 +47,36 @@ class DispatchWorkspaceDao {
         userId: String,
         event: WorkspaceCreateEvent,
         environmentUid: String,
+        regionId: Int,
+        taskId: String? = "",
         status: EnvStatusEnum,
         dslContext: DSLContext
     ): Long {
         return with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.insertInto(
                 this,
+                USER_ID,
                 PROJECT_ID,
                 WORKSPACE_NAME,
                 ENVIRONMENT_UID,
                 GIT_URL,
                 BRANCH,
                 IMAGE,
-                STATUS
+                STATUS,
+                REGION_ID,
+                TASK_ID
             )
                 .values(
-                    "",
+                    userId,
+                    event.projectId,
                     event.workspaceName,
                     environmentUid,
                     event.repositoryUrl,
                     event.branch,
                     event.devFile.runsOn?.container?.image ?: "",
-                    status.ordinal
+                    status.ordinal,
+                    regionId,
+                    taskId
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -83,6 +91,24 @@ class DispatchWorkspaceDao {
         with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
             dslContext.update(this)
                 .set(STATUS, status.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
+    fun updateWorkspace(
+        workspaceName: String,
+        envId: String,
+        regionId: Int,
+        status: EnvStatusEnum,
+        dslContext: DSLContext
+    ) {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
+                .set(ENVIRONMENT_UID, envId)
+                .set(REGION_ID, regionId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .execute()
@@ -108,6 +134,16 @@ class DispatchWorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .fetchOne()
+        }
+    }
+
+    fun getStartCloudWorkspaceInfo(
+        dslContext: DSLContext
+    ): Result<TDispatchWorkspaceRecord> {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(REGION_ID.notEqual(0))
+                .fetch()
         }
     }
 

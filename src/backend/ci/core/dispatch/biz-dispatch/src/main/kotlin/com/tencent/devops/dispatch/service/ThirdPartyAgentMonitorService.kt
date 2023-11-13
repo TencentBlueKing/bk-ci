@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -36,6 +35,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.dispatch.constants.BK_DOCKER_BUILD_VOLUME
 import com.tencent.devops.dispatch.constants.BK_DOCKER_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.constants.BK_HEARTBEAT_TIME

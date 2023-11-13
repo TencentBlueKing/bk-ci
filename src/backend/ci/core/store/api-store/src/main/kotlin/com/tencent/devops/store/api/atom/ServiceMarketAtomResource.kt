@@ -102,9 +102,7 @@ interface ServiceMarketAtomResource {
     @GET
     @Path("/{atomCode}")
     @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
         @ApiParam("插件代码", required = true)

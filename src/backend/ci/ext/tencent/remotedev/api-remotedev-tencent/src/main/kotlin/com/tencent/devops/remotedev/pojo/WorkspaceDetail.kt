@@ -36,6 +36,8 @@ data class WorkspaceDetail(
     val workspaceId: Long,
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
+    @ApiModelProperty("工作空间备注名称")
+    val displayName: String?,
     @ApiModelProperty("工作空间状态")
     val status: WorkspaceStatus,
     @ApiModelProperty("最近状态修改时间")
@@ -53,5 +55,11 @@ data class WorkspaceDetail(
     @ApiModelProperty("存储空间大小（GB）")
     val disk: Int,
     @ApiModelProperty("yaml 配置内容")
-    val yaml: String
+    val yaml: String?,
+    @ApiModelProperty("操作系统类型")
+    val systemType: WorkspaceSystemType,
+    @ApiModelProperty("挂载平台类型")
+    val workspaceMountType: WorkspaceMountType,
+    @ApiModelProperty("工作空间归属")
+    val ownerType: WorkspaceOwnerType
 )

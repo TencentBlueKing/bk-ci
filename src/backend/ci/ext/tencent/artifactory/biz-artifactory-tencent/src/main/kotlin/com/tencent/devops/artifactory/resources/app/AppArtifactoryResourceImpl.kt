@@ -40,10 +40,11 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -55,35 +56,29 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
 class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val bkRepoSearchService: BkRepoSearchService,
-    private val bkRepoAppService: BkRepoAppService,
+    private val bkRepoDownloadService: BkRepoDownloadService,
     private val pipelineService: PipelineService,
+    private val tokenService: ClientTokenService,
     private val client: Client
 ) : AppArtifactoryResource {
-
-    override fun list(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<List<FileInfo>> {
-        checkParameters(userId, projectId, path)
-        return Result(bkRepoService.list(userId, projectId, artifactoryType, path))
-    }
 
     override fun getOwnFileList(
         userId: String,
@@ -139,9 +134,11 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                     it.name.endsWith(topType) -> {
                         topSet.add(it)
                     }
+
                     it.name.endsWith(secondType) -> {
                         secondSet.add(it)
                     }
+
                     else -> {
                         otherSet.add(it)
                     }
@@ -193,6 +190,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun detail(
         userId: String,
         projectId: String,
@@ -206,8 +204,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = GRANT_DOWNLOAD_PERMISSION,
-                defaultMessage = "请联系流水线负责人授予下载构件权限。"
+                errorCode = GRANT_DOWNLOAD_PERMISSION
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
@@ -220,11 +217,28 @@ class AppArtifactoryResourceImpl @Autowired constructor(
 
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            var resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = tokenService.getSystemToken(null)!!,
+                projectCode = projectId,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = pipelineId,
+                group = BkAuthGroup.RESOURCE_MANAGER
+            ).data
+            if (resourceGroupMembers.isNullOrEmpty()) {
+                resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(null)!!,
+                    projectCode = projectId,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectId,
+                    group = BkAuthGroup.MANAGER
+                ).data
+            }
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(pipelineInfo?.creator ?: ""),
-                defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+                params = arrayOf(resourceGroupMembers.let {
+                    it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
+                }.joinToString(","))
             )
         }
 
@@ -273,13 +287,19 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-
-        val result = if (path.endsWith(".ipa")) {
-            bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
+        return if (path.endsWith(".ipa")) {
+            Result(
+                bkRepoDownloadService.outerPlistUrl(
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    argPath = path,
+                    ttl = 24 * 3600
+                )
+            )
         } else {
-            bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
+            downloadUrl(userId, projectId, artifactoryType, path)
         }
-        return Result(result)
     }
 
     override fun getFilePlist(
@@ -295,13 +315,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
-        return bkRepoAppService.getPlistFile(
+        return bkRepoDownloadService.outerPlistContent(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
             argPath = path,
             ttl = ttl ?: (24 * 3600),
-            directed = false,
             experienceHashId = experienceHashId,
             organization = organization
         )
@@ -314,13 +333,14 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
         return Result(
-            bkRepoAppService.getExternalDownloadUrl(
-                userId, projectId, artifactoryType, path, 24 * 3600,
-                true
+            bkRepoDownloadService.outerDownloadUrlByToken(
+                creatorId = userId,
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path,
+                ttl = 24 * 3600
             )
         )
     }

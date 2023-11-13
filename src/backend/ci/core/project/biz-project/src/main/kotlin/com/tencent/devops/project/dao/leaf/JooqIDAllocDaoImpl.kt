@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao.leaf
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.leaf.segment.dao.IDAllocDao
 import com.tencent.devops.leaf.segment.model.LeafAlloc
 import com.tencent.devops.model.project.tables.TLeafAlloc
@@ -46,7 +47,7 @@ class JooqIDAllocDaoImpl @Autowired constructor(
 
     override fun getAllLeafAllocs(): MutableList<LeafAlloc> {
         with(TLeafAlloc.T_LEAF_ALLOC) {
-            val leafAllocRecords = dslContext.selectFrom(this).fetch()
+            val leafAllocRecords = dslContext.selectFrom(this).skipCheck().fetch()
             val leafAllocs = mutableListOf<LeafAlloc>()
             leafAllocRecords.forEach { leafAllocRecord ->
                 val leafAlloc = generateLeafAlloc(leafAllocRecord)
@@ -101,7 +102,7 @@ class JooqIDAllocDaoImpl @Autowired constructor(
 
     override fun getAllTags(): MutableList<String> {
         with(TLeafAlloc.T_LEAF_ALLOC) {
-            val tagRecords = dslContext.select(BIZ_TAG).from(this).fetch()
+            val tagRecords = dslContext.select(BIZ_TAG).from(this).skipCheck().fetch()
             return tagRecords.map { it.value1() }
         }
     }

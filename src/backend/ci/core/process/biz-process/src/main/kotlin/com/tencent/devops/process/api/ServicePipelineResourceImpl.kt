@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
@@ -47,6 +48,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
@@ -55,6 +57,7 @@ import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.audit.Audit
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
@@ -526,12 +529,93 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineInfos)
     }
 
+    override fun pagingSearchByName(
+        userId: String,
+        projectId: String,
+        pipelineName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        checkParam(userId, projectId)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
+                )
+            )
+        }
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSize ?: 20)
+        return Result(
+            pipelineListFacadeService.searchByPipelineName(
+                projectId = projectId,
+                pipelineName = pipelineName,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            ).let {
+                PipelineViewPipelinePage(
+                    page = page ?: 0,
+                    pageSize = pageSize ?: 20,
+                    records = it.records,
+                    count = it.count
+                )
+            }
+        )
+    }
+
     override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
         return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
     }
 
-    override fun getPipelineInfobyAutoId(id: Long): Result<SimplePipeline> {
-        return Result(pipelineListFacadeService.getByAutoIds(listOf(id))[0])
+    override fun getPipelineInfobyAutoId(projectId: String, id: Long): Result<SimplePipeline?> {
+        return Result(
+            pipelineListFacadeService.getByAutoIds(
+                ids = listOf(id),
+                projectId = projectId
+            ).firstOrNull()
+        )
+    }
+
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        permission: Permission,
+        excludePipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
+        checkParam(userId, projectId)
+        val bkAuthPermission = when (permission) {
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
+        }
+        val result = pipelineListFacadeService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            authPermission = bkAuthPermission,
+            excludePipelineId = excludePipelineId,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(
+            data = Page(
+                page = page ?: 0,
+                pageSize = pageSize ?: -1,
+                count = result.count,
+                records = result.records
+            )
+        )
     }
 
     private fun checkParams(userId: String, projectId: String) {

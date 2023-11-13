@@ -96,19 +96,29 @@
                         </bk-form-item>
                         <bk-form-item v-show="showExperienceGroup" label="体验组" :required="true" label-width="190" property="experienceGroups">
                             <div class="bkdevop-checkbox-group">
-                                <bk-checkbox v-for="(col, index) in experienceGroup" :key="index" v-model="col.isChecked" @change="handleGroupChange" class="exp-group-item">
-                                    {{ col.name }}
-                                    <bk-popover :delay="500" placement="bottom">
-                                        <i class="devops-icon icon-member-list"></i>
-                                        <template slot="content">
-                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">内部人员名单：
-                                                <span v-for="(entry, uIndex) in col.innerUsers" :key="uIndex">{{ entry.replace('"', '') }}<span v-if="index !== (col.innerUsers.length - 1)">,</span></span>
-                                            </p>
-                                            <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">外部人员名单：
-                                                <span>{{ col.outerUsers.join(',') }}</span>
-                                            </p>
-                                        </template>
-                                    </bk-popover>
+                                <bk-checkbox
+                                    class="exp-group-item"
+                                    v-for="(col, index) in experienceGroup"
+                                    :key="index"
+                                    v-model="col.isChecked"
+                                    @change="handleGroupChange"
+                                >
+                                    <span class="exp-group-item-content">
+                                        <span class="exp-group-item-name">{{ col.name }}</span>
+                                        <bk-popover :delay="[300, 0]" max-width="600" placement="bottom">
+                                            <i class="devops-icon icon-member-list"></i>
+                                            <div class="exp-group-popup-box" slot="content">
+                                                <p
+                                                    v-for="item in expGroupPopupConf"
+                                                    :key="item.key"
+                                                    class="exp-group-popup-item"
+                                                >
+                                                    <span>{{item.typeLabel}}</span>
+                                                    <span>{{ col[item.key].join(', ') }}</span>
+                                                </p>
+                                            </div>
+                                        </bk-popover>
+                                    </span>
                                 </bk-checkbox>
                             </div>
                             <span class="create-group-entry" @click="toCreateGroup">
@@ -140,7 +150,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item label="通知方式" label-width="190" desc="三种通知方式均不会对公开体验生效" desc-type="icon" desc-icon="icon-info-circle">
-                            <div class="bkdevop-checkbox-group">
+                            <div class="bkdevop-checkbox-group notify-group">
                                 <bk-checkbox v-for="(col, index) in noticeTypeList" :key="index" v-model="col.isChecked">{{ col.name }}</bk-checkbox>
                             </div>
                             <bk-checkbox
@@ -164,7 +174,7 @@
                     </template>
                 </bk-form>
                 <div class="submit-btn-bar">
-                    <bk-button theme="primary" @click.prevent="submitFn">{{ submitText }}</bk-button>
+                    <bk-button theme="primary" @click.prevent="beforeSubmit">{{ submitText }}</bk-button>
                     <bk-button theme="default" @click="cancel">取消</bk-button>
                 </div>
             </template>
@@ -180,29 +190,30 @@
                 </div>
             </div>
             <experience-group
-                :node-select-conf="nodeSelectConf"
-                :outers-list="outersList"
+                v-bind="groupSideslider"
                 :create-group-form="createGroupForm"
-                :loading="dialogLoading"
-                :on-change="onChange"
+                :handle-group-field-change="handleGroupFieldChange"
                 :error-handler="errorHandler"
                 @after-submit="afterCreateGroup"
-                :cancel-fn="cancelFn"></experience-group>
+                :cancel-fn="cancelFn"
+            >
+            </experience-group>
 
             <version-package :version-select-conf="versionSelectConf"
                 :loading="packageLoading"
                 :confirm-fn="confirmSelect"
-                :cancel-fn="cancelSelect"></version-package>
+                :cancel-fn="cancelSelect"
+            />
         </section>
     </div>
 </template>
 
 <script>
+    import GroupIdSelector from '@/components/common/groupIdSelector'
+    import { convertTime } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import experienceGroup from './create_group'
     import versionPackage from './version_package'
-    import { convertTime } from '@/utils/util'
-    import GroupIdSelector from '@/components/common/groupIdSelector'
 
     export default {
         components: {
@@ -215,8 +226,7 @@
                 hasPermission: true,
                 curPipelineId: '',
                 curPipelineName: '',
-                defaultDate: '2018-05-04',
-                groupIdDesc: "可发通知至企业微信群。群ID获取方法：将'CI-Notice' 拉进群，手动@CI-Notice 并输入关键字'会话ID'，发送后即可获取群ID",
+                groupIdDesc: "可发通知至企业微信群。群ID获取方法：添加'DevOps-notice' 群机器人，手动@DevOps-notice并输入关键字'群ID', 发送后即可获取",
                 experienceGroup: [],
                 groupIdStorage: [],
                 categoryList: [
@@ -253,10 +263,6 @@
                     enableWechatGroups: false,
                     experienceGroups: []
                 },
-                dialogLoading: {
-                    isLoading: false,
-                    title: ''
-                },
                 packageLoading: {
                     isLoading: false,
                     title: ''
@@ -265,13 +271,6 @@
                     isLoading: true,
                     title: ''
                 },
-                nodeSelectConf: {
-                    title: '',
-                    isShow: false,
-                    closeIcon: false,
-                    hasHeader: false,
-                    quickClose: false
-                },
                 versionSelectConf: {
                     isShow: false,
                     closeIcon: false,
@@ -279,12 +278,16 @@
                     quickClose: false,
                     confirmText: '确定'
                 },
+                groupSideslider: {
+                    title: '',
+                    visible: false,
+                    isLoading: false
+                },
                 createGroupForm: {
-                    idEdit: false,
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
+                  
                 },
                 errorHandler: {
                     nameError: false
@@ -320,6 +323,28 @@
             },
             showExperienceGroup () {
                 return this.experienceRange === 'internals'
+            },
+            expGroupPopupConf () {
+                return [{
+                    typeLabel: '内部人员：',
+                    key: 'innerUsers'
+                }, {
+                    typeLabel: '内部组织：',
+                    key: 'depts'
+                }, {
+                    typeLabel: '外部人员：',
+                    key: 'outerUsers'
+                }]
+            },
+            isPublicExp () {
+                return this.experienceRange === 'public'
+            },
+            isAlphaApk () {
+                return !!this.metaList.find(item => item.key === 'BK-CI-APP-STAGE' && item.value === 'Alpha')
+            },
+            
+            createInnerApkExpTips () {
+                return `${this.createReleaseForm.name}${this.isPublicExp ? '为开发测试版本，确定发起公开体验吗' : '为开发测试版本，准备体验包过程需要一段时间，请耐心等待'}`
             }
         },
         watch: {
@@ -358,7 +383,6 @@
             if (this.isEdit) {
                 this.requestExperienceDetail()
             }
-            this.fetchOutersList()
         },
         mounted () {
             this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
@@ -406,34 +430,6 @@
                 })
                 this.createReleaseForm.experienceGroups = newExperienceGroups
             },
-            /**
-             * 获取外部体验人员列表
-             */
-            async fetchOutersList () {
-                this.loading.isLoading = true
-                try {
-                    const res = await this.$store.dispatch('experience/fetchOutersList', {
-                        projectId: this.projectId,
-                        experienceHashId: this.experienceHashId
-                    })
-                    res.forEach(item => {
-                        this.outersList.push({
-                            id: item.username,
-                            name: item.username
-                        })
-                    })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    this.loading.isLoading = false
-                }
-            },
 
             /**
              * 获取体验详情
@@ -450,7 +446,7 @@
                     this.createReleaseForm.path = res.path
                     this.createReleaseForm.artifactoryType = res.artifactoryType
                     this.createReleaseForm.version_no = res.version
-                    this.createReleaseForm.end_date = this.localConvertTime(res.expireDate).split(' ')[0]
+                    this.createReleaseForm.end_date = convertTime(res.expireDate * 1000).split(' ')[0]
                     this.query.initDate = this.createReleaseForm.end_date
                     this.createReleaseForm.desc = res.remark
                     this.createReleaseForm.versionTitle = res.versionTitle
@@ -527,7 +523,14 @@
                 }
             },
             cancel () {
-                this.toExperienceList()
+                this.$bkInfo({
+                    title: '离开后，新编辑的数据将会丢失',
+                    type: 'warning',
+                    theme: 'warning',
+                    confirmFn: () => {
+                        this.toExperienceList()
+                    }
+                })
             },
             selectGroups (col) {
                 this.experienceGroup.forEach(item => {
@@ -545,18 +548,15 @@
             },
             toCreateGroup () {
                 this.createGroupForm = {
-                    isEdit: false,
-                    groupHashId: '',
                     name: '',
-                    internal_list: [],
-                    external_list: [],
-                    desc: ''
+                    members: [],
+                    remark: ''
                 }
-                this.nodeSelectConf.title = '新增体验组'
-                this.nodeSelectConf.isShow = true
+                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.visible = true
             },
-            onChange (tags) {
-                this.createGroupForm.internal_list = tags
+            handleGroupFieldChange (name, value) {
+                this.createGroupForm[name] = value
             },
             
             productResult () {
@@ -577,11 +577,12 @@
             },
             afterCreateGroup () {
                 this.requestGroupList()
-                this.nodeSelectConf.isShow = false
+                this.groupSideslider.visible = false
             },
             cancelFn () {
-                if (!this.dialogLoading.isLoading) {
-                    this.nodeSelectConf.isShow = false
+                console.log(1111, this.groupSideslider)
+                if (!this.groupSideslider.isLoading) {
+                    this.groupSideslider.visible = false
                 }
             },
             toShowPackageList () {
@@ -651,24 +652,6 @@
                     this.versionSelectConf.confirmText = '确定'
                 }
             },
-            // submitValidate () {
-            //     let errorCount = 0
-            //     if (!this.createReleaseForm.name) {
-            //         this.errorFormHandler.nameError = true
-            //         errorCount++
-            //     }
-
-            //     if (!this.createReleaseForm.end_date) {
-            //         this.errorFormHandler.dateError = true
-            //         errorCount++
-            //     }
-
-            //     if (errorCount > 0) {
-            //         return false
-            //     }
-
-            //     return true
-            // },
             groupIdChange (name, value) {
                 this.createReleaseForm.wechatGroups = value
             },
@@ -699,8 +682,21 @@
                 })
                 localStorage.setItem('groupIdStr', this.groupIdStorage.sort().join(';'))
             },
+            beforeSubmit () {
+                if (!this.isAlphaApk) {
+                    this.submitFn()
+                    return
+                }
+                this.$bkInfo({
+                    subTitle: this.createInnerApkExpTips,
+                    type: 'warning',
+                    confirmFn: () => {
+                        this.submitFn()
+                    }
+                })
+            },
             async submitFn () {
-                if (this.experienceRange === 'public') {
+                if (this.isPublicExp) {
                     this.createReleaseForm.experienceGroups = ['kygplomw']
                     this.createReleaseForm.internal_list = []
                     this.createReleaseForm.external_list = []
@@ -832,12 +828,7 @@
                     }
                 }
             },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
-            },
+            
             toExperienceList () {
                 this.$router.push({
                     name: 'experienceList',
@@ -852,19 +843,32 @@
 
 <style lang="scss">
     @import './../../scss/conf';
-
+    @import '@/scss/mixins/ellipsis';
     .create-experience-wrapper {
         .experience-form {
             width: 800px;
             .bkdevop-checkbox-group {
-                .bk-form-checkbox {
-                    width: 180px;
-                    line-height: 30px;
+                &.notify-group {
+                    display: grid;
+                    grid-gap: 20px;
+                    grid-auto-flow: column;
+                    grid-template-columns: max-content;
                     margin-bottom: 10px;
                 }
+                
                 .exp-group-item {
                     .icon-member-list {
                         display: none;
+                    }
+                    .exp-group-item-content {
+                        display: flex;
+                        align-items: center;
+                        width: 170px;
+                        margin-right: 10px;
+                        .exp-group-item-name {
+                            flex: 1;
+                            @include ellipsis();
+                        }
                     }
                     &:hover {
                         .icon-member-list {
@@ -932,7 +936,7 @@
                 border-width: 1px;
                 border-style: solid solid solid solid;
                 border-color: $borderWeightColor transparent transparent $borderWeightColor;
-                background-color: #fff;
+                background-color: #f5f7fa;
                 top: 12px;
                 left: -5px;
                 transform: rotate(45deg);
@@ -982,6 +986,21 @@
                 border-top: 1px solid $borderWeightColor;
                 font-size: 12px;
             }
+        }
+    }
+    .exp-group-popup-box {
+        display: grid;
+        grid-template-rows: auto;
+        grid-gap: 10px;
+
+        .exp-group-popup-item {
+            display: flex;
+            align-items: flex-start;
+            word-break: break-all;
+            > span:first-child {
+                flex-shrink: 0;
+            }
+            font-weight: 400;
         }
     }
 </style>

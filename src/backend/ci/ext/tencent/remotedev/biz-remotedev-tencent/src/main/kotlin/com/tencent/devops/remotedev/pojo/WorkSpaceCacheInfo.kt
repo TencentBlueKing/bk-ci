@@ -12,5 +12,7 @@ data class WorkSpaceCacheInfo(
     val hostIP: String,
     val environmentIP: String,
     val clusterId: String,
-    val namespace: String
+    val namespace: String,
+    val curLaunchId: Int?,
+    val regionId: Int?
 )

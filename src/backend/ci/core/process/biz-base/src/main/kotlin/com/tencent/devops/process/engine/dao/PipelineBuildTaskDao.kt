@@ -329,6 +329,7 @@ class PipelineBuildTaskDao {
             val taskId = updateTaskInfo.taskId
             val baseStep = dslContext.update(this)
                 .set(STATUS, updateTaskInfo.taskStatus.ordinal)
+                .set(EXECUTE_COUNT, updateTaskInfo.executeCount)
             updateTaskInfo.starter?.let { baseStep.set(STARTER, it) }
             updateTaskInfo.approver?.let { baseStep.set(APPROVER, it) }
             updateTaskInfo.startTime?.let { baseStep.set(START_TIME, it) }
