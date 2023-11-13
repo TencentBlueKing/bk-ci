@@ -179,7 +179,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
-            startType = StartType.SERVICE
+            startType = StartType.SERVICE,
+            triggerEventSource = userId
         )
     }
 

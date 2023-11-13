@@ -48,9 +48,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.jooq.DSLContext
@@ -69,8 +67,7 @@ class PipelineRemoteAuthService @Autowired constructor(
     private val client: Client,
     private val bkTag: BkTag,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildVariableService: BuildVariableService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val buildVariableService: BuildVariableService
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
@@ -131,24 +128,16 @@ class PipelineRemoteAuthService @Autowired constructor(
         return bkTag.invokeByTag(projectConsulTag) {
             logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, " +
                     "$projectConsulTag ${bkTag.getFinalTag()}")
-            val buildId = pipelineTriggerEventService.saveSpecificEvent(
+            val buildId = client.getGateway(ServiceBuildResource::class).manualStartupNew(
+                userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
-                requestParams = vals.toMap(),
-                userId = userId!!,
-                triggerType = PipelineTriggerType.REMOTE.name,
-                startAction = {
-                    client.getGateway(ServiceBuildResource::class).manualStartupNew(
-                        userId = userId!!,
-                        projectId = pipeline.projectId,
-                        pipelineId = pipeline.pipelineId,
-                        values = vals.toMap(),
-                        channelCode = ChannelCode.BS,
-                        startType = StartType.REMOTE,
-                        buildNo = null
-                    ).data!!
-                }
-            )
+                values = vals.toMap(),
+                channelCode = ChannelCode.BS,
+                startType = StartType.REMOTE,
+                buildNo = null,
+                triggerEventSource = sourceIp
+            ).data!!
             // 在远程触发器job中打印sourcIp
             val taskId = buildVariableService.getVariable(
                 projectId = pipeline.projectId,

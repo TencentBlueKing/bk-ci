@@ -732,7 +732,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        startType: StartType
+        startType: StartType,
+        triggerEventSource: String?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -741,6 +742,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             requestParams = values,
             userId = userId!!,
+            eventSource = triggerEventSource ?: "",
             triggerType = PipelineTriggerType.SERVICE.name,
             startAction = {
                 pipelineBuildFacadeService.buildManualStartup(

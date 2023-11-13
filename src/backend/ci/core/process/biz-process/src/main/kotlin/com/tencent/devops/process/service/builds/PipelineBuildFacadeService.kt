@@ -33,9 +33,11 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -63,6 +65,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -113,10 +116,12 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -163,7 +168,8 @@ class PipelineBuildFacadeService(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
-    private val webhookBuildParameterService: WebhookBuildParameterService
+    private val webhookBuildParameterService: WebhookBuildParameterService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -696,16 +702,35 @@ class PipelineBuildFacadeService(
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
 
-            return pipelineBuildService.startPipeline(
-                userId = userId,
-                pipeline = pipeline,
-                startType = StartType.TIME_TRIGGER,
-                pipelineParamMap = paramPamp,
-                channelCode = pipeline.channelCode,
-                isMobile = false,
-                model = model,
-                signPipelineVersion = null,
-                frequencyLimit = false
+            return pipelineTriggerEventService.saveSpecificEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                requestParams = parameters,
+                userId = userId!!,
+                eventSource = pipeline.lastModifyUser,
+                eventDesc = JsonUtil.toJson(
+                    I18Variable(
+                        code = WebhookI18nConstants.TIMING_START_EVENT_DESC,
+                        params = listOf(
+                            pipeline.lastModifyUser
+                        )
+                    ),
+                    false
+                ),
+                triggerType = PipelineTriggerType.TIME_TRIGGER.name,
+                startAction = {
+                    pipelineBuildService.startPipeline(
+                        userId = userId,
+                        pipeline = pipeline,
+                        startType = StartType.TIME_TRIGGER,
+                        pipelineParamMap = paramPamp,
+                        channelCode = pipeline.channelCode,
+                        isMobile = false,
+                        model = model,
+                        signPipelineVersion = null,
+                        frequencyLimit = false
+                    )
+                }
             ).id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")

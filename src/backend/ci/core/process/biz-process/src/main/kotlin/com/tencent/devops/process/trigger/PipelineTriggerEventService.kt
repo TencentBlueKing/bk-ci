@@ -37,12 +37,14 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
@@ -407,6 +409,8 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
+        eventSource: String,
+        eventDesc: String? = null,
         requestParams: Map<String, String>?,
         triggerType: String = PipelineTriggerType.MANUAL.name,
         startAction: () -> BuildId
@@ -414,6 +418,11 @@ class PipelineTriggerEventService @Autowired constructor(
         var buildNum: String? = null
         var status = PipelineTriggerStatus.SUCCEED.name
         var buildId: String? = null
+        val pipelineInfo = client.get(ServicePipelineResource::class).getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.BS
+        ).data
         try {
             val buildInfo = startAction.invoke()
             buildNum = buildInfo.num.toString()
@@ -426,6 +435,9 @@ class PipelineTriggerEventService @Autowired constructor(
             saveManualStartEvent(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineInfo?.pipelineName ?: "",
+                eventSource = eventSource,
+                eventDesc = eventDesc,
                 buildId = buildId,
                 status = status,
                 requestParams = requestParams,
@@ -442,15 +454,30 @@ class PipelineTriggerEventService @Autowired constructor(
     private fun saveManualStartEvent(
         projectId: String,
         pipelineId: String,
+        pipelineName: String,
+        eventSource: String,
         buildId: String?,
         buildNum: String?,
         userId: String,
         status: String,
         triggerType: String,
-        requestParams: Map<String, String>?
+        requestParams: Map<String, String>?,
+        eventDesc: String? = null
     ) {
         val eventId = getEventId()
         val requestId = MDC.get(TraceTag.BIZID)
+        // 事件描述
+        val targetEventDesc = if (eventDesc.isNullOrBlank()) {
+            JsonUtil.toJson(
+                I18Variable(
+                    code = getI18Code(triggerType),
+                    params = listOf(eventSource)
+                ),
+                false
+            )
+        } else {
+            eventDesc
+        }
         saveEvent(
             triggerDetail = PipelineTriggerDetail(
                 eventId = eventId,
@@ -458,18 +485,14 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                buildNum = buildNum
+                buildNum = buildNum,
+                pipelineName = pipelineName
             ),
             triggerEvent = PipelineTriggerEvent(
                 eventId = eventId,
                 projectId = projectId,
-                eventDesc = JsonUtil.toJson(
-                    I18Variable(
-                        code = getI18Code(triggerType),
-                        params = listOf(userId)
-                    ),
-                    false
-                ),
+                eventDesc = targetEventDesc,
+                eventSource = eventSource,
                 triggerType = triggerType,
                 eventType = triggerType,
                 triggerUser = userId,
@@ -484,6 +507,7 @@ class PipelineTriggerEventService @Autowired constructor(
         PipelineTriggerType.MANUAL.name -> WebhookI18nConstants.MANUAL_START_EVENT_DESC
         PipelineTriggerType.REMOTE.name -> WebhookI18nConstants.REMOTE_START_EVENT_DESC
         PipelineTriggerType.SERVICE.name -> WebhookI18nConstants.SERVICE_START_EVENT_DESC
+        PipelineTriggerType.PIPELINE.name -> WebhookI18nConstants.PIPELINE_START_EVENT_DESC
         else -> ""
     }
 

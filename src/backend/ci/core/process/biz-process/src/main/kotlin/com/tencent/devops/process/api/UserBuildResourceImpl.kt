@@ -101,6 +101,7 @@ class UserBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             requestParams = values,
             userId = userId,
+            eventSource = userId,
             startAction = {
                 pipelineBuildFacadeService.buildManualStartup(
                     userId = userId,

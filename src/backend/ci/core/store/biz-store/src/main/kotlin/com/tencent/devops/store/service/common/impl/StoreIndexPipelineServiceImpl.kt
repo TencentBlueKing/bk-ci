@@ -170,7 +170,8 @@ class StoreIndexPipelineServiceImpl @Autowired constructor(
             pipelineId = pipelineId,
             values = mapOf(KEY_INDEX_CODE to storeIndexPipelineInitRequest.indexCode),
             channelCode = ChannelCode.AM,
-            startType = StartType.SERVICE
+            startType = StartType.SERVICE,
+            triggerEventSource = userId
         )
         logger.info("manualStartupNew result is:$buildId")
     }

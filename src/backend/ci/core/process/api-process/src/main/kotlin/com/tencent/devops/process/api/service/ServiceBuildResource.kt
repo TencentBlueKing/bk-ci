@@ -806,7 +806,10 @@ interface ServiceBuildResource {
         buildNo: Int? = null,
         @ApiParam("启动类型", required = false)
         @QueryParam("startType")
-        startType: StartType
+        startType: StartType,
+        @ApiParam("触发事件源", required = false)
+        @QueryParam("triggerEventSource")
+        triggerEventSource: String? = ""
     ): Result<BuildId>
 
     @ApiOperation("取消并发起新构建")

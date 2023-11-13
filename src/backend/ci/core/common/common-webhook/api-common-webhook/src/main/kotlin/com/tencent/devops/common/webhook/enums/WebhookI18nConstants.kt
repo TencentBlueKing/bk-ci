@@ -70,6 +70,12 @@ object WebhookI18nConstants {
     // openApi触发
     const val SERVICE_START_EVENT_DESC = "bkServiceStartEventDesc"
 
+    // 流水线触发
+    const val PIPELINE_START_EVENT_DESC = "bkPipelineStartEventDesc"
+
+    // 定时触发
+    const val TIMING_START_EVENT_DESC = "bkTimingStartEventDesc"
+
     // 事件类型匹配
     const val EVENT_TYPE_MATCHED = "bkRepoTriggerEventTypeMatched"
 

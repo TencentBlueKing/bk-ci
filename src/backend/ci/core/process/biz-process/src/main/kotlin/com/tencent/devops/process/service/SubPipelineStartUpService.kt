@@ -29,8 +29,10 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -42,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -54,8 +57,10 @@ import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
@@ -82,7 +87,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val subPipelineStatusService: SubPipelineStatusService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     companion object {
@@ -245,15 +251,36 @@ class SubPipelineStartUpService @Autowired constructor(
             checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
             // 子流水线的调用不受频率限制
-            val subBuildId = pipelineBuildService.startPipeline(
-                userId = readyToBuildPipelineInfo.lastModifyUser,
-                pipeline = readyToBuildPipelineInfo,
-                startType = StartType.PIPELINE,
-                pipelineParamMap = params,
-                channelCode = channelCode,
-                isMobile = isMobile,
-                model = model,
-                frequencyLimit = false
+            val subBuildId = pipelineTriggerEventService.saveSpecificEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                requestParams = parameters,
+                userId = userId!!,
+                eventSource = parentPipelineId,
+                eventDesc = JsonUtil.toJson(
+                    I18Variable(
+                        code = WebhookI18nConstants.PIPELINE_START_EVENT_DESC,
+                        params = listOf(
+                            userId,
+                            "/console/pipeline/$parentProjectId/$parentPipelineId/detail/$parentBuildId",
+                            parentPipelineInfo.pipelineName
+                        )
+                    ),
+                    false
+                ),
+                triggerType = PipelineTriggerType.PIPELINE.name,
+                startAction = {
+                    pipelineBuildService.startPipeline(
+                        userId = readyToBuildPipelineInfo.lastModifyUser,
+                        pipeline = readyToBuildPipelineInfo,
+                        startType = StartType.PIPELINE,
+                        pipelineParamMap = params,
+                        channelCode = channelCode,
+                        isMobile = isMobile,
+                        model = model,
+                        frequencyLimit = false
+                    )
+                }
             ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
