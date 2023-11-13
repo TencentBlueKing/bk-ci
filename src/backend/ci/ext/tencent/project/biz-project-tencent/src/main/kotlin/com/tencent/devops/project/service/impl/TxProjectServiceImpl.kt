@@ -84,9 +84,7 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.support.api.service.ServiceFileResource
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
