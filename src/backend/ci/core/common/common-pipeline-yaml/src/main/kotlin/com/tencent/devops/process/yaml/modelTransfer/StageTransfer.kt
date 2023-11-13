@@ -135,7 +135,10 @@ class StageTransfer @Autowired(required = false) constructor(
         val containerList = mutableListOf<Container>()
 
         stage.jobs.forEachIndexed { jobIndex, job ->
-            yamlInput.aspectWrapper.setYamlJob4Yaml(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            yamlInput.aspectWrapper.setYamlJob4Yaml(
+                yamlJob = job,
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
             val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
@@ -222,15 +225,22 @@ class StageTransfer @Autowired(required = false) constructor(
 
     fun model2YamlStage(
         stage: Stage,
-        projectId: String
+        projectId: String,
+        aspectWrapper: PipelineTransferAspectWrapper
     ): PreStage {
         val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
-            val steps = elementTransfer.model2YamlSteps(job, projectId)
+            aspectWrapper.setModelJob4Model(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            val steps = elementTransfer.model2YamlSteps(job, projectId, aspectWrapper)
 
             (job.jobId?.ifBlank { null } ?: ScriptYmlUtils.randomString("job_")) to when (job.getClassType()) {
                 NormalContainer.classType -> containerTransfer.addYamlNormalContainer(job as NormalContainer, steps)
                 VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")
+            }.also { preJob ->
+                aspectWrapper.setYamlJob4Yaml(
+                    yamlPreJob = preJob,
+                    aspectType = PipelineTransferAspectWrapper.AspectType.AFTER
+                )
             }
         }
         return PreStage(

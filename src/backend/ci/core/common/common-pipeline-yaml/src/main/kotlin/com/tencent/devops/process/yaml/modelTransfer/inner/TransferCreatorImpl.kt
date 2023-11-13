@@ -49,7 +49,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     private val runPlugInVersionData: String? = null
 
     @Value("\${container.defaultImage:#{null}}")
-    private val defaultImageData: String = "mirrors.tencent.com/ci/tlinux3_ci:2.5.0"
+    private val defaultImageData: String = "tlinux3_ci:2.*"
 
     companion object {
         private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"

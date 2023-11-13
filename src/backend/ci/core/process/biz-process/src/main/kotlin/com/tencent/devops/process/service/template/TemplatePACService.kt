@@ -14,8 +14,10 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -85,43 +87,59 @@ class TemplatePACService @Autowired constructor(
         setting.labels = labels
 
         // yaml
-        val (_, yaml, _) = transferYamlService.transfer(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = null,
-            actionType = TransferActionType.FULL_MODEL2YAML,
-            data = TransferBody(
-                PipelineModelAndSetting(model, setting)
-            )
-        )
+        val (yamlSupported, yaml, yamlInvalidMsg) = try {
+            val yml = transferYamlService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = null,
+                actionType = TransferActionType.FULL_MODEL2YAML,
+                data = TransferBody(
+                    PipelineModelAndSetting(model, setting)
+                )
+            ).newYaml
+            Triple(true, yml, null)
+        } catch (e: PipelineTransferException) {
+            // 旧流水线可能无法转换，用空YAML代替
+            logger.warn("TRANSFER_YAML|$projectId|$userId|FULL_MODEL2YAML", e)
+            Triple(false, null, I18nUtil.getCodeLanMessage(
+                messageCode = e.errorCode,
+                params = e.params,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = e.defaultMessage
+            ))
+        }
 
         // highlight mark
         val highlightMarkList = mutableListOf<TransferMark>()
         if (yaml != null && highlightType != null) {
             run outside@{
-                TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
-                    when {
-                        highlightType == HighlightType.LABEL && key == "label" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                try {
+                    TransferMapper.getYamlLevelOneIndex(yaml).forEach { (key, value) ->
+                        when {
+                            highlightType == HighlightType.LABEL && key == "label" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                            highlightType == HighlightType.CONCURRENCY && key == "concurrency" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.NOTIFY && key == "notices" -> {
-                            highlightMarkList.add(value)
-                            return@outside
-                        }
+                            highlightType == HighlightType.NOTIFY && key == "notices" -> {
+                                highlightMarkList.add(value)
+                                return@outside
+                            }
 
-                        highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
-                            highlightMarkList.add(value)
-                            // pipelineModel 可能多个
-                            return@forEach
+                            highlightType == HighlightType.PIPELINE_MODEL && key in pipelineModelKey -> {
+                                highlightMarkList.add(value)
+                                // pipelineModel 可能多个
+                                return@forEach
+                            }
                         }
                     }
+                } catch (ignore: Throwable) {
+                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
                 }
             }
         }
@@ -131,7 +149,9 @@ class TemplatePACService @Autowired constructor(
             templateYaml = yaml,
             setting = setting,
             hasPermission = hasPermission,
-            highlightMarkList = highlightMarkList
+            highlightMarkList = highlightMarkList,
+            yamlSupported = yamlSupported,
+            yamlInvalidMsg = yamlInvalidMsg
         )
     }
 

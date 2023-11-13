@@ -40,6 +40,8 @@ data class BuildFormProperty(
     var name: String? = null,
     @ApiModelProperty("是否必须", required = true)
     var required: Boolean,
+    @ApiModelProperty("是否为常量", required = true)
+    var constant: Boolean? = false,
     @ApiModelProperty("元素类型", required = true)
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)
@@ -84,7 +86,7 @@ data class BuildFormProperty(
     @ApiModelProperty("替换搜索url中的搜素关键字", required = false)
     var replaceKey: String? = null,
     @ApiModelProperty("是否只读", required = false)
-    val readOnly: Boolean? = false,
+    var readOnly: Boolean? = false,
     @ApiModelProperty("参数值是否必填", required = false)
     val valueNotEmpty: Boolean? = false,
     @ApiModelProperty("页面所需内容，后台仅保存，不做处理", required = false)

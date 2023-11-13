@@ -29,6 +29,7 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -94,6 +95,9 @@ object StreamPipelineUtils {
                 )
             )
         ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
+        setting = PipelineSetting(
+            cleanVariablesWhenRetry = true,
+            pipelineAsCodeSettings = PipelineAsCodeSettings()
+        )
     )
 }

@@ -43,13 +43,13 @@ class PipelineSettingVersionService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineSettingVersion {
+    ): PipelineSettingVersion? {
         return pipelineSettingVersionDao.getSettingVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
-        ) ?: PipelineSettingVersion(projectId = projectId, pipelineId = pipelineId, version = version)
+        )
     }
 
     fun getLatestSettingVersion(

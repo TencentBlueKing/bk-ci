@@ -51,7 +51,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
-import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
@@ -78,6 +77,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService

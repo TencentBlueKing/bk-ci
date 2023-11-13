@@ -40,5 +40,9 @@ data class TransferResponse(
     @ApiModelProperty("定位")
     val mark: TransferMark? = null,
     @ApiModelProperty("互转报错信息")
-    val error: String? = null
+    val error: String? = null,
+    @ApiModelProperty("是否支持YAML解析", required = true)
+    val yamlSupported: Boolean = true,
+    @ApiModelProperty("YAML解析异常信息")
+    val yamlInvalidMsg: String? = null
 )

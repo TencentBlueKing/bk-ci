@@ -32,6 +32,8 @@ import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineModelWithYamlRequest(
+    @ApiModelProperty("流水线ID（为空时导入并创建流水线）", required = false)
+    val pipelineId: String?,
     @ApiModelProperty("草稿的来源版本（前端保存时传递）", required = true)
     val baseVersion: Int,
     @ApiModelProperty("流水线模型", required = true)

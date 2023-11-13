@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 import java.util.concurrent.ConcurrentMap
 
-
 object PipelineTransferAspectLoader {
     private val cachedInstances: ConcurrentMap<String, IPipelineTransferAspect> = ConcurrentHashMap()
 
@@ -35,6 +34,22 @@ object PipelineTransferAspectLoader {
                         jp.yamlTriggerOn()!!.repoName = defaultRepo
                     }
                     return null
+                }
+            }
+        )
+        return aspects
+    }
+
+    fun checkInvalidElement(
+        invalidElement: MutableList<String>,
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ): LinkedList<IPipelineTransferAspect> {
+        aspects.add(
+            object : IPipelineTransferAspectElement {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    if (jp.yamlPreStep() == null) {
+                        invalidElement.add("${jp.modelElement()?.getClassType()}(${jp.modelElement()?.name})")
+                    }
                 }
             }
         )

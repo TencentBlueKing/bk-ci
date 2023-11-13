@@ -51,12 +51,12 @@ data class PipelineSetting(
     @ApiModelProperty("版本", required = false)
     var version: Int = 1,
     @ApiModelProperty("描述", required = false)
-    val desc: String = "",
+    var desc: String = "",
     @ApiModelProperty("标签列表", required = false)
     var labels: List<String> = emptyList(),
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
     @ApiModelProperty("构建号生成规则", required = false)
-    val buildNumRule: String? = null, // 构建号生成规则
+    var buildNumRule: String? = null, // 构建号生成规则
 
     // 通知订阅相关配置
     @Deprecated("被successSubscriptionList取代")
@@ -72,11 +72,11 @@ data class PipelineSetting(
 
     // 运行控制、流水线禁用相关配置
     @ApiModelProperty("Lock 类型", required = false)
-    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    var runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
     @ApiModelProperty("最大排队时长", required = false)
-    val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
+    var waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     @ApiModelProperty("最大排队数量", required = false)
-    val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+    var maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     @ApiModelProperty("并发时,设定的group", required = false)
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
@@ -90,7 +90,7 @@ data class PipelineSetting(
     @ApiModelProperty("重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = PipelineAsCodeSettings()
+    var pipelineAsCodeSettings: PipelineAsCodeSettings?
 ) {
 
     // 校验流水线的通知设置是否为空，即用户为配置或使用默认配置

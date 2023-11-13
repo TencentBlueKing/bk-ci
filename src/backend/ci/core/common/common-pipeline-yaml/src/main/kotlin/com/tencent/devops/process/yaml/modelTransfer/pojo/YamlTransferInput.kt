@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferJoinPointImpl
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 
 data class YamlTransferInput(
