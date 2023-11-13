@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.databind.JavaType
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
@@ -39,14 +39,9 @@ class ItsmService @Autowired constructor(
     private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
-        val responseType = objectMapper.typeFactory.constructParametricType(
-            ResponseDTO::class.java,
-            objectMapper.typeFactory.constructParametricType(List::class.java, Any::class.java)
-        )
         val itsmResponseDTO: ResponseDTO<List<Any>> = executeHttpPost(
             urlSuffix = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
-            body = itsmCancelApplicationInfo,
-            responseType = responseType
+            body = itsmCancelApplicationInfo
         )
         if (itsmResponseDTO.message != "success") {
             logger.warn("cancel itsm application failed!$itsmCancelApplicationInfo")
@@ -61,11 +56,7 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
-        val responseType = objectMapper.typeFactory.constructParametricType(
-            ResponseDTO::class.java,
-            objectMapper.typeFactory.constructParametricType(Map::class.java, Any::class.java, Any::class.java)
-        )
-        val itsmResponseDTO: ResponseDTO<Map<*, *>> = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param, responseType)
+        val itsmResponseDTO: ResponseDTO<Map<*, *>> = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
         val itsmApiResData = itsmResponseDTO.data
         logger.info("itsmApiResData:$itsmApiResData")
 
@@ -79,16 +70,12 @@ class ItsmService @Autowired constructor(
     }
 
     fun getItsmTicketStatus(sn: String): String {
-        val responseType = objectMapper.typeFactory.constructParametricType(
-            ResponseDTO::class.java,
-            objectMapper.typeFactory.constructParametricType(Map::class.java, Any::class.java, Any::class.java)
-        )
         val itsmResponseDTO: ResponseDTO<Map<*, *>> =
-            executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn), responseType)
+            executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
         return itsmResponseDTO.data?.get("current_status").toString()
     }
 
-    private fun <T> executeHttpPost(urlSuffix: String, body: Any, responseType: JavaType): ResponseDTO<T> {
+    private fun <T> executeHttpPost(urlSuffix: String, body: Any): ResponseDTO<T> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val requestBody = objectMapper.writeValueAsString(body)
@@ -100,10 +87,10 @@ class ItsmService @Autowired constructor(
             .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
             .build()
-        return executeHttpRequest(url, request, responseType)
+        return executeHttpRequest(url, request)
     }
 
-    private fun <T> executeHttpGet(urlSuffix: String, responseType: JavaType): ResponseDTO<T> {
+    private fun <T> executeHttpGet(urlSuffix: String): ResponseDTO<T> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val url = itsmUrlPrefix + urlSuffix
@@ -112,17 +99,18 @@ class ItsmService @Autowired constructor(
             .addHeader("x-bkapi-authorization", headerStr)
             .get()
             .build()
-        return executeHttpRequest(url, request, responseType)
+        return executeHttpRequest(url, request)
     }
 
-    private fun <T> executeHttpRequest(url: String, request: Request, responseType: JavaType): ResponseDTO<T> {
+    private fun <T> executeHttpRequest(url: String, request: Request): ResponseDTO<T> {
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
             val responseStr = it.body!!.string()
-            val responseDTO: ResponseDTO<T> = objectMapper.readValue(responseStr, responseType)
+            val responseDTO: ResponseDTO<T> =
+                objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<T>>() {})
             if (responseDTO.code != 0L || !responseDTO.result) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
