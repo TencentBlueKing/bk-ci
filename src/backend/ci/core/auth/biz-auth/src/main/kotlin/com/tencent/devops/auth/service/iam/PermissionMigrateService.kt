@@ -83,7 +83,10 @@ interface PermissionMigrateService {
     /**
      * 迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目
      */
-    fun migrateMonitorResource(projectCodes: List<String>): Boolean
+    fun migrateMonitorResource(
+        projectCodes: List<String>,
+        async: Boolean = true
+    ): Boolean
 
     fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
 }

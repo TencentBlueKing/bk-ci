@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v1.13.0-rc.5](#v1130-rc5)
+   - [Changelog since v1.13.0-rc.4](#changelog-since-v1130-rc4)
+
 
 - [v1.13.0-rc.4](#v1130-rc4)
    - [Changelog since v1.13.0-rc.3](#changelog-since-v1130-rc3)
@@ -12,6 +15,20 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v1.13.0-rc.5
+## Changelog since v1.13.0-rc.4
+#### 新增
+- [新增] [bugfix] 默认prod集群router-tag判断有误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9615)
+- [新增] Image checkImageInspect接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9609)
+- [新增] 提供监控迁移service接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9592)
+- [新增] github触发器事件补充 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9372)
+- [新增] redis分布式锁改造 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9499)
+- [新增] 流水线插件安装包支持缓存，提高流水线执行速度 TencentBlueKing [链接](http://github.com/TencentBlueKing/bk-ci/issues/8940)
+- [新增] 【PAC】feat：代码库支持重置授权 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8145)
+
+#### 修复
+- [修复] 构建日志的服务调用端增加请求熔断机制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9602)
+- [修复] 静态资源文件的url地址域名支持适配特定环境遗漏点修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9581)
 
 # v1.13.0-rc.4
 ## Changelog since v1.13.0-rc.3
