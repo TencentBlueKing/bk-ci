@@ -25,13 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.atom
 
-enum class BusinessEnum {
-    CATEGORY, // 范畴
-    ATOM, // 插件
-    IMAGE, // 镜像
-    SERVICE, // 微扩展
-    BUILD_TYPE, // 构建资源类型
-    CODECC // 代码扫描
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("研发商店组件国际化配置")
+data class StoreI18nConfig(
+    @ApiModelProperty("项目标识")
+    val projectCode: String,
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
+    @ApiModelProperty("资源文件目录")
+    val fileDir: String,
+    @ApiModelProperty("国际化目录")
+    val i18nDir: String,
+    @ApiModelProperty("map字段在properties中key的前缀")
+    val propertiesKeyPrefix: String? = null,
+    @ApiModelProperty("map字段在db中key的前缀")
+    val dbKeyPrefix: String? = null,
+    @ApiModelProperty("代码库哈希ID")
+    val repositoryHashId: String? = null
+)

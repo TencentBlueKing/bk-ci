@@ -25,24 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.common.log.constant
 
-/**
- *
- * Powered By Tencent
- */
 object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
-
     const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
     const val RESPONSE_ENTITY_MAX_SIZE = 1024 * 1024 * 1024
     const val SCROLL_MAX_LINES = 5000
     const val NORMAL_MAX_LINES = 10000
-    const val BULK_BUFFER_SIZE = 100
+    const val BULK_BUFFER_SIZE = 1000
     const val SCROLL_MAX_TIMES = 6
-
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
 }

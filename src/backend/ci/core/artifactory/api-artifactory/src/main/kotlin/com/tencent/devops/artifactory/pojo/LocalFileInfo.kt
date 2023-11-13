@@ -25,13 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.artifactory.pojo
 
-enum class BusinessEnum {
-    CATEGORY, // 范畴
-    ATOM, // 插件
-    IMAGE, // 镜像
-    SERVICE, // 微扩展
-    BUILD_TYPE, // 构建资源类型
-    CODECC // 代码扫描
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("本地目录下文件信息")
+data class LocalFileInfo(
+    @ApiModelProperty("文件所在相对路径列表", required = true)
+    val relativePath: String,
+    @ApiModelProperty("是否是静态文件", required = false)
+    val staticFlag: Boolean = true
+)
