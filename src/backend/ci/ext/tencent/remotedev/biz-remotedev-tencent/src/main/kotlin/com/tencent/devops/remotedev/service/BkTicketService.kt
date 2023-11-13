@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -71,7 +72,7 @@ class BkTicketService @Autowired constructor(
         if (bkTicket.isBlank()) return false
         // 获取user的所有运行中的容器
         workspaceDao.fetchWorkspace(
-            dslContext, userId = userId, status = WorkspaceStatus.RUNNING
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING, systemType = WorkspaceSystemType.LINUX
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             updateBkTicket(userId, bkTicket, it.hostName, it.workspaceMountType)

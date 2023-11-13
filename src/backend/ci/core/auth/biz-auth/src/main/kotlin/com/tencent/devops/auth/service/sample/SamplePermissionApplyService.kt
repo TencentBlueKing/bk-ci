@@ -55,8 +55,8 @@ class SamplePermissionApplyService : PermissionApplyService {
         return true
     }
 
-    override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
-        return emptyList()
+    override fun getGroupPermissionDetail(userId: String, groupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+        return emptyMap()
     }
 
     override fun getRedirectInformation(

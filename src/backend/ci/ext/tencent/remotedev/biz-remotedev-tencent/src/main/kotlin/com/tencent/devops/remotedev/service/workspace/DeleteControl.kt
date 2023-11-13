@@ -101,20 +101,19 @@ class DeleteControl @Autowired constructor(
         checkDeleteImmediately: Boolean? = null
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
 
             // 校验状态以及处理异常的情况
             val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
@@ -132,7 +131,7 @@ class DeleteControl @Autowired constructor(
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = userId,
+                    userId = workspace.createUserId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
@@ -151,7 +150,8 @@ class DeleteControl @Autowired constructor(
                 action = WorkspaceAction.DELETING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -276,7 +276,8 @@ class DeleteControl @Autowired constructor(
                 action = WorkspaceAction.DELETING,
                 systemType = workspace.workspaceSystemType,
                 workspaceMountType = workspace.workspaceMountType,
-                ownerType = workspace.ownerType
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
             )
             return true
         }
@@ -404,7 +405,8 @@ class DeleteControl @Autowired constructor(
             action = WorkspaceAction.DELETE,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
         )
     }
 

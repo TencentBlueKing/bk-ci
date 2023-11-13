@@ -41,14 +41,14 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
+import javax.ws.rs.DELETE
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -124,6 +124,18 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: List<OPUserSetting>
+    ): Result<Boolean>
+
+    @ApiOperation("续期体验时长")
+    @POST
+    @Path("/renewal_time")
+    fun renewalExperienceDuration(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "续期时长", required = true)
+        @QueryParam("renewalTime")
+        renewalTime: Int
     ): Result<Boolean>
 
     @ApiOperation("获取用户设置")
@@ -256,13 +268,4 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
-
-    @ApiOperation("转移数据到workspace windows 表")
-    @GET
-    @Path("/windowsWorkspaceDaoInit")
-    fun windowsWorkspaceDaoInit(
-        @ApiParam(value = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
 }

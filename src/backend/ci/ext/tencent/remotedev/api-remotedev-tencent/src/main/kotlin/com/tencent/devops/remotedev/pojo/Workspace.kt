@@ -76,6 +76,10 @@ data class Workspace(
     val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
     @ApiModelProperty("windows资源配置id")
     val winConfigId: Int? = null,
+    @ApiModelProperty("windows 资源配置")
+    val winConfig: WindowsResourceTypeConfig? = null,
+    @ApiModelProperty("镜像id")
+    val imageId: String? = null,
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,

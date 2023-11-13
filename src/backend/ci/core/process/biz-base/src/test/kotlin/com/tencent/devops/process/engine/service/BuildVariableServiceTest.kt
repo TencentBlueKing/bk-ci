@@ -49,7 +49,7 @@ class BuildVariableServiceTest {
 
     private val dslContext: DSLContext = mockk()
     private val pipelineBuildVarDao: PipelineBuildVarDao = mockk()
-    private val redisOperation: RedisOperation = RedisOperation(mockk())
+    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
     private val pipelineAsCodeService: PipelineAsCodeService = mockk(relaxed = true)
 
     private val buildVariableService = BuildVariableService(

@@ -25,24 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.auth.api.user
 
-/**
- *
- * Powered By Tencent
- */
-object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
-    const val RESPONSE_ENTITY_MAX_SIZE = 1024 * 1024 * 1024
-    const val SCROLL_MAX_LINES = 5000
-    const val NORMAL_MAX_LINES = 10000
-    const val BULK_BUFFER_SIZE = 100
-    const val SCROLL_MAX_TIMES = 6
-
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
+@Api(tags = ["AUTH_MONITOR_SPACE"], description = "监控空间接口")
+@Path("/user/auth/monitor/space")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserMonitorSpaceResource {
+    @ApiOperation("获取监控空间业务id")
+    @GET
+    @Path("/")
+    fun getMonitorSpaceBizId(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectCode")
+        @ApiParam("项目ID", required = false)
+        projectCode: String
+    ): Result<String>
 }

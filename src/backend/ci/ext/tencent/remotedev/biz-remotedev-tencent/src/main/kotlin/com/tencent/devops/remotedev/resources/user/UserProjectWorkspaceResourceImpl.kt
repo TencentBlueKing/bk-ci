@@ -35,13 +35,22 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
+import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.windows.TimeScope
+import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
+import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -51,7 +60,12 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val deliverControl: DeliverControl,
     private val deleteControl: DeleteControl,
-    private val startWorkspaceService: StartWorkspaceService
+    private val startWorkspaceHandler: StartWorkspaceHandler,
+    private val stopWorkspaceHandler: StopWorkspaceHandler,
+    private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
+    private val startWorkspaceService: StartWorkspaceService,
+    private val bkBaseService: BKBaseService
 ) : UserProjectWorkspaceResource {
     override fun createWorkspace(
         userId: String,
@@ -76,8 +90,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
             deleteControl.deleteWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                needPermission = false,
-                checkDeleteImmediately = true
+                needPermission = false
             )
         )
     }
@@ -114,7 +127,42 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
+        return Result(true)
+    }
+
+    override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
+        return Result(true)
+    }
+
+    override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
+        return Result(true)
+    }
+
+    override fun makeImageByVm(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        makeImageReq: MakeWorkspaceImageReq
+    ): Result<Boolean> {
+        makeWorkspaceImageHandler.makeWorkspaceImage(userId, projectId, workspaceName, makeImageReq)
+        return Result(true)
+    }
+
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
         return Result(startWorkspaceService.computerStatus(userId, projectId))
+    }
+
+    override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
+        return Result(
+            bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
+        )
+    }
+
+    override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
+        return workspaceService.exportProjectWorkspaceListUser(userId, projectId, page, pageSize)
     }
 }

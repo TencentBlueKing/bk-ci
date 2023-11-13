@@ -29,7 +29,6 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUserDao
@@ -107,18 +106,6 @@ class ProjectUserService @Autowired constructor(
             res[project.englishName] = projectProperties.remotedevManager?.split(";")
                 ?.filter { it.isNotBlank() }
                 ?.toMutableSet() ?: mutableSetOf()
-        }
-
-        // 获取项目的权限管理员
-        res.forEach { (projectId, members) ->
-            val auths = try {
-                authProjectApi.getProjectUsers(projectServiceCode, projectId, BkAuthGroup.MANAGER)
-            } catch (e: Exception) {
-                logger.warn("getRemoteDevAdmin request getProjectUsers error", e)
-                null
-            } ?: return@forEach
-
-            members.addAll(auths.filter { it.isNotBlank() })
         }
 
         return res

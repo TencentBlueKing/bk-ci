@@ -25,28 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.common.log.constant
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserImageManageResource
-import com.tencent.devops.remotedev.pojo.image.ProjectImage
-import com.tencent.devops.remotedev.service.image.ImageManageService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-@Suppress("ALL")
-class UserImageManageResourceImpl @Autowired constructor(
-    private val projectImageManageService: ImageManageService
-
-) : UserImageManageResource {
-    companion object {
-        val logger = LoggerFactory.getLogger(UserImageManageResourceImpl::class.java)!!
-    }
-
-    override fun getProjectImageList(userId: String, projectId: String): Result<List<ProjectImage>> {
-        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
-        return Result(projectImageManageService.getProjectImageList(projectId))
-    }
+object Constants {
+    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
+    const val RESPONSE_ENTITY_MAX_SIZE = 1024 * 1024 * 1024
+    const val SCROLL_MAX_LINES = 5000
+    const val NORMAL_MAX_LINES = 10000
+    const val BULK_BUFFER_SIZE = 1000
+    const val SCROLL_MAX_TIMES = 6
 }

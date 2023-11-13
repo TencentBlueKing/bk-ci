@@ -42,16 +42,16 @@ import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
-import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.GitTransferService
+import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import java.time.Duration
+import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
@@ -146,6 +146,30 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
+    fun renewalExperienceDuration(userId: String, time: Int): Boolean {
+        logger.info("$userId renewalExperienceDuration")
+        val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+        val data = OPUserSetting(
+            userIds = listOf(userId),
+            maxRunningCount = setting.maxRunningCount,
+            maxHavingCount = setting.maxHavingCount,
+            onlyCloudIDE = setting.onlyCloudIDE,
+            allowedDownload = setting.allowedDownload,
+            needWatermark = setting.needWatermark,
+            autoDeletedDays = setting.autoDeletedDays,
+            mountType = setting.mountType,
+            startCloudExperienceDuration = setting.startCloudExperienceDuration?.plus(time),
+            allowedCopy = setting.allowedCopy,
+            clientWhiteList = setting.clientWhiteList,
+            grayFlag = false,
+            startWhiteList = setting.startWhiteList
+        )
+
+        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
+
+        return true
+    }
+
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->
@@ -161,7 +185,7 @@ class RemoteDevSettingService @Autowired constructor(
 
             data.startWhiteList?.let { isEnabled ->
                 if (isEnabled) {
-                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId, override = true)
                 } else {
                     whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
                 }
