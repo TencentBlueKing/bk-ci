@@ -51,6 +51,10 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "lambda", "store")
     }
 
+    "dispatch" -> {
+        listOf("dispatch", "dispatch_kubernetes")
+    }
+
     else -> listOf(moduleName)
 }
 
