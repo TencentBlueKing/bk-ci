@@ -129,7 +129,8 @@ class ItsmService @Autowired constructor(
         organization: String,
         authSecrecy: Int,
         subjectScopes: List<SubjectScopeInfo>,
-        productName: String
+        productName: String,
+        isCreateProject: Boolean = true
     ): ItsmContentDTO {
         logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName")
         val itsmColumns = listOf(
@@ -166,7 +167,12 @@ class ItsmService @Autowired constructor(
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
             .label(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
+                I18nUtil.getCodeLanMessage(
+                    if (isCreateProject)
+                        AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
+                    else
+                        AuthI18nConstants.BK_UPDATE_PROJECT_APPROVAL
+                )
             )
             .value(listOf(value))
             .build()

@@ -36,6 +36,7 @@ object AuthI18nConstants {
     const val BK_GROUP_NAME = "bkGroupName" // 用户组名称
     const val BK_VALIDITY_PERIOD = "bkValidityPeriod" // 申请期限
     const val BK_CREATE_PROJECT_APPROVAL = "bkCreateProjectApproval" // 创建项目{0}审批
+    const val BK_UPDATE_PROJECT_APPROVAL = "bkUpdateProjectApproval" // 修改项目{0}审批
     const val BK_APPLY_TO_JOIN_PROJECT = "bkApplyToJoinProject" // 申请加入项目
     const val BK_APPLY_TO_JOIN_GROUP = "bkApplyToJoinGroup" // 申请加入用户组
     const val BK_DAY = "bkDay" // days
