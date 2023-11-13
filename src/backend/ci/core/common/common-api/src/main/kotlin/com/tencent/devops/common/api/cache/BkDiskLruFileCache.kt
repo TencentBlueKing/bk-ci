@@ -58,6 +58,9 @@ class BkDiskLruFileCache(
         val snapshot = diskCache[ShaUtils.sha256(key)]
         snapshot?.getInputStream(0)?.use { inputStream ->
             // 将snapshot对象输出流写入输出文件
+            if (!outputFile.exists()) {
+                outputFile.parentFile.mkdirs()
+            }
             FileOutputStream(outputFile).use { outputStream ->
                 val buffer = ByteArray(BUFFER_SIZE)
                 var bytesRead: Int

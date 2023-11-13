@@ -133,4 +133,17 @@ object GitUtils {
             commitId.substring(0, 8)
         }
     }
+
+    /**
+     * 校验代码库url
+     */
+    fun diffRepoUrl(
+        sourceRepoUrl: String,
+        targetRepoUrl: String
+    ): Boolean {
+        val sourceRepoInfo = GitUtils.getDomainAndRepoName(sourceRepoUrl)
+        val targetRepoInfo = GitUtils.getDomainAndRepoName(targetRepoUrl)
+        return sourceRepoInfo.first != targetRepoInfo.first ||
+                sourceRepoInfo.second != targetRepoInfo.second
+    }
 }

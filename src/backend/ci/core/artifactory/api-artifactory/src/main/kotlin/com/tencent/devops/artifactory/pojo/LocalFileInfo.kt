@@ -24,24 +24,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.utils.code.git.GitUtils
+package com.tencent.devops.artifactory.pojo
 
-abstract class CommonGitRepositoryService<T : Repository> : CodeRepositoryService<T> {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    /**
-     * 校验代码库url
-     */
-    fun diffRepoUrl(
-        sourceRepo: TRepositoryRecord,
-        targetRepo: T
-    ): Boolean {
-        val sourceRepoInfo = GitUtils.getDomainAndRepoName(sourceRepo.url)
-        val targetRepoInfo = GitUtils.getDomainAndRepoName(targetRepo.url)
-        return sourceRepoInfo.first != targetRepoInfo.first ||
-                sourceRepoInfo.second != targetRepoInfo.second
-    }
-}
+@ApiModel("本地目录下文件信息")
+data class LocalFileInfo(
+    @ApiModelProperty("文件所在相对路径列表", required = true)
+    val relativePath: String,
+    @ApiModelProperty("是否是静态文件", required = false)
+    val staticFlag: Boolean = true
+)

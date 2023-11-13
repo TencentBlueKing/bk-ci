@@ -67,7 +67,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService
-) : CommonGitRepositoryService<CodeGitRepository>() {
+) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
     }
@@ -121,7 +121,7 @@ class CodeGitRepositoryService @Autowired constructor(
             )
         }
         // 不得切换代码库
-        if (diffRepoUrl(record, repository)) {
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
             logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -142,8 +142,10 @@ class CodeGitRepositoryService @Autowired constructor(
         var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
-            logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
-                            "targetUrl=[${repository.url}]")
+            logger.info(
+                "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
+                        "targetUrl=[${repository.url}]"
+            )
             // Git项目ID
             gitProjectId = getGitProjectId(
                 repo = repository,
@@ -212,6 +214,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     userName = repository.userName
                 )
             }
+
             RepoAuthType.HTTP -> {
                 if (repoCredentialInfo.username.isEmpty()) {
                     throw OperationException(
@@ -234,6 +237,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     repoUsername = repository.userName
                 )
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = REPO_TYPE_NO_NEED_CERTIFICATION,

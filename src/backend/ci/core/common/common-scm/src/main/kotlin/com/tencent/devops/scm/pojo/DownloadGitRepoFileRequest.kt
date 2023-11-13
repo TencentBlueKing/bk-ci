@@ -25,31 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.util
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import io.swagger.annotations.ApiParam
 
-class AtomReleaseTxtAnalysisUtilTest {
-
-    @Test
-    fun regexAnalysisTest() {
-        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
-        val pathList = mutableListOf<String>()
-        val result = mutableMapOf<String, String>()
-        AtomReleaseTxtAnalysisUtil.regexAnalysis(
-            input = input,
-            atomPath = "",
-            pathList = pathList
-        )
-        pathList.forEach {
-            result[it] = "www.tested.xxx"
-        }
-        val filePathReplaceResult = AtomReleaseTxtAnalysisUtil.filePathReplace(result, input)
-        Assertions.assertEquals(
-            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
-            filePathReplaceResult
-        )
-    }
-}
+data class DownloadGitRepoFileRequest(
+    @ApiParam("仓库名称", required = true)
+    val repoName: String,
+    @ApiParam("commit hash值、分支名或tag", required = false)
+    val sha: String?,
+    @ApiParam("限定为下载指定路径的文件", required = false)
+    val filePath: String?,
+    @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+    val format: String?,
+    @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
+    val isProjectPathWrapped: Boolean?
+)

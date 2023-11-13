@@ -25,13 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.util
 
-enum class BusinessEnum {
-    CATEGORY, // 范畴
-    ATOM, // 插件
-    IMAGE, // 镜像
-    SERVICE, // 微扩展
-    BUILD_TYPE, // 构建资源类型
-    CODECC // 代码扫描
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+
+class TextReferenceFileAnalysisUtilTest {
+
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        TextReferenceFileAnalysisUtil.regexAnalysis(
+            input = input,
+            fileDirPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
+        }
+        val filePathReplaceResult = TextReferenceFileAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
+    }
 }
