@@ -30,7 +30,6 @@ package com.tencent.devops.process.plugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 
 /**
  * 流水线的Element的编排插件处理器
@@ -54,11 +53,6 @@ interface ElementBizPlugin<T : Element> {
      * 在删除[element]插件之前，根据[param]参数调用删除前的预处理
      */
     fun beforeDelete(element: T, param: BeforeDeleteParam)
-
-    /**
-     * 在修改[element]插件之前，根据[param]参数调用修改前的预处理
-     */
-    fun beforeUpdate(element: T, param: BeforeUpdateParam)
 
     /**
      * 检查[element]插件以及出现的次数[appearedCnt]是否符合要求

@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -75,6 +76,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -138,7 +140,8 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         useTemplateSettings: Boolean? = false,
         templateId: String? = null,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        existModel: Model? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -230,7 +233,11 @@ class PipelineRepositoryService constructor(
                     containerSeqId = containerSeqId,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    model = model,
+                    userId = userId,
                     modelTasks = modelTasks,
+                    channelCode = channelCode,
+                    create = create,
                     distIds = distinctIdSet
                 )
             } else {
@@ -240,7 +247,10 @@ class PipelineRepositoryService constructor(
                     containerSeqId = containerSeqId,
                     userId = userId,
                     pipelineId = pipelineId,
+                    model = model,
                     modelTasks = modelTasks,
+                    channelCode = channelCode,
+                    create = create,
                     distIds = distinctIdSet
                 )
             }
@@ -254,7 +264,11 @@ class PipelineRepositoryService constructor(
         containerSeqId: AtomicInteger,
         projectId: String,
         pipelineId: String,
+        model: Model,
+        userId: String,
         modelTasks: MutableList<PipelineModelTask>,
+        channelCode: ChannelCode,
+        create: Boolean,
         distIds: HashSet<String>
     ) {
         if (stage.containers.size != 1) {
@@ -284,6 +298,18 @@ class PipelineRepositoryService constructor(
                 e.id = modelTaskIdGenerator.getNextId()
             }
             distIds.add(e.id!!)
+            ElementBizRegistrar.getPlugin(e)?.afterCreate(
+                element = e,
+                param = AfterCreateParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    userId = userId,
+                    channelCode = channelCode,
+                    create = create,
+                    container = c
+                )
+            )
 
             modelTasks.add(
                 PipelineModelTask(
@@ -311,7 +337,10 @@ class PipelineRepositoryService constructor(
         containerSeqId: AtomicInteger,
         userId: String,
         pipelineId: String,
+        model: Model,
         modelTasks: MutableList<PipelineModelTask>,
+        channelCode: ChannelCode,
+        create: Boolean,
         distIds: HashSet<String>
     ) {
         if (stage.containers.isEmpty()) {
@@ -386,6 +415,20 @@ class PipelineRepositoryService constructor(
                         checkSubpipeline(projectId, e.subPipelineId, existPipelines)
                     }
                 }
+
+                // 补偿动作--未来拆分出来，针对复杂的东西异步处理
+                ElementBizRegistrar.getPlugin(e)?.afterCreate(
+                    element = e,
+                    param = AfterCreateParam(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        userId = userId,
+                        channelCode = channelCode,
+                        create = create,
+                        container = c
+                    )
+                )
 
                 modelTasks.add(
                     PipelineModelTask(

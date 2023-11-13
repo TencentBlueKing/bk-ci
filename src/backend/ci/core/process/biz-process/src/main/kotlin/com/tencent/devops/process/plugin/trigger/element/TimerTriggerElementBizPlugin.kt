@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -112,8 +111,6 @@ class TimerTriggerElementBizPlugin constructor(
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
         }
     }
-
-    override fun beforeUpdate(element: TimerTriggerElement, param: BeforeUpdateParam) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(TimerTriggerElementBizPlugin::class.java)

@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -63,8 +62,6 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     }
 
     override fun check(element: T, appearedCnt: Int) = Unit
-
-    override fun beforeUpdate(element: T, param: BeforeUpdateParam) = Unit
 }
 
 @ElementBiz

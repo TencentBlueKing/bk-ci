@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -507,12 +506,6 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    override fun beforeUpdateElementInExistsModel(existModel: Model, sourceModel: Model?, param: BeforeUpdateParam) {
-        recursiveElement(existModel = existModel) {
-            updatePrepare(sourceModel, it, param)
-        }
-    }
-
     private fun recursiveElement(
         existModel: Model,
         action: (element: Element) -> Unit
@@ -526,26 +519,6 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    private fun updatePrepare(sourceModel: Model?, originElement: Element, param: BeforeUpdateParam) {
-        if (sourceModel != null) {
-            val oldElement = sourceModel.elementFind(originElement)
-            if (oldElement != null) {
-                logger.info("The element(${originElement.name}/${originElement.id}) is update")
-                ElementBizRegistrar.getPlugin(originElement)?.beforeUpdate(
-                    originElement,
-                    param.copy(oldElement = oldElement, newElement = originElement)
-                )
-            } else {
-                logger.info(
-                    "The element(${originElement.name}/${originElement.id}) is not update," +
-                            "the element cannot be found from the model"
-                )
-            }
-        } else {
-            logger.info("The element(${originElement.name}/${originElement.id}) is not update")
-        }
-    }
-
     override fun afterCreateElementInExistsModel(existModel: Model, sourceModel: Model?, param: AfterCreateParam) {
         recursiveElement(existModel = existModel) {
             createPrepare(sourceModel, it, param)
@@ -554,10 +527,17 @@ open class DefaultModelCheckPlugin constructor(
 
     private fun createPrepare(sourceModel: Model?, originElement: Element, param: AfterCreateParam) {
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
-            logger.info("The element(${originElement.name}/${originElement.id}) is create")
+            val oldElement = sourceModel!!.elementFind(originElement)
+            val elementParam = if (oldElement == null) {
+                logger.info("The element(${originElement.name}/${originElement.id}) is create")
+                param.copy(element = originElement)
+            } else {
+                logger.info("The element(${originElement.name}/${originElement.id}) is update")
+                param.copy(element = originElement, oldElement = oldElement, create = false)
+            }
             ElementBizRegistrar.getPlugin(originElement)?.afterCreate(
                 originElement,
-                param.copy(element = originElement)
+                elementParam
             )
         } else {
             logger.info("The element(${originElement.name}/${originElement.id}) is not create")

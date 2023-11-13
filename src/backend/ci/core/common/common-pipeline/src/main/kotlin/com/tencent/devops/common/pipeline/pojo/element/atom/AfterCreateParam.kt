@@ -53,5 +53,7 @@ data class AfterCreateParam(
     @ApiModelProperty("容器")
     val container: Container? = null,
     @ApiModelProperty("插件配置")
-    var element: Element = EmptyElement()
+    var element: Element = EmptyElement(),
+    @ApiModelProperty("旧插件配置")
+    var oldElement: Element = EmptyElement()
 ) : AtomChangeEventParam

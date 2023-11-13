@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.enums.AtomChangeAction
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -49,7 +48,11 @@ class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtom
             atomCode = element.getAtomCode(),
             atomVersion = element.version,
             param = param,
-            action = AtomChangeAction.CREATE
+            action = if (param.create) {
+                AtomChangeAction.CREATE
+            } else {
+                AtomChangeAction.UPDATE
+            }
         )
     }
 
@@ -61,17 +64,6 @@ class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtom
             atomVersion = element.version,
             param = param,
             action = AtomChangeAction.DELETE
-        )
-    }
-
-    override fun beforeUpdate(element: MarketBuildLessAtomElement, param: BeforeUpdateParam) {
-        val inputMap = element.data["input"] as Map<String, Any>
-        MarketBuildUtils.changeAction(
-            inputMap = inputMap,
-            atomCode = element.getAtomCode(),
-            atomVersion = element.version,
-            param = param,
-            action = AtomChangeAction.UPDATE
         )
     }
 

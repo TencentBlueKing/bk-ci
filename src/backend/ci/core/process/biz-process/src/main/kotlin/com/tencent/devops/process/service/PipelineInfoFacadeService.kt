@@ -51,7 +51,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.AfterCreateParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeUpdateParam
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -221,7 +220,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId ?: "",
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.BS,
+                create = true
             )
         )
         return newPipelineId
@@ -477,17 +477,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                             channelCode = channelCode
                         )
                     )
-                } else {
-                    modelCheckPlugin.afterCreateElementInExistsModel(
-                        existModel = model,
-                        sourceModel = null,
-                        param = AfterCreateParam(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId ?: "",
-                            channelCode = channelCode
-                        )
-                    )
                 }
             }
         } finally {
@@ -540,18 +529,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
             return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
-            if (model != null) {
-                modelCheckPlugin.afterCreateElementInExistsModel(
-                    existModel = model,
-                    sourceModel = null,
-                    param = AfterCreateParam(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        channelCode = channelCode
-                    )
-                )
-            }
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
@@ -694,7 +671,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = newPipelineId!!,
-                        channelCode = channelCode
+                        channelCode = channelCode,
+                        create = true
                     )
                 )
             }
@@ -782,22 +760,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode
                 )
             )
-            modelCheckPlugin.beforeUpdateElementInExistsModel(
-                model, existModel, BeforeUpdateParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    channelCode = channelCode
-                )
-            )
-            modelCheckPlugin.afterCreateElementInExistsModel(
-                model, existModel, AfterCreateParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    channelCode = channelCode
-                )
-            )
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -805,7 +767,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 userId = userId,
                 channelCode = channelCode,
                 create = false,
-                updateLastModifyUser = updateLastModifyUser
+                updateLastModifyUser = updateLastModifyUser,
+                existModel = existModel
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
