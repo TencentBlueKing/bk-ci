@@ -37,7 +37,6 @@ import java.time.Duration
 import java.time.LocalTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 
 class MetricsService(
     private val dslContext: DSLContext,
