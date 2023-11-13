@@ -70,7 +70,7 @@ class ExperienceOuterService @Autowired constructor(
         if (isBlackIp(realIp)) {
             logger.warn("it is black ip : {}", realIp)
             throw ErrorCodeException(
-                statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR
             )
         }
@@ -169,7 +169,7 @@ class ExperienceOuterService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("decode profile failed , token:{}", token, e)
             throw ErrorCodeException(
-                statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ACCOUNT_INFORMATION_ABNORMAL
             )
         }
@@ -192,7 +192,7 @@ class ExperienceOuterService @Autowired constructor(
         if (realIp == null) {
             logger.warn("Can not get client real ip")
             throw ErrorCodeException(
-                statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = UNABLE_GET_IP
             )
         }
@@ -258,7 +258,7 @@ class ExperienceOuterService @Autowired constructor(
                 redisOperation.set(checkKey, "1") // 将缓存置为不正常用户
                 logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
                 throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ACCOUNT_HAS_BEEN_BLOCKED
                 )
             }
@@ -267,7 +267,7 @@ class ExperienceOuterService @Autowired constructor(
             if (checkResult == "1") {
                 logger.warn("v2ProfilesRead, redis , status is not normal , token:{}", token)
                 throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ACCOUNT_HAS_BEEN_BLOCKED
                 )
             }
@@ -286,7 +286,7 @@ class ExperienceOuterService @Autowired constructor(
         if (profile.status != Profile.StatusEnum.NORMAL) {
             logger.warn("bkOuterLogin status is not normal , status : {}", profile.status)
             throw ErrorCodeException(
-                statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ACCOUNT_HAS_BEEN_BLOCKED
             )
         }
@@ -312,7 +312,7 @@ class ExperienceOuterService @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn("taiLogin failed , body is $responseBody")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ACCOUNT_INFORMATION_ABNORMAL
                 )
             }
@@ -321,14 +321,14 @@ class ExperienceOuterService @Autowired constructor(
             if (!taiLogin.data.matched) {
                 logger.warn("password error , username: $accountId")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = OUTER_LOGIN_WRONG_PASSWORD
                 )
             }
             if (!username.endsWith("@tai")) {
                 logger.warn("taiLogin is not support inner user , username: $username")
                 throw ErrorCodeException(
-                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = USER_NEED_TAI_ACCOUNT
                 )
             }
