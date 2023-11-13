@@ -51,7 +51,7 @@ class MessageTemplateDao {
                 .set(template)
                 .onDuplicateKeyUpdate()
                 .set(TEMPLATE_NAME, template.templateName)
-                .set(NOTIFY_TYPE_SCOPE , template.notifyTypeScope)
+                .set(NOTIFY_TYPE_SCOPE, template.notifyTypeScope)
                 .execute()
         }
     }
