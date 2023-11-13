@@ -53,7 +53,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val HAS_BEEN_DELETED = 32006
         const val APP_NOT_BIND_CGS = 32004
         const val NO_CGS_CHOOSE = 32005
-        private const val DEFAULT_CGS_PER_PAGE = 500
+        private const val DEFAULT_CGS_PER_PAGE = 10000
         private const val DEFAULT_CGS_PAGE = 0
     }
 
@@ -550,7 +550,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("getResourceList response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -561,7 +560,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentResourceDataRsp = jacksonObjectMapper().readValue(responseContent)
-                logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data.rows
