@@ -311,7 +311,8 @@ class PermissionGradeManagerService @Autowired constructor(
                         name = ALL_MEMBERS_NAME
                     )
                 ),
-                productName = projectApprovalInfo.productName!!
+                productName = projectApprovalInfo.productName!!,
+                isCreateProject = false
             )
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
