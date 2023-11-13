@@ -393,7 +393,8 @@ class GithubService @Autowired constructor(
     override fun isOAuth(
         userId: String,
         projectId: String,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
         val accessToken = if (refreshToken == true) {
@@ -406,7 +407,8 @@ class GithubService @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 repoHashId = null,
-                popupTag = ""
+                popupTag = "",
+                resetType = resetType
             ).redirectUrl
         )
         // 校验token是否有效
@@ -419,7 +421,8 @@ class GithubService @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     repoHashId = null,
-                    popupTag = ""
+                    popupTag = "",
+                    resetType = resetType
                 ).redirectUrl
             )
         }
