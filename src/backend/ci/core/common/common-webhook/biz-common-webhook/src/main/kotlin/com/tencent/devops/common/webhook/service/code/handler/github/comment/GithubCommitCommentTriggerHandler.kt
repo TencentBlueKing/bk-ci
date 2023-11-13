@@ -25,13 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
-enum class BusinessEnum {
-    CATEGORY, // 范畴
-    ATOM, // 插件
-    IMAGE, // 镜像
-    SERVICE, // 微扩展
-    BUILD_TYPE, // 构建资源类型
-    CODECC // 代码扫描
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
+
+@CodeWebhookHandler
+@Suppress("TooManyFunctions")
+class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubCommitCommentEvent> {
+    companion object {
+        const val SHORT_COMMIT_SHA_LENGTH = 8
+    }
+
+    override fun eventClass(): Class<GithubCommitCommentEvent> {
+        return GithubCommitCommentEvent::class.java
+    }
+
+    override fun getCommentParam(event: GithubCommitCommentEvent): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        with(event.comment) {
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
+            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
+        }
+        return startParams
+    }
 }

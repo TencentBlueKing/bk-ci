@@ -227,7 +227,12 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     repositoryHashId = storeI18nConfig.repositoryHashId,
                     branch = storeI18nConfig.branch
                 ) ?: return@forEach
-                val textReferenceContentMap = getTextReferenceFileContent(fileProperties)
+                val textReferenceContentMap = getTextReferenceFileContent(
+                    projectCode = storeI18nConfig.projectCode,
+                    properties = fileProperties,
+                    repositoryHashId = storeI18nConfig.repositoryHashId,
+                    fileDir = storeI18nConfig.fileDir
+                )
                 var textReferenceFileDirPath: String? = null
                 val allFileNames = textReferenceContentMap.values.flatten().toSet()
                 if (textReferenceContentMap.isNotEmpty()) {
@@ -332,22 +337,49 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     /**
      * 获取存在文件引用的配置
      */
-    fun getTextReferenceFileContent(properties: Properties): Map<String, List<String>> {
+    fun getTextReferenceFileContent(
+        projectCode: String,
+        properties: Properties,
+        fileDir: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
-        val regex = Regex(pattern = BK_CI_PATH_REGEX)
+
         properties.keys.map { it as String }.forEach { key ->
             val text = properties[key].toString()
-            val matchResult = regex.findAll(text)
-            val fileNames = mutableListOf<String>()
-            matchResult.forEach {
-                val fileName = it.groupValues[2].replace("\"", "")
-                fileNames.add(fileName)
-            }
-            if (fileNames.isNotEmpty()) {
+            val fileNames = getFilePathAnalysis(text)
+            val mdFileNames = fileNames.filter { it.endsWith(".md") }
+            if (mdFileNames.isEmpty()) {
                 map[key] = fileNames
+            } else {
+                val fileStr = getFileStr(
+                    projectCode = projectCode,
+                    fileDir = fileDir,
+                    fileName = "file${File.separator}${mdFileNames[0]}",
+                    repositoryHashId = repositoryHashId,
+                    branch = branch
+                )
+                fileStr?.let {
+                    map[key] = getFilePathAnalysis(fileStr)
+                    properties[key] = fileStr
+                }
             }
         }
         return map
+    }
+
+    fun getFilePathAnalysis(
+        text: String
+    ): MutableList<String> {
+        val regex = Regex(pattern = BK_CI_PATH_REGEX)
+        val matchResult = regex.findAll(text)
+        val fileNames = mutableListOf<String>()
+        matchResult.forEach {
+            val fileName = it.groupValues[2].replace("\"", "")
+            fileNames.add(fileName)
+        }
+        return fileNames
     }
 
     private fun getTextReferenceFileParsing(
