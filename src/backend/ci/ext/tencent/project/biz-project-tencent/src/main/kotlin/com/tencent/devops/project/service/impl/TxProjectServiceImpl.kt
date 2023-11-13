@@ -521,45 +521,32 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
         return try {
-            executeHttpPost(
-                urlSuffix = obsUrl,
-                obsBaseDictDTO = ObsBaseDictDTO(
-                    jsonrpc = "2.0",
-                    id = "0",
-                    method = "getObsBaseDict",
-                    params = mapOf(
-                        "DeptId" to "2",
-                        "StaffName" to "xx",
-                        "DictType" to "4"
-                    )
+            val obsBaseDictDTO = ObsBaseDictDTO(
+                jsonrpc = "2.0",
+                id = "0",
+                method = "getObsBaseDict",
+                params = mapOf(
+                    "DeptId" to "2",
+                    "StaffName" to "xx",
+                    "DictType" to "4"
                 )
-            ).result.data
+            )
+            val requestBody = objectMapper.writeValueAsString(obsBaseDictDTO)
+            OkhttpUtils.doPost(
+                url = "${config.devopsHostGateway}$obsUrl",
+                jsonParam = requestBody,
+                headers = mapOf("Authorization" to "Bearer $obsToken")
+            ).use {
+                if (!it.isSuccessful) {
+                    logger.warn("request obs products failed,response:($it)")
+                    throw RemoteServiceException("request failed, response:($it)")
+                }
+                val responseStr = it.body!!.string()
+                objectMapper.readValue(responseStr, ObsOperationalProductResponse::class.java)
+            }.result.data
         } catch (ignore: Exception) {
             logger.warn("get obs products fail!${ignore.message}")
             emptyList()
-        }
-    }
-
-    private fun executeHttpPost(urlSuffix: String, obsBaseDictDTO: ObsBaseDictDTO): ObsOperationalProductResponse {
-        val requestBody = objectMapper.writeValueAsString(obsBaseDictDTO).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val url = "${config.devopsHostGateway}$urlSuffix"
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .addHeader("Authorization", "Bearer $obsToken")
-            .build()
-        return executeHttpRequest(url, request)
-    }
-
-    private fun executeHttpRequest(url: String, request: Request): ObsOperationalProductResponse {
-        OkhttpUtils.doHttp(request).use {
-            if (!it.isSuccessful) {
-                logger.warn("request failed, uri:($url)|response: ($it)")
-                throw RemoteServiceException("request failed, response:($it)")
-            }
-            val responseStr = it.body!!.string()
-            return objectMapper.readValue(responseStr)
         }
     }
 
