@@ -34,8 +34,8 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import com.tencent.devops.remotedev.service.BKBaseService
@@ -49,8 +49,8 @@ import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandle
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -117,14 +117,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
-        kotlin.runCatching { permissionService.checkUserManager(userId, projectId) }.fold(
-            {
-                return Result(true)
-            },
-            {
-                return Result(false)
-            }
-        )
+        return Result(permissionService.hasUserManager(userId, projectId))
     }
 
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
