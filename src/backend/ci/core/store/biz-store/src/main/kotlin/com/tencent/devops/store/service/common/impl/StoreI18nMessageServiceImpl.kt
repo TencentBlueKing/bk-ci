@@ -357,7 +357,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 )
                 fileStr?.let {
                     map[key] = getFilePathAnalysis(fileStr)
-                    properties[key] = map[key]
+                    properties[key] = fileStr
                 }
             }
         }
