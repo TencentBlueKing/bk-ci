@@ -681,9 +681,9 @@ class TemplateFacadeService @Autowired constructor(
     ): Triple<List<String>?, Result<out Record>?, Int> {
         val offset = if (null != page && null != pageSize) (page - 1) * pageSize else null
         // 若不开启模板权限或者不检查列表权限的，直接返回列表数据。
-        if (!checkPermission || !pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId!!)) {
+        return if (!checkPermission || !pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId!!)) {
             logger.info("get templates without permission :$projectId|$userId|$checkPermission")
-            return getTemplateListAndCountWithoutPermission(
+            getTemplateListAndCountWithoutPermission(
                 projectId = projectId,
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
@@ -699,7 +699,7 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 permissions = setOf(AuthPermission.VIEW, AuthPermission.LIST)
             )
-            return getTemplateListAndCountWithPermission(
+            getTemplateListAndCountWithPermission(
                 projectId = projectId,
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
