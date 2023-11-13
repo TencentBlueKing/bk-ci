@@ -107,7 +107,7 @@ class StartCloudInterfaceService @Autowired constructor(
         resourceList.forEach {
             if (it.cgsId in lockedVms) it.locked = true
         }
-        logger.info("syncStartCloudResourceList|resourceList|$resourceList")
+        logger.info("syncStartCloudResourceList|resourceList|${resourceList.size}")
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
         return resourceList

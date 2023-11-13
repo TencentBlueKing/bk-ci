@@ -548,7 +548,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("getResourceList response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -559,7 +558,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentResourceDataRsp = jacksonObjectMapper().readValue(responseContent)
-                logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data.rows
