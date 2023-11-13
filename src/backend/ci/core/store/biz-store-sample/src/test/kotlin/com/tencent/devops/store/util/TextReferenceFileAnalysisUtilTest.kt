@@ -25,20 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:image:api-image"))
-    api(project(":ext:tencent:image:api-image-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-codecc"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+package com.tencent.devops.store.util
+
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+
+class TextReferenceFileAnalysisUtilTest {
+
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        TextReferenceFileAnalysisUtil.regexAnalysis(
+            input = input,
+            fileDirPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
+        }
+        val filePathReplaceResult = TextReferenceFileAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
+    }
 }
