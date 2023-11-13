@@ -28,7 +28,8 @@ const isLoading = ref(false);
 const isChange = ref(false);
 const isToBeApproved = ref(false);
 const btnLoading = ref(false);
-const hasPermission = ref(true)
+const hasPermission = ref(true);
+const operationalList = ref({});
 const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
@@ -100,6 +101,10 @@ const infoBoxInstance = ref();
 const updateProject = async () => {
   infoBoxInstance.value?.hide()
   btnLoading.value = true;
+  productIdChange({
+    id: projectData.value.productId,
+    list: operationalList.value,
+  });
   const result = await http
     .requestUpdateProject({
       projectId: projectData.value.englishName,
@@ -132,6 +137,18 @@ const updateProject = async () => {
   }
   return Promise.resolve(false)
 };
+
+const fetchOperationalList = async () => {
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+  });
+};
+
 const showNeedApprovedTips = () => {
   infoBoxInstance.value = InfoBox({
     isShow: true,
@@ -179,6 +196,7 @@ const handleNoPermission = () => {
 
 onMounted(() => {
   fetchProjectData();
+  fetchOperationalList();
 });
 </script>
 
@@ -192,7 +210,6 @@ onMounted(() => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
-        @productIdChange="productIdChange"
         @initProjectForm="initProjectForm"
         @approvedChange="handleApprovedChange">
         <bk-form-item>
