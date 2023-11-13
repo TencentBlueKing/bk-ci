@@ -416,7 +416,8 @@
     "deleteTemplateTips": "Delete Template ( {0} ) ?",
     "updateStatus": "Update Status",
     "updateDialogTitle": "Update Instance",
-    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed"
+    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
+    "permissionSetting": "Permission Setting"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

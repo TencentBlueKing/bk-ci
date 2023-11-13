@@ -59,7 +59,17 @@
             }
         },
         created () {
-            this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
+            const projectId = this.$route.params.projectId
+            this.$store.dispatch('requestProjectDetail', { projectId })
+            this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {
+                if (res.data) {
+                    this.sideMenuList[0].list.push({
+                        id: 'templatePermission',
+                        name: this.$t('template.permissionSetting'),
+                        icon: 'icon-cog'
+                    })
+                }
+            })
         }
     }
 </script>
