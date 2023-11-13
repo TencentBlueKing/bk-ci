@@ -45,12 +45,13 @@ import org.springframework.stereotype.Repository
 @Suppress("ALL")
 class MessageTemplateDao {
 
-    fun crateCommonNotifyMessageTemplate(dslContext: DSLContext, template: TCommonNotifyMessageTemplateRecord) {
+    fun createCommonNotifyMessageTemplate(dslContext: DSLContext, template: TCommonNotifyMessageTemplateRecord) {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(this)
                 .set(template)
                 .onDuplicateKeyUpdate()
                 .set(TEMPLATE_NAME, template.templateName)
+                .set(NOTIFY_TYPE_SCOPE , template.notifyTypeScope)
                 .execute()
         }
     }

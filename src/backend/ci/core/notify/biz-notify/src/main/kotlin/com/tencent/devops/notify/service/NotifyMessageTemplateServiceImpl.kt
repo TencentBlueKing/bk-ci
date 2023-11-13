@@ -124,7 +124,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             tCommonNotifyMessageTemplateRecord.notifyTypeScope = JsonUtil.toJson(template.notifyTypeScope)
             tCommonNotifyMessageTemplateRecord.priority = template.priority.ordinal.toByte()
             tCommonNotifyMessageTemplateRecord.source = template.source.getValue().toByte()
-            messageTemplateDao.crateCommonNotifyMessageTemplate(
+            messageTemplateDao.createCommonNotifyMessageTemplate(
                 dslContext,
                 tCommonNotifyMessageTemplateRecord
             )
@@ -200,7 +200,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                messageTemplateDao.crateCommonNotifyMessageTemplate(
+                messageTemplateDao.createCommonNotifyMessageTemplate(
                     transactionContext,
                     tCommonNotifyMessageTemplateRecord
                 )
