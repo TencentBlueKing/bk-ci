@@ -58,25 +58,23 @@ abstract class BasePathFilter(
     private fun hashPathSpecs(response: WebhookFilterResponse): Boolean {
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
-            val matchPathsMap = mutableMapOf<String, MutableSet<String>>()
+            val matchUserPaths = mutableSetOf<String>()
             triggerOnPath.forEach eventPath@{ eventPath ->
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
                         // 提取最终匹配路径
-                        extractMatchUserPath(eventPath, userPath, matchPathsMap)
+                        matchUserPaths.add(extractMatchUserPath(eventPath, userPath))
                         return@eventPath
                     }
                 }
             }
-            val finalPaths = getFinalUserPath(matchPathsMap)
-            if (finalPaths.isNotEmpty()) {
-                response.addParam(MATCH_PATHS, finalPaths.joinToString(","))
+            if (matchUserPaths.isNotEmpty()) {
+                response.addParam(MATCH_PATHS, matchUserPaths.joinToString(","))
             }
         } else {
             matchIncludePaths.addAll(triggerOnPath)
         }
-
         val matchExcludedPaths = mutableSetOf<String>()
         if (excludedPaths.isNotEmpty()) {
             matchIncludePaths.forEach eventPath@{ eventPath ->
@@ -102,21 +100,6 @@ abstract class BasePathFilter(
 
     open fun extractMatchUserPath(
         eventPath: String,
-        userPath: String,
-        matchPathsMap: MutableMap<String, MutableSet<String>>
-    ) {
-        val targetSet = if (matchPathsMap[userPath] == null) {
-            mutableSetOf()
-        } else {
-            matchPathsMap[userPath]!!
-        }
-        targetSet.add(userPath)
-        matchPathsMap[userPath] = targetSet
-    }
-
-    open fun getFinalUserPath(
-        matchPathsMap: MutableMap<String, MutableSet<String>>
-    ): Set<String> {
-        return matchPathsMap.keys.toSet()
-    }
+        userPath: String
+    ) = eventPath
 }

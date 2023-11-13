@@ -49,26 +49,11 @@ class PathRegexFilter(
         return matcher.match(userPath, eventPath)
     }
 
+    @SuppressWarnings("CyclomaticComplexMethod")
     override fun extractMatchUserPath(
         eventPath: String,
-        userPath: String,
-        matchPathsMap: MutableMap<String, MutableSet<String>>
-    ) {
-        val targetSet = if (matchPathsMap[userPath] == null) {
-            mutableSetOf()
-        } else {
-            matchPathsMap[userPath]!!
-        }
-        targetSet.add(getShortPath(userPath, eventPath))
-        matchPathsMap[userPath] = targetSet
-    }
-
-    private fun patternIsMatchDir(userPath: String) =
-        userPath.endsWith("/*") ||
-                userPath.endsWith("/**") ||
-                userPath == "**"
-
-    private fun getShortPath(userPath: String, eventPath: String): String {
+        userPath: String
+    ): String {
         val patternParts = userPath.split("/")
         // 无视规则，直接返回空
         if (isInvalidPattern(userPath) || isInvalidPattern(patternParts)) {
@@ -109,21 +94,6 @@ class PathRegexFilter(
             segment++
         }
         return pathList.joinToString("/")
-    }
-
-    override fun getFinalUserPath(
-        matchPathsMap: MutableMap<String, MutableSet<String>>
-    ): Set<String> = when {
-        matchPathsMap.isEmpty() -> {
-            setOf()
-        }
-        // 合并所有匹配路径
-        else -> {
-            val paths = matchPathsMap.map { it.value }
-            val targetPath = mutableSetOf<String>()
-            paths.forEach { targetPath.addAll(it) }
-            targetPath.toSet()
-        }
     }
 
     private fun isInvalidPattern(pattern: String) = (pattern == "*" || pattern == "**")

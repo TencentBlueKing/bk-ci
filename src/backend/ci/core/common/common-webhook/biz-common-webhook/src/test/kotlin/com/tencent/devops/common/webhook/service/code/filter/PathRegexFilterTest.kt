@@ -304,7 +304,7 @@ class PathRegexFilterTest {
 
     @Test
     @SuppressWarnings("LongMethod", "ComplexMethod")
-    fun buildFinalIncludePath() {
+    fun extractMatchUserPath() {
         var pathRegexFilter = PathRegexFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("trunk/bin/dd.txt", "branches/bin/9.0/aa.txt", "branches/bin/doc/abc/9.0/aa.txt"),
