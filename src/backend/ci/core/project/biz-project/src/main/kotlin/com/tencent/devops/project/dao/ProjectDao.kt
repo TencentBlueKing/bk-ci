@@ -477,6 +477,7 @@ class ProjectDao {
         }
 
         if (remoteDevFlag != null && remoteDevFlag) {
+            conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
             conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
         }
 

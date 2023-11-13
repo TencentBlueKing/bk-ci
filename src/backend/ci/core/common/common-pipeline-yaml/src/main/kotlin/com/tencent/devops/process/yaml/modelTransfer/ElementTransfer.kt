@@ -503,7 +503,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 )
             }
 
-            element.getAtomCode() == "run" && element is MarketBuildAtomElement -> {
+            element.getAtomCode() == creator.runPlugInAtomCode && element is MarketBuildAtomElement -> {
                 val input = element.data["input"] as Map<String, Any>? ?: emptyMap()
                 PreStep(
                     name = element.name,

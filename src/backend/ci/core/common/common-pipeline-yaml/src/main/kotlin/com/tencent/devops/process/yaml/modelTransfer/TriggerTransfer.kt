@@ -86,7 +86,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = push.users,
                     excludeUsers = push.usersIgnore,
-                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
                     repositoryType = RepositoryType.NAME,
@@ -124,7 +125,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     block = mr.blockMr,
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = RepositoryType.NAME,
@@ -208,7 +210,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin(),
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
-                    pathFilterType = git.pathFilterType?.name,
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     // todo action
                     action = null
                 )
@@ -233,9 +235,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     blockMr = git.block,
-                    webhookQueue = git.webhookQueue,
-                    reportCommitCheck = git.enableCheck,
-                    pathFilterType = git.pathFilterType?.name,
+                    webhookQueue = git.webhookQueue.nullIfDefault(false),
+                    reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     // todo action
                     action = null
                 )
@@ -270,7 +272,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathsIgnore = git.excludePaths?.disjoin(),
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
-                    pathFilterType = git.pathFilterType?.name
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name)
                 )
 
                 CodeEventType.CHANGE_COMMIT -> nowExist.push = PushRule(
@@ -299,7 +301,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                             includeUsers = push.users,
                             excludeUsers = push.usersIgnore,
-                            pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                            pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
                             // todo action
                             repositoryType = RepositoryType.NAME,
@@ -345,7 +348,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             block = mr.blockMr,
                             webhookQueue = mr.webhookQueue,
                             enableCheck = mr.reportCommitCheck,
-                            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
+                            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
                             // todo action
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = RepositoryType.NAME,
@@ -422,7 +426,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = push.users,
                     excludeUsers = push.usersIgnore.nonEmptyOrNull()?.join(),
-                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
                     repositoryType = RepositoryType.NAME,
@@ -459,7 +464,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludeUsers = mr.usersIgnore.nonEmptyOrNull()?.join(),
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.PULL_REQUEST,
                     repositoryType = RepositoryType.NAME,
@@ -520,7 +526,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = push.users,
                     excludeUsers = push.usersIgnore.nonEmptyOrNull(),
-                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     repositoryType = RepositoryType.NAME,
                     repositoryName = triggerOn.repoName
@@ -602,7 +609,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                     includeUsers = push.users,
                     excludeUsers = push.usersIgnore,
-                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
                     repositoryType = RepositoryType.NAME,
@@ -637,7 +645,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = mr.users,
                     excludeUsers = mr.usersIgnore,
                     block = mr.blockMr,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) },
+                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
                     repositoryType = RepositoryType.NAME,
