@@ -263,7 +263,10 @@
              */
             handleFullscreen () {
                 this.isFullscreen = true
-                this.messageInfo(this.$t('environment.按 Esc 即可退出全屏模式'))
+                this.$bkMessage({
+                    theme: 'primary',
+                    message: this.$t('environment.按 Esc 即可退出全屏模式')
+                })
                 this.infoBoxParentNode = this.$refs.infoBox.parentNode
                 document.body.appendChild(this.$refs.infoBox)
                 this.$refs.view && this.$refs.view.resize()

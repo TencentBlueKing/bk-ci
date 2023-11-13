@@ -12,6 +12,7 @@
     "vue-echarts": "^6.0.2",
     "vue-file-upload": "^0.1.12",
     "vuex-class": "^0.3.0",
+    "lodash": "^4.17.21",
     "ace-builds": "^1.4.12"
   },
   "devDependencies": {

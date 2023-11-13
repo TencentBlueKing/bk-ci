@@ -42,11 +42,11 @@
                 :is-content-loading="isAsyncContentLoading"
                 @on-toggle="handleToggle" />
         </div>
-        <div v-if="renderNums < contentList.length" ref="load" class="load-more">
+        <div ref="load" class="load-more">
             <div class="loading-flag">
-                <Icon type="loading-circle" />
+                <icon name="loading" size="16" />
             </div>
-            <div>{{ $t('history.加载中') }}</div>
+            <div>{{ $t('environment.加载中') }}</div>
         </div>
     </div>
 </template>
