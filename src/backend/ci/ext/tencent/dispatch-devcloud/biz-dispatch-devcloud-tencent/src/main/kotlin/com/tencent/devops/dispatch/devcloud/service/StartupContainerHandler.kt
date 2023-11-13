@@ -107,7 +107,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                     SLAVE_ENVIRONMENT to "DevCloud",
                     ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
                     ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage,
-                    ENV_DEVCLOUD_CPU to cpu,
+                    ENV_DEVCLOUD_CPU to cpu.toString(),
                     ENV_DEVCLOUD_MEM to memory,
                     ENV_DEVCLOUD_DISK to disk
                 )
