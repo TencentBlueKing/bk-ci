@@ -639,4 +639,9 @@ class WorkspaceCommon @Autowired constructor(
             )
         }
     }
+
+    // 按天备份数据
+    fun backupDailyCsgData() {
+        workspaceDao.backupDailyCsgData(dslContext)
+    }
 }
