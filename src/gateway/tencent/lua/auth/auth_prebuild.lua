@@ -19,9 +19,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --- 蓝鲸平台登录对接
 --- 获取Cookie中bk_token
-local bk_token, err = cookieUtil:get_cookie("bk_ticket")
+local bk_tick, err = cookieUtil:get_cookie("bk_ticket")
 local devops_prebuild_access_token =  ngx.var.http_x_devops_prebuild_access_token
-if bk_token == nil and devops_prebuild_access_token == nil then
+if bk_tick == nil and devops_prebuild_access_token == nil then
   ngx.log(ngx.STDERR, "failed to read user request bk_token or devops_access_token: ", err)
   ngx.exit(401)
   return
@@ -30,11 +30,11 @@ local ticket = nil
 if devops_prebuild_access_token ~= nil then 
   ticket = oauthUtil:verify_token(devops_prebuild_access_token)
 else
-  ticket = oauthUtil:get_prebuild_ticket(bk_token)
+  ticket = oauthUtil:get_prebuild_ticket(bk_tick)
 end
 
 --- 设置用户信息
 ngx.header["x-devops-uid"] = ticket.user_id
-ngx.header["x-devops-bk-token"] = bk_token
+ngx.header["x-devops-bk-token"] = bk_tick
 ngx.header["x-devops-access-token"] = ticket.access_token
 ngx.exit(200)
