@@ -30,7 +30,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCollation
@@ -40,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class ArchivePipelineFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineListFacadeService: PipelineListFacadeService,
@@ -89,6 +89,17 @@ class ArchivePipelineFacadeService @Autowired constructor(
         ) {
             throw PermissionForbiddenException("Need archived pipeline manage permission")
         }
+        return archivePipelineManageService.getArchivedPipelineList(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            filterByPipelineName = filterByPipelineName,
+            filterByCreator = filterByCreator,
+            filterByLabels = filterByLabels,
+            sortType = sortType,
+            collation = collation
+        )
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {

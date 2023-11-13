@@ -80,7 +80,19 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         sortType: PipelineSortType?,
         collation: PipelineCollation?
     ): Result<Page<PipelineInfo>> {
-        TODO("Not yet implemented")
+        return Result(
+            archivePipelineFacadeService.getArchivedPipelineList(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                filterByPipelineName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels,
+                sortType = sortType,
+                collation = collation
+            )
+        )
     }
 
     override fun getAllBuildNo(

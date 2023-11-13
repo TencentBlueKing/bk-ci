@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

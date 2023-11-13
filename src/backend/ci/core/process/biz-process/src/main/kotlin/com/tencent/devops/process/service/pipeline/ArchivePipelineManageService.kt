@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class ArchivePipelineManageService @Autowired constructor(
     @Qualifier(ARCHIVE_SHARDING_DSL_CONTEXT)
     private var archiveShardingDslContext: DSLContext,
