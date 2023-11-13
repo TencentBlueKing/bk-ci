@@ -364,7 +364,6 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         return map
     }
 
-
     fun getFilePathAnalysis(
         text: String
     ): MutableList<String> {

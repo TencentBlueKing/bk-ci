@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.service.common.StoreFileService
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
