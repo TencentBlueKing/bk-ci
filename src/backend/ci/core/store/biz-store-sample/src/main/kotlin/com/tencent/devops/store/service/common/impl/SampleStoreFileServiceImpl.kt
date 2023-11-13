@@ -93,8 +93,8 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         fileDirPath: String,
         request: TextReferenceFileDownloadRequest
     ) {
-        val fileNameList = request.fileNames
-        fileNameList.forEach {
+        val fileNames = request.fileNames
+        fileNames.forEach {
             downloadFile(
                 userId,
                 "${request.projectCode}$fileSeparator${request.fileDir}${fileSeparator}file$fileSeparator$it",
