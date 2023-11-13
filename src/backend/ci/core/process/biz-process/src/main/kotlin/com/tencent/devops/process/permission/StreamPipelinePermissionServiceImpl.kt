@@ -45,17 +45,19 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val checkTokenService: ClientTokenService
 ) : PipelinePermissionService {
+
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = checkTokenService.getSystemToken(null) ?: "",
             action = permission.value,
             projectCode = projectId,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
 

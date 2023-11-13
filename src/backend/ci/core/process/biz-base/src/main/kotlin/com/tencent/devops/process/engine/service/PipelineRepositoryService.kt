@@ -1147,9 +1147,10 @@ class PipelineRepositoryService constructor(
         sortType: PipelineSortType,
         collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+        val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
             projectId = projectId,
+            deleteFlag = true,
             days = days,
             offset = offset,
             limit = limit,

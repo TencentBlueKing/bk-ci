@@ -242,13 +242,6 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    migratePipelineLabelData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
                     migratePipelineRemoteAuthData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -877,39 +870,6 @@ class MigratePipelineDataTask constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (auditResourceRecords.size == MEDIUM_PAGE_SIZE)
-    }
-
-    private fun migratePipelineLabelData(
-        projectId: String,
-        pipelineId: String,
-        dslContext: DSLContext,
-        migratingShardingDslContext: DSLContext,
-        processDataMigrateDao: ProcessDataMigrateDao
-    ) {
-        var offset = 0
-        do {
-            val labelIds = processDataMigrateDao.getPipelineLabelPipelineRecords(
-                dslContext = migratingShardingDslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                limit = LONG_PAGE_SIZE,
-                offset = offset
-            ).map { it.labelId }.toMutableList()
-            if (labelIds.isNotEmpty()) {
-                val pipelineLabelRecords = processDataMigrateDao.getPipelineLabelRecords(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    labelIds = labelIds
-                )
-                if (pipelineLabelRecords.isNotEmpty()) {
-                    processDataMigrateDao.migratePipelineLabelData(
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        pipelineLabelRecords = pipelineLabelRecords
-                    )
-                }
-            }
-            offset += LONG_PAGE_SIZE
-        } while (labelIds.size == LONG_PAGE_SIZE)
     }
 
     private fun migratePipelineWebhookData(

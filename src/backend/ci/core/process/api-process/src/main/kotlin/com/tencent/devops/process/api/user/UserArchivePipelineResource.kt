@@ -28,7 +28,13 @@
 package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -39,6 +45,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PIPELINE_ARCHIVE"], description = "服务-流水线资源")
@@ -104,4 +111,38 @@ interface UserArchivePipelineResource {
         @PathParam(value = "pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取已归档流水线列表")
+    @GET
+    @Path("/projects/{projectId}/archived/pipelines/list")
+    @Suppress("LongParameterList")
+    fun getArchivedPipelineList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int,
+        @ApiParam("按流水线过滤", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String? = null,
+        @ApiParam("按创建人过滤", required = false)
+        @QueryParam("filterByCreator")
+        filterByCreator: String? = null,
+        @ApiParam("按标签过滤", required = false)
+        @QueryParam("filterByLabels")
+        filterByLabels: String? = null,
+        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @QueryParam("sortType")
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @ApiParam("排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation? = null
+    ): Result<Page<PipelineInfo>>
 }

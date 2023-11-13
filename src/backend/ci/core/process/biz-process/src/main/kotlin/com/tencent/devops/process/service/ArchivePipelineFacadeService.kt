@@ -28,9 +28,14 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.service.pipeline.ArchivePipelineDataMigrateService
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.service.pipeline.ArchivePipelineManageService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -38,7 +43,7 @@ import org.springframework.stereotype.Service
 class ArchivePipelineFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val archivePipelineDataMigrateService: ArchivePipelineDataMigrateService
+    private val archivePipelineManageService: ArchivePipelineManageService
 ) {
     fun getDownloadAllPipelines(userId: String, projectId: String): List<Map<String, String>> {
         return pipelineListFacadeService.listPermissionPipelineName(projectId, userId)
@@ -51,7 +56,39 @@ class ArchivePipelineFacadeService @Autowired constructor(
     }
 
     fun migrateArchivePipelineData(userId: String, projectId: String, pipelineId: String): Boolean {
-        return archivePipelineDataMigrateService.migrateData(userId, projectId, pipelineId)
+        // 检查用户是否有迁移归档流水线数据的权限
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.ARCHIVE
+            )
+        ) {
+            throw PermissionForbiddenException("Need pipeline archive permission")
+        }
+        return archivePipelineManageService.migrateData(userId, projectId, pipelineId)
+    }
+
+    fun getArchivedPipelineList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?,
+        sortType: PipelineSortType?,
+        collation: PipelineCollation?
+    ): Page<PipelineInfo> {
+        // 检查用户是否有归档流水线数据的查看权限
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.MANAGE_ARCHIVED_PIPELINE
+            )
+        ) {
+            throw PermissionForbiddenException("Need archived pipeline manage permission")
+        }
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
