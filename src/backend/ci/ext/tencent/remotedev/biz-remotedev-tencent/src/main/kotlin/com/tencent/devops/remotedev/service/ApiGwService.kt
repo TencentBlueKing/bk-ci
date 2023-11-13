@@ -10,9 +10,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
