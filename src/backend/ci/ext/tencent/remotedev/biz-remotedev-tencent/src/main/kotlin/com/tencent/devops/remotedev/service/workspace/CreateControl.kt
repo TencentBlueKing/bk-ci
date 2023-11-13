@@ -111,6 +111,7 @@ class CreateControl @Autowired constructor(
         private const val BLANK_TEMPLATE_ID = 1
     }
 
+    // 用于控制台上创建
     fun asyncCreateWorkspace(
         pmUserId: String,
         projectId: String,
@@ -176,7 +177,8 @@ class CreateControl @Autowired constructor(
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
                 disk = windowsConfig.workspaceDisk(),
-                winConfigId = windowsConfig.id?.toInt()
+                winConfigId = windowsConfig.id?.toInt(),
+                imageId = workspaceCreate.imageId
             )
 
             workspaceDao.createWorkspace(
@@ -215,7 +217,7 @@ class CreateControl @Autowired constructor(
         }
     }
 
-    // 处理创建工作空间逻辑
+    // 处理创建工作空间逻辑，用于客户端上创建
     fun createWorkspace(
         userId: String,
         bkTicket: String,
