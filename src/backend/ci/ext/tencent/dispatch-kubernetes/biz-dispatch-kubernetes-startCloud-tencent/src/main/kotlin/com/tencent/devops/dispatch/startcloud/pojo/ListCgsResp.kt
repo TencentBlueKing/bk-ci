@@ -15,7 +15,7 @@ data class ListCgsResp(
 data class ListCgsRespData(
     val basic: ListCgsRespDataBasic,
     val pvcs: List<ListCgsRespDataPvcsData>?,
-    val image: String,
+    val image: String?,
     val cgsData: ListCgsRespDataCgsData
 )
 
