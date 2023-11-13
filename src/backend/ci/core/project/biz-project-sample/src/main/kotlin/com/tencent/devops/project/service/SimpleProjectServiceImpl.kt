@@ -195,7 +195,12 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun isRbacPermission(projectId: String): Boolean = true
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
-        return emptyList()
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
     }
 
     override fun buildRouterTag(routerTag: String?): String? = null
