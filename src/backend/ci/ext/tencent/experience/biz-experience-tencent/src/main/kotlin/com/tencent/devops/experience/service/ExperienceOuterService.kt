@@ -1,6 +1,5 @@
 package com.tencent.devops.experience.service
 
-import com.tencent.bkuser.ApiException
 import com.tencent.bkuser.api.ProfilesApi
 import com.tencent.bkuser.api.V1Api
 import com.tencent.bkuser.model.Profile
@@ -133,12 +132,11 @@ class ExperienceOuterService @Autowired constructor(
                 platform = platform
             )
             return token
-        } catch (e: ApiException) {
+        } catch (e: ErrorCodeException) {
             logger.warn("login error", e)
             throw ErrorCodeException(
-                statusCode = e.code,
-                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = e.responseBody
+                statusCode = e.statusCode,
+                errorCode = e.errorCode
             )
         } catch (e: Exception) {
             logger.warn("login bad request", e)
