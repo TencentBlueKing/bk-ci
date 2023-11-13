@@ -25,20 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:image:api-image"))
-    api(project(":ext:tencent:image:api-image-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-codecc"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-}
+package com.tencent.devops.artifactory.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("本地目录下文件信息")
+data class LocalFileInfo(
+    @ApiModelProperty("文件所在相对路径列表", required = true)
+    val relativePath: String,
+    @ApiModelProperty("是否是静态文件", required = false)
+    val staticFlag: Boolean = true
+)

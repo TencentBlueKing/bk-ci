@@ -25,20 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:store:biz-store"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:image:api-image"))
-    api(project(":ext:tencent:image:api-image-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-codecc"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-}
+package com.tencent.devops.store.pojo.atom
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("研发商店组件国际化配置")
+data class StoreI18nConfig(
+    @ApiModelProperty("项目标识")
+    val projectCode: String,
+    @ApiModelProperty("组件标识")
+    val storeCode: String,
+    @ApiModelProperty("资源文件目录")
+    val fileDir: String,
+    @ApiModelProperty("国际化目录")
+    val i18nDir: String,
+    @ApiModelProperty("map字段在properties中key的前缀")
+    val propertiesKeyPrefix: String? = null,
+    @ApiModelProperty("map字段在db中key的前缀")
+    val dbKeyPrefix: String? = null,
+    @ApiModelProperty("代码库哈希ID")
+    val repositoryHashId: String? = null
+)

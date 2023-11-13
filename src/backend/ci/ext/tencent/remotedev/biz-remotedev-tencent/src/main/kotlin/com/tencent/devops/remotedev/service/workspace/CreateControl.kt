@@ -33,12 +33,13 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
-import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -56,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -80,7 +82,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("LongMethod")
+@Suppress("ALL")
 class CreateControl @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
@@ -151,14 +153,51 @@ class CreateControl @Autowired constructor(
             errorCode = PROJECT_NOT_EXIST
         )
 
-        // 检查配额
-        projectWinCreateCheck(
-            projectInfo = projectInfo,
-            createCount = workspaceCreate.count,
-            type = workspaceCreate.windowsType,
-            zone = workspaceCreate.windowsZone,
-            adHoc = cgsId != null
+        // 检查项目配额
+        val projectLimit = projectInfo.properties?.cloudDesktopNum
+            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
+            ?: 20
+        val count = workspaceDao.countUserWorkspace(
+            dslContext = dslContext,
+            projectId = projectInfo.englishName,
+            ownerType = WorkspaceOwnerType.PROJECT,
+            unionShared = false
         )
+        if (count + workspaceCreate.count > projectLimit) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                params = arrayOf(projectLimit.toString())
+            )
+        }
+
+        // 检查自定义和非自定义镜像额度
+        if (workspaceCreate.imageCosFile.isNotBlank()) {
+            val resource = client.get(ServiceStartCloudResource::class).getResourceVm(
+                ResourceVmReq(
+                    zoneId = windowsZone.zoneShortName,
+                    machineType = windowsConfig.size
+                )
+            ).data!!
+            if (resource.free < workspaceCreate.count) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                    params = arrayOf(
+                        windowsZone.zone,
+                        windowsConfig.size,
+                        resource.free.toString(),
+                        workspaceCreate.count.toString()
+                    )
+                )
+            }
+        } else {
+            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
+            if (cgsId == null && resourceCount < workspaceCreate.count) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(resourceCount.toString())
+                )
+            }
+        }
 
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
@@ -372,7 +411,7 @@ class CreateControl @Autowired constructor(
             // 创建失败
             // websocket 通知失败
             logger.warn("create workspace ${event.workspaceName} failed")
-            workspaceDao.deleteWorkspace(event.workspaceName, dslContext)
+            workspaceCreateFail(ws)
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -388,6 +427,18 @@ class CreateControl @Autowired constructor(
             ownerType = ws.ownerType,
             projectId = ws.projectId
         )
+    }
+
+    private fun workspaceCreateFail(ws: WorkspaceRecord) {
+        if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
+            workspaceCommon.updateStatus2DeliveringFailed(
+                workspace = ws,
+                action = WorkspaceAction.CREATE,
+                notifyTemplateCode = "WINDOWS_GPU_CREATE_FAILED"
+            )
+        } else {
+            workspaceDao.deleteWorkspace(ws.workspaceName, dslContext)
+        }
     }
 
     private fun getOpHistoryCreate(type: WorkspaceSystemType, vararg args: Any) = when (type) {
@@ -434,7 +485,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -635,43 +686,12 @@ class CreateControl @Autowired constructor(
         )
     }
 
-    private fun projectWinCreateCheck(
-        projectInfo: ProjectVO,
-        createCount: Int,
-        type: String,
-        zone: String,
-        adHoc: Boolean = false
-    ) {
-        val resourceCount = startCloudResourceCountCheck(type, zone)
-        if (!adHoc && resourceCount < createCount) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                params = arrayOf(resourceCount.toString())
-            )
-        }
-        val projectLimit = projectInfo.properties?.cloudDesktopNum
-            ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
-            ?: 20
-        val count = workspaceDao.countUserWorkspace(
-            dslContext = dslContext,
-            projectId = projectInfo.englishName,
-            ownerType = WorkspaceOwnerType.PROJECT,
-            unionShared = false
-        )
-        if (count + createCount > projectLimit) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                params = arrayOf(projectLimit.toString())
-            )
-        }
-    }
-
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -699,7 +719,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
