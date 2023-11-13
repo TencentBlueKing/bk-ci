@@ -126,6 +126,8 @@ allprojects {
             }
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("org.apache.poi:poi:${Versions.apachepoi}")
+            dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
         }
     }
 

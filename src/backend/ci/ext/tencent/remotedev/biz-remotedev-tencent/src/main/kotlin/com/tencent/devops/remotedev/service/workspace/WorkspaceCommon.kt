@@ -32,6 +32,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
@@ -43,6 +45,8 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -82,6 +86,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -116,6 +121,9 @@ class WorkspaceCommon @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
         private const val DEFAULT_WAIT_TIME = 60
     }
+
+    @Value("\${notice.wework:#{null}}")
+    private var weworkId: String? = null
 
     // 封装统一分发WS的方法
     fun dispatchWebsocketPushEvent(
@@ -192,7 +200,7 @@ class WorkspaceCommon @Autowired constructor(
 
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
+                .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
             WorkSpaceCacheInfo(
                 sshKey = "",
                 environmentHost = event.environmentHost ?: "",
@@ -306,6 +314,11 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.stopped -> {
                 sleepControl.doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
+            }
+
+            workspaceInfo.status == EnvStatusEnum.readyToRun -> {
+                sleepControl.doStopWS(true, userId, workspaceName)
+                return WorkspaceStatus.STOPPED
             }
 
             workspaceInfo.status == EnvStatusEnum.deleted -> {
@@ -632,6 +645,42 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceName = workspace.workspaceName,
                 computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
             )
+        }
+    }
+
+    // 按天备份数据
+    fun backupDailyCsgData() {
+        workspaceDao.backupDailyCsgData(dslContext)
+    }
+
+    fun updateStatus2DeliveringFailed(
+        workspace: WorkspaceRecord,
+        action: WorkspaceAction,
+        notifyTemplateCode: String
+    ) {
+        updateStatusAndCreateHistory(
+            workspace = workspace,
+            newStatus = WorkspaceStatus.DELIVERING_FAILED,
+            action = action
+        )
+        // 通知
+        if (!weworkId.isNullOrBlank()) {
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = notifyTemplateCode,
+                bodyParams = mapOf(
+                    WorkspaceRecord::workspaceName.name to workspace.workspaceName,
+                    WorkspaceRecord::projectId.name to workspace.projectId,
+                    WorkspaceRecord::createUserId.name to workspace.createUserId,
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                ),
+                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+                markdownContent = false
+            )
+            kotlin.runCatching {
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            }.onFailure {
+                logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+            }
         }
     }
 }

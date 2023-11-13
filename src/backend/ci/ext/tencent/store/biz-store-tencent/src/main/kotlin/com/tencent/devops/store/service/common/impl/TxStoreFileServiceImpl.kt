@@ -34,17 +34,15 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.cache.BkDiskLruFileCache
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.MASTER
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.api.scm.ServiceTGitResource
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.service.common.StoreFileService
@@ -119,42 +117,34 @@ class TxStoreFileServiceImpl : StoreFileService() {
     override fun textReferenceFileDownload(
         userId: String,
         fileDirPath: String,
-        cacheKey: String,
-        bkDiskLruFileCache: BkDiskLruFileCache,
         request: TextReferenceFileDownloadRequest
-    ): String? {
-        val zipFile = File(fileDirPath, "file.zip")
-        try {
-            downloadFile(
-                filePath = "file",
-                file = zipFile,
-                repositoryHashId = request.repositoryHashId,
-                branch = request.branch
-            )
-            if (zipFile.exists()) {
-                bkDiskLruFileCache.put(cacheKey, zipFile)
-                ZipUtil.unZipFile(zipFile, fileDirPath, true)
+    ) {
+        request.fileNames.forEach {
+            try {
+                downloadFile(
+                    userId = userId,
+                    filePath = "file$fileSeparator$it",
+                    file = File(fileDirPath, it),
+                    repositoryHashId = request.repositoryHashId,
+                    branch = request.branch
+                )
+            } catch (ignored: Throwable) {
+                logger.warn("BKSystemErrorMonitor|parse store file[$it] fail|error=${ignored.message}")
             }
-        } catch (ignored: Throwable) {
-            logger.warn("BKSystemErrorMonitor|parse atom file fail|error=${ignored.message}")
-            return null
         }
-        return "$fileDirPath${fileSeparator}file"
     }
 
     override fun downloadFile(
+        userId: String,
         filePath: String,
         file: File,
         repositoryHashId: String?,
         branch: String?,
         format: String?
     ) {
-        val serviceUrl = client.getServiceUrl(ServiceGitResource::class)
-        val url = "$serviceUrl/service/git/downloadGitRepoFile?" +
-                "repoId=$repositoryHashId&repositoryType=${RepositoryType.ID.name}&sha=${branch ?: MASTER}" +
-                "&tokenType=${TokenTypeEnum.OAUTH.name}" +
-                "&filePath=${URLEncoder.encode(filePath, Charsets.UTF_8.name())}" +
-                "&format=${format ?: "zip"}"
+        val serviceUrl = client.getServiceUrl(ServiceTGitResource::class)
+        val url = "$serviceUrl/service/tgit/downloadGitFile?repoId=$repositoryHashId" +
+                "&filePath=$filePath&authType=${RepoAuthType.OAUTH}&ref=${branch ?: MASTER}"
         OkhttpUtils.downloadFile(url, file)
     }
 

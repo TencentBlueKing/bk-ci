@@ -69,7 +69,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -496,14 +495,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomCode = atomRecord.atomCode
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
-        storeFileService.storeFileCacheClean(
-            StoreFileCacheCleanEvent(
-                storeCode = atomCode,
-                version = atomVersion,
-                fileCachePath = storeFileService.getFileCachePath("$atomCode${File.separator}$atomVersion"),
-                fileCacheKey = storeFileService.getFileCacheKey(atomCode, atomVersion)
-            )
-        )
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, atomVersion)
         val repoId = atomRecord.repositoryHashId
         val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val getAtomConfResult = getAtomConfig(

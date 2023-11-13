@@ -117,7 +117,8 @@ config = {
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
     devx = {
         loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
-    }
+    },
+    auth_token = "__BK_CI_AUTH_TOKEN__",
 }
 
 require("init_common")

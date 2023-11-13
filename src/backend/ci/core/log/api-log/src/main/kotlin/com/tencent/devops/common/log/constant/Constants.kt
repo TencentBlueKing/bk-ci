@@ -25,32 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.listener
+package com.tencent.devops.common.log.constant
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.measure.StoreFileCacheCleanEvent
-import com.tencent.devops.store.service.common.StoreFileService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-
-@Component
-class StoreFileCacheCleanListener @Autowired constructor(
-    private val storeFileService: StoreFileService
-) : Listener<StoreFileCacheCleanEvent> {
-
-    override fun execute(event: StoreFileCacheCleanEvent) {
-        try {
-            logger.info("StoreFileCacheCleanListener event:$event")
-            storeFileService.storeFileCacheClean(event)
-        } catch (ignored: Throwable) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
-        }
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(StoreFileCacheCleanListener::class.java)
-    }
+object Constants {
+    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
+    const val RESPONSE_ENTITY_MAX_SIZE = 1024 * 1024 * 1024
+    const val SCROLL_MAX_LINES = 5000
+    const val NORMAL_MAX_LINES = 10000
+    const val BULK_BUFFER_SIZE = 1000
+    const val SCROLL_MAX_TIMES = 6
 }
