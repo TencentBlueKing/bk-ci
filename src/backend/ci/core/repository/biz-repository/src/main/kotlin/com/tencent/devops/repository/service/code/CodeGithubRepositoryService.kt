@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -55,7 +56,7 @@ class CodeGithubRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val githubRepositoryService: GithubRepositoryService,
     private val githubTokenService: GithubTokenService
-) : CommonGitRepositoryService<GithubRepository>() {
+) : CodeRepositoryService<GithubRepository> {
     override fun repositoryType(): String {
         return GithubRepository::class.java.name
     }
@@ -101,7 +102,7 @@ class CodeGithubRepositoryService @Autowired constructor(
             )
         }
         // 不得切换代码库
-        if (diffRepoUrl(record, repository)) {
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
             logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
             throw OperationException(
                 MessageUtil.getMessageByLocale(

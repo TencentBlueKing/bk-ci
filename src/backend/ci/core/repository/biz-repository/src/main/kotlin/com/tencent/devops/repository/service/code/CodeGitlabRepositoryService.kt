@@ -59,7 +59,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: IScmService,
     private val credentialService: CredentialService
-) : CommonGitRepositoryService<CodeGitlabRepository>() {
+) : CodeRepositoryService<CodeGitlabRepository> {
     override fun repositoryType(): String {
         return CodeGitlabRepository::class.java.name
     }
@@ -112,7 +112,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
             )
         }
         // 不得切换代码库
-        if (diffRepoUrl(record, repository)) {
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
             logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
             throw OperationException(
                 MessageUtil.getMessageByLocale(

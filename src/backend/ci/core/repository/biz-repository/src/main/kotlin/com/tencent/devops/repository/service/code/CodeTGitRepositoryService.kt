@@ -67,7 +67,7 @@ class CodeTGitRepositoryService @Autowired constructor(
     private val tGitOAuthService: TGitOAuthService,
     private val credentialService: CredentialService,
     private val scmOauthService: IScmOauthService
-) : CommonGitRepositoryService<CodeTGitRepository>() {
+) : CodeRepositoryService<CodeTGitRepository> {
     override fun repositoryType(): String {
         return CodeTGitRepository::class.java.name
     }
@@ -112,7 +112,7 @@ class CodeTGitRepositoryService @Autowired constructor(
             throw OperationException(I18nUtil.getCodeLanMessage(TGIT_INVALID))
         }
         // 不得切换代码库
-        if (diffRepoUrl(record, repository)) {
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
             logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
