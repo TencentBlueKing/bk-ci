@@ -11,6 +11,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
@@ -578,6 +581,52 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getResourceVm(
+        data: ResourceVmReq
+    ): ResourceVmRespData {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorType,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorCode,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.debug("get resource vm body: $body response: $responseContent")
+                val resp: ResourceVmResp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == resp.code) {
+                    return resp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get resource vm SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = " 接口超时, url: $url"
             )
         }
