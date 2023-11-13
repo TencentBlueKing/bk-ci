@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -327,6 +328,7 @@ interface UserWorkspaceResource {
         @ApiParam("bkTicket信息", required = true)
         bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
+
     @ApiOperation("更新容器的BKticket")
     @POST
     @Path("/updateAllBkTicket")
@@ -350,4 +352,16 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WorkspaceStartCloudDetail?>
+
+    @ApiOperation("校验云桌面设备管控")
+    @GET
+    @Path("/project_access_device_permissions")
+    fun projectAccessDevicePermissions(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("MAC地址", required = true)
+        @QueryParam("macAddress")
+        macAddress: String
+    ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
 }

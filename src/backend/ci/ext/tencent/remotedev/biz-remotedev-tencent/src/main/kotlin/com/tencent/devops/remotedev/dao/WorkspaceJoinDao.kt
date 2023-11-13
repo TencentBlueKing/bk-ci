@@ -336,6 +336,21 @@ class WorkspaceJoinDao {
         return result
     }
 
+    fun fetchProjectFromUser(
+        dslContext: DSLContext,
+        userId: String
+    ): Set<String> {
+        return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
+            .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch().distinct()
+            .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID.name] as String? ?: "" }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
     class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
         override fun map(record: Record?): WorkspaceRecord? {
             if (record == null) {

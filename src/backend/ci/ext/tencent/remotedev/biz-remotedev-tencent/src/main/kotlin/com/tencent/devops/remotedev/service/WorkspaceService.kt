@@ -56,6 +56,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
@@ -121,7 +122,6 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevCvmService: RemoteDevCvmService,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
@@ -132,7 +132,8 @@ class WorkspaceService @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val bkccService: BKCCService,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val expertSupportDao: ExpertSupportDao
+    private val expertSupportDao: ExpertSupportDao,
+    private val apiGwService: ApiGwService
 ) {
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
@@ -1179,6 +1180,17 @@ class WorkspaceService @Autowired constructor(
             MediaType.APPLICATION_OCTET_STREAM
         ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
+    }
+
+    fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Map<String, ProjectAccessDevicePermissionsResp> {
+        // 获取用户当前的项目列表
+        val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
+        // 调用安全接口
+        return apiGwService.projectAccessDevicePermissions(macAddress, userId, projects.joinToString(","))
+            ?: emptyMap()
     }
 
     companion object {

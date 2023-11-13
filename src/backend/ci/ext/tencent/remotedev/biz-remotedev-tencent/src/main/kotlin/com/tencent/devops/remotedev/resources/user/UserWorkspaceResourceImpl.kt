@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -212,6 +213,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
         return Result(true)
     }
+
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
         bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
@@ -219,5 +221,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    }
+
+    override fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
 }
