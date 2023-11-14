@@ -33,6 +33,7 @@ const isLoading = ref(false);
 const userName = ref('');
 const hasPermission = ref(true)
 const showException = ref(false);
+const operationalList = ref([]);
 const exceptionObj = ref({
   type: '',
   title: '',
@@ -113,6 +114,10 @@ const fieldMap = [
     after: 'afterProjectType'
   },
   {
+    current: 'productId',
+    after: 'afterProductId'
+  },
+  {
     current: 'centerName',
     after: 'afterCenterName',
   },
@@ -157,6 +162,23 @@ const handleEdit = () => {
 const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank')
 };
+
+const fetchOperationalList = async () => {
+  isLoading.value = true;
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+    isLoading.value = false;
+  });
+};
+
+const getOperational = (id) => {
+  return operationalList.value.find(i => String(i.ProductId) === String(id))
+}
 
 /**
  * 取消更新项目 
@@ -306,6 +328,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
+  await fetchOperationalList();
 });
 </script>
 
@@ -326,7 +349,7 @@ onMounted(async () => {
     <bk-loading class="content-wrapper" :loading="isLoading">
       <article class="project-info-content">
         <template v-if="hasPermission">
-          <template v-if="projectData.projectCode">
+          <template v-if="projectData.projectCode && operationalList.length">
             <section class="content-main">
               <bk-form class="detail-content-form" :label-width="160">
                 <bk-form-item :label="t('项目名称')" property="projectName">
@@ -357,6 +380,24 @@ onMounted(async () => {
                     <div>{{ projectData.afterDescription }}</div>
                   </div>
                 </bk-form-item>
+                <bk-form-item :label="t('项目类型')" property="bg">
+                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
+                  <div class="diff-content" v-if="projectData.afterProjectType">
+                    <p class="update-title">
+                      {{ t('本次更新：') }}
+                    </p>
+                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
+                  </div>
+                </bk-form-item>
+                <bk-form-item :label="t('项目所属运营产品')" property="bg">
+                  <span>{{ getOperational(projectData.productId)?.ProductName || projectData.productId }}</span>
+                  <div class="diff-content" v-if="projectData.afterProductId">
+                    <p class="update-title">
+                      {{ t('本次更新：') }}
+                    </p>
+                    <span>{{ getOperational(projectData.afterProductId)?.ProductName || projectData.productId }}</span>
+                  </div>
+                </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
                   <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
                   <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
@@ -366,15 +407,6 @@ onMounted(async () => {
                   <span>
                     {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
                   </span>
-                  </div>
-                </bk-form-item>
-                <bk-form-item :label="t('项目类型')" property="bg">
-                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
-                  <div class="diff-content" v-if="projectData.afterProjectType">
-                    <p class="update-title">
-                      {{ t('本次更新：') }}
-                    </p>
-                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目性质')" property="authSecrecy">
@@ -445,10 +477,10 @@ onMounted(async () => {
                   </Popover>
 
                   <Popover
+                    v-if="[4].includes(projectData.approvalStatus)"
                     :content="t('仅更新人可撤销更新')"
                     :disabled="userName !== projectData.updator">
                     <bk-button
-                      v-if="[4].includes(projectData.approvalStatus)"
                       class="btn"
                       theme="default"
                       :disabled="userName !== projectData.updator"
@@ -512,6 +544,7 @@ onMounted(async () => {
     padding: 24px;
     height: 100%;
     width: 100%;
+    overflow: auto;
   }
   .content-wrapper {
     flex: 1;

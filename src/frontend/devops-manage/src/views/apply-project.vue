@@ -18,7 +18,10 @@ const projectData = ref({
   englishName: '',
   description: '',
   projectType: '',
+  projectTypes: '',
   logoAddr: '',
+  productId: '',
+  productName: '',
   bgId: 0,
   bgName: '',
   deptId: '',
@@ -72,6 +75,9 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const productIdChange = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
+};
 const handleCancel = () => {
   router.back();
 };
@@ -90,6 +96,7 @@ const handleCancel = () => {
           type="apply"
           :data="projectData"
           @initProjectForm="initProjectForm"
+          @productIdChange="productIdChange"
         >
           <bk-form-item>
             <bk-button
@@ -146,7 +153,7 @@ const handleCancel = () => {
       flex: 1;
       margin: 0 auto;
       background-color: #fff;
-      padding: 32px 120px 32px 80px;
+      padding: 32px 120px 0 80px;
       box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
     }
     .mr10 {

@@ -217,5 +217,9 @@ export default {
   async getResource(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
     return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
+  },
+
+  async getOperationalList() {
+    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProducts`)
   }
 };

@@ -17,7 +17,7 @@ import http from '@/http/api';
 const {
   t,
 } = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange']);
 
 const props = defineProps({
   data: Object,
@@ -37,6 +37,7 @@ const logoFiles = computed(() => {
 });
 const projectForm = ref(null);
 const iframeRef = ref(null);
+const operationalList = ref([]);
 const vm = getCurrentInstance();
 const rules = {
   englishName: [
@@ -91,6 +92,7 @@ const deptLoading = ref({
   bg: false,
   dept: false,
   center: false,
+  product: false,
 });
 
 const curDepartmentInfo = ref({
@@ -251,6 +253,19 @@ const showMemberDialog = () => {
   showDialog.value = true;
 };
 
+const fetchOperationalList = async () => {
+  deptLoading.value.product = true;
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+    deptLoading.value.product = false;
+  });
+};
+
 const validateProjectNameTips = ref('');
 watch(() => projectData.value.projectName, (val) => {
   if (props.type === 'apply' && val) {
@@ -287,9 +302,18 @@ watch(() => projectData.value.englishName, (val) => {
   deep: true,
 });
 
-watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
   projectForm.value.validate();
   emits('approvedChange', true);
+}, {
+  deep: true,
+});
+
+watch(() => projectData.value.productId, (id) => {
+  emits('productIdChange', {
+    id,
+    list: operationalList.value,
+  });
 }, {
   deep: true,
 });
@@ -297,6 +321,7 @@ watch(() => [projectData.value.authSecrecy, projectData.value.projectType, proje
 onMounted(async () => {
   await fetchUserDetail();
   await fetchDepartmentList();
+  await fetchOperationalList();
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -356,6 +381,22 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
+    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+      <bk-select
+        v-model="projectData.projectType"
+        :placeholder="t('请选择项目类型')"
+        name="center"
+        searchable
+        @change="handleChangeForm"
+      >
+        <bk-option
+          v-for="type in projectTypeList"
+          :value="type.id"
+          :key="type.id"
+          :label="type.name"
+        />
+      </bk-select>
+    </bk-form-item>
     <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
@@ -409,20 +450,21 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+    <bk-form-item :label="t('项目所属运营产品')" property="productId" :required="true">
       <bk-select
-        v-model="projectData.projectType"
-        :placeholder="t('选择项目类型')"
+        class="product-select"
+        v-model="projectData.productId"
+        :placeholder="t('请选择所属运营产品')"
+        :scroll-height="160"
         name="center"
+        filterable
+        enable-virtual-render
+        :list="operationalList"
+        :input-search="false"
+        :loading="deptLoading.product"
         searchable
         @change="handleChangeForm"
       >
-        <bk-option
-          v-for="type in projectTypeList"
-          :value="type.id"
-          :key="type.id"
-          :label="type.name"
-        />
       </bk-select>
     </bk-form-item>
     <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
