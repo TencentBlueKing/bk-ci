@@ -68,5 +68,11 @@ data class TemplateModel(
     @ApiModelProperty("是否有可更新实例", required = true)
     val hasInstance2Upgrade: Boolean,
     @ApiModelProperty("是否有模版操作权限", required = true)
-    val hasPermission: Boolean
+    val hasPermission: Boolean,
+    @ApiModelProperty("是否有模版查看权限", required = true)
+    val canView: Boolean? = null,
+    @ApiModelProperty("是否有模版查看权限", required = true)
+    val canEdit: Boolean? = null,
+    @ApiModelProperty("是否有模版删除权限", required = true)
+    val canDelete: Boolean? = null
 )
