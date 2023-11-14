@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -39,7 +40,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -58,6 +58,7 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
@@ -382,22 +383,31 @@ interface ServiceGitResource {
         repoUrl: String? = null
     ): Result<GitMrInfo>
 
-    @ApiOperation("下载git仓库")
+    @ApiOperation("下载git仓库文件")
     @GET
     @Path("/downloadGitRepoFile")
     fun downloadGitRepoFile(
-        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
-        @QueryParam("repoName")
-        repoName: String,
+        @ApiParam(value = "仓库id")
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
         @ApiParam("commit hash值、分支名或tag", required = false)
         @QueryParam("sha")
         sha: String?,
-        @ApiParam("token", required = true)
-        @QueryParam("token")
-        token: String,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
+        @ApiParam("限定为下载指定路径的文件", required = false)
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+        @QueryParam("format")
+        format: String?,
+        @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
+        @QueryParam("isProjectPathWrapped")
+        isProjectPathWrapped: Boolean?,
         @Context
         response: HttpServletResponse
     )
