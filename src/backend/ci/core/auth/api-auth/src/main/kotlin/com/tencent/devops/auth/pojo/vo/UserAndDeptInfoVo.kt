@@ -23,5 +23,5 @@ data class UserAndDeptInfoVo(
     @ApiModelProperty("水印信息")
     val waterMark: String? = null,
     @ApiModelProperty("是否是项目成员")
-    val belongProjectMember: Boolean? = null,
+    val belongProjectMember: Boolean? = null
 )
