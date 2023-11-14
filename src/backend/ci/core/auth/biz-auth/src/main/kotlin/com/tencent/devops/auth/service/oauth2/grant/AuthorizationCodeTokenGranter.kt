@@ -52,7 +52,7 @@ class AuthorizationCodeTokenGranter constructor(
         )
     }
 
-    fun handleAuthorizationCode(
+    private fun handleAuthorizationCode(
         code: String?,
         clientId: String
     ): TAuthOauth2CodeRecord {
@@ -68,7 +68,7 @@ class AuthorizationCodeTokenGranter constructor(
         return codeDetails
     }
 
-    fun generateRefreshToken(
+    private fun generateRefreshToken(
         clientId: String,
         clientDetails: ClientDetailsInfo,
         accessTokenInfo: TAuthOauth2AccessTokenRecord?

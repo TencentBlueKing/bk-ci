@@ -38,7 +38,7 @@ class Oauth2Config constructor(
     }
 
     private fun getDefaultTokenGranters(): List<TokenGranter> {
-        val tokenGranters = ArrayList<TokenGranter>()
+        val tokenGranters = mutableListOf<TokenGranter>()
         tokenGranters.add(clientCredentialsTokenGranter)
         tokenGranters.add(authorizationCodeTokenGranter)
         tokenGranters.add(refreshTokenGranter)
