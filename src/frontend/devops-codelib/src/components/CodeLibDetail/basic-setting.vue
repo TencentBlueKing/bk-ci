@@ -387,29 +387,29 @@
             },
             codelibTypeConstants (val) {
                 // 校验是否已经授权了OAUTh
-                switch (val) {
-                    case 'git':
-                        this.refreshGitOauth({
-                            type: 'git',
-                            resetType: 'checkGitOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                    case 'github':
-                        this.refreshGithubOauth({
-                            projectId: this.projectId,
-                            resetType: 'checkGithubOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                    case 'tgit':
-                        this.refreshGitOauth({
-                            type: 'tgit',
-                            resetType: 'checkTGitOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                }
+                // switch (val) {
+                //     case 'git':
+                //         this.refreshGitOauth({
+                //             type: 'git',
+                //             resetType: 'checkGitOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                //     case 'github':
+                //         this.refreshGithubOauth({
+                //             projectId: this.projectId,
+                //             resetType: 'checkGithubOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                //     case 'tgit':
+                //         this.refreshGitOauth({
+                //             type: 'tgit',
+                //             resetType: 'checkTGitOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                // }
             }
         },
         methods: {
