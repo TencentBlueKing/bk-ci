@@ -116,6 +116,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -699,23 +700,24 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-            val buildId = pipelineBuildService.startPipeline(
-                userId = userId,
-                pipeline = pipeline,
-                startType = StartType.TIME_TRIGGER,
-                pipelineParamMap = paramPamp,
-                channelCode = pipeline.channelCode,
-                isMobile = false,
-                model = model,
-                signPipelineVersion = null,
-                frequencyLimit = false
-            )
-            saveTriggerEvent(
+            val buildId = saveTriggerEvent(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 values = paramPamp.mapValues { it.value.value.toString() },
-                buildId = buildId
+                action = {
+                    pipelineBuildService.startPipeline(
+                        userId = userId,
+                        pipeline = pipeline,
+                        startType = StartType.TIME_TRIGGER,
+                        pipelineParamMap = paramPamp,
+                        channelCode = pipeline.channelCode,
+                        isMobile = false,
+                        model = model,
+                        signPipelineVersion = null,
+                        frequencyLimit = false
+                    )
+                }
             )
             return buildId.id
         } finally {
@@ -2505,22 +2507,36 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildId: BuildId?
-    ) {
+        action: () -> BuildId
+    ): BuildId {
+        var buildId: BuildId? = null
+        var status = PipelineTriggerStatus.SUCCEED.name
+        var failReason = ""
         try {
-            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                specificEvent = PipelineSpecificEvent(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    requestParams = values,
-                    userId = userId,
-                    eventSource = userId,
-                    triggerType = StartType.TIME_TRIGGER.name,
-                    buildInfo = buildId
-                )
-            )
+            buildId = action.invoke()
         } catch (ignored: Exception) {
-            logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            status = PipelineTriggerStatus.FAILED.name
+            failReason = ignored.message.toString()
+            throw ignored
+        } finally {
+            try {
+                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                    specificEvent = PipelineSpecificEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        requestParams = values,
+                        userId = userId,
+                        eventSource = userId,
+                        triggerType = StartType.TIME_TRIGGER.name,
+                        buildInfo = buildId,
+                        failReason = failReason,
+                        status = status
+                    )
+                )
+            } catch (ignored: Exception) {
+                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            }
         }
+        return buildId!!
     }
 }

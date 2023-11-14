@@ -413,7 +413,9 @@ class PipelineTriggerEventService @Autowired constructor(
         eventDesc: String? = null,
         requestParams: Map<String, String>?,
         triggerType: String = PipelineTriggerType.MANUAL.name,
-        buildInfo: BuildId?
+        buildInfo: BuildId?,
+        status: String = PipelineTriggerStatus.SUCCEED.name,
+        failReason: String? = null
     ) {
         logger.info("start save specific event|$projectId|$pipelineId|$userId|$triggerType")
         val pipelineInfo = client.get(ServicePipelineResource::class).getPipelineInfo(
@@ -428,11 +430,12 @@ class PipelineTriggerEventService @Autowired constructor(
             eventSource = eventSource,
             eventDesc = eventDesc,
             buildId = buildInfo?.id ?: "",
-            status = PipelineTriggerStatus.SUCCEED.name,
+            status = status,
             requestParams = requestParams,
             userId = userId,
             buildNum = buildInfo?.num.toString(),
-            triggerType = triggerType
+            triggerType = triggerType,
+            failReason = failReason
         )
     }
 
@@ -450,7 +453,8 @@ class PipelineTriggerEventService @Autowired constructor(
         status: String,
         triggerType: String,
         requestParams: Map<String, String>?,
-        eventDesc: String? = null
+        eventDesc: String? = null,
+        failReason: String?
     ) {
         val eventId = getEventId()
         val requestId = MDC.get(TraceTag.BIZID)
@@ -474,7 +478,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 buildNum = buildNum,
-                pipelineName = pipelineName
+                pipelineName = pipelineName,
+                reason = failReason
             ),
             triggerEvent = PipelineTriggerEvent(
                 eventId = eventId,

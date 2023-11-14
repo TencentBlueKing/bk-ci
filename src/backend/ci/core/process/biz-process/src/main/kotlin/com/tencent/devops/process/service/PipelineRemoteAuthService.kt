@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -129,22 +130,23 @@ class PipelineRemoteAuthService @Autowired constructor(
         return bkTag.invokeByTag(projectConsulTag) {
             logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, " +
                     "$projectConsulTag ${bkTag.getFinalTag()}")
-            val buildId = client.getGateway(ServiceBuildResource::class).manualStartupNew(
+            val buildId = saveTriggerEvent(
                 userId = userId!!,
-                projectId = pipeline.projectId,
-                pipelineId = pipeline.pipelineId,
-                values = vals.toMap(),
-                channelCode = ChannelCode.BS,
-                startType = StartType.REMOTE,
-                buildNo = null
-            ).data!!
-            saveTriggerEvent(
-                userId = userId,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
                 eventSource = sourceIp ?: "",
                 values = vals.toMap(),
-                buildId = buildId
+                action = {
+                    client.getGateway(ServiceBuildResource::class).manualStartupNew(
+                        userId = userId!!,
+                        projectId = pipeline.projectId,
+                        pipelineId = pipeline.pipelineId,
+                        values = vals.toMap(),
+                        channelCode = ChannelCode.BS,
+                        startType = StartType.REMOTE,
+                        buildNo = null
+                    ).data!!
+                }
             )
             // 在远程触发器job中打印sourcIp
             val taskId = buildVariableService.getVariable(
@@ -181,23 +183,37 @@ class PipelineRemoteAuthService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildId: BuildId?
-    ) {
+        action: () -> BuildId?
+    ) :BuildId {
+        var buildId: BuildId? = null
+        var status = PipelineTriggerStatus.SUCCEED.name
+        var failReason = ""
         try {
-            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                specificEvent = PipelineSpecificEvent(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    requestParams = values,
-                    userId = userId,
-                    eventSource = eventSource,
-                    triggerType = StartType.REMOTE.name,
-                    buildInfo = buildId
-                )
-            )
+            buildId = action.invoke()
         } catch (ignored: Exception) {
-            logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            status = PipelineTriggerStatus.FAILED.name
+            failReason = ignored.message.toString()
+            throw ignored
+        } finally {
+            try {
+                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                    specificEvent = PipelineSpecificEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        requestParams = values,
+                        userId = userId,
+                        eventSource = eventSource,
+                        triggerType = StartType.REMOTE.name,
+                        buildInfo = buildId,
+                        failReason = failReason,
+                        status = status
+                    )
+                )
+            } catch (ignored: Exception) {
+                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            }
         }
+        return buildId!!
     }
 
     companion object {

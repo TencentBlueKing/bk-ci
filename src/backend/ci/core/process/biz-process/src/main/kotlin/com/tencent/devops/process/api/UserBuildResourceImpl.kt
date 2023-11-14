@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
@@ -99,24 +100,25 @@ class UserBuildResourceImpl @Autowired constructor(
         triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        val manualStartup = pipelineBuildFacadeService.buildManualStartup(
+        val manualStartup = saveTriggerEvent(
             userId = userId,
-            startType = StartType.MANUAL,
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            channelCode = ChannelCode.BS,
-            buildNo = buildNo,
-            triggerReviewers = triggerReviewers
+            action = {
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS,
+                    buildNo = buildNo,
+                    triggerReviewers = triggerReviewers
+                )
+            }
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
-        saveTriggerEvent(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = values,
-            buildId = manualStartup
-        )
         return Result(manualStartup)
     }
 
@@ -553,23 +555,37 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildId: BuildId?
-    ) {
+        action: () -> BuildId?
+    ): BuildId {
+        var buildId: BuildId? = null
+        var status = PipelineTriggerStatus.SUCCEED.name
+        var failReason = ""
         try {
-            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                specificEvent = PipelineSpecificEvent(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    requestParams = values,
-                    userId = userId,
-                    eventSource = userId,
-                    triggerType = StartType.MANUAL.name,
-                    buildInfo = buildId
-                )
-            )
+            buildId = action.invoke()
         } catch (ignored: Exception) {
-            logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            status = PipelineTriggerStatus.FAILED.name
+            failReason = ignored.message.toString()
+            throw ignored
+        } finally {
+            try {
+                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                    specificEvent = PipelineSpecificEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        requestParams = values,
+                        userId = userId,
+                        eventSource = userId,
+                        triggerType = StartType.MANUAL.name,
+                        buildInfo = buildId,
+                        failReason = failReason,
+                        status = status
+                    )
+                )
+            } catch (ignored: Exception) {
+                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            }
         }
+        return buildId!!
     }
 
     companion object{

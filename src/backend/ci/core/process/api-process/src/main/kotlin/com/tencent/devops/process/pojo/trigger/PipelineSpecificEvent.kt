@@ -48,5 +48,9 @@ data class PipelineSpecificEvent(
     @ApiModelProperty("触发类型")
     val triggerType: String = PipelineTriggerType.MANUAL.name,
     @ApiModelProperty("构建信息")
-    val buildInfo: BuildId?
+    val buildInfo: BuildId?,
+    @ApiModelProperty("构建状态")
+    val status: String,
+    @ApiModelProperty("失败信息")
+    val failReason: String
 )

@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -137,23 +138,24 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V3|$userId|start|$projectId|$pipelineId|$values|$buildNo")
-        val buildId = client.get(ServiceBuildResource::class).manualStartupNew(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = values ?: emptyMap(),
-            buildNo = buildNo,
-            channelCode = apiGatewayUtil.getChannelCode(),
-            startType = StartType.SERVICE
-        )
-        saveTriggerEvent(
+        val buildId = saveTriggerEvent(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            buildId = buildId.data
+            action = {
+                client.get(ServiceBuildResource::class).manualStartupNew(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values ?: emptyMap(),
+                    buildNo = buildNo,
+                    channelCode = apiGatewayUtil.getChannelCode(),
+                    startType = StartType.SERVICE
+                ).data
+            }
         )
-        return buildId
+        return Result(buildId)
     }
 
     override fun stop(
@@ -297,23 +299,40 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>?,
-        buildId: BuildId?
-    ) {
+        action: () -> BuildId?
+    ): BuildId {
+        var buildId: BuildId? = null
+        var status = PipelineTriggerStatus.SUCCEED.name
+        var failReason = ""
         try {
-            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                specificEvent = PipelineSpecificEvent(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    requestParams = values,
-                    userId = userId,
-                    eventSource = userId,
-                    triggerType = StartType.SERVICE.name,
-                    buildInfo = buildId
-                )
-            )
+            buildId = action.invoke()
         } catch (ignored: Exception) {
-            logger.warn("OPENAPI_BUILD_V3|fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+            status = PipelineTriggerStatus.FAILED.name
+            failReason = ignored.message.toString()
+            throw ignored
+        } finally {
+            try {
+                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                    specificEvent = PipelineSpecificEvent(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        requestParams = values,
+                        userId = userId,
+                        eventSource = userId,
+                        triggerType = StartType.SERVICE.name,
+                        buildInfo = buildId,
+                        failReason = failReason,
+                        status = status
+                    )
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "OPENAPI_BUILD_V3|fail to save trigger event|$projectId|$pipelineId|$userId|$buildId",
+                    ignored
+                )
+            }
         }
+        return buildId!!
     }
 
     companion object {

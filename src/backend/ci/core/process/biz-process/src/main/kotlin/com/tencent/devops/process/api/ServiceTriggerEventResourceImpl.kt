@@ -49,7 +49,9 @@ class ServiceTriggerEventResourceImpl @Autowired constructor(
                 eventSource = eventSource,
                 eventDesc = eventDesc,
                 triggerType = PipelineTriggerType.PIPELINE.name,
-                buildInfo = buildInfo
+                buildInfo = buildInfo,
+                status = status,
+                failReason = failReason
             )
         }
         return true
