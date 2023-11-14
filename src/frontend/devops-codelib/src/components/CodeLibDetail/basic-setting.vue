@@ -462,6 +462,7 @@
                 deep: true
             },
             repoId () {
+                this.syncStatus = ''
                 this.$emit('update:pacProjectName', '')
             },
             codelibTypeConstants (val) {

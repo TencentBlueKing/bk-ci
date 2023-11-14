@@ -251,6 +251,8 @@
                     .then(async (res) => {
                         this.repoInfo = res
                         await this.handleCheckPacProject()
+                    }).finally(() => {
+                        this.isLoading = false
                     })
             },
 
