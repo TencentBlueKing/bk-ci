@@ -387,12 +387,17 @@ object TransferMapper {
     }
 
     private fun checkMarker(start: Mark, end: Mark, marker: TransferMark.Mark): Boolean {
-        if (start.line <= marker.line && start.column <= marker.column &&
-            end.line >= marker.line && end.column >= marker.column
-        ) {
-            return true
+        if (start.line == 215) {
+            println()
         }
-        return false
+        return marker.bigger(start) != false && marker.bigger(end) != true
+    }
+
+    private fun TransferMark.Mark.bigger(start: Mark) = when {
+        line > start.line -> true
+        line == start.line && column > start.column -> true
+        line == start.line && column == start.column -> null
+        else -> false
     }
 
     private fun exactlyTheSameNode(l: Node, r: Node): Boolean {
