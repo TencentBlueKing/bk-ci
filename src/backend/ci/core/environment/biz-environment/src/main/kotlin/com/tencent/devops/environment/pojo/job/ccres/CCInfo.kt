@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 data class CCInfo(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Int?,
+    val bkHostId: Long?,
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
     val bkCloudId: Int?,
@@ -18,5 +18,11 @@ data class CCInfo(
     val operator: String?,
     @ApiModelProperty(value = "备份负责人", notes = "不同备份负责人之间用英文逗号隔开")
     @JsonProperty("bk_bak_operator")
-    val bkBakOperator: String?
-)
+    val bkBakOperator: String?,
+    @ApiModelProperty(value = "服务器ID")
+    @JsonProperty("svr_id")
+    val svrId: Long?
+) {
+    constructor(bkHostId: Long?, bkHostInnerip: String?, svrId: Long?) :
+        this(bkHostId, 0, bkHostInnerip, "", "", svrId)
+}

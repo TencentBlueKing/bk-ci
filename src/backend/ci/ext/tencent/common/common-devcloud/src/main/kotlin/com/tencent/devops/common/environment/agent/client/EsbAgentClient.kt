@@ -189,7 +189,8 @@ class EsbAgentClient {
                             ip = lanIPs[0],
                             displayIp = lanIPs.joinToString(";"),
                             osName = osName,
-                            agentStatus = false
+                            agentStatus = false,
+                            serverId = it["serverId"] as Int
                         )
                     }
                 }

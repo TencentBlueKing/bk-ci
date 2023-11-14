@@ -48,5 +48,7 @@ data class CreateNodeModel(
     var image: String? = "",
     var taskId: Long? = null,
     var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null
+    var lastBuildTime: LocalDateTime? = null,
+    var hostId: Long?,
+    var cloudAreaId: Long? = 0
 )

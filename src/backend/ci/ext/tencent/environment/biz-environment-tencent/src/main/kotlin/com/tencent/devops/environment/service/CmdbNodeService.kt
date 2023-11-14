@@ -40,6 +40,10 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.service.job.QueryFromCCService
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import com.tencent.devops.environment.utils.ImportServerNodeUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -55,8 +59,13 @@ class CmdbNodeService @Autowired constructor(
     private val projectConfigDao: ProjectConfigDao,
     private val redisOperation: RedisOperation,
     private val esbAgentClient: EsbAgentClient,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val queryFromCCService: QueryFromCCService
 ) {
+    companion object {
+        const val DEFAULT_CLOUD_AREA_ID = 0L
+        const val FIELD_BK_SVR_ID = "svr_id"
+    }
 
     fun getUserCmdbNodesNew(
         userId: String,
@@ -99,9 +108,9 @@ class CmdbNodeService @Autowired constructor(
 
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>) {
         // 验证 CMDB 节点IP和责任人
-        val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes
-        val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip }
-        val invalidIps = nodeIps.filter {
+        val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes // 查出所有ip对应记录
+        val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip } // ip - 记录 映射
+        val invalidIps = nodeIps.filter { // 权限校验
             if (!cmdbIpToNodeMap.containsKey(it)) true
             else {
                 val isOperator = cmdbIpToNodeMap[it]!!.operator == userId
@@ -117,9 +126,10 @@ class CmdbNodeService @Autowired constructor(
         }
 
         // 只添加不存在的节点
-        val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId)
-        val existIpList = existNodeList.map { it.nodeIp }.toSet()
-        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
+        val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
+        val existIpList = existNodeList.map { it.nodeIp }.toSet() // 已存在 节点ip
+        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet() // 要添加的 节点ip
+        val toAddIpToCmdbNodeMap = cmdbIpToNodeMap.filter { toAddIpList.contains(it.key) } // 要添加的 节点ip - cmdb记录映射
         ImportServerNodeUtils.checkImportCount(
             dslContext = dslContext,
             projectConfigDao = projectConfigDao,
@@ -128,6 +138,44 @@ class CmdbNodeService @Autowired constructor(
             userId = userId,
             toAddNodeCount = toAddIpList.size
         )
+
+        // 通过svrId查询节点是否在CC中
+        val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
+
+        val svrIdQueryCCRes = queryFromCCService.queryCCListHostWithoutBizByInRules(
+            listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID), svrIdList, FIELD_BK_SVR_ID
+        )
+        val svrIdQueryCCList = svrIdQueryCCRes.data.info // 所有在cc中的节点记录
+        val svrIdToCCResMap = svrIdQueryCCList.associateBy { it.svrId } // cc中 svrId-节点记录 映射
+
+        val inCCSvrIdList = mutableListOf<Long>() // 在CC中的节点的SvrId
+        val notInCCSvrIdList = mutableListOf<Long>() // 不在CC中的节点的SvrId
+        svrIdList.map {
+            if (svrIdToCCResMap.containsKey(it.toLong())) inCCSvrIdList.add(it.toLong())
+            else notInCCSvrIdList.add(it.toLong())
+        }
+
+        var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
+
+        if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
+            val ccData = svrIdQueryCCRes.data.info
+            queryCCIpToCCInfoMap = ccData.associateBy { it.bkHostInnerip }
+        }
+
+        var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
+        if (notInCCSvrIdList.isNotEmpty()) { // 不在CC中，add到CC中，查出host_id和云区域id
+            val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
+            val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
+            addToCCIpToCCInfoMap = ccHostIdList?.mapIndexed { index, value ->
+                CCInfo(
+                    svrId = notInCCSvrIdList[index],
+                    bkHostId = value,
+                    bkHostInnerip = svrIdToCCResMap[notInCCSvrIdList[index]]?.bkHostInnerip
+                )
+            }?.associateBy { it.bkHostInnerip } ?: mapOf()
+        }
+
+        queryCCIpToCCInfoMap = queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
 
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
         val toAddNodeList = toAddIpList.map {
@@ -143,7 +191,9 @@ class CmdbNodeService @Autowired constructor(
                 osName = cmdbNode.osName,
                 operator = cmdbNode.operator,
                 bakOperator = cmdbNode.bakOperator,
-                agentStatus = agentStatusMap[cmdbNode.ip] ?: false
+                agentStatus = agentStatusMap[cmdbNode.ip] ?: false,
+                hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
+                cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )
         }
 
