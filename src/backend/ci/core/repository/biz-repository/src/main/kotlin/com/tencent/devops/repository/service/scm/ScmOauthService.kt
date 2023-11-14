@@ -278,7 +278,7 @@ class ScmOauthService @Autowired constructor(
                     }
                 }
             }
-            ScmFactory.getScm(
+            ScmOauthFactory.getScm(
                 projectName = projectName,
                 url = url,
                 type = type,
