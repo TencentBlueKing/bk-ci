@@ -25,18 +25,37 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('details.path')" prop="fullName" show-overflow-tooltip></bk-table-column>
-            <bk-table-column :label="$t('details.filesize')" width="150" prop="size" show-overflow-tooltip>
+            <bk-table-column
+                :label="$t('details.path')"
+                prop="fullName"
+                show-overflow-tooltip
+            >
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('details.filesize')"
+                width="150"
+                prop="size"
+                show-overflow-tooltip
+            >
                 <template slot-scope="props">
                     {{ !props.row.folder ? sizeFormatter(props.row.size) : sizeFormatter(getFolderSize(props.row)) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('details.repoType')" width="150" prop="artifactoryType" :formatter="repoTypeFormatter" show-overflow-tooltip></bk-table-column>
+            <bk-table-column
+                :label="$t('details.repoType')"
+                width="150"
+                prop="artifactoryType"
+                :formatter="repoTypeFormatter"
+                show-overflow-tooltip
+            >
+            </bk-table-column>
             <bk-table-column :label="$t('operate')" width="150">
                 <template slot-scope="props">
                     <artifact-download-button
+                        :output="props.row"
                         :has-permission="hasPermission"
                         v-bind="props.row"
+                        :artifactory-type="props.row.artifactoryType"
                     />
                 </template>
             </bk-table-column>
@@ -109,7 +128,8 @@
                         this.artifactories
                             = res.records.map((item) => ({
                                 ...item,
-                                icon: item.folder ? 'folder' : extForFile(item.name)
+                                icon: item.folder ? 'folder' : extForFile(item.name),
+                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
                             })) || []
                         this.hasPermission = permission
                         if (this.artifactories.length <= 0) {

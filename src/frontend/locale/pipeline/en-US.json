@@ -1219,5 +1219,6 @@
   "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute.",
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
-  "copyAsTemplateInstance": "Copy As Instance"
+  "copyAsTemplateInstance": "Copy As Instance",
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository."
 }

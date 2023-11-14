@@ -267,9 +267,9 @@
         ALL_PIPELINE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
-        RECENT_USED_VIEW_ID,
         PIPELINE_TABLE_COLUMN_CACHE,
-        PIPELINE_TABLE_LIMIT_CACHE
+        PIPELINE_TABLE_LIMIT_CACHE,
+        RECENT_USED_VIEW_ID
     } from '@/store/constants'
     import {
         PROJECT_RESOURCE_ACTION,
@@ -505,6 +505,9 @@
             handleSelectChange (selection, ...args) {
                 this.selectionLength = selection.length
                 this.$emit('selection-change', selection, ...args)
+                this.$nextTick(() => {
+                    this.$refs?.pipelineTable?.doLayout?.()
+                })
             },
             goGroup (groupName) {
                 const group = this.groupNamesMap[groupName]
@@ -667,6 +670,7 @@
         justify-content: center;
         background: #EAEBF0;
         height: 32px;
+        grid-gap: 10px;
     }
     .latest-build-multiple-row {
         display: flex;

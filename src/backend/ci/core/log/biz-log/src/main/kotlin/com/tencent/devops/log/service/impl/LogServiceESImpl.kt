@@ -54,7 +54,7 @@ import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
-import com.tencent.devops.log.util.Constants
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
 import org.elasticsearch.ElasticsearchStatusException
@@ -95,7 +95,7 @@ import kotlin.math.ceil
     "ReturnCount",
     "ComplexMethod"
 )
-class LogServiceESImpl constructor(
+class LogServiceESImpl(
     private val logClient: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
