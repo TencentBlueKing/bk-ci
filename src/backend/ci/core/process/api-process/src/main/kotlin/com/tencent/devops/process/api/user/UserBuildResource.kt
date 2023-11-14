@@ -103,10 +103,7 @@ interface UserBuildResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String,
-        @ApiParam("查看指定版本调试数据", required = false, defaultValue = "false")
-        @QueryParam("version")
-        debugVersion: Int? = null
+        buildId: String
     ): Result<List<BuildParameters>>
 
     @ApiOperation("手动启动流水线")
