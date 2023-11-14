@@ -387,9 +387,6 @@ object TransferMapper {
     }
 
     private fun checkMarker(start: Mark, end: Mark, marker: TransferMark.Mark): Boolean {
-        if (start.line == 215) {
-            println()
-        }
         return marker.bigger(start) != false && marker.bigger(end) != true
     }
 
