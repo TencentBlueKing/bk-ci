@@ -299,10 +299,11 @@ class InitializeMatrixGroupStageCmd(
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
-                        dispatchType = customDispatchType ?: modelContainer.dispatchType?.deepCopy<DispatchType>()?.let { itd ->
-                            itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
-                            itd
-                        },
+                        dispatchType = customDispatchType
+                            ?: modelContainer.dispatchType?.deepCopy<DispatchType>()?.let { itd ->
+                                itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
+                                itd
+                            },
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
