@@ -38,7 +38,7 @@ class QueryFromCCService : QueryOperatorService {
     companion object {
         private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
         const val DEFAULT_PAGE_LIMIT = 3
-        const val DEFAULT_PAGE_START = 3
+        const val DEFAULT_PAGE_START = 0
         const val FIELD_BK_HOST_ID = "bk_host_id"
         const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
         const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
