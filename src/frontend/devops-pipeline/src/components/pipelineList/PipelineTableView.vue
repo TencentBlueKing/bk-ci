@@ -63,7 +63,7 @@
                     {{props.row.pipelineName}}
                 </router-link>
                 <span v-else>{{props.row.pipelineName}}</span>
-                <logo v-if="props.row.templateId" name="template" size="14" />
+                <logo v-if="props.row.templateId" name="template-mode" size="14" />
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">

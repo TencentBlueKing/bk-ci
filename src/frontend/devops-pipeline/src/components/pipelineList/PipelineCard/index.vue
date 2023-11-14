@@ -9,7 +9,7 @@
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
-                    <logo v-if="pipeline.templateId" name="template" size="14" />
+                    <logo v-if="pipeline.templateId" name="template-mode" size="14" />
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
