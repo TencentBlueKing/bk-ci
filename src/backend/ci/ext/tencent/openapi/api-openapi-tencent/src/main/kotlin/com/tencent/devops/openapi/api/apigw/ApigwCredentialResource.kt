@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwCredentialResource {
 
-    @ApiOperation("获取拥有对应权限凭据列表")
+    @ApiOperation("获取拥有对应权限凭据列表", tags = ["v1_app_credentials"])
     @Path("/{projectId}/hasPermissionList")
     @GET
     fun hasPermissionList(

@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRepositoryResourceV2 {
 
-    @ApiOperation("查询项目的代码库列表")
+    @ApiOperation("查询项目的代码库列表", tags = ["v2_app_repositories_listByProject"])
     @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
@@ -82,7 +82,7 @@ interface ApigwRepositoryResourceV2 {
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
 
-    @ApiOperation("获取授权路径")
+    @ApiOperation("获取授权路径", tags = ["v2_app_repositories_getAuthUrl"])
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
@@ -103,7 +103,7 @@ interface ApigwRepositoryResourceV2 {
         repoHashId: String?
     ): Result<String>
 
-    @ApiOperation("获取git代码库accessToken信息")
+    @ApiOperation("获取git代码库accessToken信息", tags = ["v2_app_repositories_git"])
     @GET
     @Path("/git/{userId}")
     fun gitGet(
