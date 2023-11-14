@@ -32,6 +32,9 @@ class QueryFromCCService : QueryOperatorService {
     @Value("\${job.bkccListHostWithoutBizReqUrl:}")
     private val bkccListHostWithoutBizReqUrl = ""
 
+    @Value("\${job.bkccAddHostToCiBizUrl:}")
+    private val bkccAddHostToCiBizUrl = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
         const val DEFAULT_PAGE_LIMIT = 3
@@ -110,7 +113,7 @@ class QueryFromCCService : QueryOperatorService {
         val ccAddHostReq = CCAddHostReq(svrIds)
         val requestContent = jacksonObjectMapper().writeValueAsString(ccAddHostReq)
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val ccAddHostToCiBizRes = OkhttpUtils.doPost(bkccListHostWithoutBizReqUrl, requestContent, headers)
+        val ccAddHostToCiBizRes = OkhttpUtils.doPost(bkccAddHostToCiBizUrl, requestContent, headers)
         val responseBody = ccAddHostToCiBizRes.body?.string()
         val ccResp = jacksonObjectMapper().readValue<CCAndHostRes>(responseBody!!)
         if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz] ccResp: $ccResp")
