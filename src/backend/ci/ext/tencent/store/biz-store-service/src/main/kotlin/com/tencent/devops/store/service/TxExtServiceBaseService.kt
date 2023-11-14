@@ -144,7 +144,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                     dslContext,
                     extensionInfo.language!!,
                     StoreTypeEnum.SERVICE
-                ).sampleProjectPath,
+                )?.sampleProjectPath,
                 namespaceId = serviceNameSpaceId.toInt(),
                 visibilityLevel = extensionInfo.visibilityLevel,
                 tokenType = TokenTypeEnum.PRIVATE_KEY
