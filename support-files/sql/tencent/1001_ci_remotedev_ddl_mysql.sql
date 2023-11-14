@@ -56,9 +56,11 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
+    `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
-    KEY `ipKey`(`HOST_IP`)
+    KEY `ipKey`(`HOST_IP`),
+    KEY `imageKey`(`IMAGE_ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 
@@ -476,5 +478,21 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
 	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ----------------------------
+-- Table structure for T_DAILY_CGS_DATA 统计每天云桌面的数据快照
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_DAILY_CGS_DATA` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `DATE` varchar(64) NOT NULL DEFAULT '' COMMENT '日期',
+    `OWNER_TYPE` varchar(32) NOT NULL DEFAULT 'PERSONAL' COMMENT '工作空间所属（PERSONAL、PROJECT）',
+    `NUMBER` int(11) NOT NULL DEFAULT '0' COMMENT '云桌面数',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`DATE`,`OWNER_TYPE`),
+    KEY `idx_date` (`DATE`),
+    KEY `idx_type` (`OWNER_TYPE`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='统计每天云桌面的数据快照';
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -293,7 +293,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -323,7 +323,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -418,6 +418,11 @@ class DeleteControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                 params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't delete again")
             )
+        }
+
+        if (workspace.status.checkDeliveringFailed()) {
+            logger.info("${workspace.workspaceName} is DELIVERING_FAILED, delete immediately.")
+            return true
         }
 
         if (workspaceCommon.notOk2doNextAction(workspace)) {

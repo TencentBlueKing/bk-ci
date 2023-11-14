@@ -31,7 +31,7 @@ import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.IndexService
-import com.tencent.devops.log.util.Constants
+import com.tencent.devops.common.log.constant.Constants
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.IntPoint
 import org.apache.lucene.document.NumericDocValuesField
