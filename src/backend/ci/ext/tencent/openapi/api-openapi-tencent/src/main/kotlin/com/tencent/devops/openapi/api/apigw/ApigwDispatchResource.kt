@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwDispatchResource {
     @GET
     @Path("/macos/vms")
-    @ApiOperation("获取vm列表")
+    @ApiOperation("获取vm列表", tags = ["v1_app_dispatch"])
     fun macOSList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

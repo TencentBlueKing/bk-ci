@@ -25,15 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.common.es.client.impl
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
+import com.tencent.devops.common.es.client.LogClient
+import com.tencent.devops.common.es.ESClient
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "log.elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
-)
+class LogClientImpl constructor(private val client: ESClient) : LogClient {
+
+    override fun getActiveClients(): List<ESClient> {
+        return listOf(client)
+    }
+
+    override fun hashClient(buildId: String): ESClient {
+        return getActiveClients().first()
+    }
+}
