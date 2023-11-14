@@ -468,29 +468,29 @@
             },
             codelibTypeConstants (val) {
                 // 校验是否已经授权了OAUTh
-                switch (val) {
-                    case 'git':
-                        this.refreshGitOauth({
-                            type: 'git',
-                            resetType: 'checkGitOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                    case 'github':
-                        this.refreshGithubOauth({
-                            projectId: this.projectId,
-                            resetType: 'checkGithubOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                    case 'tgit':
-                        this.refreshGitOauth({
-                            type: 'tgit',
-                            resetType: 'checkTGitOauth',
-                            redirectUrl: window.location.href
-                        })
-                        break
-                }
+                // switch (val) {
+                //     case 'git':
+                //         this.refreshGitOauth({
+                //             type: 'git',
+                //             resetType: 'checkGitOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                //     case 'github':
+                //         this.refreshGithubOauth({
+                //             projectId: this.projectId,
+                //             resetType: 'checkGithubOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                //     case 'tgit':
+                //         this.refreshGitOauth({
+                //             type: 'tgit',
+                //             resetType: 'checkTGitOauth',
+                //             redirectUrl: window.location.href
+                //         })
+                //         break
+                // }
             },
             showSyncFailedDetail (val) {
                 if (val) {
@@ -591,6 +591,30 @@
              */
             async handleTogglePacStatus () {
                 if ((!this.repoInfo.enablePac && this.pacProjectName) || this.repoInfo.yamlSyncStatus === 'SYNC') return
+                switch (this.codelibTypeConstants) {
+                    case 'git':
+                        await this.refreshGitOauth({
+                            type: 'git',
+                            resetType: 'checkGitOauth',
+                            redirectUrl: window.location.href
+                        })
+                        break
+                    case 'github':
+                        await this.refreshGithubOauth({
+                            projectId: this.projectId,
+                            resetType: 'checkGithubOauth',
+                            redirectUrl: window.location.href
+                        })
+                        break
+                    case 'tgit':
+                        await this.refreshGitOauth({
+                            type: 'tgit',
+                            resetType: 'checkTGitOauth',
+                            redirectUrl: window.location.href
+                        })
+                        break
+                }
+                
                 if (this.repoInfo.enablePac) {
                     this.$emit('update:pacProjectName', '')
                     await this.handleCheckHasCiFolder()
