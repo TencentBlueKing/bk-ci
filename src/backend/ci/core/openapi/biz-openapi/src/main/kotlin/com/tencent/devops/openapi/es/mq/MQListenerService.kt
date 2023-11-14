@@ -25,13 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.openapi.es.mq
 
-import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.openapi.es.IESService
+import org.slf4j.LoggerFactory
 
-interface LogClient {
+class MQListenerService constructor(
+    private val logService: IESService,
+    private val dispatcher: MQDispatcher
+) {
 
-    fun getActiveClients(): List<ESClient>
+    fun handleEvent(event: ESEvent) {
+        var result = false
+        try {
+            logService.esAddMessage(event)
+            result = true
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to add the log batch event [${event.logs}|${event.retryTime}]", ignored)
+        } finally {
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to add log batch event [${event.logs}|${event.retryTime}]")
+                with(event) {
+                    dispatcher.dispatchEvent(
+                        ESEvent(
+                            logs = logs,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
+                }
+            }
+        }
+    }
 
-    fun hashClient(buildId: String): ESClient
+    companion object {
+        private val logger = LoggerFactory.getLogger(MQListenerService::class.java)
+    }
 }

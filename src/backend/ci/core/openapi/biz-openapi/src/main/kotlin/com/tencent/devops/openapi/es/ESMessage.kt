@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client.impl
+package com.tencent.devops.openapi.es
 
-import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.es.ESClient
-
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
-
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
-    }
-
-    override fun hashClient(buildId: String): ESClient {
-        return getActiveClients().first()
-    }
-}
+/**
+ *
+ * Powered By Tencent
+ */
+data class ESMessage(
+    val api: String,
+    val key: String = "",
+    val projectId: String = "",
+    val path: String = "",
+    var timestamp: Long = 0
+)
