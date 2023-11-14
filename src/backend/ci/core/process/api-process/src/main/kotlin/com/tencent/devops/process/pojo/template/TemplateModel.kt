@@ -71,7 +71,7 @@ data class TemplateModel(
     val hasPermission: Boolean,
     @ApiModelProperty("是否有模版查看权限", required = true)
     val canView: Boolean? = null,
-    @ApiModelProperty("是否有模版查看权限", required = true)
+    @ApiModelProperty("是否有模版编辑权限", required = true)
     val canEdit: Boolean? = null,
     @ApiModelProperty("是否有模版删除权限", required = true)
     val canDelete: Boolean? = null

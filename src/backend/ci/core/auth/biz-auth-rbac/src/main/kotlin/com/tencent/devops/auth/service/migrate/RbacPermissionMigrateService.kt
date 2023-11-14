@@ -268,13 +268,16 @@ class RbacPermissionMigrateService constructor(
             ).relationId
             migrateProjectsExecutorService.submit {
                 MDC.put(TraceTag.BIZID, traceId)
-                // todo 需要查询数据，查询是否需要把监控空间权限也注册上
+                val isRegisterMonitorPermission = authMigrationDao.get(
+                    dslContext = dslContext,
+                    projectCode = it.englishName
+                ) != null
                 migrateResourceService.migrateProjectResource(
                     projectCode = it.englishName,
                     projectName = it.projectName,
                     gradeManagerId = gradeManagerId,
                     async = true,
-                    registerMonitorPermission = false
+                    registerMonitorPermission = isRegisterMonitorPermission
                 )
                 logger.info("migrate resources of new resource type:$resourceType|$projectCodes")
                 migrateResourceService.migrateResource(

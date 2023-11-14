@@ -51,7 +51,7 @@ interface PipelineTemplatePermissionService {
      * @param projectId projectId
      * @param templateId templateId
      * @param permission 权限
-     * @return 有权限返回true
+     * @return 有权限返回true,无权限抛出异常
      */
     fun checkPipelineTemplatePermissionWithMessage(
         userId: String,
@@ -65,8 +65,6 @@ interface PipelineTemplatePermissionService {
      * @param userId userId
      * @param projectId projectId
      * @param permissions permissions
-     * @param templateRecords templateRecords
-     * @return 有权限返回true
      */
     fun getResourcesByPermission(
         userId: String,
