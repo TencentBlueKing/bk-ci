@@ -132,6 +132,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "RTX"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -146,6 +147,10 @@
     sender: "DevOps"
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
     body: "✔️${successContent}\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "jgj46v0knzlkhcah57rcutao30tqza5v"
+    taskName: "构建成功"
+    content: "${successContent}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -454,6 +459,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "RTX"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -468,6 +474,10 @@
     sender: "DevOps"
     title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
     body: "❌${failContent}\n\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "构建失败"
+    content: "${failContent}"
   creator: "system"
   modifior: "system"
 - index: 23
