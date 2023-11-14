@@ -27,8 +27,10 @@
 
 package com.tencent.devops.store.dao.template
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -74,7 +76,7 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TTemplate.T_TEMPLATE) {
-            dslContext.select(TEMPLATE_CODE.`as`("storeCode")).from(this)
+            dslContext.select(TEMPLATE_CODE.`as`(KEY_STORE_CODE)).from(this)
                 .where(TEMPLATE_NAME.contains(storeName))
                 .groupBy(TEMPLATE_CODE)
                 .fetch()
@@ -87,8 +89,8 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
     ): Result<out Record>? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(
-                TEMPLATE_CODE.`as`("storeCode"),
-                VERSION.`as`("version")
+                TEMPLATE_CODE.`as`(KEY_STORE_CODE),
+                VERSION.`as`(KEY_VERSION)
             ).from(this)
                 .where(TEMPLATE_CODE.`in`(storeCodeList))
                 .and(LATEST_FLAG.eq(true))

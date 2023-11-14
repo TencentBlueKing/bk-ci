@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
@@ -50,6 +51,8 @@ import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.OperationLogDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
+import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
@@ -77,6 +80,9 @@ class StorePipelineServiceImpl : StorePipelineService {
 
     @Autowired
     private lateinit var businessConfigDao: BusinessConfigDao
+
+    @Autowired
+    private lateinit var storeBuildInfoDao: StoreBuildInfoDao
 
     @Autowired
     private lateinit var operationLogDao: OperationLogDao
@@ -266,19 +272,31 @@ class StorePipelineServiceImpl : StorePipelineService {
         storeInfoRecords?.forEach { storeInfo ->
             val projectCode = storeInfo[KEY_PROJECT_CODE] as String
             val storeCode = storeInfo[KEY_STORE_CODE] as String
-            var pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
-            if (pipelineName.toCharArray().size > 128) {
-                pipelineName = "am-$storeCode-${UUIDUtil.generate()}"
-            }
-            val paramMap = mapOf(
+            val pipelineName = "am-$storeCode-${UUIDUtil.generate()}"
+            val paramMap = mutableMapOf(
                 KEY_PIPELINE_NAME to pipelineName,
                 KEY_STORE_CODE to storeCode,
-                KEY_VERSION to storeInfo[KEY_VERSION],
-                KEY_LANGUAGE to storeInfo[KEY_LANGUAGE],
-                KEY_SCRIPT to StringEscapeUtils.escapeJava(storeInfo[KEY_SCRIPT] as String),
-                KEY_REPOSITORY_HASH_ID to storeInfo[KEY_REPOSITORY_HASH_ID],
-                KEY_REPOSITORY_PATH to (storeInfo[KEY_REPOSITORY_PATH] ?: "")
+                KEY_VERSION to storeInfo[KEY_VERSION]
             )
+            storeInfo[KEY_LANGUAGE]?.let {
+                val language = it.toString()
+                paramMap[KEY_LANGUAGE] = language
+                val storeBuildInfoRecord = storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                    dslContext = dslContext,
+                    language = language,
+                    storeType = StoreTypeEnum.valueOf(storeType)
+                )
+                storeBuildInfoRecord?.let {
+                    paramMap[KEY_SCRIPT] = StringEscapeUtils.escapeJava(storeBuildInfoRecord.script)
+                    paramMap[KEY_REPOSITORY_PATH] = storeBuildInfoRecord.repositoryPath ?: ""
+                }
+            }
+            storeInfo[KEY_REPOSITORY_HASH_ID]?.let {
+                paramMap[KEY_REPOSITORY_HASH_ID] = it
+            }
+            storeInfo[KEY_BRANCH]?.let {
+                paramMap[KEY_BRANCH] = it
+            }
             // 将流水线模型中的变量替换成具体的值
             var convertModel = if (checkGrayFlag) {
                 val grayProjectSet = gray.grayProjectSet(redisOperation)
@@ -308,7 +326,6 @@ class StorePipelineServiceImpl : StorePipelineService {
                         pipelineModelVersionList = pipelineModelVersionList
                     )
                 )
-            logger.info("updatePipelineModelResult:$updatePipelineModelResult")
             if (updatePipelineModelResult.isNotOk()) {
                 batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
             }
