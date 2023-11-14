@@ -477,7 +477,8 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         ip: String?
     ): List<WeSecProjectWorkspace> {
-        logger.info("op get project $projectId workspace list")
+        val startTime = System.currentTimeMillis()
+
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
@@ -485,19 +486,47 @@ class WorkspaceService @Autowired constructor(
             ip = ip
         ) ?: emptyList()
 
-        return result.map {
-            val detail = workspaceCommon.getWorkspaceDetail(it["NAME"] as String)
+        val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
+
+        val workspaceNames = result.map { it["NAME"] as String }.toSet()
+
+        val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
+            .associateBy { it.workspaceName }
+
+        val fetchDetailEndTime = System.currentTimeMillis()
+
+        val data = result.map { res ->
+            val workspaceName = res["NAME"] as String
+            val detail = detailMap[workspaceName]?.let { det ->
+                try {
+                    objectMapper.readValue<WorkSpaceCacheInfo>(det.detail)
+                } catch (ignore: Exception) {
+                    logger.warn("get workspace detail from redis error|${workspaceName}", ignore)
+                    null
+                }
+            }
             WeSecProjectWorkspace(
-                workspaceName = it["NAME"] as String,
-                projectId = it["PROJECT_ID"] as String,
-                creator = it["CREATOR"] as String,
+                workspaceName = workspaceName,
+                projectId = res["PROJECT_ID"] as String,
+                creator = res["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
-                createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String,
-                status = WorkspaceStatus.values()[it["STATUS"] as Int]
+                createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
+                owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                status = WorkspaceStatus.values()[res["STATUS"] as Int]
             )
         }
+
+        val buildDataEndTime = System.currentTimeMillis()
+
+        logger.info(
+            "getProjectWorkspaceList4WeSec fetchWorkspaceWithOwner {}ms, fetchDetail {}ms, buildData{}ms",
+            fetchWorkspaceWithOwnerEndTime - startTime,
+            fetchDetailEndTime - fetchWorkspaceWithOwnerEndTime,
+            buildDataEndTime - fetchDetailEndTime
+        )
+
+        return data
     }
 
     fun getWorkspaceProject(): List<RemotedevProject> {

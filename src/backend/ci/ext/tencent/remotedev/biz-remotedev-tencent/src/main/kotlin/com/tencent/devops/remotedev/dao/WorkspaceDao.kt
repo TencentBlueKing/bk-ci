@@ -692,6 +692,18 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspaceDetailByNames(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<TWorkspaceDetailRecord> {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .fetch()
+        }
+    }
+
+
     class TWorkspaceRecordJooqMapper : RecordMapper<TWorkspaceRecord, WorkspaceRecord> {
         override fun map(record: TWorkspaceRecord?): WorkspaceRecord? {
             return record?.run {
