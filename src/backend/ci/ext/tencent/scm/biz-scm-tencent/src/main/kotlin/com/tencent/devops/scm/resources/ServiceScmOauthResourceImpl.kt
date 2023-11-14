@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceScmOauthResource
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
@@ -186,6 +187,50 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
             region = region,
             userName = userName,
             event = event
+        )
+        return Result(true)
+    }
+
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): Result<List<GitHook>> {
+        return Result(
+            scmOauthService.getWebHooks(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token
+            )
+        )
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ): Result<Boolean> {
+        logger.info(
+            "Start to update the web hook of " +
+                    "(hookId=$hookId, url=$url, type=$type, username=$userName, event=$event, hookUrl=$hookUrl)"
+        )
+        scmOauthService.updateWebHook(
+            hookId = hookId,
+            projectName = projectName,
+            url = url,
+            type = type,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName,
+            event = event,
+            hookUrl = hookUrl
         )
         return Result(true)
     }

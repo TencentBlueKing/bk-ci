@@ -29,6 +29,7 @@ package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
@@ -45,7 +46,9 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -210,6 +213,63 @@ interface ServiceScmOauthResource {
         @ApiParam("事件类型", required = false)
         @QueryParam("event")
         event: String?
+    ): Result<Boolean>
+
+    @ApiOperation("获取webhook地址")
+    @GET
+    @Path("getWebHooks")
+    fun getWebHooks(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String?
+    ): Result<List<GitHook>>
+
+    @ApiOperation("添加Git或者Gitlab WEB hook")
+    @PUT
+    @Path("{hookId}/updateWebHook")
+    fun updateWebHook(
+        @ApiParam("回调地址", required = true)
+        @PathParam("hookId")
+        hookId: Long,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @ApiParam("passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam("token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @ApiParam("仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String,
+        @ApiParam("事件类型", required = false)
+        @QueryParam("event")
+        event: String?,
+        @ApiParam("回调地址", required = true)
+        @QueryParam("hookUrl")
+        hookUrl: String?
     ): Result<Boolean>
 
     @ApiOperation("添加Git Commit Check")
