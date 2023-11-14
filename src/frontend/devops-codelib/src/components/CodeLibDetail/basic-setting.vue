@@ -462,6 +462,7 @@
                 deep: true
             },
             repoId () {
+                this.time = 1000
                 this.syncStatus = ''
                 this.$emit('update:pacProjectName', '')
             },
