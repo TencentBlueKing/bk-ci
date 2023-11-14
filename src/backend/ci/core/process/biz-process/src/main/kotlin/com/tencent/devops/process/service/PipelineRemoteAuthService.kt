@@ -184,7 +184,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         pipelineId: String,
         values: Map<String, String>?,
         action: () -> BuildId?
-    ) :BuildId {
+    ): BuildId {
         var buildId: BuildId? = null
         var status = PipelineTriggerStatus.SUCCEED.name
         var failReason = ""

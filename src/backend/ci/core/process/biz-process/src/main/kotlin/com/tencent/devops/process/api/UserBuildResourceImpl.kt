@@ -588,7 +588,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return buildId!!
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(UserBuildResourceImpl::class.java)
     }
 }
