@@ -431,7 +431,8 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             "yaml,459,24 -> yaml-job",
             "yaml,219,14 -> yaml-stage",
             "yaml,600,12 -> yaml-setting",
-            "yaml,30,14 -> yaml-setting-2"
+            "yaml,30,14 -> yaml-setting-2",
+            "yaml_very_simple,1,1 -> yaml_very_simple-step"
         ]
     )
     fun yamlElementInsert(value: String) {
