@@ -501,7 +501,7 @@ class WorkspaceService @Autowired constructor(
                 try {
                     objectMapper.readValue<WorkSpaceCacheInfo>(det.detail)
                 } catch (ignore: Exception) {
-                    logger.warn("get workspace detail from redis error|${workspaceName}", ignore)
+                    logger.warn("get workspace detail from redis error|$workspaceName", ignore)
                     null
                 }
             }
