@@ -112,6 +112,7 @@
                 'editingElementPos'
             ]),
             ...mapGetters('atom', [
+                'osList',
                 'getContainers',
                 'getStage'
             ]),
@@ -156,7 +157,9 @@
                 'setPipelineEditing',
                 'yamlNavToPipelineModel',
                 'previewAtomYAML',
-                'insertAtomYAML'
+                'insertAtomYAML',
+                'addStage',
+                'addContainer'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, pipelineWithoutTrigger } = this
@@ -224,7 +227,6 @@
                 this.atomYaml = ''
             },
             handleStepClick (editingElementPos, atom) {
-                console.log(editingElementPos, atom)
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
                 const element = this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex].elements[elementIndex]
                 this.updateAtom({
@@ -239,21 +241,31 @@
             },
             async addPlugin () {
                 const pos = this.$refs.editor.editor.getPosition()
-                this.yamlPos = pos
                 const res = await this.yamlNavToPipelineModel({
                     projectId: this.$route.params.projectId,
                     line: pos.lineNumber,
                     column: pos.column,
                     body: this.pipelineYaml
                 })
-                const lastStageIndex = this.pipelineWithoutTrigger.stages.length - 1
-                const lastContainerIndex = this.pipelineWithoutTrigger.stages[lastStageIndex].containers.length - 1
-                const lastElemntIndex = this.pipelineWithoutTrigger.stages[lastStageIndex].containers[lastContainerIndex].elements.length - 1
-                const container = this.pipelineWithoutTrigger.stages[res.stageIndex ?? lastStageIndex].containers[res.jobIndex ?? lastContainerIndex]
+                let container = this.pipelineWithoutTrigger?.stages[res?.stageIndex ?? 0]?.containers?.[res?.jobIndex ?? 0]
+                let stepIndex = res.stepIndex ?? 0
+                if (!container) {
+                    this.addStage({
+                        stageIndex: res.stageIndex ?? 0,
+                        stages: this.pipelineWithoutTrigger?.stages
+                    })
+                    const containers = this.pipelineWithoutTrigger?.stages[0]?.containers
+                    this.addContainer({
+                        containers,
+                        type: this.osList[1].value
+                    })
+                    container = this.pipelineWithoutTrigger?.stages[0]?.containers[0]
+                    stepIndex = container.elements?.length - 1
+                }
                 this.addAtom({
-                    stageIndex: res.stageIndex ?? lastStageIndex,
-                    containerIndex: res.jobIndex ?? lastContainerIndex,
-                    atomIndex: res.stepIndex ?? lastElemntIndex,
+                    stageIndex: res.stageIndex ?? 0,
+                    containerIndex: res.jobIndex ?? 0,
+                    atomIndex: stepIndex,
                     container
                 })
             },

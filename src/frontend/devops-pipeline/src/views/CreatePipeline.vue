@@ -467,7 +467,7 @@
                     }
 
                     this.isDisabled = true
-                    const { pipelineId } = await this.createPipelineWithTemplate(params)
+                    const { pipelineId, version } = await this.createPipelineWithTemplate(params)
                     if (pipelineId) {
                         this.$showTips({ message: this.$t('createPipelineSuc'), theme: 'success' })
 
@@ -475,6 +475,7 @@
                             name: 'pipelinesEdit',
                             params: {
                                 ...this.$route.params,
+                                version,
                                 pipelineId
                             }
                         })

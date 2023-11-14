@@ -279,8 +279,7 @@
             },
             handlePipelineChange (pipeline) {
                 if (!this.editable) return
-                console.trace(this.pipeline, pipeline)
-                // Object.assign(this.pipeline, pipeline)
+                Object.assign(this.pipeline, pipeline)
                 this.setPipelineEditing(true)
             },
             resetInsertStageState () {

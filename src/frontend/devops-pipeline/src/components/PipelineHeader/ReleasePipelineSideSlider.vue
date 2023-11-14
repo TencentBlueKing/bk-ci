@@ -389,9 +389,12 @@
                         }
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                        version,
+                        versionName,
                         releaseVersion: version,
                         releaseVersionName: versionName,
-                        canDebug: false
+                        canDebug: false,
+                        canRelease: false
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac ? 'pacPipelineReleaseTips' : 'releaseTips'

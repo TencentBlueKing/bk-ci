@@ -193,7 +193,7 @@
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
                         pipelineName: pipelineSetting.pipelineName,
                         canDebug: true,
-                        canRelease: false,
+                        canRelease: true,
                         version,
                         versionName
                     })

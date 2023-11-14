@@ -50,6 +50,19 @@
                 />
             </div>
         </bk-collapse-item>
+        <bk-collapse-item name="4" custom-trigger-area v-if="constantParams.length > 0">
+            <header class="params-collapse-trigger">
+                {{ $t('常量') }}
+                <i class="devops-icon icon-arrow-right" />
+            </header>
+            <div slot="content" class="params-collapse-content">
+                <pipeline-params-form
+                    ref="paramsForm"
+                    :param-values="constantValues"
+                    :params="constantParams"
+                />
+            </div>
+        </bk-collapse-item>
     </bk-collapse>
 </template>
 
@@ -82,7 +95,9 @@
                 versionParamValues: {},
                 buildNo: {},
                 buildValues: {},
-                buildList: []
+                buildList: [],
+                constantParams: [],
+                constantValues: {}
             }
         },
         computed: {
@@ -129,7 +144,14 @@
                     this.paramList = startupInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
+                    this.constantParams = startupInfo.properties.filter(p => p.constant)
                     this.initParams(values)
+                    this.updateParams({
+                        ...this.paramsValues,
+                        ...this.versionParamValues,
+                        ...this.buildValues,
+                        ...this.constantValues
+                    })
                 } else {
                     this.$bkMessage({
                         theme: 'error',
@@ -142,6 +164,7 @@
                 this.paramsValues = getParamsValuesMap(this.paramList, key, values)
                 this.versionParamValues = getParamsValuesMap(this.versionParamList, key, values)
                 this.buildValues = getParamsValuesMap(this.buildList, key, values)
+                this.constantValues = getParamsValuesMap(this.constantParams, key, values)
             },
             updateParams (valueKey = 'defaultValue') {
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
