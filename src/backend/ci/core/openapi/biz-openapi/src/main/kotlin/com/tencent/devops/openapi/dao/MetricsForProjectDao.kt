@@ -25,22 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.constants
+package com.tencent.devops.openapi.dao
 
-object StreamBinding {
-    // 日志预处理事件
-    const val BINDING_LOG_ORIGIN_EVENT_IN = "logOriginEventIn"
-    const val BINDING_LOG_ORIGIN_EVENT_OUT = "logOriginEventOut"
+import com.tencent.devops.model.openapi.tables.TOpenapiMetricsForProject
+import com.tencent.devops.openapi.pojo.MetricsProjectData
+import org.jooq.DSLContext
+import org.jooq.InsertOnDuplicateSetMoreStep
+import org.springframework.stereotype.Repository
 
-    // 日志预处理事件
-    const val BINDING_LOG_STORAGE_EVENT_IN = "logStorageEventIn"
-    const val BINDING_LOG_STORAGE_EVENT_OUT = "logStorageEventOut"
-
-    // 日志构建状态事件
-    const val BINDING_LOG_STATUS_EVENT_IN = "logStatusEventIn"
-    const val BINDING_LOG_STATUS_EVENT_OUT = "logStatusEventOut"
-
-    // openapi审计日志预处理事件
-    const val BINDING_OPENAPI_LOG_EVENT_IN = "openapiLogOriginEventIn"
-    const val BINDING_OPENAPI_LOG_EVENT_OUT = "openapiLogOriginEventOut"
+@Repository
+class MetricsForProjectDao {
+    fun createOrUpdate(
+        dslContext: DSLContext,
+        metricsApis: List<MetricsProjectData>
+    ): Int {
+        return with(TOpenapiMetricsForProject.T_OPENAPI_METRICS_FOR_PROJECT) {
+            dslContext.batch(
+                metricsApis.mapNotNull { metricsApi ->
+                    dslContext.insertInto(
+                        this,
+                        PROJECT,
+                        API,
+                        KEY,
+                        CALL_HISTORY
+                    ).values(
+                        metricsApi.projectId ?: "",
+                        metricsApi.api,
+                        metricsApi.key,
+                        metricsApi.callHistory ?: 0
+                    ).onDuplicateKeyUpdate()
+                        .let { u ->
+                            metricsApi.callHistory?.let { i -> u.set(CALL_HISTORY, CALL_HISTORY + i) } ?: u
+                        }
+                        .let { if (it is InsertOnDuplicateSetMoreStep) it else return@mapNotNull null }
+                }
+            ).execute().sum()
+        }
+    }
 }
