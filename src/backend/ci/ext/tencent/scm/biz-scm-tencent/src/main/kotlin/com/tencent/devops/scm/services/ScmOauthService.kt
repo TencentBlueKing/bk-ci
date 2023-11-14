@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.config.GitConfig
@@ -293,7 +292,7 @@ class ScmOauthService @Autowired constructor(
                     }
                 }
             }
-            ScmFactory.getScm(
+            ScmOauthFactory.getScm(
                 projectName = projectName,
                 url = url,
                 type = type,
