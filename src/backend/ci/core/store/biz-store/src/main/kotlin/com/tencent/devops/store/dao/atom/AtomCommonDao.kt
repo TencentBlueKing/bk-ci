@@ -30,13 +30,10 @@ package com.tencent.devops.store.dao.atom
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
-import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
-import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -93,7 +90,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TAtom.T_ATOM) {
-            dslContext.select(ATOM_CODE.`as`("storeCode")).from(this)
+            dslContext.select(ATOM_CODE.`as`(KEY_STORE_CODE)).from(this)
                 .where(NAME.contains(storeName))
                 .groupBy(ATOM_CODE)
                 .fetch()

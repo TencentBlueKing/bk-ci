@@ -52,7 +52,6 @@ import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
-import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
@@ -230,7 +229,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                     )
                     val grayStoreCodeList =
                         projectRelRecords?.getValues(TStoreProjectRel.T_STORE_PROJECT_REL.STORE_CODE)
-                    if (grayStoreCodeList != null && grayStoreCodeList.isNotEmpty()) {
+                    if (!grayStoreCodeList.isNullOrEmpty()) {
                         updatePipelineModel(
                             storeType = storeType,
                             storeCodeList = grayStoreCodeList,
