@@ -93,7 +93,7 @@ interface OPRepositoryResource {
 
     @ApiOperation("移除工蜂webhook路由到灰度")
     @PUT
-    @Path("/{projectId}/{repositoryHashId}/removeGrayGitHookUrl")
+    @Path("/{projectId}/{repositoryId}/removeGrayGitHookUrl")
     fun removeGrayGitHookUrl(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
