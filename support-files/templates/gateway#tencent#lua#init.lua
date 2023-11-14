@@ -111,7 +111,8 @@ config = {
             host = "__BK_CI_KUBERNETES_API_HOST__",
             port = __BK_CI_KUBERNETES_API_PORT__,
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
-        }
+        },
+        special_domain = {}
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
@@ -120,6 +121,9 @@ config = {
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
 }
+
+-- 特殊域名
+config.kubernetes.special_domain["codecc:kubernetes-clss"] = "clss.codecc.woa.com"
 
 require("init_common")
 require("ip_whitelist")
