@@ -40,6 +40,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_CALL_SOURCE_IP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_MATCHING_PIPELINE
@@ -48,6 +49,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
+import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -119,7 +121,6 @@ class PipelineRemoteAuthService @Autowired constructor(
         if (!startUser.isNullOrBlank()) {
             vals[PIPELINE_START_REMOTE_USER_ID] = startUser
         }
-
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
         /* #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router
@@ -135,9 +136,16 @@ class PipelineRemoteAuthService @Autowired constructor(
                 values = vals.toMap(),
                 channelCode = ChannelCode.BS,
                 startType = StartType.REMOTE,
-                buildNo = null,
-                triggerEventSource = sourceIp
+                buildNo = null
             ).data!!
+            saveTriggerEvent(
+                userId = userId,
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                eventSource = sourceIp ?: "",
+                values = vals.toMap(),
+                buildId = buildId
+            )
             // 在远程触发器job中打印sourcIp
             val taskId = buildVariableService.getVariable(
                 projectId = pipeline.projectId,
@@ -164,6 +172,31 @@ class PipelineRemoteAuthService @Autowired constructor(
                 projectId = pipeline.projectId,
                 num = buildId.num
             )
+        }
+    }
+
+    private fun saveTriggerEvent(
+        userId: String,
+        eventSource: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>?,
+        buildId: BuildId?
+    ) {
+        try {
+            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                specificEvent = PipelineSpecificEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    requestParams = values,
+                    userId = userId,
+                    eventSource = eventSource,
+                    triggerType = StartType.REMOTE.name,
+                    buildInfo = buildId
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
         }
     }
 

@@ -720,8 +720,7 @@ abstract class ImageReleaseService {
                 pipelineId = imagePipelineRelRecord.pipelineId,
                 values = startParams,
                 channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE,
-                triggerEventSource = userId
+                startType = StartType.SERVICE
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {

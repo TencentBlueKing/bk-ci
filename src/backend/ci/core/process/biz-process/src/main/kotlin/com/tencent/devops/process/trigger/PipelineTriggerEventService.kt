@@ -367,7 +367,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
         val replayTriggerEvent = with(triggerEvent) {
             PipelineTriggerEvent(
-                requestId = MDC.get(TraceTag.BIZID),
+                requestId = requestId,
                 projectId = projectId,
                 eventId = replayEventId,
                 triggerType = triggerType,
@@ -413,39 +413,27 @@ class PipelineTriggerEventService @Autowired constructor(
         eventDesc: String? = null,
         requestParams: Map<String, String>?,
         triggerType: String = PipelineTriggerType.MANUAL.name,
-        startAction: () -> BuildId
-    ): BuildId {
-        var buildNum: String? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var buildId: String? = null
+        buildInfo: BuildId?
+    ) {
+        logger.info("start save specific event|$projectId|$pipelineId|$userId|$triggerType")
         val pipelineInfo = client.get(ServicePipelineResource::class).getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
         ).data
-        try {
-            val buildInfo = startAction.invoke()
-            buildNum = buildInfo.num.toString()
-            buildId = buildInfo.id
-            return buildInfo
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            throw ignored
-        } finally {
-            saveManualStartEvent(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipelineInfo?.pipelineName ?: "",
-                eventSource = eventSource,
-                eventDesc = eventDesc,
-                buildId = buildId,
-                status = status,
-                requestParams = requestParams,
-                userId = userId,
-                buildNum = buildNum,
-                triggerType = triggerType
-            )
-        }
+        saveManualStartEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineInfo?.pipelineName ?: "",
+            eventSource = eventSource,
+            eventDesc = eventDesc,
+            buildId = buildInfo?.id ?: "",
+            status = PipelineTriggerStatus.SUCCEED.name,
+            requestParams = requestParams,
+            userId = userId,
+            buildNum = buildInfo?.num.toString(),
+            triggerType = triggerType
+        )
     }
 
     /**

@@ -142,8 +142,7 @@ class AtomIndexTriggerCalServiceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 values = mapOf(KEY_INDEX_CODE to indexCode),
                 channelCode = ChannelCode.AM,
-                startType = StartType.SERVICE,
-                triggerEventSource = userId
+                startType = StartType.SERVICE
             )
         }
     }

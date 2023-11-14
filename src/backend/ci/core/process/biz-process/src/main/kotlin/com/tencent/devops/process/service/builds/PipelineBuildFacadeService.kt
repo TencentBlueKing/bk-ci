@@ -33,14 +33,13 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -65,7 +64,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -116,7 +115,7 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -169,7 +168,7 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val client: Client
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -701,37 +700,25 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-
-            return pipelineTriggerEventService.saveSpecificEvent(
+            val buildId = pipelineBuildService.startPipeline(
+                userId = userId,
+                pipeline = pipeline,
+                startType = StartType.TIME_TRIGGER,
+                pipelineParamMap = paramPamp,
+                channelCode = pipeline.channelCode,
+                isMobile = false,
+                model = model,
+                signPipelineVersion = null,
+                frequencyLimit = false
+            )
+            saveTriggerEvent(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                requestParams = parameters,
-                userId = userId!!,
-                eventSource = pipeline.lastModifyUser,
-                eventDesc = JsonUtil.toJson(
-                    I18Variable(
-                        code = WebhookI18nConstants.TIMING_START_EVENT_DESC,
-                        params = listOf(
-                            pipeline.lastModifyUser
-                        )
-                    ),
-                    false
-                ),
-                triggerType = PipelineTriggerType.TIME_TRIGGER.name,
-                startAction = {
-                    pipelineBuildService.startPipeline(
-                        userId = userId,
-                        pipeline = pipeline,
-                        startType = StartType.TIME_TRIGGER,
-                        pipelineParamMap = paramPamp,
-                        channelCode = pipeline.channelCode,
-                        isMobile = false,
-                        model = model,
-                        signPipelineVersion = null,
-                        frequencyLimit = false
-                    )
-                }
-            ).id
+                values = paramPamp.mapValues { it.value.value.toString() },
+                buildId = buildId
+            )
+            return buildId.id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
         }
@@ -2511,6 +2498,30 @@ class PipelineBuildFacadeService(
                 return@forEach
             }
             checkManualReviewParamOut(item.valueType, item, value)
+        }
+    }
+
+    private fun saveTriggerEvent(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>?,
+        buildId: BuildId?
+    ) {
+        try {
+            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                specificEvent = PipelineSpecificEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    requestParams = values,
+                    userId = userId,
+                    eventSource = userId,
+                    triggerType = StartType.TIME_TRIGGER.name,
+                    buildInfo = buildId
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
         }
     }
 }

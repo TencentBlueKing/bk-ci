@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -58,11 +57,9 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -73,9 +70,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineContainerService: PipelineContainerService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -732,19 +727,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
         values: Map<String, String>,
         channelCode: ChannelCode,
         buildNo: Int?,
-        startType: StartType,
-        triggerEventSource: String?
+        startType: StartType
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        val buildId = pipelineTriggerEventService.saveSpecificEvent(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            requestParams = values,
-            userId = userId!!,
-            eventSource = triggerEventSource ?: "",
-            triggerType = PipelineTriggerType.SERVICE.name,
-            startAction = {
+        return Result(
                 pipelineBuildFacadeService.buildManualStartup(
                     userId = userId,
                     startType = startType,
@@ -756,9 +743,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                     checkPermission = ChannelCode.isNeedAuth(channelCode),
                     frequencyLimit = true
                 )
-            }
         )
-        return Result(buildId)
     }
 
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {

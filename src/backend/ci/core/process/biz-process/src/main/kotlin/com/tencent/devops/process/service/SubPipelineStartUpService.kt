@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -52,12 +54,13 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -88,7 +91,7 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val client: Client
 ) {
 
     companion object {
@@ -249,48 +252,37 @@ class SubPipelineStartUpService @Autowired constructor(
             }
             // 校验父流水线最后修改人是否有子流水线执行权限
             checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
-
             // 子流水线的调用不受频率限制
-            val subBuildId = pipelineTriggerEventService.saveSpecificEvent(
+            val subBuildId = pipelineBuildService.startPipeline(
+                userId = readyToBuildPipelineInfo.lastModifyUser,
+                pipeline = readyToBuildPipelineInfo,
+                startType = StartType.PIPELINE,
+                pipelineParamMap = params,
+                channelCode = channelCode,
+                isMobile = isMobile,
+                model = model,
+                frequencyLimit = false
+            )
+            saveTriggerEvent(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                requestParams = parameters,
-                userId = userId!!,
-                eventSource = parentPipelineId,
-                eventDesc = JsonUtil.toJson(
-                    I18Variable(
-                        code = WebhookI18nConstants.PIPELINE_START_EVENT_DESC,
-                        params = listOf(
-                            userId,
-                            "/console/pipeline/$parentProjectId/$parentPipelineId/detail/$parentBuildId",
-                            parentPipelineInfo.pipelineName
-                        )
-                    ),
-                    false
-                ),
-                triggerType = PipelineTriggerType.PIPELINE.name,
-                startAction = {
-                    pipelineBuildService.startPipeline(
-                        userId = readyToBuildPipelineInfo.lastModifyUser,
-                        pipeline = readyToBuildPipelineInfo,
-                        startType = StartType.PIPELINE,
-                        pipelineParamMap = params,
-                        channelCode = channelCode,
-                        isMobile = isMobile,
-                        model = model,
-                        frequencyLimit = false
-                    )
-                }
-            ).id
+                values = params.mapValues { it.value.value.toString() },
+                buildId = subBuildId,
+                parentProjectId = parentProjectId,
+                parentPipelineId = parentPipelineId,
+                parentBuildId = parentBuildId,
+                parentPipelineName = parentPipelineInfo.pipelineName
+            )
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId,
+                subBuildId = subBuildId.id,
                 subProjectId = readyToBuildPipelineInfo.projectId
             )
-            return subBuildId
+            return subBuildId.id
         } finally {
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start sub-pipeline($pipelineId)")
         }
@@ -512,5 +504,44 @@ class SubPipelineStartUpService @Autowired constructor(
 
     fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
         return Result(subPipelineStatusService.getSubPipelineStatus(projectId, buildId))
+    }
+
+    private fun saveTriggerEvent(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>?,
+        buildId: BuildId?,
+        parentProjectId: String,
+        parentPipelineId: String,
+        parentBuildId: String,
+        parentPipelineName: String
+    ) {
+        try {
+            client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
+                specificEvent = PipelineSpecificEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    requestParams = values,
+                    userId = userId,
+                    eventSource = parentPipelineId,
+                    triggerType = StartType.PIPELINE.name,
+                    buildInfo = buildId,
+                    eventDesc = JsonUtil.toJson(
+                        I18Variable(
+                            code = WebhookI18nConstants.PIPELINE_START_EVENT_DESC,
+                            params = listOf(
+                                userId,
+                                "/console/pipeline/$parentProjectId/$parentPipelineId/detail/$parentBuildId",
+                                parentPipelineName
+                            )
+                        ),
+                        false
+                    )
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.warn("OPENAPI_BUILD_V4|fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
+        }
     }
 }
