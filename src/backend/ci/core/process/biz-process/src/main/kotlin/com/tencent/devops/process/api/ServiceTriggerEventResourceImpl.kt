@@ -30,7 +30,6 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -48,7 +47,7 @@ class ServiceTriggerEventResourceImpl @Autowired constructor(
                 userId = userId,
                 eventSource = eventSource,
                 eventDesc = eventDesc,
-                triggerType = PipelineTriggerType.PIPELINE.name,
+                triggerType = triggerType,
                 buildInfo = buildInfo,
                 status = status,
                 failReason = failReason
