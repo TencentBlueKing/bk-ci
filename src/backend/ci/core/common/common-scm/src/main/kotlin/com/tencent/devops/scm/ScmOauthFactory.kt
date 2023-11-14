@@ -56,7 +56,7 @@ object ScmOauthFactory {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        event: String?
+        event: String? = null
     ): IScm {
         return when (type) {
             ScmType.CODE_SVN -> {

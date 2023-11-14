@@ -70,6 +70,9 @@ class GitConfig {
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
+    @Value("\${scm.git.gitGrayHookUrl:}")
+    val gitGrayHookUrl: String = ""
+
     @Value("\${scm.git.callbackUrl:}")
     val callbackUrl: String = ""
 

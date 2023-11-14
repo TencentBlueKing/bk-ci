@@ -42,6 +42,7 @@ import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -66,7 +67,8 @@ class OPRepositoryService @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val githubTokenService: GithubTokenService,
     private val githubRepositoryService: GithubRepositoryService,
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
+    private val repositoryService: RepositoryService
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -418,6 +420,76 @@ class OPRepositoryService @Autowired constructor(
             Thread.sleep(1 * 1000)
         } while (repoSize == 100)
         logger.info("OPRepositoryService:end updateCodeGithubProjectId")
+    }
+
+    fun updateGitHookUrl(projectId: String, repositoryId: Long, newHookUrl: String, oldHookUrl: String) {
+        if (newHookUrl.isBlank() || oldHookUrl.isBlank()) {
+            logger.info("newHookUrl and oldHookUrl can not empty")
+            return
+        }
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val gitRepo = codeGitDao.get(dslContext = dslContext, repositoryId = repositoryId)
+        val isOauth = RepoAuthType.OAUTH.name == gitRepo.authType
+        val token = getToken(isOauth = isOauth, it = gitRepo, repositoryInfo = repository)
+        val existHooks = if (isOauth) {
+            scmOauthService.getWebHooks(
+                projectName = gitRepo.projectName,
+                url = repository.url,
+                token = token,
+                type = ScmType.valueOf(repository.type)
+            )
+        } else {
+            scmService.getWebHooks(
+                projectName = gitRepo.projectName,
+                url = repository.url,
+                token = token,
+                type = ScmType.valueOf(repository.type)
+            )
+        }
+        if (existHooks.isNotEmpty()) {
+            existHooks.forEach {
+                if (it.url.contains(oldHookUrl)) {
+                    val event = when {
+                        it.pushEvents -> CodeGitWebhookEvent.PUSH_EVENTS.value
+                        it.tagPushEvents -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
+                        it.mergeRequestsEvents -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+                        it.issuesEvents -> CodeGitWebhookEvent.ISSUES_EVENTS.value
+                        it.noteEvents -> CodeGitWebhookEvent.NOTE_EVENTS.value
+                        it.reviewEvents -> CodeGitWebhookEvent.REVIEW_EVENTS.value
+                        else -> null
+                    }
+                    if (isOauth) {
+                        scmOauthService.updateWebHook(
+                            hookId = it.id,
+                            projectName = gitRepo.projectName,
+                            url = repository.url,
+                            token = token,
+                            type = ScmType.valueOf(repository.type),
+                            privateKey = null,
+                            passPhrase = null,
+                            region = null,
+                            userName = gitRepo.userName,
+                            event = event,
+                            hookUrl = newHookUrl
+                        )
+                    } else {
+                        scmService.updateWebHook(
+                            hookId = it.id,
+                            projectName = gitRepo.projectName,
+                            url = repository.url,
+                            token = token,
+                            type = ScmType.valueOf(repository.type),
+                            privateKey = null,
+                            passPhrase = null,
+                            region = null,
+                            userName = gitRepo.userName,
+                            event = event,
+                            hookUrl = newHookUrl
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun getToken(isOauth: Boolean, it: Record, repositoryInfo: TRepositoryRecord): String? {

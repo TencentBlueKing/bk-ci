@@ -27,6 +27,7 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
@@ -57,6 +58,10 @@ interface IScm {
     fun checkTokenAndUsername()
 
     fun addWebHook(hookUrl: String)
+
+    fun getWebHooks(): List<GitHook> = emptyList()
+
+    fun updateWebHook(hookId: Long, hookUrl: String) = Unit
 
     fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
