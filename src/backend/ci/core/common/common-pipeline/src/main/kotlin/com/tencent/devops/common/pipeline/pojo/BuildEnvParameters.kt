@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.app
+package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建-common-环境变量")
+@ApiModel("构建-变量描述")
 data class BuildEnvParameters(
     @ApiModelProperty("名称")
     val name: String,

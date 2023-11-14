@@ -47,7 +47,7 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -106,6 +106,13 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
+    override fun getTriggerBuildParams(
+        userId: String,
+        atomCodeList: List<String>
+    ): Result<Map<String, Map<String, List<BuildEnvParameters>>>> {
+        TODO("Not yet implemented")
     }
 
     override fun listRepositoryAliasName(

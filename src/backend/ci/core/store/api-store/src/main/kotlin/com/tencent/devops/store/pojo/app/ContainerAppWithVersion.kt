@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.app
 
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
