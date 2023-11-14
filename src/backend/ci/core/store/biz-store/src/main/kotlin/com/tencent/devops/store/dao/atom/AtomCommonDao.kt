@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
@@ -105,7 +106,6 @@ class AtomCommonDao : AbstractStoreCommonDao() {
     ): Result<out Record>? {
         val ta = TAtom.T_ATOM
         val taei = TAtomEnvInfo.T_ATOM_ENV_INFO
-        val tsbi = TStoreBuildInfo.T_STORE_BUILD_INFO
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val tspir = TStorePipelineRel.T_STORE_PIPELINE_REL
         return dslContext.select(
@@ -113,17 +113,15 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             ta.VERSION.`as`(KEY_VERSION),
             ta.REPOSITORY_HASH_ID.`as`(KEY_REPOSITORY_HASH_ID),
             ta.CODE_SRC.`as`(KEY_CODE_SRC),
+            ta.BRANCH.`as`(KEY_BRANCH),
             taei.LANGUAGE.`as`(KEY_LANGUAGE),
-            tsbi.SCRIPT.`as`(KEY_SCRIPT),
-            tsbi.REPOSITORY_PATH.`as`(KEY_REPOSITORY_PATH),
             tspr.PROJECT_CODE.`as`(KEY_PROJECT_CODE),
             tspr.CREATOR.`as`(KEY_CREATOR),
             tspir.PIPELINE_ID.`as`(KEY_PIPELINE_ID)
         ).from(ta).leftJoin(taei).on(ta.ID.eq(taei.ATOM_ID))
-            .join(tsbi).on(taei.LANGUAGE.eq(tsbi.LANGUAGE))
-            .join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspr.STORE_TYPE)))
-            .join(tspir).on(ta.ATOM_CODE.eq(tspir.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspir.STORE_TYPE)))
-            .where(tsbi.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+            .join(tspir).on(ta.ATOM_CODE.eq(tspir.STORE_CODE).and(tspr.STORE_TYPE.eq(tspir.STORE_TYPE)))
+            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             .and(ta.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(ta.ATOM_CODE.`in`(storeCodeList))
