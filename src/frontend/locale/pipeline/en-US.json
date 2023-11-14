@@ -1220,5 +1220,6 @@
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
   "copyAsTemplateInstance": "Copy As Instance",
-  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository."
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
+  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template"
 }

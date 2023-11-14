@@ -9,7 +9,13 @@
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
-                    <logo v-if="pipeline.templateId" name="template-mode" size="14" />
+                    <logo
+                        class="ml5"
+                        v-if="pipeline.templateId"
+                        name="template-mode"
+                        size="14"
+                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
+                    />
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
@@ -232,6 +238,8 @@
                     color: $primaryColor;
                     margin: 0;
                     font-weight: normal;
+                    display: flex;
+                    align-items: center;
                     @include ellipsis();
                 }
                 .bk-pipeline-card-summary {

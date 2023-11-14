@@ -48,22 +48,30 @@
         <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <span
-                    v-if="props.row.permissions && !props.row.permissions.canView"
-                    class="pointer"
-                    @click="applyPermission(props.row)"
-                >
-                    {{props.row.pipelineName}}
-                </span>
-                <router-link
-                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
-                    class="pipeline-cell-link"
-                    :disabled="props.row.permissions && !props.row.permissions.canView"
-                    :to="props.row.historyRoute">
-                    {{props.row.pipelineName}}
-                </router-link>
-                <span v-else>{{props.row.pipelineName}}</span>
-                <logo v-if="props.row.templateId" name="template-mode" size="14" />
+                <div class="pipeline-name">
+                    <span
+                        v-if="props.row.permissions && !props.row.permissions.canView"
+                        class="pointer"
+                        @click="applyPermission(props.row)"
+                    >
+                        {{props.row.pipelineName}}
+                    </span>
+                    <router-link
+                        v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
+                        class="pipeline-cell-link"
+                        :disabled="props.row.permissions && !props.row.permissions.canView"
+                        :to="props.row.historyRoute">
+                        {{props.row.pipelineName}}
+                    </router-link>
+                    <span v-else>{{props.row.pipelineName}}</span>
+                    <logo
+                        class="ml5"
+                        v-if="props.row.templateId"
+                        name="template-mode"
+                        size="12"
+                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
+                    />
+                </div>
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
@@ -671,6 +679,10 @@
         background: #EAEBF0;
         height: 32px;
         grid-gap: 10px;
+    }
+    .pipeline-name {
+        display: flex;
+        align-items: center;
     }
     .latest-build-multiple-row {
         display: flex;
