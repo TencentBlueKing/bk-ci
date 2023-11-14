@@ -49,6 +49,7 @@ import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -63,6 +64,7 @@ class CmdbNodeService @Autowired constructor(
     private val queryFromCCService: QueryFromCCService
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
         const val DEFAULT_CLOUD_AREA_ID = 0L
         const val FIELD_BK_SVR_ID = "svr_id"
     }
@@ -161,6 +163,7 @@ class CmdbNodeService @Autowired constructor(
             val ccData = svrIdQueryCCRes.data.info
             queryCCIpToCCInfoMap = ccData.associateBy { it.bkHostInnerip }
         }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]queryCCIpToCCInfoMap:$queryCCIpToCCInfoMap")
 
         var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
         if (notInCCSvrIdList.isNotEmpty()) { // 不在CC中，add到CC中，查出host_id和云区域id
@@ -174,6 +177,7 @@ class CmdbNodeService @Autowired constructor(
                 )
             }?.associateBy { it.bkHostInnerip } ?: mapOf()
         }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
 
         queryCCIpToCCInfoMap = queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
 
@@ -196,6 +200,7 @@ class CmdbNodeService @Autowired constructor(
                 cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )
         }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]toAddNodeList:$toAddNodeList")
 
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)

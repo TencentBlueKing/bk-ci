@@ -382,7 +382,9 @@ class NodeDao {
                     LAST_MODIFY_TIME,
                     LAST_MODIFY_USER,
                     PIPELINE_REF_COUNT,
-                    LAST_BUILD_TIME
+                    LAST_BUILD_TIME,
+                    HOST_ID,
+                    CLOUD_AREA_ID
                 ).values(
                     it.nodeStringId,
                     it.projectId,
@@ -405,7 +407,9 @@ class NodeDao {
                     now,
                     it.createdUser,
                     it.pipelineRefCount,
-                    it.lastBuildTime
+                    it.lastBuildTime,
+                    it.hostId,
+                    it.cloudAreaId
                 ).returning(NODE_ID).fetchOne()!!.nodeId
                 val hashId = HashUtil.encodeLongId(nodeId)
                 dslContext.update(this)
