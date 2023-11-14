@@ -51,7 +51,7 @@ data class AfterCreateParam(
     @ApiModelProperty("是否创建")
     val create: Boolean = true,
     @ApiModelProperty("容器")
-    val container: Container? = null,
+    var container: Container? = null,
     @ApiModelProperty("插件配置")
     var element: Element = EmptyElement(),
     @ApiModelProperty("旧插件配置")

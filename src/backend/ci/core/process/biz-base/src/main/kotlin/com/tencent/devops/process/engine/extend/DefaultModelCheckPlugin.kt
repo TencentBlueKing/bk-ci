@@ -394,8 +394,8 @@ open class DefaultModelCheckPlugin constructor(
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
-        recursiveElement(existModel) {
-            deletePrepare(sourceModel, it, param)
+        recursiveElement(existModel) { container, element ->
+            deletePrepare(sourceModel, element, param)
         }
     }
 
@@ -508,20 +508,21 @@ open class DefaultModelCheckPlugin constructor(
 
     private fun recursiveElement(
         existModel: Model,
-        action: (element: Element) -> Unit
+        action: (container: Container, element: Element) -> Unit
     ) {
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
-                    action.invoke(e)
+                    action.invoke(c, e)
                 }
             }
         }
     }
 
     override fun afterCreateElementInExistsModel(existModel: Model, sourceModel: Model?, param: AfterCreateParam) {
-        recursiveElement(existModel = existModel) {
-            createPrepare(sourceModel, it, param)
+        recursiveElement(existModel = existModel) { container, element ->
+            param.container = container
+            createPrepare(sourceModel, element, param)
         }
     }
 
