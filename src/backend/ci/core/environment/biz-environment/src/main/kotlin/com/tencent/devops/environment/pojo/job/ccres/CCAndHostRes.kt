@@ -7,6 +7,9 @@ data class CCAndHostRes(
     @ApiModelProperty(value = "状态码", required = true)
     @JsonProperty("code")
     var code: Int,
+    @ApiModelProperty(value = "状态码名称")
+    @JsonProperty("code_name")
+    var codeName: String?,
     @ApiModelProperty(value = "权限信息")
     @JsonProperty("permission")
     var permission: String?,
