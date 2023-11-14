@@ -657,7 +657,17 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val resp: ListCgsResp = jacksonObjectMapper().readValue(responseContent)
                 when (resp.code) {
-                    OK -> return resp.data
+                    OK -> {
+                        if (resp.data == null) {
+                            throw BuildFailureException(
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                                ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                                " 获取listcgs接口异常: data is null"
+                            )
+                        }
+                        return resp.data
+                    }
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.LIST_CGS_ERROR.errorType,
                         ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
