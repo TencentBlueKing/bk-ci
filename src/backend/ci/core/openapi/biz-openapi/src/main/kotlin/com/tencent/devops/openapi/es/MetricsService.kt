@@ -37,7 +37,6 @@ import java.time.Duration
 import java.time.LocalTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 
 class MetricsService(
     private val dslContext: DSLContext,
@@ -58,7 +57,7 @@ class MetricsService(
     /**
      * every 5m
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+//    @Scheduled(cron = "0 0/5 * * * ?")
     fun job() {
         logger.info("Start to openapi metrics job")
         RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 60).run {

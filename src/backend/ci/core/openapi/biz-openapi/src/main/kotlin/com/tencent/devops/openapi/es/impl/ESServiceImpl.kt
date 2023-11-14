@@ -67,7 +67,7 @@ import org.elasticsearch.search.aggregations.pipeline.SimpleValue
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.slf4j.LoggerFactory
 
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ComplexMethod")
 class ESServiceImpl constructor(
     private val logClient: LogClient,
     private val redisOperation: RedisOperation,
