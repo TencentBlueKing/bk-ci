@@ -143,10 +143,12 @@ class CmdbNodeService @Autowired constructor(
 
         // 通过svrId查询节点是否在CC中
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdList:$svrIdList")
 
         val svrIdQueryCCRes = queryFromCCService.queryCCListHostWithoutBizByInRules(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID), svrIdList, FIELD_BK_SVR_ID
         )
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdQueryCCRes:$svrIdQueryCCRes")
         val svrIdQueryCCList = svrIdQueryCCRes.data.info // 所有在cc中的节点记录
         val svrIdToCCResMap = svrIdQueryCCList.associateBy { it.svrId } // cc中 svrId-节点记录 映射
 
@@ -156,6 +158,8 @@ class CmdbNodeService @Autowired constructor(
             if (svrIdToCCResMap.containsKey(it.toLong())) inCCSvrIdList.add(it.toLong())
             else notInCCSvrIdList.add(it.toLong())
         }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]inCCSvrIdList:$inCCSvrIdList")
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]notInCCSvrIdList:$notInCCSvrIdList")
 
         var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
 
