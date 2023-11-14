@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,19 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:openapi:model-openapi"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-pipeline"))
-    api(project(":core:common:common-es"))
-    api(project(":core:common:common-stream"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:environment:api-environment"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:common:common-client"))
-    api("io.jsonwebtoken:jjwt-api")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
-    api("org.springframework.boot:spring-boot-starter-aop")
+package com.tencent.devops.openapi.es
+
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+object IndexNameUtils {
+
+    fun getIndexName(): String {
+        val formatter = DateTimeFormatter.ofPattern(LOG_INDEX_DATE_FORMAT)
+        return LOG_INDEX_PREFIX + formatter.format(LocalDateTime.now())
+    }
+
+    fun getIndexNamePrefix(): String {
+        return "$LOG_INDEX_PREFIX*"
+    }
+
+    fun getNextIndexName(): String {
+        val formatter = DateTimeFormatter.ofPattern(LOG_INDEX_DATE_FORMAT)
+        return LOG_INDEX_PREFIX + formatter.format(LocalDateTime.now().plusDays(1))
+    }
+
+    private const val LOG_INDEX_PREFIX = "openapi-metric-log-"
+    private const val LOG_INDEX_DATE_FORMAT = "yyyy-MM-dd"
 }

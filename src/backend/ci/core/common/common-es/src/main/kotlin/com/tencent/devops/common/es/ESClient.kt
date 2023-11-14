@@ -25,54 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.common.es
 
-import java.net.Socket
-import javax.net.ssl.SSLEngine
-import javax.net.ssl.X509ExtendedTrustManager
+import org.elasticsearch.client.RestHighLevelClient
 
-@Suppress("ALL")
-class NormalX509ExtendedTrustManager : X509ExtendedTrustManager() {
-
-    override fun checkClientTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String,
-        socket: Socket
-    ) = Unit
-
-    override fun checkClientTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String,
-        sslEngine: SSLEngine
-    ) = Unit
-
-    override fun checkClientTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String
-    ) = Unit
-
-    override fun checkServerTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String,
-        socket: Socket
-    ) = Unit
-
-    override fun checkServerTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String,
-        sslEngine: SSLEngine
-    ) = Unit
-
-    override fun checkServerTrusted(
-        x509Certificates: Array<out java.security.cert.X509Certificate>,
-        authType: String
-    ) = Unit
-
-    override fun getAcceptedIssuers(): Array<out java.security.cert.X509Certificate> {
-        return emptyArray()
-    }
-
-    companion object {
-        val INSTANCE = NormalX509ExtendedTrustManager()
-    }
-}
+data class ESClient(
+    val clusterName: String,
+    val restClient: RestHighLevelClient,
+    val shards: Int,
+    val replicas: Int,
+    val shardsPerNode: Int,
+    val requestTimeout: Long,
+    val mainCluster: Boolean? = false,
+    val writable: Boolean? = true
+)
