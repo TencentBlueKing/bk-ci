@@ -36,7 +36,6 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 

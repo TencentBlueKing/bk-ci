@@ -28,7 +28,6 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
