@@ -12,7 +12,7 @@ object BkCryptoUtil {
 
     private val UTF8 = charset("UTF-8")
     private val SM4_CRYPTO = SymmetricCryptorFactory.getCryptor(CryptorNames.SM4)
-    private val SM4_KEY = "b*SnKm#3%t4"
+    private const val SM4_KEY = "b*SnKm#3%t4"
 
     /**
      * 加密SM4(没有开启则使用AES)
