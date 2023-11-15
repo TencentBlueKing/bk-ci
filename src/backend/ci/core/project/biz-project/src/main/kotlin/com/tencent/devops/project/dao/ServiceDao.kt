@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
@@ -46,6 +47,7 @@ class ServiceDao {
             return dslContext.selectFrom(this)
                 .where(DELETED.eq(false))
                 .let { if (clusterType == null) it else it.and(CLUSTER_TYPE.eq(clusterType)) }
+                .skipCheck()
                 .fetch()
         }
     }
@@ -129,6 +131,7 @@ class ServiceDao {
                 LOGO_URL,
                 WEB_SOCKET,
                 GRAY_IFRAME_URL,
+                WEIGHT,
                 CLUSTER_TYPE
             ).values(
                 serviceCreateInfo.name,
@@ -152,6 +155,7 @@ class ServiceDao {
                 serviceCreateInfo.logoUrl,
                 serviceCreateInfo.webSocket,
                 serviceCreateInfo.grayIframeUrl,
+                serviceCreateInfo.weight,
                 serviceCreateInfo.clusterType
             ).returning().fetchOne()
         }
@@ -236,6 +240,9 @@ class ServiceDao {
             }
             if (serviceUpdateInfo.deleted != null) {
                 execute.set(DELETED, serviceUpdateInfo.deleted)
+            }
+            if (serviceUpdateInfo.weight != null) {
+                execute.set(WEIGHT, serviceUpdateInfo.weight)
             }
             execute.set(CLUSTER_TYPE, serviceUpdateInfo.clusterType)
             return execute.set(UPDATED_USER, userId)

@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -87,8 +86,8 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
+import com.tencent.devops.process.pojo.template.MarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
@@ -123,6 +122,12 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -133,12 +138,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 
 @Suppress("ALL")
 @Service
@@ -969,19 +968,6 @@ class TemplateFacadeService @Autowired constructor(
         }
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        if (!latestTemplate.storeFlag || latestTemplate.srcTemplateId.isNullOrBlank()) {
-            try {
-                checkTemplate(templateResult, projectId)
-            } catch (ignored: ErrorCodeException) {
-                // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageUtil.getMessageByLocale(
-                    messageCode = ignored.errorCode,
-                    params = ignored.params,
-                    language = I18nUtil.getLanguage(userId)
-                )
-                templateResult.tips = message
-            }
-        }
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,
             versionName = latestTemplate.versionName,
