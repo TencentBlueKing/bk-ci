@@ -100,6 +100,6 @@ interface OPRepositoryResource {
         projectId: String,
         @ApiParam("代码库ID", required = true)
         @PathParam("repositoryId")
-        repositoryId: Long,
+        repositoryId: Long
     ): Result<Boolean>
 }
