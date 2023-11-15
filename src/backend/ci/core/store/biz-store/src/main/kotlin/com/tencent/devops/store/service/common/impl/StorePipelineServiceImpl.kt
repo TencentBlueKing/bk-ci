@@ -268,17 +268,18 @@ class StorePipelineServiceImpl : StorePipelineService {
         // 获取研发商店组件信息
         val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
         val pipelineModelVersionList = mutableListOf<PipelineModelVersion>()
-        storeInfoRecords?.forEach { storeInfo ->
-            val projectCode = storeInfo[KEY_PROJECT_CODE] as String
-            val storeCode = storeInfo[KEY_STORE_CODE] as String
+        storeInfoRecords?.forEach { storeInfoRecord ->
+            val storeInfoMap = storeInfoRecord.intoMap()
+            val projectCode = storeInfoMap[KEY_PROJECT_CODE]?.toString() ?: ""
+            val storeCode = storeInfoMap[KEY_STORE_CODE] as String
             val pipelineName = "am-$storeCode-${UUIDUtil.generate()}"
             val paramMap = mutableMapOf(
                 KEY_PIPELINE_NAME to pipelineName,
                 KEY_STORE_CODE to storeCode,
-                KEY_VERSION to storeInfo[KEY_VERSION]
+                KEY_VERSION to storeInfoMap[KEY_VERSION]
             )
-            storeInfo[KEY_LANGUAGE]?.let {
-                val language = it.toString()
+            val language = storeInfoMap[KEY_LANGUAGE]?.toString()
+            language?.let {
                 paramMap[KEY_LANGUAGE] = language
                 val storeBuildInfoRecord = storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext = dslContext,
@@ -290,11 +291,13 @@ class StorePipelineServiceImpl : StorePipelineService {
                     paramMap[KEY_REPOSITORY_PATH] = storeBuildInfoRecord.repositoryPath ?: ""
                 }
             }
-            storeInfo[KEY_REPOSITORY_HASH_ID]?.let {
-                paramMap[KEY_REPOSITORY_HASH_ID] = it
+            val repositoryHashId = storeInfoMap[KEY_REPOSITORY_HASH_ID]?.toString()
+            repositoryHashId?.let {
+                paramMap[KEY_REPOSITORY_HASH_ID] = repositoryHashId
             }
-            storeInfo[KEY_BRANCH]?.let {
-                paramMap[KEY_BRANCH] = it
+            val branch = storeInfoMap[KEY_BRANCH]?.toString()
+            branch?.let {
+                paramMap[KEY_BRANCH] = branch
             }
             // 将流水线模型中的变量替换成具体的值
             var convertModel = if (checkGrayFlag) {
@@ -311,8 +314,8 @@ class StorePipelineServiceImpl : StorePipelineService {
             pipelineModelVersionList.add(
                 PipelineModelVersion(
                     projectId = projectCode,
-                    pipelineId = storeInfo[KEY_PIPELINE_ID] as String,
-                    creator = storeInfo[KEY_CREATOR] as String,
+                    pipelineId = storeInfoMap[KEY_PIPELINE_ID] as String,
+                    creator = storeInfoMap[KEY_CREATOR] as String,
                     model = convertModel
                 )
             )
