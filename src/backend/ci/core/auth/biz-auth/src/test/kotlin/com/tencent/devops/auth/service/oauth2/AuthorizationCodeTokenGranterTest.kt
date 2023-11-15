@@ -1,11 +1,9 @@
 package com.tencent.devops.auth.service.oauth2
 
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
 import com.tencent.devops.auth.service.oauth2.grant.AuthorizationCodeTokenGranter
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2AccessTokenRecord
-import com.tencent.devops.model.auth.tables.records.TAuthOauth2RefreshTokenRecord
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
@@ -41,7 +39,8 @@ class AuthorizationCodeTokenGranterTest : BkCiAbstractTest() {
         redirectUri = "testRedirectUri",
         scope = "testScope",
         accessTokenValidity = 3600,
-        refreshTokenValidity = 3600
+        refreshTokenValidity = 3600,
+        icon = "icon"
     )
 
     @Test

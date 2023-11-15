@@ -30,7 +30,8 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
             authorizedGrantTypes = "authorization_code,refresh_token",
             redirectUri = "http://example.com/callback",
             accessTokenValidity = 3600,
-            refreshTokenValidity = 86400
+            refreshTokenValidity = 86400,
+            icon = "icon"
         )
 
         val invalidGrantType = "invalid_grant_type"
@@ -58,7 +59,8 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
             authorizedGrantTypes = "authorization_code",
             redirectUri = "http://example.com/callback",
             accessTokenValidity = 3600,
-            refreshTokenValidity = 86400
+            refreshTokenValidity = 86400,
+            icon = "icon"
         )
 
         val invalidRedirectUri = "http://invalid.com/callback"
@@ -86,7 +88,8 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
             authorizedGrantTypes = "authorization_code",
             redirectUri = "http://example.com/callback",
             accessTokenValidity = 3600,
-            refreshTokenValidity = 86400
+            refreshTokenValidity = 86400,
+            icon = "icon"
         )
 
         val invalidClientSecret = "invalidSecret"
@@ -114,7 +117,8 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
             authorizedGrantTypes = "authorization_code",
             redirectUri = "http://example.com/callback",
             accessTokenValidity = 3600,
-            refreshTokenValidity = 86400
+            refreshTokenValidity = 86400,
+            icon = "icon"
         )
 
         val invalidScope = listOf("invalidScope")

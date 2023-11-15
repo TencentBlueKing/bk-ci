@@ -37,7 +37,8 @@ class RefreshTokenGranterTest : BkCiAbstractTest() {
         redirectUri = "testRedirectUri",
         scope = "testScope",
         accessTokenValidity = 3600,
-        refreshTokenValidity = 3600
+        refreshTokenValidity = 3600,
+        icon = "icon"
     )
 
     private val accessTokenInfo = TAuthOauth2AccessTokenRecord(
