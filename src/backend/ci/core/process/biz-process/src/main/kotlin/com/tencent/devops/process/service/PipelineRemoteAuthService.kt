@@ -28,6 +28,8 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -38,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceTriggerEventResource
@@ -50,6 +53,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
@@ -187,12 +191,12 @@ class PipelineRemoteAuthService @Autowired constructor(
     ): BuildId {
         var buildId: BuildId? = null
         var status = PipelineTriggerStatus.SUCCEED.name
-        var failReason = ""
+        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
         try {
             buildId = action.invoke()
         } catch (ignored: Exception) {
             status = PipelineTriggerStatus.FAILED.name
-            failReason = ignored.message.toString()
+            reason = ignored.message.toString()
             throw ignored
         } finally {
             try {
@@ -205,8 +209,18 @@ class PipelineRemoteAuthService @Autowired constructor(
                         eventSource = eventSource,
                         triggerType = StartType.REMOTE.name,
                         buildInfo = buildId,
-                        failReason = failReason,
-                        status = status
+                        reason = reason,
+                        status = status,
+                        eventDesc = JsonUtil.toJson(
+                            I18Variable(
+                                code = WebhookI18nConstants.REMOTE_START_EVENT_DESC,
+                                params = listOf(
+                                    userId,
+                                    eventSource
+                                )
+                            ),
+                            false
+                        )
                     )
                 )
             } catch (ignored: Exception) {

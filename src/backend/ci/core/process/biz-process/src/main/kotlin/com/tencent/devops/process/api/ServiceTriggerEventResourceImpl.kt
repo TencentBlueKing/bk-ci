@@ -50,7 +50,7 @@ class ServiceTriggerEventResourceImpl @Autowired constructor(
                 triggerType = triggerType,
                 buildInfo = buildInfo,
                 status = status,
-                failReason = failReason
+                reason = reason
             )
         }
         return true

@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -303,12 +304,12 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): BuildId {
         var buildId: BuildId? = null
         var status = PipelineTriggerStatus.SUCCEED.name
-        var failReason = ""
+        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
         try {
             buildId = action.invoke()
         } catch (ignored: Exception) {
             status = PipelineTriggerStatus.FAILED.name
-            failReason = ignored.message.toString()
+            reason = ignored.message.toString()
             throw ignored
         } finally {
             try {
@@ -321,7 +322,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
                         eventSource = userId,
                         triggerType = StartType.SERVICE.name,
                         buildInfo = buildId,
-                        failReason = failReason,
+                        reason = reason,
                         status = status
                     )
                 )

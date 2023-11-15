@@ -51,6 +51,6 @@ data class PipelineSpecificEvent(
     val buildInfo: BuildId?,
     @ApiModelProperty("构建状态")
     val status: String,
-    @ApiModelProperty("失败信息")
-    val failReason: String
+    @ApiModelProperty("原因")
+    val reason: String
 )

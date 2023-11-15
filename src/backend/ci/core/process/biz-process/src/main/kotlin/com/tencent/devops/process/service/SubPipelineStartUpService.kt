@@ -61,6 +61,7 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -520,12 +521,12 @@ class SubPipelineStartUpService @Autowired constructor(
     ): BuildId {
         var buildId: BuildId? = null
         var status = PipelineTriggerStatus.SUCCEED.name
-        var failReason = ""
+        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
         try {
             buildId = action.invoke()
         } catch (ignored: Exception) {
             status = PipelineTriggerStatus.FAILED.name
-            failReason = ignored.message.toString()
+            reason = ignored.message.toString()
             throw ignored
         } finally {
             try {
@@ -549,7 +550,7 @@ class SubPipelineStartUpService @Autowired constructor(
                             ),
                             false
                         ),
-                        failReason = failReason,
+                        reason = reason,
                         status = status
                     )
                 )

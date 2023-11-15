@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -559,12 +560,12 @@ class UserBuildResourceImpl @Autowired constructor(
     ): BuildId {
         var buildId: BuildId? = null
         var status = PipelineTriggerStatus.SUCCEED.name
-        var failReason = ""
+        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
         try {
             buildId = action.invoke()
         } catch (ignored: Exception) {
             status = PipelineTriggerStatus.FAILED.name
-            failReason = ignored.message.toString()
+            reason = ignored.message.toString()
             throw ignored
         } finally {
             try {
@@ -577,7 +578,7 @@ class UserBuildResourceImpl @Autowired constructor(
                         eventSource = userId,
                         triggerType = StartType.MANUAL.name,
                         buildInfo = buildId,
-                        failReason = failReason,
+                        reason = reason,
                         status = status
                     )
                 )

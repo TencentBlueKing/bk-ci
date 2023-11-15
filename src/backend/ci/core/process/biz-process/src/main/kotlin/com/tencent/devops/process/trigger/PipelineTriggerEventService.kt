@@ -415,7 +415,7 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerType: String = PipelineTriggerType.MANUAL.name,
         buildInfo: BuildId?,
         status: String = PipelineTriggerStatus.SUCCEED.name,
-        failReason: String? = null
+        reason: String? = null
     ) {
         logger.info("start save specific event|$projectId|$pipelineId|$userId|$triggerType")
         val pipelineInfo = client.get(ServicePipelineResource::class).getPipelineInfo(
@@ -435,7 +435,7 @@ class PipelineTriggerEventService @Autowired constructor(
             userId = userId,
             buildNum = buildInfo?.num.toString(),
             triggerType = triggerType,
-            failReason = failReason
+            reason = reason
         )
     }
 
@@ -454,7 +454,7 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerType: String,
         requestParams: Map<String, String>?,
         eventDesc: String? = null,
-        failReason: String?
+        reason: String?
     ) {
         val eventId = getEventId()
         val requestId = MDC.get(TraceTag.BIZID)
@@ -479,7 +479,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 buildId = buildId,
                 buildNum = buildNum,
                 pipelineName = pipelineName,
-                reason = failReason
+                reason = reason
             ),
             triggerEvent = PipelineTriggerEvent(
                 eventId = eventId,
@@ -501,6 +501,7 @@ class PipelineTriggerEventService @Autowired constructor(
         PipelineTriggerType.REMOTE.name -> WebhookI18nConstants.REMOTE_START_EVENT_DESC
         PipelineTriggerType.SERVICE.name -> WebhookI18nConstants.SERVICE_START_EVENT_DESC
         PipelineTriggerType.PIPELINE.name -> WebhookI18nConstants.PIPELINE_START_EVENT_DESC
+        PipelineTriggerType.TIME_TRIGGER.name -> WebhookI18nConstants.TIMING_START_EVENT_DESC
         else -> ""
     }
 
