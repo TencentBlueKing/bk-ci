@@ -111,8 +111,15 @@ class QueryFromCCService : QueryOperatorService {
 
     fun addHostToCiBiz(svrIds: List<Long>): CCAndHostRes {
         val ccAddHostReq = CCAddHostReq(svrIds)
+        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
+            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
+        val headers = mutableMapOf(
+            "accept" to "*/*",
+            "Content-Type" to "application/json",
+            "X-Bkapi-Authorization" to bkAuthorization
+        )
         val requestContent = jacksonObjectMapper().writeValueAsString(ccAddHostReq)
-        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
+//        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
         val ccAddHostToCiBizRes = OkhttpUtils.doPost(bkccAddHostToCiBizUrl, requestContent, headers)
         val responseBody = ccAddHostToCiBizRes.body?.string()
         val ccResp = jacksonObjectMapper().readValue<CCAndHostRes>(responseBody!!)
