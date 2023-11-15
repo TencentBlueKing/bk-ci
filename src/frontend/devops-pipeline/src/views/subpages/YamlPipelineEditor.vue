@@ -100,7 +100,8 @@
                 yamlHighlightBlock: [],
                 isAdding: false,
                 isUpdating: false,
-                isUpdateElement: false
+                isUpdateElement: false,
+                tempPos: {}
             }
         },
         computed: {
@@ -145,6 +146,9 @@
             editingElementPos (val) {
                 if (!val) {
                     this.resetPreviewAtomYaml()
+                    this.$nextTick(() => {
+                        this.resetTempData()
+                    })
                 }
             }
         },
@@ -159,7 +163,9 @@
                 'previewAtomYAML',
                 'insertAtomYAML',
                 'addStage',
-                'addContainer'
+                'addContainer',
+                'deleteAtom',
+                'deleteStage'
             ]),
             getStageByIndex (stageIndex) {
                 const { getStage, pipelineWithoutTrigger } = this
@@ -187,6 +193,7 @@
                     })
                     this.handleYamlChange(data.yaml)
                     this.yamlHighlightBlock = data.mark ? [data.mark] : []
+                    this.tempPos = {}
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
@@ -211,13 +218,17 @@
             async previewAtom () {
                 if (this.isPreviewingAtomYAML) return
                 try {
-                    this.showAtomYaml = true
                     this.isPreviewingAtomYAML = true
                     const yaml = await this.atomModel2Yaml()
+                    this.showAtomYaml = true
                     this.toggleAtomSelectorPopup(true)
                     this.atomYaml = yaml
                 } catch (error) {
                     console.error(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isPreviewingAtomYAML = false
                 }
@@ -239,35 +250,75 @@
                     editingElementPos
                 })
             },
+            getInsertPos (stageIndex, containerIndex) {
+                try {
+                    const stages = this.pipelineWithoutTrigger?.stages
+                    if (!Array.isArray(stages) || stages.length === 0) {
+                        return null
+                    }
+
+                    const stage = stages[stageIndex ?? stages.length - 1]
+                    const lastIndex = Array.isArray(stage?.containers) && stage?.containers?.length > 0 ? stage?.containers?.length - 1 : 0
+                    return {
+                        stageIndex: stageIndex ?? stages.length - 1,
+                        containerIndex: containerIndex ?? lastIndex
+                    }
+                } catch (error) {
+                    return null
+                }
+            },
             async addPlugin () {
                 const pos = this.$refs.editor.editor.getPosition()
-                const res = await this.yamlNavToPipelineModel({
+                const { data } = await this.yamlNavToPipelineModel({
                     projectId: this.$route.params.projectId,
                     line: pos.lineNumber,
                     column: pos.column,
                     body: this.pipelineYaml
                 })
-                let container = this.pipelineWithoutTrigger?.stages[res?.stageIndex ?? 0]?.containers?.[res?.jobIndex ?? 0]
-                let stepIndex = res.stepIndex ?? 0
+                let modelPos = this.getInsertPos(data.stageIndex, data.containerIndex)
+                let container = this.pipelineWithoutTrigger?.stages[modelPos?.stageIndex]?.containers[modelPos?.containerIndex]
+
+                let stepIndex = data.stepIndex ?? (container?.elements?.length ?? 0) - 1
+
                 if (!container) {
                     this.addStage({
-                        stageIndex: res.stageIndex ?? 0,
+                        stageIndex: 0,
                         stages: this.pipelineWithoutTrigger?.stages
                     })
                     const containers = this.pipelineWithoutTrigger?.stages[0]?.containers
                     this.addContainer({
                         containers,
-                        type: this.osList[1].value
+                        type: this.osList[2].value
                     })
+                    modelPos = {
+                        stageIndex: 0,
+                        containerIndex: 0
+                    }
                     container = this.pipelineWithoutTrigger?.stages[0]?.containers[0]
                     stepIndex = container.elements?.length - 1
+                    this.tempPos.addStage = true
                 }
+                Object.assign(this.tempPos, modelPos, {
+                    stepIndex
+                })
                 this.addAtom({
-                    stageIndex: res.stageIndex ?? 0,
-                    containerIndex: res.jobIndex ?? 0,
+                    ...modelPos,
                     atomIndex: stepIndex,
                     container
                 })
+            },
+            resetTempData () {
+                if (this.tempPos.addStage) {
+                    this.deleteStage({
+                        stageIndex: this.tempPos.stageIndex
+                    })
+                } else if (Number.isInteger(this.tempPos.stepIndex)) {
+                    this.deleteAtom({
+                        container: this.pipelineWithoutTrigger?.stages[this.tempPos.stageIndex]?.containers[this.tempPos.containerIndex],
+                        atomIndex: this.tempPos.stepIndex + 1
+                    })
+                }
+                this.tempPos = {}
             },
             cancelAdd () {
                 this.togglePropertyPanel({

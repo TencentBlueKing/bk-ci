@@ -5,7 +5,6 @@
         :width="640"
         :quick-close="true"
         :before-close="handleBeforeClose"
-        @animation-end="afterHidden"
     >
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
@@ -117,13 +116,13 @@
                 if (!this.closeConfirm) {
                     return true
                 }
-                if (typeof this.beforeClose === 'function') {
-                    await this.beforeClose()
-                }
                 const res = await navConfirm({
                     title: this.$t('leaveConfirmTitle'),
                     content: this.$t('leaveConfirmTips')
                 })
+                if (res && typeof this.beforeClose === 'function') {
+                    await this.beforeClose()
+                }
                 return res
             },
 

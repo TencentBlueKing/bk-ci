@@ -32,7 +32,6 @@ import {
     CLEAR_ATOM_DATA,
     DELETE_ATOM,
     DELETE_ATOM_PROP,
-    DELETE_CONTAINER,
     DELETE_STAGE,
     FETCHING_ATOM_LIST,
     FETCHING_ATOM_MORE_LOADING,
@@ -58,11 +57,9 @@ import {
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_PIPELINE_CONTAINER,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
-    SET_PIPELINE_STAGE,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -99,9 +96,6 @@ export default {
     [SET_STAGE_TAG_LIST]: (state, stageTagList) => {
         Vue.set(state, 'stageTagList', stageTagList)
     },
-    [SET_PIPELINE_STAGE]: (state, stages) => {
-        state.pipeline.stages = stages
-    },
     [SET_COMMON_SETTING]: (state, setting) => {
         state.pipelineCommonSetting = setting || {}
         try {
@@ -112,16 +106,6 @@ export default {
             }
         } catch (err) {
             console.error('commom setting error', err)
-        }
-    },
-    [SET_PIPELINE_CONTAINER]: (state, { oldContainers, containers }) => {
-        const stages = state.pipeline.stages || []
-        const stageIndex = stages.findIndex(stage => stage.containers === oldContainers)
-        if (containers.length > 0) {
-            const currentStage = state.pipeline.stages[stageIndex] || {}
-            currentStage.containers = containers
-        } else {
-            state.pipeline.stages.splice(stageIndex, 1)
         }
     },
     [SET_SAVE_STATUS]: (state, status) => {
@@ -354,7 +338,7 @@ export default {
         }
     },
     [DELETE_STAGE]: (state, { stageIndex }) => {
-        state.pipeline.stages.splice(stageIndex, 1)
+        state.pipelineWithoutTrigger.stages.splice(stageIndex, 1)
         return state
     },
     [UPDATE_STAGE]: (state, { stage, newParam }) => {
@@ -375,10 +359,6 @@ export default {
     [ADD_CONTAINER]: (state, { containers, newContainer }) => {
         containers.push(newContainer)
     },
-    [DELETE_CONTAINER]: (state, { stageIndex, containerIndex }) => {
-        const currentStage = state.pipeline.stages[stageIndex] || {}
-        currentStage.containers.splice(containerIndex, 1)
-    },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
         Object.assign(container, newParam)
     },
@@ -392,7 +372,6 @@ export default {
         elements.splice(atomIndex, 1)
     },
     [PROPERTY_PANEL_VISIBLE]: (state, { showPanelType, isShow, isComplete, editingElementPos = null }) => {
-        console.log(editingElementPos, 'mutation')
         return Object.assign(state, {
             showPanelType,
             isPropertyPanelVisible: isShow,

@@ -354,8 +354,8 @@ export default {
             : []
     },
     getElement: state => (container, index) => {
-        const element = container && Array.isArray(container.elements) ? container.elements[index] : null
-        if (element !== null) {
+        const element = Array.isArray(container?.elements) ? container.elements[index] : null
+        if (element) {
             typeof element.isError === 'undefined' && Vue.set(element, 'isError', false)
         }
         return element

@@ -34,7 +34,6 @@ import {
     CLEAR_ATOM_DATA,
     DELETE_ATOM,
     DELETE_ATOM_PROP,
-    DELETE_CONTAINER,
     DELETE_STAGE,
     FETCHING_ATOM_LIST,
     FETCHING_ATOM_MORE_LOADING,
@@ -59,10 +58,8 @@ import {
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_PIPELINE_CONTAINER,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
-    SET_PIPELINE_STAGE,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -140,14 +137,6 @@ export default {
 
     setRequestAtomData ({ commit }, data) {
         commit(SET_REQUEST_ATOM_DATA, data)
-    },
-
-    setPipelineStage ({ commit }, stages) {
-        commit(SET_PIPELINE_STAGE, stages)
-    },
-
-    setPipelineContainer ({ commit }, { oldContainers, containers }) {
-        commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
@@ -509,10 +498,6 @@ export default {
             })
             commit(SET_PIPELINE_EDITING, true)
         }
-    },
-    deleteContainer: ({ commit }, payload) => {
-        commit(DELETE_CONTAINER, payload)
-        commit(SET_PIPELINE_EDITING, true)
     },
     updateContainer: PipelineEditActionCreator(UPDATE_CONTAINER),
     updateStage: PipelineEditActionCreator(UPDATE_STAGE),
