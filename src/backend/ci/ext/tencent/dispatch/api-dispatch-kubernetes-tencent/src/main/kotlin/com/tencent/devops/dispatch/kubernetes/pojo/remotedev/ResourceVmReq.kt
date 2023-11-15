@@ -13,7 +13,11 @@ data class ResourceVmResp(
     val result: Boolean,
     val code: Int,
     val message: String?,
-    val data: List<ResourceVmRespData>?
+    val data: ResourceVmRespResource?
+)
+
+data class ResourceVmRespResource(
+    val zoneResources: List<ResourceVmRespData>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
