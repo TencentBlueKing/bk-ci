@@ -20,5 +20,7 @@ data class ClientDetailsInfo(
     @ApiModelProperty("accessToken有效期", required = true)
     val accessTokenValidity: Long,
     @ApiModelProperty("refreshToken有效期", required = true)
-    val refreshTokenValidity: Long
+    val refreshTokenValidity: Long,
+    @ApiModelProperty("图标", required = true)
+    val icon: String
 )
