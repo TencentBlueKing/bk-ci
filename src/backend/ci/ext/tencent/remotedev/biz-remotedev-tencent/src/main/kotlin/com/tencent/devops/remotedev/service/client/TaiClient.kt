@@ -7,24 +7,20 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.config.BkConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class TaiClient @Autowired constructor(
+    private val bkConfig: BkConfig,
     private val objectMapper: ObjectMapper
 ) {
-    @Value("\${auth.appCode}")
-    val appCode: String = ""
-
-    @Value("\${auth.appSecret}")
-    val appSecret: String = ""
     fun taiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {
-        val authorization = """{"bk_app_code":"$appCode","bk_app_secret":"$appSecret"}"""
+        val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = params, formatted = false)
         val request = Request.Builder()
             .url("https://bk-unity-user.apigw.o.woa.com/prod/api/v1/open/odc-tai/users/-/query/")
@@ -39,7 +35,10 @@ class TaiClient @Autowired constructor(
         this.use {
             val responseContent = this.body!!.string()
             if (!this.isSuccessful) {
-                throw RemoteServiceException("request api[${this.request.url.toUrl()}] error|$responseContent", this.code)
+                throw RemoteServiceException(
+                    "request api[${this.request.url.toUrl()}] error|$responseContent",
+                    this.code
+                )
             }
 
             val responseData = try {
