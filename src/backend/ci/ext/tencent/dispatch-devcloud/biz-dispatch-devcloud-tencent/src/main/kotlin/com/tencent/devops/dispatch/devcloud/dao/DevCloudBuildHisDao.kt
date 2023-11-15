@@ -78,7 +78,7 @@ class DevCloudBuildHisDao {
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String?
-    ): Result<TDevcloudBuildHisRecord> {
+    ): TDevcloudBuildHisRecord? {
         with(TDevcloudBuildHis.T_DEVCLOUD_BUILD_HIS) {
             val select = dslContext.selectFrom(this)
                 .where(BUIDLD_ID.eq(buildId))
@@ -86,7 +86,7 @@ class DevCloudBuildHisDao {
                 select.and(VM_SEQ_ID.eq(vmSeqId))
             }
 
-            return select.fetch()
+            return select.orderBy(GMT_CREATE.desc()).fetchAny()
         }
     }
 
