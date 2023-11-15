@@ -16,6 +16,7 @@ data class ResourceVmResp(
     val data: ResourceVmRespResource?
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceVmRespResource(
     val zoneResources: List<ResourceVmRespData>?
 )
@@ -28,8 +29,8 @@ data class ResourceVmRespData(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceVmRespDataMachineResource(
-    val cap: Int,
-    val used: Int,
-    val free: Int,
+    val cap: Int?,
+    val used: Int?,
+    val free: Int?,
     val machineType: String
 )

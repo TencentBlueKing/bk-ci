@@ -136,7 +136,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
                     val key = resource.zoneId.replace(Regex("\\d+"), "")
                     val map = res.getOrPut(key) { mutableMapOf() }
                     resource.machineResources?.forEach { mas ->
-                        map[mas.machineType] = (map[mas.machineType] ?: 0) + mas.free
+                        map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
                     }
                 }
             return Result(res)
