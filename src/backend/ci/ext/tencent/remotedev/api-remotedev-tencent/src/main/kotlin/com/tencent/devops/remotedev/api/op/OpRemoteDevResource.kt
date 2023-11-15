@@ -270,7 +270,7 @@ interface OpRemoteDevResource {
     ): Result<CgsResourceConfig>
 
     @ApiOperation("初始话太湖账号信息")
-    @GET
+    @POST
     @Path("/init_tai_user_info")
     fun initTaiUserInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

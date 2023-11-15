@@ -39,7 +39,7 @@ class TaiClient @Autowired constructor(
         this.use {
             val responseContent = this.body!!.string()
             if (!this.isSuccessful) {
-                throw RemoteServiceException("request api[${this.request.url.toUrl()}] error", this.code)
+                throw RemoteServiceException("request api[${this.request.url.toUrl()}] error|$responseContent", this.code)
             }
 
             val responseData = try {
