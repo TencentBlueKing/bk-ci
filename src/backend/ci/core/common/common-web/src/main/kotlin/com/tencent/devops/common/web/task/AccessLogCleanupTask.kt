@@ -12,6 +12,7 @@ import java.util.stream.Collectors
 /**
  * 定时清理访问日志
  */
+@SuppressWarnings("NestedBlockDepth")
 class AccessLogCleanupTask(
     logDirectory: String
 ) {
