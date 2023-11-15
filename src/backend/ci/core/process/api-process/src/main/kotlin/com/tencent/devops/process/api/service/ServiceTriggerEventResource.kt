@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceTriggerEventResource {
 
     @ApiOperation("保存特殊触发事件")
-    @Path("projects/{projectId}/{pipelineId}/saveSpecificEvent")
+    @Path("projects/saveSpecificEvent")
     @POST
     fun saveSpecificEvent(
         @ApiParam("触发参数", required = true)
