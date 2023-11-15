@@ -12,9 +12,9 @@
         <file>${service.log.dir}/service.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>3</maxHistory>
             <maxFileSize>1GB</maxFileSize>
-            <totalSizeCap>10GB</totalSizeCap>
+            <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
@@ -33,9 +33,9 @@
         <file>${service.log.dir}/service-error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>3</maxHistory>
             <maxFileSize>1GB</maxFileSize>
-            <totalSizeCap>10GB</totalSizeCap>
+            <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
