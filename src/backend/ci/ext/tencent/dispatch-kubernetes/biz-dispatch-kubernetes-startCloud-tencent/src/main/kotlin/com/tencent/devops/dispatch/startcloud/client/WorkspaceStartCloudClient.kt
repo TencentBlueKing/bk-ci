@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 import java.util.UUID
 
+@Suppress("ALL")
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
     private val dslContext: DSLContext,
