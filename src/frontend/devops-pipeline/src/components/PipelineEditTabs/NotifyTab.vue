@@ -12,7 +12,7 @@
                     <template v-for="(item, index) in getRenderInfo(card.type)">
                         <div :key="index" class="item-content">
                             <div class="operate-icons">
-                                <i class="devops-icon icon-edit2" @click="handleEdit(card.type, index)"></i>
+                                <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
                                 <i class="devops-icon icon-more" style="font-size: 16px"></i>
                             </div>
                             <template v-for="field in renderFields">
@@ -232,10 +232,10 @@
                     position: absolute;
                     top: 10px;
                     right: 12px;
-                    .devops-icon {
-                        font-size: 12px;
-                        padding-left: 4px;
-                    }
+                    display: flex;
+                    align-items: center;
+                    grid-gap: 10px;
+                    font-size: 14px;
                 }
                 &:nth-child(odd) {
                     margin-right: 140px;
