@@ -51,7 +51,10 @@ class ServiceDeptResourceImpl @Autowired constructor(
         return Result(deptService.getUserInfo(userId, name))
     }
 
-    override fun getUserInfoAndWaterMark(userId: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfoAndWaterMark(userId))
+    override fun getUserInfoAndWaterMark(
+        userId: String,
+        projectCode: String
+    ): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfoAndWaterMark(userId, projectCode))
     }
 }

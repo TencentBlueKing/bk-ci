@@ -86,6 +86,9 @@ interface ServiceDeptResource {
     fun getUserInfoAndWaterMark(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
-        userId: String
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectCode")
+        projectCode: String
     ): Result<UserAndDeptInfoVo?>
 }

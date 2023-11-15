@@ -17,11 +17,13 @@ class ApigwUserManagementResourceV4Impl @Autowired constructor(
     override fun getUserInfo(
         appCode: String?,
         apigwType: String?,
-        userId: String
+        userId: String,
+        projectCode: String
     ): Result<UserAndDeptInfoVo?> {
         logger.info("OPENAPI_GET_USER_INFO_V4|$appCode|$userId")
         return client.get(ServiceDeptResource::class).getUserInfoAndWaterMark(
-            userId = userId
+            userId = userId,
+            projectCode = projectCode
         )
     }
 

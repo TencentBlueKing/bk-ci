@@ -48,6 +48,7 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.secops.SecOpsService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -68,7 +69,8 @@ import java.util.concurrent.TimeUnit
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper,
-    val secOpsService: SecOpsService
+    val secOpsService: SecOpsService,
+    val permissionProjectService: PermissionProjectService
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -266,7 +268,10 @@ class AuthDeptServiceImpl @Autowired constructor(
         return userInfoCache.getIfPresent(name)?.get() ?: getUserAndPutInCache(userId, name)
     }
 
-    override fun getUserInfoAndWaterMark(userId: String): UserAndDeptInfoVo? {
+    override fun getUserInfoAndWaterMark(
+        userId: String,
+        projectCode: String
+    ): UserAndDeptInfoVo? {
         val userInfo = getUserInfo(
             userId = userId,
             name = userId
@@ -275,6 +280,11 @@ class AuthDeptServiceImpl @Autowired constructor(
             defaultMessage = "user not exist!$userId"
         )
         val userWaterMark = secOpsService.getUserWaterMark(userId = userId)
+        val belongProjectMember = permissionProjectService.isProjectUser(
+            userId = userId,
+            projectCode = projectCode,
+            group = null
+        )
         return UserAndDeptInfoVo(
             id = userInfo.id,
             name = userInfo.name,
@@ -282,7 +292,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             hasChild = userInfo.hasChild,
             deptInfo = userInfo.deptInfo,
             extras = userInfo.extras,
-            waterMark = userWaterMark.data
+            waterMark = userWaterMark.data,
+            belongProjectMember = belongProjectMember
         )
     }
 

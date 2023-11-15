@@ -15,6 +15,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_USER_MANAGEMENT_V4"], description = "OPENAPI-用户管理")
@@ -37,6 +38,9 @@ interface ApigwUserManagementResourceV4 {
         apigwType: String?,
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectCode")
+        projectCode: String
     ): Result<UserAndDeptInfoVo?>
 }
