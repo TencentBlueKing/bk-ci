@@ -588,7 +588,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun getResourceVm(
         data: ResourceVmReq
-    ): ResourceVmRespData {
+    ): List<ResourceVmRespData>? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm"
         val body = JsonUtil.toJson(data, false)
         val request = Request.Builder()

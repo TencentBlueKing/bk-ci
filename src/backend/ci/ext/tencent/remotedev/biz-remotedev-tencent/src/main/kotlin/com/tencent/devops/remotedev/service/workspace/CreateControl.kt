@@ -177,7 +177,18 @@ class CreateControl @Autowired constructor(
                     zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 )
-            ).data!!
+            ).data?.firstOrNull { it.zoneId == windowsZone.zoneShortName }
+                ?.machineResources?.firstOrNull { it.machineType == windowsConfig.size }
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                    params = arrayOf(
+                        windowsZone.zone,
+                        windowsConfig.size,
+                        "0",
+                        workspaceCreate.count.toString()
+                    )
+                )
+
             if (resource.free < workspaceCreate.count) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
@@ -485,7 +496,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -689,9 +700,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                it.machineType == type &&
-                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -719,7 +730,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
