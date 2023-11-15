@@ -1,0 +1,97 @@
+package com.tencent.devops.remotedev.service.client
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+
+@Service
+class TaiClient @Autowired constructor(
+    private val objectMapper: ObjectMapper
+) {
+    @Value("\${auth.appCode}")
+    val appCode: String = ""
+
+    @Value("\${auth.appSecret}")
+    val appSecret: String = ""
+    fun taiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {
+        val authorization = """{"bk_app_code":"$appCode","bk_app_secret":"$appSecret"}"""
+        val requestBody = JsonUtil.toJson(bean = params, formatted = false)
+        val request = Request.Builder()
+            .url("https://bk-unity-user.apigw.o.woa.com/prod/api/v1/open/odc-tai/users/-/query/")
+            .header("X-Bkapi-Authorization", authorization)
+            .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        val res = OkhttpUtils.doHttp(request).resolveResponse<TaiUserInfoResponse>()
+        return res.data
+    }
+
+    private inline fun <reified T> okhttp3.Response.resolveResponse(): T {
+        this.use {
+            val responseContent = this.body!!.string()
+            if (!this.isSuccessful) {
+                throw RemoteServiceException("request api[${this.request.url.toUrl()}] error", this.code)
+            }
+
+            val responseData = try {
+                objectMapper.readValue(responseContent, jacksonTypeRef<T>())
+            } catch (e: Exception) {
+                throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
+            }
+
+            return responseData
+        }
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiUserInfoRequest(
+    val usernames: Set<String>
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiUserInfoResponse(
+    val data: List<TaiUserInfo>
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaiUserInfo(
+    val username: String,
+    val sub: String,
+    @JsonProperty("account_id")
+    val accountId: String,
+    @JsonProperty("account_name")
+    val accountName: String,
+    @JsonProperty("account_email")
+    val accountEmail: String,
+    val phone: String,
+    val state: Int,
+    @JsonProperty("manage_group_ids")
+    val manageGroupIds: List<Int>,
+    @JsonProperty("company_tags")
+    val companyTags: List<CompanyTags>
+) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class CompanyTags(
+        val share: Int,
+        @JsonProperty("tag_id")
+        val tagId: String,
+        @JsonProperty("tag_name")
+        val tagName: String,
+        @JsonProperty("tag_type")
+        val tagType: String,
+        @JsonProperty("short_name")
+        val shortName: String,
+        @JsonProperty("email_suffix")
+        val emailSuffix: String
+    )
+}

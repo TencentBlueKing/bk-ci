@@ -52,6 +52,10 @@ data class RemoteDevSettings(
     val dotfileRepo: String = "",
     @ApiModelProperty("项目Id")
     var projectId: String = "",
+    @ApiModelProperty("用户名称")
+    var userName: String = "",
+    @ApiModelProperty("公司名称")
+    var companyName: String = "",
     @ApiModelProperty("平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
 )

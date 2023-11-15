@@ -169,7 +169,7 @@ class StartControl @Autowired constructor(
                                 ).toSet()
                             ),
                             workspaceName = workspace.workspaceName,
-                            settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                            settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
                             mountType = workspace.workspaceMountType
                         )

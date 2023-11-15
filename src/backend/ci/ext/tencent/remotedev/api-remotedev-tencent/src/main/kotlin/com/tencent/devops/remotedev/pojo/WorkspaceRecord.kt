@@ -34,6 +34,7 @@ import java.time.LocalDateTime
 interface WorkspaceRecordInf {
     val workspaceName: String
     val workspaceSystemType: WorkspaceSystemType
+    val createUserId: String
 }
 
 @ApiModel("工作空间信息")
@@ -75,7 +76,7 @@ data class WorkspaceRecord(
     val sleepingTime: Int,
     val disk: Int,
     @ApiModelProperty("工作空间创建人")
-    val createUserId: String,
+    override val createUserId: String,
     @ApiModelProperty("所在事业群，用作度量统计")
     val creatorBgName: String,
     @ApiModelProperty("所在部门，用作度量统计")
@@ -143,7 +144,7 @@ data class WorkspaceRecordWithDetail(
     val sleepingTime: Int,
     val disk: Int,
     @ApiModelProperty("工作空间创建人")
-    val createUserId: String,
+    override val createUserId: String,
     @ApiModelProperty("所在事业群，用作度量统计")
     val creatorBgName: String,
     @ApiModelProperty("所在部门，用作度量统计")

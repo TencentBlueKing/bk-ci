@@ -426,7 +426,7 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchOneSetting(
                 dslContext = dslContext,
                 userId = creator
             ).projectId.ifBlank { null }
