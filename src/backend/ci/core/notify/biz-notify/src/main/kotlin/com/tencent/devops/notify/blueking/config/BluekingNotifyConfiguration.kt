@@ -4,7 +4,6 @@ import com.tencent.devops.notify.blueking.sdk.CMSApi
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.blueking.service.inner.BlueKingWeworkServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.EmailServiceImpl
-import com.tencent.devops.notify.blueking.service.inner.OrgServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.RtxServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.SmsServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.WechatServiceImpl
@@ -14,7 +13,6 @@ import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.notify.dao.SmsNotifyDao
 import com.tencent.devops.notify.dao.WechatNotifyDao
 import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.notify.service.OrgService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
@@ -65,10 +63,6 @@ class BluekingNotifyConfiguration {
     @Bean
     @ConditionalOnMissingBean(WeworkService::class)
     fun weworkService() = BlueKingWeworkServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(OrgService::class)
-    fun orgService() = OrgServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(RtxService::class)
