@@ -477,7 +477,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
 	`TYPE` varchar(16)  NOT NULL COMMENT '配置类型',
 	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
     PRIMARY KEY (`ID`),
-    KEY `idx_creator` (`TYPE`)
+    KEY `idx_type` (`TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
