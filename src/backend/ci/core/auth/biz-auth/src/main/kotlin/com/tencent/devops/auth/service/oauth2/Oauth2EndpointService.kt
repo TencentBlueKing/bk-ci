@@ -39,7 +39,8 @@ class Oauth2EndpointService constructor(
         return Oauth2AuthorizationInfoVo(
             userName = userId,
             clientName = clientDetails.clientName,
-            scope = scopeOperations.associateWith { scopeOperationService.get(it)!!.operationNameCn }
+            scope = scopeOperations.associateWith { scopeOperationService.get(it)!!.operationNameCn },
+            icon = clientDetails.icon
         )
     }
 
