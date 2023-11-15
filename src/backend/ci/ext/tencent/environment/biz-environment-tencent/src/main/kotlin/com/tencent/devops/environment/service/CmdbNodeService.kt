@@ -172,6 +172,7 @@ class CmdbNodeService @Autowired constructor(
         var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
         if (notInCCSvrIdList.isNotEmpty()) { // 不在CC中，add到CC中，查出host_id和云区域id
             val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
+            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCResp:$addToCCResp")
             val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
             addToCCIpToCCInfoMap = ccHostIdList?.mapIndexed { index, value ->
                 CCInfo(
