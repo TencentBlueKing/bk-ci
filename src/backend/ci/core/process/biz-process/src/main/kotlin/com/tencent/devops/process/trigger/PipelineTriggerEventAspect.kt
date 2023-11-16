@@ -213,7 +213,7 @@ class PipelineTriggerEventAspect(
                 triggerEventBuilder.eventDesc(
                     I18Variable(
                         code = REMOTE_START_EVENT_DESC,
-                        params = listOf(userId)
+                        params = listOf(eventSource, userId)
                     ).toJsonStr()
                 )
             }
