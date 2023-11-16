@@ -387,12 +387,14 @@ object TransferMapper {
     }
 
     private fun checkMarker(start: Mark, end: Mark, marker: TransferMark.Mark): Boolean {
-        if (start.line <= marker.line && start.column <= marker.column &&
-            end.line >= marker.line && end.column >= marker.column
-        ) {
-            return true
-        }
-        return false
+        return marker.bigger(start) != false && marker.bigger(end) != true
+    }
+
+    private fun TransferMark.Mark.bigger(start: Mark) = when {
+        line > start.line -> true
+        line == start.line && column > start.column -> true
+        line == start.line && column == start.column -> null
+        else -> false
     }
 
     private fun exactlyTheSameNode(l: Node, r: Node): Boolean {
@@ -882,6 +884,9 @@ object TransferMapper {
         last: Boolean = false,
         action: (steps: ArrayList<Any>) -> NodeIndex?
     ): NodeIndex {
+        if (stages.isEmpty()) {
+            stages.add(mutableMapOf(PreStage::jobs.name to LinkedHashMap<String, Any>()))
+        }
         val index = if (last && positionResponse.stageIndex == null) stages.lastIndex else positionResponse.stageIndex!!
         val jobs = stages[index][PreStage::jobs.name] as LinkedHashMap<String, Any>
         return NodeIndex(
@@ -899,6 +904,11 @@ object TransferMapper {
         last: Boolean = false,
         action: (steps: ArrayList<Any>) -> NodeIndex?
     ): NodeIndex? {
+        if (jobs.isEmpty()) {
+            val job  = LinkedHashMap<String, Any>()
+            job[PreJob::steps.name] = ArrayList<Any>()
+            jobs["job_1"] = job
+        }
         val key = if (last && positionResponse.jobId == null) jobs.entries.last().key else positionResponse.jobId
             ?: return null
         val job = jobs[key] as LinkedHashMap<String, Any>
