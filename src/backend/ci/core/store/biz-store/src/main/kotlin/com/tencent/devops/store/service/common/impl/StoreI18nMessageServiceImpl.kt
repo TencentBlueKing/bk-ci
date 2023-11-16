@@ -231,7 +231,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     projectCode = storeI18nConfig.projectCode,
                     properties = fileProperties,
                     repositoryHashId = storeI18nConfig.repositoryHashId,
-                    fileDir = storeI18nConfig.fileDir
+                    fileDir = storeI18nConfig.fileDir,
+                    branch = storeI18nConfig.branch
                 )
                 var textReferenceFileDirPath: String? = null
                 val allFileNames = textReferenceContentMap.values.flatten().toSet()
