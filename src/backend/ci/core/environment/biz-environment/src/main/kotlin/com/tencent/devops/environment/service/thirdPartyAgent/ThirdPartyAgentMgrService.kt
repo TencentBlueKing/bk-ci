@@ -38,12 +38,13 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.agent.AgentErrorExitErrorEnum
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
-import com.tencent.devops.common.api.pojo.agent.trans
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -215,7 +216,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             currentAgentVersion = agentPropsScope.getAgentVersion(),
             currentWorkerVersion = agentPropsScope.getWorkerVersion(),
             exitErrorMsg = if (props?.exitError != null) {
-                "${props.exitError.errorEnum.trans(userId)}|${props.exitError.message}"
+                "${trans(props.exitError.errorEnum, userId)}|${props.exitError.message}"
             } else {
                 null
             }
@@ -233,6 +234,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
 
         return tpad
+    }
+
+    private fun trans(enum: AgentErrorExitErrorEnum, userId: String): String {
+        return MessageUtil.getMessageByLocale(enum.name, I18nUtil.getLanguage(userId))
     }
 
     private fun getAgentProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): AgentProps? {

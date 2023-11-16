@@ -14,6 +14,3 @@ enum class AgentErrorExitErrorEnum {
     THIRD_AGENT_EXIT_PERMISSION_DENIED
 }
 
-fun AgentErrorExitErrorEnum.trans(userId: String): String {
-    return MessageUtil.getMessageByLocale(this.name, I18nUtil.getLanguage(userId))
-}
