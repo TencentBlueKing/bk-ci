@@ -121,13 +121,13 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
+        val settingVersion = pipelineRepositoryService.getSetting(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.let { latest ->
+        )?.let { releaseSetting ->
             PipelineVersionUtils.getSettingVersion(
-                currVersion = latest.version,
-                originSetting = latest,
+                currVersion = releaseSetting.version,
+                originSetting = PipelineSettingVersion.convertFromSetting(releaseSetting),
                 newSetting = PipelineSettingVersion.convertFromSetting(setting)
             )
         } ?: 1
