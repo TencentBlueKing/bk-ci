@@ -127,7 +127,6 @@ class CmdbNodeService @Autowired constructor(
                 params = arrayOf(invalidIps.joinToString(","))
             )
         }
-
         // 只添加不存在的节点
         val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
         val existIpList = existNodeList.map { it.nodeIp }.toSet() // 已存在 节点ip

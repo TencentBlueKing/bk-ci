@@ -152,7 +152,7 @@ class QueryFromCCService : QueryOperatorService {
         val resBody = executeDeleteRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
         )
-        logger.debug("[deleteHostFromCiBiz]resBody:$resBody")
+        if (logger.isDebugEnabled) logger.debug("[deleteHostFromCiBiz]resBody:$resBody")
         return jacksonObjectMapper().readValue(resBody!!)
     }
 
