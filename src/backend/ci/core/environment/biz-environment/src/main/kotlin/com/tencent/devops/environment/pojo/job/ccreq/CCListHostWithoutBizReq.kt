@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.pojo.job.ccreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.annotation.SkipLogField
 import io.swagger.annotations.ApiModelProperty
 
 data class CCListHostWithoutBizReq<T>(
@@ -9,7 +10,7 @@ data class CCListHostWithoutBizReq<T>(
     val bkAppCode: String? = "",
     @ApiModelProperty(value = "安全秘钥 (app secret)", required = true)
     @JsonProperty("bk_app_secret")
-    val bkAppSecret: String? = "",
+    @SkipLogField val bkAppSecret: String? = "",
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     val bkUsername: String? = "admin",

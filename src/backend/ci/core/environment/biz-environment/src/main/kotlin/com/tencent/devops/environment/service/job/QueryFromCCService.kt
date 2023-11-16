@@ -141,8 +141,10 @@ class QueryFromCCService : QueryOperatorService {
         val resBody = executePostRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
         )
-        logger.debug("[addHostToCiBiz]resBody:$resBody")
-        return jacksonObjectMapper().readValue(resBody!!)
+        if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]resBody:$resBody")
+        val deserializedResBody = jacksonObjectMapper().readValue<CCResp<CCBkHost>>(resBody!!)
+        if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]deserializedResBody:$deserializedResBody")
+        return deserializedResBody
     }
 
     fun deleteHostFromCiBiz(hostIdList: Set<Long>): CCResp<Nothing> {
