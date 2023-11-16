@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.BUILD
 import com.tencent.devops.common.api.constant.CODECC
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
@@ -69,6 +70,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -88,7 +90,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBE
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_NO_NEW_COMMIT
+import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBER
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
@@ -123,7 +126,6 @@ import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.utils.StoreUtils
 import java.time.LocalDateTime
-import java.io.File
 import java.util.Date
 import java.util.concurrent.Executors
 import org.apache.commons.text.StringEscapeUtils
@@ -998,6 +1000,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String> {
         val atomCode = marketAtomUpdateRequest.atomCode
+        val branch = marketAtomUpdateRequest.branch ?: throw ErrorCodeException(
+            errorCode = PARAMETER_IS_NULL,
+            params = arrayOf("branch")
+        )
         // 判断用户是否有权限(插件成员可以操作)
         if (!(storeMemberDao.isStoreMember(
                 dslContext = dslContext,
@@ -1007,7 +1013,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             ))
         ) {
             throw ErrorCodeException(
-                errorCode = USER_NOT_IS_STORE_MEMBE,
+                errorCode = USER_NOT_IS_STORE_MEMBER,
                 params = arrayOf(userId)
             )
         }
@@ -1018,12 +1024,23 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!!
         val versionRecord =
-            atomDao.getAtomTestVersion(dslContext, atomCode, "test-${marketAtomUpdateRequest.branch}")
-        val newVersionFlag = versionRecord?.let {
-            !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
+            atomDao.getAtomTestVersion(dslContext, atomCode, "test-${branch}")
+        var newVersionFlag = true
+        versionRecord?.let {
+            val recentCommitInfo = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
+                userId = userId,
+                repoId = it.repositoryHashId,
+                sha = branch,
+                tokenType = TokenTypeEnum.OAUTH
+            ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
+            val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
+            if (recentCommitDate <= it.updateTime.timestamp()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
+            }
+            newVersionFlag = !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
                     it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
-        } ?: true
+        }
         val atomId = if (newVersionFlag) {
             version = "$version${LocalDateTime.now().hour}"
             UUIDUtil.generate()
@@ -1040,7 +1057,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomVersion = version,
             userId = userId,
             repositoryHashId = atomRecord.repositoryHashId,
-            branch = marketAtomUpdateRequest.branch
+            branch = branch
         )
         if (getAtomConfResult.errorCode != "0") {
             return I18nUtil.generateResponseDataObject(
@@ -1081,7 +1098,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             ))
         ) {
             throw ErrorCodeException(
-                errorCode = USER_NOT_IS_STORE_MEMBE,
+                errorCode = USER_NOT_IS_STORE_MEMBER,
                 params = arrayOf(userId)
             )
         }
