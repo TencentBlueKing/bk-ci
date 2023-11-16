@@ -261,7 +261,7 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomTestVersion(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
@@ -525,17 +525,17 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        val field = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
+        val branchTestFlagField = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
             thirdVersion,
-            field
+            branchTestFlagField
         ).from(t)
             .orderBy(
-                field.desc(),
+                branchTestFlagField.desc(),
                 firstVersion.plus(0).desc(),
                 secondVersion.plus(0).desc(),
                 thirdVersion.plus(0).desc()

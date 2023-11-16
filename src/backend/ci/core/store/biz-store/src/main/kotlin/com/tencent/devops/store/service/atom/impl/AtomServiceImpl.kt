@@ -715,7 +715,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
-            if (tmpVersionPrefix != versionPrefix && !(it[KEY_BRANCH_TEST_FLAG] as Boolean)) {
+            if (tmpVersionPrefix != versionPrefix && (it[KEY_BRANCH_TEST_FLAG] as Boolean) != true) {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
