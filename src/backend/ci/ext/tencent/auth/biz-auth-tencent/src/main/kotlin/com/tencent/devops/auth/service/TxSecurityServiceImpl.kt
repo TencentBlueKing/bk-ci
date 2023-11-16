@@ -6,7 +6,8 @@ import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_WATER_MARK_NOT_EXI
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.auth.pojo.dto.SecOpsWaterMarkDTO
 import com.tencent.devops.auth.pojo.vo.SecOpsWaterMarkInfoVo
-import com.tencent.devops.auth.service.secops.SecOpsService
+import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.security.SecurityService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -18,9 +19,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TxSecOpsServiceImpl constructor(
-    val objectMapper: ObjectMapper
-) : SecOpsService {
+class TxSecurityServiceImpl constructor(
+    val objectMapper: ObjectMapper,
+    deptService: DeptService,
+    permissionProjectService: PermissionProjectService
+) : SecurityService(
+    deptService = deptService,
+    permissionProjectService = permissionProjectService
+) {
 
     @Value("\${auth.appCode:}")
     private val appCode = ""
@@ -85,7 +91,7 @@ class TxSecOpsServiceImpl constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TxSecOpsServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(TxSecurityServiceImpl::class.java)
         private const val USER_WATER_MARK_GET_SUFFIX = "/web/api/v2/watermark/"
     }
 }
