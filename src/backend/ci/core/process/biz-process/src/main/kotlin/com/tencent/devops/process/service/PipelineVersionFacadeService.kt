@@ -198,6 +198,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            updateVersion = false,
             setting = draftSetting.copy(
                 labels = request.labels,
                 desc = request.description ?: ""
@@ -434,6 +435,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 yaml = newYaml
             )
         } else {
+            val draft = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,
                 projectId = projectId,
@@ -441,8 +443,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                 setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 checkPermission = false,
                 versionStatus = versionStatus,
+                updateVersion = draft == null,
                 dispatchPipelineUpdateEvent = false
             )
+
             pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,

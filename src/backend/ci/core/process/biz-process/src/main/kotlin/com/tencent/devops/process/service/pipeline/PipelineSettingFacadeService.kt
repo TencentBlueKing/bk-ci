@@ -100,7 +100,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         updateLastModifyUser: Boolean? = true,
         dispatchPipelineUpdateEvent: Boolean = true,
-        updateLabels: Boolean = true
+        updateLabels: Boolean = true,
+        updateVersion: Boolean = true
     ): PipelineSetting {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
@@ -121,15 +122,15 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        val settingVersion = pipelineRepositoryService.getSetting(
+        val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.let { releaseSetting ->
-            PipelineVersionUtils.getSettingVersion(
-                currVersion = releaseSetting.version,
-                originSetting = PipelineSettingVersion.convertFromSetting(releaseSetting),
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
                 newSetting = PipelineSettingVersion.convertFromSetting(setting)
-            )
+            ) else latest.version
         } ?: 1
 
         val pipelineName = pipelineRepositoryService.saveSetting(
