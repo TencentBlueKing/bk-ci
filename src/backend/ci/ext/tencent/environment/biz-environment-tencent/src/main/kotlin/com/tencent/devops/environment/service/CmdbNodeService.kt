@@ -177,6 +177,7 @@ class CmdbNodeService @Autowired constructor(
     }
 
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
+        val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId.toLong() }
         // 通过svrId查询节点是否在CC中
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdList:$svrIdList")
@@ -214,7 +215,7 @@ class CmdbNodeService @Autowired constructor(
                 CCInfo(
                     svrId = notInCCSvrIdList[index],
                     bkHostId = value,
-                    bkHostInnerip = svrIdToCCResMap[notInCCSvrIdList[index]]?.bkHostInnerip
+                    bkHostInnerip = serverIdToCmdbNodeMap[notInCCSvrIdList[index]]?.ip
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfo")
