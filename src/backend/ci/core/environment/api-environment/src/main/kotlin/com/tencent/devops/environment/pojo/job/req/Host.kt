@@ -11,4 +11,6 @@ data class Host(
     val bkHostId: Long?,
     @ApiModelProperty(value = "IP地址")
     val ip: String?
-)
+) {
+    constructor(bkHostId: Long?) : this(0, bkHostId, null)
+}

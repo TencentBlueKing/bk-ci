@@ -149,8 +149,8 @@ class CmdbNodeService @Autowired constructor(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID), svrIdList, FIELD_BK_SVR_ID
         )
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdQueryCCRes:$svrIdQueryCCRes")
-        val svrIdQueryCCList = svrIdQueryCCRes.data.info // 所有在cc中的节点记录
-        val svrIdToCCResMap = svrIdQueryCCList.associateBy { it.svrId } // cc中 svrId-节点记录 映射
+        val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有在cc中的节点记录
+        val svrIdToCCResMap = svrIdQueryCCList!!.associateBy { it.svrId } // cc中 svrId-节点记录 映射
 
         val inCCSvrIdList = mutableListOf<Long>() // 在CC中的节点的SvrId
         val notInCCSvrIdList = mutableListOf<Long>() // 不在CC中的节点的SvrId
@@ -164,8 +164,8 @@ class CmdbNodeService @Autowired constructor(
         var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
 
         if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
-            val ccData = svrIdQueryCCRes.data.info
-            queryCCIpToCCInfoMap = ccData.associateBy { it.bkHostInnerip }
+            val ccData = svrIdQueryCCRes.data?.info
+            queryCCIpToCCInfoMap = ccData!!.associateBy { it.bkHostInnerip }
         }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]queryCCIpToCCInfoMap:$queryCCIpToCCInfoMap")
 

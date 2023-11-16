@@ -49,6 +49,8 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.req.Host
+import com.tencent.devops.environment.service.job.QueryFromCCService
 import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -58,6 +60,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
@@ -77,22 +80,26 @@ class NodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val nodeWebsocketService: NodeWebsocketService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val slaveGatewayDao: SlaveGatewayDao
+    private val slaveGatewayDao: SlaveGatewayDao,
+    private val queryFromCCService: QueryFromCCService
 ) {
+    @Value("\${job.bkScopeId:}")
+    private val bkScopeId = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
+        const val BIZ_SIZE = 1
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
     fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
-            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
-        val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
+            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE) // 用户所有有权限的 节点id
+        val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds) // 所有要删的且有记录的 节点id记录
         if (existNodeList.isEmpty()) {
             return
         }
-        val existNodeIdList = existNodeList.map { it.nodeId }
+        val existNodeIdList = existNodeList.map { it.nodeId } // 所有要删的且有记录的 节点id
 
         val unauthorizedNodeIds = existNodeIdList.filterNot { canDeleteNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
@@ -101,6 +108,24 @@ class NodeService @Autowired constructor(
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }
+
+        // 判断节点在CC中的业务，为蓝盾对应的公共业务：find_host_biz_relations接口查询出所属业务，看返回值中的data数组中对象的bk_biz_id是否等于蓝盾测试机业务。
+        val hostIdList = existNodeList.map { it.hostId }
+        val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
+        val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
+        val queryCCEqualBizList = hostIdQueryCCList?.filter { bkScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
+        val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
+
+        // 条件1. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
+        val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
+            dslContext, projectId, queryCCEqualBizHostIdList
+        )
+        val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })
+        val deleteHostIdList = hostIdToNodeMap.filter { (key, value) ->
+            BIZ_SIZE == value.size && bkScopeId == value[0].bizId.toString()
+        } // 条件2. 只有一个业务 且 这个业务的bizid等于蓝盾测试机，则从CC中移除
+        // 满足以上两个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
+        queryFromCCService.deleteHostFromCiBiz(deleteHostIdList.keys)
 
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
 
@@ -413,6 +438,7 @@ class NodeService @Autowired constructor(
                     throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
                 }
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = ERROR_NODE_CHANGE_USER_NOT_SUPPORT,

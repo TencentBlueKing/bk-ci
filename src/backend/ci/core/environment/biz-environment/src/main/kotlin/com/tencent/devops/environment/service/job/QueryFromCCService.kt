@@ -7,13 +7,21 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.job.ccreq.CCAddHostReq
+import com.tencent.devops.environment.pojo.job.ccreq.CCDeleteHostReq
+import com.tencent.devops.environment.pojo.job.ccreq.CCFindHostBizRelationsReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCHostPropertyFilter
 import com.tencent.devops.environment.pojo.job.ccreq.CCListHostWithoutBizReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCPage
 import com.tencent.devops.environment.pojo.job.ccreq.CCRules
-import com.tencent.devops.environment.pojo.job.ccres.CCAndHostRes
+import com.tencent.devops.environment.pojo.job.ccres.CCBkHost
+import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
+import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -29,11 +37,23 @@ class QueryFromCCService : QueryOperatorService {
     @Value("\${job.bkSupplierAccount:}")
     private val bkSupplierAccount = ""
 
-    @Value("\${job.bkccListHostWithoutBizReqUrl:}")
-    private val bkccListHostWithoutBizReqUrl = ""
+    @Value("\${job.bkccQueryBaseUrl:}")
+    private val bkccQueryBaseUrl = ""
 
-    @Value("\${job.bkccAddHostToCiBizUrl:}")
-    private val bkccAddHostToCiBizUrl = ""
+    @Value("\${job.bkccListHostWithoutBizPath:#{\"/list_hosts_without_biz\"}")
+    private val bkccListHostWithoutBizPath = ""
+
+    @Value("\${job.bkccFindHostBizRelationsPath:#{\"/find_host_biz_relations\"}")
+    private val bkccFindHostBizRelationsPath = ""
+
+    @Value("\${job.bkccExecuteBaseUrl:}")
+    private val bkccExecuteBaseUrl = ""
+
+    @Value("\${job.bkccAddHostToCiBizPath:#{\"/sync/cmdb/add_host_to_ci_biz\"}")
+    private val bkccAddHostToCiBizPath = ""
+
+    @Value("\${job.bkccDeleteHostFromCiBizPath:#{\"/delete/cmdb/delete_host_from_ci_biz\"}")
+    private val bkccDeleteHostFromCiBizPath = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
@@ -61,26 +81,32 @@ class QueryFromCCService : QueryOperatorService {
             listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_OPERATOR, FIELD_BAK_OPERATOR),
             nodeHostIdList, FIELD_BK_HOST_ID
         )
-        val ccData = ccResp.data.info
-        val ccIpToNodeMap = ccData.associateBy { it.bkHostInnerip }
-        val invalidIpList = nodeIpList.filter {
-            val isOperator = userId == ccIpToNodeMap[it]?.operator ||
-                nodeIpToNodeMap[it]?.createdUser == ccIpToNodeMap[it]?.operator
-            val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!! ||
-                ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
-            !isOperator && !isBakOpertor
-        }
-        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] invalidIpList: $invalidIpList")
+        if (null != ccResp.data) {
+            val ccData = ccResp.data.info
+            val ccIpToNodeMap = ccData.associateBy { it.bkHostInnerip }
+            val invalidIpList = nodeIpList.filter {
+                val isOperator = userId == ccIpToNodeMap[it]?.operator ||
+                    nodeIpToNodeMap[it]?.createdUser == ccIpToNodeMap[it]?.operator
+                val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!!
+                    || ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
+                !isOperator && !isBakOpertor
+            }
+            if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] invalidIpList: $invalidIpList")
 
-        if (invalidIpList.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                params = arrayOf(invalidIpList.joinToString(","))
-            )
+            if (invalidIpList.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
+                    params = arrayOf(invalidIpList.joinToString(","))
+                )
+            }
         }
     }
 
-    fun <T> queryCCListHostWithoutBizByInRules(fields: List<String>, inValueList: T, field: String): CCResp {
+    fun <T> queryCCListHostWithoutBizByInRules(
+        fields: List<String>,
+        inValueList: T,
+        field: String
+    ): CCResp<QueryCCListHostWithoutBizData> {
         val ccListHostWithoutBizReq = CCListHostWithoutBizReq(
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
@@ -99,31 +125,68 @@ class QueryFromCCService : QueryOperatorService {
                 )
             )
         )
-        val requestContent = jacksonObjectMapper().writeValueAsString(ccListHostWithoutBizReq)
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByBkHostId] requestContent: $requestContent")
-        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val ccListHostWithoutBizRes = OkhttpUtils.doPost(bkccListHostWithoutBizReqUrl, requestContent, headers)
-        val responseBody = ccListHostWithoutBizRes.body?.string()
-        val ccResp = jacksonObjectMapper().readValue<CCResp>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByBkHostId] ccResp: $ccResp")
-        return ccResp
+        return executePostRequest(
+            getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
+        )
     }
 
-    fun addHostToCiBiz(svrIds: List<Long>): CCAndHostRes {
-        val ccAddHostReq = CCAddHostReq(svrIds)
+    fun addHostToCiBiz(svrIdList: List<Long>): CCResp<CCBkHost> {
+        val ccAddHostReq = CCAddHostReq(svrIdList)
+        return executePostRequest(getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq)
+    }
+
+    fun deleteHostFromCiBiz(hostIdList: Set<Long>): CCResp<Nothing> {
+        val ccDeleteHostReq = CCDeleteHostReq(hostIdList)
+        return executeDeleteRequest(getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq)
+    }
+
+    fun queryCCFindHostBizRelations(hostIdList: List<Long>): CCResp<List<HostBizRelation>> {
+        val ccFindHostBizRelationsReq = CCFindHostBizRelationsReq(
+            bkAppCode = bkAppCode,
+            bkAppSecret = bkAppSecret,
+            bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+            bkHostId = hostIdList
+        )
+        return executePostRequest(
+            getcommonHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
+        )
+    }
+
+    private fun getcommonHeaders(): Map<String, String> {
+        return mapOf("accept" to "*/*", "Content-Type" to "application/json")
+    }
+
+    private fun getAuthHeaders(): Map<String, String> {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
-        val headers = mutableMapOf(
+        return mapOf(
             "accept" to "*/*",
             "Content-Type" to "application/json",
             "X-Bkapi-Authorization" to bkAuthorization
         )
-        val requestContent = jacksonObjectMapper().writeValueAsString(ccAddHostReq)
-//        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val ccAddHostToCiBizRes = OkhttpUtils.doPost(bkccAddHostToCiBizUrl, requestContent, headers)
-        val responseBody = ccAddHostToCiBizRes.body?.string()
-        val ccResp = jacksonObjectMapper().readValue<CCAndHostRes>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz] ccResp: $ccResp")
+    }
+
+    private fun <T, U> executePostRequest(headers: Map<String, String>, url: String, req: T): CCResp<U> {
+        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
+        val responseBody = ccPostRes.body?.string()
+        val ccResp = jacksonObjectMapper().readValue<CCResp<U>>(responseBody!!)
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccResp: $ccResp")
         return ccResp
+    }
+
+    private fun <T, U> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): CCResp<U> {
+        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val requestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), requestContent)
+        val deleteReq: Request = Request.Builder()
+            .url(url)
+            .headers(headers.toHeaders())
+            .delete(requestBody)
+            .build()
+        val ccDeleteRes = OkhttpUtils.doHttp(deleteReq)
+        val responseBody = ccDeleteRes.body?.string()
+        val ccDeleteResp = jacksonObjectMapper().readValue<CCResp<U>>(responseBody!!)
+        if (logger.isDebugEnabled) logger.debug("[executeDeleteRequest] ccDeleteResp: $ccDeleteResp")
+        return ccDeleteResp
     }
 }

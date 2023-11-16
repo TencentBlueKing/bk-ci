@@ -26,8 +26,11 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
     @Value("\${job.bkAppSecret:}")
     private val bkAppSecret = ""
 
-    @Value("\${job.cmdbGetQueryInfoReqUrl:}")
-    private val cmdbGetQueryInfoReqUrl = ""
+    @Value("\${job.cmdbGetQueryInfoBaseUrl:}")
+    private val cmdbGetQueryInfoBaseUrl = ""
+
+    @Value("\${job.cmdbGetQueryInfoPath:#{\"/get_query_info\"}")
+    private val cmdbGetQueryInfoPath = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentQueryOperatorFromCmdbService::class.java)
@@ -56,7 +59,9 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
         val requestContent = jacksonObjectMapper().writeValueAsString(cmdbGetQueryInfoReq)
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val cmdbGetQueryInfoRes = OkhttpUtils.doPost(cmdbGetQueryInfoReqUrl, requestContent, headers)
+        val cmdbGetQueryInfoRes = OkhttpUtils.doPost(
+            cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, requestContent, headers
+        )
         val responseBody = cmdbGetQueryInfoRes.body?.string()
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] responseBody: $responseBody")
         val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)

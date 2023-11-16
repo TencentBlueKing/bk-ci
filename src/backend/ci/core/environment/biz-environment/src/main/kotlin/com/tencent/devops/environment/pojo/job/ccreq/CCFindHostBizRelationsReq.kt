@@ -1,0 +1,19 @@
+package com.tencent.devops.environment.pojo.job.ccreq
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
+
+data class CCFindHostBizRelationsReq(
+    @ApiModelProperty(value = "应用ID (app id)", required = true)
+    @JsonProperty("bk_app_code")
+    val bkAppCode: String? = "",
+    @ApiModelProperty(value = "安全秘钥 (app secret)", required = true)
+    @JsonProperty("bk_app_secret")
+    val bkAppSecret: String? = "",
+    @ApiModelProperty(value = "当前用户用户名", required = true)
+    @JsonProperty("bk_username")
+    val bkUsername: String? = "admin",
+    @ApiModelProperty(value = "主机属性列表", required = true)
+    @JsonProperty("bk_host_id")
+    val bkHostId: List<Long>
+)
