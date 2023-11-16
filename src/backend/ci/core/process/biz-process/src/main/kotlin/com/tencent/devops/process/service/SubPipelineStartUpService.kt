@@ -232,7 +232,7 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId)
             params[PIPELINE_START_PARENT_PIPELINE_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId)
-            params[PIPELINE_START_PARENT_PIPELINE_ID] =
+            params[PIPELINE_START_PARENT_PIPELINE_NAME] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)

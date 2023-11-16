@@ -174,6 +174,7 @@ class PipelineTriggerEventAspect(
         return pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null
     }
 
+    @Suppress("ComplexCondition")
     private fun buildTriggerEvent(
         userId: String,
         projectId: String,
@@ -234,7 +235,6 @@ class PipelineTriggerEventAspect(
                 val parentPipelineId = pipelineParamMap?.get(PIPELINE_START_PARENT_PIPELINE_ID)?.value?.toString()
                 val parentPipelineName = pipelineParamMap?.get(PIPELINE_START_PARENT_PIPELINE_NAME)?.value?.toString()
                 val parentBuildId = pipelineParamMap?.get(PIPELINE_START_PARENT_BUILD_ID)?.value?.toString()
-                logger.info("subPipeline event: $parentProjectId:$parentPipelineId:$parentPipelineName:$parentBuildId")
                 if (parentProjectId == null || parentPipelineId == null ||
                     parentBuildId == null || parentPipelineName == null
                 ) {
