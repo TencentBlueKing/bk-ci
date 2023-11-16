@@ -57,63 +57,59 @@ class RbacPipelineTemplatePermissionService constructor(
     override fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String?
     ): Boolean {
-        if (!enableTemplatePermissionManage(projectId)) {
+        return if (!enableTemplatePermissionManage(projectId)) {
             super.checkPipelineTemplatePermission(
                 userId = userId,
                 projectId = projectId,
-                permission = permission
+                permission = permission,
+                templateId = templateId
             )
         } else {
-            if (!authPermissionApi.validateUserResourcePermission(
-                    user = userId,
-                    serviceCode = pipelineAuthServiceCode,
-                    resourceType = resourceType,
-                    permission = permission,
-                    projectCode = projectId
-                )) {
-                logger.warn("user($userId) has no $permission permission under project($projectId)")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
-                    defaultMessage = "user($userId) has no $permission permission under project($projectId)!"
-                )
-            }
-        }
-        return true
-    }
-
-    override fun checkPipelineTemplatePermission(
-        userId: String,
-        projectId: String,
-        templateId: String,
-        permission: AuthPermission
-    ): Boolean {
-        if (!enableTemplatePermissionManage(projectId)) {
-            super.checkPipelineTemplatePermission(
-                userId = userId,
-                projectId = projectId,
-                permission = permission
-            )
-        } else {
-            if (!authPermissionApi.validateUserResourcePermission(
+            if (templateId != null) {
+                authPermissionApi.validateUserResourcePermission(
                     user = userId,
                     serviceCode = pipelineAuthServiceCode,
                     resourceType = resourceType,
                     projectCode = projectId,
                     resourceCode = templateId,
                     permission = permission
-                )) {
-                logger.warn(
-                    "The user($userId) does not have permission to " +
-                        "${permission.value} the template under this project($projectId)"
                 )
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
-                    defaultMessage = "The user($userId) does not have permission to " +
-                        "${permission.value} the template under this project($projectId)"
+            } else {
+                authPermissionApi.validateUserResourcePermission(
+                    user = userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    resourceType = resourceType,
+                    permission = permission,
+                    projectCode = projectId
                 )
             }
+        }
+    }
+
+    override fun checkPipelineTemplatePermissionWithMessage(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String?
+    ): Boolean {
+        if (!checkPipelineTemplatePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = permission,
+                templateId = templateId
+            )) {
+            logger.warn(
+                "The user($userId) does not have permission to " +
+                    "${permission.value} the template under this project($projectId)"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PERMISSION_OPERATION_TEMPLATE,
+                defaultMessage = "The user($userId) does not have permission to " +
+                    "${permission.value} the template under this project($projectId)"
+            )
         }
         return true
     }

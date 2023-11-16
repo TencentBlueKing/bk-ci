@@ -72,4 +72,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     override fun migrateMonitorResource(projectCodes: List<String>, async: Boolean): Boolean {
         return true
     }
+
+    override fun migrateResourcesOfNewResourceType(resourceType: String, projectCodes: List<String>): Boolean {
+        return true
+    }
 }

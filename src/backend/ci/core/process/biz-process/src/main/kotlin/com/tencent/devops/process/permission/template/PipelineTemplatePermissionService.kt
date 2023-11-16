@@ -31,20 +31,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PipelineTemplatePermissionService {
     /**
-     * 校验是否有任意流水线模板存在指定的权限
-     * @param userId userId
-     * @param projectId projectId
-     * @param permission 权限
-     * @return 有权限返回true
-     */
-    fun checkPipelineTemplatePermission(
-        userId: String,
-        projectId: String,
-        permission: AuthPermission
-    ): Boolean
-
-    /**
-     * 校验指定流水线模板是否有指定权限
+     * 校验有流水线模板权限
      * @param userId userId
      * @param projectId projectId
      * @param templateId templateId
@@ -54,8 +41,23 @@ interface PipelineTemplatePermissionService {
     fun checkPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        templateId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        templateId: String? = null
+    ): Boolean
+
+    /**
+     * 校验指定流水线模板是否有指定权限
+     * @param userId userId
+     * @param projectId projectId
+     * @param templateId templateId
+     * @param permission 权限
+     * @return 有权限返回true,无权限抛出异常
+     */
+    fun checkPipelineTemplatePermissionWithMessage(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String? = null
     ): Boolean
 
     /**
@@ -63,8 +65,6 @@ interface PipelineTemplatePermissionService {
      * @param userId userId
      * @param projectId projectId
      * @param permissions permissions
-     * @param templateRecords templateRecords
-     * @return 有权限返回true
      */
     fun getResourcesByPermission(
         userId: String,
@@ -113,7 +113,6 @@ interface PipelineTemplatePermissionService {
     /**
      * 是否开启流水线模板管理
      * @param projectId projectId
-     * @param templateId 流水线模板ID
      */
     fun enableTemplatePermissionManage(projectId: String): Boolean
 }

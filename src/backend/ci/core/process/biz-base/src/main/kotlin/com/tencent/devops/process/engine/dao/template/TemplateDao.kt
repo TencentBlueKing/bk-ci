@@ -336,6 +336,21 @@ class TemplateDao {
         }
     }
 
+    fun getTemplateByType(
+        dslContext: DSLContext,
+        projectId: String,
+        templateType: TemplateType
+    ): TTemplateRecord {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TYPE.eq(templateType.name))
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+            )
+        }
+    }
+
     fun getSrcTemplateId(dslContext: DSLContext, projectId: String, templateId: String, type: String? = null): String? {
         return with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
@@ -479,7 +494,7 @@ class TemplateDao {
         if (templateType != null) {
             conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
-        if (templateIdList != null && templateIdList.isNotEmpty()) {
+        if (templateIdList != null) {
             conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {

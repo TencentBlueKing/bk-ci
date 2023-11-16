@@ -6,14 +6,10 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
-import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.model.process.tables.TTemplate
-import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -67,7 +63,7 @@ class AuthPipelineTemplateService @Autowired constructor(
         val templatesRecords = templateDao.listTemplate(
             dslContext = dslContext,
             projectId = projectId,
-            includePublicFlag = true,
+            includePublicFlag = null,
             templateType = null,
             templateIdList = null,
             storeFlag = null,
@@ -101,7 +97,7 @@ class AuthPipelineTemplateService @Autowired constructor(
         val pipelineTemplateList = templateDao.listTemplate(
             dslContext = dslContext,
             projectId = projectId,
-            includePublicFlag = true,
+            includePublicFlag = null,
             templateType = null,
             templateIdList = ids,
             storeFlag = null,

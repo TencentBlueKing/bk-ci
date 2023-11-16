@@ -123,4 +123,15 @@ interface OpAuthMigrateResource {
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/migrateResourcesOfNewResourceType")
+    @ApiOperation("迁移新增资源类型的资源")
+    fun migrateResourcesOfNewResourceType(
+        @ApiParam("资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }
