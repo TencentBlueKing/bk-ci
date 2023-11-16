@@ -89,6 +89,7 @@ class NodeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
         const val BIZ_SIZE = 1
+        const val FIRST_ELEMENT = 0
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
@@ -122,7 +123,7 @@ class NodeService @Autowired constructor(
         )
         val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })
         val deleteHostIdList = hostIdToNodeMap.filter { (key, value) ->
-            BIZ_SIZE == value.size && bkScopeId == value[0].bizId.toString()
+            BIZ_SIZE == value.size && bkScopeId == value[FIRST_ELEMENT].hostId.toString()
         } // 条件2. 只有一个业务 且 这个业务的bizid等于蓝盾测试机，则从CC中移除
         // 满足以上两个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
         queryFromCCService.deleteHostFromCiBiz(deleteHostIdList.keys)
