@@ -70,7 +70,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -101,7 +101,6 @@ import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
@@ -118,6 +117,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -1023,7 +1023,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!!
-        val versionRecord = atomDao.getAtomTestVersion(dslContext, atomCode, "$TEST-$branch-")
+        val versionRecord = atomDao.getAtomByVersionPrefix(dslContext, atomCode, "$TEST-$branch-")
         var newVersionFlag = true
         versionRecord?.let {
             val recentCommitInfo = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
@@ -1034,7 +1034,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
             val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
             logger.info("creatAtomBranchTestVersion recentCommitDate:$recentCommitDate|updateTime:${it.updateTime}")
-            if (recentCommitDate <= it.updateTime.timestamp()) {
+            if (recentCommitDate <= it.updateTime.timestampmilli()) {
                 throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
             }
             newVersionFlag = !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
