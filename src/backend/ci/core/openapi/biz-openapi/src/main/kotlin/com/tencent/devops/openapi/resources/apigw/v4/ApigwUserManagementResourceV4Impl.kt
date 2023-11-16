@@ -1,6 +1,5 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
-import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.api.service.ServiceSecurityResource
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.pojo.Result
