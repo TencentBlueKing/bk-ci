@@ -79,5 +79,4 @@ interface ServiceDeptResource {
         @ApiParam("用户名称", required = true)
         name: String
     ): Result<UserAndDeptInfoVo?>
-
 }
