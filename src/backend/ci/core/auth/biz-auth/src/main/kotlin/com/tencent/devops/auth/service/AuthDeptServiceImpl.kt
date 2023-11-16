@@ -69,8 +69,7 @@ import java.util.concurrent.TimeUnit
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper,
-    val secOpsService: SecOpsService,
-    val permissionProjectService: PermissionProjectService
+    val secOpsService: SecOpsService
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -280,11 +279,6 @@ class AuthDeptServiceImpl @Autowired constructor(
             defaultMessage = "user not exist!$userId"
         )
         val userWaterMark = secOpsService.getUserWaterMark(userId = userId)
-        val belongProjectMember = permissionProjectService.isProjectUser(
-            userId = userId,
-            projectCode = projectCode,
-            group = null
-        )
         return UserAndDeptInfoVo(
             id = userInfo.id,
             name = userInfo.name,
@@ -293,7 +287,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             deptInfo = userInfo.deptInfo,
             extras = userInfo.extras,
             waterMark = userWaterMark.data,
-            belongProjectMember = belongProjectMember
+            belongProjectMember = true
         )
     }
 
