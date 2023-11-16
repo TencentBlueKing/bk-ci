@@ -58,11 +58,11 @@
                                      'edit-item': entry.isEditing
                                  }"
                                 v-for="(entry, index) in pipelineNameList" :key="index" @click="lastClickPipeline(index)">
-                                <template v-if="entry.isEditing">
+                                <div v-show="entry.isEditing">
                                     <bk-input
+                                        ref="pipelineNameInput"
                                         class="pipeline-name-input"
                                         v-model="displayName"
-                                        :maxlength="128"
                                         :placeholder="$t('pipelineNameInputTips')"
                                     />
                                     <div class="edit-tools">
@@ -77,8 +77,8 @@
                                             v-bk-tooltips="$t('cancel')"
                                         />
                                     </div>
-                                </template>
-                                <template v-else>
+                                </div>
+                                <div v-show="!entry.isEditing">
                                     <div class="pipeline-name" v-bk-overflow-tips>
                                         {{ entry.pipelineName }}
                                     </div>
@@ -95,7 +95,7 @@
                                         @click="deletePipelineName(index)"
                                         v-bk-tooltips="$t('delete')"
                                     />
-                                </template>
+                                </div>
                             </div>
                             <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
                                 <i class="plus-icon"></i>

@@ -36,7 +36,7 @@
                     @select-all="selectItem"
                 >
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
-                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
+                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
                         <template slot-scope="props">
                             <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
                         </template>
@@ -62,7 +62,7 @@
                     <bk-table-column :label="$t('operate')" width="250">
                         <template slot-scope="props">
                             <bk-button class="mr10" theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
-                            <bk-button class="mr10" theme="primary" text @click="copyAsTemplateInstance(props.row)">{{ $t('copyAsTemplateInstance') }}</bk-button>
+                            <bk-button class="mr10" theme="primary" text @click="copyAsTemplateInstance(props.row)">{{ $t('copy') }}</bk-button>
                             <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
                         </template>
                     </bk-table-column>
@@ -406,7 +406,7 @@
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         curVersionId: this.currentVersionId,
-                        pipelineName: row.pipelineName + '_copy',
+                        pipelineName: (row.pipelineName + '_copy').substring(0, 128),
                         type: 'copy_instance'
                     }
                 }

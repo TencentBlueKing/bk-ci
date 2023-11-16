@@ -430,7 +430,7 @@
     "execTimes": "已执行次数",
     "known": "知道了",
     "noExecution": "未执行过",
-    "copyAs": "复制流水线",
+    "copyAs": "复制为流水线",
     "exportPipelineJson": "导出",
     "importModifyPipelineJson": "导入更新",
     "updatePipelineJson": "更新流水线",
@@ -1226,5 +1226,6 @@
   "downloadLater": "稍后再下载",
   "copyAsTemplateInstance": "复制为模板实例",
   "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
-  "pipelineConstraintModeTips": "约束模式下，流水线编排随模板更新，不能自由调整"
+  "pipelineConstraintModeTips": "约束模式下，流水线编排随模板更新，不能自由调整",
+  "copy": "复制"
 }

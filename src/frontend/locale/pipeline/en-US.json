@@ -1221,5 +1221,6 @@
   "downloadLater": "Download later",
   "copyAsTemplateInstance": "Copy As Instance",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
-  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template"
+  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
+  "copy": "Copy"
 }

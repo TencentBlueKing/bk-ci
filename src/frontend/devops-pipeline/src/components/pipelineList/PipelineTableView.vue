@@ -48,28 +48,30 @@
         <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <div class="pipeline-name">
-                    <span
-                        v-if="props.row.permissions && !props.row.permissions.canView"
-                        class="pointer"
-                        @click="applyPermission(props.row)"
-                    >
-                        {{props.row.pipelineName}}
-                    </span>
-                    <router-link
-                        v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
-                        class="pipeline-cell-link"
-                        :disabled="props.row.permissions && !props.row.permissions.canView"
-                        :to="props.row.historyRoute">
-                        {{props.row.pipelineName}}
-                    </router-link>
-                    <span v-else>{{props.row.pipelineName}}</span>
+                <div class="pipeline-name-warpper">
+                    <div class="pipeline-name">
+                        <span
+                            v-if="props.row.permissions && !props.row.permissions.canView"
+                            class="pointer"
+                            @click="applyPermission(props.row)"
+                        >
+                            {{props.row.pipelineName}}
+                        </span>
+                        <router-link
+                            v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
+                            class="pipeline-cell-link"
+                            :disabled="props.row.permissions && !props.row.permissions.canView"
+                            :to="props.row.historyRoute">
+                            {{props.row.pipelineName}}
+                        </router-link>
+                        <span v-else>{{props.row.pipelineName}}</span>
+                    </div>
                     <logo
-                        class="ml5"
                         v-if="props.row.templateId"
+                        class="ml5 template-mode-icon"
                         name="template-mode"
                         size="12"
-                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
+                        v-bk-tooltips.bottom="$t('pipelineConstraintModeTips')"
                     />
                 </div>
             </template>
@@ -680,15 +682,16 @@
         height: 32px;
         grid-gap: 10px;
     }
-    .pipeline-name {
-        display: flex;
-        align-items: center;
-    }
     .latest-build-multiple-row {
         display: flex;
         flex-direction: column;
     }
     .pipeline-list-table {
+        .cell {
+            position: relative;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 1;
+        }
         td {
             position: inherit;
         }
@@ -704,6 +707,19 @@
         }
         ::-webkit-scrollbar-thumb {
             background-color: #DCDEE5 !important;
+        }
+        .pipeline-name-warpper {
+            width: 100%;
+            display: inline-flex;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .pipeline-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .template-mode-icon {
+            flex-shrink: 0;
         }
     }
     .exec-pipeline-btn {

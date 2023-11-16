@@ -6,14 +6,15 @@
                     <router-link
                         class="pipeline-cell-link"
                         :to="pipeline.historyRoute"
+                        v-bk-overflow-tips
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
                     <logo
-                        class="ml5"
+                        class="ml5 template-mode-icon"
                         v-if="pipeline.templateId"
                         name="template-mode"
-                        size="14"
+                        size="12"
                         v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
                 </h3>
@@ -238,9 +239,19 @@
                     color: $primaryColor;
                     margin: 0;
                     font-weight: normal;
-                    display: flex;
                     align-items: center;
                     @include ellipsis();
+                    width: 100%;
+                    display: inline-flex;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+                .pipeline-cell-link {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .template-mode-icon {
+                    flex-shrink: 0;
                 }
                 .bk-pipeline-card-summary {
                     display: flex;
