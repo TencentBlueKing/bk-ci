@@ -91,7 +91,7 @@ interface BuildAtomResource {
 
     @ApiOperation("根据插件版本ID获取插件版本进度")
     @GET
-    @Path("/desk/atom/release/Ids/{atomId}")
+    @Path("/desk/atom/release/ids/{atomId}")
     fun getProcessInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
