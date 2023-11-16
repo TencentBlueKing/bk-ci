@@ -125,6 +125,10 @@ class QueryFromCCService : QueryOperatorService {
                 )
             )
         )
+        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] req: $ccListHostWithoutBizReq")
+        if (logger.isDebugEnabled) logger.debug(
+            "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
+        )
         return executePostRequest(
             getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
         )
