@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
+import com.tencent.devops.common.api.pojo.agent.trans
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -213,7 +214,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             diskTotal = agentHostInfo.diskTotal,
             currentAgentVersion = agentPropsScope.getAgentVersion(),
             currentWorkerVersion = agentPropsScope.getWorkerVersion(),
-            exitErrorMsg = "${props?.exitError?.errorEnum?.i18code}|${props?.exitError?.message}"
+            exitErrorMsg = if (props?.exitError != null) {
+                "${props.exitError.errorEnum.trans(userId)}|${props.exitError.message}"
+            } else {
+                null
+            }
         )
 
         if (needHeartbeatInfo) {
