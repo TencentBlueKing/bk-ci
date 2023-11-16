@@ -1023,7 +1023,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!!
-        val versionRecord = atomDao.getAtomTestVersion(dslContext, atomCode, "$TEST-${branch}-")
+        val versionRecord = atomDao.getAtomTestVersion(dslContext, atomCode, "$TEST-$branch-")
         var newVersionFlag = true
         versionRecord?.let {
             val recentCommitInfo = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
