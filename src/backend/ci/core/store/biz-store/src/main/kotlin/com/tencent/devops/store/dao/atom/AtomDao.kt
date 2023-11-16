@@ -255,7 +255,7 @@ class AtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
