@@ -1,8 +1,5 @@
 package com.tencent.devops.common.api.pojo.agent
 
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
-
 data class AgentErrorExitData(
     val errorEnum: AgentErrorExitErrorEnum,
     val message: String?
