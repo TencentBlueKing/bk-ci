@@ -29,6 +29,7 @@ package com.tencent.devops.sign.impl
 
 import com.dd.plist.NSArray
 import com.dd.plist.NSDictionary
+import com.dd.plist.NSNumber
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -420,9 +421,12 @@ class SignServiceImpl @Autowired constructor(
             val appTitle = parameters.toString()
             parameters = rootDict.objectForKey("CFBundleShortVersionString") as NSString
             val bundleVersion = parameters.toString()
-            parameters = rootDict.objectForKey("CFBundleVersion") as NSString
+            val bundleVersionFull = try {
+                (rootDict.objectForKey("CFBundleVersion") as NSString).toString()
+            } catch (ignore: ClassCastException) {
+                (rootDict.objectForKey("CFBundleVersion") as NSNumber).toString()
+            }
 
-            val bundleVersionFull = parameters.toString()
             // scheme
             val (scheme, appName) = pair(rootDict, zhStrings)
 

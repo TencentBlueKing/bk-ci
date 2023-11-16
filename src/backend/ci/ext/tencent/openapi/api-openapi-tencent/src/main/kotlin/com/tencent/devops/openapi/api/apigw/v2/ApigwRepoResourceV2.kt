@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.TaskReport
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -49,6 +50,7 @@ interface ApigwRepoResourceV2 {
 
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}")
+    @ApiOperation("拿取报告", tags = ["v2_app_reports_get"])
     fun getBuildReports(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

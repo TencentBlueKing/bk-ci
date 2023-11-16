@@ -109,7 +109,8 @@ object ProjectUtils {
             authSecrecy = tProjectRecord.authSecrecy,
             managePermission = managePermission,
             showUserManageIcon = showUserManageIcon,
-            channelCode = tProjectRecord.channel
+            channelCode = tProjectRecord.channel,
+            productId = tProjectRecord.productId
         )
     }
 
@@ -161,7 +162,9 @@ object ProjectUtils {
             authSecrecy = tProjectRecord.authSecrecy,
             afterAuthSecrecy = projectApprovalInfo?.authSecrecy ?: tProjectRecord.authSecrecy,
             projectType = tProjectRecord.projectType,
-            afterProjectType = projectApprovalInfo?.projectType
+            afterProjectType = projectApprovalInfo?.projectType,
+            productId = tProjectRecord.productId,
+            afterProductId = projectApprovalInfo?.productId
         )
     }
 }
