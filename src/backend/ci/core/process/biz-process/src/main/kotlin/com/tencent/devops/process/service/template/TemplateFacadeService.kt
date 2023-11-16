@@ -124,7 +124,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import okhttp3.internal.addHeaderLenient
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
