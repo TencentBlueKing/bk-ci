@@ -1033,7 +1033,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 tokenType = TokenTypeEnum.OAUTH
             ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
             val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
-            logger.info("creatAtomBranchTestVersion recentCommitDate:$recentCommitDate|updateTime:${it.updateTime}")
             if (recentCommitDate <= it.updateTime.timestampmilli()) {
                 throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
             }
