@@ -40,19 +40,19 @@ class QueryFromCCService : QueryOperatorService {
     @Value("\${job.bkccQueryBaseUrl:}")
     private val bkccQueryBaseUrl = ""
 
-    @Value("\${job.bkccListHostWithoutBizPath:#{\"/list_hosts_without_biz\"}")
+    @Value("\${job.bkccListHostWithoutBizPath:#{\"/list_hosts_without_biz\"}}")
     private val bkccListHostWithoutBizPath = ""
 
-    @Value("\${job.bkccFindHostBizRelationsPath:#{\"/find_host_biz_relations\"}")
+    @Value("\${job.bkccFindHostBizRelationsPath:#{\"/find_host_biz_relations\"}}")
     private val bkccFindHostBizRelationsPath = ""
 
     @Value("\${job.bkccExecuteBaseUrl:}")
     private val bkccExecuteBaseUrl = ""
 
-    @Value("\${job.bkccAddHostToCiBizPath:#{\"/sync/cmdb/add_host_to_ci_biz\"}")
+    @Value("\${job.bkccAddHostToCiBizPath:#{\"/sync/cmdb/add_host_to_ci_biz\"}}")
     private val bkccAddHostToCiBizPath = ""
 
-    @Value("\${job.bkccDeleteHostFromCiBizPath:#{\"/delete/cmdb/delete_host_from_ci_biz\"}")
+    @Value("\${job.bkccDeleteHostFromCiBizPath:#{\"/delete/cmdb/delete_host_from_ci_biz\"}}")
     private val bkccDeleteHostFromCiBizPath = ""
 
     companion object {
@@ -87,8 +87,8 @@ class QueryFromCCService : QueryOperatorService {
             val invalidIpList = nodeIpList.filter {
                 val isOperator = userId == ccIpToNodeMap[it]?.operator ||
                     nodeIpToNodeMap[it]?.createdUser == ccIpToNodeMap[it]?.operator
-                val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!!
-                    || ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
+                val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!! ||
+                    ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
                 !isOperator && !isBakOpertor
             }
             if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] invalidIpList: $invalidIpList")
