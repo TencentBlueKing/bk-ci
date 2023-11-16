@@ -598,8 +598,7 @@ class WorkspaceService @Autowired constructor(
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
-        )
-            .mapValues { "${it.value.first}@${it.value.second}" }
+        ).mapValues { "${it.value.first}@${it.value.second}" }
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
