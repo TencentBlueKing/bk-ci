@@ -118,10 +118,10 @@ interface UserPipelineTransferResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("行数 0开始")
+        @ApiParam("行数 从1开始")
         @QueryParam("line")
         line: Int,
-        @ApiParam("列数 0开始")
+        @ApiParam("列数 从1开始")
         @QueryParam("column")
         column: Int,
         yaml: PositionBody
@@ -140,10 +140,10 @@ interface UserPipelineTransferResource {
         @ApiParam("流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("行数 0开始")
+        @ApiParam("行数 从1开始")
         @QueryParam("line")
         line: Int,
-        @ApiParam("列数 0开始")
+        @ApiParam("列数 从1开始")
         @QueryParam("column")
         column: Int,
         data: ElementInsertBody
