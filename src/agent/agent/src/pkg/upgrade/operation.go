@@ -28,13 +28,12 @@
 package upgrade
 
 import (
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 
 	"github.com/pkg/errors"
 
@@ -46,8 +45,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
-const DAEMON_EXIT_CODE = 88
-
 // UninstallAgent 卸载
 func UninstallAgent() {
 	logs.Info("start uninstall agent")
@@ -58,7 +55,7 @@ func UninstallAgent() {
 		// 错误了也不退出，最少也要干掉daemon
 	}
 	logs.Warn("agent process exiting")
-	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
 }
 
 // runUninstallUpgrader 卸载的区分开，方便进行退出处理
@@ -85,7 +82,7 @@ func runUninstallUpgrader(action string) error {
 	logs.Info("[agentUpgrade]|start uninstall process success, pid: ", pid)
 
 	logs.Warn("[agentUpgrade]|agent uninstall process exiting")
-	systemutil.ExitProcess(DAEMON_EXIT_CODE)
+	systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
 	return nil
 }
 
@@ -128,23 +125,6 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		", docker init file changed: ", changeItems.DockerInitFile,
 	)
 
-	if changeItems.checkNoChange() {
-		logs.Info("[agentUpgrade]|no change to upgrade, skip")
-		return nil
-	}
-
-	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
-	job.BuildTotalManager.Lock.Lock()
-	defer func() {
-		job.BuildTotalManager.Lock.Unlock()
-	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
-		job.GBuildDockerManager.GetInstanceCount() > 0 {
-		logs.Infof("agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
-			job.GBuildManager.GetPreInstancesCount(), job.GBuildManager.GetInstanceCount(), job.GBuildDockerManager.GetInstanceCount())
-		return nil
-	}
-
 	if changeItems.JdkChanged {
 		logs.Info("[agentUpgrade]|jdk changed, replace jdk file")
 
@@ -168,7 +148,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 
 		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
 		go func() {
-			files, err := ioutil.ReadDir(workDir)
+			files, err := os.ReadDir(workDir)
 			if err != nil {
 				logs.Error("upgrade jdk remove old jdk file error", err)
 				return

@@ -42,6 +42,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
@@ -242,7 +243,6 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		upgradeWorkerFile := systemutil.GetUpgradeDir() + "/" + config.WorkAgentFile
 
 		if fileutil.Exists(upgradeWorkerFile) {
-
 			_, err := fileutil.CopyFile(upgradeWorkerFile, agentJarPath, true)
 			upgradeWorkerFileVersion := config.DetectWorkerVersion()
 			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
@@ -259,6 +259,9 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			errorMsg := i18n.Localize("ExecutableFileMissing", map[string]interface{}{"filename": agentJarPath, "dir": workDir})
 			logs.Error(errorMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
+
+			// 丢失 worker 添加退出码
+			exitcode.AddExitError(exitcode.ExitNotWorker, errorMsg)
 		}
 	}
 
@@ -375,7 +378,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := os.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	err := exitcode.WriteFileWithCheck(scriptFile, []byte(scriptContent), os.ModePerm)
 	defer func() {
 		_ = systemutil.Chmod(scriptFile, os.ModePerm)
 		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
@@ -384,7 +387,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		return "", err
 	} else {
 		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
-		err := os.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
+		err := exitcode.WriteFileWithCheck(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {

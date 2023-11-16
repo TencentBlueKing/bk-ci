@@ -34,6 +34,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
@@ -169,6 +170,20 @@ func agentUpgrade() {
 	}
 
 	ack = true
+
+	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
+	// 放到下载文件前，这样就不会因为有长时间构建任务重复下载文件
+	job.BuildTotalManager.Lock.Lock()
+	defer func() {
+		job.BuildTotalManager.Lock.Unlock()
+	}()
+	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
+		job.GBuildDockerManager.GetInstanceCount() > 0 {
+		logs.Infof("agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
+			job.GBuildManager.GetPreInstancesCount(), job.GBuildManager.GetInstanceCount(), job.GBuildDockerManager.GetInstanceCount())
+		return
+	}
+
 	logs.Info("[agentUpgrade]|download upgrade files start")
 	changeItems := downloadUpgradeFiles(upgradeItem)
 	if changeItems.checkNoChange() {

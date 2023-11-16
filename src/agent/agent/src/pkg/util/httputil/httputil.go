@@ -1,3 +1,6 @@
+//go:build out
+// +build out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -177,18 +180,4 @@ func (r *HttpClient) Execute() *HttpResult {
 	result.Status = resp.StatusCode
 	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
 	return result
-}
-
-func (r *HttpResult) Into(obj interface{}) error {
-	// TODO 怎么在golang用泛型将result转成结构化数据？
-	if nil != r.Error {
-		return r.Error
-	}
-
-	err := json.Unmarshal(r.Body, obj)
-	if nil != err {
-		return err
-	}
-
-	return nil
 }
