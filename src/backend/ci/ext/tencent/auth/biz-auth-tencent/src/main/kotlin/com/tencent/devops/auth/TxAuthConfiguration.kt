@@ -111,7 +111,6 @@ class TxAuthConfiguration {
     fun deptService(
         redisOperation: RedisOperation,
         objectMapper: ObjectMapper,
-        secOpsService: SecOpsService,
-        permissionProjectService: PermissionProjectService
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper, secOpsService, permissionProjectService)
+        secOpsService: SecOpsService
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper, secOpsService)
 }
