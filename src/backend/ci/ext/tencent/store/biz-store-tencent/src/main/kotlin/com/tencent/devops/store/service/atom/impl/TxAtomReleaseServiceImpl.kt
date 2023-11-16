@@ -1033,6 +1033,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 tokenType = TokenTypeEnum.OAUTH
             ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
             val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
+            logger.info("creatAtomBranchTestVersion recentCommitDate:$recentCommitDate|updateTime:${it.updateTime}")
             if (recentCommitDate <= it.updateTime.timestamp()) {
                 throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
             }
@@ -1044,9 +1045,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             version = "$version${LocalDateTime.now().hour}"
             UUIDUtil.generate()
         } else {
-            versionRecord!!.id
+            marketAtomUpdateRequest.version = versionRecord!!.version
+            versionRecord.id
         }
-        marketAtomUpdateRequest.version = version
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
 
