@@ -241,6 +241,7 @@
                         name: this.eventId
                     }]
                 })
+                this.daterange = ['', '']
             }
         },
         methods: {
