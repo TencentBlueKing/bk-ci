@@ -48,7 +48,6 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.secops.SecOpsService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
