@@ -11,6 +11,7 @@ import com.tencent.devops.remotedev.config.BkConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -19,6 +20,10 @@ class TaiClient @Autowired constructor(
     private val bkConfig: BkConfig,
     private val objectMapper: ObjectMapper
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TaiClient::class.java)
+    }
+
     fun taiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = params, formatted = false)
@@ -44,6 +49,7 @@ class TaiClient @Autowired constructor(
             val responseData = try {
                 objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             } catch (e: Exception) {
+                logger.error("TaiClient resolveResponse fail|${e.message}", e)
                 throw RemoteServiceException("parse api[${this.request.url.toUrl()}] resp $responseContent", this.code)
             }
 
@@ -75,7 +81,7 @@ data class TaiUserInfo(
     val phone: String,
     val state: Int,
     @JsonProperty("manage_group_ids")
-    val manageGroupIds: List<Int>,
+    val manageGroupIds: List<String>,
     @JsonProperty("company_tags")
     val companyTags: List<CompanyTags>
 ) {
@@ -87,7 +93,7 @@ data class TaiUserInfo(
         @JsonProperty("tag_name")
         val tagName: String,
         @JsonProperty("tag_type")
-        val tagType: String,
+        val tagType: Int,
         @JsonProperty("short_name")
         val shortName: String,
         @JsonProperty("email_suffix")
