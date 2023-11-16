@@ -141,52 +141,7 @@ class CmdbNodeService @Autowired constructor(
             userId = userId,
             toAddNodeCount = toAddIpList.size
         )
-
-//        // 通过svrId查询节点是否在CC中
-//        val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdList:$svrIdList")
-//
-//        val svrIdQueryCCRes = queryFromCCService.queryCCListHostWithoutBizByInRules(
-//            listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID), svrIdList, FIELD_BK_SVR_ID
-//        )
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdQueryCCRes:$svrIdQueryCCRes")
-//        val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有在cc中的节点记录
-//        val svrIdToCCResMap = svrIdQueryCCList!!.associateBy { it.svrId } // cc中 svrId-节点记录 映射
-//
-//        val inCCSvrIdList = mutableListOf<Long>() // 在CC中的节点的SvrId
-//        val notInCCSvrIdList = mutableListOf<Long>() // 不在CC中的节点的SvrId
-//        svrIdList.map {
-//            if (svrIdToCCResMap.containsKey(it.toLong())) inCCSvrIdList.add(it.toLong())
-//            else notInCCSvrIdList.add(it.toLong())
-//        }
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]inCCSvrIdList:$inCCSvrIdList")
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]notInCCSvrIdList:$notInCCSvrIdList")
-//
-//        var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
-//
-//        if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
-//            val ccData = svrIdQueryCCRes.data?.info
-//            queryCCIpToCCInfoMap = ccData!!.associateBy { it.bkHostInnerip }
-//        }
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]queryCCIpToCCInfoMap:$queryCCIpToCCInfoMap")
-//
-//        var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
-//        if (notInCCSvrIdList.isNotEmpty()) { // 不在CC中，add到CC中，查出host_id和云区域id
-//            val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-//            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCResp:$addToCCResp")
-//            val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
-//            addToCCIpToCCInfoMap = ccHostIdList?.mapIndexed { index, value ->
-//                CCInfo(
-//                    svrId = notInCCSvrIdList[index],
-//                    bkHostId = value,
-//                    bkHostInnerip = svrIdToCCResMap[notInCCSvrIdList[index]]?.bkHostInnerip
-//                )
-//            }?.associateBy { it.bkHostInnerip } ?: mapOf()
-//        }
-//        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
-//
-//        queryCCIpToCCInfoMap = queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
-        val queryCCIpToCCInfoMap = deleteNodeFromCC(toAddIpToCmdbNodeMap)
+        val queryCCIpToCCInfoMap = addNodeToCC(toAddIpToCmdbNodeMap)
 
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
         val toAddNodeList = toAddIpList.map {
@@ -221,7 +176,7 @@ class CmdbNodeService @Autowired constructor(
         }
     }
 
-    private fun deleteNodeFromCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
+    private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
         // 通过svrId查询节点是否在CC中
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdList:$svrIdList")
@@ -262,9 +217,9 @@ class CmdbNodeService @Autowired constructor(
                     bkHostInnerip = svrIdToCCResMap[notInCCSvrIdList[index]]?.bkHostInnerip
                 )
             }
-            if (logger.isDebugEnabled) logger.debug("[deleteNodeFromCC]addToCCInfo:$addToCCInfo")
+            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfo")
             addToCCIpToCCInfoMap = addToCCInfo?.associateBy { it.bkHostInnerip } ?: mapOf()
-            if (logger.isDebugEnabled) logger.debug("[deleteNodeFromCC]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
+            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
         }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
 
