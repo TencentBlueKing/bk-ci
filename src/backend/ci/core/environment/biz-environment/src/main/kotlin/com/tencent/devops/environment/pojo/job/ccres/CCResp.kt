@@ -13,13 +13,13 @@ data class CCResp<out T>(
     @ApiModelProperty(value = "权限信息")
     @JsonProperty("permission")
     val permission: String?,
-    @ApiModelProperty(value = "执行成功失败", required = true)
+    @ApiModelProperty(value = "执行成功失败")
     @JsonProperty("result")
-    val result: Boolean,
-    @ApiModelProperty(value = "请求链ID", required = true)
+    val result: Boolean?,
+    @ApiModelProperty(value = "请求链ID")
     @JsonProperty("request_id")
-    val requestId: String,
-    @ApiModelProperty(value = "结果消息", required = true)
+    val requestId: String?,
+    @ApiModelProperty(value = "结果消息")
     @JsonProperty("message")
     val message: String?,
     @ApiModelProperty(value = "返回数据")

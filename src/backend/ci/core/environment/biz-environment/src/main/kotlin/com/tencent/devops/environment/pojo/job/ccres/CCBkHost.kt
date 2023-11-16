@@ -6,5 +6,5 @@ import io.swagger.annotations.ApiModelProperty
 data class CCBkHost(
     @ApiModelProperty(value = "CC中的机器host_id", required = true)
     @JsonProperty("bk_host_ids")
-    var bkHostIds: List<Long>
+    val bkHostIds: List<Long>
 )
