@@ -31,6 +31,7 @@ package com.tencent.devops.process.trigger
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.MANUAL_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OPENAPI_START_EVENT_DESC
@@ -96,6 +97,7 @@ class PipelineTriggerEventAspect(
             var userId: String? = null
             var channelCode: ChannelCode? = null
             var startValues: Map<String, String>? = null
+            var pipelineParamMap: MutableMap<String, BuildParameters>? = null
             var startType: StartType? = null
 
             for (index in parameterValue.indices) {
@@ -105,6 +107,8 @@ class PipelineTriggerEventAspect(
                     "channelCode" -> channelCode = parameterValue[index] as ChannelCode
                     "startValues" -> startValues = parameterValue[index] as Map<String, String>?
                     "startType" -> startType = parameterValue[index] as StartType
+                    "pipelineParamMap" ->
+                        pipelineParamMap = parameterValue[index] as MutableMap<String, BuildParameters>?
                     else -> Unit
                 }
             }
@@ -114,7 +118,7 @@ class PipelineTriggerEventAspect(
                 userId = userId,
                 channelCode = channelCode,
                 startType = startType,
-                startValues = startValues,
+                pipelineParamMap = pipelineParamMap,
                 result = result,
                 exception = exception
             )
@@ -126,6 +130,7 @@ class PipelineTriggerEventAspect(
                     userId = userId!!,
                     projectId = pipeline!!.projectId,
                     startValues = startValues,
+                    pipelineParamMap = pipelineParamMap,
                     startType = startType!!
                 ) ?: return
 
@@ -151,7 +156,7 @@ class PipelineTriggerEventAspect(
         userId: String?,
         channelCode: ChannelCode?,
         startType: StartType?,
-        startValues: Map<String, String>?,
+        pipelineParamMap: MutableMap<String, BuildParameters>?,
         result: Any?,
         exception: Throwable?
     ): Boolean {
@@ -166,13 +171,14 @@ class PipelineTriggerEventAspect(
             return true
         }
         // 重试不需要记录
-        return startValues != null && startValues[PIPELINE_RETRY_BUILD_ID] != null
+        return pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null
     }
 
     private fun buildTriggerEvent(
         userId: String,
         projectId: String,
         startValues: Map<String, String>?,
+        pipelineParamMap: MutableMap<String, BuildParameters>?,
         startType: StartType
     ): PipelineTriggerEvent? {
         val requestId = MDC.get(TraceTag.BIZID)
@@ -224,10 +230,10 @@ class PipelineTriggerEventAspect(
             }
 
             StartType.PIPELINE -> {
-                val parentProjectId = startValues?.get(PIPELINE_START_PARENT_PROJECT_ID)
-                val parentPipelineId = startValues?.get(PIPELINE_START_PARENT_PIPELINE_ID)
-                val parentPipelineName = startValues?.get(PIPELINE_START_PARENT_PIPELINE_NAME)
-                val parentBuildId = startValues?.get(PIPELINE_START_PARENT_BUILD_ID)
+                val parentProjectId = pipelineParamMap?.get(PIPELINE_START_PARENT_PROJECT_ID)?.value?.toString()
+                val parentPipelineId = pipelineParamMap?.get(PIPELINE_START_PARENT_PIPELINE_ID)?.value?.toString()
+                val parentPipelineName = pipelineParamMap?.get(PIPELINE_START_PARENT_PIPELINE_NAME)?.value?.toString()
+                val parentBuildId = pipelineParamMap?.get(PIPELINE_START_PARENT_BUILD_ID)?.value?.toString()
                 if (parentProjectId == null || parentPipelineId == null ||
                     parentBuildId == null || parentPipelineName == null
                 ) {
