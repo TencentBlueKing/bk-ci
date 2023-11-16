@@ -69,7 +69,7 @@ interface PipelineTemplatePermissionService {
     fun getResourcesByPermission(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>,
+        permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
 
     /**

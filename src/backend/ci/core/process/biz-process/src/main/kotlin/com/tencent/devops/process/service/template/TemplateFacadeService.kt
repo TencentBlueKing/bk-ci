@@ -653,7 +653,7 @@ class TemplateFacadeService @Autowired constructor(
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
             page = page,
-            pageSize = pageSize,
+            pageSize = pageSize
         )
         logger.info("get templates and count :$templateWithPermission")
         fillResult(

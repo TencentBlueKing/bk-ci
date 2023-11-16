@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.service.migrate
 
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceService
