@@ -122,10 +122,15 @@ class PipelineTriggerEventAspect(
                 return
             }
             val triggerEvent =
-                buildTriggerEvent(userId = userId!!, startValues = startValues, startType = startType!!) ?: return
+                buildTriggerEvent(
+                    userId = userId!!,
+                    projectId = pipeline!!.projectId,
+                    startValues = startValues,
+                    startType = startType!!
+                ) ?: return
 
             val triggerDetail = buildTriggerDetail(
-                pipeline = pipeline!!,
+                pipeline = pipeline,
                 eventId = triggerEvent.eventId!!,
                 result = result,
                 exception = exception
@@ -140,6 +145,7 @@ class PipelineTriggerEventAspect(
         }
     }
 
+    @Suppress("ComplexCondition")
     private fun skipSaveTriggerEvent(
         pipeline: PipelineInfo?,
         userId: String?,
@@ -165,6 +171,7 @@ class PipelineTriggerEventAspect(
 
     private fun buildTriggerEvent(
         userId: String,
+        projectId: String,
         startValues: Map<String, String>?,
         startType: StartType
     ): PipelineTriggerEvent? {
@@ -172,6 +179,7 @@ class PipelineTriggerEventAspect(
         val eventId = triggerEventService.getEventId()
         val triggerEventBuilder = PipelineTriggerEventBuilder()
         triggerEventBuilder.requestId(requestId)
+        triggerEventBuilder.projectId(projectId)
         triggerEventBuilder.eventId(eventId)
         triggerEventBuilder.triggerUser(userId)
         triggerEventBuilder.createTime(LocalDateTime.now())
