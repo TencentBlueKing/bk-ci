@@ -45,11 +45,11 @@
                 </bk-button>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <div class="pipeline-name-warpper">
-                    <div class="pipeline-name">
+                    <div class="pipeline-name" v-bk-overflow-tips>
                         <span
                             v-if="props.row.permissions && !props.row.permissions.canView"
                             class="pointer"
@@ -71,7 +71,7 @@
                         class="ml5 template-mode-icon"
                         name="template-mode"
                         size="12"
-                        v-bk-tooltips.bottom="$t('pipelineConstraintModeTips')"
+                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
                 </div>
             </template>
@@ -718,8 +718,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .pipeline-cell-link {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .template-mode-icon {
             flex-shrink: 0;
+            position: relative;
+            top: 2px;
         }
     }
     .exec-pipeline-btn {
