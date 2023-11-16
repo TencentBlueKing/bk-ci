@@ -42,5 +42,5 @@ interface ApigwUserManagementResourceV4 {
         @ApiParam("项目ID", required = true)
         @QueryParam("projectCode")
         projectCode: String
-    ): Result<UserAndDeptInfoVo?>
+    ): Result<UserAndDeptInfoVo>
 }

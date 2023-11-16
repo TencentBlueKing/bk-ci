@@ -19,7 +19,7 @@ class ApigwUserManagementResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectCode: String
-    ): Result<UserAndDeptInfoVo?> {
+    ): Result<UserAndDeptInfoVo> {
         logger.info("OPENAPI_GET_USER_SECURITY_INFO_V4|$appCode|$userId")
         return client.get(ServiceSecurityResource::class).getUserSecurityInfo(
             userId = userId,
