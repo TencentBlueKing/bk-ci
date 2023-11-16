@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
@@ -229,6 +230,12 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId
             )
+        )
+    }
+
+    override fun getOperationalProducts(userId: String): Result<List<OperationalProductVO>> {
+        return Result(
+            projectService.getOperationalProducts()
         )
     }
 }

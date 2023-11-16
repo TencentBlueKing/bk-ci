@@ -44,6 +44,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -113,7 +114,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
                 file = logoFile,
                 fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
                 language = I18nUtil.getLanguage(userId),
-                logo = true
+                staticFlag = true
             )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
@@ -195,6 +196,15 @@ class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     override fun isRbacPermission(projectId: String): Boolean = true
+
+    override fun getOperationalProducts(): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
 
     override fun buildRouterTag(routerTag: String?): String? = null
 

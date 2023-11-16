@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
@@ -84,6 +85,7 @@ import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
@@ -119,6 +121,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
@@ -178,6 +181,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var client: Client
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+    @Autowired
+    lateinit var storeFileService: StoreFileService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -368,18 +373,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest)
         val versionContentFieldName = MarketAtomUpdateRequest::versionContent.name
         jsonMap["$KEY_VERSION_INFO.$versionContentFieldName"] = marketAtomUpdateRequest.versionContent
-        val defaultLocaleLanguage = taskJsonMap[KEY_DEFAULT_LOCALE_LANGUAGE].toString()
-        jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] = defaultLocaleLanguage
+        val defaultLocaleLanguage = taskJsonMap[KEY_DEFAULT_LOCALE_LANGUAGE]?.toString()
+        jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] = defaultLocaleLanguage ?: DEFAULT_LOCALE_LANGUAGE
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
         val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = jsonMap,
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            propertiesKeyPrefix = KEY_RELEASE_INFO,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                storeCode = atomCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                propertiesKeyPrefix = KEY_RELEASE_INFO,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId
+            ),
+            version = version
         ).toMutableMap()
         updateRequestDataMap[versionContentFieldName] =
             updateRequestDataMap["$KEY_VERSION_INFO.$versionContentFieldName"].toString()
@@ -409,12 +418,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
-            fileDir = "$atomCode/$version",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
-            repositoryHashId = atomRecord.repositoryHashId
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                storeCode = atomCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+                repositoryHashId = atomRecord.repositoryHashId
+            ),
+            version = version
         )
         // 校验插件发布类型
         marketAtomCommonService.validateReleaseType(
@@ -657,12 +670,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     )
                 storeI18nMessageService.parseErrorCodeI18nInfo(
                     userId = userId,
-                    projectCode = projectCode,
                     errorCodes = errorCodes,
-                    fileDir = "$atomCode/$atomVersion",
-                    i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
-                    keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
-                    repositoryHashId = repositoryHashId
+                    version = atomVersion,
+                    storeI18nConfig = StoreI18nConfig(
+                        projectCode = projectCode,
+                        storeCode = atomCode,
+                        fileDir = "$atomCode/$atomVersion",
+                        i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repositoryHashId)),
+                        dbKeyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
+                        repositoryHashId = repositoryHashId
+                    )
                 )
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
@@ -699,12 +716,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
                 val qualityDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
                     userId = userId,
-                    projectCode = projectCode,
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),
-                    fileDir = "$atomCode/$atomVersion",
-                    i18nDir = i18nDir,
-                    dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-                    repositoryHashId = repositoryHashId
+                    storeI18nConfig = StoreI18nConfig(
+                        projectCode = projectCode,
+                        storeCode = atomCode,
+                        fileDir = "$atomCode/$atomVersion",
+                        i18nDir = i18nDir,
+                        dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+                        repositoryHashId = repositoryHashId
+                    ),
+                    version = atomVersion
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = (qualityDataMap["stage"] as String).lowercase(Locale.getDefault())
@@ -1037,6 +1058,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = params
             )
         }
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
         marketAtomDao.setAtomStatusById(
             dslContext = dslContext,
             atomId = atomId,
@@ -1119,6 +1141,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomCode = atomReleaseRequest.atomCode
         val atomStatus = atomReleaseRequest.atomStatus
         if (releaseFlag) {
+            storeFileService.cleanStoreVersionReferenceFile(atomCode, atomReleaseRequest.version)
             // 处理插件发布逻辑
             doAtomReleaseBus(userId, atomReleaseRequest)
             // 更新质量红线信息

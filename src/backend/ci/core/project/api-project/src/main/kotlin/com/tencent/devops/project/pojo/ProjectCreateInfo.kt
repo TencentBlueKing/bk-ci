@@ -65,5 +65,9 @@ data class ProjectCreateInfo(
     @ApiModelProperty("logo地址")
     val logoAddress: String? = null,
     @ApiModelProperty("项目性质")
-    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value
+    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
+    @ApiModelProperty("运营产品ID")
+    val productId: Int? = null,
+    @ApiModelProperty("运营产品名称")
+    val productName: String? = null
 )
