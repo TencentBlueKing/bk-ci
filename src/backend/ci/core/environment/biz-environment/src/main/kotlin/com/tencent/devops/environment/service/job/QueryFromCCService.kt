@@ -129,19 +129,26 @@ class QueryFromCCService : QueryOperatorService {
         if (logger.isDebugEnabled) logger.debug(
             "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
         )
-        return executePostRequest(
+        val resBody = executePostRequest(
             getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
         )
+        return jacksonObjectMapper().readValue(resBody!!)
     }
 
     fun addHostToCiBiz(svrIdList: List<Long>): CCResp<CCBkHost> {
         val ccAddHostReq = CCAddHostReq(svrIdList)
-        return executePostRequest(getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq)
+        val resBody = executePostRequest(
+            getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
+        )
+        return jacksonObjectMapper().readValue(resBody!!)
     }
 
     fun deleteHostFromCiBiz(hostIdList: Set<Long>): CCResp<Nothing> {
         val ccDeleteHostReq = CCDeleteHostReq(hostIdList)
-        return executeDeleteRequest(getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq)
+        val resBody = executeDeleteRequest(
+            getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
+        )
+        return jacksonObjectMapper().readValue(resBody!!)
     }
 
     fun queryCCFindHostBizRelations(hostIdList: List<Long>): CCResp<List<HostBizRelation>> {
@@ -151,9 +158,10 @@ class QueryFromCCService : QueryOperatorService {
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
             bkHostId = hostIdList
         )
-        return executePostRequest(
+        val resBody = executePostRequest(
             getcommonHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
         )
+        return jacksonObjectMapper().readValue(resBody!!)
     }
 
     private fun getcommonHeaders(): Map<String, String> {
@@ -170,17 +178,14 @@ class QueryFromCCService : QueryOperatorService {
         )
     }
 
-    private fun <T, U> executePostRequest(headers: Map<String, String>, url: String, req: T): CCResp<U> {
+    private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: $url")
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
-        val responseBody = ccPostRes.body?.string()
-        val ccResp = jacksonObjectMapper().readValue<CCResp<U>>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccResp: $ccResp")
-        return ccResp
+        return ccPostRes.body?.string()
     }
 
-    private fun <T, U> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): CCResp<U> {
+    private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         val requestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), requestContent)
         val deleteReq: Request = Request.Builder()
@@ -189,9 +194,6 @@ class QueryFromCCService : QueryOperatorService {
             .delete(requestBody)
             .build()
         val ccDeleteRes = OkhttpUtils.doHttp(deleteReq)
-        val responseBody = ccDeleteRes.body?.string()
-        val ccDeleteResp = jacksonObjectMapper().readValue<CCResp<U>>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[executeDeleteRequest] ccDeleteResp: $ccDeleteResp")
-        return ccDeleteResp
+        return ccDeleteRes.body?.string()
     }
 }
