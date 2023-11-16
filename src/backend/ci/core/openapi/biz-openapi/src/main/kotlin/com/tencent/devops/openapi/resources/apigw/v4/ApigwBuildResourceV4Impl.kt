@@ -41,7 +41,6 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -50,9 +49,6 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
-import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -176,24 +172,15 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo")
-        val buildId = saveTriggerEvent(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
-            action = {
-                client.get(ServiceBuildResource::class).manualStartupNew(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values ?: emptyMap(),
-                    buildNo = buildNo,
-                    channelCode = apiGatewayUtil.getChannelCode(),
-                    startType = StartType.SERVICE
-                ).data
-            }
+            values = values ?: emptyMap(),
+            buildNo = buildNo,
+            channelCode = apiGatewayUtil.getChannelCode(),
+            startType = StartType.SERVICE
         )
-        return Result(buildId)
     }
 
     override fun stop(
@@ -439,47 +426,6 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class)
             .getBuildIdFromBuildNumber(projectId, pipelineId, buildNumber).data
             ?: throw ParamBlankException("Invalid buildNumber")
-    }
-
-    private fun saveTriggerEvent(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        values: Map<String, String>?,
-        action: () -> BuildId?
-    ): BuildId {
-        var buildId: BuildId? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
-        try {
-            buildId = action.invoke()
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            reason = ignored.message.toString()
-            throw ignored
-        } finally {
-            try {
-                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                    specificEvent = PipelineSpecificEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        requestParams = values,
-                        userId = userId,
-                        eventSource = userId,
-                        triggerType = StartType.SERVICE.name,
-                        buildInfo = buildId,
-                        reason = reason,
-                        status = status
-                    )
-                )
-            } catch (ignored: Exception) {
-                logger.warn(
-                    "OPENAPI_BUILD_V4|fail to save trigger event|$projectId|$pipelineId|$userId|$buildId",
-                    ignored
-                )
-            }
-        }
-        return buildId!!
     }
 
     companion object {

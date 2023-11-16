@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -39,7 +38,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -48,9 +46,6 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
-import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
@@ -66,8 +61,7 @@ class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineRecentUseService: PipelineRecentUseService,
-    private val client: Client
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -101,23 +95,15 @@ class UserBuildResourceImpl @Autowired constructor(
         triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        val manualStartup = saveTriggerEvent(
+        val manualStartup = pipelineBuildFacadeService.buildManualStartup(
             userId = userId,
+            startType = StartType.MANUAL,
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            action = {
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.MANUAL,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = ChannelCode.BS,
-                    buildNo = buildNo,
-                    triggerReviewers = triggerReviewers
-                )
-            }
+            channelCode = ChannelCode.BS,
+            buildNo = buildNo,
+            triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(manualStartup)
@@ -549,44 +535,6 @@ class UserBuildResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
-    }
-
-    private fun saveTriggerEvent(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        values: Map<String, String>?,
-        action: () -> BuildId?
-    ): BuildId {
-        var buildId: BuildId? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
-        try {
-            buildId = action.invoke()
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            reason = ignored.message.toString()
-            throw ignored
-        } finally {
-            try {
-                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                    specificEvent = PipelineSpecificEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        requestParams = values,
-                        userId = userId,
-                        eventSource = userId,
-                        triggerType = StartType.MANUAL.name,
-                        buildInfo = buildId,
-                        reason = reason,
-                        status = status
-                    )
-                )
-            } catch (ignored: Exception) {
-                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
-            }
-        }
-        return buildId!!
     }
 
     companion object {

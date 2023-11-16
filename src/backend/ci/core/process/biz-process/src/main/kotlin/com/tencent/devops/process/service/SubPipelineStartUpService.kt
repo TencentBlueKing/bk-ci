@@ -29,12 +29,9 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -45,8 +42,6 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
-import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -54,21 +49,18 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
-import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -91,8 +83,7 @@ class SubPipelineStartUpService @Autowired constructor(
     private val subPipelineStatusService: SubPipelineStatusService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val client: Client
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     companion object {
@@ -241,6 +232,8 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId)
             params[PIPELINE_START_PARENT_PIPELINE_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId)
+            params[PIPELINE_START_PARENT_PIPELINE_ID] =
+                BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
@@ -254,37 +247,25 @@ class SubPipelineStartUpService @Autowired constructor(
             // 校验父流水线最后修改人是否有子流水线执行权限
             checkPermission(userId = parentPipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
             // 子流水线的调用不受频率限制
-            val subBuildId = saveTriggerEvent(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                values = params.mapValues { it.value.value.toString() },
-                parentProjectId = parentProjectId,
-                parentPipelineId = parentPipelineId,
-                parentBuildId = parentBuildId,
-                parentPipelineName = parentPipelineInfo.pipelineName,
-                action = {
-                    pipelineBuildService.startPipeline(
-                        userId = readyToBuildPipelineInfo.lastModifyUser,
-                        pipeline = readyToBuildPipelineInfo,
-                        startType = StartType.PIPELINE,
-                        pipelineParamMap = params,
-                        channelCode = channelCode,
-                        isMobile = isMobile,
-                        model = model,
-                        frequencyLimit = false
-                    )
-                }
-            )
+            val subBuildId = pipelineBuildService.startPipeline(
+                userId = readyToBuildPipelineInfo.lastModifyUser,
+                pipeline = readyToBuildPipelineInfo,
+                startType = StartType.PIPELINE,
+                pipelineParamMap = params,
+                channelCode = channelCode,
+                isMobile = isMobile,
+                model = model,
+                frequencyLimit = false
+            ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId.id,
+                subBuildId = subBuildId,
                 subProjectId = readyToBuildPipelineInfo.projectId
             )
-            return subBuildId.id
+            return subBuildId
         } finally {
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start sub-pipeline($pipelineId)")
         }
@@ -506,58 +487,5 @@ class SubPipelineStartUpService @Autowired constructor(
 
     fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
         return Result(subPipelineStatusService.getSubPipelineStatus(projectId, buildId))
-    }
-
-    private fun saveTriggerEvent(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        values: Map<String, String>?,
-        parentProjectId: String,
-        parentPipelineId: String,
-        parentBuildId: String,
-        parentPipelineName: String,
-        action: () -> BuildId?
-    ): BuildId {
-        var buildId: BuildId? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
-        try {
-            buildId = action.invoke()
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            reason = ignored.message.toString()
-            throw ignored
-        } finally {
-            try {
-                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                    specificEvent = PipelineSpecificEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        requestParams = values,
-                        userId = userId,
-                        eventSource = parentPipelineId,
-                        triggerType = StartType.PIPELINE.name,
-                        buildInfo = buildId,
-                        eventDesc = JsonUtil.toJson(
-                            I18Variable(
-                                code = WebhookI18nConstants.PIPELINE_START_EVENT_DESC,
-                                params = listOf(
-                                    userId,
-                                    "/console/pipeline/$parentProjectId/$parentPipelineId/detail/$parentBuildId",
-                                    parentPipelineName
-                                )
-                            ),
-                            false
-                        ),
-                        reason = reason,
-                        status = status
-                    )
-                )
-            } catch (ignored: Exception) {
-                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
-            }
-        }
-        return buildId!!
     }
 }

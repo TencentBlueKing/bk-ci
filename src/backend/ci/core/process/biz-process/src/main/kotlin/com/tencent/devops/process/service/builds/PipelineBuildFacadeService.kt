@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -64,7 +63,6 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServiceTriggerEventResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -115,9 +113,6 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.trigger.PipelineSpecificEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -168,8 +163,7 @@ class PipelineBuildFacadeService(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
-    private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val client: Client
+    private val webhookBuildParameterService: WebhookBuildParameterService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -701,26 +695,17 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-            val buildId = saveTriggerEvent(
+            return pipelineBuildService.startPipeline(
                 userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                values = paramPamp.mapValues { it.value.value.toString() },
-                action = {
-                    pipelineBuildService.startPipeline(
-                        userId = userId,
-                        pipeline = pipeline,
-                        startType = StartType.TIME_TRIGGER,
-                        pipelineParamMap = paramPamp,
-                        channelCode = pipeline.channelCode,
-                        isMobile = false,
-                        model = model,
-                        signPipelineVersion = null,
-                        frequencyLimit = false
-                    )
-                }
-            )
-            return buildId.id
+                pipeline = pipeline,
+                startType = StartType.TIME_TRIGGER,
+                pipelineParamMap = paramPamp,
+                channelCode = pipeline.channelCode,
+                isMobile = false,
+                model = model,
+                signPipelineVersion = null,
+                frequencyLimit = false
+            ).id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
         }
@@ -2501,43 +2486,5 @@ class PipelineBuildFacadeService(
             }
             checkManualReviewParamOut(item.valueType, item, value)
         }
-    }
-
-    private fun saveTriggerEvent(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        values: Map<String, String>?,
-        action: () -> BuildId
-    ): BuildId {
-        var buildId: BuildId? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var reason: String = PipelineTriggerReason.TRIGGER_SUCCESS.name
-        try {
-            buildId = action.invoke()
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            reason = ignored.message.toString()
-            throw ignored
-        } finally {
-            try {
-                client.get(ServiceTriggerEventResource::class).saveSpecificEvent(
-                    specificEvent = PipelineSpecificEvent(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        requestParams = values,
-                        userId = userId,
-                        eventSource = userId,
-                        triggerType = StartType.TIME_TRIGGER.name,
-                        buildInfo = buildId,
-                        reason = reason,
-                        status = status
-                    )
-                )
-            } catch (ignored: Exception) {
-                logger.warn("fail to save trigger event|$projectId|$pipelineId|$userId|$buildId", ignored)
-            }
-        }
-        return buildId!!
     }
 }
