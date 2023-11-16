@@ -24,12 +24,12 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwUserManagementResourceV4 {
     @GET
-    @Path("/getUserInfo")
+    @Path("/getUserSecurityInfo")
     @ApiOperation(
-        "获取用户信息",
+        "获取用户安全相关信息",
         tags = ["v4_app_user_info"]
     )
-    fun getUserInfo(
+    fun getUserSecurityInfo(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,

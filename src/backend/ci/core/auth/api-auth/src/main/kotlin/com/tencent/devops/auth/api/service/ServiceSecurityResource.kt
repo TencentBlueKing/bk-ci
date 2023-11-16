@@ -15,7 +15,7 @@ import javax.ws.rs.QueryParam
 @Path("/service/security")
 interface ServiceSecurityResource {
     @GET
-    @Path("/getUserInfoAndWaterMark")
+    @Path("/getUserSecurityInfo")
     @ApiOperation("获取安全相关信息")
     fun getUserSecurityInfo(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
