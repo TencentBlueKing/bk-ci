@@ -20,7 +20,7 @@ type ExitErrorEnum string
 const (
 	ExitNotWorker          ExitErrorEnum = "THIRD_AGENT_EXIT_NOT_WORKER"
 	ExitLeftDevice                       = "THIRD_AGENT_EXIT_LEFT_DEVICE"
-	ExitNoPermissionDenied               = "THIRD_AGENT_EXIT_PERMISSION_DENID"
+	ExitNoPermissionDenied               = "THIRD_AGENT_EXIT_PERMISSION_DENIED"
 )
 
 var exitError *ExitErrorType = nil
