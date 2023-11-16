@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     STATUS  int          default 0                 not null comment '0使用中 1待销毁 2销毁中 10注册中 11未使用',
     LOCKED  boolean      default false             not null comment '该资源是否锁定',
     USER_INSTANCE_List text NOT NULL COMMENT '拥有者或共享人详情',
+    PROJECT_ID varchar(64)  DEFAULT '' NOT NULL COMMENT '项目ID',
+    DISK varchar(64)  NULL COMMENT '磁盘',
+    HDISK varchar(64)  NULL COMMENT '云磁盘',
     UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 

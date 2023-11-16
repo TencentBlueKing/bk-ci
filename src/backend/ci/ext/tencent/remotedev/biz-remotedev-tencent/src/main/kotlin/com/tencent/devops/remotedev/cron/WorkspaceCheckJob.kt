@@ -48,6 +48,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
         private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
+        private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
 
     /**
@@ -116,7 +117,10 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
-                if (redisHeartBeat.autoHeartbeat()) return
+                if (redisHeartBeat.autoHeartbeat()) {
+                    workspaceCommon.fixUnexpectedWorkspace()
+                    return
+                }
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
@@ -143,6 +147,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         }
                     }
                 }
+                // 保留在此：处理休眠失败的情况
                 workspaceCommon.fixUnexpectedWorkspace()
             }
         } catch (e: Throwable) {
@@ -226,6 +231,27 @@ class WorkspaceCheckJob @Autowired constructor(
             if (lockSuccess) {
                 logger.info("sync START resource list get lock.")
                 workspaceCommon.syncStartCloudResourceList()
+            }
+        } catch (e: Throwable) {
+            logger.error("sync START resource list failed", e)
+        }
+    }
+
+    /**
+     * 23:50 定时统计云桌面数据快照
+     */
+    @Scheduled(cron = "0 50 23 * * ?")
+    fun backupDailyCgsData() {
+        logger.info("=========>> start to back up cgs data <<=========")
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
+            return
+        }
+        val redisLock = RedisLock(redisOperation, backupCgsDataLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("sync backup cgs data get lock.")
+                workspaceCommon.backupDailyCsgData()
             }
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)

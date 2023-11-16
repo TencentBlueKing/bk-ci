@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -45,16 +46,19 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -76,6 +80,9 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.display
+import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
+import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
@@ -87,6 +94,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -94,10 +102,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Service
-@Suppress("LongMethod")
+@Suppress("ALL")
 class WorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
@@ -106,6 +118,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
+    private val remoteDevCvmService: RemoteDevCvmService,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
@@ -117,17 +130,10 @@ class WorkspaceService @Autowired constructor(
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val redisCache: RedisCacheService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val expertSupportDao: ExpertSupportDao
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-        private const val defaultPageSize = 20
-        private const val DEFAULT_WAIT_TIME = 60
-        private const val DISCOUNT_TIME = 10000
-    }
-
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
@@ -248,70 +254,110 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countProjectWorkspace(
+        val count = workspaceJoinDao.countProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             workspaceName = null,
             systemType = null,
             queryType = QueryType.WEB,
             ips = null,
-            owner = null
+            owner = null,
+            status = null,
+            zoneId = null,
+            machineType = null,
+            expertSupId = null
         )
-        val result = workspaceDao.limitFetchProjectWorkspace(
-            dslContext = dslContext,
+        val result = limitFetchProjectWorkspace(
             projectId = projectId,
             workspaceName = null,
             systemType = null,
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
             ips = null,
-            owner = null
-        ) ?: emptyList()
+            owner = null,
+            status = null,
+            zoneId = null,
+            machineType = null,
+            expertSupId = null
+        )
 
-        return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
+        val records = parseWorkspaceList(result, false)
+
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 
     fun getProjectWorkspaceList4Op(
+        data: ProjectWorkspaceFetchData
+    ): Page<ProjectWorkspace> {
+        logger.info("op get project ${data.projectId} workspace list {}", data)
+        val pageNotNull = data.page ?: 1
+        val pageSizeNotNull = data.pageSize ?: 6666
+        val count = workspaceJoinDao.countProjectWorkspace(
+            dslContext = dslContext,
+            projectId = data.projectId,
+            workspaceName = data.workspaceName,
+            systemType = data.systemType,
+            queryType = QueryType.OP,
+            ips = data.ips,
+            owner = data.owner,
+            status = data.status,
+            zoneId = data.zoneId,
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
+        )
+        val result = limitFetchProjectWorkspace(
+            projectId = data.projectId,
+            workspaceName = data.workspaceName,
+            systemType = data.systemType,
+            queryType = QueryType.OP,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
+            ips = data.ips,
+            owner = data.owner,
+            status = data.status,
+            zoneId = data.zoneId,
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
+        )
+
+        val records = parseWorkspaceList(result, true)
+
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
+    }
+
+    // 拆出来 fetch 方便同步修改
+    private fun limitFetchProjectWorkspace(
+        limit: SQLLimit,
         projectId: String?,
         workspaceName: String?,
         systemType: WorkspaceSystemType?,
+        queryType: QueryType?,
         ips: List<String>?,
-        page: Int?,
-        pageSize: Int?,
-        owner: String?
-    ): Page<ProjectWorkspace> {
-        logger.info("op get project $projectId workspace list")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countProjectWorkspace(
+        owner: String?,
+        status: WorkspaceStatus?,
+        zoneId: String?,
+        machineType: String?,
+        expertSupId: Long?
+    ): List<WorkspaceRecordInf> {
+        return workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             projectId = projectId,
             workspaceName = workspaceName,
             systemType = systemType,
-            queryType = QueryType.OP,
+            queryType = queryType,
+            limit = limit,
             ips = ips,
-            owner = owner
-        )
-        val result = workspaceDao.limitFetchProjectWorkspace(
-            dslContext = dslContext,
-            projectId = projectId,
-            workspaceName = workspaceName,
-            systemType = systemType,
-            queryType = QueryType.OP,
-            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            ips = ips,
-            owner = owner
+            owner = owner,
+            status = status,
+            zoneId = zoneId,
+            machineType = machineType,
+            expertSupId = expertSupId
         ) ?: emptyList()
-
-        return parseWorkspaceList(result, pageNotNull, pageSizeNotNull, count)
     }
 
     private fun parseWorkspaceList(
         result: List<WorkspaceRecordInf>,
-        pageNotNull: Int,
-        pageSizeNotNull: Int,
-        count: Long
-    ): Page<ProjectWorkspace> {
+        enableExportSup: Boolean
+    ): List<ProjectWorkspace> {
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
 
@@ -334,6 +380,25 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
+
+        // 专家协助
+        var expertMap: MutableMap<String, MutableList<FetchSupportResp>>? = null
+        if (enableExportSup) {
+            expertMap = mutableMapOf()
+            expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet()).forEach {
+                val resp = FetchSupportResp(
+                    id = it.id,
+                    creator = it.creator,
+                    content = it.content,
+                    createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+                )
+                if (expertMap[it.workspaceName] != null) {
+                    expertMap[it.workspaceName]?.add(resp)
+                } else {
+                    expertMap[it.workspaceName] = mutableListOf(resp)
+                }
+            }
+        }
 
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
@@ -364,7 +429,9 @@ class WorkspaceService @Autowired constructor(
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
-                            disk = it.memory
+                            disk = it.memory,
+                            expertSupportList = expertMap?.get(it.workspaceName),
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
@@ -394,14 +461,16 @@ class WorkspaceService @Autowired constructor(
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
-                            disk = it.memory
+                            disk = it.memory,
+                            expertSupportList = expertMap?.get(it.workspaceName),
+                            macAddress = allWindows[it.workspaceName]?.macAddress
                         )
                     )
                 }
             }
         }
 
-        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
+        return records
     }
 
     fun getProjectWorkspaceList4WeSec(
@@ -443,6 +512,11 @@ class WorkspaceService @Autowired constructor(
                 projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
             )
         }
+    }
+
+    fun getRemotedevCvm(projectId: String?): List<RemotedevCvmData> {
+        logger.debug("get remotedev cvm list")
+        return remoteDevCvmService.getAllRemotedevCvm(projectId)
     }
 
     private fun parsingWorkspace(
@@ -982,5 +1056,140 @@ class WorkspaceService @Autowired constructor(
                 logger.info("no need to notify now|$userId|$duration|${limit * 60}")
             }
         }
+    }
+
+    fun exportProjectWorkspaceList(
+        data: ProjectWorkspaceFetchData
+    ): Response {
+        val pageNotNull = data.page ?: 1
+        val pageSizeNotNull = data.pageSize ?: 6666
+
+        val result = limitFetchProjectWorkspace(
+            projectId = data.projectId,
+            workspaceName = data.workspaceName,
+            systemType = data.systemType,
+            queryType = QueryType.OP,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
+            ips = data.ips,
+            owner = data.owner,
+            status = data.status,
+            zoneId = data.zoneId,
+            machineType = data.machineType,
+            expertSupId = data.expertSupId
+        )
+
+        val records = parseWorkspaceList(result, true)
+
+        // 创建表
+        val workbook = SXSSFWorkbook()
+        val sheet = workbook.createSheet("实例管理")
+        // 创建标题
+        val titleRow = sheet.createRow(0)
+        titleList.forEachIndexed { index, s ->
+            titleRow.createCell(index).setCellValue(s)
+        }
+        // 创建内容
+        var offset = 1
+        records.forEach { record ->
+            val row = sheet.createRow(offset)
+            row.createCell(0).setCellValue(record.projectId)
+            row.createCell(1).setCellValue(record.workspaceName)
+            row.createCell(2).setCellValue(record.status?.display())
+            row.createCell(3).setCellValue(record.hostName)
+            row.createCell(4).setCellValue(record.workspaceSystemType.name)
+            row.createCell(5).setCellValue(record.winConfig?.size)
+            row.createCell(6).setCellValue(record.createUserId)
+            row.createCell(7).setCellValue(record.owner)
+            row.createCell(8).setCellValue(record.viewers?.joinToString(","))
+            offset++
+        }
+        // 调整宽度
+        titleList.forEachIndexed { index, _ ->
+            sheet.trackAllColumnsForAutoSizing()
+            sheet.autoSizeColumn(index)
+        }
+
+        return Response.ok(
+            StreamingOutput { output ->
+                workbook.write(output)
+                workbook.dispose()
+            },
+            MediaType.APPLICATION_OCTET_STREAM
+        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
+            .build()
+    }
+
+    fun exportProjectWorkspaceListUser(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Response {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 6666
+        val result = limitFetchProjectWorkspace(
+            projectId = projectId,
+            workspaceName = null,
+            systemType = null,
+            queryType = QueryType.WEB,
+            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
+            ips = null,
+            owner = null,
+            status = null,
+            zoneId = null,
+            machineType = null,
+            expertSupId = null
+        )
+
+        val records = parseWorkspaceList(result, false)
+
+        // 创建表
+        val workbook = SXSSFWorkbook()
+        val sheet = workbook.createSheet("实例管理")
+        // 创建标题
+        val titleRow = sheet.createRow(0)
+        userTitleList.forEachIndexed { index, s ->
+            titleRow.createCell(index).setCellValue(s)
+        }
+        // 创建内容
+        var offset = 1
+        records.forEach { record ->
+            val row = sheet.createRow(offset)
+            row.createCell(0).setCellValue(record.workspaceName)
+            row.createCell(1).setCellValue(record.hostName)
+            row.createCell(2).setCellValue(record.status?.display())
+            row.createCell(3).setCellValue(record.winConfig?.size)
+            row.createCell(4).setCellValue(record.zoneConfig?.zone)
+            row.createCell(5).setCellValue(record.macAddress)
+            row.createCell(6).setCellValue(record.owner)
+            row.createCell(7).setCellValue(record.viewers?.joinToString(";"))
+            offset++
+        }
+        // 调整宽度
+        userTitleList.forEachIndexed { index, _ ->
+            sheet.trackAllColumnsForAutoSizing()
+            sheet.autoSizeColumn(index)
+        }
+
+        return Response.ok(
+            StreamingOutput { output ->
+                workbook.write(output)
+                workbook.dispose()
+            },
+            MediaType.APPLICATION_OCTET_STREAM
+        ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
+            .build()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        private const val defaultPageSize = 20
+        private const val DEFAULT_WAIT_TIME = 60
+        private const val DISCOUNT_TIME = 10000
+        private val titleList =
+            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "创建人", "拥有者", "共享人")
+        private val userTitleList =
+            listOf("桌面 ID/别名", "内网 IP", "状态", "机型", "地域", "MAC地址", "拥有者", "共享人")
     }
 }

@@ -21,6 +21,7 @@ data class RemoteDevUpdateEvent(
     var environmentHost: String? = null,
     var environmentIp: String? = null,
     var resourceId: String? = null,
+    var macAddress: String? = null,
     var errorMsg: String? = null,
     var workspaceImageInfo: WorkspaceImageInfo? = null,
     val bkTicket: String? = null,

@@ -7,5 +7,6 @@ data class CreateGitProxyData(
     val projectId: String,
     val url: String,
     val repoName: String,
-    val desc: String?
+    val desc: String?,
+    val enableLfsCache: Boolean?
 )

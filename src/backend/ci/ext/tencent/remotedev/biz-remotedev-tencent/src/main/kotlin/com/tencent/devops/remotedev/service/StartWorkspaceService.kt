@@ -8,9 +8,11 @@ import com.tencent.devops.remotedev.pojo.windows.ComputerUserData
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserEnum
 import com.tencent.devops.remotedev.service.startcloud.StartCloudClient
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class StartWorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
@@ -39,34 +41,37 @@ class StartWorkspaceService @Autowired constructor(
             ?: return ComputerStatusResp(0, emptyList(), emptyList())
 
         // 拼接仪表信息
-        var statusNormalValue = 0
-        var statusAbnormalValue = 0
-        var statusShutdownValue = 0
-        var userLoginValue = 0
-        var userLogoutValue = 0
+        val statusResMap = mutableMapOf<ComputerStatusEnum, ComputerStatusData>()
+        val userResMap = mutableMapOf(
+            ComputerUserEnum.LOGIN to ComputerUserData(0, ComputerUserEnum.LOGIN),
+            ComputerUserEnum.LOGOUT to ComputerUserData(0, ComputerUserEnum.LOGOUT)
+        )
         resp.forEach {
-            when (it.state) {
-                0 -> statusAbnormalValue++
-                1 -> statusNormalValue++
-                2 -> statusShutdownValue++
-            }
             if (!it.userInfos.isNullOrEmpty()) {
-                userLoginValue++
+                userResMap[ComputerUserEnum.LOGIN]!!.value++
             } else {
-                userLogoutValue++
+                userResMap[ComputerUserEnum.LOGOUT]!!.value++
+            }
+
+            val status = ComputerStatusEnum.getEnumFromStatus(it.state)
+            if (status == null) {
+                logger.warn("computerStatus $userId|$projectId get unknown state ${it.state}")
+                return@forEach
+            }
+            if (statusResMap[status] == null) {
+                statusResMap[status] = ComputerStatusData(1, status, status.message)
+            } else {
+                statusResMap[status]!!.value++
             }
         }
         return ComputerStatusResp(
             count = resp.size,
-            status = listOf(
-                ComputerStatusData(statusNormalValue, ComputerStatusEnum.NORMAL),
-                ComputerStatusData(statusAbnormalValue, ComputerStatusEnum.ABNORMAL),
-                ComputerStatusData(statusShutdownValue, ComputerStatusEnum.SHUTDOWN)
-            ),
-            users = listOf(
-                ComputerUserData(userLoginValue, ComputerUserEnum.LOGIN),
-                ComputerUserData(userLogoutValue, ComputerUserEnum.LOGOUT)
-            )
+            status = statusResMap.values.toList(),
+            users = userResMap.values.toList()
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StartWorkspaceService::class.java)
     }
 }

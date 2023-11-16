@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,5 +66,9 @@ data class ProjectWorkspace(
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,
-    val disk: Int = 100
+    val disk: Int = 100,
+    @ApiModelProperty("专家协助")
+    val expertSupportList: List<FetchSupportResp>?,
+    @ApiModelProperty("云桌面对应的mac地址")
+    val macAddress: String? = null
 )

@@ -71,13 +71,18 @@ class WhiteListService @Autowired constructor(
         return true
     }
 
-    fun addGPUWhiteListUser(userId: String, whiteListUser: String, limit: Int = 1): Boolean {
+    fun addGPUWhiteListUser(
+        userId: String,
+        whiteListUser: String,
+        limit: Int = 1,
+        override: Boolean = false
+    ): Boolean {
         logger.info("userId($userId) wants to add GPU whiteListUser($whiteListUser)")
         // whiteListUser支持多个用;分隔，需要解析。
         whiteListUser.apply {
             val whiteListUserArray = this.split(";")
             for (user in whiteListUserArray) {
-                if (whiteListDao.add(
+                if (override && whiteListDao.addOrUpdate(
                         dslContext,
                         WhiteList(
                             name = user,
@@ -86,9 +91,18 @@ class WhiteListService @Autowired constructor(
                         )
                     ) == 1
                 ) {
-                    logger.info("whiteListUser($user) in the gpu whiteList has add.")
-                } else {
-                    logger.info("whiteListUser($user) in the gpu whiteList already exists.")
+                    logger.info("whiteListUser($user) in the gpu whiteList has add.(override)")
+                }
+                if (!override && whiteListDao.add(
+                        dslContext,
+                        WhiteList(
+                            name = user,
+                            type = WhiteListType.WINDOWS_GPU,
+                            windowsGpuLimit = limit
+                        )
+                    ) == 1
+                ) {
+                    logger.info("whiteListUser($user) in the gpu whiteList has add.(not override)")
                 }
                 client.get(ServiceStartCloudResource::class).createStartCloudUser(user)
             }

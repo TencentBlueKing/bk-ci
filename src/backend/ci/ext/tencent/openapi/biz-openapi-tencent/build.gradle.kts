@@ -39,7 +39,7 @@ dependencies {
     api("io.jsonwebtoken:jjwt-api")
     implementation(project(mapOf("path" to ":ext:tencent:remotedev:api-remotedev-tencent")))
     implementation(project(mapOf("path" to ":ext:tencent:remotedev:api-remotedev-tencent")))
-    implementation(project(mapOf("path" to ":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent")))
+    implementation(project(mapOf("path" to ":ext:tencent:dispatch:api-dispatch-kubernetes-tencent")))
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")
     api("org.springframework.boot:spring-boot-starter-aop")

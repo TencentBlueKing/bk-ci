@@ -30,6 +30,7 @@ package com.tencent.devops.log.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
@@ -42,7 +43,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -53,8 +54,17 @@ import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
-import com.tencent.devops.log.util.Constants
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
+import com.tencent.devops.log.util.IndexNameUtils
+import java.io.IOException
+import java.sql.Date
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
+import kotlin.math.ceil
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -75,14 +85,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import java.io.IOException
-import java.sql.Date
-import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
-import kotlin.math.ceil
 
 @Suppress(
     "LongParameterList",
@@ -93,7 +95,7 @@ import kotlin.math.ceil
     "ReturnCount",
     "ComplexMethod"
 )
-class LogServiceESImpl constructor(
+class LogServiceESImpl(
     private val logClient: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
@@ -141,7 +143,7 @@ class LogServiceESImpl constructor(
                     if (doAddMultiLines(buf, event.buildId) == 0) {
                         throw ExecuteException(
                             "None of lines is inserted successfully to ES " +
-                                "[${event.buildId}|${event.retryTime}]"
+                                    "[${event.buildId}|${event.retryTime}]"
                         )
                     } else {
                         buf.clear()
@@ -682,7 +684,7 @@ class LogServiceESImpl constructor(
             )
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                    "doQueryInitLogs get the query builder: $boolQueryBuilder"
+                        "doQueryInitLogs get the query builder: $boolQueryBuilder"
             )
 
             val searchRequest = SearchRequest(index)
@@ -751,7 +753,7 @@ class LogServiceESImpl constructor(
 
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                    "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
+                        "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
                 .source(
@@ -838,9 +840,11 @@ class LogServiceESImpl constructor(
                 end >= size -> {
                     end - size
                 }
+
                 logSize >= size -> {
                     logSize - size
                 }
+
                 else -> {
                     0
                 }
@@ -857,7 +861,7 @@ class LogServiceESImpl constructor(
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                    "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
+                        "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
                 .source(
@@ -1093,7 +1097,7 @@ class LogServiceESImpl constructor(
             indexCache.put(index, true)
             true
         } else {
-            true
+            false
         }
     }
 
@@ -1121,14 +1125,20 @@ class LogServiceESImpl constructor(
     }
 
     private fun createIndex(buildId: String, index: String): Boolean {
+        val createClient = logClient.hashClient(buildId)
+        // 提前创建第二天的索引备用
+        createESIndex(createClient, IndexNameUtils.getNextIndexName())
+        return createESIndex(createClient, index)
+    }
+
+    private fun createESIndex(createClient: ESClient, index: String): Boolean {
         logger.info("[$index] Create index")
         var success = false
         val startEpoch = System.currentTimeMillis()
-        val createClient = logClient.hashClient(buildId)
         return try {
             logger.info(
                 "[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
-                    " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
+                        " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
             )
             val request = CreateIndexRequest(index)
                 .settings(

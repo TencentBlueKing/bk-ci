@@ -29,11 +29,7 @@ package com.tencent.devops.log.client.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_CLUSTER_NAME
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_CONTACT_BLUE_SHIELD_ASSISTANT
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_EMPTY_DATA
@@ -46,20 +42,24 @@ import com.tencent.devops.common.log.constant.LogMessageCode.BK_LOOK_FORWARD_IT
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_NOTIFICATION_PUSH_FROM_BKDEVOPS
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_RECOVERY
 import com.tencent.devops.common.log.constant.LogMessageCode.BK_STATUS
-import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
-import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.math.abs
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 class MultiESLogClient constructor(
     private val clients: List<ESClient>,
@@ -93,6 +93,7 @@ class MultiESLogClient constructor(
     private val notifyExecutor = Executors.newSingleThreadExecutor()
 
     private val notifyUsers = HashSet<String>()
+
     @Volatile
     private var notifyUserLastUpdate = 0L
 
@@ -298,121 +299,123 @@ class MultiESLogClient constructor(
                 sender = "DevOps"
                 body = message
             }
-            SpringContextUtil.getBean(Client::class.java).get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+            SpringContextUtil.getBean(Client::class.java).get(ServiceNotifyResource::class)
+                .sendEmailNotify(emailMessage)
         } catch (t: Throwable) {
             logger.warn("[$esName|$inactive] Fail to send the notify message", t)
         }
     }
 
+    @Suppress("MaxLineLength")
     private fun getEmailBody(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val date = simpleDateFormat.format(Date())
         return "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n" +
-            "\t<tbody>\n" +
-            "\t\t<tr>\n" +
-            "\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n" +
-            "\t\t\t   <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t<tbody>\n" +
-            "\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n" +
-            "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t<tbody>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"http://file.tapd.oa.com//tfl/pictures/201807/tapd_20363462_1531467552_72.png\" width=\"52\" style=\"display: block\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"http://file.tapd.oa.com//tfl/pictures/201807/tapd_20363462_1531467605_41.png\" width=\"176\" style=\"display: block\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t</tbody>\n" +
-            "\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n" +
-            "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n" +
-            "\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">" + I18nUtil.getCodeLanMessage(
+                "\t<tbody>\n" +
+                "\t\t<tr>\n" +
+                "\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n" +
+                "\t\t\t   <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+                "\t\t\t\t\t<tbody>\n" +
+                "\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n" +
+                "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+                "\t\t\t\t\t\t\t\t\t<tbody>\n" +
+                "\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"http://file.tapd.oa.com//tfl/pictures/201807/tapd_20363462_1531467552_72.png\" width=\"52\" style=\"display: block\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"http://file.tapd.oa.com//tfl/pictures/201807/tapd_20363462_1531467605_41.png\" width=\"176\" style=\"display: block\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t</tbody>\n" +
+                "\t\t\t\t\t\t\t\t</table>\n" +
+                "\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n" +
+                "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n" +
+                "\t\t\t\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION
         ) + "</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_NOTIFICATION_PUSH_FROM_BKDEVOPS
         ) + "</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 36px; padding-bottom: 14px; color: #707070;\"></td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<thead style=\"background: #f6f8f8;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"color: #333C48;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 36px; padding-bottom: 14px; color: #707070;\"></td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<thead style=\"background: #f6f8f8;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"color: #333C48;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_CLUSTER_NAME
         ) + "</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_STATUS
         ) + "</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody style=\"color: #707070;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#{esName}</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#{status}</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- " + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody style=\"color: #707070;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#{esName}</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#{status}</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<!-- " + I18nUtil.getCodeLanMessage(
             messageCode = BK_EMPTY_DATA
         ) + " -->\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- <tr class=\"no-data\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t<!-- <tr class=\"no-data\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_LOOK_FORWARD_IT
         ) + "</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr> -->\n" +
-            "\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t</tr> -->\n" +
+                "\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_CONTACT_BLUE_SHIELD_ASSISTANT
         ) + "</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>$date</div>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
+                "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>$date</div>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
+                "\t\t\t\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n" +
+                "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
         ) + "</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t</tbody>\n" +
-            "\t\t\t   </table>\n" +
-            "\t\t\t</td>\n" +
-            "\t\t</tr>\n" +
-            "\t</tbody>\n" +
-            "</table>\n"
+                "\t\t\t\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t\t\t\t</table>\n" +
+                "\t\t\t\t\t\t\t</td>\n" +
+                "\t\t\t\t\t\t</tr>\n" +
+                "\t\t\t\t\t</tbody>\n" +
+                "\t\t\t   </table>\n" +
+                "\t\t\t</td>\n" +
+                "\t\t</tr>\n" +
+                "\t</tbody>\n" +
+                "</table>\n"
     }
 
     fun parseMessageTemplate(content: String, data: Map<String, String>): String {
@@ -430,6 +433,7 @@ class MultiESLogClient constructor(
         matcher.appendTail(newValue)
         return newValue.toString()
     }
+
     // 1 minute
     private fun isNotifyUserValid() = (System.currentTimeMillis() - notifyUserLastUpdate) <= 60 * 1000
 
