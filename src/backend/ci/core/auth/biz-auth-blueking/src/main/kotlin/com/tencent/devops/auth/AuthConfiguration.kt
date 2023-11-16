@@ -55,7 +55,6 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
-import com.tencent.devops.auth.service.secops.SecOpsService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
@@ -118,9 +117,8 @@ class AuthConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper,
-        secOpsService: SecOpsService
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper, secOpsService)
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 
     @Bean
     @Primary

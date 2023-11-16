@@ -80,15 +80,4 @@ interface ServiceDeptResource {
         name: String
     ): Result<UserAndDeptInfoVo?>
 
-    @GET
-    @Path("/getUserInfoAndWaterMark")
-    @ApiOperation("获取单个用户信息和水印信息")
-    fun getUserInfoAndWaterMark(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("用户ID", required = true)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectCode")
-        projectCode: String
-    ): Result<UserAndDeptInfoVo?>
 }
