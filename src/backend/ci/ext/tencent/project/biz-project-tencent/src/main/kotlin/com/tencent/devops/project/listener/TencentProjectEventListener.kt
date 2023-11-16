@@ -87,15 +87,18 @@ class TencentProjectEventListener @Autowired constructor(
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
+        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         projectPaasCCService.updatePaasCCProject(
             userId = event.userId,
             projectId = event.projectId,
             projectUpdateInfo = event.projectInfo,
-            accessToken = ""
+            accessToken = accessToken
         )
     }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
+        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+
         val projectUpdateLogoInfo = ProjectUpdateLogoInfo(
             logo_addr = event.logoAddr,
             updator = event.userId
@@ -103,7 +106,7 @@ class TencentProjectEventListener @Autowired constructor(
         projectPaasCCService.updatePaasCCProjectLogo(
             userId = event.userId,
             projectId = event.projectId,
-            accessToken = "",
+            accessToken = accessToken,
             projectUpdateLogoInfo = projectUpdateLogoInfo
         )
     }

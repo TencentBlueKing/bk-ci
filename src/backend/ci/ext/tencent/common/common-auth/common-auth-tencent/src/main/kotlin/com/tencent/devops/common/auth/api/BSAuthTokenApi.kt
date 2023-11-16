@@ -153,19 +153,6 @@ class BSAuthTokenApi @Autowired constructor(
 
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {
         return serviceCode.id() to secretMap[serviceCode.id()]!!
-//        val secret = when (serviceCode as BkAuthServiceCode) {
-//            BkAuthServiceCode.BCS -> bkAuthProperties.bcsSecret
-//            BkAuthServiceCode.CODE -> bkAuthProperties.codeSecret
-//            BkAuthServiceCode.PIPELINE -> bkAuthProperties.pipelineSecret
-//            BkAuthServiceCode.ARTIFACTORY -> bkAuthProperties.artifactorySecret
-//            BkAuthServiceCode.TICKET -> bkAuthProperties.ticketSecret
-//            BkAuthServiceCode.ENVIRONMENT -> bkAuthProperties.environmentSecret
-//            BkAuthServiceCode.EXPERIENCE -> bkAuthProperties.experienceSecret
-//            BkAuthServiceCode.VS -> bkAuthProperties.vsSecret
-//            BkAuthServiceCode.QUALITY -> bkAuthProperties.qualitySecret
-//            BkAuthServiceCode.WETEST -> bkAuthProperties.wetestSecret
-//        }
-//        return Pair(serviceCode.value, secret!!)
     }
 
     companion object {
