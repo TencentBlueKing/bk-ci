@@ -140,6 +140,7 @@ class QueryFromCCService : QueryOperatorService {
         val resBody = executePostRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
         )
+        logger.debug("[addHostToCiBiz]resBody:$resBody")
         return jacksonObjectMapper().readValue(resBody!!)
     }
 
@@ -148,6 +149,7 @@ class QueryFromCCService : QueryOperatorService {
         val resBody = executeDeleteRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
         )
+        logger.debug("[deleteHostFromCiBiz]resBody:$resBody")
         return jacksonObjectMapper().readValue(resBody!!)
     }
 
