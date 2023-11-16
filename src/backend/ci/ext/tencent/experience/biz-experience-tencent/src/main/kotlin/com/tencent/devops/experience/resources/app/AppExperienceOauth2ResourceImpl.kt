@@ -7,11 +7,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceOauth2Resource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 
 @RestResource
 class AppExperienceOauth2ResourceImpl constructor(
     val client: Client
 ) : AppExperienceOauth2Resource {
+    @AllowOuter
     override fun getAuthorizationInformation(
         userId: String,
         clientId: String,
@@ -24,6 +26,7 @@ class AppExperienceOauth2ResourceImpl constructor(
         )
     }
 
+    @AllowOuter
     override fun getAuthorizationCode(
         userId: String,
         clientId: String,
