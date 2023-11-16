@@ -48,8 +48,6 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.secops.SecOpsService
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -67,8 +65,7 @@ import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper,
-    val secOpsService: SecOpsService
+    val objectMapper: ObjectMapper
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -264,30 +261,6 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
         return userInfoCache.getIfPresent(name)?.get() ?: getUserAndPutInCache(userId, name)
-    }
-
-    override fun getUserInfoAndWaterMark(
-        userId: String,
-        projectCode: String
-    ): UserAndDeptInfoVo? {
-        val userInfo = getUserInfo(
-            userId = userId,
-            name = userId
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_USER_NOT_EXIST,
-            defaultMessage = "user not exist!$userId"
-        )
-        val userWaterMark = secOpsService.getUserWaterMark(userId = userId)
-        return UserAndDeptInfoVo(
-            id = userInfo.id,
-            name = userInfo.name,
-            type = userInfo.type,
-            hasChild = userInfo.hasChild,
-            deptInfo = userInfo.deptInfo,
-            extras = userInfo.extras,
-            waterMark = userWaterMark.data,
-            belongProjectMember = true
-        )
     }
 
     private fun getUserAndPutInCache(userId: String, name: String): UserAndDeptInfoVo? {

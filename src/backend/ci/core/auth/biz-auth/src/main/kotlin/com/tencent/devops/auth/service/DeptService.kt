@@ -55,6 +55,4 @@ interface DeptService {
 
     // 获取单个用户信息
     fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
-
-    fun getUserInfoAndWaterMark(userId: String, projectCode: String): UserAndDeptInfoVo?
 }
