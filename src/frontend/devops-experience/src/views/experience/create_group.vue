@@ -284,7 +284,7 @@
                         return 'bk-input'
                     case 1:
                     default:
-                        return 'bk-member-selector'
+                        return this.isManual ? 'bk-member-selector' : 'bk-tag-input'
                 }
             },
             typeProps () {
@@ -322,7 +322,8 @@
                                 placeholder: !this.isManual ? '请从左侧选择已有用户组' : '请输入',
                                 key: this.isManual,
                                 disabled: !this.isManual,
-                                value: this.innerUsers
+                                value: this.innerUsers,
+                                allowCreate: !this.isManual
                             },
                             listeners: {
                                 input: (value) => {
@@ -337,7 +338,6 @@
                 if (filterKeys.length === 0) { // 没有过滤条件
                     return this.createGroupForm.members
                 }
-                console.log(this.filters, filterKeys)
                 return this.createGroupForm.members.filter(item => {
                     return filterKeys.every(key => {
                         return this.filters[key].includes(item[key])
@@ -437,7 +437,6 @@
                 this.pagination.limit = limit
             },
             handlePageChange (page) {
-                console.log(123, page, this.pagination)
                 this.pagination.current = page
             },
             handleImportTypeSelected (value) {
@@ -483,45 +482,16 @@
                         }
                         
                         case 2: {
-                            const { illegalUserIds, legalUserIds } = await this.isCpValid(this.outerUsers)
-                            const list = legalUserIds
-                                .filter(item => !this.userSet.has(item))
-                            const conflictUserIds = legalUserIds
-                                .filter(item => this.userSet.has(item))
-                            this.$bkNotify({
-                                title: '添加外部用户结果',
-                                limit: 1,
-                                message: this.$createElement('div', {}, [
-                                    list.length > 0 ? this.$createElement('p', {}, `${list.join(',')}用户添加成功`) : null,
-                                    illegalUserIds.length > 0 ? this.$createElement('p', {}, `${illegalUserIds.join(',')}用户添加失败`) : null,
-                                    conflictUserIds.length > 0 ? this.$createElement('p', {}, `${conflictUserIds.join(',')}用户已存在`) : null
-                                ]),
-                                theme: illegalUserIds.length > 0 ? 'error' : conflictUserIds.length > 0 ? 'warning' : 'success'
-                            })
-                            
-                            if (list.length > 0) {
-                                this.outerUsers = ''
-                                this.handleGroupFieldChange(
-                                    'members',
-                                    [
-                                        ...list.map(item => ({
-                                            name: item,
-                                            id: item,
-                                            type: 2,
-                                            deptFullName: '--'
-                                        })),
-                                        ...this.createGroupForm.members
-                                    ]
-                                )
-                            }
+                            await this.addOutterUsers(this.outerUsers)
+                            this.outerUsers = ''
                             break
                         }
-                    
                         case 1:
                         default: {
                             try {
                                 this.adding = true
-                                const list = this.innerUsers.filter(item => !this.userSet.has(item))
+                                const list = this.innerUsers.filter(item => !this.userSet.has(item) && item.indexOf('@tai') === -1)
+                                
                                 if (list.length > 0) {
                                     const res = await this.requestUserOrg({
                                         type: 1,
@@ -538,11 +508,15 @@
                                             ...this.createGroupForm.members
                                         ]
                                     )
-                                } else if (this.innerUsers.length > 0) {
+                                } else if (this.innerUsers.filter(item => item.indexOf('@tai') === -1).length > 0) {
                                     this.$bkMessage({
                                         message: `内部体验人员${this.innerUsers.join(',')}已存在`,
                                         theme: 'error'
                                     })
+                                }
+                                const outerUsers = this.innerUsers.filter(item => item.indexOf('@tai') > -1).join(',')
+                                if (outerUsers) {
+                                    await this.addOutterUsers(outerUsers)
                                 }
                                 this.innerUsers = []
                                 !this.isManual && (this.importType = undefined)
@@ -603,6 +577,38 @@
                         message,
                         theme
                     })
+                }
+            },
+            async addOutterUsers (outerUsers) {
+                const { illegalUserIds, legalUserIds } = await this.isCpValid(outerUsers)
+                const list = legalUserIds
+                    .filter(item => !this.userSet.has(item))
+                const conflictUserIds = legalUserIds
+                    .filter(item => this.userSet.has(item))
+                this.$bkNotify({
+                    title: '添加外部用户结果',
+                    limit: 1,
+                    message: this.$createElement('div', {}, [
+                        list.length > 0 ? this.$createElement('p', {}, `${list.join(',')}用户添加成功`) : null,
+                        illegalUserIds.length > 0 ? this.$createElement('p', {}, `${illegalUserIds.join(',')}用户添加失败`) : null,
+                        conflictUserIds.length > 0 ? this.$createElement('p', {}, `${conflictUserIds.join(',')}用户已存在`) : null
+                    ]),
+                    theme: illegalUserIds.length > 0 ? 'error' : conflictUserIds.length > 0 ? 'warning' : 'success'
+                })
+                
+                if (list.length > 0) {
+                    this.handleGroupFieldChange(
+                        'members',
+                        [
+                            ...list.map(item => ({
+                                name: item,
+                                id: item,
+                                type: 2,
+                                deptFullName: '--'
+                            })),
+                            ...this.createGroupForm.members
+                        ]
+                    )
                 }
             },
             beforeClose () {
