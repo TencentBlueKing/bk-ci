@@ -18,22 +18,22 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
         dslContext = dslContext,
         authOauth2ClientDetailsDao = authOauth2ClientDetailsDao
     )
+    private val clientId = "testClient"
+
+    private val clientDetails = ClientDetailsInfo(
+        clientId = "testClient",
+        clientSecret = "testSecret",
+        clientName = "Test Client",
+        scope = "read,write",
+        authorizedGrantTypes = "authorization_code,refresh_token",
+        redirectUri = "http://example.com/callback,http://example1.com/callback",
+        accessTokenValidity = 3600,
+        refreshTokenValidity = 86400,
+        icon = "icon"
+    )
 
     @Test
     fun `test verifyClientInformation with invalid grant type`() {
-        val clientId = "testClient"
-        val clientDetails = ClientDetailsInfo(
-            clientId = clientId,
-            clientSecret = "testSecret",
-            clientName = "Test Client",
-            scope = "read,write",
-            authorizedGrantTypes = "authorization_code,refresh_token",
-            redirectUri = "http://example.com/callback",
-            accessTokenValidity = 3600,
-            refreshTokenValidity = 86400,
-            icon = "icon"
-        )
-
         val invalidGrantType = "invalid_grant_type"
 
         val exception = assertThrows<ErrorCodeException> {
@@ -50,19 +50,6 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
 
     @Test
     fun `test verifyClientInformation with invalid redirect URI`() {
-        val clientId = "testClient"
-        val clientDetails = ClientDetailsInfo(
-            clientId = clientId,
-            clientSecret = "testSecret",
-            clientName = "Test Client",
-            scope = "read,write",
-            authorizedGrantTypes = "authorization_code",
-            redirectUri = "http://example.com/callback",
-            accessTokenValidity = 3600,
-            refreshTokenValidity = 86400,
-            icon = "icon"
-        )
-
         val invalidRedirectUri = "http://invalid.com/callback"
 
         val exception = assertThrows<ErrorCodeException> {
@@ -79,19 +66,6 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
 
     @Test
     fun `test verifyClientInformation with invalid client secret`() {
-        val clientId = "testClient"
-        val clientDetails = ClientDetailsInfo(
-            clientId = clientId,
-            clientSecret = "testSecret",
-            clientName = "Test Client",
-            scope = "read,write",
-            authorizedGrantTypes = "authorization_code",
-            redirectUri = "http://example.com/callback",
-            accessTokenValidity = 3600,
-            refreshTokenValidity = 86400,
-            icon = "icon"
-        )
-
         val invalidClientSecret = "invalidSecret"
 
         val exception = assertThrows<ErrorCodeException> {
@@ -108,19 +82,6 @@ class Oauth2ClientServiceTest : BkCiAbstractTest() {
 
     @Test
     fun `test verifyClientInformation with invalid scope`() {
-        val clientId = "testClient"
-        val clientDetails = ClientDetailsInfo(
-            clientId = clientId,
-            clientSecret = "testSecret",
-            clientName = "Test Client",
-            scope = "read,write",
-            authorizedGrantTypes = "authorization_code",
-            redirectUri = "http://example.com/callback",
-            accessTokenValidity = 3600,
-            refreshTokenValidity = 86400,
-            icon = "icon"
-        )
-
         val invalidScope = listOf("invalidScope")
 
         val exception = assertThrows<ErrorCodeException> {
