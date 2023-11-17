@@ -27,19 +27,19 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.WebAutoConfiguration
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.es.ESConfigUtils
+import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.log.constant.LogMessageCode.ES_CLUSTER_ADDRESS_NOT_CONFIGURED
 import com.tencent.devops.common.log.constant.LogMessageCode.ES_CLUSTER_NAME_NOT_CONFIGURED
 import com.tencent.devops.common.log.constant.LogMessageCode.ES_UNIQUE_NAME_NOT_CONFIGURED
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.WebAutoConfiguration
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
-import com.tencent.devops.log.es.ESAutoConfiguration
-import com.tencent.devops.log.es.ESClient
-import com.tencent.devops.log.es.ESProperties
-import com.tencent.devops.log.util.ESConfigUtils
+import com.tencent.devops.log.es.LogESAutoConfiguration
+import com.tencent.devops.common.es.ESClient
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -62,60 +62,84 @@ import org.springframework.core.Ordered
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
-@AutoConfigureAfter(ESAutoConfiguration::class)
+@AutoConfigureAfter(LogESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${log.elasticsearch.ip:#{null}}")
     private val e1IP: String? = null
+
     @Value("\${log.elasticsearch.port:#{null}}")
     private val e1Port: Int? = null
+
     @Value("\${log.elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
+
     @Value("\${log.elasticsearch.username:#{null}}")
     private val e1Username: String? = null
+
     @Value("\${log.elasticsearch.password:#{null}}")
     private val e1Password: String? = null
+
     @Value("\${log.elasticsearch.name:#{null}}")
     private val e1Name: String? = null
+
     @Value("\${log.elasticsearch.mainCluster:#{null}}")
     private val e1MainCluster: String? = null
+
     @Value("\${log.elasticsearch.writable:#{null}}")
     private val e1Writable: String? = null
+
     @Value("\${log.elasticsearch.shards:#{null}}")
     private val e1Shards: Int? = null
+
     @Value("\${log.elasticsearch.replicas:#{null}}")
     private val e1Replicas: Int? = null
+
     @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val e1ShardsPerNode: Int? = null
+
     @Value("\${log.elasticsearch.socketTimeout:#{null}}")
     private val e1socketTimeout: Int? = null
+
     @Value("\${log.elasticsearch.https:#{null}}")
     private val e1Https: String? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
+
     @Value("\${log.elasticsearch2.port:#{null}}")
     private val e2Port: Int? = null
+
     @Value("\${log.elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
+
     @Value("\${log.elasticsearch2.username:#{null}}")
     private val e2Username: String? = null
+
     @Value("\${log.elasticsearch2.password:#{null}}")
     private val e2Password: String? = null
+
     @Value("\${log.elasticsearch2.name:#{null}}")
     private val e2Name: String? = null
+
     @Value("\${log.elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
+
     @Value("\${log.elasticsearch2.writable:#{null}}")
     private val e2Writable: String? = null
+
     @Value("\${log.elasticsearch2.shards:#{null}}")
     private val e2Shards: Int? = null
+
     @Value("\${log.elasticsearch2.replicas:#{null}}")
     private val e2Replicas: Int? = null
+
     @Value("\${log.elasticsearch2.shardsPerNode:#{null}}")
     private val e2ShardsPerNode: Int? = null
+
     @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
     private val e2socketTimeout: Int? = null
+
     @Value("\${log.elasticsearch.https:#{null}}")
     private val e2Https: String? = null
 

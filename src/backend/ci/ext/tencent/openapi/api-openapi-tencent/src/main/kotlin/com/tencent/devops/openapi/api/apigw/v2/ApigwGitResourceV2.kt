@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwGitResourceV2 {
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目", tags = ["v2_app_git_getProject"])
     @GET
     @Path("/getProject")
     fun getProject(
