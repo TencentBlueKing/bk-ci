@@ -264,7 +264,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        @AuditRequestBody
         modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean> {
         checkParam(userId, projectId)

@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -126,6 +127,8 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
+        ActionAuditContext.current().setInstance(setting)
+
         val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,
             setting = setting,
