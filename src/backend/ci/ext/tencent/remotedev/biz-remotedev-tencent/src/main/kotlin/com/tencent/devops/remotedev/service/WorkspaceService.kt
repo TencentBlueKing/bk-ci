@@ -386,27 +386,23 @@ class WorkspaceService @Autowired constructor(
         var expertMap: MutableMap<String, MutableList<FetchSupportResp>>? = null
         if (enableExportSup) {
             expertMap = mutableMapOf()
-            expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet())
-                .filter {
-                    if (expertSupId != null) {
-                        it.id == expertSupId
-                    } else {
-                        true
-                    }
+            if (expertSupId != null) {
+                listOf(expertSupportDao.getSup(dslContext, expertSupId))
+            } else {
+                expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet())
+            }.filterNotNull().forEach {
+                val resp = FetchSupportResp(
+                    id = it.id,
+                    creator = it.creator,
+                    content = it.content,
+                    createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+                )
+                if (expertMap[it.workspaceName] != null) {
+                    expertMap[it.workspaceName]?.add(resp)
+                } else {
+                    expertMap[it.workspaceName] = mutableListOf(resp)
                 }
-                .forEach {
-                    val resp = FetchSupportResp(
-                        id = it.id,
-                        creator = it.creator,
-                        content = it.content,
-                        createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
-                    )
-                    if (expertMap[it.workspaceName] != null) {
-                        expertMap[it.workspaceName]?.add(resp)
-                    } else {
-                        expertMap[it.workspaceName] = mutableListOf(resp)
-                    }
-                }
+            }
         }
 
         val records = mutableListOf<ProjectWorkspace>()
