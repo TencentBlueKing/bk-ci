@@ -54,7 +54,7 @@ object IPUtils {
             }
         }
 
-        return if (innerIp.isNullOrBlank()) "" else innerIp!!
+        return if (innerIp.isNullOrBlank()) "" else innerIp
     }
 
     fun getNtNameAndIP(): Map<String, String> {
