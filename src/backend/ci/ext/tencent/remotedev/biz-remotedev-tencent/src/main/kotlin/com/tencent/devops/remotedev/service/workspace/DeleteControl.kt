@@ -453,6 +453,11 @@ class DeleteControl @Autowired constructor(
             )
         }
 
+        if (workspace.status.checkDeliveringFailed()) {
+            logger.info("${workspace.workspaceName} is DELIVERING_FAILED, delete immediately.")
+            return true
+        }
+
         if (workspaceCommon.notOk2doNextAction(workspace)) {
             logger.info("${workspace.workspaceName} is $workspace.status, return error.")
             throw ErrorCodeException(

@@ -61,7 +61,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/newProject")
-    @ApiOperation("创建项目")
+    @ApiOperation("创建项目", tags = ["v2_app_projects_newProject"])
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -81,7 +81,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/newProject/setRouter")
-    @ApiOperation("创建项目")
+    @ApiOperation("创建项目", tags = ["v2_app_projects_setRouter"])
     fun createProjectSetRouter(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -104,7 +104,7 @@ interface ApigwProjectResourceV2 {
 
     @GET
     @Path("/getProjectByOrganizationId")
-    @ApiOperation("根据组织架构查询所有项目")
+    @ApiOperation("根据组织架构查询所有项目", tags = ["v2_app_projects_getProjectByOrganizationId"])
     fun listProjectByOrganizationId(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -131,7 +131,7 @@ interface ApigwProjectResourceV2 {
 
     @GET
     @Path("/getProjectByName")
-    @ApiOperation("根据名称查询项目信息,组织限制")
+    @ApiOperation("根据名称查询项目信息,组织限制", tags = ["v2_app_projects_getProjectByName"])
     fun getProjectByOrganizationId(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -158,7 +158,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/{projectId}/createByUser")
-    @ApiOperation("添加指定用户到指定项目用户组")
+    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v2_app_projects_createByUser"])
     fun createProjectUserByUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -175,7 +175,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/{projectId}/createUser")
-    @ApiOperation("添加指定用户到指定项目用户组")
+    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v2_app_projects_createUser"])
     fun createProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -192,6 +192,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/createUserByApp")
+    @ApiOperation("创建用户", tags = ["v2_app_projects_createUserByApp"])
     fun createProjectaUserByApp(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -211,6 +212,7 @@ interface ApigwProjectResourceV2 {
 
     @POST
     @Path("/permissions")
+    @ApiOperation("创建权限", tags = ["v2_app_projects_permissions"])
     fun createUserPipelinePermission(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -230,6 +232,7 @@ interface ApigwProjectResourceV2 {
 
     @GET
     @Path("/{projectId}/roles")
+    @ApiOperation("获取roles", tags = ["v2_app_projects_roles"])
     fun getProjectRoles(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

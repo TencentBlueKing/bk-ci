@@ -25,7 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 dependencies {
-    api(project(":core:dispatch:biz-dispatch-sample"))
+    api(project(":core:dispatch:biz-dispatch"))
+    api(project(":core:dispatch:biz-dispatch-docker"))
+    api(project(":core:dispatch:biz-dispatch-kubernetes"))
+
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))

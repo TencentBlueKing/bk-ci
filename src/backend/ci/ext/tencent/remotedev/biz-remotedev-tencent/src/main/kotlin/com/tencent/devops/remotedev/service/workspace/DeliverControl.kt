@@ -38,11 +38,7 @@ import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -64,7 +60,6 @@ import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
@@ -81,9 +76,6 @@ class DeliverControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService
 ) {
-
-    @Value("\${notice.wework:#{null}}")
-    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeliverControl::class.java)
@@ -329,28 +321,11 @@ class DeliverControl @Autowired constructor(
         ws: WorkspaceRecord
     ) {
         if (softwareList.taskStatus == TaskStatusEnum.FAILED) {
-            workspaceCommon.updateStatusAndCreateHistory(
+            workspaceCommon.updateStatus2DeliveringFailed(
                 workspace = ws,
-                newStatus = WorkspaceStatus.DELIVERING_FAILED,
-                action = WorkspaceAction.CREATE
+                action = WorkspaceAction.CREATE,
+                notifyTemplateCode = "WINDOWS_GPU_SAFE_INIT_FAILED"
             )
-            // 通知
-            if (!weworkId.isNullOrBlank()) {
-                val request = SendNotifyMessageTemplateRequest(
-                    templateCode = "WINDOWS_GPU_SAFE_INIT_FAILED",
-                    bodyParams = mapOf(
-                        WorkspaceRecord::workspaceName.name to ws.workspaceName,
-                        NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
-                    ),
-                    notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                    markdownContent = false
-                )
-                kotlin.runCatching {
-                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-                }.onFailure {
-                    logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
-                }
-            }
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DELIVERING_FAILED.errorCode
             )

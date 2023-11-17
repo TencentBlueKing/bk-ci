@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v1.13.0-rc.6](#v1130-rc6)
+   - [Changelog since v1.13.0-rc.5](#changelog-since-v1130-rc5)
+
 - [v1.13.0-rc.5](#v1130-rc5)
    - [Changelog since v1.13.0-rc.4](#changelog-since-v1130-rc4)
 
@@ -15,6 +18,37 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v1.13.0-rc.6
+## Changelog since v1.13.0-rc.5
+#### 新增
+- [新增] dispatch 支持上下文占位，动态赋值 [链接](http://github.com/TencentBlueKing/bk-ci/issues/6460)
+- [新增] 项目支持关联运营产品和根据运营产品搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9636)
+- [新增] svn触发需要提供获取到触发路径的变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9402)
+- [新增] openapi新增度量能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9638)
+- [新增] 优化批量添加项目成员接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9660)
+- [新增] 整合dispatch-docker, dispatch-kubernetes模块到dispatch [链接](http://github.com/TencentBlueKing/bk-ci/issues/9548)
+- [新增] redis库拆分 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9621)
+- [新增] 优化OP获取项目列表接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9666)
+- [新增] undertow加上线程池监控 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9631)
+- [新增] iOS重签名部分功能优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9537)
+- [新增] 构建分组并发时优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9618)
+- [新增] 最近使用流水线组新增删除逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9627)
+- [新增] Revert "feat:希望支持分支进行上架测试 [链接](http://github.com/TencentBlueKing/bk-ci/issues/4780)
+- [新增] log的redisKey独立化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9599)
+- [新增] 上下文命令字支持设置备注 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9545)
+
+#### 优化
+- [优化] 插件国际化properties文件value值支持引入文件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9366)
+- [优化] 构建日志模块增加服务端压缩请求 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9650)
+- [优化] 微服务的主机IP列表队列配置自动删除 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9663)
+- [优化] 添加商店配置项优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9600)
+
+#### 修复
+- [修复] 归档目录到根目录时，查询制品错误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9679)
+- [修复] 公共构建机的插件缓存目录挪到工作空间的上一级目录 TencentBlueKing [链接](http://github.com/TencentBlueKing/bk-ci/issues/9640)
+- [修复] 点击人工审核会把流水线中同一条红线规则的两处控制点的数据都刷新，导致另一个控制点的审核失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9633)
+- [修复] stage审核取消兼容数据处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9611)
+- [修复] stream修复部分受国际化影响的错误码返回内容 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9546)
 # v1.13.0-rc.5
 ## Changelog since v1.13.0-rc.4
 #### 新增

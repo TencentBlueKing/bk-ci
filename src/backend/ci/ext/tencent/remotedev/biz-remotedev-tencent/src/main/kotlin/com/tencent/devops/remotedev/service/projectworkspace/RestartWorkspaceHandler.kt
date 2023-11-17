@@ -57,13 +57,13 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class RestartWorkspaceHandler @Autowired constructor(
@@ -96,7 +96,17 @@ class RestartWorkspaceHandler @Autowired constructor(
     )
     fun restartWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
-        permissionService.checkUserManager(userId, projectId)
+        if (!permissionService.hasOwnerPermission(
+                userId = userId,
+                workspaceName = workspaceName,
+                projectId = projectId
+            ) && !permissionService.hasUserManager(userId, projectId)
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to restart $workspaceName")
+            )
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

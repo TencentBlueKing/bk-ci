@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwSlaResourceV2 {
 
-    @ApiOperation("CodeCC的SLA统计详情，含执行次数,耗时,成功率以及错误码分布")
+    @ApiOperation("CodeCC的SLA统计详情，含执行次数,耗时,成功率以及错误码分布", tags = ["v2_app_sla"])
     @GET
     @Path("/codecc/queryByBG")
     fun codeccQueryByBG(

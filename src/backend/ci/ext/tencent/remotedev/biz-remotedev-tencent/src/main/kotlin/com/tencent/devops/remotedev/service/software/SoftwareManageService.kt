@@ -209,7 +209,10 @@ class SoftwareManageService @Autowired constructor(
                 SoftwareInfo(
                     name = record["NAME"] as String,
                     version = record["VERSION"] as String,
-                    commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
+                    commonArgs = CommonArgs(
+                        base64 = base64Val,
+                        cloudDesktopId = workspaceName
+                    ).takeIf { record["NAME"] == IOANAME }
                 )
             )
         }

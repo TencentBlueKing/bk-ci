@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwEnvironmentResourceV2 {
 
-    @ApiOperation("获取用户有权限使用的服务器列表")
+    @ApiOperation("获取用户有权限使用的服务器列表", tags = ["v2_app_environment_listUsableServerNodes"])
     @GET
     @Path("/projects/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
@@ -71,7 +71,7 @@ interface ApigwEnvironmentResourceV2 {
         projectId: String
     ): Result<List<NodeWithPermission>>
 
-    @ApiOperation("获取用户有权限使用的环境列表")
+    @ApiOperation("获取用户有权限使用的环境列表", tags = ["v2_app_environment_listUsableServerEnvs"])
     @GET
     @Path("/projects/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
@@ -89,7 +89,7 @@ interface ApigwEnvironmentResourceV2 {
         projectId: String
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据环境名称获取环境信息(不校验权限)")
+    @ApiOperation("根据环境名称获取环境信息(不校验权限)", tags = ["v2_app_environment_listRawByEnvNames"])
     @POST
     @Path("/projects/{projectId}/listRawByEnvNames")
     fun listRawByEnvNames(
@@ -109,7 +109,7 @@ interface ApigwEnvironmentResourceV2 {
         envNames: List<String>
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据hashId(多个)获取环境信息(不校验权限)")
+    @ApiOperation("根据hashId(多个)获取环境信息(不校验权限)", tags = ["v2_app_environment_listRawByEnvHashIds"])
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
@@ -129,7 +129,7 @@ interface ApigwEnvironmentResourceV2 {
         envHashIds: List<String>
     ): Result<List<EnvWithPermission>>
 
-    @ApiOperation("根据hashId获取项目节点列表(不校验权限)")
+    @ApiOperation("根据hashId获取项目节点列表(不校验权限)", tags = ["v2_app_environment_listRawByNodeHashIds"])
     @POST
     @Path("/projects/{projectId}/listRawByNodeHashIds")
     fun listRawByHashIds(

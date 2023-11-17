@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
+    api(project(":ext:tencent:dispatch:api-dispatch-kubernetes-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
     api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
 
