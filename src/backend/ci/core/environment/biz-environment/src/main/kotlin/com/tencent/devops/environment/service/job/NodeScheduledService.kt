@@ -1,0 +1,67 @@
+package com.tencent.devops.environment.service.job
+
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.environment.dao.NodeDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
+
+@Service
+class NodeScheduledService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val nodeDao: NodeDao,
+    private val queryFromCCService: QueryFromCCService
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
+        private const val SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY = "scheduled_clean_invalid_host_id_timeout_lock"
+        private const val EXPTIRATION_TIME_OF_THE_LOCK = 60L
+    }
+
+    /**
+     * 后台定时轮询机器状态，看机器是否在CC中（判断T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
+     * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
+     * 从每个小时的 0分钟 开始，每隔 2分钟 执行一次，直到下一个小时开始。即，函数会在 00:00、00:02、00:04、00:06、...、00:58 执行。
+     */
+    @Scheduled(cron = "0 0/2 * * * ?")
+    fun scheduledCleanInvalidHostId() {
+        val redisLock = RedisLock(
+            getRedisStringSerializerOperation(), SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK
+        )
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                if (logger.isDebugEnabled)
+                    logger.debug("---[scheduledCleanInvalidHostId]Check whether the node is in cc.---")
+                checkNodeInCC()
+            } else {
+                if (logger.isDebugEnabled)
+                    logger.debug("---[scheduledCleanInvalidHostId]Task is running and doesn't need to be started.---")
+            }
+        } catch (e: Throwable) {
+            logger.error("[scheduledCleanInvalidHostId]exception: ", e)
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    private fun getRedisStringSerializerOperation(): RedisOperation {
+        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
+    }
+
+    private fun checkNodeInCC() {
+        val nodeRecords = nodeDao.getNodesWhoseHostIdNotNull(dslContext) // T_NODE表中host_id不为空的记录
+        val hostIdList = nodeRecords.map { it.hostId } // 要判断在不在cc中的 所有host_id
+        val nodeCCList = queryFromCCService.queryCCFindHostBizRelations(hostIdList).data // 在cc中的 host_id对应cc记录
+        val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
+        val invalidHostIdList = hostIdList.filterNot {
+            hostIdToNodeCCMap?.containsKey(it) ?: false
+        } // 不在cc中了，要置空的hostid
+        nodeDao.updateNodeHostIdNull(dslContext, invalidHostIdList)
+        if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
+    }
+}

@@ -48,6 +48,30 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateNodeHostIdNull(dslContext: DSLContext, hostList: List<Long>) {
+        val hostIdDefault: Long? = null
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(HOST_ID, hostIdDefault)
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .where(HOST_ID.`in`(hostList))
+                .execute()
+        }
+    }
+
+    fun getNodesWhoseHostIdNotNull(dslContext: DSLContext): MutableList<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(HOST_ID.isNotNull)
+                .orderBy(HOST_ID.desc())
+                .fetch()
+        }.map {
+            if (it != null) nodeRecords.add(it)
+        }
+        return nodeRecords
+    }
+
     fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         hostList.map {

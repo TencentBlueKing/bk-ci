@@ -68,7 +68,7 @@ class QueryFromCCService : QueryOperatorService {
         const val IN_OPERATION = "in"
     }
 
-    /*
+    /**
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
      *  core中实现：从CC中 用对应T_NODE表中记录的host_id查询机器的主备负责人
      */
