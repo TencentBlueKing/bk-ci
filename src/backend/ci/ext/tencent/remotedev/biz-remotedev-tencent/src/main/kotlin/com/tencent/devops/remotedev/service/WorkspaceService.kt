@@ -1188,6 +1188,9 @@ class WorkspaceService @Autowired constructor(
     ): Map<String, ProjectAccessDevicePermissionsResp> {
         // 获取用户当前的项目列表
         val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
+        if (projects.isEmpty()) {
+            return emptyMap()
+        }
         // 调用安全接口
         return apiGwService.projectAccessDevicePermissions(macAddress, userId, projects.joinToString(","))
             ?: emptyMap()

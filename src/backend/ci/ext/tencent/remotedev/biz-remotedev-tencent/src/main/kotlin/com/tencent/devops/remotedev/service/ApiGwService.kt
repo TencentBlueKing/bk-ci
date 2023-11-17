@@ -33,7 +33,10 @@ class ApiGwService @Autowired constructor(
             .get()
             .header(
                 name = "X-Bkapi-Authorization",
-                value = JsonUtil.toJson(mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret))
+                value = JsonUtil.toJson(
+                    mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret),
+                    false
+                )
             )
             .build()
         return OkhttpUtils.doHttp(request).use { response ->
