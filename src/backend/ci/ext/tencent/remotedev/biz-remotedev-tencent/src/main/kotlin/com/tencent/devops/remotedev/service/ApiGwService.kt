@@ -45,7 +45,7 @@ class ApiGwService @Autowired constructor(
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_ACCESS_DEVICE_PERMISSION.errorCode,
-                    params = arrayOf("request fail code ${response.code}")
+                    defaultMessage = "request fail code ${response.code}"
                 )
             }
 
@@ -54,7 +54,7 @@ class ApiGwService @Autowired constructor(
                 logger.error("projectAccessDevicePermissions|{}|{}|{}", request.url, response.code, data)
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_ACCESS_DEVICE_PERMISSION.errorCode,
-                    params = arrayOf("code ${resp.code} msg ${resp.message}")
+                    defaultMessage = "code ${resp.code} msg ${resp.message}"
                 )
             }
             resp.data.result
