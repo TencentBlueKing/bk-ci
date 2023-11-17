@@ -1,14 +1,10 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 - [v1.13.0](#v1130)
    - [Changelog since v1.12.0-rc.8](#changelog-since-v1120-rc8)
-
 - [v1.13.0-rc.6](#v1130-rc6)
    - [Changelog since v1.13.0-rc.5](#changelog-since-v1130-rc5)
-
 - [v1.13.0-rc.5](#v1130-rc5)
    - [Changelog since v1.13.0-rc.4](#changelog-since-v1130-rc4)
-
-
 - [v1.13.0-rc.4](#v1130-rc4)
    - [Changelog since v1.13.0-rc.3](#changelog-since-v1130-rc3)
 - [v1.13.0-rc.3](#v1130-rc3)
@@ -48,11 +44,9 @@
 - [新增] 新增判断是否是项目成员user态接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9569)
 - [新增] 新增获取部门员工信息接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9570)
 - [新增] 支持开通蓝盾项目权限的同时开通对应的监控空间权限 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8935)
-- [新增] 【PAC】feat：代码库支持重置授权 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8145)
 - [新增] 增加获取项目信息及成员信息接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9392)
 - [新增] 接入审计中心 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9414)
 - [新增] 上下文命令字支持设置备注 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9545)
-- [新增] fit-sec线权限升级支持 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9521)
 - [新增] yaml 方式下，mr 触发器支持配置是否阻塞 mr 合并 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9412)
 - [新增] auth服务异常信息规范 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9455)
 - [新增] 研发商店插件的质量红线指标支持占位符 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9506)
