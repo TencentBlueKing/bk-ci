@@ -210,15 +210,15 @@ class CmdbNodeService @Autowired constructor(
             val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
             if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCResp:$addToCCResp")
             val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
-            val addToCCInfo = ccHostIdList?.mapIndexed { index, value ->
+            val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                 CCInfo(
                     svrId = notInCCSvrIdList[index],
                     bkHostId = value,
                     bkHostInnerip = serverIdToCmdbNodeMap[notInCCSvrIdList[index]]?.ip
                 )
             }
-            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfo")
-            addToCCIpToCCInfoMap = addToCCInfo?.associateBy { it.bkHostInnerip } ?: mapOf()
+            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfoList")
+            addToCCIpToCCInfoMap = addToCCInfoList?.associateBy { it.bkHostInnerip } ?: mapOf()
             if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
         }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")

@@ -89,7 +89,6 @@ class NodeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
         const val BIZ_SIZE = 1
-        const val FIRST_ELEMENT = 0
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
@@ -115,6 +114,7 @@ class NodeService @Autowired constructor(
         val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
         val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdQueryCCList:$hostIdQueryCCList")
+
         // 条件1. 这个业务的bizid等于蓝盾测试机
         val queryCCEqualBizList = hostIdQueryCCList?.filter { bkScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]queryCCEqualBizList:$queryCCEqualBizList")
@@ -127,13 +127,13 @@ class NodeService @Autowired constructor(
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]nodeRecordByHostId:$nodeRecordByHostId")
         val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdToNodeMap:$hostIdToNodeMap")
-        val deleteHostIdList = hostIdToNodeMap.filter { (key, value) ->
+        val deleteHostIdMap = hostIdToNodeMap.filter { (key, value) ->
             BIZ_SIZE == value.size // key -> host_id, value -> host_id对应T_NODE表记录
         } // 只有一个项目
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]deleteHostIdList:$deleteHostIdList")
+        if (logger.isDebugEnabled) logger.debug("[deleteNodes]deleteHostIdMap:$deleteHostIdMap")
 
         // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
-        queryFromCCService.deleteHostFromCiBiz(deleteHostIdList.keys)
+        queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys)
 
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
 
