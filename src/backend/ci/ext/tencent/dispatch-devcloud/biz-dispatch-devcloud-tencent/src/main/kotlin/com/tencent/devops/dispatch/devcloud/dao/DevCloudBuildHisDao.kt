@@ -3,7 +3,6 @@ package com.tencent.devops.dispatch.devcloud.dao
 import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudBuildHis
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -78,7 +77,7 @@ class DevCloudBuildHisDao {
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String?
-    ): Result<TDevcloudBuildHisRecord> {
+    ): TDevcloudBuildHisRecord? {
         with(TDevcloudBuildHis.T_DEVCLOUD_BUILD_HIS) {
             val select = dslContext.selectFrom(this)
                 .where(BUIDLD_ID.eq(buildId))
@@ -86,7 +85,7 @@ class DevCloudBuildHisDao {
                 select.and(VM_SEQ_ID.eq(vmSeqId))
             }
 
-            return select.fetch()
+            return select.orderBy(GMT_CREATE.desc()).fetchAny()
         }
     }
 
