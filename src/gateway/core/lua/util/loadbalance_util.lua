@@ -47,12 +47,9 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         -- 特殊处理的域名,优先级最高
         local special_key = gateway_project .. ":" .. devops_tag
-        for key, value in ipairs(config.kubernetes.special_domain) do
-            if key == special_key then
-                kubernetes_domain = value
-            end
+        if config.kubernetes.special_domain[special_key] ~= nil then
+            kubernetes_domain = config.kubernetes.special_domain[special_key]
         end
-
         return kubernetes_domain .. "/ms/" .. service_name
     end
 
