@@ -3,7 +3,6 @@ package com.tencent.devops.dispatch.devcloud.dao
 import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudBuildHis
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
