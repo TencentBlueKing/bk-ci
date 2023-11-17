@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Primary
-class TencentQueryOperatorFromCmdbService : QueryOperatorService {
+class TencentQueryFromCmdbService : QueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 
@@ -33,8 +33,16 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
     private val cmdbGetQueryInfoPath = ""
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TencentQueryOperatorFromCmdbService::class.java)
+        private val logger = LoggerFactory.getLogger(TencentQueryFromCmdbService::class.java)
         const val PAGE_SIZE = 1000
+        const val COLUMN_SVR_BAK_OPERATOR = "SvrBakOperator"
+        const val COLUMN_SVR_OPERATOR = "SvrOperator"
+        const val COLUMN_SVR_IP = "SvrIp"
+        const val COLUMN_SVR_NAME = "SvrName"
+        const val COLUMN_SFW_NAME = "SfwName"
+        const val COLUMN_SEVER_LAN_IP = "serverLanIP"
+        const val DEFAULT_START_INDEX = 0
+        const val DEFAULT_RETURN_TOTAL_ROWS = 1
     }
 
     /*
@@ -50,24 +58,21 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
             operator = DEFAULT_SYTEM_USER,
-            reqColumn = listOf("SvrBakOperator", "SvrOperator", "SvrIp", "SvrName", "SfwName", "serverLanIP"),
+            reqColumn = listOf(
+                COLUMN_SVR_BAK_OPERATOR, COLUMN_SVR_OPERATOR, COLUMN_SVR_IP,
+                COLUMN_SVR_NAME, COLUMN_SFW_NAME, COLUMN_SEVER_LAN_IP
+            ),
             keyValues = CmdbKeyValues(
                 svrIp = nodeIpList.joinToString(separator = ";")
             ),
-            pagingInfo = CmdbPagingInfo(0, PAGE_SIZE, 1)
+            pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
         )
-        val requestContent = jacksonObjectMapper().writeValueAsString(cmdbGetQueryInfoReq)
-        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] requestContent: $requestContent")
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        val cmdbGetQueryInfoRes = OkhttpUtils.doPost(
-            cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, requestContent, headers
+        val responseBody = executePostRequest(
+            headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
         )
-        val responseBody = cmdbGetQueryInfoRes.body?.string()
         if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] responseBody: $responseBody")
-        val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] cmdbResp: $cmdbResp")
-        val cmdbData = cmdbResp.data.data
-        val cmdbIpToCmdbDataMap: Map<String, CmdbDataIns> = cmdbData?.associateBy { it.SvrIp } ?: mapOf() // ip - 记录 映射
+        val cmdbIpToCmdbDataMap = getNodeIpToCmdbDataMap(responseBody)
 
         val invalidIpList = nodeIpList.filter {
             val isOperator = userId == cmdbIpToCmdbDataMap[it]?.SvrOperator ||
@@ -82,5 +87,39 @@ class TencentQueryOperatorFromCmdbService : QueryOperatorService {
                 params = arrayOf(invalidIpList.joinToString(","))
             )
         }
+    }
+
+    fun queryCmdbInfoFromIp(nodeIpList: List<String>): Map<String, CmdbDataIns>? {
+        val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
+            bkAppCode = bkAppCode,
+            bkAppSecret = bkAppSecret,
+            operator = DEFAULT_SYTEM_USER,
+            reqColumn = listOf(COLUMN_SVR_IP, COLUMN_SVR_NAME, COLUMN_SFW_NAME),
+            keyValues = CmdbKeyValues(
+                svrIp = nodeIpList.joinToString(separator = ";")
+            ),
+            pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
+        )
+        val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
+        val responseBody = executePostRequest(
+            headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
+        )
+        return getNodeIpToCmdbDataMap(responseBody)
+    }
+
+    private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: $url")
+        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
+        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
+        return ccPostRes.body?.string()
+    }
+
+    private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
+        val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)
+        if (logger.isDebugEnabled) logger.debug("[getNodeIpToCmdbDataMap] cmdbResp: $cmdbResp")
+        val cmdbData = cmdbResp.data.data
+        val cmdbIpToCmdbDataMap: Map<String, CmdbDataIns> = cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
+        return cmdbIpToCmdbDataMap
     }
 }

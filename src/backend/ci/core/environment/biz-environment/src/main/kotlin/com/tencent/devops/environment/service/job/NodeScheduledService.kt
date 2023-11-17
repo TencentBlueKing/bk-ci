@@ -23,9 +23,9 @@ class NodeScheduledService @Autowired constructor(
     }
 
     /**
-     * 后台定时轮询机器状态，看机器是否在CC中（判断T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
+     * 后台定时轮询机器状态，看机器是否在CC中（T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
-     * 从每个小时的 0分钟 开始，每隔 2分钟 执行一次，直到下一个小时开始。即，函数会在 00:00、00:02、00:04、00:06、...、00:58 执行。
+     * cron：从每个小时的 0分钟 开始，每隔 2分钟 执行一次，直到下一个小时开始。即，函数会在 00:00、00:02、00:04、00:06、...、00:58 执行。
      */
     @Scheduled(cron = "0 0/2 * * * ?")
     fun scheduledCleanInvalidHostId() {
@@ -60,8 +60,8 @@ class NodeScheduledService @Autowired constructor(
         val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
         val invalidHostIdList = hostIdList.filterNot {
             hostIdToNodeCCMap?.containsKey(it) ?: false
-        } // 不在cc中了，要置空的hostid
-        nodeDao.updateNodeHostIdNull(dslContext, invalidHostIdList)
+        } // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
+        nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
         if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
     }
 }

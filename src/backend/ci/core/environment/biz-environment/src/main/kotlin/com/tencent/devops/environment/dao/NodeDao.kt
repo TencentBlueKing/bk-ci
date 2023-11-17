@@ -48,11 +48,33 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
-    fun updateNodeHostIdNull(dslContext: DSLContext, hostList: List<Long>) {
+    fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.toString())
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .where(NODE_IP.`in`(ipList))
+                .execute()
+        }
+    }
+    fun getCmdbNodes(dslContext: DSLContext): MutableList<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(NODE_TYPE.eq("CMDB"))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }.map {
+            if (it != null) nodeRecords.add(it)
+        }
+        return nodeRecords
+    }
+    fun updateNodeNotInCC(dslContext: DSLContext, hostList: List<Long>) {
         val hostIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(HOST_ID, hostIdDefault)
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(HOST_ID.`in`(hostList))
                 .execute()
