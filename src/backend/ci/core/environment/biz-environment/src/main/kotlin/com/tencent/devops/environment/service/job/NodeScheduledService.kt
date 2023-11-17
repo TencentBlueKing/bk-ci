@@ -25,9 +25,9 @@ class NodeScheduledService @Autowired constructor(
     /**
      * 后台定时轮询机器状态，看机器是否在CC中（T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
-     * cron：从每个小时的 0分钟 开始，每隔 2分钟 执行一次，直到下一个小时开始。即，函数会在 00:00、00:02、00:04、00:06、...、00:58 执行。
+     * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 0/2 * * * ?")
+    @Scheduled(cron = "0 0 10 * * ?")
     fun scheduledCleanInvalidHostId() {
         val redisLock = RedisLock(
             getRedisStringSerializerOperation(), SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK

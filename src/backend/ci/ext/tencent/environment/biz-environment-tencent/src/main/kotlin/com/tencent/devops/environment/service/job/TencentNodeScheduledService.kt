@@ -25,9 +25,9 @@ class TencentNodeScheduledService @Autowired constructor(
     /**
      * 后台定时轮询机器状态，看机器在不在公司cmdb中（cloud_area_id 字段：-1 - 不在，0 - 在）
      * 只轮询T_NODE表中 NODE_TYPE=="CMDB"的记录，用ip 调用get_query_info接口，看能否得到对应记录：能-不操作，不能-对应记录的cloud_area_id置为-1
-     * cron：从每个小时的 1分钟 开始，每隔 2分钟 执行一次，直到下一个小时开始。即，函数会在 00:01、00:03、00:05、00:07、...、00:59 执行。
+     * cron：每天上午9点执行。
      */
-    @Scheduled(cron = "0 1/2 * * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun scheduledCheckNodeInCmdb() {
         val redisLock = RedisLock(
             getRedisStringSerializerOperation(), CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK
