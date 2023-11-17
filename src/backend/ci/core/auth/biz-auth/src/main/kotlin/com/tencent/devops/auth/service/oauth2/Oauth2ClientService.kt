@@ -62,7 +62,7 @@ class Oauth2ClientService constructor(
                 defaultMessage = "The client($clientId) does not support $grantType type"
             )
         }
-        if (redirectUri != null && redirectUri != clientDetails.redirectUri) {
+        if (redirectUri != null && !clientDetails.redirectUri.split(",").contains(redirectUri)) {
             logger.warn("The redirectUri is invalid|$clientId|$redirectUri")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REDIRECT_URI,
