@@ -281,7 +281,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = null
         )
 
-        val records = parseWorkspaceList(result, false)
+        val records = parseWorkspaceList(result, false, null)
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
@@ -319,7 +319,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = data.expertSupId
         )
 
-        val records = parseWorkspaceList(result, true)
+        val records = parseWorkspaceList(result, true, data.expertSupId)
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
@@ -356,7 +356,8 @@ class WorkspaceService @Autowired constructor(
 
     private fun parseWorkspaceList(
         result: List<WorkspaceRecordInf>,
-        enableExportSup: Boolean
+        enableExportSup: Boolean,
+        expertSupId: Long?
     ): List<ProjectWorkspace> {
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
@@ -385,19 +386,27 @@ class WorkspaceService @Autowired constructor(
         var expertMap: MutableMap<String, MutableList<FetchSupportResp>>? = null
         if (enableExportSup) {
             expertMap = mutableMapOf()
-            expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet()).forEach {
-                val resp = FetchSupportResp(
-                    id = it.id,
-                    creator = it.creator,
-                    content = it.content,
-                    createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
-                )
-                if (expertMap[it.workspaceName] != null) {
-                    expertMap[it.workspaceName]?.add(resp)
-                } else {
-                    expertMap[it.workspaceName] = mutableListOf(resp)
+            expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet())
+                .filter {
+                    if (expertSupId != null) {
+                        it.id == expertSupId
+                    } else {
+                        true
+                    }
                 }
-            }
+                .forEach {
+                    val resp = FetchSupportResp(
+                        id = it.id,
+                        creator = it.creator,
+                        content = it.content,
+                        createTime = it.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+                    )
+                    if (expertMap[it.workspaceName] != null) {
+                        expertMap[it.workspaceName]?.add(resp)
+                    } else {
+                        expertMap[it.workspaceName] = mutableListOf(resp)
+                    }
+                }
         }
 
         val records = mutableListOf<ProjectWorkspace>()
@@ -1107,7 +1116,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = data.expertSupId
         )
 
-        val records = parseWorkspaceList(result, true)
+        val records = parseWorkspaceList(result, true, data.expertSupId)
 
         // 创建表
         val workbook = SXSSFWorkbook()
@@ -1170,7 +1179,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = null
         )
 
-        val records = parseWorkspaceList(result, false)
+        val records = parseWorkspaceList(result, false, null)
 
         // 创建表
         val workbook = SXSSFWorkbook()
