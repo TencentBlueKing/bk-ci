@@ -140,15 +140,16 @@ class RemoteDevSettingDao {
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.select(USER_ID, USER_NAME, COMPANY_NAME).from(this)
                 .let {
-                    if (!userIds.isNullOrEmpty()) {
+                    if (userIds != null) {
                         it.where(USER_ID.`in`(userIds))
                     } else {
-                        it.where(USER_ID.endsWith("@tai"))
+                        it.where(USER_ID.like("%@tai"))
                     }
                 }
                 .let {
                     if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
                 }
+                .skipCheck()
                 .fetch {
                     it.value1() to Pair(it.value2(), it.value3())
                 }.toMap()

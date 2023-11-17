@@ -571,6 +571,8 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         assigns.forEach {
+            // 没有注册setting就注册
+            remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
         }
     }

@@ -247,7 +247,7 @@ class RemoteDevSettingService @Autowired constructor(
             val taiUsers = remoteDevSettingDao.fetchTaiUserInfo(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize),
-                userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet()
+                userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
             )
             val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() }
             val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
