@@ -49,5 +49,5 @@ object Versions {
     const val iam = "1.0.39-SNAPSHOT"
     const val disklrucache = "2.0.2"
     const val apachepoi = "5.2.4"
-    const val audit = "1.0.8-SNAPSHOT"
+    const val audit = "1.0.8"
 }
