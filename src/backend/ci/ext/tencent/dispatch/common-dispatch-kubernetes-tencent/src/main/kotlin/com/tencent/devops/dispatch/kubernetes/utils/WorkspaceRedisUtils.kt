@@ -52,7 +52,6 @@ class WorkspaceRedisUtils @Autowired constructor(
 
     fun getTaskStatus(taskUid: String): TaskStatus? {
         val result = redisOperation.hget(taskStatusKey(), taskUid)
-        logger.info("$taskUid get task: $result")
         return if (result != null) {
             return objectMapper.readValue(result, TaskStatus::class.java)
         } else {

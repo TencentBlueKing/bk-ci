@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.startcloud.service
+package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -43,13 +43,13 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
-import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
-import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
+import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -89,7 +89,7 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.machineType == event.devFile.machineType
+                it.machineType == event.devFile.machineType
         }.randomOrNull() ?: throw BuildFailureException(
             ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
             ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -250,11 +250,12 @@ class StartCloudRemoteDevService @Autowired constructor(
 
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
-                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                logger.info("Loop task taskId: $taskId, status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
+                    workspaceRedisUtils.deleteTask(taskId)
                     DispatchBuildTaskStatus(
-                            DispatchBuildTaskStatusEnum.SUCCEEDED,
-                            JsonUtil.toJson(taskStatus)
+                        DispatchBuildTaskStatusEnum.SUCCEEDED,
+                        JsonUtil.toJson(taskStatus)
                     )
                 } else {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
