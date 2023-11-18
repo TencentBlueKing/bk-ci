@@ -85,8 +85,6 @@ interface IContainer {
 
 data class Container(
     override val image: String? = null,
-    @JsonProperty("image-type")
-    val imageType: String? = ImageType.THIRD.name,
     @JsonProperty("image-code")
     override val imageCode: String? = null,
     @JsonProperty("image-version")
