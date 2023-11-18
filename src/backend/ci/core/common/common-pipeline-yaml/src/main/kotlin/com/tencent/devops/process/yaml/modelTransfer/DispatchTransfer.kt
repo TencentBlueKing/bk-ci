@@ -77,8 +77,8 @@ class DispatchTransfer @Autowired(required = false) constructor(
             poolType = null,
             poolName = JobRunsOnType.DOCKER.type,
             container = Container3(
-                image = inner.defaultImage,
-                imageType = ImageType.BKSTORE.name
+                imageCode = inner.defaultImageCode,
+                imageVersion = inner.defaultImageVersion
             )
         )
     )
@@ -142,13 +142,12 @@ class DispatchTransfer @Autowired(required = false) constructor(
                     buildTemplateAcrossInfo = buildTemplateAcrossInfo
                 )
             } else null
-            val image = (info?.image ?: inner.defaultImage).split(":")
             return PoolType.DockerOnVm.toDispatchType(
                 Pool(
                     credentialId = getDockerInfo(job, buildTemplateAcrossInfo)?.credential?.credentialId,
                     image = PoolImage(
-                        imageCode = image.getOrElse(0) { "" },
-                        imageVersion = image.getOrElse(1) { "" },
+                        imageCode = info?.imageCode ?: inner.defaultImageCode,
+                        imageVersion = info?.imageVersion ?: inner.defaultImageVersion,
                         imageType = info?.imageType
                     )
                 )
@@ -178,11 +177,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
             return PoolType.SelfHosted.toDispatchType(
                 with(job.runsOn) {
                     Pool(
-                        envName = if (poolType == JobRunsOnPoolType.ENV_NAME.name) poolName else null,
+                        envName = poolName,
                         workspace = workspace,
-                        envId = if (poolType == JobRunsOnPoolType.ENV_ID.name) poolName else null,
-                        agentId = if (poolType == JobRunsOnPoolType.AGENT_ID.name) poolName else null,
-                        agentName = if (poolType == JobRunsOnPoolType.AGENT_NAME.name) poolName else null,
+                        agentName = nodeName,
                         dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo)
                     )
                 }
@@ -201,7 +198,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             )
             ThirdPartyAgentDockerInfo(
-                image = info.image,
+                image = info.image ?: "",
                 credential = Credential(
                     user = info.userName,
                     password = info.password,

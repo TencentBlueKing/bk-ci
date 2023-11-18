@@ -52,6 +52,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
@@ -67,6 +68,7 @@ import com.tencent.devops.process.yaml.v3.models.add
 import com.tencent.devops.process.yaml.v3.models.job.Container
 import com.tencent.devops.process.yaml.v3.models.job.Container2
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.models.job.Service
@@ -379,8 +381,7 @@ object ScriptYmlUtils {
                     env = preJob.env,
                     continueOnError = preJob.continueOnError,
                     strategy = preJob.strategy,
-                    dependOn = preJob.dependOn,
-                    dependOnType = preJob.dependOnType
+                    dependOn = preJob.dependOn
                 )
             )
 
@@ -393,7 +394,7 @@ object ScriptYmlUtils {
 
     fun formatRunsOn(preRunsOn: Any?): RunsOn {
         if (preRunsOn == null) {
-            return RunsOn()
+            return RunsOn(poolName = JobRunsOnType.DOCKER.type)
         }
 
         try {
@@ -417,6 +418,7 @@ object ScriptYmlUtils {
                     poolName = preRunsOn.toString()
                 )
             }
+            println("$preRunsOn")
             throw YamlFormatException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_YAML_FORMAT_EXCEPTION,
@@ -536,7 +538,7 @@ object ScriptYmlUtils {
                     },
                     variables = preCheck.reviews.variables,
                     description = preCheck.reviews.description,
-                    sendMarkdown = preCheck.reviews.sendMarkdown,
+                    contentFormat = ContentFormat.parse(preCheck.reviews.contentFormat),
                     notifyType = preCheck.reviews.notifyType,
                     notifyGroups = preCheck.reviews.notifyGroups
                 )
