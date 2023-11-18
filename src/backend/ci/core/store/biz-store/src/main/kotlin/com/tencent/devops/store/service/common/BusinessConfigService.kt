@@ -66,7 +66,7 @@ class BusinessConfigService @Autowired constructor(
         }
         val record = businessConfigDao.get(
             dslContext = dslContext,
-            business = businessConfigRequest.business.name,
+            business = businessConfigRequest.business,
             feature = businessConfigRequest.feature,
             businessValue = businessConfigRequest.businessValue
         )

@@ -31,10 +31,12 @@ bkCiClusterTag: devops
 bkCiRepositoryGithubServer: repository
 bkCiDockerRoutingType: KUBERNETES
 bkCiDockerJobQuotaEnable: false
+bkCiBcsEnable: false
 bkCiBcsCpu: 8.0
 bkCiBcsMemory: 16048
 bkCiKubernetesCpu: 8
 bkCiKubernetesMemory: 16048
+bkCiKubernetesEnable: true
 bkCiKubernetesHost: http://kubernetes-manager
 bkCiKubernetesToken: landun
 bkCiDevopsToken: devops

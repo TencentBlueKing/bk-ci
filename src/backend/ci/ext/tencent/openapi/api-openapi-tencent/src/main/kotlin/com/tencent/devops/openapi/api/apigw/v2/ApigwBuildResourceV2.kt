@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwBuildResourceV2 {
 
-    @ApiOperation("停止构建")
+    @ApiOperation("停止构建", tags = ["v2_app_builds_stop"])
     @PUT
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     fun stop(
@@ -75,7 +75,7 @@ interface ApigwBuildResourceV2 {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("构建详情")
+    @ApiOperation("构建详情", tags = ["v2_app_builds_detail"])
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     fun detail(

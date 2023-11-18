@@ -27,6 +27,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
+import com.tencent.devops.dispatch.devcloud.utils.DevCloudOkhttpUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.json.JSONArray
@@ -75,7 +76,7 @@ class DispatchDevCloudClient {
             .build()
 
         try {
-            OkhttpUtils.doHttp(request).use { response ->
+            DevCloudOkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] http code is ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
@@ -145,7 +146,7 @@ class DispatchDevCloudClient {
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
         try {
-            OkhttpUtils.doHttp(request).use { response ->
+            DevCloudOkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw BuildFailureException(

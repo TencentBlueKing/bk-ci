@@ -83,7 +83,7 @@ class WorkspaceJoinDao {
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             // 没有包含其他表的条件
-            if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
+            if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
                 return (
                         genFetchProjectWorkspaceCond(
                             dslContext = dslContext,
@@ -188,7 +188,7 @@ class WorkspaceJoinDao {
         }
 
         // 没有连表查询的条件
-        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
+        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
             return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
         }
 

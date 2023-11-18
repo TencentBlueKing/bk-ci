@@ -88,7 +88,7 @@
                 this.sendMessage('backToReq')
             },
             sendMessage (action, params) {
-                window.top.postMessage({
+                window.parent.postMessage({
                     action,
                     params
                 }, '*')

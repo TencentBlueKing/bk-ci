@@ -32,7 +32,7 @@ function _M:getProfile(otoken)
         local httpc = http.new()
         --- 开始连接
         httpc:set_timeout(3000)
-        httpc:connect(config.bkci.host, config.bkci.port)
+        httpc:connect(config.kubernetes.domain, 80)
         --- 发送请求
         local res, err = httpc:request({path = "/ms/experience/api/open/experiences/outerAuth?token=" .. otoken, method = "GET"})
 

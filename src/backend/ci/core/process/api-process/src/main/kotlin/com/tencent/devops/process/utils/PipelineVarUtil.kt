@@ -248,7 +248,8 @@ object PipelineVarUtil {
         "ci.mr_reviewers" to BK_REPO_GIT_WEBHOOK_MR_REVIEWERS,
         "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH,
         "ci.repo_create_time" to PIPELINE_GIT_REPO_CREATE_TIME,
-        "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR
+        "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR,
+        "ci.remark" to PIPELINE_BUILD_REMARK
     )
 
     /**
