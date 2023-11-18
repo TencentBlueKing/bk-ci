@@ -32,7 +32,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: ydpzneyp
-          pool-type: AGENT_ID
           agent-selector:
             - windows
           workspace: 工作空间
@@ -50,7 +49,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: dpenqqym
-          pool-type: ENV_ID
           agent-selector:
             - windows
           workspace: 工作空间
@@ -120,7 +118,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: zmoxbbqp
-          pool-type: AGENT_ID
           agent-selector:
             - macos
           workspace: 工作空间
@@ -134,7 +131,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: rqmakgrm
-          pool-type: ENV_ID
           agent-selector:
             - macos
           workspace: 工作空间
@@ -153,7 +149,6 @@ stages:
           pool-name: docker
           container:
             image: tlinux3_ci:2.*
-            image-type: THIRD
             credentials: royalhuang_up
         steps:
           - name: Bash
@@ -167,7 +162,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: xpvwazlm
-          pool-type: AGENT_ID
           agent-selector:
             - linux
           workspace: 工作空间
@@ -181,7 +175,6 @@ stages:
         runs-on:
           self-hosted: true
           pool-name: njmkyaom
-          pool-type: ENV_ID
           agent-selector:
             - linux
           workspace: 工作空间
@@ -201,7 +194,6 @@ stages:
           pool-name: docker
           container:
             image: tlinux3_ci:2.*
-            image-type: BKSTORE
         steps:
           - name: Bash
             uses: linuxScript@1.*
@@ -225,7 +217,6 @@ stages:
           pool-name: docker
           container:
             image: tlinux3_ci:2.*
-            image-type: BKSTORE
         if: 3333 == '6666'
         steps:
           - name: Bash
@@ -324,7 +315,6 @@ finally:
       pool-name: docker
       container:
         image: tlinux3_ci:2.*
-        image-type: BKSTORE
     steps:
       - run: "echo 112233"
 notices:
