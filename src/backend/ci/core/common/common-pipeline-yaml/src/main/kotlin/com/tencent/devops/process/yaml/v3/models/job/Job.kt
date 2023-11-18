@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v3.models.job
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -65,41 +66,60 @@ data class Job(
     val strategy: Strategy? = null,
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = emptyList(),
-    @ApiModelProperty(name = "depend-on-type")
-    @JsonProperty("depend-on-type")
-    val dependOnType: String? = null
+    val dependOn: List<String>? = emptyList()
 )
 
+interface IContainer {
+    val image: String?
+    val imageCode: String?
+    val imageVersion: String?
+
+    fun takeImageType() = if (imageCode != null) ImageType.BKSTORE else ImageType.THIRD
+
+    fun takeImage() = if (takeImageType() == ImageType.BKSTORE) "$imageCode:$imageVersion" else image
+
+    fun takeImageCode() = imageCode ?: image?.substringBefore(":")
+
+    fun takeImageVersion() = imageVersion ?: image?.substringAfter(":")
+}
+
 data class Container(
-    val image: String,
+    override val image: String? = null,
     @JsonProperty("image-type")
     val imageType: String? = ImageType.THIRD.name,
+    @JsonProperty("image-code")
+    override val imageCode: String? = null,
+    @JsonProperty("image-version")
+    override val imageVersion: String? = null,
     val credentials: Credentials? = null,
     val options: DockerOptions? = null,
     @JsonProperty("image-pull-policy")
     val imagePullPolicy: String? = null
-)
+) : IContainer
 
 data class Container2(
-    val image: String,
-    @JsonProperty("image-type")
-    val imageType: String? = ImageType.THIRD.name,
+    override val image: String? = null,
+    @JsonProperty("image-code")
+    override val imageCode: String? = null,
+    @JsonProperty("image-version")
+    override val imageVersion: String? = null,
     val credentials: String? = null,
     val options: DockerOptions? = null,
     @JsonProperty("image-pull-policy")
     val imagePullPolicy: String? = null
-)
+) : IContainer
 
 data class Container3(
-    val image: String,
-    @JsonProperty("image-type")
-    val imageType: String? = ImageType.THIRD.name,
+    override val image: String? = null,
+    @JsonProperty("image-code")
+    override val imageCode: String? = null,
+    @JsonProperty("image-version")
+    override val imageVersion: String? = null,
     val credentials: Any? = null,
     val options: DockerOptions? = null,
     @JsonProperty("image-pull-policy")
     val imagePullPolicy: String? = null
-)
+) : IContainer
 
 enum class ImagePullPolicyEnum(val type: String) {
     IfNotPresent("if-not-present"),
@@ -137,8 +157,13 @@ data class RunsOn(
     val selfHosted: Boolean? = false,
     @ApiModelProperty(name = "pool-name")
     @JsonProperty("pool-name")
-    var poolName: String = JobRunsOnType.DOCKER.type,
-    @JsonProperty("pool-type")
+    var poolName: String? = null,
+    @ApiModelProperty(name = "hw-spec")
+    @JsonProperty("hw-spec")
+    val hwSpec: String? = null,
+    @JsonProperty("node-name")
+    var nodeName: String? = null,
+    @JsonIgnore
     val poolType: String? = JobRunsOnPoolType.ENV_NAME.name,
     val container: Any? = null,
     @ApiModelProperty(name = "agent-selector")

@@ -56,6 +56,7 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefau
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -225,6 +226,7 @@ class StageTransfer @Autowired(required = false) constructor(
 
     fun model2YamlStage(
         stage: Stage,
+        userId: String,
         projectId: String,
         aspectWrapper: PipelineTransferAspectWrapper
     ): PreStage {
@@ -234,7 +236,13 @@ class StageTransfer @Autowired(required = false) constructor(
 
             (job.jobId?.ifBlank { null } ?: ScriptYmlUtils.randomString("job_")) to when (job.getClassType()) {
                 NormalContainer.classType -> containerTransfer.addYamlNormalContainer(job as NormalContainer, steps)
-                VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
+                VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(
+                    userId = userId,
+                    projectId = projectId,
+                    job = job as VMBuildContainer,
+                    steps = steps
+                )
+
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")
             }.also { preJob ->
                 aspectWrapper.setYamlJob4Yaml(
@@ -290,7 +298,7 @@ class StageTransfer @Autowired(required = false) constructor(
                 )
             },
             description = stage.checkIn?.reviewDesc,
-            sendMarkdown = stage.checkIn?.markdownContent?.nullIfDefault(false),
+            contentFormat = ContentFormat.parse(stage.checkIn?.markdownContent).nullIfDefault(ContentFormat.TEXT)?.text,
             notifyType = stage.checkIn?.notifyType?.ifEmpty { null },
             notifyGroups = stage.checkIn?.notifyGroup?.ifEmpty { null }
         )
@@ -320,7 +328,7 @@ class StageTransfer @Autowired(required = false) constructor(
                     reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
                 )
             }.toMutableList()
-            check.markdownContent = stageCheck.reviews.sendMarkdown ?: false
+            check.markdownContent = stageCheck.reviews.contentFormat == ContentFormat.MARKDOWN
             check.notifyType = stageCheck.reviews.notifyType?.toMutableList() ?: mutableListOf()
             check.notifyGroup = stageCheck.reviews.notifyGroups?.toMutableList() ?: mutableListOf()
         }

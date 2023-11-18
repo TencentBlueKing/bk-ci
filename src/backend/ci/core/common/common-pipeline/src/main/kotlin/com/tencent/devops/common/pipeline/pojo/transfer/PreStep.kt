@@ -62,8 +62,8 @@ data class PreStep(
     var env: Map<String, Any?>? = emptyMap(),
     val run: String? = null,
     val shell: String? = null,
-    @ApiModelProperty(name = "manual-retry")
-    @JsonProperty("manual-retry")
+    @ApiModelProperty(name = "can-manually-retry")
+    @JsonProperty("can-manually-retry")
     var manualRetry: Boolean? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreStep

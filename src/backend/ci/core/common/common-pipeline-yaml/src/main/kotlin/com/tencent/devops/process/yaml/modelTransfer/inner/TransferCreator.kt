@@ -45,7 +45,10 @@ interface TransferCreator {
     val runPlugInVersion: String?
 
     // 默认的公共镜像
-    val defaultImage: String
+    val defaultImageCode: String
+
+    // 默认的公共镜像版本
+    val defaultImageVersion: String
 
     /**
      * 构造具有特殊语法的checkout插件

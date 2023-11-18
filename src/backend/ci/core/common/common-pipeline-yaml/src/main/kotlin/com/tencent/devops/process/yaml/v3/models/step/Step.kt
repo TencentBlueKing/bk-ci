@@ -52,7 +52,7 @@ data class Step(
     @ApiModelProperty("run 插件的附加参数")
     val runAdditionalOptions: Map<String, String?>?,
     val checkout: String?,
-    @JsonProperty("manual-retry")
+    @JsonProperty("can-manually-retry")
     val manualRetry: Boolean? = null,
     // 在系统内唯一标识step唯一性，不参与yaml打印
     @JsonIgnore

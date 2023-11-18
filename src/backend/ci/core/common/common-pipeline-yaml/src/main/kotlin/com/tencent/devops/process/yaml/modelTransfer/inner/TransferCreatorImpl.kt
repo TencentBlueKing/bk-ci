@@ -64,8 +64,11 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     override val runPlugInVersion: String?
         get() = runPlugInVersionData
 
-    override val defaultImage: String
-        get() = defaultImageData
+    override val defaultImageCode: String
+        get() = defaultImageData.substringBefore(":")
+
+    override val defaultImageVersion: String
+        get() = defaultImageData.substringAfter(":")
 
     override fun transferCheckoutElement(
         step: Step

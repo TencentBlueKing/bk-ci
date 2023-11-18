@@ -221,7 +221,12 @@ class ModelTransfer @Autowired constructor(
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
-            val ymlStage = modelStage.model2YamlStage(stage, modelInput.setting.projectId, modelInput.aspectWrapper)
+            val ymlStage = modelStage.model2YamlStage(
+                stage = stage,
+                userId = modelInput.userId,
+                projectId = modelInput.setting.projectId,
+                aspectWrapper = modelInput.aspectWrapper
+            )
             modelInput.aspectWrapper.setYamlStage4Yaml(
                 yamlPreStage = ymlStage,
                 aspectType = PipelineTransferAspectWrapper.AspectType.AFTER
@@ -233,7 +238,12 @@ class ModelTransfer @Autowired constructor(
         val lastStage = modelInput.model.stages.last()
         val finally = if (lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
-            modelStage.model2YamlStage(lastStage, modelInput.setting.projectId, modelInput.aspectWrapper).jobs
+            modelStage.model2YamlStage(
+                stage = lastStage,
+                userId = modelInput.userId,
+                projectId = modelInput.setting.projectId,
+                aspectWrapper = modelInput.aspectWrapper
+            ).jobs
         } else null
         yaml.finally = finally as LinkedHashMap<String, Any>?
         yaml.concurrency = makeConcurrency(modelInput.setting)
