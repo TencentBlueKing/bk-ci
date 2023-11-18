@@ -182,7 +182,7 @@ class PipelineWebhookUpgradeService(
         var findResult = false
         for (element in elements) {
             val (elementScmType, elementEventType, elementRepositoryConfig) =
-                RepositoryConfigUtils.buildWebhookConfig(element, params) ?: continue
+                RepositoryConfigUtils.buildWebhookConfig(element, params)
             val usedKey = "${pipelineId}_${element.id!!}"
             if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId() &&
                 elementScmType == repositoryType &&
@@ -231,6 +231,7 @@ class PipelineWebhookUpgradeService(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     private fun PipelineWebhook.doUpdateWebhookSecret(
         pipelines: MutableMap<String, List<Element>>,
         pipelineVariables: HashMap<String, Map<String, String>>
