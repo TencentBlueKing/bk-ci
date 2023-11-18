@@ -349,5 +349,4 @@ class PipelineWebhookService @Autowired constructor(
             limit = limit.limit
         ) ?: emptyList()
     }
-
 }
