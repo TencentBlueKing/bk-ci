@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.startcloud.service
+package com.tencent.devops.dispatch.kubernetes.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -43,13 +43,13 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
-import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
-import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
+import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
+import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
