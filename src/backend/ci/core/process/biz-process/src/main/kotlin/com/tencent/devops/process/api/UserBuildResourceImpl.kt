@@ -51,7 +51,6 @@ import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import io.micrometer.core.annotation.Timed
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -535,9 +534,5 @@ class UserBuildResourceImpl @Autowired constructor(
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserBuildResourceImpl::class.java)
     }
 }

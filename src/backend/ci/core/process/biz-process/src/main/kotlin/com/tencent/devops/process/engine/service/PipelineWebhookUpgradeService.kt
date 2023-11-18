@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
@@ -248,7 +249,7 @@ class PipelineWebhookUpgradeService(
                 repoType = repoType,
                 variables = params
             )
-            for (element in elements) {
+            elements.forEach { element ->
                 if (element.id == taskId) {
                     when (element) {
                         is CodeGitWebHookTriggerElement ->
@@ -257,12 +258,14 @@ class PipelineWebhookUpgradeService(
                                 repositoryConfig = repositoryConfig,
                                 codeEventType = element.eventType
                             )
+
                         is CodeTGitWebHookTriggerElement ->
                             scmProxyService.addTGitWebhook(
                                 projectId,
                                 repositoryConfig = repositoryConfig,
                                 codeEventType = element.data.input.eventType
                             )
+
                         is CodeGitlabWebHookTriggerElement ->
                             scmProxyService.addGitlabWebhook(
                                 projectId,
@@ -270,7 +273,7 @@ class PipelineWebhookUpgradeService(
                                 codeEventType = element.eventType
                             )
                     }
-                    break
+                    return
                 }
             }
         } catch (t: Throwable) {
@@ -312,97 +315,114 @@ class PipelineWebhookUpgradeService(
                     repoCache.clear()
                 }
                 preProjectId = projectId
-                val model = pipelineWebhookService.getModel(projectId, pipelineId)
-                if (model == null) {
-                    logger.info("$projectId|$pipelineId|model is null")
-                    return@forEach
-                }
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                val params = triggerContainer.params.associate { param ->
-                    param.id to param.defaultValue.toString()
-                }
-                val elementMap =
-                    triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
-                val pipelineWebhooks = pipelineWebhookDao.listWebhook(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    limit = limit,
-                    offset = 0
-                )
-                pipelineWebhooks?.forEach webhook@{ webhook ->
-                    try {
-                        if (webhook.taskId.isNullOrBlank()) return@webhook
-                        val element = elementMap[webhook.taskId] ?: return@webhook
-                        val (elementScmType, elementEventType, elementRepositoryConfig) =
-                            RepositoryConfigUtils.buildWebhookConfig(element, params)
-                        val webhookRepositoryConfig = RepositoryConfigUtils.getRepositoryConfig(
-                            repoHashId = webhook.repoHashId,
-                            repoName = webhook.repoName,
-                            repoType = webhook.repoType,
-                            variables = params
-                        )
-                        // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致,打印日志统计
-                        if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
-                            logger.info(
-                                "webhook repository config different from element repository config|" +
-                                        "webhook:$webhookRepositoryConfig|element:$elementRepositoryConfig"
-                            )
-                        }
-                        // 缓存代码库信息,避免频繁调用代码库信息接口
-                        val repoCacheKey = "${projectId}_${webhookRepositoryConfig.getRepositoryId()}"
-                        val repositoryOptional = repoCache[repoCacheKey] ?: run {
-                            val repo = try {
-                                scmProxyService.getRepo(
-                                    projectId = projectId,
-                                    repositoryConfig = webhookRepositoryConfig
-                                )
-                            } catch (ignored: Exception) {
-                                logger.warn(
-                                    "$projectId|$pipelineId|${webhookRepositoryConfig.getRepositoryId()}|" +
-                                            "fail to get repository info", ignored
-                                )
-                                null
-                            }
-                            val optional = Optional.ofNullable(repo)
-                            repoCache[repoCacheKey] = optional
-                            optional
-                        }
-                        val repository = if (repositoryOptional.isPresent) {
-                            repositoryOptional.get()
-                        } else {
-                            null
-                        }
-
-                        // 历史原因,git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,统计数据量
-                        if (repository != null && webhook.projectName != repository.projectName) {
-                            logger.info(
-                                "webhook projectName different from repo projectName|" +
-                                        "webhook:${webhook.projectName}|repo:${repository.projectName}"
-                            )
-                        }
-                        val repositoryHashId = when {
-                            repository != null -> repository.repoHashId
-                            webhookRepositoryConfig.repositoryType == RepositoryType.ID ->
-                                webhookRepositoryConfig.repositoryHashId
-
-                            else -> null
-                        }
-                        pipelineWebhookDao.updateWebhookEventInfo(
-                            dslContext = dslContext,
-                            eventType = elementEventType?.name ?: "",
-                            externalId = repository?.getExternalId(),
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            taskId = webhook.taskId!!,
-                            repositoryHashId = repositoryHashId
-                        )
-                    } catch (ignored: Exception) {
-                        logger.info("update webhook event info error|$webhook", ignored)
-                    }
-                }
+                updatePipelineEventInfo(projectId = projectId, pipelineId = pipelineId, repoCache = repoCache)
             }
             offset += limit
         } while (pipelines.size == 1000)
+    }
+
+    private fun updatePipelineEventInfo(
+        projectId: String,
+        pipelineId: String,
+        repoCache: MutableMap<String, Optional<Repository>>
+    ) {
+        val model = pipelineWebhookService.getModel(projectId, pipelineId)
+        if (model == null) {
+            logger.info("$projectId|$pipelineId|model is null")
+            return
+        }
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = triggerContainer.params.associate { param ->
+            param.id to param.defaultValue.toString()
+        }
+        val elementMap =
+            triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
+        val pipelineWebhooks = pipelineWebhookDao.listWebhook(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            limit = 1000,
+            offset = 0
+        )
+        pipelineWebhooks?.forEach webhook@{ webhook ->
+            try {
+                if (webhook.taskId.isNullOrBlank()) return@webhook
+                val element = elementMap[webhook.taskId] ?: return@webhook
+                val (elementScmType, elementEventType, elementRepositoryConfig) =
+                    RepositoryConfigUtils.buildWebhookConfig(element, params)
+                val webhookRepositoryConfig = RepositoryConfigUtils.getRepositoryConfig(
+                    repoHashId = webhook.repoHashId,
+                    repoName = webhook.repoName,
+                    repoType = webhook.repoType,
+                    variables = params
+                )
+                // 插件的配置与表中数据不一致,如保存流水线时,注册webhook失败,就会导致数据不一致,打印日志统计
+                if (elementRepositoryConfig.getRepositoryId() != webhookRepositoryConfig.getRepositoryId()) {
+                    logger.info(
+                        "webhook repository config different from element repository config|" +
+                                "webhook:$webhookRepositoryConfig|element:$elementRepositoryConfig"
+                    )
+                }
+                val repository = getAndCacheRepo(projectId, webhookRepositoryConfig, repoCache)
+
+                // 历史原因,git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,统计数据量
+                if (repository != null && webhook.projectName != repository.projectName) {
+                    logger.info(
+                        "webhook projectName different from repo projectName|" +
+                                "webhook:${webhook.projectName}|repo:${repository.projectName}"
+                    )
+                }
+                val repositoryHashId = when {
+                    repository != null -> repository.repoHashId
+                    webhookRepositoryConfig.repositoryType == RepositoryType.ID ->
+                        webhookRepositoryConfig.repositoryHashId
+
+                    else -> null
+                }
+                pipelineWebhookDao.updateWebhookEventInfo(
+                    dslContext = dslContext,
+                    eventType = elementEventType?.name ?: "",
+                    externalId = repository?.getExternalId(),
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = webhook.taskId!!,
+                    repositoryHashId = repositoryHashId
+                )
+            } catch (ignored: Exception) {
+                logger.info("update webhook event info error|$webhook", ignored)
+            }
+        }
+    }
+
+    private fun getAndCacheRepo(
+        projectId: String,
+        webhookRepositoryConfig: RepositoryConfig,
+        repoCache: MutableMap<String, Optional<Repository>>
+    ): Repository? {
+        // 缓存代码库信息,避免频繁调用代码库信息接口
+        val repoCacheKey = "${projectId}_${webhookRepositoryConfig.getRepositoryId()}"
+        val repositoryOptional = repoCache[repoCacheKey] ?: run {
+            val repo = try {
+                scmProxyService.getRepo(
+                    projectId = projectId,
+                    repositoryConfig = webhookRepositoryConfig
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "$projectId|${webhookRepositoryConfig.getRepositoryId()}|" +
+                            "fail to get repository info", ignored
+                )
+                null
+            }
+            val optional = Optional.ofNullable(repo)
+            repoCache[repoCacheKey] = optional
+            optional
+        }
+        val repository = if (repositoryOptional.isPresent) {
+            repositoryOptional.get()
+        } else {
+            null
+        }
+        return repository
     }
 }

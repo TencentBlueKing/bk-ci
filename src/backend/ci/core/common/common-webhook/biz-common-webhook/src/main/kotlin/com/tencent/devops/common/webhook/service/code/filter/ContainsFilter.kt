@@ -47,17 +47,7 @@ class ContainsFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
-
-        return buildFilterFailedReason(
-            action = {
-                included.isEmpty() || included.contains(triggerOn)
-            },
-            response = response
-        )
-    }
-
-    private fun buildFilterFailedReason(action: () -> Boolean, response: WebhookFilterResponse): Boolean {
-        val filterResult = action.invoke()
+        val filterResult = included.isEmpty() || included.contains(triggerOn)
         if (!filterResult && failedReason.isNotBlank()) {
             response.failedReason = failedReason
         }
