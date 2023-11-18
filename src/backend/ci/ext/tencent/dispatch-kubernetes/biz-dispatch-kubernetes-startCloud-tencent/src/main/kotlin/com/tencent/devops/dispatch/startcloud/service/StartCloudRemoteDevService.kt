@@ -251,8 +251,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
                 logger.info("Loop task taskId: $taskId, status: ${JsonUtil.toJson(taskStatus)}")
+                workspaceRedisUtils.deleteTask(taskId)
                 return if (taskStatus.status == TaskStatusEnum.successed) {
-                    workspaceRedisUtils.deleteTask(taskId)
                     DispatchBuildTaskStatus(
                             DispatchBuildTaskStatusEnum.SUCCEEDED,
                             JsonUtil.toJson(taskStatus)
