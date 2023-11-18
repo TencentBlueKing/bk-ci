@@ -2,7 +2,7 @@ version: v3.0
 name: qqq
 on:
   manual:
-    can-element-skip: false
+    can-skip-step: false
 stages:
 - jobs:
     job_1:

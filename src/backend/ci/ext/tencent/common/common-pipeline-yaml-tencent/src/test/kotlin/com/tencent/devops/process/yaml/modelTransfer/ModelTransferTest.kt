@@ -57,6 +57,7 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
@@ -310,6 +311,18 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             "PipelineRemoteToken"
         )
+
+        every {
+            transferCache.getThirdPartyAgent(JobRunsOnPoolType.ENV_ID, any(), any(), any())
+        }.returns(
+            "构建机环境别名"
+        )
+
+        every {
+            transferCache.getThirdPartyAgent(JobRunsOnPoolType.AGENT_ID, any(), any(), any())
+        }.returns(
+            "构建机节点别名"
+        )
         ReflectionTestUtils.setField(creator, "marketRunTaskData", true)
         ReflectionTestUtils.setField(creator, "runPlugInAtomCodeData", "run")
         ReflectionTestUtils.setField(creator, "runPlugInVersionData", "1.*")
@@ -319,7 +332,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ValueSource(
         strings = [
             "model-yaml-001",
-//            "model-yaml-002"
+            "model-yaml-002"
         ]
     )
     fun model2Yaml(value: String) {

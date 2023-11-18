@@ -108,15 +108,14 @@ enum class PoolType {
                     poolType = null,
                     container = when (dispatcher.imageType) {
                         ImageType.BKSTORE -> Container2(
-                            image = "${dispatcher.value}:${dispatcher.imageVersion}",
-                            credentials = dispatcher.credentialId?.ifBlank { null },
-                            imageType = dispatcher.imageType!!.name
+                            imageCode = dispatcher.value,
+                            imageVersion = dispatcher.imageVersion,
+                            credentials = dispatcher.credentialId?.ifBlank { null }
                         )
 
                         ImageType.THIRD -> Container2(
                             image = dispatcher.value,
-                            credentials = dispatcher.credentialId?.ifBlank { null },
-                            imageType = dispatcher.imageType!!.name
+                            credentials = dispatcher.credentialId?.ifBlank { null }
                         )
 
                         else -> null

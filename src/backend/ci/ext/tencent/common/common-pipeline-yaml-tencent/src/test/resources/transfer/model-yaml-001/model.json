@@ -2187,7 +2187,7 @@
           "credentialId" : "",
           "credentialProject" : "",
           "imageCode" : "tlinux3_ci",
-          "imageVersion" : "2.*",
+          "imageVersion" : "2.1",
           "imageName" : "tlinux3-CI镜像",
           "dockerBuildVersion" : "tlinux3_ci",
           "imagePublicFlag" : false,

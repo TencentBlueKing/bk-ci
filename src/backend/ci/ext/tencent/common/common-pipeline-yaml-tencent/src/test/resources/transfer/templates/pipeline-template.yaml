@@ -91,11 +91,11 @@ stages:
             values: []
             description: 描述
         description: 审核说明：
-        send-markdown: true
+        content-format: markdown
         notify-type:
           - RTX
           - WEWORK_GROUP
-        notify-groups:
+        chat-id:
           - ww2075063897
       timeout-hours: 24
   - name: mac

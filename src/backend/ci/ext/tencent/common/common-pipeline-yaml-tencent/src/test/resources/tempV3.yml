@@ -228,8 +228,8 @@ notices:
   - xx123123
   - xx222333
   if: FAILURE
-  notify-markdown: true
-  notify-detail-url: true
+  content-format: markdown
+  attach-build-url: true
 - type:
   - wework-message
   content: this is a wework-message notice,content is hello.
