@@ -59,4 +59,6 @@ data class CodeP4Repository(
     override fun isLegal(): Boolean {
         return true
     }
+
+    override fun getExternalId(): String = projectName
 }

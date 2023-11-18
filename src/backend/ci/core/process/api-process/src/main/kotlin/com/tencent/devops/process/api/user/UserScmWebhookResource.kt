@@ -37,7 +37,6 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -49,12 +48,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserScmWebhookResource {
-
-    @ApiOperation("更新所有的webhook项目名")
-    @PUT
-    @Path("/updateProjectNameAndTaskId")
-    fun updateProjectNameAndTaskId(): Result<Boolean>
-
     @ApiOperation("根据代码库类型获取事件")
     @GET
     @Path("/eventType")

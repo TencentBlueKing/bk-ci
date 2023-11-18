@@ -74,4 +74,6 @@ data class CodeGitlabRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }
