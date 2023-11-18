@@ -369,15 +369,6 @@ include(":ext:tencent:dispatch:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch:common-dispatch-kubernetes-tencent")
 include(":ext:tencent:dispatch:boot-dispatch-tencent")
 
-include(":ext:tencent:dispatch-kubernetes")
-include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-tencent")
-include(":ext:tencent:dispatch-kubernetes:boot-dispatch-kubernetes-tencent")
-include(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent")
-include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-bcs-tencent")
-include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-devcloud-tencent")
-include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-startCloud-tencent")
-include(":ext:tencent:dispatch-kubernetes:common-dispatch-kubernetes-tencent")
-
 include(":ext:tencent:plugin")
 include(":ext:tencent:plugin:api-plugin-tencent")
 include(":ext:tencent:plugin:biz-plugin-tencent")
@@ -445,10 +436,6 @@ include(":ext:tencent:auth:boot-auth-tencent")
 
 include(":ext:tencent:buildless")
 include(":ext:tencent:buildless:boot-buildless-tencent")
-
-include(":ext:tencent:dispatch-docker")
-include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
-include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
 
 include(":ext:tencent:dispatch-devcloud")
 include(":ext:tencent:dispatch-devcloud:api-dispatch-devcloud-tencent")
