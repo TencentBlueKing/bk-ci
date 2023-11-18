@@ -1223,6 +1223,7 @@ class WorkspaceService @Autowired constructor(
         // 获取用户当前的项目列表
         val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
         if (projects.isEmpty()) {
+            logger.debug("projectAccessDevicePermissions|userId|$userId|empty projects")
             return emptyMap()
         }
         // 调用安全接口
