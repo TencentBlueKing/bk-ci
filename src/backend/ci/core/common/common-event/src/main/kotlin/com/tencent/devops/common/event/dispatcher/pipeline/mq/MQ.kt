@@ -311,14 +311,14 @@ object MQ {
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 
     // pac每条流水线触发事件
-    const val EXCHANGE_PAC_PIPELINE_LISTENER = "e.pac.pipeline.listener"
+    const val EXCHANGE_PIPELINE_YAML_LISTENER = "e.pipeline.yaml.listener"
     // pac开启流水线事件
-    const val ROUTE_PAC_ENABLE_PIPELINE_EVENT = "r.pac.enable.pipeline.event"
-    const val QUEUE_PAC_ENABLE_PIPELINE_EVENT = "q.pac.enable.pipeline.event"
+    const val ROUTE_PIPELINE_YAML_ENABLE_EVENT = "r.pipeline.yaml.enable.event"
+    const val QUEUE_PIPELINE_YAML_ENABLE_EVENT = "q.pipeline.yaml.enable.event"
     // pac触发事件
-    const val ROUTE_PAC_TRIGGER_PIPELINE_EVENT = "r.pac.trigger.pipeline.event"
-    const val QUEUE_PAC_TRIGGER_PIPELINE_EVENT = "q.pac.trigger.pipeline.event"
+    const val ROUTE_PIPELINE_YAML_TRIGGER_EVENT = "r.pipeline.yaml.trigger.event"
+    const val QUEUE_PIPELINE_YAML_TRIGGER_EVENT = "q.pipeline.yaml.trigger.event"
     // pac关闭流水线事件
-    const val ROUTE_PAC_DISABLE_PIPELINE_EVENT = "r.pac.disable.pipeline.event"
-    const val QUEUE_PAC_DISABLE_PIPELINE_EVENT = "q.pac.disable.pipeline.event"
+    const val ROUTE_PIPELINE_YAML_DISABLE_EVENT = "r.pipeline.yaml.disable.event"
+    const val QUEUE_PIPELINE_YAML_DISABLE_EVENT = "q.pipeline.yaml.disable.event"
 }

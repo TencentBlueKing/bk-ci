@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.yaml.mq
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
@@ -36,9 +35,9 @@ import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
-data class PacYamlTriggerEvent(
-    override val source: String = "PacYamlTrigger",
+@Event(MQ.EXCHANGE_PIPELINE_YAML_LISTENER, MQ.ROUTE_PIPELINE_YAML_DISABLE_EVENT)
+data class PipelineYamlDisableEvent(
+    override val source: String = "PacYamlDisable",
     override val projectId: String,
     override val yamlPath: String,
     override val userId: String,
@@ -46,9 +45,8 @@ data class PacYamlTriggerEvent(
     override val metaData: ActionMetaData,
     override val actionCommonData: EventCommonData,
     override val actionContext: PacTriggerContext,
-    override val actionSetting: PacRepoSetting,
-    val scmType: ScmType
-) : BasePacYamlEvent(
+    override val actionSetting: PacRepoSetting
+) : BasePipelineYamlEvent(
     source = source,
     projectId = projectId,
     yamlPath = yamlPath,

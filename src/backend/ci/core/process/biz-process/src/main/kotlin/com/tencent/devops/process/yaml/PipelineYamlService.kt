@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
@@ -42,6 +43,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PipelineYamlService(
@@ -53,6 +55,7 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
+        private const val MAX_LEN_FOR_NAME = 512
     }
 
     fun save(
@@ -267,6 +270,28 @@ class PipelineYamlService(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId
+        )
+    }
+
+    fun deletePipelineYaml(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        filePath: String
+    ) {
+        // 删除前改名，防止文件名占用
+        val delTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+        var delFilePath = "$filePath[$delTime]"
+        if (delFilePath.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
+            delFilePath = delFilePath.substring(0, MAX_LEN_FOR_NAME)
+        }
+        pipelineYamlInfoDao.delete(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            delFilePath = delFilePath
         )
     }
 }

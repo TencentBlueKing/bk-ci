@@ -46,8 +46,9 @@ import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.PacTriggerPipeline
 import com.tencent.devops.process.yaml.actions.pacActions.data.PacEnableEvent
 import com.tencent.devops.process.yaml.actions.pacActions.data.PacPushYamlFileEvent
-import com.tencent.devops.process.yaml.mq.PacYamlEnableEvent
-import com.tencent.devops.process.yaml.mq.PacYamlTriggerEvent
+import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
+import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
+import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -125,7 +126,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
             pipelineEventDispatcher.dispatch(
-                PacYamlEnableEvent(
+                PipelineYamlEnableEvent(
                     projectId = projectId,
                     yamlPath = it.yamlPath,
                     userId = userId,
@@ -170,21 +171,24 @@ class PipelineYamlFacadeService @Autowired constructor(
             logger.warn("pac yaml trigger not found ci yaml from git|$projectId|$repoHashId")
             return
         }
-        val removeFiles = action.getDeleteYamlFiles()
+        val deleteFiles = action.getDeleteYamlFiles()
         // 在默认分支上删除文件需要删除流水线
-        if (action.data.context.defaultBranch == action.data.eventCommon.branch && !removeFiles.isNullOrEmpty()) {
-            removeFiles.forEach { removeFile ->
-                pipelineYamlInfoDao.delete(
-                    dslContext = dslContext,
+        if (action.data.context.defaultBranch == action.data.eventCommon.branch && !deleteFiles.isNullOrEmpty()) {
+            deleteFiles.forEach { filePath ->
+                pipelineYamlService.deletePipelineYaml(
                     userId = action.data.getUserId(),
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    filePath = removeFile
+                    filePath = filePath
                 )
             }
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-        val eventId = pipelineTriggerEventService.getEventId()
+        val eventId = pipelineTriggerEventService.getEventId(
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = repoHashId
+        )
         val triggerEvent = PipelineTriggerEvent(
             projectId = projectId,
             eventId = eventId,
@@ -196,8 +200,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             requestId = requestId,
             createTime = eventTime
         )
-        action.data.context.eventId = eventId
         pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
+        action.data.context.eventId = eventId
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
         ).associate {
@@ -211,22 +215,26 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
         }
         yamlPathList.forEach {
-            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: PacTriggerPipeline(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = it.yamlPath,
-                pipelineId = "",
-                userId = action.data.getUserId(),
-                delete = false
-            )
-            if (triggerPipeline.delete) {
-                return@forEach
+            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: run {
+                // ci文件没有变更,流水线不存在则不创建,可能默认分支已经将文件删除,其他分支还存在
+                if (it.checkType == CheckType.NEED_CHECK) {
+                    PacTriggerPipeline(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = it.yamlPath,
+                        pipelineId = "",
+                        userId = action.data.getUserId(),
+                        delete = false
+                    )
+                } else {
+                    return@forEach
+                }
             }
             action.data.context.pipeline = triggerPipeline
             action.data.context.yamlFile = it
             action.data.context.eventId = eventId
             pipelineEventDispatcher.dispatch(
-                PacYamlTriggerEvent(
+                PipelineYamlTriggerEvent(
                     projectId = projectId,
                     yamlPath = it.yamlPath,
                     userId = action.data.getUserId(),

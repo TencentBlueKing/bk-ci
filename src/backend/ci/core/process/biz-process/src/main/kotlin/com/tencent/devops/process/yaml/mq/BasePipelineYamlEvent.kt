@@ -28,32 +28,30 @@
 
 package com.tencent.devops.process.yaml.mq
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 
-@Event(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
-data class PacYamlEnableEvent(
-    override val source: String = "PacYamlEnable",
+open class BasePipelineYamlEvent(
+    override val source: String,
     override val projectId: String,
-    override val yamlPath: String,
+    open val yamlPath: String,
     override val userId: String,
-    override val eventStr: String,
-    override val metaData: ActionMetaData,
-    override val actionCommonData: EventCommonData,
-    override val actionContext: PacTriggerContext,
-    override val actionSetting: PacRepoSetting
-) : BasePacYamlEvent(
+    open val eventStr: String,
+    open val metaData: ActionMetaData,
+    open val actionCommonData: EventCommonData,
+    open val actionContext: PacTriggerContext,
+    open val actionSetting: PacRepoSetting,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0
+) : IPipelineEvent(
+    actionType = ActionType.START,
     source = source,
     projectId = projectId,
-    yamlPath = yamlPath,
+    pipelineId = yamlPath,
     userId = userId,
-    eventStr = eventStr,
-    metaData = metaData,
-    actionCommonData = actionCommonData,
-    actionContext = actionContext,
-    actionSetting = actionSetting
+    delayMills = delayMills
 )

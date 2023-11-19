@@ -44,84 +44,84 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class PacTriggerMQConfig {
+class PipelineYamlMQConfig {
 
     @Bean
     fun traceEventDispatcher(rabbitTemplate: RabbitTemplate) = TraceEventDispatcher(rabbitTemplate)
 
     /**
-     * pac流水线触发交换机
+     * yaml流水线触发交换机
      */
     @Bean
-    fun pacPipelineExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PAC_PIPELINE_LISTENER, true, false)
+    fun pipelineYamlExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_YAML_LISTENER, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
 
     @Bean
-    fun pacEnableQueue() = Queue(MQ.QUEUE_PAC_ENABLE_PIPELINE_EVENT)
+    fun pipelineYamlEnableQueue() = Queue(MQ.QUEUE_PIPELINE_YAML_ENABLE_EVENT)
 
     @Bean
-    fun pacEnableQueueBind(
-        @Autowired pacEnableQueue: Queue,
-        @Autowired pacPipelineExchange: DirectExchange
+    fun pipelineYamlEnableQueueBind(
+        @Autowired pipelineYamlEnableQueue: Queue,
+        @Autowired pipelineYamlExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacEnableQueue).to(pacPipelineExchange).with(MQ.ROUTE_PAC_ENABLE_PIPELINE_EVENT)
+        return BindingBuilder.bind(pipelineYamlEnableQueue).to(pipelineYamlExchange)
+            .with(MQ.ROUTE_PIPELINE_YAML_ENABLE_EVENT)
     }
 
     @Bean
-    fun pacEnableContainer(
+    fun pipelineYamlEnableContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pacEnableQueue: Queue,
+        @Autowired pipelineYamlEnableQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pacExchange: PacTriggerListener,
+        @Autowired pacExchange: PipelineYamlTriggerListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
-            queue = pacEnableQueue,
+            queue = pipelineYamlEnableQueue,
             rabbitAdmin = rabbitAdmin,
             buildListener = pacExchange,
             messageConverter = messageConverter,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 10,
-            maxConcurrency = 20,
-            prefetchCount = 1
+            maxConcurrency = 20
         )
     }
 
     @Bean
-    fun pacTriggerQueue() = Queue(MQ.QUEUE_PAC_TRIGGER_PIPELINE_EVENT)
+    fun pipelineYamlTriggerQueue() = Queue(MQ.QUEUE_PIPELINE_YAML_TRIGGER_EVENT)
 
     @Bean
-    fun pacTriggerQueueBind(
-        @Autowired pacTriggerQueue: Queue,
-        @Autowired pacPipelineExchange: DirectExchange
+    fun pipelineYamlTriggerQueueBind(
+        @Autowired pipelineYamlTriggerQueue: Queue,
+        @Autowired pipelineYamlExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pacTriggerQueue).to(pacPipelineExchange).with(MQ.ROUTE_PAC_TRIGGER_PIPELINE_EVENT)
+        return BindingBuilder.bind(pipelineYamlTriggerQueue).to(pipelineYamlExchange)
+            .with(MQ.ROUTE_PIPELINE_YAML_TRIGGER_EVENT)
     }
 
     @Bean
-    fun pacTriggerContainer(
+    fun pipelineYamlTriggerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pacTriggerQueue: Queue,
+        @Autowired pipelineYamlTriggerQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pacTriggerListener: PacTriggerListener,
+        @Autowired pipelineYamlTriggerListener: PipelineYamlTriggerListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         return Tools.createSimpleMessageListenerContainer(
             connectionFactory = connectionFactory,
-            queue = pacTriggerQueue,
+            queue = pipelineYamlTriggerQueue,
             rabbitAdmin = rabbitAdmin,
-            buildListener = pacTriggerListener,
+            buildListener = pipelineYamlTriggerListener,
             messageConverter = messageConverter,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 30,
-            maxConcurrency = 50,
-            prefetchCount = 1
+            maxConcurrency = 50
         )
     }
 }

@@ -81,9 +81,9 @@ class YamlTriggerExceptionHandler(
                     }
                 }
                 null
-            } catch (e: Throwable) {
+            } catch (ignored: Throwable) {
                 // 防止Hanlder处理过程中报错，兜底
-                logger.error("BKSystemErrorMonitor|PacTriggerExceptionHandler|action|${action.format()}", e)
+                logger.error("BKSystemErrorMonitor|PacTriggerExceptionHandler|action|${action.format()}", ignored)
                 null
             }
         }
@@ -136,7 +136,7 @@ class YamlTriggerExceptionHandler(
                 .detailId(pipelineTriggerEventService.getDetailId())
                 .eventId(action.data.context.eventId!!)
                 .status(PipelineTriggerStatus.FAILED.name)
-                .pipelineId(action.data.context.pipeline?.filePath ?: "")
+                .pipelineId(pipeline?.pipelineId ?: yamlFile.yamlPath)
                 .reason(reason)
                 .reasonDetail(reasonDetail)
                 .build()

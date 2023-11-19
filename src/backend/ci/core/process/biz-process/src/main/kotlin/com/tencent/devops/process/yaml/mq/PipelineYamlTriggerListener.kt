@@ -35,27 +35,28 @@ import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
+import com.tencent.devops.process.yaml.pojo.CheckType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PacTriggerListener @Autowired constructor(
+class PipelineYamlTriggerListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val actionFactory: EventActionFactory,
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlBuildService: PipelineYamlBuildService,
     private val exceptionHandler: YamlTriggerExceptionHandler
-) : BaseListener<BasePacYamlEvent>(
+) : BaseListener<BasePipelineYamlEvent>(
     pipelineEventDispatcher = pipelineEventDispatcher
 ) {
-    override fun run(event: BasePacYamlEvent) {
+    override fun run(event: BasePipelineYamlEvent) {
         when (event) {
-            is PacYamlEnableEvent -> {
+            is PipelineYamlEnableEvent -> {
                 enablePac(projectId = event.projectId, event = event)
             }
 
-            is PacYamlTriggerEvent -> {
+            is PipelineYamlTriggerEvent -> {
                 trigger(projectId = event.projectId, event = event)
             }
 
@@ -65,7 +66,7 @@ class PacTriggerListener @Autowired constructor(
         }
     }
 
-    private fun enablePac(projectId: String, event: PacYamlEnableEvent) {
+    private fun enablePac(projectId: String, event: PipelineYamlEnableEvent) {
         logger.info("receive enable pac|$projectId|${event.actionSetting}")
         val action = try {
             val action = actionFactory.loadEnableEvent(
@@ -79,8 +80,8 @@ class PacTriggerListener @Autowired constructor(
                 return
             }
             action
-        } catch (e: Throwable) {
-            logger.warn("enable pac|load|action|error", e)
+        } catch (ignored: Throwable) {
+            logger.warn("enable pac|load|action|error", ignored)
             return
         }
         exceptionHandler.handle(action = action) {
@@ -95,7 +96,7 @@ class PacTriggerListener @Autowired constructor(
         }
     }
 
-    private fun trigger(projectId: String, event: PacYamlTriggerEvent) {
+    private fun trigger(projectId: String, event: PipelineYamlTriggerEvent) {
         logger.info("receive pac yaml trigger|$projectId|${event.actionSetting}")
         val action = try {
             val action = actionFactory.loadByData(
@@ -109,12 +110,15 @@ class PacTriggerListener @Autowired constructor(
                 return
             }
             action
-        } catch (e: Throwable) {
-            logger.warn("enable pac|load|action|error", e)
+        } catch (ignored: Throwable) {
+            logger.warn("enable pac|load|action|error", ignored)
             return
         }
         exceptionHandler.handle(action = action) {
-            pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
+            val yamlFile = action.data.context.yamlFile!!
+            if (yamlFile.checkType == CheckType.NEED_CHECK) {
+                pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
+            }
             pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
         }
     }

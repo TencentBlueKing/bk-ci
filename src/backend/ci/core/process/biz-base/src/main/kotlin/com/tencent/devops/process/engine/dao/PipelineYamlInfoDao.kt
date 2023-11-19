@@ -130,11 +130,13 @@ class PipelineYamlInfoDao {
         userId: String,
         projectId: String,
         repoHashId: String,
-        filePath: String
+        filePath: String,
+        delFilePath: String
     ) {
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             dslContext.update(this)
                 .set(DELETE, true)
+                .set(FILE_PATH, delFilePath)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(PROJECT_ID.eq(projectId))
