@@ -25,6 +25,7 @@ export default {
     namespaced: true,
     state: {
         showAtomSelectorPopup: false,
+        showVariable: true,
         pipeline: null,
         pipelineWithoutTrigger: null,
         pipelineYaml: '',
@@ -66,6 +67,7 @@ export default {
         execDetail: null,
         hideSkipExecTask: false,
         globalEnvs: null,
+        commonParams: [],
         saveStatus: false,
         stageTagList: [],
         defaultStageTags: [],

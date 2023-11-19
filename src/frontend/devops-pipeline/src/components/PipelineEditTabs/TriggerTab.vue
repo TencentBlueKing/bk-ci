@@ -148,6 +148,7 @@
         color: #ff5656;
     }
     .link-btn {
+        cursor: pointer;
         color: #3a84ff;
     }
     .trigger-list-wrapper {

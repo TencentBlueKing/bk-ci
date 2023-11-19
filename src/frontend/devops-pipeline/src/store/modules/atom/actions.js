@@ -56,6 +56,7 @@ import {
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
+    SET_COMMON_PARAMS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
@@ -73,6 +74,7 @@ import {
     SET_TEMPLATE,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
+    SET_SHOW_VARIABLE,
     UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
     UPDATE_ATOM_OUTPUT,
@@ -136,6 +138,10 @@ export default {
 
     setStoreSearch ({ commit }, str) {
         commit(SET_STORE_SEARCH, str)
+    },
+
+    setShowVariable ({ commit }, isShow) {
+        commit(SET_SHOW_VARIABLE, !!isShow)
     },
 
     setRequestAtomData ({ commit }, data) {
@@ -253,6 +259,23 @@ export default {
         } catch (error) {
             rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             throw error
+        }
+    },
+    requestCommonParams: async ({ commit }) => {
+        try {
+            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/common`)
+            commit(SET_COMMON_PARAMS, data)
+            return data
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+    requestTriggerParams: async ({ commit }, params) => {
+        try {
+            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            return data
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
         }
     },
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {

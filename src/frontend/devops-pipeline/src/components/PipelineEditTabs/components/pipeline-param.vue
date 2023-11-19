@@ -1,77 +1,62 @@
 <template>
     <div class="variable-container">
         <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ xxx }} 引用变量')" closable></bk-alert>
-        <div class="add-and-desc">
-            <bk-button @click="handleEdit(-1)">{{$t('新增变量')}}</bk-button>
-            <div class="status-desc">
-                <div class="desc-item">
-                    <div class="circle" style="background-color: #2DCB9D;"></div>
-                    <span class="status-desc">{{$t('入参')}}</span>
-                </div>
-                <div class="desc-item">
-                    <div class="circle" style="background-color: #FF5656;"></div>
-                    <span class="status-desc">{{$t('必填')}}</span>
-                </div>
-                <div class="desc-item">
-                    <div class="circle" style="background-color: #C4C6CC;"></div>
-                    <span class="status-desc">{{$t('运行时只读')}}</span>
-                </div>
-            </div>
+        <div class="operate-row">
+            <bk-button class="var-btn" @click="handleAdd">{{$t('添加变量')}}</bk-button>
+            <bk-button class="var-btn" @click="handleAdd('constant')">{{$t('添加常量')}}</bk-button>
+            <bk-input
+                v-model="searchStr"
+                :clearable="true"
+                :placeholder="'变量名/变量别名/变量描述'"
+                :right-icon="'bk-icon icon-search'"
+            />
         </div>
-        <div class="variable-content">
-            <div v-for="(param, index) in globalParams" :key="param.id" class="variable-item"
-                @mouseenter="hoverIndex = index" @mouseleave="hoverIndex = -1">
-                <div class="var-con">
-                    <div class="var-names" v-bk-tooltips="{ content: param.desc, disabled: !param.desc }">
-                        <span>{{ param.id }}</span>
-                        <span>({{ param.name || param.id }})</span>
-                    </div>
-                    <div class="default-value">
-                        {{ param.defaultValue }}
-                    </div>
-                </div>
-                <div class="var-operate">
-                    <div v-if="hoverIndex === index" class="operate-btns">
-                        <i @click="handleEdit(index)" class="bk-icon icon-edit-line" style="margin-right: 12px;"></i>
-                        <i @click="handleDelete(index)" class="bk-icon icon-minus-circle"></i>
-                    </div>
-                    <div v-else class="var-status">
-                        <div v-if="param.required" class="circle" style="background-color: #2DCB9D;"></div>
-                        <div v-if="param.valueNotEmpty" class="circle" style="background-color: #FF5656;"></div>
-                        <div v-if="param.readOnly" class="circle" style="background-color: #C4C6CC;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="variable-empty" v-if="globalParams.length === 0">
-                {{$t('暂无变量')}}
-            </div>
-        </div>
+        <template v-if="!showSlider">
+            <param-group
+                v-for="group in pipelineParamGroups"
+                :key="group.key"
+                :title="group.title"
+                :list="group.list"
+                :handle-edit="handleEdit"
+                :handle-delete="handleDelete"
+            />
+        </template>
 
-        <bk-sideslider :quick-close="false" :transfer="true" :width="640" :title="sliderTitle"
-            :is-show.sync="showSlider" ext-cls="edit-var-container" @hidden="closeSlider">
-            <div class="edit-var-content" slot="content">
-                <pipeline-param-form :edit-item="sliderEditItem" :global-params="globalParams" :edit-index="editIndex"
-                    :update-param="updateEditItem" :reset-edit-item="resetEditItem" />
+        <div v-else class="current-edit-param-item">
+            <div class="edit-var-header">
+                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="showSlider = false" />
+                {{sliderTitle}}
+            </div>
+            <div class="edit-var-content">
+                <pipeline-param-form
+                    :edit-item="sliderEditItem"
+                    :global-params="globalParams"
+                    :edit-index="editIndex"
+                    :param-type="paramType"
+                    :update-param="updateEditItem"
+                    :reset-edit-item="resetEditItem" />
             </div>
             <div class="edit-var-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveVar">
-                    {{ $t('添加') }}
+                    {{ editIndex === -1 ? $t('添加') : $t('确定') }}
                 </bk-button>
-                <bk-button style="margin-left: 4px;" @click="hideSlider">
+                <bk-button style="margin-left: 8px;" @click="hideSlider">
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
-        </bk-sideslider>
+        </div>
     </div>
 </template>
 
 <script>
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
 
     export default {
         components: {
-            PipelineParamForm
+            PipelineParamForm,
+            ParamGroup
         },
         props: {
             params: {
@@ -86,9 +71,10 @@
         data () {
             return {
                 showSlider: false,
-                hoverIndex: -1,
                 editIndex: -1,
-                sliderEditItem: {}
+                paramType: 'var',
+                sliderEditItem: {},
+                searchStr: ''
             }
         },
         computed: {
@@ -103,32 +89,62 @@
                     this.updateContainerParams('params', [...params, ...this.versions])
                 }
             },
+            renderParams () {
+                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
+            },
+            pipelineParamGroups () {
+                return [
+                    {
+                        key: 'constantParam',
+                        title: '常量',
+                        list: this.renderParams.filter(item => item.constant === true)
+                    },
+                    {
+                        key: 'requiredParam',
+                        title: '入参',
+                        list: this.renderParams.filter(item => !item.constant && item.required)
+                    },
+                    {
+                        key: 'otherParam',
+                        title: '其它变量',
+                        list: this.renderParams.filter(item => !item.constant && !item.required)
+                    }
+                ]
+            },
             sliderTitle () {
-                return this.editIndex === -1 ? this.$t('添加变量') : this.$t('编辑变量')
+                return `${this.editIndex === -1 ? this.$t('添加') : this.$t('编辑')}${this.paramType === 'constant' ? this.$t('常量') : this.$t('变量')}`
             }
         },
         methods: {
-            handleDelete (index) {
+            handleDelete (paramId) {
+                const index = this.globalParams.findIndex(item => item.id === paramId)
                 this.globalParams.splice(index, 1)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
-            handleEdit (index) {
+            handleAdd (type = 'var') {
+                this.editIndex = -1
                 this.showSlider = true
-                this.editIndex = index
-                if (index > -1 && this.globalParams[index]) {
-                    this.sliderEditItem = this.globalParams[index]
-                } else {
-                    this.sliderEditItem = {}
-                }
+                this.sliderEditItem = {}
+                this.paramType = type
+            },
+            handleEdit (paramId) {
+                this.showSlider = true
+                this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
+                this.sliderEditItem = this.globalParams.find(item => item.id === paramId) || {}
+                this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             handleSaveVar () {
-                if (this.editIndex > -1) {
-                    this.globalParams[this.editIndex] = this.sliderEditItem
-                } else {
-                    this.globalParams.push(this.sliderEditItem)
-                }
-                this.updateContainerParams('params', [...this.globalParams, ...this.versions])
-                this.hideSlider()
+                this.$validator.validate('pipelineParam.*').then((result) => {
+                    if (result) {
+                        if (this.editIndex > -1) {
+                            this.globalParams[this.editIndex] = this.sliderEditItem
+                        } else {
+                            this.globalParams.push(this.sliderEditItem)
+                        }
+                        this.updateContainerParams('params', [...this.globalParams, ...this.versions])
+                        this.hideSlider()
+                    }
+                })
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
@@ -145,3 +161,88 @@
         }
     }
 </script>
+
+<style lang="scss">
+    @import "@/scss/mixins/ellipsis.scss";
+    .variable-container {
+        .circle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .operate-row {
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .var-btn {
+                width: 88px;
+                min-width: 88px;
+                margin-right: 8px;
+            }
+        }
+        .variable-content {
+            width: 100%;
+            min-height: 64px;
+            border: 1px solid #DCDEE5;
+            border-bottom: none;
+            .variable-empty {
+                height: 200px;
+                border-bottom: 1px solid #DCDEE5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color:#63656E;
+            }
+            .variable-item {
+                position: relative;
+                height: 64px;
+                border-bottom: 1px solid #DCDEE5;
+                padding-left: 24px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .var-con {
+                    font-size: 12px;
+                    letter-spacing: 0;
+                    line-height: 20px;
+                    flex: 1;
+                    overflow: hidden;
+                    .var-names {
+                        color: #313238;
+                        flex-shrink: 0;
+                    }
+                    .default-value {
+                        color: #979BA5;
+                        @include ellipsis();
+                        width: 100%;
+                    }
+                }
+                .var-operate {
+                    .var-status {
+                        margin-right: 16px;
+                        display: flex;
+                        align-items: center;
+                        .circle {
+                            margin-left: 8px;
+                        }
+                    }
+                    .operate-btns {
+                        width: 76px;
+                        height: 62px;
+                        background-color: #F5F7FA;
+                        display: flex;
+                        align-items: center;
+                        padding: 0 18px;
+                        i {
+                            cursor: pointer;
+                            font-size: 14px;
+                            color: #63656E;
+                        }
+                    }
+                }
+            }
+        }
+    }
+</style>

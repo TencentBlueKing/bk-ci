@@ -55,6 +55,7 @@ import {
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
+    SET_COMMON_PARAMS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
@@ -72,6 +73,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_SHOW_VARIABLE,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
@@ -425,8 +427,17 @@ export default {
             globalEnvs
         })
     },
+    [SET_COMMON_PARAMS]: (state, commonParams) => {
+        return Object.assign(state, {
+            commonParams
+        })
+    },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {
         Vue.set(state, 'showAtomSelectorPopup', show)
+        return state
+    },
+    [SET_SHOW_VARIABLE]: (state, show) => {
+        Vue.set(state, 'showVariable', show)
         return state
     },
     [SET_STORE_LOADING]: (state, data) => {

@@ -201,6 +201,8 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
+                        // 收起变量侧栏
+                        this.setShowVariable(false)
                         this.fetchClassify()
                         this.fetchAtomList()
                         setTimeout(() => {
@@ -246,6 +248,7 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setRequestAtomData',
+                'setShowVariable',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
@@ -361,12 +364,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 50px);
+        height: calc(100% - 48px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 50px;
+        top: 48px;
         &:before {
             content: '';
             display: block;

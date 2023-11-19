@@ -9,6 +9,7 @@
         </empty-tips>
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
+            <show-variable v-if="currentTab === 'pipeline'" :pipeline="pipeline" />
             <header class="choose-type-switcher">
                 <span
                     v-for="panel in panels"
@@ -29,7 +30,6 @@
                     v-on="curPanel.listeners"
                 ></component>
                 <template v-if="!isLoading && pipeline && currentTab === 'pipeline'">
-                    <show-variable :pipeline="pipeline" />
                     <!-- <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content"></mini-map> -->
                 </template>
             </div>
@@ -414,8 +414,7 @@
         .edit-content-area {
             position: relative;
             background: white;
-            /* height: calc(100vh - 192px); */
-            height: calc(100vh - 140px);
+            height: calc(100vh - 114px);
             margin: 0 24px;
             padding: 24px 24px 40px;
             overflow-y: auto;
