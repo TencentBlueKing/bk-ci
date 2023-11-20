@@ -36,10 +36,8 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.option.StageControlOption
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -54,10 +52,10 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_HOURS
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
+import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
-import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -79,7 +77,9 @@ class StageTransfer @Autowired(required = false) constructor(
     val objectMapper: ObjectMapper,
     val containerTransfer: ContainerTransfer,
     val elementTransfer: ElementTransfer,
-    val variableTransfer: VariableTransfer
+    val variableTransfer: VariableTransfer,
+    val transferCacheService: TransferCacheService,
+    val transferCreator: TransferCreator
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StageTransfer::class.java)
@@ -140,6 +140,7 @@ class StageTransfer @Autowired(required = false) constructor(
                 yamlJob = job,
                 aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
             )
+            preCheckJob(job, yamlInput)
             val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
@@ -366,33 +367,17 @@ class StageTransfer @Autowired(required = false) constructor(
         return params
     }
 
-    private fun getBuildFormPropertyFromYmlVariable(
-        variables: Map<String, Variable>?
-    ): List<BuildFormProperty> {
-        if (variables.isNullOrEmpty()) {
-            return emptyList()
+    private fun preCheckJob(
+        job: Job,
+        yamlInput: YamlTransferInput
+    ) {
+        if (job.runsOn.hwSpec != null) {
+            val hw = transferCacheService.getDockerResource(
+                userId = yamlInput.userId,
+                projectId = yamlInput.projectCode,
+                buildType = transferCreator.defaultLinuxDispatchType()
+            )?.dockerResourceOptionsMaps?.find { it.dockerResourceOptionsShow.description == job.runsOn.hwSpec }
+            job.runsOn.hwSpec = hw?.id
         }
-        val buildFormProperties = mutableListOf<BuildFormProperty>()
-        variables.forEach { (key, variable) ->
-            buildFormProperties.add(
-                BuildFormProperty(
-                    id = key,
-                    required = variable.allowModifyAtStartup ?: true,
-                    type = BuildFormPropertyType.STRING,
-                    defaultValue = variable.value ?: "",
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null,
-                    readOnly = variable.readonly,
-                    valueNotEmpty = variable.valueNotEmpty
-                )
-            )
-        }
-        return buildFormProperties
     }
 }

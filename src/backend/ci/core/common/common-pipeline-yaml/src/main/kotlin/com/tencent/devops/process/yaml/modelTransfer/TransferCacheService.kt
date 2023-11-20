@@ -7,6 +7,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerResourceConfigResource
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
@@ -41,7 +44,7 @@ class TransferCacheService @Autowired constructor(
                 val (atomCode, version) = key.split("@")
                 client.get(ServiceMarketAtomResource::class)
                     .getAtomsDefaultValue(ElementThirdPartySearchParam(atomCode, version)).data
-            }.onFailure { logger.warn("get $key default value error.") }.getOrNull() ?: emptyMap()
+            }.onFailure { logger.warn("get $key default value error.", it) }.getOrNull() ?: emptyMap()
         }
     private val storeImageInfoCache = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -54,7 +57,7 @@ class TransferCacheService @Autowired constructor(
                         imageCode = imageCode,
                         imageVersion = imageVersion
                     ).data
-            }.onFailure { logger.warn("get $key ImageInfoByCodeAndVersion value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key ImageInfoByCodeAndVersion value error.", it) }.getOrNull()
         }
     private val projectGroupAndUsersCache = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -66,7 +69,7 @@ class TransferCacheService @Autowired constructor(
                         token = tokenService.getSystemToken(null)!!,
                         projectCode = key
                     ).data
-            }.onFailure { logger.warn("get $key ProjectGroupAndUserList error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key ProjectGroupAndUserList error.", it) }.getOrNull()
         }
     private val pipelineLabel = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -77,7 +80,7 @@ class TransferCacheService @Autowired constructor(
                 client.get(ServicePipelineGroupResource::class)
                     .getGroups(userId, projectId)
                     .data
-            }.onFailure { logger.warn("get $key pipeline label value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key pipeline label value error.", it) }.getOrNull()
         }
     private val gitRepository = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -105,7 +108,7 @@ class TransferCacheService @Autowired constructor(
                 client.get(ServicePipelineResource::class)
                     .generateRemoteToken(userId, projectId, pipelineId)
                     .data?.token
-            }.onFailure { logger.warn("get $key remote token value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key remote token value error.", it) }.getOrNull()
         }
     private val thirdPartyAgent = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -128,7 +131,19 @@ class TransferCacheService @Autowired constructor(
 
                     else -> null
                 }
-            }.onFailure { logger.warn("get $key thirdPartyAgent value error.") }.getOrNull()
+            }.onFailure { logger.warn("get $key thirdPartyAgent value error.", it) }.getOrNull()
+        }
+
+    private val dockerResource = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, UserDockerResourceOptionsVO?> { key ->
+            kotlin.runCatching {
+                val (userId, projectId, buildType) = key.split("@@")
+                        client.get(ServiceDockerResourceConfigResource::class)
+                            .getDockerResourceConfigList(userId, projectId, buildType)
+                            .data
+            }.onFailure { logger.warn("get $key dockerResource value error.", it) }.getOrNull()
         }
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
@@ -150,4 +165,7 @@ class TransferCacheService @Autowired constructor(
         if (value == null) return null
         return thirdPartyAgent.get("${poolType.name}@@$userId@@$projectId@@$value")
     }
+
+    fun getDockerResource(userId: String, projectId: String, buildType: BuildType) =
+        dockerResource.get("$userId@@$projectId@@${buildType.name}")
 }

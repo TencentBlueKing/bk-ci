@@ -25,55 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelTransfer.inner
+package com.tencent.devops.dispatch.docker.api.service
 
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.process.yaml.v3.models.step.Step
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
- */
-interface TransferCreator {
-    // 控制run插件是否是研发商店插件
-    val marketRunTask: Boolean
+@Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
+@Path("/service/dispatch-docker")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDockerResourceConfigResource {
 
-    // 研发商店的run插件的code
-    val runPlugInAtomCode: String?
-
-    // 研发商店的run插件的版本
-    val runPlugInVersion: String?
-
-    // 默认的公共镜像
-    val defaultImageCode: String
-
-    // 默认的公共镜像版本
-    val defaultImageVersion: String
-
-    /**
-     * 构造具有特殊语法的checkout插件
-     * @param step 当前step对象
-     * @param event model创建的总事件
-     * @param additionalOptions 插件的控制参数
-     */
-    fun transferCheckoutElement(
-        step: Step
-    ): MarketBuildAtomElement
-
-    /**
-     * 构造编译类的插件
-     */
-    fun transferMarketBuildAtomElement(
-        step: Step
-    ): MarketBuildAtomElement
-
-    /**
-     * 构造编译类的插件
-     */
-    fun transferMarketBuildLessAtomElement(
-        step: Step
-    ): MarketBuildLessAtomElement
-
-    fun defaultLinuxDispatchType(): BuildType
+    @GET
+    @Path("/resource-config/projects/{projectId}/list")
+    @ApiOperation("获取docker性能配置列表")
+    fun getDockerResourceConfigList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("buildType", required = false)
+        @QueryParam("buildType")
+        buildType: String? = BuildType.DOCKER.name
+    ): Result<UserDockerResourceOptionsVO>
 }
