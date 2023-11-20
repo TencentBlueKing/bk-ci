@@ -150,7 +150,7 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    @Suppress("LoopWithTooManyJumpStatements")
+    @Suppress("LoopWithTooManyJumpStatements", "ComplexMethod")
     private fun PipelineWebhook.matchElement(
         elements: List<Element>,
         params: Map<String, String>,
