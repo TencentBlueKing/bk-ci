@@ -42,11 +42,13 @@ class ClientVersionDao {
                 this,
                 IP,
                 USER,
-                VERSION
+                VERSION,
+                MAC_ADDRESS
             ).values(
                 ip,
                 userId,
-                version
+                version,
+                macAddress
             ).onDuplicateKeyIgnore().execute()
         }
     }
