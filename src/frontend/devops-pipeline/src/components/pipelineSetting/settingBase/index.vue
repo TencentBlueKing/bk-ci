@@ -153,8 +153,9 @@
                 ],
                 curNavTab: { label: this.$t('settings.buildSuc'), name: 'success' },
                 noticeList: [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' }
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ],
@@ -438,6 +439,9 @@
              margin-bottom: 30px;
              & .bk-form-content .bk-form-radio{
                 display: block;
+             }
+             .bk-form-control {
+                line-height: inherit;
              }
         }
         .notice-tab {

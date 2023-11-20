@@ -355,7 +355,8 @@
     "imgUrl": "Image Url",
     "mdLink": "Markdown Link",
     "conCopySuc": "Copied Succeed",
-    "additionDesc": "Description"
+    "additionDesc": "Description",
+    "voice": "Voice"
   },
   "template": {
     "addTemplate": "New Template",
