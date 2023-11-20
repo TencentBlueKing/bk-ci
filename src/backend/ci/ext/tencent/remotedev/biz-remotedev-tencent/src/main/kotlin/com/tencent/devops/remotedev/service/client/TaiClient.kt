@@ -13,6 +13,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,11 +25,14 @@ class TaiClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TaiClient::class.java)
     }
 
+    @Value("\${taiHu.apiUrl}")
+    val apiUrl: String = ""
+
     fun taiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = params, formatted = false)
         val request = Request.Builder()
-            .url("https://bk-unity-user.apigw.o.woa.com/prod/api/v1/open/odc-tai/users/-/query/")
+            .url("$apiUrl/prod/api/v1/open/odc-tai/users/-/query/")
             .header("X-Bkapi-Authorization", authorization)
             .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
