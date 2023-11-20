@@ -17,7 +17,7 @@ BEGIN
                 WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ATOM'
                     AND COLUMN_NAME = 'VERSION') THEN
-        ALTER TABLE T_ATOM MODIFY COLUMN VERSION varchar(30) NOT NULL;
+        ALTER TABLE T_ATOM MODIFY COLUMN VERSION varchar(30)  NOT NULL COMMENT '版本号';
     END IF;
 
     IF NOT EXISTS(SELECT 1
