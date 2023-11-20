@@ -27,7 +27,10 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
@@ -42,7 +45,12 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) : UserPipelineSettingResource {
 
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
+    override fun saveSetting(
+        userId: String,
+        @AuditRequestBody
+        setting: PipelineSetting
+    ): Result<String> {
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = setting.projectId,

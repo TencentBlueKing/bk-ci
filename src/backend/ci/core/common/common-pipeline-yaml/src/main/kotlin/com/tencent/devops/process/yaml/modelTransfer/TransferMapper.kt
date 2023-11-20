@@ -905,7 +905,7 @@ object TransferMapper {
         action: (steps: ArrayList<Any>) -> NodeIndex?
     ): NodeIndex? {
         if (jobs.isEmpty()) {
-            val job  = LinkedHashMap<String, Any>()
+            val job = LinkedHashMap<String, Any>()
             job[PreJob::steps.name] = ArrayList<Any>()
             jobs["job_1"] = job
         }
