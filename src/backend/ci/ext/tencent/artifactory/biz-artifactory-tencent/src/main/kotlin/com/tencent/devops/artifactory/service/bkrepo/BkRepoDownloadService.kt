@@ -43,10 +43,8 @@ import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -96,7 +94,7 @@ open class BkRepoDownloadService @Autowired constructor(
             "outerBkrepoDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
                     "artifactoryType: $artifactoryType, path: $path, ttl: $ttl"
         )
-        val normalizedPath = getNormalizePath(path, artifactoryType, userId, projectId)
+        val normalizedPath = getNormalizePath(path, artifactoryType, creatorId ?: userId, projectId)
         val url = bkRepoService.externalDownloadUrl(
             creatorId = creatorId ?: userId,
             userId = userId,
@@ -540,53 +538,23 @@ open class BkRepoDownloadService @Autowired constructor(
         projectId: String,
         normalizedPath: String
     ) {
-        when (artifactoryType) {
-            ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId, projectId)
-                    )
+        try {
+            // 能够获取文件属性证明有下载文件的权限
+            bkRepoClient.listMetadata(
+                userId,
+                projectId,
+                RepoUtils.getRepoByType(artifactoryType),
+                normalizedPath
+            )
+        } catch (e: Exception) {
+            logger.error("checkArtifactoryType failed", e)
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    messageCode = ArtifactoryMessageCode.METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("pipelineId")
                 )
-            }
-
-            ArtifactoryType.PIPELINE -> {
-                val properties = bkRepoClient.listMetadata(
-                    userId,
-                    projectId,
-                    RepoUtils.getRepoByType(artifactoryType),
-                    normalizedPath
-                )
-                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(
-                        Response.Status.BAD_REQUEST,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = ArtifactoryMessageCode.METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
-                            language = I18nUtil.getLanguage(userId),
-                            params = arrayOf("pipelineId")
-                        )
-                    )
-                }
-                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
-                pipelineService.validatePermission(
-                    userId,
-                    projectId,
-                    pipelineId!!,
-                    AuthPermission.DOWNLOAD,
-                    MessageUtil.getMessageByLocale(
-                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId, projectId, pipelineId)
-                    )
-                )
-            }
-            // 其他类型不支持下载
-            else -> throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(artifactoryType.name)
             )
         }
     }

@@ -224,11 +224,11 @@ stages:
           values: []
           description: 描述
       description: 审核说明：
-      send-markdown: true
+      content-format: markdown
       notify-type:
       - RTX
       - WEWORK_GROUP
-      notify-groups:
+      chat-id:
       - ww2075063897
     timeout-hours: 24
 - name: mac
@@ -499,7 +499,7 @@ finally:
         archiveFile: '*.log'
       continue-on-error: manual
       retry-times: 4
-      manual-retry: true
+      can-manually-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
       with:

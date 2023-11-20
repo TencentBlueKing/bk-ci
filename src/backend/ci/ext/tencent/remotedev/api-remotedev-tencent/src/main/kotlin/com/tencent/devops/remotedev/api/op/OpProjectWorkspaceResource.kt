@@ -35,7 +35,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminItem
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -45,7 +44,9 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
 @Path("/op/project/workspace")
@@ -84,7 +85,7 @@ interface OpProjectWorkspaceResource {
         userId: String,
         @ApiParam("获取数据")
         data: FetchOwnerAndAdminData
-    ): Result<Map<String, FetchOwnerAndAdminItem>>
+    ): Result<Set<String>>
 
     @ApiOperation("修改云研发机器在 CMDB 的属性")
     @POST
@@ -96,4 +97,27 @@ interface OpProjectWorkspaceResource {
         @ApiParam("修改数据")
         data: OpUpdateCCHostData
     ): Result<Boolean>
+
+    @ApiOperation("刷新 codeproxy 数据")
+    @POST
+    @Path("/refreshCodeProxy")
+    fun refreshCodeProxy(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("projectId")
+        projectId: String
+    )
+
+    @ApiOperation("导出实例页面查询结果")
+    @POST
+    @Path("/list/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportProjectWorkspaceList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("查询参数")
+        data: ProjectWorkspaceFetchData
+    ): Response
 }

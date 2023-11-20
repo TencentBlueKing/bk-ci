@@ -1934,7 +1934,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
                     jobId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1
@@ -1944,7 +1944,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                            "a higher priority waiting request</a> for group($groupName) exists",
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1

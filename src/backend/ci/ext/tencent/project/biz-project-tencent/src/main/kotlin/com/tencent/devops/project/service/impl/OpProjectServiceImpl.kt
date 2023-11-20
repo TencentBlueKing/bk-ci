@@ -51,6 +51,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +70,8 @@ class OpProjectServiceImpl @Autowired constructor(
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val projectRemoteDevService: ProjectRemoteDevService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
@@ -100,7 +102,8 @@ class OpProjectServiceImpl @Autowired constructor(
         // 判断项目是不是审核的情况
         var flag = false
         if (1 == dbProjectRecord.approvalStatus &&
-            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)
+        ) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -158,6 +161,12 @@ class OpProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+
+        // 更新云研发项目时相关操作
+        if (projectInfoRequest.properties?.remotedev == true) {
+            projectRemoteDevService.enableRemoteDev(userId, dbProjectRecord.englishName, dbProjectRecord.projectName)
+        }
+
         return if (!flag) {
             0 // 更新操作
         } else {

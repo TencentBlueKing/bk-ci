@@ -38,5 +38,9 @@ dependencies {
     api(project(":core:common:common-websocket"))
     api(project(":core:notify:api-notify"))
     api(project(":core:auth:api-auth"))
+
+    implementation("org.apache.poi:poi")
+    implementation("org.apache.poi:poi-ooxml")
+
     testImplementation(project(":core:common:common-test"))
 }

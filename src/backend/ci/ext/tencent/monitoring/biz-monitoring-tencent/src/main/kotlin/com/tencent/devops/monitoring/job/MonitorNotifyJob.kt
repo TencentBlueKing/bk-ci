@@ -266,13 +266,14 @@ class MonitorNotifyJob @Autowired constructor(
             "bk_app_secret" to appSecret,
             "sql" to """
                     SELECT COUNT(distinct userId) as dailyCount
-                    FROM 100205_bkdevops_build_history.druid
+                    FROM 100205_bkdevops_build_history.hdfs
                     WHERE thedate='${DateFormatUtils.format(startTime, "yyyyMMdd")}'
                     LIMIT 1
                 """.trimIndent(),
             "prefer_storage" to ""
         )
         val bkDataBean = getBkData(reqBody)
+        logger.info("bkDataBean is $bkDataBean")
         val userNum = bkDataBean.data.list.map { it.values.first() }.first().toDouble()
 
         // 上报数据

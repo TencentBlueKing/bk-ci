@@ -15,6 +15,6 @@ data class EnvironmentStatus(
     val namespace: String,
     val name: String? = null,
     val startTime: String? = null,
-    val containerStatuses: List<ContainerStatus>,
+    val containerStatuses: List<ContainerStatus>? = null,
     val initContainerStatuses: List<ContainerStatus>? = null
 )

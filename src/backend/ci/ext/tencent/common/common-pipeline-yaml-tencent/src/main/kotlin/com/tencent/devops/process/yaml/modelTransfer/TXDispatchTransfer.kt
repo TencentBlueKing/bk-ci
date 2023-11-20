@@ -78,11 +78,11 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
     override fun dispatcherMacos(
         job: Job
     ): DispatchType? {
-        if (job.runsOn.poolName.startsWith("macos")) {
+        if (job.runsOn.poolName?.startsWith("macos") == true) {
             return TXPoolType.Macos.toDispatchType(
                 Pool(
                     macOS = MacOS(
-                        systemVersion = job.runsOn.poolName.removePrefix("macos-"),
+                        systemVersion = job.runsOn.poolName?.removePrefix("macos-"),
                         xcodeVersion = job.runsOn.xcode
                     )
                 )
@@ -95,7 +95,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
         job: Job
     ): DispatchType? {
         // windows公共构建机
-        if (job.runsOn.poolName.startsWith("windows")) {
+        if (job.runsOn.poolName?.startsWith("windows") == true) {
             return TXPoolType.WindowsOnDevcloud.toDispatchType(
                 Pool(
                     container = job.runsOn.poolName
@@ -116,7 +116,6 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
         job: Job,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): Pool {
-        val image = inner.defaultImage.split(":")
         var containerPool = Pool(
             credential = Credential(
                 user = "",
@@ -127,10 +126,11 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
             env = job.env,
             buildType = buildType,
             image = PoolImage(
-                imageCode = image.getOrElse(0) { "" },
-                imageVersion = image.getOrElse(1) { "" },
+                imageCode = inner.defaultImageCode,
+                imageVersion = inner.defaultImageVersion,
                 imageType = ImageType.BKSTORE
-            )
+            ),
+            performanceConfigId = job.runsOn.hwSpec
         )
 
         if (job.runsOn.container != null) {
@@ -139,9 +139,9 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     JsonUtil.toJson(job.runsOn.container!!),
                     Container::class.java
                 )
-                val imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
-                val cImage = container.image.split(":")
-                val imageCode = cImage.getOrElse(0) { "" }
+                val imageType = container.takeImageType()
+                val imageCode = container.takeImageCode() ?: ""
+                val imageVersion = container.takeImageVersion() ?: ""
                 containerPool = Pool(
                     container = when (imageType) {
                         ImageType.THIRD -> container.image
@@ -157,18 +157,19 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,
-                        imageVersion = cImage.getOrElse(1) { "" },
+                        imageVersion = imageVersion,
                         imageType = imageType
-                    )
+                    ),
+                    performanceConfigId = job.runsOn.hwSpec
                 )
             } catch (e: Exception) {
                 val container = YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(job.runsOn.container!!),
                     Container2::class.java
                 )
-                val imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
-                val cImage = container.image.split(":")
-                val imageCode = cImage.getOrElse(0) { "" }
+                val imageType = container.takeImageType()
+                val imageCode = container.takeImageCode() ?: ""
+                val imageVersion = container.takeImageVersion() ?: ""
                 containerPool = Pool(
                     container = when (imageType) {
                         ImageType.THIRD -> container.image
@@ -190,9 +191,10 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                     buildType = buildType,
                     image = PoolImage(
                         imageCode = imageCode,
-                        imageVersion = cImage.getOrElse(1) { "" },
+                        imageVersion = imageVersion,
                         imageType = imageType
-                    )
+                    ),
+                    performanceConfigId = job.runsOn.hwSpec
                 )
             }
         }

@@ -29,13 +29,16 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 
 import com.fasterxml.jackson.annotation.JsonValue
 
-enum class EnvironmentAction(private val action: String) {
+enum class EnvironmentAction(val action: String) {
     CREATE("create"),
     START("start"),
     STOP("stop"),
     RECREATE("recreate"),
     SCALE("scale"),
-    DELETE("delete");
+    DELETE("delete"),
+    DELETE_VM("deletevm"),
+    RESTART("restart"),
+    MAKE_IMAGE("copyvm");
 
     @JsonValue
     fun getValue(): String {

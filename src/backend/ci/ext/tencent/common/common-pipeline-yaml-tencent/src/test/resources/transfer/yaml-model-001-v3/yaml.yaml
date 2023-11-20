@@ -2,7 +2,18 @@ version: v3.0
 name: all job
 on:
 - schedules:
-    cron: "0 0 1 ? * 3,4,5"
+    cron:
+    - 0 1 * * *
+    - 0 2 * * *
+    interval:
+      week:
+      - Tue
+      - Wed
+      - Thu
+      time-points:
+      - 01:00
+      - 01:02
+  manual: enabled
   remote: enabled
 - repo-name: aliasName/xxx
   type: git
@@ -19,8 +30,7 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
-  manual: disabled
+  manual: enabled
 - repo-name: aliasName/xxx
   type: tgit
   push:
@@ -34,8 +44,7 @@ on:
     - 排除以下路径：
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
-  manual: disabled
+  manual: enabled
 - repo-name: aliasName/xxx
   type: github
   push:
@@ -45,8 +54,7 @@ on:
     - mr
     users-ignore:
     - 排除以下人员：
-    path-filter-type: NamePrefixFilter
-  manual: disabled
+  manual: enabled
 - repo-name: 按代码库别名输入
   type: svn
   push:
@@ -58,8 +66,7 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
-  manual: disabled
+  manual: enabled
 - repo-name: "123"
   type: p4
   push:
@@ -67,7 +74,7 @@ on:
     - 监听以下路径：
     paths-ignore:
     - 排除以下路径：
-  manual: disabled
+  manual: enabled
 - repo-name: aliasName/xxx
   type: gitlab
   tag:
@@ -77,7 +84,7 @@ on:
     - 排除以下tag：
     users-ignore:
     - yongyiduan
-  manual: disabled
+  manual: enabled
 variables:
   字符串:
     value: value
@@ -139,8 +146,8 @@ variables:
     props:
       type: artifactory
       description: "666"
-      glob: '*'
-      properties:
+      filter-rule: '*'
+      metadata:
         key1asd: asdasd
         key2: qwe
   子流水线:
@@ -160,8 +167,7 @@ stages:
       name: Windows-私有单构建机
       runs-on:
         self-hosted: true
-        pool-name: ydpzneyp
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - windows
         workspace: 工作空间
@@ -178,8 +184,7 @@ stages:
       name: Windows-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: dpenqqym
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - windows
         workspace: 工作空间
@@ -204,7 +209,8 @@ stages:
         with:
           charsetType: UTF_8
         continue-on-error: true
-        run: "echo 1\r\necho 2"
+        run: "echo 1\r
+echo 2"
         shell: pwsh
   check-in:
     reviews:
@@ -220,13 +226,12 @@ stages:
           values: []
           description: 描述
       description: 审核说明：
-      send-markdown: true
+      content-format: markdown
       notify-type:
       - RTX
       - WEWORK_GROUP
-      notify-groups:
+      chat-id:
       - ww2075063897
-    timeout-hours: 24
 - name: mac
   label:
   - Build
@@ -248,8 +253,7 @@ stages:
       name: MacOS-私有构建机
       runs-on:
         self-hosted: true
-        pool-name: zmoxbbqp
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - macos
         workspace: 工作空间
@@ -262,8 +266,7 @@ stages:
       name: MacOS-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: rqmakgrm
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - macos
         workspace: 工作空间
@@ -281,8 +284,7 @@ stages:
       runs-on:
         pool-name: docker
         container:
-          image: tlinux3_ci:2.*
-          image-type: THIRD
+          image: mirrors.tencent.com/ci/tlinux3_ci:2.0.0
           credentials: royalhuang_up
       steps:
       - name: Bash
@@ -295,8 +297,7 @@ stages:
       name: Linux-私有构建机
       runs-on:
         self-hosted: true
-        pool-name: xpvwazlm
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - linux
         workspace: 工作空间
@@ -309,8 +310,7 @@ stages:
       name: Linux-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: njmkyaom
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - linux
         workspace: 工作空间
@@ -325,12 +325,7 @@ stages:
       name: Linux-矩阵
       mutex:
         label: a
-        queue-enable: true
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
+        queue-length: 5
       steps:
       - name: Bash
         uses: linuxScript@1.*
@@ -349,12 +344,6 @@ stages:
         label: aasd
         queue-length: 3
         timeout-minutes: "${bianliang}"
-        queue-enable: true
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
       if: 3333 == '6666'
       steps:
       - name: Bash
@@ -364,7 +353,6 @@ stages:
       timeout-minutes: "111"
       depend-on:
       - job_QxG
-      depend-on-type: NAME
 - name: stage-5
   label:
   - Build
@@ -452,45 +440,18 @@ finally:
     runs-on:
       pool-name: docker
       container:
-        image: tlinux3_ci:2.*
-        image-type: BKSTORE
+        image-code: tlinux3_ci
+        image-version: "2.1"
     steps:
-    - checkout: https://git.code.oa.com/XXX/XXX.git
+    - checkout: 302rW
       name: Checkout
       with:
-        repositoryType: ID
-        repositoryHashId: 302rW
-        repositoryName: ""
-        repositoryUrl: ""
-        authType: TICKET
-        persistCredentials: true
-        pullType: BRANCH
-        refName: master
-        localPath: ""
-        strategy: REVERT_UPDATE
-        fetchDepth: ""
-        fetchOnlyCurrentRef: false
-        enableFetchRefSpec: false
-        fetchRefSpec: ""
-        enablePartialClone: false
-        includePath: ""
-        excludePath: ""
-        cachePath: ""
-        enableGitLfs: true
         enableGitLfsClean: false
         lfsConcurrentTransfers: ""
-        enableSubmodule: true
-        submodulePath: ""
-        enableSubmoduleRemote: false
-        enableSubmoduleRecursive: true
         submoduleJobs: ""
         submoduleDepth: ""
-        enableVirtualMergeBranch: true
-        enableGitClean: true
-        enableGitCleanIgnore: true
         enableGitCleanNested: false
-        autoCrlf: "false"
-        enableTrace: false
+        type: ID
     - name: Bash
       if: ALWAYS_UNLESS_CANCELLED
       uses: linuxScript@1.*
@@ -501,74 +462,27 @@ finally:
         archiveFile: '*.log'
       continue-on-error: manual
       retry-times: 4
-      manual-retry: true
+      can-manually-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
       with:
-        beAutoLang: false
         languages:
         - KOTLIN
-        checkerSetType: normal
         tools:
         - CLOC
         - DUPC
         - WOODPECKER_SENSITIVE
         - DETEKT
-        asyncTask: false
-        asyncTaskId: ""
-        goPath: ""
         bkcheckDebug: false
         bkcheckCustomMacros: []
         bk_atom_del_hook_url: http://v2.idc.devops.oa.com/proxy-devnet?url=http%3A%2F%2Fv2.codecc.oa.com%2Ftask%2Fapi%2Fservice%2Ftask%2Fpipeline%2FstopSingle%3FpipelineId%3D%7BpipelineId%7D%26multiPipelineMark%3D%7BmultiPipelineMark%7D%26disabledReason%3Ddelete%26userName%3D%7BuserId%7D
-        bk_atom_del_hook_url_method: DELETE
-        scriptType: SHELL
-        script: |-
-          # Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷
-          # 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh
-          # 确保build.sh能够编译代码
-          # cd path/to/build.sh
-          # sh build.sh
         languageRuleSetMap:
           SWIFT_RULE: []
           KOTLIN_RULE:
           - codecc_default_kotlin
           - standard_kotlin
-        C_CPP_RULE: []
-        checkerSetEnvType: prod
-        multiPipelineMark: ""
-        rtxReceiverType: "1"
-        rtxReceiverList: []
-        botWebhookUrl: ""
-        botRemindRange: "2"
-        botRemindSeverity: "7"
-        botRemaindTools: []
-        emailReceiverType: "1"
-        emailReceiverList: []
-        emailCCReceiverList: []
-        instantReportStatus: "2"
-        reportDate: []
-        reportTime: ""
-        reportTools: []
-        toolScanType: "1"
-        diffBranch: ""
-        byFile: false
-        mrCommentEnable: true
-        prohibitIgnore: false
-        transferAuthorList: []
-        path: []
-        customPath: []
-        scanTestSource: false
-        openScanPrj: false
         openScanFilterEnable: false
-        issueSystem: TAPD
-        issueSubSystem: ""
-        issueResolvers: []
-        issueReceivers: []
-        issueFindByVersion: ""
         maxIssue: 1000
-        issueAutoCommit: false
-        issueTools: []
-        issueSeverities: []
         SWIFT_RULE: []
         SWIFT_TOOL:
         - toolList:
@@ -588,24 +502,3 @@ finally:
         - toolList:
           - DETEKT
     timeout-minutes: "${bianliang}"
-notices:
-- if: SUCCESS
-  type:
-  - email
-  - sms
-  - wework-message
-  receivers:
-  - "${BK_CI_START_USER_NAME}"
-  - yongyiduan
-  - royalhuang
-  groups:
-  - 开发人员
-  - 管理员
-  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"
-- if: FAILURE
-  type:
-  - email
-  - wework-message
-  receivers:
-  - "${BK_CI_START_USER_NAME}"
-  content: "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。"

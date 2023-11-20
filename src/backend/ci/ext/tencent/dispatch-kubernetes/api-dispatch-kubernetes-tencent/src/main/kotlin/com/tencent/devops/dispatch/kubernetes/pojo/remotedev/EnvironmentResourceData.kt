@@ -17,7 +17,10 @@ data class EnvironmentResourceData(
     val status: Int,
     @JsonProperty("userInstanceList")
     val userInstanceList: List<Instance>? = null,
-    var locked: Boolean? = false
+    var locked: Boolean? = false,
+    val projectId: String?,
+    val disk: String?,
+    val hDisk: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

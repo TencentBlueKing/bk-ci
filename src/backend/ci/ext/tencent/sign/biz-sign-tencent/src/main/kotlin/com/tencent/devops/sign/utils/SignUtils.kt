@@ -368,24 +368,42 @@ object SignUtils {
     }
 
     private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
-        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
-        val keyLevels = key.split('.')
-        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
-        var subDict = rootDict
-        keyPrefix.forEach {
-            subDict = getSubDictionary(subDict, it) ?: return@forEach
-        }
-        if (!subDict.containsKey(keyLevels.last())) {
-            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
-        } else {
-            val boolValue = boolConvert(value)
-            val cmd = if (boolValue == null) {
-                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
-            } else {
-                "plutil -replace $key -bool $boolValue ${fixPath(infoPlistPath)}"
+//        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
+//        val keyLevels = key.split('.')
+//        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
+//        var subDict = rootDict
+//        keyPrefix.forEach {
+//            subDict = getSubDictionary(subDict, it) ?: return@forEach
+//        }
+//        if (!subDict.containsKey(keyLevels.last())) {
+//            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
+//            return
+//        }
+        val cmd = when {
+            boolConvert(value) != null -> {
+                "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
             }
-            logger.info("[replaceKey: ] $cmd")
+            integerConvert(value) != null -> {
+                "plutil -replace $key -integer $value ${fixPath(infoPlistPath)}"
+            }
+            floatConvert(value) != null -> {
+                "plutil -replace $key -float $value ${fixPath(infoPlistPath)}"
+            }
+            value.startsWith('[') && value.endsWith(']') -> {
+                "plutil -replace $key -array '$value' ${fixPath(infoPlistPath)}"
+            }
+            value.startsWith('{') && value.endsWith('}') -> {
+                "plutil -replace $key -dict '$value' ${fixPath(infoPlistPath)}"
+            }
+            else -> {
+                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+            }
+        }
+        logger.info("[replaceKey: ] $cmd")
+        try {
             runtimeExec(cmd)
+        } catch (ignore: Throwable) {
+            logger.warn("[replace key with error: ] $cmd")
         }
     }
 
@@ -495,6 +513,22 @@ object SignUtils {
             value.equals("true", true) -> true
             value.equals("false", true) -> false
             else -> null
+        }
+    }
+
+    private fun integerConvert(value: String?): Int? {
+        return try {
+            value?.toInt()
+        } catch (ignore: Throwable) {
+            null
+        }
+    }
+
+    private fun floatConvert(value: String?): Float? {
+        return try {
+            value?.toFloat()
+        } catch (ignore: Throwable) {
+            null
         }
     }
 

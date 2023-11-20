@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TProjectSoftwares
 import com.tencent.devops.model.remotedev.tables.TSystemInstalledRecords
 import com.tencent.devops.model.remotedev.tables.TSystemSoftwares
@@ -80,7 +81,7 @@ class SoftwareManageDao {
         dslContext: DSLContext
     ): Result<out Record> {
         with(TSystemSoftwares.T_SYSTEM_SOFTWARES) {
-            return dslContext.select(NAME, VERSION).from(this)
+            return dslContext.select(NAME, VERSION).from(this).skipCheck()
                 .fetch()
         }
     }

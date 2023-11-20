@@ -30,23 +30,27 @@ package com.tencent.devops.dispatch.startcloud.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreateBasicBody
-import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.startcloud.utils.StartCloudRedisUtils
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,6 +62,7 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceClient: WorkspaceStartCloudClient,
+    private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val startCloudRedisUtils: StartCloudRedisUtils
 ) : RemoteDevInterface {
 
@@ -78,7 +83,9 @@ class StartCloudRemoteDevService @Autowired constructor(
                 throw it
             }
         }
-        val pipelineId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+
+        // 生产创建start资源的订单号
+        val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
@@ -98,47 +105,92 @@ class StartCloudRemoteDevService @Autowired constructor(
                 basicBody = EnvironmentCreateBasicBody(
                     userId = userId,
                     appName = appName,
-                    pipelineId = pipelineId,
+                    pipelineId = orderId,
                     zoneId = resource.zoneId,
                     machineType = resource.machineType,
-                    cgsId = event.devFile.cgsId
+                    cgsId = event.devFile.cgsId,
+                    projectId = event.projectId,
+                    image = event.devFile.imageCosFile
                 )
             )
         )
 
         // 创建成功后保存pipelineId
-        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, pipelineId)
+        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
 
-        return CreateWorkspaceRes(res.cgsIp, pipelineId, res.cloudZoneId.toIntOrNull() ?: 0, res.resourceId)
+        return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
-        return EMPTY
-    }
-
-    override fun stopWorkspace(userId: String, workspaceName: String): String {
-        return EMPTY
-    }
-
-    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-        workspaceClient.deleteWorkspace(
+        val resp = workspaceClient.operateWorkspace(
             userId = userId,
-            workspaceName = event.workspaceName,
-            EnvironmentDelete(
-                userId = event.userId,
-                appName = appName,
-                pipeLineId = dispatchWorkspaceDao.getWorkspaceInfo(event.workspaceName, dslContext)?.taskId
+            action = EnvironmentAction.START,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
             )
         )
 
-        // 更新db状态
-        dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = event.workspaceName,
-            status = EnvStatusEnum.deleted,
-            dslContext = dslContext
+        return resp.taskUid
+    }
+
+    override fun stopWorkspace(userId: String, workspaceName: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.STOP,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
+            )
         )
 
-        return EMPTY
+        return resp.taskUid
+    }
+
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.RESTART,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName)
+            )
+        )
+
+        return resp.taskUid
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.DELETE_VM,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                appName = appName,
+                userId = userId,
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
+            )
+        )
+
+        return resp.taskUid
+    }
+
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.MAKE_IMAGE,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                appName = appName,
+                userId = userId,
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
+                cgsId = cgsId
+            )
+        )
+
+        return resp.taskUid
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
@@ -146,7 +198,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        return true
     }
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
@@ -157,13 +211,17 @@ class StartCloudRemoteDevService @Autowired constructor(
                 ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                 "第三方服务-START-CLOUD 异常，异常信息 - 获取云桌面详情为空"
             )
+        val workspaceStatus = workspaceClient.getWorkspaceInfo(
+            userId = userId,
+            environmentOperate = EnvironmentOperate(getEnvironmentUid(workspaceName))
+        )
         return WorkspaceInfo(
-            status = EnvStatusEnum.running,
-            hostIP = workspaceInfo.environmentUid,
-            environmentIP = workspaceInfo.environmentUid,
-            clusterId = "",
-            namespace = "",
-            environmentHost = "",
+            status = workspaceStatus.status,
+            hostIP = workspaceStatus.hostIP,
+            environmentIP = workspaceStatus.environmentIP,
+            clusterId = workspaceStatus.clusterId,
+            namespace = workspaceStatus.namespace,
+            environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
             curLaunchId = curLaunchId,
@@ -171,8 +229,38 @@ class StartCloudRemoteDevService @Autowired constructor(
         )
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
-        return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
+        logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
+        val startTime = System.currentTimeMillis()
+        val timeout = if (type == UpdateEventType.CREATE) START_CREATE_TIMEOUT else START_OTHER_TIMEOUT
+        loop@ while (true) {
+            if (System.currentTimeMillis() - startTime > timeout) {
+                logger.error("Wait task: $taskId finish timeout($timeout)")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
+                )
+            }
+
+            Thread.sleep(START_CREATE_LOOP_INTERVAL)
+
+            val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
+            if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                return if (taskStatus.status == TaskStatusEnum.successed) {
+                    DispatchBuildTaskStatus(
+                            DispatchBuildTaskStatusEnum.SUCCEEDED,
+                            JsonUtil.toJson(taskStatus)
+                    )
+                } else {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
+                }
+            }
+        }
     }
 
     fun refreshStartCloudOrderId(userId: String): Boolean {
@@ -185,8 +273,15 @@ class StartCloudRemoteDevService @Autowired constructor(
         return true
     }
 
+    private fun getEnvironmentUid(workspaceName: String): String {
+        val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+        return workspaceRecord?.environmentUid ?: throw RuntimeException("No start environment with $workspaceName")
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
-        private const val EMPTY = ""
+        private const val START_CREATE_TIMEOUT = 60 * 60 * 1000 // start生成资源最长轮训时间
+        private const val START_OTHER_TIMEOUT = 30 * 60 * 1000
+        private const val START_CREATE_LOOP_INTERVAL = 1000L
     }
 }

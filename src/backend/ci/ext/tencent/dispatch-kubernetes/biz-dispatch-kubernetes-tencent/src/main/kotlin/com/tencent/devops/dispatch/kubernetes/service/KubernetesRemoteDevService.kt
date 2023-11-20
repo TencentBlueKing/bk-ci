@@ -36,7 +36,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -72,7 +72,15 @@ class KubernetesRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
+    override fun restartWorkspace(userId: String, workspaceName: String): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
         TODO("Not yet implemented")
     }
 
@@ -88,7 +96,11 @@ class KubernetesRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
         TODO("Not yet implemented")
     }
 

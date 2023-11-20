@@ -1,17 +1,28 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.dao.RemoteDevCodeProxyDao
+import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
+import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.format.DateTimeFormatter
 
 @Service
 class GitProxyService @Autowired constructor(
     private val gitproxyBkRepoClient: GitproxyBkRepoClient,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val dslContext: DSLContext,
+    private val codeProxyDao: RemoteDevCodeProxyDao
 ) {
     fun createRepo(
         userId: String,
@@ -22,13 +33,43 @@ class GitProxyService @Autowired constructor(
             gitproxyBkRepoClient.createProject(userId, data.projectId)
             redisOperation.set("REDIS_BKREPO_PROJECT:${data.projectId}", "", 10 * 60)
         }
-        gitproxyBkRepoClient.createRepo(
+        val respData = gitproxyBkRepoClient.createRepo(
             userId = userId,
             projectId = data.projectId,
             repoName = data.repoName,
             url = data.url,
             desc = data.desc,
-            gitType = data.gitType
+            gitType = data.gitType,
+            category = BkRepoCategory.PROXY,
+            enableLfs = false
+        )
+        var lfsRespData: CreateRepoRespData? = null
+        val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
+        if (enableLfs) {
+            lfsRespData = gitproxyBkRepoClient.createRepo(
+                userId = userId,
+                projectId = data.projectId,
+                repoName = "$LFS_REPONAME_PREFIX${data.repoName}",
+                url = data.url,
+                desc = data.desc,
+                gitType = data.gitType,
+                category = BkRepoCategory.REMOTE,
+                enableLfs = true
+            )
+        }
+        codeProxyDao.addCodeProxy(
+            dslContext = dslContext,
+            projectId = data.projectId,
+            name = data.repoName,
+            type = scmType2ProxyType(data.gitType)!!,
+            url = data.url,
+            conf = CodeProxyConf(
+                proxyUrl = respData?.configuration?.settings?.clientUrl,
+                lfsUrl = lfsRespData?.configuration?.settings?.clientUrl
+            ),
+            desc = data.desc,
+            creator = userId,
+            enableLfs = enableLfs
         )
         return true
     }
@@ -51,22 +92,40 @@ class GitProxyService @Autowired constructor(
         pageSize: Int,
         gitType: ScmType?
     ): Page<FetchRepoResp> {
-        val repos = gitproxyBkRepoClient.fetchRepo(userId, projectId, page, pageSize, gitType)
-        val resp = repos.records.map { record ->
+        val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val count = codeProxyDao.countFetchCodeProxy(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = scmType2ProxyType(gitType)
+        )
+        val records = codeProxyDao.fetchCodeProxy(
+            dslContext = dslContext,
+            projectId = projectId,
+            type = scmType2ProxyType(gitType),
+            limit = pageLimit
+        )
+
+        val resp = records.map { record ->
+            val conf = JsonUtil.getObjectMapper().readValue(
+                record.conf.data(),
+                object : TypeReference<CodeProxyConf>() {}
+            )
             FetchRepoResp(
-                url = record.configuration.proxy.url,
-                proxyUrl = record.configuration.url,
-                creator = record.createdBy,
-                createdDate = record.createdDate,
+                url = record.url,
+                proxyUrl = conf.proxyUrl,
+                creator = record.creator,
+                createdDate = record.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 repoName = record.name,
                 type = record.type,
-                desc = record.description
+                desc = record.desc,
+                lfsUrl = conf.lfsUrl
             )
         }
+
         return Page(
-            pageNumber = repos.pageNumber,
-            pageSize = repos.pageSize,
-            totalRecords = repos.totalRecords,
+            pageNumber = page,
+            pageSize = pageSize,
+            totalRecords = count.toLong(),
             records = resp
         )
     }
@@ -76,12 +135,71 @@ class GitProxyService @Autowired constructor(
         projectId: String,
         repoName: String
     ): Boolean {
+        // 从自己的数据库先查在删
+        val record = codeProxyDao.fetchSingleCodeProxy(dslContext, projectId, repoName)
+        // 查不到做保险删除
+        if (record == null) {
+            gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
+            gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+            return true
+        }
         gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
+        if (record.enableLfs == true) {
+            gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+        }
+        codeProxyDao.deleteCodeProxy(dslContext, record.id)
         return true
     }
 
+    fun refreshCodeProxy(projectId: String) {
+        val proxys = gitproxyBkRepoClient.fetchRepo(
+            userId = "admin",
+            projectId = projectId,
+            page = 1,
+            pageSize = 100,
+            gitType = null,
+            category = BkRepoCategory.PROXY
+        )
+        val lfs = gitproxyBkRepoClient.fetchRepo(
+            userId = "admin",
+            projectId = projectId,
+            page = 1,
+            pageSize = 100,
+            gitType = null,
+            category = BkRepoCategory.REMOTE
+        ).records.associateBy { it.name }
+
+        val data = proxys.records.map { proxy ->
+            val lfsUrl = lfs["$LFS_REPONAME_PREFIX${proxy.name}"]?.configuration?.settings?.clientUrl
+            RefreshCodeProxyData(
+                projectId = proxy.projectId,
+                name = proxy.name,
+                type = proxy.type,
+                url = proxy.configuration.proxy?.url ?: "",
+                conf = CodeProxyConf(
+                    proxyUrl = proxy.configuration.settings?.clientUrl,
+                    lfsUrl
+                ),
+                desc = proxy.description,
+                creator = proxy.createdBy,
+                enableLfs = lfsUrl != null
+            )
+        }
+
+        codeProxyDao.batchAddProxy(dslContext, data)
+    }
+
+    private fun scmType2ProxyType(scmType: ScmType?): String? {
+        if (scmType == null) {
+            return null
+        }
+        return when (scmType) {
+            ScmType.CODE_SVN -> "SVN"
+            else -> "GIT"
+        }
+    }
+
     companion object {
-        // bkrepo project 缓存
-        const val REDIS_BKREPO_PROJECT = "remotedev:bkrepo:existProject"
+        private const val LFS_REPONAME_PREFIX = "Lfs_"
     }
 }

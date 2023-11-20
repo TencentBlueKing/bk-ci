@@ -37,6 +37,7 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 
@@ -72,7 +73,12 @@ data class WorkspaceWebsocketPush(
             )
         }
         val pageSession = super.findSession(page) ?: emptySet()
-        return userSession.plus(pageSession)
+        val instanceManage = if (projectId.isNotBlank()) {
+            super.findSession(WorkspacePageBuild.instanceManage(projectId)) ?: emptySet()
+        } else {
+            emptySet()
+        }
+        return userSession.plus(pageSession).plus(instanceManage)
     }
 
     override fun buildMqMessage(): SendMessage {

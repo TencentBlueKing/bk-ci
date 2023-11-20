@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
@@ -44,6 +45,11 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspectTrigger
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferJoinPoint
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
@@ -51,6 +57,7 @@ import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
@@ -59,6 +66,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.LinkedList
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -131,6 +139,61 @@ internal class ModelTransferTest : BkCiAbstractTest() {
 
     @BeforeEach
     fun setUp() {
+        every {
+            transferCache.getAtomDefaultValue(any())
+        }.returns(emptyMap())
+        every {
+            transferCache.getAtomDefaultValue("CodeccCheckAtomDebug@4.*")
+        }.returns("""{
+    "beAutoLang" : "false",
+    "languages" : "",
+    "checkerSetType" : "normal",
+    "tools" : "",
+    "asyncTask" : "false",
+    "asyncTaskId" : "",
+    "goPath" : "",
+    "pyVersion" : "py3",
+    "bk_atom_del_hook_url_method" : "DELETE",
+    "scriptType" : "SHELL",
+    "script" : "# Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷\n# 请使用依赖的构建工具如maven/cmake等写一个编译脚本build.sh\n# 确保build.sh能够编译代码\n# cd path/to/build.sh\n# sh build.sh",
+    "languageRuleSetMap" : "{}",
+    "C_CPP_RULE" : "",
+    "checkerSetEnvType" : "prod",
+    "multiPipelineMark" : "",
+    "rtxReceiverType" : "1",
+    "rtxReceiverList" : "",
+    "botWebhookUrl" : "",
+    "botRemindRange" : "2",
+    "botRemindSeverity" : "7",
+    "botRemaindTools" : "",
+    "emailReceiverType" : "1",
+    "emailReceiverList" : "",
+    "emailCCReceiverList" : "",
+    "instantReportStatus" : "2",
+    "reportDate" : "",
+    "reportTime" : "",
+    "reportTools" : "",
+    "toolScanType" : "1",
+    "diffBranch" : "",
+    "byFile" : "false",
+    "mrCommentEnable" : "true",
+    "prohibitIgnore" : "false",
+    "newDefectJudgeFromDate" : "",
+    "transferAuthorList" : "",
+    "path" : "",
+    "customPath" : "",
+    "scanTestSource" : "false",
+    "openScanPrj" : "false",
+    "issueSystem" : "TAPD",
+    "issueSubSystem" : "",
+    "issueResolvers" : "",
+    "issueReceivers" : "",
+    "issueFindByVersion" : "",
+    "maxIssue" : "1000",
+    "issueAutoCommit" : "false",
+    "issueTools" : "",
+    "issueSeverities" : ""
+  }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
         every {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
         }.returns(emptyMap())
@@ -233,7 +296,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             CodeGitRepository(
                 aliasName = "aliasName/xxx",
-                url = "https://git.code.oa.com/XXX/XXX.git",
+                url = "https://git.com/XXX/XXX.git",
                 credentialId = "credentialId",
                 projectName = "projectName",
                 userName = "userName",
@@ -248,6 +311,18 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }.returns(
             "PipelineRemoteToken"
         )
+
+        every {
+            transferCache.getThirdPartyAgent(JobRunsOnPoolType.ENV_ID, any(), any(), any())
+        }.returns(
+            "构建机环境别名"
+        )
+
+        every {
+            transferCache.getThirdPartyAgent(JobRunsOnPoolType.AGENT_ID, any(), any(), any())
+        }.returns(
+            "构建机节点别名"
+        )
         ReflectionTestUtils.setField(creator, "marketRunTaskData", true)
         ReflectionTestUtils.setField(creator, "runPlugInAtomCodeData", "run")
         ReflectionTestUtils.setField(creator, "runPlugInVersionData", "1.*")
@@ -256,47 +331,60 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "model-yaml-001"
+            "model-yaml-001",
+            "model-yaml-002"
         ]
     )
     fun model2Yaml(value: String) {
         val file = testReadResourceFile("transfer/$value/model.json")
-        val yamlV2 = testReadResourceFile("transfer/$value/yamlV2.yaml")
         val yamlV3 = testReadResourceFile("transfer/$value/yamlV3.yaml")
         val modelAndSetting = JsonUtil.to(file, object : TypeReference<PipelineModelAndSetting>() {})
 
+        val invalidElement = mutableListOf<String>()
+        val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("step_1|FULL_MODEL2YAML V3 start")
         val yml = modelTransfer.model2yaml(
             ModelTransferInput(
-                "test",
-                modelAndSetting.model,
-                modelAndSetting.setting,
-                YamlVersion.Version.V3_0
+                userId = "test",
+                model = modelAndSetting.model,
+                setting = modelAndSetting.setting,
+                version = YamlVersion.Version.V3_0,
+                aspectWrapper = PipelineTransferAspectWrapper(defaultAspects)
             )
         )
+        if (!invalidElement.isNullOrEmpty()) {
+            println(invalidElement)
+            throw PipelineTransferException(
+                CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER,
+                arrayOf(invalidElement.joinToString("\n"))
+            )
+        }
         val newYaml = TransferMapper.toYaml(yml)
         Assertions.assertEquals(newYaml, TransferMapper.toYaml(TransferMapper.to(yamlV3)))
-        watcher.start("step_2|FULL_MODEL2YAML V2 start")
-        val ymlV2 = modelTransfer.model2yaml(
-            ModelTransferInput(
-                "test",
-                modelAndSetting.model,
-                modelAndSetting.setting,
-                YamlVersion.Version.V2_0
-            )
-        )
-        val newYamlV2 = TransferMapper.toYaml(ymlV2)
-        Assertions.assertEquals(newYamlV2, TransferMapper.toYaml(TransferMapper.to(yamlV2)))
-        watcher.stop()
+//        v2 暂不支持跳过检查
+        /*val yamlV2 = testReadResourceFile("transfer/$value/yamlV2.yaml")
+                watcher.start("step_2|FULL_MODEL2YAML V2 start")
+                val ymlV2 = modelTransfer.model2yaml(
+                    ModelTransferInput(
+                        "test",
+                        modelAndSetting.model,
+                        modelAndSetting.setting,
+                        YamlVersion.Version.V2_0
+                    )
+                )
+                val newYamlV2 = TransferMapper.toYaml(ymlV2)
+                Assertions.assertEquals(newYamlV2, TransferMapper.toYaml(TransferMapper.to(yamlV2)))
+                watcher.stop()*/
         println(watcher.toString())
     }
 
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "yaml-model-001-v3",
-            "yaml-model-001-v2"
+            "yaml-model-003-v3-template",
+            "yaml-model-002-v3",
+            "yaml-model-001-v3"
         ]
     )
     fun yaml2model(value: String) {
@@ -306,6 +394,17 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("parse PreScriptBuildYaml")
         val pYml = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
+        val aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+        aspects.add(
+            object : IPipelineTransferAspectTrigger {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
+                        jp.yamlTriggerOn()!!.repoName = "test/before"
+                    }
+                    return null
+                }
+            }
+        )
         watcher.start("normalize Yaml")
         pYml.replaceTemplate { templateFilter ->
             YamlTemplate(
@@ -323,10 +422,11 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         }
         watcher.start("yaml2Model")
         val input = YamlTransferInput(
-            "testUser",
-            "testProject",
-            pipelineInfo,
-            pYml
+            userId = "testUser",
+            projectCode = "testProject",
+            pipelineInfo = pipelineInfo,
+            yaml = pYml,
+            aspectWrapper = PipelineTransferAspectWrapper(aspects)
         )
         val model = modelTransfer.yaml2Model(input)
         val setting = modelTransfer.yaml2Setting(input)
@@ -344,7 +444,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             "yaml,459,24 -> yaml-job",
             "yaml,219,14 -> yaml-stage",
             "yaml,600,12 -> yaml-setting",
-            "yaml,30,14 -> yaml-setting-2"
+            "yaml,30,14 -> yaml-setting-2",
+            "yaml_very_simple,1,1 -> yaml_very_simple-step",
+            "yaml_muti_line,16,20 -> yaml_muti_line-step"
         ]
     )
     fun yamlElementInsert(value: String) {
@@ -395,7 +497,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {
-        return ""
+        return testReadResourceFile("transfer/templates/${param.path.path}")
     }
 
     private fun testReadResourceFile(resourceName: String): String {
