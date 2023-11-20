@@ -1,8 +1,8 @@
 package com.tencent.devops.notify.model
 
-import com.tencent.devops.notify.pojo.VoiceMessage
+import com.tencent.devops.notify.pojo.VoiceNotifyMessage
 
-class VoiceNotifyMessageWithOperation : VoiceMessage() {
+class VoiceNotifyMessageWithOperation : VoiceNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0
     var lastError: String? = null

@@ -1,58 +1,53 @@
-package com.tencent.devops.notify.service.inner
+package com.tencent.devops.notify.blueking.service.inner
 
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.notify.utils.TOF4Service
-import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_VOICE_URL
-import com.tencent.devops.common.notify.utils.TOFConfiguration
+import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_VOICE
+import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.VOICE_URL
 import com.tencent.devops.notify.dao.VoiceNotifyDao
 import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.VoiceNotifyMessage
 import com.tencent.devops.notify.service.VoiceService
-import com.tencent.devops.notify.utils.TofUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Autowired
 
-@Primary
-@Service
-class VoiceServiceImpl(
+class VoiceServiceImpl @Autowired constructor(
+    private val notifyService: NotifyService,
     private val voiceNotifyDao: VoiceNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val configuration: TOFConfiguration,
-    private val tof4Service: TOF4Service,
-    private val dslContext: DSLContext
+    private val configuration: Configuration,
+    private val dslContext: DSLContext,
 ) : VoiceService {
     override fun sendMqMsg(message: VoiceNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, message)
     }
 
+    /**
+     * 发送语音消息
+     */
     override fun sendMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
         val voiceNotifyPost = try {
             voiceNotifyMessageWithOperation.asPost()
         } catch (e: Exception) {
-            logger.warn("send message failed , ", e)
+            logger.warn("send message failed.", e)
             return
         }
 
-        val tofConfig = TofUtil.getTofConfig(voiceNotifyMessageWithOperation, configuration)
+        val tofConfig = configuration.getConfigurations(voiceNotifyMessageWithOperation.tofSysId)
         if (null == tofConfig) {
             logger.warn("tofConfig is null , $voiceNotifyMessageWithOperation")
             return
         }
-        if (tofConfig["tof4Enabled"] != "true") {
-            logger.warn("voice notify must use tof4")
-            return
-        }
-
-        val tofResult = tof4Service.post(TOF4_VOICE_URL, voiceNotifyPost, tofConfig)
+        val tofResult = notifyService.post(VOICE_URL, voiceNotifyPost, tofConfig)
         val retryCount = voiceNotifyMessageWithOperation.retryCount
         val tofSuccess = tofResult.Ret == 0
         val id = voiceNotifyMessageWithOperation.id ?: UUIDUtil.generate()
+
         voiceNotifyDao.insertOrUpdate(
             dslContext = dslContext,
             id = id,
@@ -66,6 +61,7 @@ class VoiceServiceImpl(
             tofSysId = tofConfig["sys-id"],
             fromSysId = voiceNotifyPost.fromSysId
         )
+
 
         // 失败重试 , 最多3次
         if (!tofSuccess && retryCount < 3) {

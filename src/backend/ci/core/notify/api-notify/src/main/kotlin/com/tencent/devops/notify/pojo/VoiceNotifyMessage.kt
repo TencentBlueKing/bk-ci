@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("语音信息")
-open class VoiceMessage : BaseMessage() {
+open class VoiceNotifyMessage : BaseMessage() {
     @ApiModelProperty("接收人(英文ID)，支持多个")
     var receivers = mutableSetOf<String>()
 
