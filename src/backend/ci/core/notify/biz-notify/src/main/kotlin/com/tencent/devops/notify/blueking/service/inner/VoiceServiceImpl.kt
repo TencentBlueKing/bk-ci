@@ -21,7 +21,7 @@ class VoiceServiceImpl @Autowired constructor(
     private val voiceNotifyDao: VoiceNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
     private val configuration: Configuration,
-    private val dslContext: DSLContext,
+    private val dslContext: DSLContext
 ) : VoiceService {
     override fun sendMqMsg(message: VoiceNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, message)
