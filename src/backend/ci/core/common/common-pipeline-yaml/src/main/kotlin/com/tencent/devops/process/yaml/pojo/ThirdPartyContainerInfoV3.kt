@@ -25,26 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.yaml.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreStageReviews(
-    val flows: List<PreFlow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?,
-    @JsonProperty("content-format")
-    val contentFormat: String?,
-    @JsonProperty("notify-type")
-    val notifyType: List<String>?,
-    @JsonProperty("chat-id")
-    val notifyGroups: List<String>?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreFlow(
-    val name: String,
-    val reviewers: Any
+data class ThirdPartyContainerInfoV3(
+    val image: String?,
+    val imageCode: String?,
+    val imageVersion: String?,
+    val userName: String?,
+    val password: String?,
+    val credId: String?,
+    val acrossTemplateId: String?,
+    val options: DockerOptions?,
+    val imagePullPolicy: String?,
+    val imageType: ImageType? = ImageType.THIRD
 )

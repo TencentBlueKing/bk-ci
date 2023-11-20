@@ -1478,7 +1478,7 @@ class PipelineRepositoryService constructor(
                     ).data
                 )
             }
-            pipelineSettingDao.saveSetting(context, setting).toString()
+            if (versionStatus == VersionStatus.RELEASED) pipelineSettingDao.saveSetting(context, setting).toString()
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)

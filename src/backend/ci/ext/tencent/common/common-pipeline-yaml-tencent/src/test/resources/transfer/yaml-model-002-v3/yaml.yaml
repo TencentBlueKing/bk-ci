@@ -99,7 +99,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: ydpzneyp
-        pool-type: AGENT_ID
         agent-selector:
         - windows
         workspace: 工作空间
@@ -117,7 +116,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: dpenqqym
-        pool-type: ENV_ID
         agent-selector:
         - windows
         workspace: 工作空间
@@ -158,11 +156,11 @@ stages:
           values: []
           description: 描述
       description: 审核说明：
-      send-markdown: true
+      content-format: markdown
       notify-type:
       - RTX
       - WEWORK_GROUP
-      notify-groups:
+      chat-id:
       - ww2075063897
     timeout-hours: 24
 - name: mac
@@ -187,7 +185,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: zmoxbbqp
-        pool-type: AGENT_ID
         agent-selector:
         - macos
         workspace: 工作空间
@@ -201,7 +198,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: rqmakgrm
-        pool-type: ENV_ID
         agent-selector:
         - macos
         workspace: 工作空间
@@ -220,7 +216,6 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          image-type: THIRD
           credentials: royalhuang_up
       steps:
       - name: Bash
@@ -234,7 +229,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: xpvwazlm
-        pool-type: AGENT_ID
         agent-selector:
         - linux
         workspace: 工作空间
@@ -248,7 +242,6 @@ stages:
       runs-on:
         self-hosted: true
         pool-name: njmkyaom
-        pool-type: ENV_ID
         agent-selector:
         - linux
         workspace: 工作空间
@@ -268,7 +261,6 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          image-type: BKSTORE
       steps:
       - name: Bash
         uses: linuxScript@1.*
@@ -292,7 +284,6 @@ stages:
         pool-name: docker
         container:
           image: tlinux3_ci:2.*
-          image-type: BKSTORE
       if: 3333 == '6666'
       steps:
       - name: Bash
@@ -390,8 +381,8 @@ finally:
     runs-on:
       pool-name: docker
       container:
-        image: tlinux3_ci:2.*
-        image-type: BKSTORE
+        image-code: tlinux3_ci
+        image-version: 2.*
     steps:
     - checkout: https://git.code.oa.com/XXX/XXX.git
       name: Checkout
@@ -439,7 +430,7 @@ finally:
         archiveFile: '*.log'
       continue-on-error: manual
       retry-times: 4
-      manual-retry: true
+      can-manually-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
       with:

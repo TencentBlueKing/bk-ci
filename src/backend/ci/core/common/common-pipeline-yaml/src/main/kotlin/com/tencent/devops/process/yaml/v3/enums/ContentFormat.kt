@@ -25,26 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.yaml.v3.enums
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+/**
+ * 模板类型，text为展示内容，content为模板在Yaml中的关键字
+ */
+enum class ContentFormat(val text: String) {
+    TEXT("text"),
+    MARKDOWN("markdown");
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreStageReviews(
-    val flows: List<PreFlow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?,
-    @JsonProperty("content-format")
-    val contentFormat: String?,
-    @JsonProperty("notify-type")
-    val notifyType: List<String>?,
-    @JsonProperty("chat-id")
-    val notifyGroups: List<String>?
-)
+    companion object {
+        fun parse(str: String?): ContentFormat {
+            return values().find { it.text == str } ?: TEXT
+        }
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreFlow(
-    val name: String,
-    val reviewers: Any
-)
+        fun parse(bool: Boolean?): ContentFormat {
+            return if (bool == true) MARKDOWN else TEXT
+        }
+    }
+}

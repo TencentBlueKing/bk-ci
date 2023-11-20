@@ -30,7 +30,6 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: aliasName/xxx
   type: tgit
@@ -45,7 +44,6 @@ on:
     - 排除以下路径：
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: aliasName/xxx
   type: github
@@ -56,7 +54,6 @@ on:
     - mr
     users-ignore:
     - 排除以下人员：
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: 按代码库别名输入
   type: svn
@@ -69,7 +66,6 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: "123"
   type: p4
@@ -150,8 +146,8 @@ variables:
     props:
       type: artifactory
       description: "666"
-      glob: '*'
-      properties:
+      filter-rule: '*'
+      metadata:
         key1asd: asdasd
         key2: qwe
   子流水线:
@@ -171,8 +167,7 @@ stages:
       name: Windows-私有单构建机
       runs-on:
         self-hosted: true
-        pool-name: ydpzneyp
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - windows
         workspace: 工作空间
@@ -189,8 +184,7 @@ stages:
       name: Windows-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: dpenqqym
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - windows
         workspace: 工作空间
@@ -231,11 +225,11 @@ stages:
           values: []
           description: 描述
       description: 审核说明：
-      send-markdown: true
+      content-format: markdown
       notify-type:
       - RTX
       - WEWORK_GROUP
-      notify-groups:
+      chat-id:
       - ww2075063897
 - name: mac
   label:
@@ -258,8 +252,7 @@ stages:
       name: MacOS-私有构建机
       runs-on:
         self-hosted: true
-        pool-name: zmoxbbqp
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - macos
         workspace: 工作空间
@@ -272,8 +265,7 @@ stages:
       name: MacOS-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: rqmakgrm
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - macos
         workspace: 工作空间
@@ -292,7 +284,6 @@ stages:
         pool-name: docker
         container:
           image: mirrors.tencent.com/ci/tlinux3_ci:2.0.0
-          image-type: THIRD
           credentials: royalhuang_up
       steps:
       - name: Bash
@@ -305,8 +296,7 @@ stages:
       name: Linux-私有构建机
       runs-on:
         self-hosted: true
-        pool-name: xpvwazlm
-        pool-type: AGENT_ID
+        node-name: 构建机节点别名
         agent-selector:
         - linux
         workspace: 工作空间
@@ -319,8 +309,7 @@ stages:
       name: Linux-私有构建机群
       runs-on:
         self-hosted: true
-        pool-name: njmkyaom
-        pool-type: ENV_ID
+        pool-name: 构建机环境别名
         agent-selector:
         - linux
         workspace: 工作空间
@@ -336,11 +325,6 @@ stages:
       mutex:
         label: a
         queue-length: 5
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
       steps:
       - name: Bash
         uses: linuxScript@1.*
@@ -359,11 +343,6 @@ stages:
         label: aasd
         queue-length: 3
         timeout-minutes: "${bianliang}"
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
       if: 3333 == '6666'
       steps:
       - name: Bash
@@ -373,7 +352,6 @@ stages:
       timeout-minutes: "111"
       depend-on:
       - job_QxG
-      depend-on-type: NAME
 - name: stage-5
   label:
   - Build
@@ -461,8 +439,8 @@ finally:
     runs-on:
       pool-name: docker
       container:
-        image: tlinux3_ci:2.*
-        image-type: BKSTORE
+        image-code: tlinux3_ci
+        image-version: "2.1"
     steps:
     - checkout: 302rW
       name: Checkout
@@ -483,7 +461,7 @@ finally:
         archiveFile: '*.log'
       continue-on-error: manual
       retry-times: 4
-      manual-retry: true
+      can-manually-retry: true
     - name: 腾讯代码分析(官方-代码分析工作组)
       uses: CodeccCheckAtomDebug@4.*
       with:

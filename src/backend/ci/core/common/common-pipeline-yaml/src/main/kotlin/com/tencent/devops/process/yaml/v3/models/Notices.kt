@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import io.swagger.annotations.ApiModelProperty
 
 /**
@@ -116,11 +117,11 @@ data class PacNotices(
     @ApiModelProperty(name = "chat-id")
     @JsonProperty("chat-id")
     val chatId: List<String>?,
-    @ApiModelProperty(name = "notify-markdown")
-    @JsonProperty("notify-markdown")
-    val notifyMarkdown: Boolean?,
-    @ApiModelProperty(name = "notify-detail-url")
-    @JsonProperty("notify-detail-url")
+    @ApiModelProperty(name = "content-format")
+    @JsonProperty("content-format")
+    val notifyMarkdown: String?,
+    @ApiModelProperty(name = "attach-build-url")
+    @JsonProperty("attach-build-url")
     val notifyDetail: Boolean?
 ) : Notices {
 
@@ -133,7 +134,8 @@ data class PacNotices(
         content = subscription.content.ifEmpty { null },
         ifField = ifField,
         chatId = subscription.wechatGroup.ifBlank { null }?.split(",")?.toSet()?.toList(),
-        notifyMarkdown = subscription.wechatGroupMarkdownFlag.nullIfDefault(false),
+        notifyMarkdown = ContentFormat.parse(subscription.wechatGroupMarkdownFlag)
+            .nullIfDefault(ContentFormat.TEXT)?.text,
         notifyDetail = subscription.detailFlag.nullIfDefault(false)
     )
 
@@ -159,7 +161,7 @@ data class PacNotices(
         users = receivers?.joinToString(",") ?: "",
         wechatGroupFlag = type.contains(NotifyType.RTX_GROUP.yamlText),
         wechatGroup = chatId?.joinToString(",") ?: "",
-        wechatGroupMarkdownFlag = notifyMarkdown ?: false,
+        wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.name,
         detailFlag = notifyDetail ?: false,
         content = content ?: ""
     )
