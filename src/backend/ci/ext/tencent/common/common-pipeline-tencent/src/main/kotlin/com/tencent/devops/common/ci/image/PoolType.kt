@@ -79,7 +79,7 @@ enum class PoolType {
         override fun transfer(pool: Pool): DispatchType {
             return PublicDevCloudDispathcType(
                 image = pool.container ?: pool.image?.imageCode,
-                performanceConfigId = "0",
+                performanceConfigId = pool.performanceConfigId ?: "0",
                 imageType = pool.image?.imageType ?: ImageType.THIRD,
                 credentialId = pool.credential?.credentialId,
                 imageVersion = pool.image?.imageVersion,
@@ -119,7 +119,8 @@ enum class PoolType {
                         )
 
                         else -> null
-                    }
+                    },
+                    hwSpec = dispatcher.performanceConfigId
                 )
             }
             return null
