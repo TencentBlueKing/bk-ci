@@ -29,6 +29,7 @@ package com.tencent.devops.notify.blueking.utils
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
+import com.tencent.devops.common.notify.pojo.VoiceNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.notify.blueking.sdk.CMSApi
 
@@ -41,6 +42,7 @@ class NotifyService(private val cmsApi: CMSApi) {
         const val SMS_URL = "/api/c/compapi/cmsi/send_sms/"
         const val WECHAT_URL = "/api/c/compapi/cmsi/send_weixin/"
         const val NOC_NOTICE_URL = "/api/c/compapi/cmsi/noc_notice/"
+        const val VOICE_URL = "/api/c/compapi/cmsi/send_voice_msg/"
     }
 
     fun post(url: String, postData: Any, tofConf: Map<String, String>? = null): NotifyResult {
@@ -61,6 +63,10 @@ class NotifyService(private val cmsApi: CMSApi) {
 
             WECHAT_URL -> {
                 cmsApi.sendWeixin(postData as WechatNotifyPost)
+            }
+
+            VOICE_URL -> {
+                cmsApi.sendVoice(postData as VoiceNotifyPost)
             }
 
             else -> {
