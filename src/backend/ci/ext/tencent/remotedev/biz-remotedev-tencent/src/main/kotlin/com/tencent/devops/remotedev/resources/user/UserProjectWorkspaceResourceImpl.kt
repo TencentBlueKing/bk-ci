@@ -27,8 +27,10 @@
 
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -67,6 +69,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService
 ) : UserProjectWorkspaceResource {
+    @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
@@ -84,6 +87,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
         return Result(
@@ -105,6 +109,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_ASSIGN)
     override fun assignUser(
         userId: String,
         projectId: String,
@@ -120,21 +125,25 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.hasUserManager(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_RESTART)
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_MAKE_IMAGE)
     override fun makeImageByVm(
         userId: String,
         projectId: String,

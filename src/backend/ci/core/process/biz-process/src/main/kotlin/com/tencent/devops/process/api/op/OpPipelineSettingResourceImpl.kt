@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api.op
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -59,6 +61,7 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(OpPipelineSettingResourceImpl::class.java)
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun updateSetting(userId: String, setting: PipelineSetting): Result<String> {
         return Result(pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting))
     }
