@@ -44,12 +44,9 @@ import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.v3.models.image.Pool
 import com.tencent.devops.process.yaml.v3.models.image.PoolImage
 import com.tencent.devops.process.yaml.v3.models.image.PoolType
-import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
-import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -58,8 +55,7 @@ import org.springframework.stereotype.Component
 class DispatchTransfer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    final val inner: TransferCreator,
-    val transferCache: TransferCacheService
+    val inner: TransferCreator
 ) {
 
     companion object {
@@ -68,18 +64,6 @@ class DispatchTransfer @Autowired(required = false) constructor(
         val MACOS_TYPE = setOf("macos-11.4", "macos-12.4", "macos-latest", "macos")
         val WINDOWS_TYPE = setOf("windows-2016", "windows")
     }
-
-    private val defaultRunsOn = JSONObject(
-        RunsOn(
-            selfHosted = null,
-            poolType = null,
-            poolName = JobRunsOnType.DOCKER.type,
-            container = Container3(
-                imageCode = inner.defaultImageCode,
-                imageVersion = inner.defaultImageVersion
-            )
-        )
-    )
 
     fun makeDispatchType(
         job: Job,
@@ -122,9 +106,6 @@ class DispatchTransfer @Autowired(required = false) constructor(
         }
         runsOn.needs = job.buildEnv?.ifEmpty { null }
         runsOn.queueTimeoutMinutes = job.jobControlOption?.prepareTimeout?.nullIfDefault(DEFAULT_JOB_PREPARE_TIMEOUT)
-        if (JSONObject(runsOn).similar(defaultRunsOn)) {
-            return null
-        }
         return runsOn
     }
 

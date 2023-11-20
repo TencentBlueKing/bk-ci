@@ -53,7 +53,9 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_QUEUE_LENGTH
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -61,6 +63,7 @@ import com.tencent.devops.process.yaml.v3.models.job.Mutex
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -69,8 +72,21 @@ class ContainerTransfer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
     val transferCache: TransferCacheService,
-    val dispatchTransfer: DispatchTransfer
+    val dispatchTransfer: DispatchTransfer,
+    val inner: TransferCreator
 ) {
+
+    private val defaultRunsOn = JSONObject(
+        RunsOn(
+            selfHosted = null,
+            poolType = null,
+            poolName = JobRunsOnType.DOCKER.type,
+            container = Container3(
+                imageCode = inner.defaultImageCode,
+                imageVersion = inner.defaultImageVersion
+            )
+        )
+    )
 
     fun addVmBuildContainer(
         job: Job,
@@ -215,7 +231,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         )
     }
 
-    private fun RunsOn.fix(userId: String, projectId: String, buildType: BuildType?): RunsOn {
+    private fun RunsOn.fix(userId: String, projectId: String, buildType: BuildType?): RunsOn? {
         /*修正私有构建机数据*/
         when (poolType) {
             JobRunsOnPoolType.AGENT_ID.name -> {
@@ -253,6 +269,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     arrayOf("poolName:$poolName,hwSpec:$hwSpec")
                 )
             }
+        }
+        if (JSONObject(this).similar(defaultRunsOn)) {
+            return null
         }
         return this
     }
