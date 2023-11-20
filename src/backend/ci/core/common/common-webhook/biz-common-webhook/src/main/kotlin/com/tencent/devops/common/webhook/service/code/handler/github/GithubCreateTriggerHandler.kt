@@ -88,8 +88,8 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         return I18Variable(
             code = i18Code,
             params = listOf(
-                getBranchName(event),
                 linkUrl,
+                getBranchName(event),
                 getUsername(event)
             )
         ).toJsonStr()
