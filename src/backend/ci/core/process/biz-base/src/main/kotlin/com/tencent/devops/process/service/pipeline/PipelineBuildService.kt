@@ -27,7 +27,13 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -93,6 +99,17 @@ class PipelineBuildService(
         private const val CONTEXT_PREFIX = "variables."
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EXECUTE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#pipeline?.pipelineId",
+            instanceNames = "#pipeline?.pipelineName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#pipeline?.projectId")],
+        scopeId = "#pipeline?.projectId",
+        content = ActionAuditContent.PIPELINE_EXECUTE_CONTENT
+    )
     fun startPipeline(
         userId: String,
         pipeline: PipelineInfo,

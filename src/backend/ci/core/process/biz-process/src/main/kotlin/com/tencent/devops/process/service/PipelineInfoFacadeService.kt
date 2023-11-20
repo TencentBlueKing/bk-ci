@@ -29,6 +29,10 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.common.cache.CacheBuilder
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -39,7 +43,10 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -135,6 +142,16 @@ class PipelineInfoFacadeService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*pipelineId*/, ChannelCode>()
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_EXPORT_PIPELINE_CONTENT
+    )
     fun exportPipeline(
         userId: String,
         projectId: String,
@@ -177,6 +194,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             it.transformCompatibility()
         }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
+
+        // 审计
+        ActionAuditContext.current().setInstanceName(model.name)
+
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return if (storageType == PipelineStorageType.YAML) {
             val suffix = PipelineStorageType.YAML.fileSuffix
@@ -266,6 +287,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_CREATE_CONTENT
+    )
     fun createPipeline(
         userId: String,
         projectId: String,
@@ -497,7 +527,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
-
+                ActionAuditContext.current()
+                    .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true
                 return result
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -658,6 +689,16 @@ class PipelineInfoFacadeService @Autowired constructor(
     /**
      * 还原已经删除的流水线
      */
+    @ActionAuditRecord(
+        actionId = ActionId.PROJECT_MANAGE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PROJECT,
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT
+    )
     fun restorePipeline(
         userId: String,
         projectId: String,
@@ -695,6 +736,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
+            ActionAuditContext.current().setInstanceName(model.name)
             return DeployPipelineResult(
                 pipelineId = pipelineId,
                 pipelineName = model.name,
@@ -836,6 +878,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_EDIT_CONTENT
+    )
     fun editPipeline(
         userId: String,
         projectId: String,
@@ -880,7 +931,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 )
             }
-
             if (isPipelineExist(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -944,6 +994,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(pipelineId, model.name, existModel, model)
             success = true
             return deployResult
         } finally {
@@ -1087,6 +1140,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         return resource.copy(model = fixedModel)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#$?.name",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_VIEW_CONTENT
+    )
     fun getPipeline(
         userId: String,
         projectId: String,
@@ -1115,7 +1179,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             )
         }
-
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1197,6 +1260,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_DELETE_CONTENT
+    )
     fun deletePipeline(
         userId: String,
         projectId: String,
@@ -1235,6 +1307,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
+            ActionAuditContext.current().addInstanceInfo(pipelineId, existModel.name, null, null)
             // 对已经存在的模型做删除前处理
             val param = BeforeDeleteParam(
                 userId = userId,

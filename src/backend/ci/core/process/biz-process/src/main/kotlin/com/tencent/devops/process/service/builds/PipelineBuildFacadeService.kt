@@ -592,7 +592,6 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
         val startEpoch = System.currentTimeMillis()
         try {
             val (model, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
