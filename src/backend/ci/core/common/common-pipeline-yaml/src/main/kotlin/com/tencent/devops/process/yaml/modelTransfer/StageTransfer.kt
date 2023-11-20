@@ -36,10 +36,8 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.option.StageControlOption
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -53,9 +51,11 @@ import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_HOURS
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
+import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -77,7 +77,9 @@ class StageTransfer @Autowired(required = false) constructor(
     val objectMapper: ObjectMapper,
     val containerTransfer: ContainerTransfer,
     val elementTransfer: ElementTransfer,
-    val variableTransfer: VariableTransfer
+    val variableTransfer: VariableTransfer,
+    val transferCacheService: TransferCacheService,
+    val transferCreator: TransferCreator
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StageTransfer::class.java)
@@ -98,6 +100,7 @@ class StageTransfer @Autowired(required = false) constructor(
             elementElapsed = null,
             params = variableTransfer.makeVariableFromYaml(yamlInput.yaml.formatVariables())
         )
+        yamlInput.aspectWrapper.setModelJob4Model(triggerContainer, PipelineTransferAspectWrapper.AspectType.AFTER)
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(listOf(triggerContainer), id = stageId, name = stageId)
@@ -133,6 +136,11 @@ class StageTransfer @Autowired(required = false) constructor(
         val containerList = mutableListOf<Container>()
 
         stage.jobs.forEachIndexed { jobIndex, job ->
+            yamlInput.aspectWrapper.setYamlJob4Yaml(
+                yamlJob = job,
+                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+            )
+            preCheckJob(job, yamlInput)
             val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
@@ -161,6 +169,10 @@ class StageTransfer @Autowired(required = false) constructor(
                     buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
                 )
             }
+            yamlInput.aspectWrapper.setModelJob4Model(
+                containerList.last(),
+                PipelineTransferAspectWrapper.AspectType.AFTER
+            )
         }
 
         val stageEnable = if (stage.enable != null) stage.enable!! else true
@@ -191,7 +203,6 @@ class StageTransfer @Autowired(required = false) constructor(
             enable = stageEnable
         )
 
-
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
             id = stageId,
@@ -216,15 +227,29 @@ class StageTransfer @Autowired(required = false) constructor(
 
     fun model2YamlStage(
         stage: Stage,
-        projectId: String
+        userId: String,
+        projectId: String,
+        aspectWrapper: PipelineTransferAspectWrapper
     ): PreStage {
         val jobs = stage.containers.associateTo(LinkedHashMap()) { job ->
-            val steps = elementTransfer.model2YamlSteps(job, projectId)
+            aspectWrapper.setModelJob4Model(job, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            val steps = elementTransfer.model2YamlSteps(job, projectId, aspectWrapper)
 
             (job.jobId?.ifBlank { null } ?: ScriptYmlUtils.randomString("job_")) to when (job.getClassType()) {
                 NormalContainer.classType -> containerTransfer.addYamlNormalContainer(job as NormalContainer, steps)
-                VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(job as VMBuildContainer, steps)
+                VMBuildContainer.classType -> containerTransfer.addYamlVMBuildContainer(
+                    userId = userId,
+                    projectId = projectId,
+                    job = job as VMBuildContainer,
+                    steps = steps
+                )
+
                 else -> throw ModelCreateException("unknown classType:(${job.getClassType()})")
+            }.also { preJob ->
+                aspectWrapper.setYamlJob4Yaml(
+                    yamlPreJob = preJob,
+                    aspectType = PipelineTransferAspectWrapper.AspectType.AFTER
+                )
             }
         }
         return PreStage(
@@ -274,7 +299,7 @@ class StageTransfer @Autowired(required = false) constructor(
                 )
             },
             description = stage.checkIn?.reviewDesc,
-            sendMarkdown = stage.checkIn?.markdownContent?.nullIfDefault(false),
+            contentFormat = ContentFormat.parse(stage.checkIn?.markdownContent).nullIfDefault(ContentFormat.TEXT)?.text,
             notifyType = stage.checkIn?.notifyType?.ifEmpty { null },
             notifyGroups = stage.checkIn?.notifyGroup?.ifEmpty { null }
         )
@@ -304,7 +329,7 @@ class StageTransfer @Autowired(required = false) constructor(
                     reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
                 )
             }.toMutableList()
-            check.markdownContent = stageCheck.reviews.sendMarkdown ?: false
+            check.markdownContent = stageCheck.reviews.contentFormat == ContentFormat.MARKDOWN
             check.notifyType = stageCheck.reviews.notifyType?.toMutableList() ?: mutableListOf()
             check.notifyGroup = stageCheck.reviews.notifyGroups?.toMutableList() ?: mutableListOf()
         }
@@ -342,33 +367,17 @@ class StageTransfer @Autowired(required = false) constructor(
         return params
     }
 
-    private fun getBuildFormPropertyFromYmlVariable(
-        variables: Map<String, Variable>?
-    ): List<BuildFormProperty> {
-        if (variables.isNullOrEmpty()) {
-            return emptyList()
+    private fun preCheckJob(
+        job: Job,
+        yamlInput: YamlTransferInput
+    ) {
+        if (job.runsOn.hwSpec != null) {
+            val hw = transferCacheService.getDockerResource(
+                userId = yamlInput.userId,
+                projectId = yamlInput.projectCode,
+                buildType = transferCreator.defaultLinuxDispatchType()
+            )?.dockerResourceOptionsMaps?.find { it.dockerResourceOptionsShow.description == job.runsOn.hwSpec }
+            job.runsOn.hwSpec = hw?.id
         }
-        val buildFormProperties = mutableListOf<BuildFormProperty>()
-        variables.forEach { (key, variable) ->
-            buildFormProperties.add(
-                BuildFormProperty(
-                    id = key,
-                    required = variable.allowModifyAtStartup ?: true,
-                    type = BuildFormPropertyType.STRING,
-                    defaultValue = variable.value ?: "",
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null,
-                    readOnly = variable.readonly,
-                    valueNotEmpty = variable.valueNotEmpty
-                )
-            )
-        }
-        return buildFormProperties
     }
 }

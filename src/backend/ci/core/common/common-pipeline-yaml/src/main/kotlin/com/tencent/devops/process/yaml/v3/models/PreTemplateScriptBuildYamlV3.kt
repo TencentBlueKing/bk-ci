@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
@@ -49,16 +50,16 @@ data class PreTemplateScriptBuildYamlV3(
     override val desc: String?,
     override val label: List<String>? = null,
     @JsonProperty("on")
-    var triggerOn: Any?,
-    override val variables: Map<String, Any>?,
-    override val stages: ArrayList<Map<String, Any>>?,
+    var triggerOn: Any? = null,
+    override var variables: Map<String, Any>? = null,
+    override var stages: ArrayList<Map<String, Any>>? = null,
     override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: ArrayList<Map<String, Any>>? = null,
-    override val extends: Extends?,
-    override val resources: Resources?,
-    override var finally: LinkedHashMap<String, Any>?,
+    override var extends: Extends? = null,
+    override var resources: Resources? = null,
+    override var finally: LinkedHashMap<String, Any>? = null,
     override val notices: List<PacNotices>?,
-    override val concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {
@@ -124,9 +125,10 @@ data class PreTemplateScriptBuildYamlV3(
     }
 
     override fun formatResources(): Resources? {
-        checkInitialized()
-        return preYaml.resources
+        return resources
     }
+
+    override fun templateFilter(): ITemplateFilter = this
 
     private fun checkInitialized() {
         if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")

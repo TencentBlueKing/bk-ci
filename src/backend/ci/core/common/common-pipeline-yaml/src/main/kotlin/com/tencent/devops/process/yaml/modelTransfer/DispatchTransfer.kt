@@ -29,8 +29,6 @@ package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
@@ -40,7 +38,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
@@ -51,9 +48,9 @@ import com.tencent.devops.process.yaml.v3.models.image.PoolType
 import com.tencent.devops.process.yaml.v3.models.job.Container3
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.utils.StreamDispatchUtils
-import javax.ws.rs.core.Response
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,9 +73,12 @@ class DispatchTransfer @Autowired(required = false) constructor(
 
     private val defaultRunsOn = JSONObject(
         RunsOn(
+            selfHosted = null,
+            poolType = null,
+            poolName = JobRunsOnType.DOCKER.type,
             container = Container3(
-                image = inner.defaultImage,
-                imageType = ImageType.BKSTORE.name
+                imageCode = inner.defaultImageCode,
+                imageVersion = inner.defaultImageVersion
             )
         )
     )
@@ -96,12 +96,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
         // macos构建机
         dispatcherMacos(job)?.let { return Pair(it, VMBaseOS.MACOS) }
         // 转换失败
-        throw CustomException(
-            Response.Status.BAD_REQUEST,
-            MessageUtil.getMessageByLocale(
-                messageCode = CommonMessageCode.PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+        throw PipelineTransferException(
+            CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+            arrayOf("job: ${job.name}")
         )
     }
 
@@ -145,15 +142,15 @@ class DispatchTransfer @Autowired(required = false) constructor(
                     buildTemplateAcrossInfo = buildTemplateAcrossInfo
                 )
             } else null
-            val image = (info?.image ?: inner.defaultImage).split(":")
             return PoolType.DockerOnVm.toDispatchType(
                 Pool(
                     credentialId = getDockerInfo(job, buildTemplateAcrossInfo)?.credential?.credentialId,
                     image = PoolImage(
-                        imageCode = image.getOrElse(0) { "" },
-                        imageVersion = image.getOrElse(1) { "" },
+                        imageCode = info?.imageCode ?: inner.defaultImageCode,
+                        imageVersion = info?.imageVersion ?: inner.defaultImageVersion,
                         imageType = info?.imageType
-                    )
+                    ),
+                    performanceConfigId = job.runsOn.hwSpec
                 )
             )
         }
@@ -181,11 +178,9 @@ class DispatchTransfer @Autowired(required = false) constructor(
             return PoolType.SelfHosted.toDispatchType(
                 with(job.runsOn) {
                     Pool(
-                        envName = if (poolType == JobRunsOnPoolType.ENV_NAME.name) poolName else null,
+                        envName = poolName,
                         workspace = workspace,
-                        envId = if (poolType == JobRunsOnPoolType.ENV_ID.name) poolName else null,
-                        agentId = if (poolType == JobRunsOnPoolType.AGENT_ID.name) poolName else null,
-                        agentName = if (poolType == JobRunsOnPoolType.AGENT_NAME.name) poolName else null,
+                        agentName = nodeName,
                         dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo)
                     )
                 }
@@ -204,7 +199,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             )
             ThirdPartyAgentDockerInfo(
-                image = info.image,
+                image = info.image ?: "",
                 credential = Credential(
                     user = info.userName,
                     password = info.password,

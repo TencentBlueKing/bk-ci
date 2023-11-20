@@ -233,7 +233,7 @@ class MigrateResultService constructor(
                     token = tokenService.getSystemToken(null)!!,
                     action = it.substringAfterLast("_"),
                     projectCode = projectCode,
-                    resourceCode = it.substringBefore("_")
+                    resourceCode = it.substringBeforeLast("_")
                 ).data!!
             }
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用

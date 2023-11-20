@@ -623,16 +623,13 @@ class PipelineBuildDao {
     /**
      * 取最近一次构建的参数
      */
-    fun getLatestBuild(dslContext: DSLContext, projectId: String, pipelineId: String): BuildInfo? {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            val select = dslContext.selectFrom(this)
-                .where(
-                    PIPELINE_ID.eq(pipelineId),
-                    PROJECT_ID.eq(projectId)
-                )
-                .orderBy(BUILD_NUM.desc()).limit(1)
-            select.fetchAny(mapper)
-        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+    fun getLatestBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        debug: Boolean
+    ): BuildInfo? {
+        return if (debug) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val select = dslContext.selectFrom(this)
                 .where(
                     PIPELINE_ID.eq(pipelineId),
@@ -640,6 +637,14 @@ class PipelineBuildDao {
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny(debugMapper)
+        } else with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                .where(
+                    PIPELINE_ID.eq(pipelineId),
+                    PROJECT_ID.eq(projectId)
+                )
+                .orderBy(BUILD_NUM.desc()).limit(1)
+            select.fetchAny(mapper)
         }
     }
 

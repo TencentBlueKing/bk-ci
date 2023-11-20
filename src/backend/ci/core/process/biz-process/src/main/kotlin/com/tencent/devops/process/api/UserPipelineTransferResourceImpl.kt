@@ -44,6 +44,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTransferResource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -78,7 +79,18 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
                 )
             )
         }
-        return Result(transferService.transfer(userId, projectId, pipelineId, actionType, data))
+        val response = try {
+            transferService.transfer(userId, projectId, pipelineId, actionType, data)
+        } catch (e: PipelineTransferException) {
+            val elementMsg = I18nUtil.getCodeLanMessage(
+                messageCode = e.errorCode,
+                params = e.params,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = e.defaultMessage
+            )
+            TransferResponse(yamlSupported = false, yamlInvalidMsg = elementMsg)
+        }
+        return Result(response)
     }
 
     override fun modelTaskTransfer(
@@ -140,7 +152,15 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         column: Int,
         yaml: PositionBody
     ): Result<PositionResponse> {
-        return Result(transferService.position(userId, projectId, line, column, yaml.yaml))
+        return Result(
+            transferService.position(
+                userId = userId,
+                projectId = projectId,
+                line = line - 1,
+                column = column - 1,
+                yaml = yaml.yaml
+            )
+        )
     }
 
     override fun modelTaskInsert(
@@ -151,6 +171,15 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
         column: Int,
         data: ElementInsertBody
     ): Result<ElementInsertResponse> {
-        return Result(transferService.modelTaskInsert(userId, projectId, pipelineId, line, column, data))
+        return Result(
+            transferService.modelTaskInsert(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                line = line - 1,
+                column = column - 1,
+                data = data
+            )
+        )
     }
 }

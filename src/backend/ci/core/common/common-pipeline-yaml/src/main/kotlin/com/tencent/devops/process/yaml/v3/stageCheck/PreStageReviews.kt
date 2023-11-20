@@ -35,11 +35,11 @@ data class PreStageReviews(
     val flows: List<PreFlow>?,
     val variables: Map<String, ReviewVariable>?,
     val description: String?,
-    @JsonProperty("send-markdown")
-    val sendMarkdown: Boolean?,
+    @JsonProperty("content-format")
+    val contentFormat: String?,
     @JsonProperty("notify-type")
     val notifyType: List<String>?,
-    @JsonProperty("notify-groups")
+    @JsonProperty("chat-id")
     val notifyGroups: List<String>?
 )
 

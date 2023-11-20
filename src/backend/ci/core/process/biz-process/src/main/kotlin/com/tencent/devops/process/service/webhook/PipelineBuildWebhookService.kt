@@ -51,10 +51,15 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubIssueCommentEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubIssuesEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewCommentEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
@@ -176,6 +181,11 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             GithubCreateEvent.classType -> objectMapper.readValue<GithubCreateEvent>(body)
             GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(body)
             GithubCheckRunEvent.classType -> objectMapper.readValue<GithubCheckRunEvent>(body)
+            GithubCommitCommentEvent.classType -> objectMapper.readValue<GithubCommitCommentEvent>(body)
+            GithubIssueCommentEvent.classType -> objectMapper.readValue<GithubIssueCommentEvent>(body)
+            GithubReviewCommentEvent.classType -> objectMapper.readValue<GithubReviewCommentEvent>(body)
+            GithubIssuesEvent.classType -> objectMapper.readValue<GithubIssuesEvent>(body)
+            GithubReviewEvent.classType -> objectMapper.readValue<GithubReviewEvent>(body)
             else -> {
                 logger.info("Github event($eventType) is ignored")
                 return true

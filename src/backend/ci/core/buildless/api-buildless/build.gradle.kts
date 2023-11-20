@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
+    api(project(":core:dispatch:api-dispatch-docker"))
 }
 
 plugins {

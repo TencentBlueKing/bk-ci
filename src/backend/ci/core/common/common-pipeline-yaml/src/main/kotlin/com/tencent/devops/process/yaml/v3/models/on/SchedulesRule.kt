@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v3.models.on
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -39,13 +40,25 @@ import io.swagger.annotations.ApiModelProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SchedulesRule(
     val enable: Boolean? = true,
-    val cron: String? = null,
+    val cron: Any? = null,
+    val interval: Interval? = null,
 
-    @ApiModelProperty(name = "advance-cron")
-    @JsonProperty("advance-cron")
-    val advanceCron: List<String>? = null,
+    @ApiModelProperty(name = "repo-name")
+    @JsonProperty("repo-name")
+    val repoName: String? = null,
 
     val branches: List<String>? = null,
 
-    val always: Boolean? = false
-)
+    val always: Boolean? = false,
+    @JsonIgnore
+    var newExpression: List<String>? = null,
+    @JsonIgnore
+    var advanceExpression: List<String>? = null
+) {
+    data class Interval(
+        val week: List<String>,
+        @ApiModelProperty(name = "time-points")
+        @JsonProperty("time-points")
+        val timePoints: List<String>? = null
+    )
+}

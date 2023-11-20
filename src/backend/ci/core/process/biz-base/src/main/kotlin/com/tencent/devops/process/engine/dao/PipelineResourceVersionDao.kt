@@ -119,6 +119,7 @@ class PipelineResourceVersionDao {
                 .set(BASE_VERSION, baseVersion)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelStr)
+                .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
                 .set(BASE_VERSION, baseVersion)

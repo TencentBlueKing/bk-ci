@@ -58,8 +58,7 @@ data class TriggerOn(
     val openapi: String? = null,
     @JsonProperty("repo-name")
     @ApiModelProperty(name = "repo-name")
-    var repoName: String? = null,
-    var credentials: String? = null
+    var repoName: String? = null
 ) {
     fun toPre(version: YamlVersion.Version) = when (version) {
         YamlVersion.Version.V2_0 -> toPreV2()
@@ -85,7 +84,6 @@ data class TriggerOn(
     private fun toPreV3() = PreTriggerOnV3(
         repoName = repoName,
         type = null,
-        credentials = credentials,
         push = push,
         tag = tag,
         mr = mr,

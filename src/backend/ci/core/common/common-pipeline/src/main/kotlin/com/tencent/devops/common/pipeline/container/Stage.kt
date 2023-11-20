@@ -71,7 +71,8 @@ data class Stage(
     @ApiModelProperty("各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
     override var template: String? = null,
-    override var ref: String? = null
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : IModelTemplate {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据

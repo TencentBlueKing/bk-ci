@@ -146,7 +146,8 @@ abstract class Element(
     @ApiModelProperty("所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyName: String? = null,
     override var template: String? = null,
-    override var ref: String? = null
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()

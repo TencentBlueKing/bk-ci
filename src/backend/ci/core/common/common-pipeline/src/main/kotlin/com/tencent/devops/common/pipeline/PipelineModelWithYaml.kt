@@ -47,5 +47,9 @@ data class PipelineModelWithYaml(
     @ApiModelProperty("是否处在可以调试状态", required = false)
     val canDebug: Boolean?,
     @ApiModelProperty("版本变更说明", required = false)
-    val description: String?
+    val description: String?,
+    @ApiModelProperty("是否支持YAML解析", required = true)
+    val yamlSupported: Boolean,
+    @ApiModelProperty("YAML解析异常信息")
+    val yamlInvalidMsg: String?
 )

@@ -41,12 +41,14 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -145,6 +147,7 @@ class RbacPermissionService constructor(
             "[rbac] batch validate user resource permission|" +
                 "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
         )
+        val watcher = Watcher("validateUserResourcePermissionByInstance|$userId|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
             // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
@@ -208,6 +211,8 @@ class RbacPermissionService constructor(
 
             return policyService.verifyPermissions(queryPolicyDTO)
         } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission|" +
                     "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"

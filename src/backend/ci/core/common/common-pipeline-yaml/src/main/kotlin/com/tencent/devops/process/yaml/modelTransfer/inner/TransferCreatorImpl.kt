@@ -29,13 +29,13 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
-@Primary
 @Component
 class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     @Value("\${marketRun.enable:#{false}}")
@@ -48,7 +48,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     private val runPlugInVersionData: String? = null
 
     @Value("\${container.defaultImage:#{null}}")
-    private val defaultImageData: String = "mirrors.tencent.com/ci/tlinux3_ci:2.5.0"
+    private val defaultImageData: String = "tlinux3_ci:2.*"
 
     companion object {
         private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"
@@ -63,8 +63,11 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     override val runPlugInVersion: String?
         get() = runPlugInVersionData
 
-    override val defaultImage: String
-        get() = defaultImageData
+    override val defaultImageCode: String
+        get() = defaultImageData.substringBefore(":")
+
+    override val defaultImageVersion: String
+        get() = defaultImageData.substringAfter(":")
 
     override fun transferCheckoutElement(
         step: Step
@@ -74,16 +77,22 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
         if (!step.with.isNullOrEmpty()) {
             inputMap.putAll(step.with!!)
         }
+        when (inputMap["type"]) {
+            CheckoutAtomParam.CheckoutRepositoryType.ID.name -> {
+                inputMap[CheckoutAtomParam::repositoryHashId.name] = step.checkout!!
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.ID
+            }
 
-        inputMap["repositoryUrl"] = step.checkout!!
+            CheckoutAtomParam.CheckoutRepositoryType.NAME.name -> {
+                inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout!!
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.NAME
+            }
 
-        // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
-        if (inputMap["authType"] == null) {
-            inputMap["authType"] = STREAM_CHECK_AUTH_TYPE
+            else -> {
+                inputMap[CheckoutAtomParam::repositoryUrl.name] = step.checkout!!
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.URL
+            }
         }
-
-        // 拼装插件固定参数
-        inputMap["repositoryType"] = "URL"
 
         val data = mutableMapOf<String, Any>()
         data["input"] = inputMap
@@ -125,4 +134,6 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             data = data
         )
     }
+
+    override fun defaultLinuxDispatchType(): BuildType = BuildType.DOCKER
 }

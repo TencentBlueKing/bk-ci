@@ -28,8 +28,8 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -56,7 +56,6 @@ class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
-    private val iamConfiguration: IamConfiguration,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
@@ -68,7 +67,8 @@ class RbacPermissionProjectService(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
         private const val expiredAt = 365L
-        private const val USER_TYPE = "user"
+        // 有效的过期时间,在30天内就是有效的
+        private const val VALID_EXPIRED_AT = 30L
     }
 
     override fun getProjectUsers(
@@ -135,14 +135,11 @@ class RbacPermissionProjectService(
             if (managerPermission || checkCiManager) {
                 return managerPermission
             }
-            val instanceDTO = InstanceDTO()
-            instanceDTO.system = iamConfiguration.systemId
-            instanceDTO.id = projectCode
-            instanceDTO.type = AuthResourceType.PROJECT.value
-            return authHelper.isAllowed(
-                userId,
-                RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
-                instanceDTO
+
+            return rbacCacheService.validateUserProjectPermission(
+                userId = userId,
+                projectCode = projectCode,
+                permission = AuthPermission.VISIT
             )
         } finally {
             logger.info(
@@ -166,16 +163,6 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
-        members.forEach {
-            deptService.getUserInfo(
-                userId = "admin",
-                name = it
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(it),
-                defaultMessage = "user $it not exist"
-            )
-        }
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
             authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
@@ -197,10 +184,42 @@ class RbacPermissionProjectService(
             params = arrayOf(roleCode),
             defaultMessage = "group $roleCode not exist"
         )
-        val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
-        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
-        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
-        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
+        val type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+        val pageInfoDTO = V2PageInfoDTO().apply {
+            pageSize = 1000
+            page = 1
+        }
+        val groupMemberMap = iamV2ManagerService.getRoleGroupMemberV2(
+            iamGroupId.toInt(),
+            pageInfoDTO
+        ).results.filter {
+            it.type == type
+        }.associateBy { it.name }
+        val addMembers = mutableListOf<String>()
+        // 预期的过期天数
+        val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
+        members.forEach {
+            // 如果用户已经在用户组,并且过期时间超过30天,则不再添加
+            if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
+                return@forEach
+            }
+            deptService.getUserInfo(
+                userId = "admin",
+                name = it
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                params = arrayOf(it),
+                defaultMessage = "user $it not exist"
+            )
+            addMembers.add(it)
+        }
+        if (addMembers.isNotEmpty()) {
+            val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
+            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+            val managerMemberGroup =
+                ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
+            iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
+        }
         return true
     }
 
@@ -225,14 +244,18 @@ class RbacPermissionProjectService(
             resourceCode = projectCode,
             groupCode = BkAuthGroup.MANAGER.value
         )!!.relationId.toInt()
+
+        val remotedevManager = projectInfo.properties?.remotedevManager?.split(",")
+        val members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+
         val owners = projectGroupAndUserList
             .find { it.roleId == managerGroupRelationId }?.userIdList ?: emptyList()
         return ProjectPermissionInfoVO(
             projectCode = projectCode,
             projectName = projectInfo.projectName,
             creator = projectInfo.creator!!,
-            owners = owners,
-            members = projectGroupAndUserList.flatMap { it.userIdList }.distinct()
+            owners = remotedevManager?.plus(owners)?.distinct() ?: owners,
+            members = remotedevManager?.plus(members)?.distinct() ?: members
         )
     }
 }

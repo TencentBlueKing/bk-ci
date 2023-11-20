@@ -28,13 +28,14 @@
 package com.tencent.devops.process.yaml.v3.stageCheck
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StageReviews(
     val flows: List<Flow>?,
     val variables: Map<String, ReviewVariable>?,
     val description: String?,
-    val sendMarkdown: Boolean?,
+    val contentFormat: ContentFormat,
     val notifyType: List<String>?,
     val notifyGroups: List<String>?
 )

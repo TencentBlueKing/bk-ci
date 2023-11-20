@@ -34,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
@@ -57,7 +58,7 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     val desc: String?
     val label: List<String>?
     val notices: List<Notices>?
-    val concurrency: Concurrency?
+    var concurrency: Concurrency?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI)
 
@@ -70,6 +71,8 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     fun formatFinallyStage(): List<Job>
 
     fun formatResources(): Resources?
+
+    fun templateFilter(): ITemplateFilter
 }
 
 /*
@@ -86,12 +89,12 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     JsonSubTypes.Type(value = PreTemplateScriptBuildYaml::class, name = YamlVersion.Version.V2)
 )
 interface ITemplateFilter : YamlVersion {
-    val variables: Map<String, Any>?
-    val stages: ArrayList<Map<String, Any>>?
+    var variables: Map<String, Any>?
+    var stages: ArrayList<Map<String, Any>>?
     val jobs: LinkedHashMap<String, Any>?
     val steps: ArrayList<Map<String, Any>>?
-    val extends: Extends?
-    val resources: Resources?
+    var extends: Extends?
+    var resources: Resources?
     var finally: LinkedHashMap<String, Any>?
 
     fun initPreScriptBuildYamlI(): PreScriptBuildYamlI
@@ -110,21 +113,22 @@ data class PreTemplateScriptBuildYaml(
     override val desc: String?,
     override val label: List<String>? = null,
     @JsonProperty("on")
-    val triggerOn: PreTriggerOn?,
-    override val variables: Map<String, Any>?,
-    override val stages: ArrayList<Map<String, Any>>?,
+    var triggerOn: PreTriggerOn? = null,
+    override var variables: Map<String, Any>? = null,
+    override var stages: ArrayList<Map<String, Any>>? = null,
     override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: ArrayList<Map<String, Any>>? = null,
-    override val extends: Extends?,
-    override val resources: Resources?,
-    override var finally: LinkedHashMap<String, Any>?,
+    override var extends: Extends? = null,
+    override var resources: Resources? = null,
+    override var finally: LinkedHashMap<String, Any>? = null,
     override val notices: List<GitNotices>?,
-    override val concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {
         version = YamlVersion.Version.V2
     }
+
     override fun yamlVersion() = YamlVersion.Version.V2_0
 
     override fun initPreScriptBuildYamlI(): PreScriptBuildYamlI {
@@ -166,9 +170,10 @@ data class PreTemplateScriptBuildYaml(
     }
 
     override fun formatResources(): Resources? {
-        checkInitialized()
-        return preYaml.resources
+        return resources
     }
+
+    override fun templateFilter(): ITemplateFilter = this
 
     private fun checkInitialized() {
         if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")

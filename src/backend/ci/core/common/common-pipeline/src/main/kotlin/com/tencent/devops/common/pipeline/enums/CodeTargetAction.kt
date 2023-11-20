@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.enums
 
 enum class CodeTargetAction(val desc: String) {
+
     COMMIT_TO_MASTER("提交到主干"),
     CHECKOUT_BRANCH_AND_REQUEST_MERGE("新建分支创建MR"),
     PUSH_BRANCH_AND_REQUEST_MERGE("在原始版本分支创建MR");

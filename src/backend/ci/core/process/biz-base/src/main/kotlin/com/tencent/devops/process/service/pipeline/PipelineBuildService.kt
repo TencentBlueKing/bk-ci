@@ -221,7 +221,8 @@ class PipelineBuildService(
         pipeline: PipelineInfo,
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
-        isMobile: Boolean
+        isMobile: Boolean,
+        debug: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -266,7 +267,7 @@ class PipelineBuildService(
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
 
-        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+        if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,
             value = BuildMsgUtils.getBuildMsg(
                 buildMsg = startValues?.get(PIPELINE_BUILD_MSG)

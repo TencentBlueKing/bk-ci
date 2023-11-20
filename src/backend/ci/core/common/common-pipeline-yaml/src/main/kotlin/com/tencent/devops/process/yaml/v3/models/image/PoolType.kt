@@ -53,7 +53,8 @@ enum class PoolType {
                 imageType = pool.image?.imageType ?: ImageType.THIRD,
                 credentialId = pool.credentialId,
                 imageVersion = pool.image?.imageVersion,
-                imageCode = pool.image?.imageCode
+                imageCode = pool.image?.imageCode,
+                performanceConfigId = pool.performanceConfigId?.toInt() ?: 0
             )
         }
 
@@ -68,11 +69,19 @@ enum class PoolType {
                 return RunsOn(
                     selfHosted = null,
                     poolName = JobRunsOnType.DOCKER.type,
+                    hwSpec = dispatcher.performanceConfigId.toString(),
                     container = when (dispatcher.imageType) {
-                        ImageType.BKSTORE, ImageType.THIRD -> Container2(
+                        ImageType.BKSTORE -> Container2(
+                            imageCode = dispatcher.dockerBuildVersion,
+                            imageVersion = dispatcher.imageVersion,
+                            credentials = dispatcher.credentialId
+                        )
+
+                        ImageType.THIRD -> Container2(
                             image = "${dispatcher.dockerBuildVersion}:${dispatcher.imageVersion}",
                             credentials = dispatcher.credentialId
                         )
+
                         else -> null
                     }
                 )
@@ -89,21 +98,6 @@ enum class PoolType {
                     envName = pool.envName,
                     workspace = pool.workspace,
                     agentType = AgentType.NAME,
-                    dockerInfo = pool.dockerInfo
-                )
-            } else if (!pool.envId.isNullOrBlank()) {
-                return ThirdPartyAgentEnvDispatchType(
-                    envProjectId = pool.envProjectId,
-                    envName = pool.envId,
-                    workspace = pool.workspace,
-                    agentType = AgentType.ID,
-                    dockerInfo = pool.dockerInfo
-                )
-            } else if (!pool.agentId.isNullOrBlank()) {
-                return ThirdPartyAgentIDDispatchType(
-                    displayName = pool.agentId,
-                    workspace = pool.workspace,
-                    agentType = AgentType.ID,
                     dockerInfo = pool.dockerInfo
                 )
             } else {
@@ -133,7 +127,8 @@ enum class PoolType {
             if (dispatcher is ThirdPartyAgentIDDispatchType) {
                 return RunsOn(
                     selfHosted = true,
-                    poolName = dispatcher.displayName,
+                    poolName = null,
+                    nodeName = dispatcher.displayName,
                     poolType = if (dispatcher.agentType == AgentType.NAME) {
                         JobRunsOnPoolType.AGENT_NAME.name
                     } else {
@@ -150,7 +145,6 @@ enum class PoolType {
             if (dockerInfo == null) return null
             return Container3(
                 image = dockerInfo.image,
-                imageType = null,
                 credentials = with(dockerInfo.credential) {
                     when {
                         this == null -> null
@@ -165,8 +159,8 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.agentName && null == pool.agentId && null == pool.envId && null == pool.envName) {
-                throw OperationException("当pool.type=$this, agentName/agentId/envId/envName参数不能全部为空")
+            if (null == pool.agentName && null == pool.envName) {
+                throw OperationException("当pool.type=$this, agentName/envName参数不能全部为空")
             }
         }
     }
