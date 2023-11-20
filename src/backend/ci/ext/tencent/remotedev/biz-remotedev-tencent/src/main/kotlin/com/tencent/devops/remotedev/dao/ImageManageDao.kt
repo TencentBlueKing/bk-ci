@@ -21,6 +21,7 @@ class ImageManageDao {
         return with(TProjectImages.T_PROJECT_IMAGES) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
@@ -32,6 +33,7 @@ class ImageManageDao {
         projectId: String,
         imageId: String,
         imageName: String,
+        userId: String,
         imageStatus: ImageStatus,
         dslContext: DSLContext
     ) {
@@ -41,11 +43,13 @@ class ImageManageDao {
                 PROJECT_ID,
                 IMAGE_ID,
                 IMAGE_NAME,
+                CREATOR,
                 STATUS
             ).values(
                 projectId,
                 imageId,
                 imageName,
+                userId,
                 imageStatus.ordinal
             ).execute()
         }

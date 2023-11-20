@@ -29,9 +29,9 @@ package com.tencent.devops.remotedev.pojo.image
 
 data class WorkspaceImageInfo(
     val imageId: String,
-    val imageCosFile: String,
-    val size: String,
-    val sourceCgsId: String,
-    val sourceCgsType: String,
-    val sourceCgsZone: String
+    val imageCosFile: String? = "",
+    val size: String? = "",
+    val sourceCgsId: String? = "",
+    val sourceCgsType: String? = "",
+    val sourceCgsZone: String? = ""
 )

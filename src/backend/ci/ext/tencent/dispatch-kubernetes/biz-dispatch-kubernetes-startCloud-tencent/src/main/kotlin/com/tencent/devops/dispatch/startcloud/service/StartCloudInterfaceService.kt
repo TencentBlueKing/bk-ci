@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.startcloud.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.startcloud.client.WorkspaceStartCloudClient
@@ -49,8 +48,7 @@ import org.springframework.stereotype.Service
 class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val dispatchWorkspaceDao: DispatchWorkspaceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -102,15 +100,28 @@ class StartCloudInterfaceService @Autowired constructor(
 
     // 同步更新云桌面资源池列表
     fun syncStartCloudResourceList(): List<EnvironmentResourceData> {
-        val resourceList = workspaceClient.getResourceList()
-        val lockedVms = workspaceClient.getLockedVmList()
-        resourceList.forEach {
-            if (it.cgsId in lockedVms) it.locked = true
+        val resList = mutableListOf<EnvironmentResourceData>()
+        val cgs = workspaceClient.listCgs()
+        cgs.forEach {
+            resList.add(
+                EnvironmentResourceData(
+                    cgsId = it.cgsData.cgsId,
+                    cgsIp = it.cgsData.cgsIp,
+                    zoneId = it.cgsData.zoneId,
+                    machineType = it.cgsData.machineType,
+                    status = it.cgsData.status,
+                    userInstanceList = it.cgsData.userInstanceList,
+                    locked = it.basic?.needLock,
+                    projectId = it.basic?.projectId ?: "",
+                    disk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "ssd" }?.pvcSize,
+                    hDisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize
+                )
+            )
         }
-        logger.info("syncStartCloudResourceList|resourceList|$resourceList")
+        logger.info("syncStartCloudResourceList|resourceList|${resList.size}")
         windowsGpuResourceDao.deleteAllResource(dslContext)
-        windowsGpuResourceDao.createOrUpdateResource(dslContext, resourceList)
-        return resourceList
+        windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
+        return resList
     }
 
     // 获取cgs信息
@@ -131,7 +142,10 @@ class StartCloudInterfaceService @Autowired constructor(
                 machineType = it.machineType,
                 status = it.status,
                 userInstanceList = null,
-                locked = ByteUtils.byte2Bool(it.locked)
+                locked = ByteUtils.byte2Bool(it.locked),
+                projectId = it.projectId,
+                disk = it.disk,
+                hDisk = it.hdisk
             )
         }
     }

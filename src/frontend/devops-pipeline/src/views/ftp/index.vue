@@ -108,7 +108,12 @@
                 return new Promise((resolve, reject) => {
                     const s = document.createElement('script')
                     s.src = url
-                    s.onload = () => resolve(s)
+                    s.onload = () => {
+                        if (window.__ftp_content__) {
+                            window.__ftp_content__(this)
+                        }
+                        resolve(s)
+                    }
                     s.onerror = reject
                     parent.appendChild(s)
                 })
