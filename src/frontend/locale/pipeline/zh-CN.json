@@ -354,7 +354,8 @@
     "imgUrl": "图片url",
     "mdLink": "markdown链接",
     "conCopySuc": "内容复制成功",
-    "additionDesc": "其他描述"
+    "additionDesc": "其他描述",
+    "voice": "语音"
   },
   "template": {
     "addTemplate": "新建模板",

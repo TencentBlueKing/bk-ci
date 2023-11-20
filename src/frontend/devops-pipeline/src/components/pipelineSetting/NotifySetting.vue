@@ -73,8 +73,9 @@
         computed: {
             noticeList () {
                 return [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ]
