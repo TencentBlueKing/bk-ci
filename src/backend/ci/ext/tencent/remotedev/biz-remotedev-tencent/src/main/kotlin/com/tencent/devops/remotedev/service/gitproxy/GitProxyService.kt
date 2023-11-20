@@ -1,10 +1,17 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.dao.RemoteDevCodeProxyDao
 import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
@@ -24,6 +31,15 @@ class GitProxyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val codeProxyDao: RemoteDevCodeProxyDao
 ) {
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#data?.repoName",
+            instanceIds = "#data?.repoName"
+        ),
+        content = ActionAuditContent.CODE_PROXY_CREATE_CONTENT
+    )
     fun createRepo(
         userId: String,
         data: CreateGitProxyData
@@ -43,6 +59,11 @@ class GitProxyService @Autowired constructor(
             category = BkRepoCategory.PROXY,
             enableLfs = false
         )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+            .scopeId = data.projectId
+
         var lfsRespData: CreateRepoRespData? = null
         val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
         if (enableLfs) {
@@ -130,6 +151,17 @@ class GitProxyService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#repoName",
+            instanceIds = "#repoName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CODE_PROXY_DELETE_CONTENT
+    )
     fun deleteRepo(
         userId: String,
         projectId: String,
