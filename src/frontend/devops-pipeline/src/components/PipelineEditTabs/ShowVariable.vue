@@ -1,10 +1,10 @@
 <template>
     <section class="variable-version-wrapper">
-        <div class="variable-entry" :class="{ 'is-close': !openVar }" @click="toggleOpenVar">
+        <div class="variable-entry" :class="{ 'is-close': !showVariable }" @click="toggleOpenVar">
             <i class="bk-devops-icon bk-icon icon-expand-line"></i>
             变量
         </div>
-        <div v-if="openVar" class="variable-version-container">
+        <div v-if="showVariable" class="variable-version-container">
             <div class="select-tab-container">
                 <div class="tab-content">
                     <div
@@ -19,24 +19,28 @@
                 </div>
             </div>
             <div class="content-wrapper">
-                <pipeline-param v-if="active === 'variable'" :params="params" :update-container-params="handleContainerChange" />
-                <div v-else>
-                    <pipeline-version :params="params" :build-no="buildNo" :update-container-params="handleContainerChange" />
-                </div>
+                <pipeline-param v-if="active === 'pipeline'" :params="params" :update-container-params="handleContainerChange" />
+                <atom-output-var :stages="stages" v-else-if="active === 'atomOutput'" />
+                <system-var :container="container" v-else-if="active === 'system'" />
+                <pipeline-version v-else :params="params" :build-no="buildNo" :update-container-params="handleContainerChange" />
             </div>
         </div>
     </section>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import PipelineParam from './components/pipeline-param'
     import PipelineVersion from './components/pipeline-version'
+    import AtomOutputVar from './components/atom-output-var'
+    import SystemVar from './components/system-var'
 
     export default {
         components: {
             PipelineParam,
-            PipelineVersion
+            PipelineVersion,
+            AtomOutputVar,
+            SystemVar
         },
         props: {
             pipeline: {
@@ -47,14 +51,21 @@
         data () {
             return {
                 panels: [
-                    { name: 'variable', label: '流水线变量' },
-                    { name: 'version', label: '推荐版本号' }
+                    { name: 'pipeline', label: this.$t('流水线变量') },
+                    { name: 'atomOutput', label: this.$t('插件输出变量') },
+                    { name: 'system', label: this.$t('系统变量') },
+                    { name: 'version', label: this.$t('推荐版本号') }
                 ],
-                active: 'variable',
-                openVar: true
+                active: 'pipeline'
             }
         },
         computed: {
+            ...mapState('atom', [
+                'showVariable'
+            ]),
+            stages () {
+                return this.pipeline?.stages || []
+            },
             container () {
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
@@ -66,9 +77,15 @@
             }
 
         },
+        created () {
+            this.requestCommonParams()
+        },
         methods: {
             ...mapActions('atom', [
-                'updateContainer'
+                'setShowVariable',
+                'toggleAtomSelectorPopup',
+                'updateContainer',
+                'requestCommonParams'
             ]),
             handleContainerChange (name, value) {
                 this.updateContainer({
@@ -80,7 +97,11 @@
                 console.log(this.params, 'final')
             },
             toggleOpenVar () {
-                this.openVar = !this.openVar
+                // 打开变量面板的同时关闭插件选择
+                if (!this.showVariable) {
+                    this.toggleAtomSelectorPopup(false)
+                }
+                this.setShowVariable(!this.showVariable)
             },
             selectTab (tab) {
                 this.active = tab
@@ -92,6 +113,7 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
+    @import "@/scss/mixins/scroller.scss";
     .edit-var-container {
         .edit-var-content {
             padding: 20px 24px;
@@ -106,20 +128,22 @@
         /* .bk-s */
     }
     .variable-entry {
-        z-index: 100;
+        z-index: 2017;
         position: absolute;
-        right: 480px;
-        top: 24px;
+        right: 460px;
+        top: calc(50% - 50px);
         writing-mode: vertical-lr;
-        padding: 8px 4px;
-        background: #C4C6CC;
+        padding: 30px 2px;
+        background: #A3C5FD;
         cursor: pointer;
-        border-radius: 4px 0 0 4px;
+        border-radius: 0 4px 4px 0;
         font-size: 12px;
         line-height: 16px;
         color: #FFF;
         &.is-close {
-            right: 0px;
+            right: 0;
+            border-radius: 4px 0 0 4px;
+            background: #699DF4;
             .icon-expand-line {
                 display: inline-block;
                 transform: rotate(180deg);
@@ -127,14 +151,14 @@
         }
     }
     .variable-version-container {
-        z-index: 10;
+        z-index: 2016;
         width: 480px;
         position: absolute;
         top: 0;
         right: 0;
         height: 100%;
         background-color: #FAFBFD;
-        padding: 8px 0px 16px;
+        border: 1px solid #DCDEE5;
         .select-tab-container {
             border-bottom: 1px solid #ebf0f5;
             .tab-content {
@@ -152,104 +176,54 @@
                         color: #3A84FF;
                         border-bottom: 2px solid #3A84FF;
                     }
+                    &:last-child {
+                        margin-right: 16px;
+                    }
                 }
             }
         }
         .content-wrapper {
+            height: calc(100% - 40px);
             padding: 8px 24px 20px;
-            .variable-container {
-                .circle {
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                }
-                .add-and-desc {
-                    margin: 16px 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    .status-desc {
-                        display: flex;
-                        align-items: center;
-                        .desc-item {
-                            display: flex;
-                            align-items: center;
-                            margin-left: 16px;
-                            font-size: 12px;
-                            color: #979BA5;
-                            .status-desc {
-                                margin-left: 4px;
-                            }
-                        }
-                    }
-                }
-                .variable-content {
-                    width: 100%;
-                    min-height: 64px;
-                    border: 1px solid #DCDEE5;
-                    border-bottom: none;
-                    .variable-empty {
-                        height: 200px;
-                        border-bottom: 1px solid #DCDEE5;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                        color:#63656E;
-                    }
-                    .variable-item {
-                        position: relative;
-                        height: 64px;
-                        border-bottom: 1px solid #DCDEE5;
-                        padding-left: 24px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        .var-con {
-                            font-size: 12px;
-                            letter-spacing: 0;
-                            line-height: 20px;
-                            flex: 1;
-                            overflow: hidden;
-                            .var-names {
-                                color: #313238;
-                                flex-shrink: 0;
-                            }
-                            .default-value {
-                                color: #979BA5;
-                                @include ellipsis();
-                                width: 100%;
-                            }
-                        }
-                        .var-operate {
-                            .var-status {
-                                margin-right: 16px;
-                                display: flex;
-                                align-items: center;
-                                .circle {
-                                    margin-left: 8px;
-                                }
-                            }
-                            .operate-btns {
-                                width: 76px;
-                                height: 62px;
-                                background-color: #F5F7FA;
-                                display: flex;
-                                align-items: center;
-                                padding: 0 18px;
-                                i {
-                                    cursor: pointer;
-                                    font-size: 14px;
-                                    color: #63656E;
-                                }
-                            }
-                        }
-                    }
-                }
+            overflow-y: auto;
+            @include scroller(#a5a5a5, 4px);
+        }
+    }
+    .current-edit-param-item {
+        z-index: 11;
+        width: 480px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        background-color: #FFF;
+        border: 1px solid #DCDEE5;
+        .edit-var-header {
+            display: flex;
+            align-items: center;
+            height: 40px;
+            font-size: 16px;
+            color: #313238;
+            border-bottom: 1px solid #DCDEE5;
+            padding: 0 4px;
+            .back-icon {
+                cursor: pointer;
+                font-size: 28px;
+                color: #3A84FF;
             }
-            .version-container {
-
-            }
+        }
+        .edit-var-content {
+            padding: 24px 40px;
+        }
+        .edit-var-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 24px;
+            border-top: 1px solid #DCDEE5;
         }
     }
 </style>

@@ -30,6 +30,10 @@
                 type: Boolean,
                 default: true
             },
+            zIndex: {
+                type: Number,
+                default: 2500
+            },
             isLoading: {
                 type: Boolean,
                 default: false
@@ -94,6 +98,7 @@
                     multiple: this.multiSelect,
                     clearable: this.clearable,
                     placeholder: this.placeholder,
+                    zIndex: this.zIndex,
                     'search-key': this.displayKey,
                     'popover-options': this.popoverOptions,
                     'enable-virtual-scroll': this.list.length > 3000,

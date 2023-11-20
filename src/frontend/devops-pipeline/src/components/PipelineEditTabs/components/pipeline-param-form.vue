@@ -1,15 +1,15 @@
 <template>
     <section>
         <bk-form form-type="vertical" class="new-ui-form" :key="param">
-            <form-field :required="true" :label="$t('变量名')" :is-error="errors.has(`id`)" :error-msg="errors.first(`id`)">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" v-validate.initial="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+            <form-field :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
+                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
             </form-field>
 
-            <form-field :required="true" :label="$t('变量别名')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" v-validate.initial="`required|unique:${globalParams.map(p => p.name).join(',')}`" name="name" :placeholder="$t('请输入别名')" :value="param.name" />
+            <form-field :required="true" :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
+                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`required|unique:${globalParams.map(p => p.name).join(',')}`" name="name" :placeholder="$t('请输入别名')" :value="param.name" />
             </form-field>
 
-            <form-field :required="true" :label="$t('editPage.paramsType')">
+            <form-field :required="true" :label="typeLabel">
                 <selector
                     :popover-min-width="246"
                     :disabled="disabled"
@@ -21,38 +21,46 @@
                 />
             </form-field>
 
-            <param-value-option :param="param" :disabled="disabled" :handle-change="handleUpdateParam"></param-value-option>
+            <param-value-option
+                :param="param"
+                :disabled="disabled"
+                :value-required="paramType === 'constant'"
+                :handle-change="handleUpdateParam"
+            >
+            </param-value-option>
 
             <form-field :label="$t('desc')">
                 <vuex-textarea :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
             </form-field>
 
-            <form-field>
-                <atom-checkbox
-                    name="required"
-                    :text="$t('editPage.showOnExec')"
-                    :disabled="disabled"
-                    :value="param.required"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)" />
-                <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('editPage.入参tips')" />
-                <atom-checkbox
-                    name="valueNotEmpty"
-                    class="neccessary-checkbox"
-                    v-if="param.required"
-                    :disabled="disabled"
-                    :text="$t('editPage.required')"
-                    :value="param.valueNotEmpty"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)" />
-            </form-field>
-            <form-field>
-                <atom-checkbox
-                    name="readOnly"
-                    :disabled="disabled"
-                    :text="$t('editPage.readOnlyOnRun')"
-                    :value="param.readOnly"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)" />
-                <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('editPage.只读tips')" />
-            </form-field>
+            <template v-if="paramType !== 'constant'">
+                <form-field>
+                    <atom-checkbox
+                        name="required"
+                        :text="$t('editPage.showOnExec')"
+                        :disabled="disabled"
+                        :value="param.required"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                    <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('editPage.入参tips')" />
+                    <atom-checkbox
+                        name="valueNotEmpty"
+                        class="neccessary-checkbox"
+                        v-if="param.required"
+                        :disabled="disabled"
+                        :text="$t('editPage.required')"
+                        :value="param.valueNotEmpty"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                </form-field>
+                <form-field>
+                    <atom-checkbox
+                        name="readOnly"
+                        :disabled="disabled"
+                        :text="$t('editPage.readOnlyOnRun')"
+                        :value="param.readOnly"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)" />
+                    <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('editPage.只读tips')" />
+                </form-field>
+            </template>
         </bk-form>
     </section>
 </template>
@@ -89,6 +97,10 @@
                 type: Number,
                 default: -1
             },
+            paramType: {
+                type: String,
+                default: 'var'
+            },
             editItem: {
                 type: Object,
                 default: () => ({})
@@ -116,6 +128,15 @@
             }
         },
         computed: {
+            idLabel () {
+                return this.paramType === 'constant' ? this.$t('常量名') : this.$t('变量名')
+            },
+            nameLabel () {
+                return this.paramType === 'constant' ? this.$t('常量别名') : this.$t('变量别名')
+            },
+            typeLabel () {
+                return this.paramType === 'constant' ? this.$t('常量类型') : this.$t('editPage.paramsType')
+            },
             paramsList () {
                 return PARAM_LIST.map(item => {
                     return {
@@ -128,6 +149,9 @@
         created () {
             if (this.editIndex === -1) {
                 this.param = deepCopy(DEFAULT_PARAM[STRING])
+                if (this.paramType === 'constant') {
+                    Object.assign(this.param, { constant: true, required: false })
+                }
                 this.resetEditItem(this.param)
             } else {
                 Object.assign(this.param, this.editItem)

@@ -1,6 +1,7 @@
 <template>
     <bk-sideslider
         class="bkci-property-panel"
+        :class="{ 'with-variable-open': showVariable }"
         :is-show.sync="visible"
         :width="640"
         :quick-close="true"
@@ -12,7 +13,6 @@
                 <p v-if="!nameEditing">{{ atomCode ? element.name : this.$t('editPage.pendingAtom') }}</p>
                 <i v-if="atomCode && editable" @click="toggleEditName(true)" class="devops-icon icon-edit" :class="nameEditing ? 'editing' : ''" />
             </div>
-            <reference-variable :global-envs="globalEnvs" :stages="stages" :container="container" />
         </header>
         <atom-content v-bind="$props" slot="content">
             <template slot="footer">
@@ -24,14 +24,12 @@
 
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
-    import ReferenceVariable from './ReferenceVariable'
     import AtomContent from './AtomContent.vue'
     import { navConfirm } from '@/utils/util'
 
     export default {
         name: 'atom-property-panel',
         components: {
-            ReferenceVariable,
             AtomContent
         },
         props: {
@@ -57,6 +55,7 @@
         },
         computed: {
             ...mapState('atom', [
+                'showVariable',
                 'globalEnvs',
                 'isPropertyPanelVisible'
             ]),
