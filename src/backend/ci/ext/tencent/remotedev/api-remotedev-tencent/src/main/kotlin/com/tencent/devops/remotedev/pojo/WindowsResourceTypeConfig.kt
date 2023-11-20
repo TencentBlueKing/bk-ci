@@ -46,8 +46,12 @@ data class WindowsResourceTypeConfig(
     val vgpu: String? = "",
     @ApiModelProperty("CPU")
     val cpu: Int,
+    @ApiModelProperty("vCPU")
+    val vcpu: String? = "",
     @ApiModelProperty("内存")
     val memory: Int,
+    @ApiModelProperty("独享内存")
+    val vmemory: String? = "",
     @ApiModelProperty("数据盘，本地SSD盘")
     val disk: String,
     @ApiModelProperty("云SSD盘")

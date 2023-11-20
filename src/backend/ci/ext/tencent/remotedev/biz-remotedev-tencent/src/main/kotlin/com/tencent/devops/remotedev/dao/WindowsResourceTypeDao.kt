@@ -53,7 +53,9 @@ class WindowsResourceTypeDao {
                 GPU,
                 VGPU,
                 CPU,
+                VCPU,
                 MEMORY,
+                VMEMORY,
                 DISK,
                 HDISK,
                 SDISK,
@@ -65,7 +67,9 @@ class WindowsResourceTypeDao {
                 config.gpu,
                 config.vgpu,
                 config.cpu,
+                config.vcpu,
                 config.memory,
+                config.vmemory,
                 config.disk,
                 config.hdisk,
                 config.sdisk,
@@ -122,9 +126,9 @@ class WindowsResourceTypeDao {
             dslContext.update(this)
                 .set(SIZE, config.size)
                 .set(TYPE, config.type ?: "")
-                .set(GPU, config.gpu)
-                .set(CPU, config.cpu)
-                .set(MEMORY, config.memory)
+                .set(VGPU, config.vgpu)
+                .set(VCPU, config.vcpu)
+                .set(VMEMORY, config.vmemory)
                 .set(DISK, config.disk)
                 .set(HDISK, config.hdisk)
                 .set(SDISK, config.sdisk)
@@ -160,7 +164,9 @@ class WindowsResourceTypeDao {
                     gpu = gpu,
                     vgpu = vgpu,
                     cpu = cpu,
+                    vcpu = vcpu,
                     memory = memory,
+                    vmemory = vmemory,
                     disk = disk,
                     hdisk = hdisk,
                     sdisk = sdisk,
