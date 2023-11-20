@@ -54,9 +54,8 @@ import com.tencent.devops.common.ci.image.PoolType as TXPoolType
 class TXDispatchTransfer @Autowired(required = false) constructor(
     client: Client,
     objectMapper: ObjectMapper,
-    inner: TransferCreator,
-    transferCache: TransferCacheService
-) : DispatchTransfer(client, objectMapper, inner, transferCache) {
+    inner: TransferCreator
+) : DispatchTransfer(client, objectMapper, inner) {
 
     override fun dispatcherLinux(
         job: Job,
