@@ -57,7 +57,6 @@ class BkAuditRequestProvider : AuditRequestProvider {
         val httpServletRequest = getHttpServletRequest()
         val requestChannel = (httpServletRequest.getAttribute(REQUEST_CHANNEL)
             ?: httpServletRequest.getHeader(REQUEST_CHANNEL))?.toString()
-        logger.debug("get request channel :$requestChannel")
         return when (requestChannel) {
             RequestChannelTypeEnum.USER.name,
             RequestChannelTypeEnum.OP.name -> AccessTypeEnum.WEB
