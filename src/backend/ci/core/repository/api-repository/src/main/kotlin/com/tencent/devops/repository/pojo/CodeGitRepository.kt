@@ -82,4 +82,6 @@ data class CodeGitRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

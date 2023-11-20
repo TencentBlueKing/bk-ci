@@ -65,7 +65,7 @@ enum class PipelineTriggerType {
 
     // 服务触发
     @ApiModelProperty("服务触发")
-    SERVICE,
+    OPENAPI,
 
     // 流水线触发
     @ApiModelProperty("流水线触发")

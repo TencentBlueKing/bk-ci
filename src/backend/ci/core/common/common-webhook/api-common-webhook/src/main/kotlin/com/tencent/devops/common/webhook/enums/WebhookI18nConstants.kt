@@ -68,7 +68,13 @@ object WebhookI18nConstants {
     const val REMOTE_START_EVENT_DESC = "bkRemoteStartEventDesc"
 
     // openApi触发
-    const val SERVICE_START_EVENT_DESC = "bkServiceStartEventDesc"
+    const val OPENAPI_START_EVENT_DESC = "bkServiceStartEventDesc"
+
+    // 流水线触发
+    const val PIPELINE_START_EVENT_DESC = "bkPipelineStartEventDesc"
+
+    // 定时触发
+    const val TIMING_START_EVENT_DESC = "bkTimingStartEventDesc"
 
     // 事件类型匹配
     const val EVENT_TYPE_MATCHED = "bkRepoTriggerEventTypeMatched"
@@ -121,6 +127,6 @@ object WebhookI18nConstants {
     // issues操作类型不匹配
     const val ISSUES_ACTION_NOT_MATCH = "bkRepoTriggerIssueActionNotMatch"
 
-    // 事件回放匹配码后缀
+    // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
 }

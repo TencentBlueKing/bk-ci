@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
 object RepositoryConfigUtils {
 
@@ -133,19 +135,83 @@ object RepositoryConfigUtils {
             )
         }
 
+    fun buildWebhookConfig(
+        element: Element,
+        variables: Map<String, String>
+    ): Triple<ScmType, CodeEventType?, RepositoryConfig> {
+        return when (element) {
+            is CodeGitWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_GIT, element.eventType, repositoryConfig)
+            }
+
+            is CodeSVNWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_SVN, CodeEventType.PUSH_COMMIT, repositoryConfig)
+            }
+
+            is CodeGitlabWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_GITLAB, element.eventType, repositoryConfig)
+            }
+
+            is CodeGithubWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
+                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.GITHUB, element.eventType, repositoryConfig)
+            }
+
+            is CodeTGitWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.data.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_TGIT, element.data.input.eventType, repositoryConfig)
+            }
+
+            is CodeP4WebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.data.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_P4, element.data.input.eventType, repositoryConfig)
+            }
+
+            else ->
+                throw InvalidParamException("Unknown code element -> $element")
+        }
+    }
+
     fun getRepositoryConfig(
         repoHashId: String?,
         repoName: String?,
         repoType: RepositoryType?,
-        variable: Map<String, String>? = null
+        variables: Map<String, String>? = null
     ): RepositoryConfig {
         return when (repoType) {
             RepositoryType.ID -> RepositoryConfig(repoHashId, null, RepositoryType.ID)
             RepositoryType.NAME -> {
-                val repositoryName = if (variable.isNullOrEmpty()) {
+                val repositoryName = if (variables.isNullOrEmpty()) {
                     repoName!!
                 } else {
-                    EnvUtils.parseEnv(repoName!!, variable)
+                    EnvUtils.parseEnv(repoName!!, variables)
                 }
                 RepositoryConfig(null, repositoryName, RepositoryType.NAME)
             }
@@ -153,10 +219,10 @@ object RepositoryConfigUtils {
                 if (!repoHashId.isNullOrBlank()) {
                     RepositoryConfig(repoHashId, null, RepositoryType.ID)
                 } else if (!repoName.isNullOrBlank()) {
-                    val repositoryName = if (variable.isNullOrEmpty()) {
+                    val repositoryName = if (variables.isNullOrEmpty()) {
                         repoName
                     } else {
-                        EnvUtils.parseEnv(repoName, variable)
+                        EnvUtils.parseEnv(repoName, variables)
                     }
                     RepositoryConfig(null, repositoryName, RepositoryType.NAME)
                 } else {

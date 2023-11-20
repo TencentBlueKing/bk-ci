@@ -48,9 +48,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_CLIENT_IP
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.jooq.DSLContext
@@ -63,14 +61,12 @@ import org.springframework.stereotype.Service
 class PipelineRemoteAuthService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineRemoteAuthDao: PipelineRemoteAuthDao,
-    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineReportService: PipelineRepositoryService,
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val bkTag: BkTag,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildVariableService: BuildVariableService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val buildVariableService: BuildVariableService
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
@@ -122,7 +118,9 @@ class PipelineRemoteAuthService @Autowired constructor(
         if (!startUser.isNullOrBlank()) {
             vals[PIPELINE_START_REMOTE_USER_ID] = startUser
         }
-
+        if (!sourceIp.isNullOrBlank()) {
+            vals[PIPELINE_START_REMOTE_CLIENT_IP] = sourceIp
+        }
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         // #5779 为兼容多集群的场景。流水线的启动需要路由到项目对应的集群。此处携带X-DEVOPS-PROJECT-ID头重新请求网关,由网关路由到项目对应的集群
         /* #7095 因Bktag设置了router_tag 默认为本集群，导致网关不会根据X-DEVOPS-PROJECT-ID路由。故直接根据项目获取router
@@ -131,24 +129,15 @@ class PipelineRemoteAuthService @Autowired constructor(
         return bkTag.invokeByTag(projectConsulTag) {
             logger.info("start call service api ${pipeline.projectId} ${pipeline.pipelineId}, " +
                     "$projectConsulTag ${bkTag.getFinalTag()}")
-            val buildId = pipelineTriggerEventService.saveSpecificEvent(
+            val buildId = client.getGateway(ServiceBuildResource::class).manualStartupNew(
+                userId = userId!!,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
-                requestParams = vals.toMap(),
-                userId = userId!!,
-                triggerType = PipelineTriggerType.REMOTE.name,
-                startAction = {
-                    client.getGateway(ServiceBuildResource::class).manualStartupNew(
-                        userId = userId!!,
-                        projectId = pipeline.projectId,
-                        pipelineId = pipeline.pipelineId,
-                        values = vals.toMap(),
-                        channelCode = ChannelCode.BS,
-                        startType = StartType.REMOTE,
-                        buildNo = null
-                    ).data!!
-                }
-            )
+                values = vals.toMap(),
+                channelCode = ChannelCode.BS,
+                startType = StartType.REMOTE,
+                buildNo = null
+            ).data!!
             // 在远程触发器job中打印sourcIp
             val taskId = buildVariableService.getVariable(
                 projectId = pipeline.projectId,

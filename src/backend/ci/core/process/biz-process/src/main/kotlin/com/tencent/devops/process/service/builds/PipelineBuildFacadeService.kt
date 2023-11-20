@@ -695,7 +695,6 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,

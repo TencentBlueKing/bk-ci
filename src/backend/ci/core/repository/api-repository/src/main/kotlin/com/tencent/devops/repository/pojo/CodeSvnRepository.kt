@@ -92,4 +92,6 @@ data class CodeSvnRepository(
     }
 
     override fun getStartPrefix() = "svn+ssh://"
+
+    override fun getExternalId(): String = projectName
 }
