@@ -17,6 +17,11 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpScmWebhookResource {
 
+    @ApiOperation("更新所有的webhook项目名")
+    @PUT
+    @Path("/updateProjectNameAndTaskId")
+    fun updateProjectNameAndTaskId(): Result<Boolean>
+
     @ApiOperation("更新webhook secret")
     @PUT
     @Path("/updateWebhookSecret")

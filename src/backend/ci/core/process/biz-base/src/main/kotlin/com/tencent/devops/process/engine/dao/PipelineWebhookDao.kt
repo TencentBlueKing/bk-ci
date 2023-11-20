@@ -294,7 +294,7 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         repositoryHashId: String?,
         eventType: String,
-        externalId: String,
+        externalId: String?,
         pipelineId: String,
         projectId: String,
         taskId: String
