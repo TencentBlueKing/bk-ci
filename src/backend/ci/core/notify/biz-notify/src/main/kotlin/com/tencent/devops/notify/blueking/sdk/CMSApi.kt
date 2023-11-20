@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
+import com.tencent.devops.common.notify.pojo.VoiceNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiReq
@@ -40,11 +41,13 @@ import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.blueking.sdk.pojo.SendMailReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendQyWxReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendSmsReq
+import com.tencent.devops.notify.blueking.sdk.pojo.SendVoiceReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendWxReq
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.EMAIL_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.NOC_NOTICE_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
+import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.VOICE_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
 import com.tencent.devops.notify.constant.NotifyMessageCode
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_NOTIFY_MESSAGES
@@ -138,6 +141,17 @@ class CMSApi(private val notifyProperties: NotifyProperties) {
             )
         }
         return doPostRequest(WECHAT_URL, wechatReq)
+    }
+
+    fun sendVoice(voiceNotifyPost: VoiceNotifyPost): ApiResp {
+        val voiceReq = with(voiceNotifyPost) {
+            SendVoiceReq(
+                auto_read_message = content,
+                receiver__username = receiver,
+                bk_username = "蓝鲸助手"
+            )
+        }
+        return doPostRequest(VOICE_URL, voiceReq)
     }
 
     private val logger = LoggerFactory.getLogger(CMSApi::class.java)
