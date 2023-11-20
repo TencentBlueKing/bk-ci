@@ -73,6 +73,7 @@ class ClientVersionDao {
 
     fun updateTime(
         dslContext: DSLContext,
+        ip: String,
         macAddress: String,
         userId: String,
         lastVersion: String
@@ -80,7 +81,8 @@ class ClientVersionDao {
         return with(TClientVersion.T_CLIENT_VERSION) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(USER.eq(userId).and(MAC_ADDRESS.eq(macAddress)).and(VERSION.eq(lastVersion))).execute()
+                .set(MAC_ADDRESS, macAddress)
+                .where(USER.eq(userId).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
         }
     }
 }
