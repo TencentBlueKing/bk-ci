@@ -53,7 +53,8 @@ enum class PoolType {
                 imageType = pool.image?.imageType ?: ImageType.THIRD,
                 credentialId = pool.credentialId,
                 imageVersion = pool.image?.imageVersion,
-                imageCode = pool.image?.imageCode
+                imageCode = pool.image?.imageCode,
+                performanceConfigId = pool.performanceConfigId?.toInt() ?: 0
             )
         }
 
@@ -68,6 +69,7 @@ enum class PoolType {
                 return RunsOn(
                     selfHosted = null,
                     poolName = JobRunsOnType.DOCKER.type,
+                    hwSpec = dispatcher.performanceConfigId.toString(),
                     container = when (dispatcher.imageType) {
                         ImageType.BKSTORE -> Container2(
                             imageCode = dispatcher.dockerBuildVersion,

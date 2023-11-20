@@ -158,7 +158,7 @@ data class RunsOn(
     var poolName: String? = null,
     @ApiModelProperty(name = "hw-spec")
     @JsonProperty("hw-spec")
-    val hwSpec: String? = null,
+    var hwSpec: String? = null,
     @JsonProperty("node-name")
     var nodeName: String? = null,
     @JsonIgnore

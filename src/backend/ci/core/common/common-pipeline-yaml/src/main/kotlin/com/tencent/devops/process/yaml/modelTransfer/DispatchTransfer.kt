@@ -149,7 +149,8 @@ class DispatchTransfer @Autowired(required = false) constructor(
                         imageCode = info?.imageCode ?: inner.defaultImageCode,
                         imageVersion = info?.imageVersion ?: inner.defaultImageVersion,
                         imageType = info?.imageType
-                    )
+                    ),
+                    performanceConfigId = job.runsOn.hwSpec
                 )
             )
         }

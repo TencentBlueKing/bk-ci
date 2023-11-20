@@ -29,14 +29,13 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.yaml.modelTransfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
-@Primary
 @Component
 class TransferCreatorImpl @Autowired constructor() : TransferCreator {
     @Value("\${marketRun.enable:#{false}}")
@@ -135,4 +134,6 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             data = data
         )
     }
+
+    override fun defaultLinuxDispatchType(): BuildType = BuildType.DOCKER
 }

@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
@@ -183,7 +184,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
     ): PreJob {
         return PreJob(
             name = job.name,
-            runsOn = dispatchTransfer.makeRunsOn(job)?.fixSelfHosted(userId, projectId),
+            runsOn = dispatchTransfer.makeRunsOn(job)?.fix(userId, projectId, job.dispatchType?.buildType()),
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
@@ -214,7 +215,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         )
     }
 
-    private fun RunsOn.fixSelfHosted(userId: String, projectId: String): RunsOn {
+    private fun RunsOn.fix(userId: String, projectId: String, buildType: BuildType?): RunsOn {
+        /*修正私有构建机数据*/
         when (poolType) {
             JobRunsOnPoolType.AGENT_ID.name -> {
                 nodeName = transferCache.getThirdPartyAgent(
@@ -224,12 +226,31 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     arrayOf("agentId: $nodeName")
                 )
             }
+
             JobRunsOnPoolType.ENV_ID.name -> {
                 poolName = transferCache.getThirdPartyAgent(
                     JobRunsOnPoolType.ENV_ID, userId, projectId, poolName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("envId: $poolName")
+                )
+            }
+        }
+
+        /*修正docker配额数据*/
+        if (hwSpec != null && buildType != null) {
+            kotlin.run {
+                val res = transferCache.getDockerResource(userId, projectId, buildType)
+                if (res?.default == hwSpec) {
+                    hwSpec = null
+                    return@run
+                }
+                val hw = res?.dockerResourceOptionsMaps?.find {
+                    it.id == hwSpec
+                }
+                hwSpec = hw?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
+                    CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+                    arrayOf("poolName:$poolName,hwSpec:$hwSpec")
                 )
             }
         }
