@@ -29,12 +29,19 @@ package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
@@ -134,6 +141,15 @@ class WorkspaceService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao
 ) {
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_EDIT_CONTENT
+    )
     // 修改workspace备注名称
     fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
         logger.info("$userId edit workspace $workspaceName|$displayName")
@@ -143,6 +159,10 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .scopeId = ws.projectId
 
         permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
         dslContext.transaction { configuration ->
@@ -162,6 +182,7 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
+    @AuditEntry(actionId = ActionId.CGS_SHARE)
     fun shareWorkspace4OP(
         userId: String,
         shareWorkspace: ShareWorkspace
@@ -190,6 +211,15 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_SHARE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_SHARE_CONTENT
+    )
     fun shareWorkspace(
         userId: String,
         workspaceName: String,
@@ -202,6 +232,11 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
         if (needPermission) {
             permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
@@ -281,7 +316,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = null
         )
 
-        val records = parseWorkspaceList(result, false)
+        val records = parseWorkspaceList(result, false, null)
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
@@ -319,7 +354,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = data.expertSupId
         )
 
-        val records = parseWorkspaceList(result, true)
+        val records = parseWorkspaceList(result, true, data.expertSupId)
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
@@ -356,7 +391,8 @@ class WorkspaceService @Autowired constructor(
 
     private fun parseWorkspaceList(
         result: List<WorkspaceRecordInf>,
-        enableExportSup: Boolean
+        enableExportSup: Boolean,
+        expertSupId: Long?
     ): List<ProjectWorkspace> {
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
@@ -385,7 +421,11 @@ class WorkspaceService @Autowired constructor(
         var expertMap: MutableMap<String, MutableList<FetchSupportResp>>? = null
         if (enableExportSup) {
             expertMap = mutableMapOf()
-            expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet()).forEach {
+            if (expertSupId != null) {
+                listOf(expertSupportDao.getSup(dslContext, expertSupId))
+            } else {
+                expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet())
+            }.filterNotNull().forEach {
                 val resp = FetchSupportResp(
                     id = it.id,
                     creator = it.creator,
@@ -477,7 +517,8 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         ip: String?
     ): List<WeSecProjectWorkspace> {
-        logger.info("op get project $projectId workspace list")
+        val startTime = System.currentTimeMillis()
+
         val result = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
@@ -485,19 +526,47 @@ class WorkspaceService @Autowired constructor(
             ip = ip
         ) ?: emptyList()
 
-        return result.map {
-            val detail = workspaceCommon.getWorkspaceDetail(it["NAME"] as String)
+        val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
+
+        val workspaceNames = result.map { it["NAME"] as String }.toSet()
+
+        val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
+            .associateBy { it.workspaceName }
+
+        val fetchDetailEndTime = System.currentTimeMillis()
+
+        val data = result.map { res ->
+            val workspaceName = res["NAME"] as String
+            val detail = detailMap[workspaceName]?.let { det ->
+                try {
+                    objectMapper.readValue<WorkSpaceCacheInfo>(det.detail)
+                } catch (ignore: Exception) {
+                    logger.warn("get workspace detail from redis error|$workspaceName", ignore)
+                    null
+                }
+            }
             WeSecProjectWorkspace(
-                workspaceName = it["NAME"] as String,
-                projectId = it["PROJECT_ID"] as String,
-                creator = it["CREATOR"] as String,
+                workspaceName = workspaceName,
+                projectId = res["PROJECT_ID"] as String,
+                creator = res["CREATOR"] as String,
                 regionId = detail?.regionId.toString(),
                 innerIp = detail?.hostIP,
-                createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                owner = it["SHARED_USER"] as? String ?: it["CREATOR"] as String,
-                status = WorkspaceStatus.values()[it["STATUS"] as Int]
+                createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
+                owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                status = WorkspaceStatus.values()[res["STATUS"] as Int]
             )
         }
+
+        val buildDataEndTime = System.currentTimeMillis()
+
+        logger.info(
+            "getProjectWorkspaceList4WeSec fetchWorkspaceWithOwner {}ms, fetchDetail {}ms, buildData{}ms",
+            fetchWorkspaceWithOwnerEndTime - startTime,
+            fetchDetailEndTime - fetchWorkspaceWithOwnerEndTime,
+            buildDataEndTime - fetchDetailEndTime
+        )
+
+        return data
     }
 
     fun getWorkspaceProject(): List<RemotedevProject> {
@@ -666,7 +735,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -697,12 +766,25 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_VIEW_CONTENT
+    )
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
         if (checkPermission) {
             permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         }
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
         val now = LocalDateTime.now()
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName)
@@ -736,7 +818,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -750,6 +832,15 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_VIEW_CONTENT
+    )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -757,8 +848,13 @@ class WorkspaceService @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
         permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         workspaceCommon.checkWorkspaceAvailability(userId, workspace.workspaceMountType, workspace.ownerType)
+        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
         if (detail == null || !workspace.status.checkRunning()) {
             throw ErrorCodeException(
@@ -1078,7 +1174,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = data.expertSupId
         )
 
-        val records = parseWorkspaceList(result, true)
+        val records = parseWorkspaceList(result, true, data.expertSupId)
 
         // 创建表
         val workbook = SXSSFWorkbook()
@@ -1141,7 +1237,7 @@ class WorkspaceService @Autowired constructor(
             expertSupId = null
         )
 
-        val records = parseWorkspaceList(result, false)
+        val records = parseWorkspaceList(result, false, null)
 
         // 创建表
         val workbook = SXSSFWorkbook()

@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
@@ -18,6 +20,7 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon
 ) : OpWorkspaceResource {
 
+    @AuditEntry(actionId = ActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceShared: WorkspaceSharedOpUse): Result<Boolean> {
         return Result(
             workspaceService.shareWorkspace(
@@ -49,6 +52,7 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.deleteSharedWorkspace(id))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun moveWorkspaceDetail(userId: String, workspaceName: String): Result<Boolean> {
         // 先获取工作空间信息
         val workspaceDetail = workspaceService.getWorkspaceDetail(userId, workspaceName, checkPermission = false)

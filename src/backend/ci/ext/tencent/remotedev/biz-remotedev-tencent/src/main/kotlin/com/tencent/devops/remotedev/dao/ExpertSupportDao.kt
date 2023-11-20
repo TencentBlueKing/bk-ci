@@ -78,6 +78,7 @@ class ExpertSupportDao {
             Int::class.java, DSL.keyword(part.toSQL()), t1
         )
     }
+
     fun fetchSupports(
         dslContext: DSLContext,
         projectId: String,
@@ -96,13 +97,13 @@ class ExpertSupportDao {
                 .let { if (content != null) it.and(CONTENT.eq(content)) else it }
                 .let {
                     if (internalTime != null) {
-                    it.and(
-                        timestampDiff(DatePart.SECOND, CREATE_TIME.cast(java.sql.Timestamp::class.java))
-                                                            .lessOrEqual(internalTime)
-                    )
-                } else {
-                    it
-                }
+                        it.and(
+                            timestampDiff(DatePart.SECOND, CREATE_TIME.cast(java.sql.Timestamp::class.java))
+                                .lessOrEqual(internalTime)
+                        )
+                    } else {
+                        it
+                    }
                 }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
@@ -118,6 +119,17 @@ class ExpertSupportDao {
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .and(STATUS.ne(ExpertSupportStatus.DONE.name))
                 .fetch()
+        }
+    }
+
+    fun getSup(
+        dslContext: DSLContext,
+        id: Long
+    ): TRemotedevExpertSupportRecord? {
+        with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchAny()
         }
     }
 
