@@ -511,7 +511,9 @@ class CredentialServiceImpl @Autowired constructor(
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
-        ActionAuditContext.current().setInstanceName(credentialRecord.credentialName).setInstanceId(credentialRecord.credentialId)
+        ActionAuditContext.current()
+            .setInstanceName(credentialRecord.credentialName)
+            .setInstanceId(credentialRecord.credentialId)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
@@ -566,7 +568,9 @@ class CredentialServiceImpl @Autowired constructor(
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
-        ActionAuditContext.current().setInstanceId(credentialRecord.credentialId).setInstanceName(credentialRecord.credentialName)
+        ActionAuditContext.current()
+            .setInstanceId(credentialRecord.credentialId)
+            .setInstanceName(credentialRecord.credentialName)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
