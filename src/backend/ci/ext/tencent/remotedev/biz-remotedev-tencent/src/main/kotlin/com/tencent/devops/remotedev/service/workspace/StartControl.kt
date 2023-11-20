@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
@@ -54,15 +60,15 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -88,6 +94,15 @@ class StartControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_START,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_START_CONTENT
+    )
     fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
 
@@ -96,6 +111,10 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
         // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
         permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         RedisCallLimit(

@@ -1,17 +1,24 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
-import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
+import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
+import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
@@ -29,6 +36,17 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val gitProxyService: GitProxyService
 ) : OpProjectWorkspaceResource {
+    @AuditEntry(
+        actionId = ActionId.CGS_ASSIGN,
+        subActionIds = [ActionId.CGS_CREATE]
+    )
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_ASSIGN,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS
+        ),
+        content = ActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
+    )
     override fun assignWorkspace(
         userId: String,
         data: OpProjectWorkspaceAssignData
@@ -37,6 +55,16 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         cgsData.forEach { cgs ->
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
+                )
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
                 machineType = cgs.machineType
