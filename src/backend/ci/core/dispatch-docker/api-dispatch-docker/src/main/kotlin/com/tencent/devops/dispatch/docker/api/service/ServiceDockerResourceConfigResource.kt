@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -48,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/dispatch-docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("dispatch-docker")
 interface ServiceDockerResourceConfigResource {
 
     @GET
