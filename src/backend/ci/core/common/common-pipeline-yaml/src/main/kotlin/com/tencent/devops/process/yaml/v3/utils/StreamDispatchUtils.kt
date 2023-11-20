@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfo
+import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfoV3
 import com.tencent.devops.process.yaml.v3.models.job.Container
 import com.tencent.devops.process.yaml.v3.models.job.Container2
 import com.tencent.devops.process.yaml.v3.models.job.Job
@@ -57,147 +58,6 @@ object StreamDispatchUtils {
 
     private val logger = LoggerFactory.getLogger(StreamDispatchUtils::class.java)
 
-    fun getBaseOs(job: Job, context: Map<String, String>? = null): VMBaseOS {
-        val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
-        // 公共构建机池
-        if (poolName == JobRunsOnType.DOCKER.type) {
-            return VMBaseOS.LINUX
-        } else if (poolName.startsWith("macos")) {
-            return VMBaseOS.MACOS
-        }
-
-        // agentSelector 也要支持占位符
-        if (job.runsOn.agentSelector.isNullOrEmpty()) {
-            return VMBaseOS.ALL
-        }
-        return when (EnvUtils.parseEnv(job.runsOn.agentSelector!![0], context ?: mapOf())) {
-            "linux" -> VMBaseOS.LINUX
-            "macos" -> VMBaseOS.MACOS
-            "windows" -> VMBaseOS.WINDOWS
-            else -> VMBaseOS.LINUX
-        }
-    }
-
-    fun getBuildEnv(job: Job, context: Map<String, String>? = null): Map<String, String>? {
-        return if (job.runsOn.selfHosted == false) {
-            job.runsOn.needs?.map { it ->
-                it.key to EnvUtils.parseEnv(it.value, context ?: mapOf())
-            }?.toMap()
-        } else {
-            null
-        }
-    }
-
-    @Throws(
-        JsonProcessingException::class,
-        ParamBlankException::class,
-        CustomException::class
-    )
-    fun getDispatchType(
-        job: Job,
-        defaultImage: String,
-        context: Map<String, String>? = null,
-        containsMatrix: Boolean? = false,
-        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): DispatchType {
-
-        val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
-        val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
-
-        // 第三方构建机
-        if (job.runsOn.selfHosted == true) {
-            if (job.runsOn.container == null) {
-                return ThirdPartyAgentEnvDispatchType(
-                    envProjectId = null,
-                    envName = poolName,
-                    workspace = workspace,
-                    agentType = AgentType.NAME,
-                    dockerInfo = null
-                )
-            }
-
-            val info = parseRunsOnContainer(
-                job = job,
-                buildTemplateAcrossInfo = buildTemplateAcrossInfo
-            )
-
-            val dockerInfo = ThirdPartyAgentDockerInfo(
-                image = info.image,
-                credential = thirdPartDockerCredential(
-                    user = info.userName,
-                    password = info.password,
-                    credentialId = info.credId,
-                    acrossTemplateId = info.acrossTemplateId,
-                    jobId = job.id
-                ),
-                options = info.options,
-                imagePullPolicy = info.imagePullPolicy
-            )
-
-            return ThirdPartyAgentEnvDispatchType(
-                envProjectId = null,
-                envName = poolName,
-                workspace = workspace,
-                agentType = AgentType.NAME,
-                dockerInfo = dockerInfo
-            )
-        }
-
-        // macos构建机
-        if (poolName.startsWith("macos")) {
-            // 外部版暂时不支持macos构建机，遇到直接报错
-            throw CustomException(
-                Response.Status.BAD_REQUEST,
-                I18nUtil.getCodeLanMessage(messageCode = BUILD_RESOURCE_NOT_EXIST, params = arrayOf("macos"))
-            )
-        }
-
-        // 公共docker构建机
-        if (poolName == "docker") {
-            var image = defaultImage
-            var credentialId = ""
-            var env: Map<String, String>?
-
-            if (job.runsOn.container != null) {
-                try {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        Container::class.java
-                    )
-
-                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
-                    env = job.env
-                } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(job.runsOn.container!!),
-                        Container2::class.java
-                    )
-
-                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
-                    credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf())
-                    env = job.env
-                }
-            }
-
-            return DockerDispatchType(
-                dockerBuildVersion = image,
-                credentialId = credentialId,
-                imageType = ImageType.THIRD
-            )
-        }
-
-        if (containsMatrix == true) {
-            return DockerDispatchType(defaultImage)
-        } else {
-            throw CustomException(
-                Response.Status.NOT_FOUND, I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_RESOURCE_NOT_EXIST,
-                    params = arrayOf("public")
-                )
-            )
-        }
-    }
-
     /**
      * 解析 jobs.runsOn.container
      * 注：因为要蓝盾也要支持所以环境变量替换会在蓝盾层面去做
@@ -206,22 +66,24 @@ object StreamDispatchUtils {
     fun parseRunsOnContainer(
         job: Job,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): ThirdPartyContainerInfo {
+    ): ThirdPartyContainerInfoV3 {
         return try {
             val container = YamlUtil.getObjectMapper().readValue(
                 JsonUtil.toJson(job.runsOn.container!!),
                 Container::class.java
             )
 
-            ThirdPartyContainerInfo(
-                image = container.image,
+            ThirdPartyContainerInfoV3(
+                image = container.takeImage(),
+                imageCode = container.takeImageCode(),
+                imageVersion = container.takeImageVersion(),
                 userName = container.credentials?.username,
                 password = container.credentials?.password,
                 credId = null,
                 acrossTemplateId = null,
                 options = container.options,
                 imagePullPolicy = container.imagePullPolicy,
-                imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
+                imageType = container.takeImageType()
             )
         } catch (e: Exception) {
             val container = YamlUtil.getObjectMapper().readValue(
@@ -229,15 +91,17 @@ object StreamDispatchUtils {
                 Container2::class.java
             )
 
-            ThirdPartyContainerInfo(
-                image = container.image,
+            ThirdPartyContainerInfoV3(
+                image = container.takeImage(),
+                imageCode = container.takeImageCode(),
+                imageVersion = container.takeImageVersion(),
                 userName = null,
                 password = null,
                 credId = container.credentials,
                 acrossTemplateId = buildTemplateAcrossInfo?.templateId,
                 options = container.options,
                 imagePullPolicy = container.imagePullPolicy,
-                imageType = ImageType.valueOf(container.imageType ?: ImageType.THIRD.name)
+                imageType = container.takeImageType()
             )
         }
     }

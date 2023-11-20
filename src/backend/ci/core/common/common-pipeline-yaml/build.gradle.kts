@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:auth:api-auth"))
     api(project(":core:quality:api-quality"))
+    api(project(":core:dispatch-docker:api-dispatch-docker"))
 
     api("org.apache.ant:ant")
     api("org.apache.commons:commons-text")

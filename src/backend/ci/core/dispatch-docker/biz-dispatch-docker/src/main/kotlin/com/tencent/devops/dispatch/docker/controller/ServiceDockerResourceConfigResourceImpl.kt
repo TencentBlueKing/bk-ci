@@ -25,26 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.dispatch.docker.controller
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerResourceConfigResource
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.dispatch.docker.service.DockerResourceOptionsService
+import org.springframework.beans.factory.annotation.Autowired
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreStageReviews(
-    val flows: List<PreFlow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?,
-    @JsonProperty("content-format")
-    val contentFormat: String?,
-    @JsonProperty("notify-type")
-    val notifyType: List<String>?,
-    @JsonProperty("chat-id")
-    val notifyGroups: List<String>?
-)
+@RestResource
+@Suppress("ALL")
+class ServiceDockerResourceConfigResourceImpl @Autowired constructor(
+    private val dockerResourceOptionsService: DockerResourceOptionsService
+) : ServiceDockerResourceConfigResource {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreFlow(
-    val name: String,
-    val reviewers: Any
-)
+    override fun getDockerResourceConfigList(
+        userId: String,
+        projectId: String,
+        buildType: String?
+    ): Result<UserDockerResourceOptionsVO> {
+        return Result(dockerResourceOptionsService.getDockerResourceConfigList(userId, projectId, buildType))
+    }
+}

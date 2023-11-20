@@ -72,7 +72,7 @@ object YamlObjects {
         val va = Variable(
             value = variable["value"]?.toString(),
             name = variable["name"]?.toString(),
-            valueNotEmpty = getNullValue("value-not-empty", variable)?.toBoolean(),
+            valueNotEmpty = getNullValue("required", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
             props = if (variable["props"] == null) {
@@ -125,11 +125,11 @@ object YamlObjects {
             repoHashId = getNullValue("repo-id", propsMap),
             scmType = getNullValue("scm-type", propsMap),
             containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
-            glob = getNullValue("glob", propsMap),
+            glob = getNullValue("filter-rule", propsMap),
             properties = transNullValue<Map<String, String>>(
                 file = fromPath,
-                type = "properties",
-                key = "properties",
+                type = "metadata",
+                key = "metadata",
                 map = propsMap
             ),
             payload = propsMap["glob"]
@@ -216,7 +216,7 @@ object YamlObjects {
             run = step["run"]?.toString(),
             shell = step["shell"]?.toString(),
             checkout = step["checkout"]?.toString(),
-            manualRetry = getNullValue("manual-retry", step)?.toBoolean(),
+            manualRetry = getNullValue("can-manually-retry", step)?.toBoolean(),
             yamlMetaData = if (step["yamlMetaData"] == null) {
                 MetaData(templateInfo = repo)
             } else {
@@ -362,15 +362,15 @@ object YamlObjects {
             } else {
                 transValue<List<String>>(fromPath, "chat-id", notice["chat-id"])
             },
-            notifyMarkdown = if (notice["notify-markdown"] == null) {
+            notifyMarkdown = if (notice["content-format"] == null) {
                 null
             } else {
-                transValue<Boolean>(fromPath, "notify-markdown", notice["notify-markdown"])
+                transValue<String>(fromPath, "content-format", notice["content-format"])
             },
-            notifyDetail = if (notice["notify-detail-url"] == null) {
+            notifyDetail = if (notice["attach-build-url"] == null) {
                 null
             } else {
-                transValue<Boolean>(fromPath, "notify-detail-url", notice["notify-detail-url"])
+                transValue<Boolean>(fromPath, "attach-build-url", notice["attach-build-url"])
             }
         )
     }
@@ -578,7 +578,6 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         } else {
             YamlObjects.transValue<List<String>>(fromPath, "depend-on", job["depend-on"])
         },
-        dependOnType = YamlObjects.getNullValue("depend-on-type", job),
         yamlMetaData = if (job["yamlMetaData"] == null) {
             MetaData(
                 templateInfo = TemplateInfo(

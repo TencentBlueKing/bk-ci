@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.modelTransfer.inner
 
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.yaml.v3.models.step.Step
 
 /**
@@ -45,7 +46,10 @@ interface TransferCreator {
     val runPlugInVersion: String?
 
     // 默认的公共镜像
-    val defaultImage: String
+    val defaultImageCode: String
+
+    // 默认的公共镜像版本
+    val defaultImageVersion: String
 
     /**
      * 构造具有特殊语法的checkout插件
@@ -70,4 +74,6 @@ interface TransferCreator {
     fun transferMarketBuildLessAtomElement(
         step: Step
     ): MarketBuildLessAtomElement
+
+    fun defaultLinuxDispatchType(): BuildType
 }

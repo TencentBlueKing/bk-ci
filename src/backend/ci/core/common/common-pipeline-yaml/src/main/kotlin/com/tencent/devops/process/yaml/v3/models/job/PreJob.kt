@@ -70,8 +70,5 @@ data class PreJob(
     @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = null,
-    @ApiModelProperty(name = "depend-on-type")
-    @JsonProperty("depend-on-type")
-    val dependOnType: String? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreJob

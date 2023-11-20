@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelTransfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -42,6 +43,8 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
@@ -51,8 +54,8 @@ import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUT
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_MUTEX_TIMEOUT_MINUTES
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.job.Mutex
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
@@ -169,22 +172,19 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 DependOnType.ID -> job.jobControlOption?.dependOnId
                 DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
                 else -> null
-            }?.ifEmpty { null },
-            dependOnType = when (job.jobControlOption?.dependOnType) {
-                DependOnType.ID -> null
-                DependOnType.NAME -> DependOnType.NAME.name
-                else -> null
-            }
+            }?.ifEmpty { null }
         )
     }
 
     fun addYamlVMBuildContainer(
+        userId: String,
+        projectId: String,
         job: VMBuildContainer,
         steps: List<PreStep>?
     ): PreJob {
         return PreJob(
             name = job.name,
-            runsOn = dispatchTransfer.makeRunsOn(job),
+            runsOn = dispatchTransfer.makeRunsOn(job)?.fix(userId, projectId, job.dispatchType?.buildType()),
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
@@ -211,13 +211,50 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 DependOnType.ID -> job.jobControlOption?.dependOnId
                 DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
                 else -> null
-            }?.ifEmpty { null },
-            dependOnType = when (job.jobControlOption?.dependOnType) {
-                DependOnType.ID -> null
-                DependOnType.NAME -> DependOnType.NAME.name
-                else -> null
-            }
+            }?.ifEmpty { null }
         )
+    }
+
+    private fun RunsOn.fix(userId: String, projectId: String, buildType: BuildType?): RunsOn {
+        /*修正私有构建机数据*/
+        when (poolType) {
+            JobRunsOnPoolType.AGENT_ID.name -> {
+                nodeName = transferCache.getThirdPartyAgent(
+                    JobRunsOnPoolType.AGENT_ID, userId, projectId, nodeName
+                ) ?: throw PipelineTransferException(
+                    CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+                    arrayOf("agentId: $nodeName")
+                )
+            }
+
+            JobRunsOnPoolType.ENV_ID.name -> {
+                poolName = transferCache.getThirdPartyAgent(
+                    JobRunsOnPoolType.ENV_ID, userId, projectId, poolName
+                ) ?: throw PipelineTransferException(
+                    CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+                    arrayOf("envId: $poolName")
+                )
+            }
+        }
+
+        /*修正docker配额数据*/
+        if (hwSpec != null && buildType != null) {
+            kotlin.run {
+                val res = transferCache.getDockerResource(userId, projectId, buildType)
+                if (res?.default == hwSpec) {
+                    hwSpec = null
+                    return@run
+                }
+                val hw = res?.dockerResourceOptionsMaps?.find {
+                    it.id == hwSpec
+                }
+                hwSpec = hw?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
+                    CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
+                    arrayOf("poolName:$poolName,hwSpec:$hwSpec")
+                )
+            }
+        }
+        return this
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
@@ -273,17 +310,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         val timeout = job.timeoutMinutes?.toIntOrNull() ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
         val timeoutVar = job.timeoutMinutes ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
 
-        val dependOnType = DependOnType.parse(job.dependOnType)
-        val dependOnId = if (dependOnType == DependOnType.ID) {
-            job.dependOn
-        } else {
-            null
-        }
-        val dependOnName = if (dependOnType == DependOnType.NAME) {
-            job.dependOn?.joinToString(",")
-        } else {
-            null
-        }
+        val dependOnName = job.dependOn?.joinToString(",")
+
         return if (!job.ifField.isNullOrBlank()) {
             var customVariables: List<NameAndValue>? = null
             if (finalStage) {
@@ -296,8 +324,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                         IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
                         else -> JobRunCondition.STAGE_RUNNING
                     },
-                    dependOnType = dependOnType,
-                    dependOnId = dependOnId,
+                    dependOnType = DependOnType.NAME,
                     dependOnName = dependOnName,
                     prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
                     continueWhenFailed = job.continueOnError
@@ -322,8 +349,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     } else {
                         null
                     },
-                    dependOnType = dependOnType,
-                    dependOnId = dependOnId,
+                    dependOnType = DependOnType.NAME,
                     dependOnName = dependOnName,
                     prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
                     continueWhenFailed = job.continueOnError,
@@ -335,8 +361,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 enable = jobEnable,
                 timeout = timeout,
                 timeoutVar = timeoutVar,
-                dependOnType = dependOnType,
-                dependOnId = dependOnId,
+                dependOnType = DependOnType.NAME,
                 dependOnName = dependOnName,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes ?: VariableDefault.DEFAULT_JOB_PREPARE_TIMEOUT,
                 continueWhenFailed = job.continueOnError

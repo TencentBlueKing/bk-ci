@@ -78,7 +78,7 @@ data class Variable(
     val readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = false,
-    @JsonProperty("value-not-empty")
+    @JsonProperty("required")
     val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
 ) : IVariable
@@ -117,8 +117,10 @@ data class VariableProps(
     @ApiModelProperty(name = "container-type")
     val containerType: BuildContainerTypeYaml? = null,
     @ApiModelProperty("自定义仓库通配符", required = false)
+    @JsonProperty("filter-rule")
     val glob: String? = null,
     @ApiModelProperty("文件元数据", required = false)
+    @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
     val payload: Any? = null
 )
