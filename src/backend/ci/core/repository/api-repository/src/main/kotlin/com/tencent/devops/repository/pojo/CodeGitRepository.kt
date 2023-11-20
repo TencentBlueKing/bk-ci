@@ -52,9 +52,7 @@ data class CodeGitRepository(
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
     @ApiModelProperty("Git仓库ID", required = false)
-    val gitProjectId: Long?,
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.CODE_GIT
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeGit"
