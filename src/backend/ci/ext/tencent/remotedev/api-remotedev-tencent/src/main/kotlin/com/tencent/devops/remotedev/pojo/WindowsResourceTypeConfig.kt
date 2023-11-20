@@ -40,8 +40,10 @@ data class WindowsResourceTypeConfig(
     val size: String,
     @ApiModelProperty("GPU卡类型")
     val type: String? = null,
-    @ApiModelProperty("vGPU")
+    @ApiModelProperty("GPU")
     val gpu: Int,
+    @ApiModelProperty("vGPU")
+    val vgpu: String? = "",
     @ApiModelProperty("CPU")
     val cpu: Int,
     @ApiModelProperty("内存")
