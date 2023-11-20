@@ -257,7 +257,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
         if (hwSpec != null && buildType != null) {
             kotlin.run {
                 val res = transferCache.getDockerResource(userId, projectId, buildType)
-                if (res?.default == hwSpec) {
+                // hwSpec为0时为特殊值，表示默认配置
+                if (res?.default == hwSpec || hwSpec == "0") {
                     hwSpec = null
                     return@run
                 }
