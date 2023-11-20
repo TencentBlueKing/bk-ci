@@ -438,7 +438,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 } catch (ignore: Throwable) {
                     // 旧流水线可能无法转换，用空YAML代替
                     logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-                    "# ${ignore.message}"
+                    null
                 }
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(

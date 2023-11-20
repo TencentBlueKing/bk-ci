@@ -420,7 +420,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             } catch (ignore: Throwable) {
                 // 旧流水线可能无法转换，用空YAML代替
                 logger.warn("TRANSFER_YAML|$projectId|$userId|${ignore.message}|modelAndYaml=\n${modelAndYaml.yaml}")
-                "# ${ignore.message}"
+                null
             }
             Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, newYaml)
         }
