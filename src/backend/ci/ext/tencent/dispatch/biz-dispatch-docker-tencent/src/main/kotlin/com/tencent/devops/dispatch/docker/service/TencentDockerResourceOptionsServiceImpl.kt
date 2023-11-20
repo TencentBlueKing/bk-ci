@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service
 
 @Service
 @Primary
-class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
+class TencentDockerResourceOptionsServiceImpl @Autowired constructor(
     private val client: Client
 ) : ExtDockerResourceOptionsService {
 
-    private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(TencentDockerResourceOptionsServiceImpl::class.java)
 
     override fun getDockerResourceConfigList(
         userId: String,

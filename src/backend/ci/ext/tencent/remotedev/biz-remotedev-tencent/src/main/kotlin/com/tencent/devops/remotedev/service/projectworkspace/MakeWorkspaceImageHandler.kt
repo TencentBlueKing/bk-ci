@@ -134,6 +134,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 projectId = projectId,
                 imageId = imageId,
                 imageName = makeImageReq.imageName,
+                userId = userId,
                 imageStatus = ImageStatus.BUILDING,
                 dslContext = dslContext
             )
