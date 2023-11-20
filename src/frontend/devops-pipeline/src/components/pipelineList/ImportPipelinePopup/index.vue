@@ -129,7 +129,7 @@
                     name: newPipelineName
                 }
                 try {
-                    const res = await this.transferModelToYaml({
+                    await this.transferModelToYaml({
                         projectId: this.$route.params.projectId,
                         actionType: 'FULL_MODEL2YAML',
                         modelAndSetting: {
@@ -144,16 +144,8 @@
                         },
                         oldYaml: ''
                     })
-                    Object.assign(pipeline, {
-                        yamlSupported: res.yamlSupported,
-                        yamlInvalidMsg: res.yamlInvalidMsg
-                    })
                 } catch (error) {
                     console.log(error)
-                    Object.assign(pipeline, {
-                        yamlSupported: false,
-                        yamlInvalidMsg: error.message
-                    })
                 }
 
                 this.setPipelineSetting({

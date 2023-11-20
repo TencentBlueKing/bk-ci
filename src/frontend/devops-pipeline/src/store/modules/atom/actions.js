@@ -180,8 +180,6 @@ export default {
             console.log(pipelineRes.data, 'fdsafdas')
             dispatch('setPipeline', model)
             commit(UPDATE_PIPELINE_INFO, {
-                yamlSupported: pipelineRes.data.yamlSupported,
-                yamlInvalidMsg: pipelineRes.data.yamlInvalidMsg,
                 baseVersion: pipelineRes.data.baseVersion,
                 baseVersionName: pipelineRes.data.baseVersionName
             })
@@ -217,10 +215,6 @@ export default {
                     actionType
                 }
             })
-            if (!data.yamlSupported) {
-                rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
-            }
-
             switch (actionType) {
                 case 'FULL_YAML2MODEL':
                     commit(SET_PIPELINE, data?.modelAndSetting?.model)
@@ -232,10 +226,6 @@ export default {
                     break
                 case 'FULL_MODEL2YAML':
                     commit(SET_PIPELINE_YAML, data?.newYaml)
-                    commit(UPDATE_PIPELINE_INFO, {
-                        yamlSupported: data.yamlSupported,
-                        yamlInvalidMsg: data.yamlInvalidMsg
-                    })
                     break
             }
             return data

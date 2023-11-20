@@ -42,12 +42,6 @@ export default {
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
     },
-    isYamlSupport: state => {
-        return state.pipelineInfo?.yamlSupported ?? true
-    },
-    yamlInvalidMsg: state => {
-        return state.pipelineInfo?.yamlInvalidMsg ?? true
-    },
     getPipelineSubscriptions: state => type => {
         return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
     },

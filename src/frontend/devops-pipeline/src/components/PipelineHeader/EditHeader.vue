@@ -3,10 +3,7 @@
         <pipeline-bread-crumb>
             <bk-tag>{{ currentVersionName }}</bk-tag>
         </pipeline-bread-crumb>
-        <mode-switch
-            :is-yaml-support="isYamlSupport"
-            :yaml-invalid-msg="yamlInvalidMsg"
-        />
+        <mode-switch />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -86,9 +83,7 @@
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
-                checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                isYamlSupport: 'atom/isYamlSupport',
-                yamlInvalidMsg: 'atom/yamlInvalidMsg'
+                checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus

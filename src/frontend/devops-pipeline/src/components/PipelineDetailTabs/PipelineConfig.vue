@@ -1,10 +1,7 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <header class="pipeline-config-header">
-            <mode-switch
-                :is-yaml-support="isYamlSupport"
-                :yaml-invalid-msg="yamlInvalidMsg"
-            />
+            <mode-switch />
             <VersionSideslider
                 v-model="activePipelineVersion"
                 ref="versionSideslider"
@@ -92,9 +89,7 @@
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
-                isYamlSupport: 'atom/isYamlSupport',
-                yamlInvalidMsg: 'atom/yamlInvalidMsg'
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
             }),
             pipelineType () {
                 return this.$route.params.type

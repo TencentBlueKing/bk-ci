@@ -1,10 +1,7 @@
 <template>
     <div class="pipeline-import-edit-header">
         <pipeline-bread-crumb />
-        <mode-switch
-            :is-yaml-support="isYamlSupport"
-            :yaml-invalid-msg="yamlInvalidMsg"
-        />
+        <mode-switch />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus"
@@ -44,9 +41,7 @@
             ]),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
-                checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                isYamlSupport: 'atom/isYamlSupport',
-                yamlInvalidMsg: 'atom/yamlInvalidMsg'
+                checkPipelineInvalid: 'atom/checkPipelineInvalid'
             })
         },
         methods: {

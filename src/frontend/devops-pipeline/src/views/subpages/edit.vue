@@ -200,7 +200,7 @@
                             ...(this.pipelineWithoutTrigger?.stages ?? [])
                         ]
                     })
-                    const res = await this.transferModelToYaml({
+                    await this.transferModelToYaml({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
@@ -210,7 +210,6 @@
                         },
                         oldYaml: this.pipelineYaml
                     })
-                    console.log(res)
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
