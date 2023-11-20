@@ -957,9 +957,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.PIPELINE,
-            instanceNames = "#$?.pipelineName",
-            instanceIds = "#pipelineId"
+            resourceType = ResourceTypeId.PIPELINE
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
@@ -1003,6 +1001,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
+            ActionAuditContext.current().addInstanceInfo(pipelineId, existModel.name, null, null)
             // 对已经存在的模型做删除前处理
             val param = BeforeDeleteParam(
                 userId = userId,
