@@ -4,7 +4,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.VoiceMessage
+import com.tencent.devops.notify.pojo.VoiceNotifyMessage
 import com.tencent.devops.notify.service.VoiceService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -31,7 +31,7 @@ class VoiceNotifier @Autowired constructor(
         val content = NotifierUtils.replaceContentParams(request.bodyParams, voiceTplRecord.content)
         logger.info("send voice msg , ${commonNotifyMessageTemplateRecord.id} , taskName:$taskName , content:$content")
 
-        val message = VoiceMessage()
+        val message = VoiceNotifyMessage()
         message.receivers = request.receivers
         message.taskName = taskName
         message.content = content
