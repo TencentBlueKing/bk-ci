@@ -62,7 +62,6 @@ class VoiceServiceImpl @Autowired constructor(
             fromSysId = voiceNotifyPost.fromSysId
         )
 
-
         // 失败重试 , 最多3次
         if (!tofSuccess && retryCount < 3) {
             val deepCopyMessage = voiceNotifyMessageWithOperation.deepCopy<VoiceNotifyMessageWithOperation>()
