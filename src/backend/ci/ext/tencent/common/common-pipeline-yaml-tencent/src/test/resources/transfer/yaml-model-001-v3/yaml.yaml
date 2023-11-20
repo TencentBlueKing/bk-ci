@@ -30,7 +30,6 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: aliasName/xxx
   type: tgit
@@ -45,7 +44,6 @@ on:
     - 排除以下路径：
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: aliasName/xxx
   type: github
@@ -56,7 +54,6 @@ on:
     - mr
     users-ignore:
     - 排除以下人员：
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: 按代码库别名输入
   type: svn
@@ -69,7 +66,6 @@ on:
     - yongyiduan
     users-ignore:
     - yongyiduan
-    path-filter-type: NamePrefixFilter
   manual: enabled
 - repo-name: "123"
   type: p4
@@ -336,11 +332,6 @@ stages:
       mutex:
         label: a
         queue-length: 5
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
       steps:
       - name: Bash
         uses: linuxScript@1.*
@@ -359,11 +350,6 @@ stages:
         label: aasd
         queue-length: 3
         timeout-minutes: "${bianliang}"
-      runs-on:
-        pool-name: docker
-        container:
-          image: tlinux3_ci:2.*
-          image-type: BKSTORE
       if: 3333 == '6666'
       steps:
       - name: Bash
@@ -461,7 +447,7 @@ finally:
     runs-on:
       pool-name: docker
       container:
-        image: tlinux3_ci:2.*
+        image: tlinux3_ci:2.1
         image-type: BKSTORE
     steps:
     - checkout: 302rW
