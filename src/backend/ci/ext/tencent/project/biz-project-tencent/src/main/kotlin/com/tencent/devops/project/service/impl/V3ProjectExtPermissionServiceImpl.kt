@@ -68,7 +68,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         userId: String
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false
@@ -198,7 +198,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             client.get(ServicePermissionAuthResource::class).grantInstancePermission(
                 userId = userId,
                 projectCode = projectId,
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 grantInstance = grantInstanceDTO
             ).data
         }

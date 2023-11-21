@@ -41,7 +41,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         if (authPermission == AuthPermission.VIEW)
             return
         val checkResult = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -60,7 +60,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -77,7 +77,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -94,7 +94,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
     ): List<String> {
 
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             action = buildCertAction(authPermission),
             resourceType = AuthResourceType.TICKET_CERT.value,
@@ -116,7 +116,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT)
         val certResultMap = mutableMapOf<AuthPermission, List<String>>()
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             action = actions,
             resourceType = AuthResourceType.TICKET_CERT.value,

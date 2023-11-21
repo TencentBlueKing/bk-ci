@@ -1,8 +1,10 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
@@ -118,6 +120,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceImageService.listImageSpecConfig())
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace4OP(
@@ -127,6 +130,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             sleepControl.stopWorkspace(
@@ -170,5 +174,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
+    }
+
+    override fun initTaiUserInfo(userId: String, taiUsers: List<String>): Result<Boolean> {
+        remoteDevSettingService.updateAllTaiUserInfo(taiUsers)
+        return Result(true)
     }
 }

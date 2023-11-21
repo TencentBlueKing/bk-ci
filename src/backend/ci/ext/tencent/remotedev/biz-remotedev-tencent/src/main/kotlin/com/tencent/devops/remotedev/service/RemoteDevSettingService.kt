@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -40,6 +41,8 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.transfer.GitTransferService
@@ -64,7 +67,8 @@ class RemoteDevSettingService @Autowired constructor(
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
     private val redisCacheService: RedisCacheService,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val taiClient: TaiClient
 ) {
 
     companion object {
@@ -73,7 +77,7 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
-        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
+        val setting = remoteDevSettingDao.fetchOneSetting(dslContext, userId)
 
         if (setting.projectId.isBlank()) {
             kotlin.runCatching {
@@ -231,5 +235,33 @@ class RemoteDevSettingService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = settings
         )
+    }
+
+    /**
+     * op接口使用，批量更新太湖账号信息
+     */
+    fun updateAllTaiUserInfo(userIds: List<String> = emptyList()) {
+        var page = 1
+        val pageSize = 50
+        while (true) {
+            val taiUsers = remoteDevSettingDao.fetchTaiUserInfo(
+                dslContext = dslContext,
+                limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize),
+                userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
+            )
+            val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() }
+            val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
+                .associateBy({
+                    it.username
+                }, { user ->
+                    Pair(
+                        user.accountName,
+                        user.companyTags.joinToString(",") { it.tagName }
+                    )
+                })
+            remoteDevSettingDao.updateTaiUserInfo(dslContext, taiInfos)
+            if (taiUsers.size < pageSize) return
+            page++
+        }
     }
 }

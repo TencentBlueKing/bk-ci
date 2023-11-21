@@ -80,7 +80,7 @@ class StreamCertPermissionServiceImpl @Autowired constructor(
         logger.info("StreamCertPermissionServiceImpl user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenService.getSystemToken(null) ?: "",
+            token = tokenService.getSystemToken() ?: "",
             action = AuthPermission.ENABLE.value, // 证书类所有检验都以操作类来校验。即便是view也走操作类权限校验
             projectCode = projectId,
             resourceCode = null

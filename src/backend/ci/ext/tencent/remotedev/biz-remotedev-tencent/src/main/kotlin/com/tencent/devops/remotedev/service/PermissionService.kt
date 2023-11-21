@@ -146,7 +146,7 @@ class PermissionService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken(null)!!,
+            token = checkTokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId
         ).data ?: false

@@ -275,7 +275,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return bkTag.invokeByTag(rbacTag) {
             client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 action = permission.value
             ).data
         }
@@ -475,7 +475,7 @@ class TxProjectServiceImpl @Autowired constructor(
             val iamProjectList = bkTag.invokeByTag(tag) {
                 client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!
+                    token = tokenService.getSystemToken()!!
                 ).data
             }
             if (iamProjectList != null) {

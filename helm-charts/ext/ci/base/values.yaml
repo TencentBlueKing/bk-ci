@@ -1102,6 +1102,8 @@ gateway:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
+  cronjob:
+    apiVersion: "batch/v1beta1"
 
 
 # experience Deployment
