@@ -406,7 +406,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         }
     }
 
-    fun addGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
+    fun addGitWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): CodeGitRepository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
@@ -445,10 +449,14 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             )
         }
 
-        return repo.projectName
+        return repo
     }
 
-    fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
+    fun addGitlabWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): Repository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
             ?: throw ErrorCodeException(errorCode = GITLAB_INVALID)
@@ -464,10 +472,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             userName = repo.userName,
             event = convertEvent(codeEventType)
         )
-        return repo.projectName
+        return repo
     }
 
-    fun addSvnWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
+    fun addSvnWebhook(projectId: String, repositoryConfig: RepositoryConfig): Repository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
@@ -483,10 +491,14 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             userName = credential.username,
             event = null
         )
-        return repo.projectName
+        return repo
     }
 
-    fun addTGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
+    fun addTGitWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): Repository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
             ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = ProcessMessageCode.TGIT_INVALID)
@@ -517,7 +529,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 event = convertEvent(codeEventType)
             )
         }
-        return repo.projectName
+        return repo
     }
 
     private fun convertEvent(codeEventType: CodeEventType?): String? {
@@ -538,7 +550,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         projectId: String,
         repositoryConfig: RepositoryConfig,
         codeEventType: CodeEventType?
-    ): String {
+    ): Repository {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.P4_INVALID)
@@ -554,7 +566,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             userName = credential.username,
             event = codeEventType?.name
         )
-        return repo.projectName
+        return repo
     }
 
     fun addGithubCheckRuns(

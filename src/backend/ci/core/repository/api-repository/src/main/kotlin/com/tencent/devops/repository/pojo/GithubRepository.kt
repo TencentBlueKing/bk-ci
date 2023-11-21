@@ -58,4 +58,6 @@ data class GithubRepository(
     override fun getStartPrefix() = "https://github.com/"
 
     override fun getScmType() = ScmType.GITHUB
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }
