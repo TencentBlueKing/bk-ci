@@ -860,7 +860,10 @@ class RepositoryService @Autowired constructor(
 
         deleteResource(projectId, repositoryId)
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-        val deleteAliasName = "${record.aliasName}[$deleteTime]"
+        var deleteAliasName = "${record.aliasName}[$deleteTime]"
+        if (deleteAliasName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
+            deleteAliasName = deleteAliasName.substring(0, MAX_LEN_FOR_NAME)
+        }
         repositoryDao.delete(
             dslContext = dslContext,
             repositoryId = repositoryId,
@@ -1135,5 +1138,6 @@ class RepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
+        private const val MAX_LEN_FOR_NAME = 255
     }
 }
