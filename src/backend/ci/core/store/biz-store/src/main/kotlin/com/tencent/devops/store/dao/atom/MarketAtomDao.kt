@@ -618,13 +618,14 @@ class MarketAtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         atomCode: String,
         versionPrefix: String
-    ): Result<TAtomRecord> {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
+    ): TAtomRecord? {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(VERSION.startsWith(versionPrefix))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.TESTING.status.toByte()))
-                .fetch()
+                .orderBy(UPDATE_TIME.desc())
+                .fetchOne()
         }
     }
 
@@ -727,6 +728,37 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
                 .execute()
+        }
+    }
+
+    fun setupAtomLatestTestFlagByAtomId(dslContext: DSLContext, userId: String, atomId: String) {
+        with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(LATEST_TEST_FLAG, DSL.case_()
+                    .`when`(ID.eq(atomId), true)
+                    .otherwise(false))
+                .set(MODIFIER, userId)
+                .execute()
+        }
+    }
+
+    fun queryAtomLatestTestVersionId(dslContext: DSLContext,atomCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(ATOM_STATUS.`in`(
+                    listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+                ))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun isAtomLatestTestVersion(dslContext: DSLContext,atomId: String): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this)
+                .where(ID.eq(atomId).and(LATEST_TEST_FLAG.eq(true))).execute()
         }
     }
 

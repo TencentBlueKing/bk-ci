@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import io.swagger.annotations.Api
@@ -55,7 +56,7 @@ interface ServiceQualityMetadataMarketResource {
         @QueryParam("atomCode")
         atomCode: String,
         @QueryParam("extra")
-        extra: String,
+        extra: String = IN_READY_TEST,
         metadataList: List<QualityMetaData>
     ): Result<Map<String/* dataId */, Long/* metadataId */>>
 
@@ -74,6 +75,6 @@ interface ServiceQualityMetadataMarketResource {
         @QueryParam("elementType")
         elementType: String,
         @QueryParam("extra")
-        extra: String
+        extra: String = IN_READY_TEST
     ): Result<Int>
 }

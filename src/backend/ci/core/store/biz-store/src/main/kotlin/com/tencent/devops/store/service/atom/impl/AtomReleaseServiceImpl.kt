@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -86,7 +87,6 @@ import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -105,7 +105,9 @@ import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.KEY_VERSION_INFO
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -845,7 +847,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return flag
     }
 
-    protected fun upgradeMarketAtom(
+    private fun upgradeMarketAtom(
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         context: DSLContext,
         userId: String,
@@ -965,6 +967,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             hashKey = VersionUtils.convertLatestVersion(record.version),
             values = "false"
         )
+        checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -1039,6 +1042,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             doAtomReleaseBus(userId, atomReleaseRequest)
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(atomCode, atomStatus)
+            checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 // 记录发布信息
@@ -1436,5 +1440,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         return Result(atomId)
+    }
+
+    fun checkUpdateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
+        RedisLock(
+            redisOperation,
+            "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
+            60L
+        ).use { redisLock ->
+            redisLock.lock()
+            if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
+                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode)
+                latestTestVersionId?.let {
+                    marketAtomDao.setupAtomLatestTestFlagByAtomId(
+                        dslContext = dslContext,
+                        userId = userId,
+                        atomId = latestTestVersionId
+                    )
+                }
+            }
+        }
     }
 }

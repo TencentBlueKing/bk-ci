@@ -649,8 +649,6 @@ class AtomDao : AtomBaseDao() {
                     .join(tspr)
                     .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
                     .where(initTestAtomCondition)
-                    .groupBy(ta.ATOM_CODE)
-                    .orderBy(ta.CREATE_TIME.desc())
             )
         }
         val t = queryAtomStep.asTable("t")
@@ -992,14 +990,8 @@ class AtomDao : AtomBaseDao() {
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
-        conditions.add(
-            ta.ATOM_STATUS.`in`(
-                listOf(
-                    AtomStatusEnum.TESTING.status.toByte(),
-                    AtomStatusEnum.AUDITING.status.toByte()
-                )
-            )
-        ) // 只查测试中和审核中的插件
+        // 只查最新的测试中和审核中的插件
+        conditions.add(ta.LATEST_TEST_FLAG.eq(true))
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
         conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
