@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -85,6 +86,8 @@ data class CodeSvnRepository(
     }
 
     override fun getStartPrefix() = "svn+ssh://"
+
+    override fun getScmType() = ScmType.CODE_SVN
 
     override fun getExternalId(): String = projectName
 }

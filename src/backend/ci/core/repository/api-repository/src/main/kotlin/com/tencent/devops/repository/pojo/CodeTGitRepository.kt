@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.annotations.ApiModel
@@ -75,6 +76,8 @@ data class CodeTGitRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getScmType() = ScmType.CODE_TGIT
 
     override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }
