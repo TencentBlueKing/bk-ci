@@ -990,6 +990,14 @@ class AtomDao : AtomBaseDao() {
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
+        conditions.add(
+            ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.TESTING.status.toByte(),
+                    AtomStatusEnum.AUDITING.status.toByte()
+                )
+            )
+        )
         // 只查最新的测试中和审核中的插件
         conditions.add(ta.LATEST_TEST_FLAG.eq(true))
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
