@@ -49,7 +49,7 @@ class StreamLogPermissionService constructor(
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = action,
             projectCode = projectCode,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value

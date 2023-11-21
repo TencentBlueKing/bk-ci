@@ -75,7 +75,7 @@ class AuthCronManager @Autowired constructor(
 
     @PostConstruct
     fun init() {
-        logger.info("init system authToken success ${clientTokenService.getSystemToken(null)}")
+        logger.info("init system authToken success ${clientTokenService.getSystemToken()}")
         updateAuthActionI18n()
         updateAuthResourceTypeI18n()
         updateAuthResourceGroupConfigI18n()
