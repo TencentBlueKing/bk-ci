@@ -63,6 +63,10 @@ data class ProjectWorkspace(
     val owner: String? = null,
     @ApiModelProperty("查看者")
     val viewers: List<String>? = emptyList(),
+    @ApiModelProperty("拥有者_CN")
+    val ownerCN: String? = null,
+    @ApiModelProperty("查看者_CN")
+    val viewersCN: List<String>? = emptyList(),
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,

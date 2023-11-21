@@ -119,7 +119,9 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
 -- Table structure for T_REMOTE_DEV_SETTINGS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
-    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID',
+    `USER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '用户中文名',
+    `COMPANY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '公司名称',
     `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
     `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
     `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
@@ -137,7 +139,9 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `USER_SETTING` mediumtext NOT NULL COMMENT '用户设置，统一维护一个json字符串',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`USER_ID`)
+    PRIMARY KEY (`USER_ID`),
+    KEY `uni_1` (`USER_NAME`),
+    KEY `uni_2` (`COMPANY_NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户远程开发配置表';
 
 -- ----------------------------

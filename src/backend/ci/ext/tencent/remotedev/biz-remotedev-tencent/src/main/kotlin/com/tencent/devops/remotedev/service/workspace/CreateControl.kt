@@ -345,7 +345,7 @@ class CreateControl @Autowired constructor(
         if (devfileMountType == WorkspaceMountType.START) {
             return devfileMountType
         }
-        val mountType = remoteDevSettingDao.fetchAnySetting(dslContext, userId).userSetting.mountType
+        val mountType = remoteDevSettingDao.fetchOneSetting(dslContext, userId).userSetting.mountType
         logger.info("checkMountType|userId|$userId|devfileMountType|$devfileMountType|mountType|$mountType")
 
         // 简化判断逻辑，优先处理 WorkspaceMountType.BCS 的情况
@@ -550,7 +550,7 @@ class CreateControl @Autowired constructor(
                 )
             }
 
-            dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
+            dotfileRepo = remoteDevSettingDao.fetchOneSetting(dslContext, userId).dotfileRepo
         }
 
         if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
@@ -610,7 +610,7 @@ class CreateControl @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
-                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
                 mountType = mountType
@@ -698,7 +698,7 @@ class CreateControl @Autowired constructor(
                     zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 ),
-                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
                 mountType = mountType
