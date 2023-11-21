@@ -593,7 +593,8 @@ class CreateControl @Autowired constructor(
                 workspaceName = ws.workspaceName,
                 devFilePath = ws.devFilePath,
                 devFile = Devfile(
-                    uid = uid
+                    uid = uid,
+                    environmentUid = envId
                 ),
                 settingEnvs = emptyMap(),
                 projectId = projectId,
