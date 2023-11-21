@@ -644,6 +644,7 @@ class AtomDao : AtomBaseDao() {
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
         if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
                     .join(tspr)
@@ -997,9 +998,7 @@ class AtomDao : AtomBaseDao() {
                     AtomStatusEnum.AUDITING.status.toByte()
                 )
             )
-        )
-        // 只查最新的测试中和审核中的插件
-        conditions.add(ta.LATEST_TEST_FLAG.eq(true))
+        ) // 只查测试中和审核中的插件
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
         conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
