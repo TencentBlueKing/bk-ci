@@ -82,6 +82,14 @@ class StartCloudRemoteDevService @Autowired constructor(
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
 
         if (event.devFile.checkWorkspaceAutomaticCorrection()) {
+            val orderId = workspaceClient.listCgs().find {
+                it.basic?.envId == event.devFile.environmentUid
+            }?.basic?.orderId ?: kotlin.run {
+                logger.error("AutomaticCorrection orderId should not be null")
+                ""
+            }
+            // 迁移orderId
+            startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
         }
 
