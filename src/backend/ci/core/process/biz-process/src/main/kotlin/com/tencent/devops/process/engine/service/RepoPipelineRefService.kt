@@ -114,14 +114,14 @@ class RepoPipelineRefService @Autowired constructor(
             try {
                 model = objectMapper.readValue(modelString, Model::class.java)
             } catch (ignored: Exception) {
-                logger.error("parse process($pipelineId) model fail", ignored)
+                logger.warn("parse process($pipelineId) model fail", ignored)
                 return
             }
         }
         try {
             analysisPipelineRefAndSave(userId, action, projectId, pipelineId, model)
         } catch (e: Exception) {
-            logger.error("analysisPipelineRefAndSave failed", e)
+            logger.warn("analysisPipelineRefAndSave failed", e)
         }
     }
 
