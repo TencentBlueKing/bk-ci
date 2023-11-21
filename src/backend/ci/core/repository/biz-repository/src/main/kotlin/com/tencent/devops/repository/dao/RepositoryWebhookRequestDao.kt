@@ -38,10 +38,11 @@ import org.springframework.stereotype.Repository
 @Suppress("ALL")
 @Repository
 class RepositoryWebhookRequestDao {
-    fun saveWebhookRequest(dslContext: DSLContext, webhookRequest: RepositoryWebhookRequest): Long {
+    fun saveWebhookRequest(dslContext: DSLContext, webhookRequest: RepositoryWebhookRequest) {
         return with(TRepositoryWebhookRequest.T_REPOSITORY_WEBHOOK_REQUEST) {
             dslContext.insertInto(
                 this,
+                REQUEST_ID,
                 EXTERNAL_ID,
                 REPOSITORY_TYPE,
                 EVENT_TYPE,
@@ -52,6 +53,7 @@ class RepositoryWebhookRequestDao {
                 REQUEST_BODY,
                 CREATE_TIME
             ).values(
+                webhookRequest.requestId,
                 webhookRequest.externalId,
                 webhookRequest.repositoryType,
                 webhookRequest.eventType,
@@ -61,13 +63,13 @@ class RepositoryWebhookRequestDao {
                 webhookRequest.requestParam?.let { JsonUtil.toJson(it) },
                 webhookRequest.requestBody,
                 webhookRequest.createTime
-            ).returning(REQUEST_ID).fetchOne()?.requestId ?: 1
+            ).execute()
         }
     }
 
     fun get(
         dslContext: DSLContext,
-        requestId: Long
+        requestId: String
     ): RepositoryWebhookRequest? {
         val record = with(TRepositoryWebhookRequest.T_REPOSITORY_WEBHOOK_REQUEST) {
             dslContext.selectFrom(this)

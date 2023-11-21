@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import javax.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,6 +41,10 @@ class ServiceArchiveAtomResourceImpl @Autowired constructor(
 
     override fun getAtomFileContent(filePath: String): Result<String> {
         return Result(archiveAtomService.getAtomFileContent(filePath))
+    }
+
+    override fun downloadAtomFile(filePath: String, response: HttpServletResponse) {
+        archiveAtomService.downloadAtomFile(filePath, response)
     }
 
     override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {

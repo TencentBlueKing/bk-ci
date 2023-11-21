@@ -72,7 +72,6 @@ import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -131,19 +130,14 @@ class TGitPushTriggerHandler(
         }
     }
 
-    override fun getEventDesc(event: GitPushEvent, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            TGIT_PUSH_EVENT_DESC
-        )
+    override fun getEventDesc(event: GitPushEvent): String {
         return I18Variable(
-            code = i18Code,
+            code = TGIT_PUSH_EVENT_DESC,
             params = listOf(
                 getBranchName(event),
                 "${event.repository.homepage}/commit/${event.checkout_sha}",
                 "${event.checkout_sha}".substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH),
-                username
+                getUsername(event)
             )
         ).toJsonStr()
     }

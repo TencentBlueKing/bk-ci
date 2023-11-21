@@ -31,11 +31,10 @@ package com.tencent.devops.process.trigger
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
+import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -52,7 +51,7 @@ class WebhookTriggerService(
     fun trigger(
         scmType: ScmType,
         matcher: ScmWebhookMatcher,
-        hookRequestId: Long,
+        requestId: String,
         eventTime: LocalDateTime
     ) {
         val preMatch = matcher.preMatch()
@@ -60,62 +59,56 @@ class WebhookTriggerService(
             logger.info("webhook trigger pre match|${preMatch.reason}")
             return
         }
-        val webhookEvent = PipelineTriggerEvent(
+        val triggerEvent = PipelineTriggerEvent(
+            requestId = requestId,
             triggerType = scmType.name,
             eventType = matcher.getEventType().name,
             triggerUser = matcher.getUsername(),
             eventDesc = matcher.getEventDesc(),
-            hookRequestId = hookRequestId,
-            eventTime = eventTime
+            createTime = eventTime
         )
-        val subscribers = pipelineWebhookService.getWebhookPipelines(
+        val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType.name
         )
-        pipelineBuildWebhookService.dispatchPipelineSubscribers(
+        pipelineBuildWebhookService.dispatchTriggerPipelines(
             matcher = matcher,
-            triggerEvent = webhookEvent,
-            subscribers = subscribers
+            triggerEvent = triggerEvent,
+            triggerPipelines = triggerPipelines
         )
     }
 
     fun replay(
-        replayEvent: WebhookRequestReplayEvent,
-        matcher: ScmWebhookMatcher,
-        eventTime: LocalDateTime
+        replayEvent: ReplayWebhookEvent,
+        triggerEvent: PipelineTriggerEvent,
+        matcher: ScmWebhookMatcher
     ) {
         val preMatch = matcher.preMatch()
         if (!preMatch.isMatch) {
             logger.info("webhook replay trigger pre match|${preMatch.reason}")
             return
         }
-        with(replayEvent) {
-            val triggerEvent = PipelineTriggerEvent(
-                triggerType = scmType.name,
-                eventType = matcher.getEventType().name,
-                triggerUser = userId,
-                eventDesc = matcher.getEventDesc(PipelineEventReplayInfo(userId)),
-                hookRequestId = hookRequestId,
-                eventTime = eventTime
-            )
-            val subscribers = pipelineId?.let {
+
+        val triggerPipelines = with(replayEvent) {
+            pipelineId?.let {
                 listOf(
-                    PipelineWebhookSubscriber(
+                    WebhookTriggerPipeline(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
                 )
             } ?: run {
-                pipelineWebhookService.getWebhookPipelines(
-                    name = matcher.getRepoName(),
-                    repositoryType = scmType.name
+                pipelineWebhookService.listTriggerPipeline(
+                    projectId = projectId,
+                    repositoryHashId = triggerEvent.eventSource!!,
+                    eventType = triggerEvent.eventType
                 )
             }
-            pipelineBuildWebhookService.dispatchPipelineSubscribers(
-                matcher = matcher,
-                triggerEvent = triggerEvent,
-                subscribers = subscribers
-            )
         }
+        pipelineBuildWebhookService.dispatchTriggerPipelines(
+            matcher = matcher,
+            triggerEvent = triggerEvent,
+            triggerPipelines = triggerPipelines
+        )
     }
 }

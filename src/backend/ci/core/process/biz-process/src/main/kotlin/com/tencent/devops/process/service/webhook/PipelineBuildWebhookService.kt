@@ -55,7 +55,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookSubscriber
+import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -102,15 +102,15 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
-    fun dispatchPipelineSubscribers(
+    fun dispatchTriggerPipelines(
         matcher: ScmWebhookMatcher,
         triggerEvent: PipelineTriggerEvent,
-        subscribers: List<PipelineWebhookSubscriber>
+        triggerPipelines: List<WebhookTriggerPipeline>
     ): Boolean {
         try {
             logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
 
-            if (subscribers.isEmpty()) {
+            if (triggerPipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
             }
@@ -118,7 +118,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             EventCacheUtil.initEventCache()
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
-            subscribers.forEach outside@{ subscriber ->
+            triggerPipelines.forEach outside@{ subscriber ->
                 val projectId = subscriber.projectId
                 val pipelineId = subscriber.pipelineId
                 try {
@@ -172,7 +172,9 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             triggerEvent.eventSource = builder.getEventSource()
             triggerEvent.projectId = projectId
             val eventId = repoEventIdMap[builder.getEventSource()] ?: run {
-                val eventId = pipelineTriggerEventService.getEventId()
+                val eventId = pipelineTriggerEventService.getEventId(
+                    projectId = projectId, requestId = triggerEvent.requestId, eventSource = triggerEvent.eventSource!!
+                )
                 repoEventIdMap[builder.getEventSource()!!] = eventId
                 eventId
             }

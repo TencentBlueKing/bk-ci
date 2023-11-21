@@ -35,7 +35,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
 import org.slf4j.LoggerFactory
 
-class StreamLogPermissionService constructor(
+class StreamLogPermissionService(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {

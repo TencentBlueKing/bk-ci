@@ -367,7 +367,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         logger.info("Start webhook replay event listener")
-        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleReplayRequest.name)
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleReplayEvent.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,

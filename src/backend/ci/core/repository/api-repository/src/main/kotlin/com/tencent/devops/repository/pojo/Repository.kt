@@ -55,4 +55,6 @@ interface Repository {
     fun getStartPrefix(): String
 
     fun getFormatURL() = url
+
+    fun getExternalId(): String = projectName
 }

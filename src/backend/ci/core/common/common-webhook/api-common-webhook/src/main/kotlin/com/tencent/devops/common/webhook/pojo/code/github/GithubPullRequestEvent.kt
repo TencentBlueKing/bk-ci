@@ -106,13 +106,13 @@ data class GithubPullRequest(
     @JsonProperty("locked")
     val locked: Boolean, // false
     @JsonProperty("maintainer_can_modify")
-    val maintainerCanModify: Boolean, // false
+    val maintainerCanModify: Boolean? = false, // false
     @JsonProperty("merge_commit_sha")
     val mergeCommitSha: String?, // null
     @JsonProperty("mergeable")
-    val mergeable: String?, // null
+    var mergeable: Boolean?, // null
     @JsonProperty("mergeable_state")
-    val mergeableState: String, // unknown
+    var mergeableState: String?, // unknown
     @JsonProperty("merged")
     val merged: Boolean, // false
     @JsonProperty("merged_at")
@@ -163,7 +163,7 @@ data class GithubMilestone(
     @JsonProperty("creator")
     val creator: GithubUser,
     @JsonProperty("description")
-    val description: String, // Tracking milestone for version 1.0
+    val description: String?, // Tracking milestone for version 1.0
     @JsonProperty("due_on")
     val dueOn: String?, // 2012-10-09T23:39:01Z
     @JsonProperty("html_url")

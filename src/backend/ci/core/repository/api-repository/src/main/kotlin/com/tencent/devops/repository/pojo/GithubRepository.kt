@@ -55,4 +55,6 @@ data class GithubRepository(
     }
 
     override fun getStartPrefix() = "https://github.com/"
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

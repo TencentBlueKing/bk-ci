@@ -35,29 +35,33 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
-import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
-import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
-import com.tencent.devops.process.webhook.pojo.event.WebhookRequestReplayEvent
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
@@ -69,7 +73,7 @@ class PipelineTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     companion object {
@@ -77,7 +81,7 @@ class PipelineTriggerEventService @Autowired constructor(
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
         // 构建链接
-        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">{1}</a>"
+        const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
     }
 
     fun getDetailId(): Long {
@@ -88,11 +92,19 @@ class PipelineTriggerEventService @Autowired constructor(
         return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_EVENT_BIZ_ID).data ?: 0
     }
 
+    fun getEventId(projectId: String, requestId: String, eventSource: String): Long {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId ?: getEventId()
+    }
+
     fun saveEvent(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        logger.info("save pipeline trigger event|event[$triggerEvent]|detail[$triggerDetail]")
         triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -107,7 +119,7 @@ class PipelineTriggerEventService @Autowired constructor(
         }
     }
 
-    fun listTriggerEvent(
+    fun listPipelineTriggerEvent(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -122,7 +134,8 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val language = I18nUtil.getLanguage(userId)
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -132,7 +145,7 @@ class PipelineTriggerEventService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventType = eventType,
@@ -144,12 +157,8 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = try {
-                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(I18nUtil.getLanguage(userId))
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                it.eventDesc
-            }
+            it.eventDesc = it.getI18nEventDesc(language)
+            it.reason = getI18nReason(it.reason, language)
             it
         }
         return SQLPage(count = count, records = records)
@@ -174,41 +183,92 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val count = pipelineTriggerEventDao.countRepoTriggerEvent(
+        // 事件ID to 总数
+        val (eventIds, count) = if (pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank()) {
+            val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            val count = pipelineTriggerEventDao.getCountByEvent(
+                dslContext = dslContext,
+                eventId = eventId,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventType = eventType,
+                triggerType = triggerType,
+                triggerUser = triggerUser,
+                startTime = startTime,
+                endTime = endTime
+            )
+            eventIds to count
+        } else {
+            val eventIds = pipelineTriggerEventDao.getDetailEventIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime,
+                pipelineName = pipelineName,
+                pipelineId = pipelineId,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            val count = pipelineTriggerEventDao.getCountByDetail(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventSource = repoHashId,
+                eventId = eventId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                startTime = startTime,
+                endTime = endTime,
+                pipelineName = pipelineName,
+                pipelineId = pipelineId
+            )
+            eventIds to count
+        }
+        // 事件信息
+        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEvent(
             dslContext = dslContext,
-            projectId = projectId,
-            eventSource = repoHashId,
-            eventType = eventType,
-            triggerType = triggerType,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            eventId = eventId,
-            pipelineName = pipelineName,
-            startTime = startTime,
-            endTime = endTime
+            eventIds = eventIds
         )
-        val records = pipelineTriggerEventDao.listRepoTriggerEvent(
+        // 触发详情记录（总数，成功数）
+        val eventDetailsMap = pipelineTriggerEventDao.listRepoTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
-            eventSource = repoHashId,
-            eventType = eventType,
-            triggerType = triggerType,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            eventId = eventId,
+            eventIds = eventIds,
             pipelineName = pipelineName,
-            startTime = startTime,
-            endTime = endTime,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
-        ).map {
-            it.eventDesc = try {
-                JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
-            } catch (ignored: Exception) {
-                logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                it.eventDesc
-            }
-            it
+            pipelineId = pipelineId
+        ).associateBy { it.eventId }
+        val records = triggerEvent.map {
+            RepoTriggerEventVo(
+                projectId = it.projectId,
+                eventId = it.eventId,
+                repoHashId = it.eventSource,
+                eventDesc = try {
+                    JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+                } catch (ignored: Exception) {
+                    logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
+                    it.eventDesc
+                },
+                eventTime = it.createTime.timestampmilli(),
+                total = eventDetailsMap[it.eventId]?.total ?: 0,
+                success = eventDetailsMap[it.eventId]?.success ?: 0
+            )
         }
         return SQLPage(count = count, records = records)
     }
@@ -217,6 +277,7 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
+        pipelineName: String?,
         page: Int?,
         pageSize: Int?,
         userId: String
@@ -228,24 +289,23 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val language = I18nUtil.getLanguage(userId)
-        val records = pipelineTriggerEventDao.listTriggerEvent(
+        val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDesc(language)
-            it.buildNum = it.getBuildNumUrl()
-            it.reasonDetailList = it.getI18nReasonDetailDesc(language)
-            it
+            fillEventDetailParam(it, language)
         }
-        val count = pipelineTriggerEventDao.countTriggerEvent(
+        val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
             eventId = eventId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
         )
         return SQLPage(count = count, records = records)
     }
@@ -296,103 +356,45 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
-        traceEventDispatcher.dispatch(
-            WebhookRequestReplayEvent(
+        // 保存重放事件
+        val requestId = MDC.get(TraceTag.BIZID)
+        val replayEventId = getEventId()
+        // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
+        val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
+        val replayTriggerEvent = with(triggerEvent) {
+            PipelineTriggerEvent(
+                requestId = requestId,
+                projectId = projectId,
+                eventId = replayEventId,
+                triggerType = triggerType,
+                eventSource = eventSource,
+                eventType = eventType,
+                triggerUser = userId,
+                eventDesc = I18Variable(
+                    code = EVENT_REPLAY_DESC,
+                    params = listOf(eventId.toString(), userId)
+                ).toJsonStr(),
+                replayRequestId = replayRequestId,
+                requestParams = requestParams,
+                createTime = LocalDateTime.now()
+            )
+        }
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = replayTriggerEvent
+        )
+        CodeWebhookEventDispatcher.dispatchReplayEvent(
+            rabbitTemplate = rabbitTemplate,
+            event = ReplayWebhookEvent(
                 userId = userId,
                 projectId = projectId,
-                hookRequestId = triggerEvent.hookRequestId!!,
+                eventId = replayEventId,
+                replayRequestId = replayRequestId,
                 scmType = scmType,
                 pipelineId = pipelineId
             )
         )
         return true
-    }
-
-    /**
-     * 保存特殊触发事件
-     * 远程/手动/openApi
-     */
-    fun saveSpecificEvent(
-        projectId: String,
-        pipelineId: String,
-        userId: String,
-        requestParams: Map<String, String>?,
-        triggerType: String = PipelineTriggerType.MANUAL.name,
-        startAction: () -> BuildId
-    ): BuildId {
-        var buildNum: String? = null
-        var status = PipelineTriggerStatus.SUCCEED.name
-        var buildId: String? = null
-        try {
-            val buildInfo = startAction.invoke()
-            buildNum = buildInfo.num.toString()
-            buildId = buildInfo.id
-            return buildInfo
-        } catch (ignored: Exception) {
-            status = PipelineTriggerStatus.FAILED.name
-            throw ignored
-        } finally {
-            saveManualStartEvent(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                status = status,
-                requestParams = requestParams,
-                userId = userId,
-                buildNum = buildNum,
-                triggerType = triggerType
-            )
-        }
-    }
-
-    /**
-     * 保存手动触发事件
-     */
-    private fun saveManualStartEvent(
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        buildNum: String?,
-        userId: String,
-        status: String,
-        triggerType: String,
-        requestParams: Map<String, String>?
-    ) {
-        val eventId = getEventId()
-        saveEvent(
-            triggerDetail = PipelineTriggerDetail(
-                eventId = eventId,
-                status = status,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                buildNum = buildNum
-            ),
-            triggerEvent = PipelineTriggerEvent(
-                eventId = eventId,
-                projectId = projectId,
-                eventDesc = JsonUtil.toJson(
-                    I18Variable(
-                        code = getI18Code(triggerType),
-                        params = listOf(userId)
-                    ),
-                    false
-                ),
-                triggerType = triggerType,
-                eventType = triggerType,
-                triggerUser = userId,
-                requestParams = requestParams,
-                eventTime = LocalDateTime.now(),
-                hookRequestId = null
-            )
-        )
-    }
-
-    private fun getI18Code(triggerType: String) = when (triggerType) {
-        PipelineTriggerType.MANUAL.name -> WebhookI18nConstants.MANUAL_START_EVENT_DESC
-        PipelineTriggerType.REMOTE.name -> WebhookI18nConstants.REMOTE_START_EVENT_DESC
-        PipelineTriggerType.SERVICE.name -> WebhookI18nConstants.SERVICE_START_EVENT_DESC
-        else -> ""
     }
 
     /**
@@ -429,6 +431,16 @@ class PipelineTriggerEventService @Autowired constructor(
         listOf()
     }
 
+    private fun getI18nReason(reason: String?, language: String): String = getCodeLanMessage(
+        messageCode = if (reason.isNullOrBlank()) {
+            PipelineTriggerReason.TRIGGER_SUCCESS.name
+        } else {
+            reason
+        },
+        language = language,
+        defaultMessage = reason
+    )
+
     /**
      * 获取构建链接
      */
@@ -439,6 +451,28 @@ class PipelineTriggerEventService @Autowired constructor(
             MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
         } else {
             null
+        }
+    }
+
+    /**
+     * 填充事件相关参数
+     * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
+     */
+    private fun fillEventDetailParam(
+        eventParam: PipelineTriggerEventVo,
+        language: String
+    ): PipelineTriggerEventVo {
+        return with(eventParam) {
+            eventDesc = getI18nEventDesc(language)
+            buildNum = getBuildNumUrl()
+            reasonDetailList = getI18nReasonDetailDesc(language)
+            reason = getI18nReason(eventParam.reason, language)
+            failReason = if (!reasonDetailList.isNullOrEmpty()) {
+                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name, language)
+            } else {
+                ""
+            }
+            this
         }
     }
 }

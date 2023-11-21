@@ -52,7 +52,7 @@ interface ServiceRepositoryWebhookResource {
     fun saveWebhookRequest(
         @ApiParam(value = "代码库触发事件", required = true)
         repositoryWebhookRequest: RepositoryWebhookRequest
-    ): Result<Long>
+    ): Result<Boolean>
 
     @ApiOperation("获取代码库事件请求")
     @GET
@@ -60,6 +60,6 @@ interface ServiceRepositoryWebhookResource {
     fun getWebhookRequest(
         @ApiParam(value = "事件ID", required = true)
         @PathParam("requestId")
-        requestId: Long
+        requestId: String
     ): Result<RepositoryWebhookRequest?>
 }

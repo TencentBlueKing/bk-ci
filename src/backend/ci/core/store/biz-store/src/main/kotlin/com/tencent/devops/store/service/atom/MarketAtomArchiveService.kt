@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import java.io.File
 
 @Suppress("ALL")
 interface MarketAtomArchiveService {
@@ -41,6 +42,14 @@ interface MarketAtomArchiveService {
         version: String,
         fileName: String
     ): String
+
+    fun downloadFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        file: File
+    )
 
     fun verifyAtomPackageByUserId(
         userId: String,

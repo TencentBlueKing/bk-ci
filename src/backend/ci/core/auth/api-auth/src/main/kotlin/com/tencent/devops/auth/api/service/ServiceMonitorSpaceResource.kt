@@ -35,6 +35,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -56,4 +57,12 @@ interface ServiceMonitorSpaceResource {
         @ApiParam("项目ID", required = false)
         projectCode: String
     ): Result<String>
+
+    @POST
+    @Path("/migrateMonitorResource")
+    @ApiOperation("迁移监控空间权限资源")
+    fun migrateMonitorResource(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }

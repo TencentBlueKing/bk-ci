@@ -45,7 +45,6 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.process.pojo.trigger.PipelineEventReplayInfo
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
@@ -86,17 +85,12 @@ class P4ShelveTriggerHandler(
 
     override fun getMessage(event: P4ShelveEvent) = event.description
 
-    override fun getEventDesc(event: P4ShelveEvent, replayInfo: PipelineEventReplayInfo?): String {
-        val (username, i18Code) = PipelineEventReplayInfo.getTriggerInfo(
-            replayInfo,
-            getUsername(event),
-            WebhookI18nConstants.P4_EVENT_DESC
-        )
+    override fun getEventDesc(event: P4ShelveEvent): String {
         return I18Variable(
-            code = i18Code,
+            code = WebhookI18nConstants.P4_EVENT_DESC,
             params = listOf(
                 getRevision(event),
-                username,
+                getUsername(event),
                 getFormatEventType(event)
             )
         ).toJsonStr()

@@ -85,7 +85,10 @@ enum class CodeEventType {
             PUSH,
             MERGE_REQUEST,
             MERGE_REQUEST_ACCEPT,
-            CREATE
+            CREATE,
+            REVIEW,
+            ISSUES,
+            NOTE
         )
 
         val CODE_P4_EVENTS = listOf(

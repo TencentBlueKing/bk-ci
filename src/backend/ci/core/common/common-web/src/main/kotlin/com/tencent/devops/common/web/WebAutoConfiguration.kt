@@ -116,8 +116,7 @@ class WebAutoConfiguration {
     ) = BkServiceInstanceApplicationRunner(
         compositeDiscoveryClient = compositeDiscoveryClient,
         bkTag = bkTag,
-        redisOperation = redisOperation,
-        rabbitAdmin = rabbitAdmin
+        redisOperation = redisOperation
     )
 
     @Bean

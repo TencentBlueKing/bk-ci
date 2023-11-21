@@ -283,19 +283,33 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
-    fun migrateMonitorResource(projectCode: String) {
-        val projectInfo = authResourceService.get(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
+    fun migrateProjectMonitorResource(
+        projectCode: String,
+        gradeManagerId: String,
+        projectName: String
+    ) {
         // 注册分级管理员监控权限资源
         permissionGradeManagerService.modifyGradeManager(
-            gradeManagerId = projectInfo.relationId,
+            gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            projectName = projectInfo.resourceName,
+            projectName = projectName,
             registerMonitorPermission = true
         )
+    }
+
+    fun migrateMonitorResource(
+        projectCode: String,
+        projectName: String,
+        gradeManagerId: String,
+        async: Boolean
+    ) {
+        if (async) {
+            migrateProjectMonitorResource(
+                projectCode = projectCode,
+                gradeManagerId = gradeManagerId,
+                projectName = projectName
+            )
+        }
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -313,11 +327,11 @@ class MigrateResourceService @Autowired constructor(
             permissionGroupPoliciesService.grantGroupPermission(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
-                projectName = projectInfo.resourceName,
+                projectName = projectName,
                 resourceType = groupConfig.resourceType,
                 groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
-                resourceName = projectInfo.resourceName,
+                resourceName = projectName,
                 iamGroupId = resourceGroupInfo.relationId.toInt()
             )
         }

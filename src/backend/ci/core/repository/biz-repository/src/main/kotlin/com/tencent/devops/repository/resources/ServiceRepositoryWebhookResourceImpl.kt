@@ -40,11 +40,12 @@ class ServiceRepositoryWebhookResourceImpl @Autowired constructor(
     val repositoryWebhookService: RepositoryWebhookService
 ) : ServiceRepositoryWebhookResource {
 
-    override fun saveWebhookRequest(repositoryWebhookRequest: RepositoryWebhookRequest): Result<Long> {
-        return Result(repositoryWebhookService.saveWebhookRequest(repositoryWebhookRequest))
+    override fun saveWebhookRequest(repositoryWebhookRequest: RepositoryWebhookRequest): Result<Boolean> {
+        repositoryWebhookService.saveWebhookRequest(repositoryWebhookRequest)
+        return Result(true)
     }
 
-    override fun getWebhookRequest(requestId: Long): Result<RepositoryWebhookRequest?> {
+    override fun getWebhookRequest(requestId: String): Result<RepositoryWebhookRequest?> {
         return Result(repositoryWebhookService.getWebhookRequest(requestId = requestId))
     }
 }

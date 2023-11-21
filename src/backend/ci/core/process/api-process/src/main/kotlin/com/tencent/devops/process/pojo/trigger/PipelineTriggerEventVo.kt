@@ -61,6 +61,8 @@ data class PipelineTriggerEventVo(
     var buildNum: String? = null,
     @ApiModelProperty("原因")
     var reason: String? = null,
-    @ApiModelProperty("原因详情", required = false)
-    var reasonDetailList: List<String>? = null
+    @ApiModelProperty("失败原因详情", required = false)
+    var reasonDetailList: List<String>? = null,
+    @ApiModelProperty("失败原因", required = false)
+    var failReason: String = ""
 )

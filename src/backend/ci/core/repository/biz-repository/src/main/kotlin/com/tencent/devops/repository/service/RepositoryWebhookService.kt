@@ -13,7 +13,7 @@ class RepositoryWebhookService @Autowired constructor(
     val repositoryWebhookRequestDao: RepositoryWebhookRequestDao,
     val dslContext: DSLContext
 ) {
-    fun saveWebhookRequest(repositoryWebhookRequest: RepositoryWebhookRequest): Long {
+    fun saveWebhookRequest(repositoryWebhookRequest: RepositoryWebhookRequest) {
         with(repositoryWebhookRequest) {
             if (externalId.isBlank()) {
                 throw ParamBlankException("Invalid eventSource")
@@ -24,14 +24,14 @@ class RepositoryWebhookService @Autowired constructor(
             if (eventType.isBlank()) {
                 throw ParamBlankException("Invalid eventType")
             }
-            return repositoryWebhookRequestDao.saveWebhookRequest(
+            repositoryWebhookRequestDao.saveWebhookRequest(
                 dslContext = dslContext,
                 webhookRequest = repositoryWebhookRequest
             )
         }
     }
 
-    fun getWebhookRequest(requestId: Long): RepositoryWebhookRequest? {
+    fun getWebhookRequest(requestId: String): RepositoryWebhookRequest? {
         return repositoryWebhookRequestDao.get(
             dslContext = dslContext,
             requestId = requestId

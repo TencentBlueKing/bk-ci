@@ -49,12 +49,11 @@ class RegexContainFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
-        return buildFilterFailedReason(
-            action = {
-                filterAction()
-            },
-            response = response
-        )
+        val filterResult = filterAction()
+        if (!filterResult && failedReason.isNotBlank()) {
+            response.failedReason = failedReason
+        }
+        return filterResult
     }
 
     @SuppressWarnings("ReturnCount")
@@ -72,13 +71,5 @@ class RegexContainFilter(
             }
         }
         return false
-    }
-
-    private fun buildFilterFailedReason(action: () -> Boolean, response: WebhookFilterResponse): Boolean {
-        val filterResult = action.invoke()
-        if (!filterResult && failedReason.isNotBlank()) {
-            response.failedReason = failedReason
-        }
-        return filterResult
     }
 }

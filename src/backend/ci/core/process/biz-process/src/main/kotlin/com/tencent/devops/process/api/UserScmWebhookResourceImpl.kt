@@ -41,12 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserScmWebhookResourceImpl @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService
 ) : UserScmWebhookResource {
-
-    override fun updateProjectNameAndTaskId(): Result<Boolean> {
-        pipelineWebhookService.updateProjectNameAndTaskId()
-        return Result(true)
-    }
-
     override fun getEventType(scmType: String): Result<List<WebhookEventType>> {
         val eventTypeList = when (scmType) {
             ScmType.CODE_GIT.name, ScmType.CODE_TGIT.name ->

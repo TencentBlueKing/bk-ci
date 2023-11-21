@@ -67,7 +67,8 @@ abstract class BasePathFilter(
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
-                        matchUserPaths.add(userPath)
+                        // 提取最终匹配路径
+                        matchUserPaths.add(extractMatchUserPath(eventPath, userPath))
                         return@eventPath
                     }
                 }
@@ -78,7 +79,6 @@ abstract class BasePathFilter(
         } else {
             matchIncludePaths.addAll(triggerOnPath)
         }
-
         val matchExcludedPaths = mutableSetOf<String>()
         if (excludedPaths.isNotEmpty()) {
             matchIncludePaths.forEach eventPath@{ eventPath ->
@@ -109,4 +109,9 @@ abstract class BasePathFilter(
     }
 
     abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
+
+    open fun extractMatchUserPath(
+        eventPath: String,
+        userPath: String
+    ) = eventPath
 }
