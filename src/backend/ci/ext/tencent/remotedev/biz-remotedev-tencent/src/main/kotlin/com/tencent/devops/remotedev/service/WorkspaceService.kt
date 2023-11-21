@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
@@ -101,12 +102,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -114,6 +109,12 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -128,7 +129,6 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevCvmService: RemoteDevCvmService,
     private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
@@ -396,6 +396,7 @@ class WorkspaceService @Autowired constructor(
     ): List<ProjectWorkspace> {
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
+        val taiUsers = mutableSetOf<String>()
 
         workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, result.map { it.workspaceName }).forEach {
             when (it.type) {
@@ -407,10 +408,15 @@ class WorkspaceService @Autowired constructor(
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
             }
+            if (UserUtil.isTaiUser(it.sharedUser)) {
+                taiUsers.add(it.sharedUser)
+            }
         }
 
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
-        val zoneConfg = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
+        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
+            .mapValues { "${it.value.first}@${it.value.second}" }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -463,9 +469,13 @@ class WorkspaceService @Autowired constructor(
                             workspaceMountType = it.workspaceMountType,
                             workspaceSystemType = it.workspaceSystemType,
                             winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                            zoneConfig = detail?.hostIP?.let { ip -> zoneConfg[ip.replace(Regex("[\\d\\.]+"), "")] },
+                            zoneConfig = detail?.hostIP?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
                             owner = owners[it.workspaceName],
                             viewers = viewers[it.workspaceName],
+                            ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
+                            viewersCN = viewers[it.workspaceName]?.map { viewer ->
+                                taiUserCN[viewer] ?: viewer
+                            },
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
@@ -498,6 +508,10 @@ class WorkspaceService @Autowired constructor(
                             winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
                             owner = owners[it.workspaceName],
                             viewers = viewers[it.workspaceName],
+                            ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
+                            viewersCN = viewers[it.workspaceName]?.map { viewer ->
+                                taiUserCN[viewer] ?: viewer
+                            },
                             gpu = it.gpu,
                             cpu = it.cpu,
                             memory = it.memory,
@@ -553,6 +567,7 @@ class WorkspaceService @Autowired constructor(
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                realOwner = res["SHARED_USER"] as? String ?: "",
                 status = WorkspaceStatus.values()[res["STATUS"] as Int]
             )
         }
@@ -594,6 +609,7 @@ class WorkspaceService @Autowired constructor(
         assignType: WorkspaceShared.AssignType,
         winConfigId: Int?,
         owner: String?,
+        ownerCN: String?,
         winConfig: WindowsResourceTypeConfig? = null
     ) = Workspace(
         workspaceId = it.workspaceId,
@@ -610,6 +626,7 @@ class WorkspaceService @Autowired constructor(
         sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime?.timestamp() else null,
         createUserId = it.createUserId,
         owner = owner,
+        ownerCN = ownerCN,
         workPath = it.workPath,
         workspaceFolder = it.workspaceFolder,
         hostName = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
@@ -643,6 +660,15 @@ class WorkspaceService @Autowired constructor(
         val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
             workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
         }?.groupBy { it.workspaceName } ?: emptyMap()
+        val taiUsers = sharedWorkspace.values.flatMap {
+            it.find { shared ->
+                shared.type == WorkspaceShared.AssignType.OWNER
+            }?.sharedUser?.lineSequence() ?: emptySequence()
+        }
+        val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(
+            dslContext,
+            userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
+        ).mapValues { "${it.value.first}@${it.value.second}" }
         val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
@@ -668,15 +694,17 @@ class WorkspaceService @Autowired constructor(
                         )
                     }
                 }
+                val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
+                    shared.type == WorkspaceShared.AssignType.OWNER
+                }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
                 parsingWorkspace(
                     it = it,
                     status = status,
                     assignType = sharedWorkspace[it.workspaceName]?.find { shared -> shared.sharedUser == userId }?.type
                         ?: WorkspaceShared.AssignType.OWNER,
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
-                    owner = sharedWorkspace[it.workspaceName]?.find { shared ->
-                        shared.type == WorkspaceShared.AssignType.OWNER
-                    }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null,
+                    owner = owner,
+                    ownerCN = taiUserCN[owner] ?: owner,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] }
                 )
             }

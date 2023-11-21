@@ -39,14 +39,14 @@ class StreamArtPipelineServiceImpl @Autowired constructor(
         return if (pipelineId != null) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
                 userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
+                token = tokenCheckService.getSystemToken() ?: "",
                 action = permission?.value ?: "",
                 projectCode = projectId,
                 resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
             ).data ?: false
         } else {
             client.get(ServiceProjectAuthResource::class).isProjectUser(
-                token = tokenCheckService.getSystemToken(null) ?: "",
+                token = tokenCheckService.getSystemToken() ?: "",
                 userId = userId,
                 projectCode = projectId
             ).data ?: false

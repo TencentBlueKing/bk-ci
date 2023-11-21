@@ -35,7 +35,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         if (authPermission == AuthPermission.VIEW)
             return
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(experienceId),
@@ -86,7 +86,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_TASK)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = actions,
@@ -123,7 +123,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         if (authPermission == AuthPermission.VIEW)
             return
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(groupId),
@@ -162,7 +162,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_GROUP)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = actions,
