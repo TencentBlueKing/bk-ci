@@ -742,7 +742,7 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun queryAtomLatestTestVersionId(dslContext: DSLContext,atomCode: String): String? {
+    fun queryAtomLatestTestVersionId(dslContext: DSLContext, atomCode: String): String? {
         with(TAtom.T_ATOM) {
             return dslContext.select(ID).from(this)
                 .where(ATOM_CODE.eq(atomCode))
@@ -755,7 +755,7 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun isAtomLatestTestVersion(dslContext: DSLContext,atomId: String): Int {
+    fun isAtomLatestTestVersion(dslContext: DSLContext, atomId: String): Int {
         with(TAtom.T_ATOM) {
             return dslContext.select(ID).from(this)
                 .where(ID.eq(atomId).and(LATEST_TEST_FLAG.eq(true))).execute()
