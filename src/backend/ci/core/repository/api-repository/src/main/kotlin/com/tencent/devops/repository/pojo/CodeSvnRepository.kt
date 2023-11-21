@@ -88,4 +88,6 @@ data class CodeSvnRepository(
     override fun getStartPrefix() = "svn+ssh://"
 
     override fun getScmType() = ScmType.CODE_SVN
+
+    override fun getExternalId(): String = projectName
 }

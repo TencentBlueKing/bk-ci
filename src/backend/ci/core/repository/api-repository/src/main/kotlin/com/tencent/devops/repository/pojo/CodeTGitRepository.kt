@@ -78,4 +78,6 @@ data class CodeTGitRepository(
     }
 
     override fun getScmType() = ScmType.CODE_TGIT
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

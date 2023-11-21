@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.svn
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_REVERSION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_USERNAME
@@ -79,6 +81,20 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         return event.log
     }
 
+    override fun getEventDesc(event: SvnCommitEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.SVN_COMMIT_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: SvnCommitEvent): String {
+        return event.rep_name
+    }
+
     override fun getWebhookFilters(
         event: SvnCommitEvent,
         projectId: String,
@@ -92,11 +108,20 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                 projectName = repository.projectName,
                 triggerOnProjectName = event.rep_name
             )
+            val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
-                triggerOnUser = getUsername(event),
+                triggerOnUser = userId,
                 includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
             )
             val projectRelativePath = WebhookUtils.getRelativePath(repository.url)
             val pathFilter = PathFilterFactory.newPathFilter(
@@ -110,7 +135,15 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = getIncludePaths(projectRelativePath)
+                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_NOT_MATCH,
+                        params = listOf()
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.PATH_IGNORED,
+                        params = listOf()
+                    ).toJsonStr()
                 )
             )
             return listOf(projectNameFilter, userFilter, pathFilter)

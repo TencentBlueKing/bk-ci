@@ -1014,7 +1014,8 @@ class PipelineRuntimeService @Autowired constructor(
             id = context.buildId,
             executeCount = context.executeCount,
             projectId = context.projectId,
-            pipelineId = context.pipelineId
+            pipelineId = context.pipelineId,
+            num = context.buildNum
         )
     }
 

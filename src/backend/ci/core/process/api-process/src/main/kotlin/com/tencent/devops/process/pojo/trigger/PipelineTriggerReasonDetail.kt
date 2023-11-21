@@ -23,28 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.pojo.trigger
 
-import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class PipelineWebhookBuildLogServiceImpl : PipelineWebhookBuildLogService {
-    override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) = Unit
-
-    override fun listWebhookBuildLogDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail>? {
-        return null
-    }
-}
+@ApiModel("流水线触发原因详情")
+data class PipelineTriggerReasonDetail(
+    @ApiModelProperty("触发插件ID")
+    val elementId: String?,
+    @ApiModelProperty("触发插件Code")
+    val elementAtomCode: String,
+    @ApiModelProperty("触发插件名称")
+    val elementName: String,
+    @ApiModelProperty("触发原因，JSON字符串，便于国际化")
+    val reasonMsg: String
+)

@@ -77,4 +77,6 @@ data class CodeGitlabRepository(
     }
 
     override fun getScmType() = ScmType.CODE_GITLAB
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

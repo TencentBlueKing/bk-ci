@@ -27,7 +27,7 @@ object PathMatchUtils {
             // 包含匹配失败
             val includePathsMatch = pathIgnoreList.isEmpty() &&
                 pathList.isNotEmpty() &&
-                response.getParam()[MATCH_PATHS] == null
+                response.params[MATCH_PATHS] == null
             return if (includePathsMatch) {
                 TriggerBody().triggerFail("on.push.paths", "change path($pathList) not match")
             } else {

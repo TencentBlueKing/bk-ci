@@ -23,32 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.pojo.trigger
 
-import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface PipelineWebhookBuildLogService {
-
-    /**
-     * 保存webhook构建日志
-     */
-    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
-
-    /**
-     * 查询webhook构建日志明细
-     */
-    @Suppress("ALL")
-    fun listWebhookBuildLogDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail>?
-}
+@ApiModel("代码库webhook事件记录")
+data class RepoTriggerEventVo(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("事件ID")
+    val eventId: Long,
+    @ApiModelProperty("代码库ID", required = false)
+    val repoHashId: String,
+    @ApiModelProperty("事件描述")
+    var eventDesc: String,
+    @ApiModelProperty("触发时间")
+    val eventTime: Long,
+    @ApiModelProperty("总流水线数")
+    val total: Int,
+    @ApiModelProperty("成功的流水线数")
+    val success: Int
+)
