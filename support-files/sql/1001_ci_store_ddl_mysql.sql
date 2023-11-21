@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `DELETE_FLAG` bit(1) DEFAULT b'0' COMMENT '是否删除',
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
   `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
+  `LATEST_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
