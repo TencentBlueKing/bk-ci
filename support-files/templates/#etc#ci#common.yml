@@ -132,9 +132,6 @@ spring:
       - index: 23
         name: T_PIPELINE_VIEW_USER_SETTINGS
         databaseShardingStrategy: SHARDING
-      - index: 24
-        name: T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL
-        databaseShardingStrategy: SHARDING
       - index: 25
         name: T_PIPELINE_WEBHOOK_QUEUE
         databaseShardingStrategy: SHARDING
@@ -219,7 +216,13 @@ spring:
       - index: 52
         name: T_PIPELINE_BUILD_RECORD_TASK
         databaseShardingStrategy: SHARDING
-
+      - index: 53
+        name: T_PIPELINE_TRIGGER_EVENT
+        databaseShardingStrategy: SHARDING
+      - index: 54
+        name: T_PIPELINE_TRIGGER_DETAIL
+        databaseShardingStrategy: SHARDING
+      
 
 endpoints:
   metrics:

@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCommitCommentEvent
 
 @CodeWebhookHandler
@@ -52,5 +53,17 @@ class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubComm
             startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
         }
         return startParams
+    }
+
+    override fun buildCommentUrl(event: GithubCommitCommentEvent): String {
+        // https://github.com/TencentBlueKing/bk-ci/commit/{{commitSha}}#commitcomment-{{commentId}}
+        return with(event) {
+            if (comment.htmlUrl.isNullOrBlank()) {
+                "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/commit/" +
+                        "${comment.commitId}#commitcomment-${comment.id}"
+            } else {
+                comment.htmlUrl!!
+            }
+        }
     }
 }
