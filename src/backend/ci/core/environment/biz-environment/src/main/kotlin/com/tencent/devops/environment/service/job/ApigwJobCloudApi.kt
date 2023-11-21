@@ -55,6 +55,12 @@ class ApigwJobCloudApi {
     @Value("\${job.getAccountListPath:#{\"/api/v3/get_account_list\"}}")
     val getAccountListPath: String = ""
 
+    @Value("\${job.getStepInstanceDetailPath:#{\"/api/v3/get_step_instance_detail\"}}")
+    val getStepInstanceDetailPath: String = ""
+
+    @Value("\${job.getStepInstanceStatusPath:#{\"/api/v3/get_step_instance_status\"}}")
+    val getStepInstanceStatusPath: String = ""
+
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
 
@@ -62,6 +68,11 @@ class ApigwJobCloudApi {
             "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s"
         private const val GET_ACCOUNT_LIST_URL_SUFFIX =
             "/?bk_scope_type=%s&bk_scope_id=%s&category=%s&account=%s&alias=%s&start=%s&length=%s"
+        private const val GET_STEP_INSTANCE_DETAIL =
+            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s"
+        private const val GET_STEP_INSTANCE_STATUS =
+            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s&execute_count=%s" +
+                "&batch=%s&max_host_num_per_group=%s&keyword=%s&search_ip=%s&status=%s&tag=%s"
 
         private val logger = LoggerFactory.getLogger(ApigwJobCloudApi::class.java)
 
@@ -101,6 +112,8 @@ class ApigwJobCloudApi {
             "createAccount" -> createAccountPath
             "deleteAccount" -> deleteAccountPath
             "getAccountList" -> getAccountListPath
+            "getStepInstanceDetail" -> getStepInstanceDetailPath
+            "getStepInstanceStatus" -> getStepInstanceStatusPath
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
@@ -140,6 +153,8 @@ class ApigwJobCloudApi {
         val suffix = when (operationName) {
             "queryJobInstanceStatus" -> QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX
             "getAccountList" -> GET_ACCOUNT_LIST_URL_SUFFIX
+            "getStepInstanceDetail" -> GET_STEP_INSTANCE_DETAIL
+            "getStepInstanceStatus" -> GET_STEP_INSTANCE_STATUS
             else -> ""
         }
         val url = jobCloudAuthenticationReq.url + String.format(

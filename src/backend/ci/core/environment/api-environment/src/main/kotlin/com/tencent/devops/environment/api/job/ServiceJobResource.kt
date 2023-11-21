@@ -39,6 +39,8 @@ import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
@@ -190,4 +192,61 @@ interface ServiceJobResource {
         @QueryParam("length")
         length: Int?
     ): JobResult<GetAccountListResult>
+
+    @ApiOperation("请求上云版job - 获取步骤实例详情数据")
+    @GET
+    @Path("/{projectId}/get_step_instance_detail")
+    fun getStepInstanceDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "作业实例ID")
+        @QueryParam("jobInstanceId")
+        jobInstanceId: Long,
+        @ApiParam(value = "步骤实例ID")
+        @QueryParam("stepInstanceId")
+        stepInstanceId: Long
+    ): JobResult<GetStepInstanceDetailResult>
+
+    @ApiOperation("请求上云版job - 获取步骤实例中各主机的任务执行状态数据")
+    @GET
+    @Path("/{projectId}/get_step_instance_status")
+    fun getStepInstanceStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "作业实例ID", required = true)
+        @QueryParam("jobInstanceId")
+        jobInstanceId: Long,
+        @ApiParam(value = "步骤实例ID", required = true)
+        @QueryParam("stepInstanceId")
+        stepInstanceId: Long,
+        @ApiParam(value = "步骤重试次数")
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @ApiParam(value = "滚动批次")
+        @QueryParam("batch")
+        batch: Int?,
+        @ApiParam(value = "每个分组里的最大主机数量，不传则返回全量数据。")
+        @QueryParam("maxHostNumPerGroup")
+        maxHostNumPerGroup: Int?,
+        @ApiParam(value = "日志搜索关键字")
+        @QueryParam("keyword")
+        keyword: String?,
+        @ApiParam(value = "主机IP/IPv6搜索关键字")
+        @QueryParam("searchIp")
+        searchIp: String?,
+        @ApiParam(value = "执行状态")
+        @QueryParam("status")
+        status: Int?,
+        @ApiParam(value = "结果标签")
+        @QueryParam("tag")
+        tag: String?
+    ): JobResult<GetStepInstanceStatusResult>
 }

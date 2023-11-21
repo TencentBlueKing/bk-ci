@@ -27,14 +27,23 @@ import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryJobInsta
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudTaskTerminateReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudCreateAccountResult
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.resp.ApprovalStepInfo
 import com.tencent.devops.environment.pojo.job.resp.AuthorizedAccount
 import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DeleteAccountResult
+import com.tencent.devops.environment.pojo.job.resp.DynamicGroup
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeLog
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.resp.FileLog
+import com.tencent.devops.environment.pojo.job.resp.FileSource
+import com.tencent.devops.environment.pojo.job.resp.FileStepInfo
 import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.HostInRes
+import com.tencent.devops.environment.pojo.job.resp.HostIpv6
 import com.tencent.devops.environment.pojo.job.resp.JobInstance
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.JobStepInstance
@@ -42,8 +51,13 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExcuteLog
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
+import com.tencent.devops.environment.pojo.job.resp.ScriptStepInfo
+import com.tencent.devops.environment.pojo.job.resp.Server
 import com.tencent.devops.environment.pojo.job.resp.StepHostResult
+import com.tencent.devops.environment.pojo.job.resp.StepHostResultForGetStepInstanceStatus
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
+import com.tencent.devops.environment.pojo.job.resp.TopoNode
+import com.tencent.devops.environment.pojo.job.resp.VariableServer
 import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -442,5 +456,155 @@ class JobService @Autowired constructor(
             }
         )
         return getAccountListRes
+    }
+
+    fun getStepInstanceDetail(
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long
+    ): JobResult<GetStepInstanceDetailResult> {
+        ApigwJobCloudApi.setThreadLocal("getStepInstanceDetail")
+        val jobCloudGetStepInstanceDetailRes: JobCloudResult<JobCloudGetStepInstanceDetailResult> =
+            apigwJobCloudApi.executeGetRequest(
+                JobCloudGetStepInstanceDetailResult::class.java, jobInstanceId ?: "", stepInstanceId ?: ""
+            )
+        val getStepInstanceDetailRes: JobResult<GetStepInstanceDetailResult> = JobResult(
+            code = jobCloudGetStepInstanceDetailRes.code,
+            result = jobCloudGetStepInstanceDetailRes.result,
+            jobRequestId = jobCloudGetStepInstanceDetailRes.jobRequestId,
+            data = jobCloudGetStepInstanceDetailRes.data?.let { jobCloudGetStepInstanceDetail ->
+                GetStepInstanceDetailResult(
+                    id = jobCloudGetStepInstanceDetail.id,
+                    type = jobCloudGetStepInstanceDetail.type,
+                    name = jobCloudGetStepInstanceDetail.name,
+                    scriptStepInfo = jobCloudGetStepInstanceDetail.jobCloudScriptStepInfo
+                        .let { jobCloudScriptStepInfo ->
+                            ScriptStepInfo(
+                                scriptSource = jobCloudScriptStepInfo.scriptSource,
+                                scriptId = jobCloudScriptStepInfo.scriptId,
+                                scriptVersionId = jobCloudScriptStepInfo.scriptVersionId,
+                                content = jobCloudScriptStepInfo.content,
+                                scriptLanguage = jobCloudScriptStepInfo.scriptLanguage,
+                                scriptParam = jobCloudScriptStepInfo.scriptParam,
+                                timeout = jobCloudScriptStepInfo.timeout,
+                                accountId = jobCloudScriptStepInfo.accountId,
+                                accountName = jobCloudScriptStepInfo.accountName,
+                                executeTarget = jobCloudScriptStepInfo.executeTarget.let { jobCloudVariableServer ->
+                                    VariableServer(
+                                        variable = jobCloudVariableServer.variable,
+                                        server = jobCloudVariableServer.jobCloudServer.let { jobCloudServer ->
+                                            Server(
+                                                hostList = jobCloudServer.jobCloudHostList.map {
+                                                    HostIpv6(bkHostId = it.bkHostId, ip = it.ip, ipv6 = it.ipv6)
+                                                },
+                                                topoNodeList = jobCloudServer.jobCloudTopoNodeList.map {
+                                                    TopoNode(nodeType = it.nodeType, id = it.id)
+                                                },
+                                                dynamicGroupList = jobCloudServer.jobCloudDynamicGroupList.map {
+                                                    DynamicGroup(id = it.id)
+                                                }
+                                            )
+                                        }
+                                    )
+                                },
+                                secureParam = jobCloudScriptStepInfo.secureParam,
+                                ignoreError = jobCloudScriptStepInfo.ignoreError
+                            )
+                        },
+                    fileStepInfo = FileStepInfo(
+                        fileSourceList = jobCloudGetStepInstanceDetail.jobCloudFileStepInfo
+                            .jobCloudFileSourceList.map { jobCloudFileSource ->
+                                FileSource(
+                                    fileType = jobCloudFileSource.fileType,
+                                    fileLocation = jobCloudFileSource.fileLocation.map { it },
+                                    fileHash = jobCloudFileSource.fileHash,
+                                    fileSize = jobCloudFileSource.fileSize,
+                                    host = jobCloudFileSource.host.let { variableServer ->
+                                        VariableServer(
+                                            variable = variableServer.variable,
+                                            server = variableServer.jobCloudServer.let { jobCloudServer ->
+                                                Server(
+                                                    hostList = jobCloudServer.jobCloudHostList.map {
+                                                        HostIpv6(bkHostId = it.bkHostId, ip = it.ip, ipv6 = it.ipv6)
+                                                    },
+                                                    topoNodeList = jobCloudServer.jobCloudTopoNodeList.map {
+                                                        TopoNode(nodeType = it.nodeType, id = it.id)
+                                                    },
+                                                    dynamicGroupList = jobCloudServer.jobCloudDynamicGroupList.map {
+                                                        DynamicGroup(id = it.id)
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    },
+                                    accountId = jobCloudFileSource.accountId,
+                                    accountName = jobCloudFileSource.accountName,
+                                    fileSourceId = jobCloudFileSource.fileSourceId,
+                                    fileSourceName = jobCloudFileSource.fileSourceName
+                                )
+                            }
+                    ),
+                    approvalStepInfo = ApprovalStepInfo(
+                        approvalMessage = jobCloudGetStepInstanceDetail.jobCloudApprovalStepInfo.approvalMessage
+                    )
+                )
+            }
+        )
+        return getStepInstanceDetailRes
+    }
+
+    fun getStepInstanceStatus(
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long,
+        executeCount: Int?,
+        batch: Int?,
+        maxHostNumPerGroup: Int?,
+        keyword: String?,
+        searchIp: String?,
+        status: Int?,
+        tag: String?
+    ): JobResult<GetStepInstanceStatusResult> {
+        ApigwJobCloudApi.setThreadLocal("getStepInstanceStatus")
+        val jobCloudGetStepInstanceStatusRes: JobCloudResult<JobCloudGetStepInstanceStatusResult> =
+            apigwJobCloudApi.executeGetRequest(
+                JobCloudGetStepInstanceStatusResult::class.java,
+                jobInstanceId ?: "", stepInstanceId ?: "", executeCount ?: "", batch ?: "",
+                maxHostNumPerGroup ?: "", keyword ?: "", searchIp ?: "", status ?: "", tag ?: ""
+            )
+        val getStepInstanceStatusRes: JobResult<GetStepInstanceStatusResult> = JobResult(
+            code = jobCloudGetStepInstanceStatusRes.code,
+            result = jobCloudGetStepInstanceStatusRes.result,
+            jobRequestId = jobCloudGetStepInstanceStatusRes.jobRequestId,
+            data = jobCloudGetStepInstanceStatusRes.data?.let { jobCloudGetStepInstanceStatus ->
+                GetStepInstanceStatusResult(
+                    status = jobCloudGetStepInstanceStatus.status,
+                    totalTime = jobCloudGetStepInstanceStatus.totalTime,
+                    name = jobCloudGetStepInstanceStatus.name,
+                    stepInstanceId = jobCloudGetStepInstanceStatus.stepInstanceId,
+                    executeCount = jobCloudGetStepInstanceStatus.status,
+                    createTime = jobCloudGetStepInstanceStatus.createTime,
+                    endTime = jobCloudGetStepInstanceStatus.endTime,
+                    type = jobCloudGetStepInstanceStatus.type,
+                    startTime = jobCloudGetStepInstanceStatus.startTime,
+                    stepHostResultList = jobCloudGetStepInstanceStatus.stepHostResultList.map { stepHostResult ->
+                        StepHostResultForGetStepInstanceStatus(
+                            bkHostId = stepHostResult.bkHostId,
+                            ip = stepHostResult.ip,
+                            ipv6 = stepHostResult.ipv6,
+                            bkCloudId = stepHostResult.bkCloudId,
+                            status = stepHostResult.status,
+                            tag = stepHostResult.tag,
+                            groupKey = stepHostResult.groupKey,
+                            exitCode = stepHostResult.exitCode,
+                            startTime = stepHostResult.startTime,
+                            endTime = stepHostResult.endTime,
+                            totalTime = stepHostResult.totalTime
+                        )
+                    },
+                )
+            }
+        )
+        return getStepInstanceStatusRes
     }
 }

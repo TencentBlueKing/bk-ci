@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudHostIpv6(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val hostList: Long,
+    val bkHostId: Long,
     @ApiModelProperty(value = "IP")
     val ip: String,
     @ApiModelProperty(value = "Ipv6地址")

@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 data class JobCloudServer(
     @ApiModelProperty(value = "脚本ID")
     @JsonProperty("host_list")
-    val hostList: List<JobCloudHostIpv6>,
+    val jobCloudHostList: List<JobCloudHostIpv6>,
     @ApiModelProperty(value = "脚本ID")
     @JsonProperty("topo_node_list")
     val jobCloudTopoNodeList: List<JobCloudTopoNode>,

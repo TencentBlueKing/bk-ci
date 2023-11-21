@@ -41,6 +41,8 @@ import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
@@ -145,6 +147,36 @@ class ServiceJobResourceImpl @Autowired constructor(
         checkParamBlank(userId, projectId)
         logger.info("[getAccountList] userId:$userId, projectId:$projectId")
         return jobService.getAccountList(projectId, account, alias, category, start, length)
+    }
+
+    override fun getStepInstanceDetail(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long
+    ): JobResult<GetStepInstanceDetailResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.getStepInstanceDetail(projectId, jobInstanceId, stepInstanceId)
+    }
+
+    override fun getStepInstanceStatus(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long,
+        executeCount: Int?,
+        batch: Int?,
+        maxHostNumPerGroup: Int?,
+        keyword: String?,
+        searchIp: String?,
+        status: Int?,
+        tag: String?
+    ): JobResult<GetStepInstanceStatusResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.getStepInstanceStatus(
+            projectId, jobInstanceId, stepInstanceId, executeCount,
+            batch, maxHostNumPerGroup, keyword, searchIp, status, tag
+        )
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {

@@ -13,6 +13,8 @@ import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
@@ -112,6 +114,40 @@ class ApigwJobResourceV4Impl @Autowired constructor(
     ): JobResult<GetAccountListResult> {
         return client.get(ServiceJobResource::class).getAccountList(
             userId, projectId, account, alias, category, start, length
+        )
+    }
+
+    override fun getStepInstanceDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long
+    ): JobResult<GetStepInstanceDetailResult> {
+        return client.get(ServiceJobResource::class).getStepInstanceDetail(
+            userId, projectId, jobInstanceId, stepInstanceId
+        )
+    }
+
+    override fun getStepInstanceStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long,
+        executeCount: Int?,
+        batch: Int?,
+        maxHostNumPerGroup: Int?,
+        keyword: String?,
+        searchIp: String?,
+        status: Int?,
+        tag: String?
+    ): JobResult<GetStepInstanceStatusResult> {
+        return client.get(ServiceJobResource::class).getStepInstanceStatus(
+            userId, projectId, jobInstanceId, stepInstanceId, executeCount,
+            batch, maxHostNumPerGroup, keyword, searchIp, status, tag
         )
     }
 }
