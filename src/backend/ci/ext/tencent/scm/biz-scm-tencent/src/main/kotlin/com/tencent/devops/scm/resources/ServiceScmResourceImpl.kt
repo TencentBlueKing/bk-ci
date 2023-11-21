@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceScmResource
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
@@ -208,6 +209,50 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 "(projectName=$projectName, url=$url, type=$type, username=$userName, event=$event, hookUrl=$hookUrl)"
         )
         scmService.addWebHook(
+            projectName = projectName,
+            url = url,
+            type = type,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName,
+            event = event,
+            hookUrl = hookUrl
+        )
+        return Result(true)
+    }
+
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): Result<List<GitHook>> {
+        return Result(
+            scmService.getWebHooks(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token
+            )
+        )
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ): Result<Boolean> {
+        logger.info(
+            "Start to update the web hook of " +
+                    "(hookId=$hookId, url=$url, type=$type, username=$userName, event=$event, hookUrl=$hookUrl)"
+        )
+        scmService.updateWebHook(
+            hookId = hookId,
             projectName = projectName,
             url = url,
             type = type,
