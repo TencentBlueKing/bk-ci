@@ -34,12 +34,18 @@ class PathRegexFilter(
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String = "",
+    // 排除过滤失败原因
+    private val excludedFailedReason: String = "",
     private val caseSensitive: Boolean
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,
     includedPaths = includedPaths,
     excludedPaths = excludedPaths,
+    includedFailedReason = includedFailedReason,
+    excludedFailedReason = excludedFailedReason,
     caseSensitive = caseSensitive
 ) {
     private val matcher = AntPathMatcher()
@@ -47,5 +53,63 @@ class PathRegexFilter(
     override fun isPathMatch(eventPath: String, userPath: String): Boolean {
         matcher.setCaseSensitive(caseSensitive)
         return matcher.match(userPath, eventPath)
+    }
+
+    @SuppressWarnings("CyclomaticComplexMethod")
+    override fun extractMatchUserPath(
+        eventPath: String,
+        userPath: String
+    ): String {
+        val patternParts = userPath.split("/")
+        // 无视规则，直接返回空
+        if (isInvalidPattern(userPath) || isInvalidPattern(patternParts)) {
+            return ""
+        }
+        val pathParts = eventPath.split("/")
+        val pathList = mutableListOf<String>()
+        var pathIndex = 0
+        var segment = 0
+        while (segment < patternParts.size && pathIndex < pathParts.size) {
+            val patternPart = patternParts[segment]
+            // 无效字符
+            if (isInvalidPattern(patternPart)) {
+                // 以*或**结尾的规则，直接结束
+                if (segment == patternParts.size - 1) {
+                    break
+                }
+                val nextPatternPart = patternParts[segment + 1]
+                // 后续不存在有效字符继续找
+                if (isInvalidPattern(nextPatternPart)) {
+                    segment++
+                    continue
+                }
+                while (pathIndex < pathParts.size && !matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    val pathItem = pathParts[pathIndex++]
+                    pathList.add(pathItem)
+                }
+                // 追加上匹配上的真实目录[nextPatternPart可能为dir_**]
+                if (matcher.match(nextPatternPart, pathParts[pathIndex])) {
+                    pathList.add(pathParts[pathIndex])
+                }
+                segment++
+            } else {
+                val pathItem = pathParts[pathIndex]
+                pathList.add(pathItem)
+            }
+            pathIndex++
+            segment++
+        }
+        return pathList.joinToString("/")
+    }
+
+    private fun isInvalidPattern(pattern: String) = (pattern == "*" || pattern == "**")
+
+    private fun isInvalidPattern(patterns: List<String>): Boolean {
+        patterns.toSet().forEach {
+            if (!isInvalidPattern(it)) {
+                return false
+            }
+        }
+        return true
     }
 }

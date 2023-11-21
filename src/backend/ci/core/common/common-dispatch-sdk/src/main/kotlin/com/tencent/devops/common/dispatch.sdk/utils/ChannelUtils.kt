@@ -29,11 +29,8 @@ package com.tencent.devops.common.dispatch.sdk.utils
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.BkTag
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 @Suppress("ALL")
 class ChannelUtils @Autowired constructor(
     private val bkTag: BkTag
@@ -47,9 +44,5 @@ class ChannelUtils @Autowired constructor(
         } else {
             ChannelCode.BS
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ChannelUtils::class.java)
     }
 }

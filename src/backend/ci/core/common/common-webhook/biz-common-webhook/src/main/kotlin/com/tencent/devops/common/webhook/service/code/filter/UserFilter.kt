@@ -33,7 +33,11 @@ class UserFilter(
     private val pipelineId: String,
     private val triggerOnUser: String,
     private val includedUsers: List<String>,
-    private val excludedUsers: List<String>
+    private val excludedUsers: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String = "",
+    // 排除过滤失败原因
+    private val excludedFailedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -45,30 +49,35 @@ class UserFilter(
             "$pipelineId|triggerOnUser:$triggerOnUser|includedUsers:$includedUsers" +
                 "|excludedUsers:$excludedUsers|user filter"
         )
-        return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
+        return hasNoUserSpecs() || (isUserNotExcluded(response) && isUserIncluded(response))
     }
 
     private fun hasNoUserSpecs(): Boolean {
         return includedUsers.isEmpty() && excludedUsers.isEmpty()
     }
 
-    private fun isUserNotExcluded(): Boolean {
+    private fun isUserNotExcluded(response: WebhookFilterResponse): Boolean {
         excludedUsers.forEach { excludeUser ->
             if (excludeUser == triggerOnUser) {
                 logger.warn("$pipelineId|$excludeUser|the exclude user match the git event user")
+                response.failedReason = excludedFailedReason
                 return false
             }
         }
         return true
     }
 
-    private fun isUserIncluded(): Boolean {
+    private fun isUserIncluded(response: WebhookFilterResponse): Boolean {
         includedUsers.forEach { includedUser ->
             if (includedUser == triggerOnUser) {
                 logger.warn("$pipelineId|includedUser|the included user match the git event user")
                 return true
             }
         }
-        return includedUsers.isEmpty()
+        val userIncluded = includedUsers.isEmpty()
+        if (!userIncluded) {
+            response.failedReason = includedFailedReason
+        }
+        return userIncluded
     }
 }

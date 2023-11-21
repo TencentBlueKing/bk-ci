@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
@@ -303,7 +304,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         // 归档插件归档目录时，在目录多归档一个.bkci_pipeline文件, 记录归档目录的信息
         return if (nodeInfo.name == ".bkci_pipeline") {
             FileInfo(
-                name = nodeInfo.name,
+                name = nodeInfo.path.split("/").lastOrNull { it.isNotBlank() } ?: StringPool.ROOT,
                 fullName = nodeInfo.name,
                 path = nodeInfo.fullPath,
                 fullPath = nodeInfo.fullPath,

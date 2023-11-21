@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
@@ -40,14 +41,14 @@ interface ScmWebhookMatcher {
     /**
      * 预匹配,在还没有解析流水线列表时判断
      */
-    fun preMatch(): MatchResult
+    fun preMatch(): WebhookMatchResult
 
     fun isMatch(
         projectId: String,
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): MatchResult
+    ): WebhookMatchResult
 
     fun getUsername(): String
 
@@ -70,6 +71,16 @@ interface ScmWebhookMatcher {
     fun getMergeRequestId(): Long? = null
 
     fun getMessage(): String?
+
+    /**
+     * 获取事件描述,根据不同的事件组织事件说明
+     */
+    fun getEventDesc(): String = ""
+
+    /**
+     * 获取webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port
+     */
+    fun getExternalId(): String = ""
 
     fun getWebHookParamsMap(): Map<String/*pipelineId*/, WebHookParams/*pipeline webhookParams*/> = emptyMap()
 

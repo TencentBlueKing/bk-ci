@@ -132,6 +132,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -146,6 +147,10 @@
     sender: "DevOps"
     title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️ ${successContent}\nView details: ${detailUrl}"
+  voiceTemplate:
+    id: "jgj46v0knzlkhcah57rcutao30tqza5v"
+    taskName: "Build Success"
+    content: "${successContent}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -331,6 +336,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -345,6 +351,10 @@
     sender: "DevOps"
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌${failContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "Build Failure"
+    content: "${failContent}"
   creator: "system"
   modifior: "system"
 - index: 17
@@ -449,6 +459,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -463,6 +474,10 @@
     sender: "DevOps"
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌ ${failContent}\n\nView details: ${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "Build Failure"
+    content: "${failContent}"
   creator: "system"
   modifior: "system"
 - index: 23
@@ -587,6 +602,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -601,6 +617,10 @@
     sender: "DevOps"
     title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️${successContent}"
+  voiceTemplate:
+    id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
+    taskName: "Build Success"
+    content: "${successContent}"
   creator: "system"
   modifior: "system"
 - index: 29

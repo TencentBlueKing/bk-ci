@@ -26,7 +26,7 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
     ): Result<ProjectPermissionInfoVO> {
         logger.info("OPENAPI_AUTH_PROJECT_PERMISSION_INFO_V4|$projectId")
         return client.get(ServiceProjectAuthResource::class).getProjectPermissionInfo(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId
         )
     }
