@@ -430,7 +430,9 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
-        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal)))
+        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+        .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal)))
+
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
         }
@@ -692,6 +694,17 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspaceDetailByNames(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<TWorkspaceDetailRecord> {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .fetch()
+        }
+    }
+
     class TWorkspaceRecordJooqMapper : RecordMapper<TWorkspaceRecord, WorkspaceRecord> {
         override fun map(record: TWorkspaceRecord?): WorkspaceRecord? {
             return record?.run {
@@ -797,7 +810,8 @@ class WorkspaceDao {
                 OWNER_TYPE, DSL.count(ID).`as`("VALUE"),
                 DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
             ).from(this)
-                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))))
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(STATUS.notIn(WorkspaceStatus.DELETED.ordinal, WorkspaceStatus.PREPARING.ordinal, WorkspaceStatus.DELIVERING.ordinal, WorkspaceStatus.DELIVERING_FAILED.ordinal))
                 .groupBy(OWNER_TYPE)
                 .fetch()
         }

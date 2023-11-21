@@ -56,6 +56,7 @@ class TOF4Service @Autowired constructor(
         const val TOF4_EMAIL_URL_WITH_ATTACH = "/ebus/tof4_msg/api/v1/Message/SendMail"
         const val TOF4_EMAIL_URL = "/ebus/tof4_msg/api/v1/Message/SendMailInfo"
         const val TOF4_RTX_URL = "/ebus/tof4_msg/api/v1/Message/SendRTXInfo"
+        const val TOF4_VOICE_URL = "/ebus/tof4_msg/api/v1/Message/SendCtiInfo"
     }
 
     private val okHttpClient = OkHttpClient()
@@ -215,7 +216,7 @@ class TOF4Service @Autowired constructor(
         val signData = String.format("%s%s%s%s", timestamp, tofToken, nonce, timestamp)
         val signature: String
         try {
-            signature = HashUtils.sha256(signData)
+            signature = HashUtils.sha256(signData).uppercase()
         } catch (e: Exception) {
             logger.error("sha256 fail when generate tof4 header", e)
             return null

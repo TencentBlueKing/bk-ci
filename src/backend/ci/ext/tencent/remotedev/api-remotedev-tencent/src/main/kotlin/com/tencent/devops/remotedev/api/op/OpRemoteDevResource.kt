@@ -268,4 +268,14 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
+
+    @ApiOperation("初始话太湖账号信息")
+    @POST
+    @Path("/init_tai_user_info")
+    fun initTaiUserInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        taiUsers: List<String>
+    ): Result<Boolean>
 }

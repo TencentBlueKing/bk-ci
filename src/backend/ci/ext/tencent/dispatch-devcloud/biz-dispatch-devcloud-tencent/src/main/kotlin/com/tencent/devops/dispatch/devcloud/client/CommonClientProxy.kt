@@ -55,7 +55,7 @@ class CommonClientProxy : ClientProxy {
         projectId: String,
         pipelineId: String
     ): Request.Builder {
-        return Request.Builder().url(devCloudUrl + url).headers(headers(pipelineId, pipelineId, userId))
+        return Request.Builder().url(devCloudUrl + url).headers(headers(projectId, pipelineId, userId))
     }
 
     fun headers(

@@ -191,7 +191,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null) ?: "",
+            token = tokenService.getSystemToken() ?: "",
             action = authPermission.value,
             projectCode = projectId,
             resourceCode = "",
@@ -206,7 +206,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null) ?: "",
+            token = tokenService.getSystemToken() ?: "",
             action = authPermission.value,
             projectCode = projectId,
             resourceCode = "",
