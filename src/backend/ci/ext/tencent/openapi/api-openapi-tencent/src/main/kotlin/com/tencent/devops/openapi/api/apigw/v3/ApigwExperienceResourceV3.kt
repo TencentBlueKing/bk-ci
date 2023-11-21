@@ -34,7 +34,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwExperienceResourceV3 {
-    @ApiOperation("通过bundleId获取公开体验跳转信息")
+    @ApiOperation("通过bundleId获取公开体验跳转信息", tags = ["v3_app_experience_jumpInfo"])
     @Path("/jumpInfo")
     @GET
     fun jumpInfo(
@@ -55,7 +55,7 @@ interface ApigwExperienceResourceV3 {
         platform: String
     ): Result<ExperienceJumpInfo>
 
-    @ApiOperation("获取构建中的体验的信息")
+    @ApiOperation("获取构建中的体验的信息", tags = ["v3_app_experience_listForBuild"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
     fun listForBuild(
@@ -79,7 +79,7 @@ interface ApigwExperienceResourceV3 {
         buildId: String
     ): Result<List<ExperienceInfoForBuild>>
 
-    @ApiOperation("下架体验")
+    @ApiOperation("下架体验", tags = ["v3_app_experience_offline"])
     @Path("/{projectId}/{experienceHashId}/offline")
     @PUT
     fun offline(
@@ -100,7 +100,7 @@ interface ApigwExperienceResourceV3 {
         experienceHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("上架体验")
+    @ApiOperation("上架体验", tags = ["v3_app_experience_online"])
     @Path("/{projectId}/{experienceHashId}/online")
     @PUT
     fun online(
@@ -121,7 +121,7 @@ interface ApigwExperienceResourceV3 {
         experienceHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("创建体验")
+    @ApiOperation("创建体验", tags = ["v3_app_experience_create"])
     @Path("/{projectId}/create")
     @POST
     fun create(
@@ -141,7 +141,7 @@ interface ApigwExperienceResourceV3 {
         experience: ExperienceServiceCreate
     ): Result<String>
 
-    @ApiOperation("编辑体验")
+    @ApiOperation("编辑体验", tags = ["v3_app_experience_edit"])
     @Path("/{projectId}/{experienceHashId}/edit")
     @POST
     fun edit(
@@ -164,7 +164,7 @@ interface ApigwExperienceResourceV3 {
         experience: ExperienceUpdate
     ): Result<Boolean>
 
-    @ApiOperation("创建体验组")
+    @ApiOperation("创建体验组", tags = ["v3_app_experience_group_create"])
     @Path("/group/{projectId}/create")
     @POST
     fun create(
@@ -184,7 +184,7 @@ interface ApigwExperienceResourceV3 {
         group: GroupCreate
     ): Result<String>
 
-    @ApiOperation("修改体验组")
+    @ApiOperation("修改体验组", tags = ["v3_app_experience_grou_edit"])
     @Path("/group/{projectId}/{groupHashId}/edit")
     @POST
     fun edit(
@@ -207,7 +207,7 @@ interface ApigwExperienceResourceV3 {
         group: GroupUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除体验组")
+    @ApiOperation("删除体验组", tags = ["v3_app_experience_grou_delete"])
     @Path("/group/{projectId}/{groupHashId}/delete")
     @DELETE
     fun delete(
@@ -228,7 +228,7 @@ interface ApigwExperienceResourceV3 {
         groupHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取体验组用户")
+    @ApiOperation("获取体验组用户", tags = ["v3_app_experience_grou_getUsers"])
     @Path("/group/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(

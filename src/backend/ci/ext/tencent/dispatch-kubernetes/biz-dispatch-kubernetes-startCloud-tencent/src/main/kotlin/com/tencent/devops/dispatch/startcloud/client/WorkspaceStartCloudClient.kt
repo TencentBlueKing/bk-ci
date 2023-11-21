@@ -8,7 +8,12 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.dispatch.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startcloud.pojo.CgsQueryReq
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentCreate
@@ -23,6 +28,8 @@ import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentShareRep
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.startcloud.pojo.ListCgsResp
+import com.tencent.devops.dispatch.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.dispatch.startcloud.pojo.Page
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -35,7 +42,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
+import java.util.UUID
 
+@Suppress("ALL")
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
     private val dslContext: DSLContext,
@@ -48,7 +57,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         const val HAS_BEEN_DELETED = 32006
         const val APP_NOT_BIND_CGS = 32004
         const val NO_CGS_CHOOSE = 32005
-        private const val DEFAULT_CGS_PER_PAGE = 500
+        private const val DEFAULT_CGS_PER_PAGE = 10000
         private const val DEFAULT_CGS_PAGE = 0
     }
 
@@ -72,8 +81,9 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun createWorkspace(userId: String, environment: EnvironmentCreate): EnvironmentCreateRsp.EnvironmentCreateRspData {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/createvm"
+        val id = UUID.randomUUID()
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeBcsHeaders().toHeaders())
@@ -83,7 +93,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -94,7 +104,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
-                logger.info("createWorkspace rsp: $environmentRsp")
+                logger.info("$id|createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data
@@ -175,7 +185,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
         val url = "$apiUrl/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -189,7 +200,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId create environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -220,7 +231,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("User $userId create environment get SocketTimeoutException", e)
+            logger.error("$id|User $userId create environment get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -233,7 +244,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
     fun shareWorkspace(userId: String, environment: EnvironmentShare): String {
         val url = "$apiUrl/openapi/computer/share"
         val body = JsonUtil.toJson(environment, false)
-        logger.info("User $userId request url: $url, body: $body")
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -247,7 +259,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("User $userId share environment response: ${response.code} || $responseContent")
+                logger.info("$id|User $userId share environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -452,6 +464,53 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun getWorkspaceInfo(
+        userId: String,
+        environmentOperate: EnvironmentOperate
+    ): EnvironmentStatus {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/status"
+        val body = JsonUtil.toJson(environmentOperate, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.info("$userId get workspace info body: $body response: $responseContent")
+                val environmentInfoRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == environmentInfoRsp.code) {
+                    return environmentInfoRsp.data!!
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${environmentInfoRsp.code}-${environmentInfoRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("$userId get workspace info SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
     fun getResourceList(): List<EnvironmentResourceData> {
         var cgsPage = DEFAULT_CGS_PAGE
         val cgsData = mutableListOf<EnvironmentResourceData>()
@@ -495,7 +554,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("getResourceList response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
@@ -506,7 +564,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentResourceDataRsp = jacksonObjectMapper().readValue(responseContent)
-                logger.info("createWorkspace rsp: $environmentRsp")
                 when {
                     OK == environmentRsp.code && environmentRsp.data != null
                     -> return environmentRsp.data.rows
@@ -526,6 +583,107 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getResourceVm(
+        data: ResourceVmReq
+    ): ResourceVmRespData {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorType,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorCode,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.debug("get resource vm body: $body response: $responseContent")
+                val resp: ResourceVmResp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == resp.code) {
+                    return resp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get resource vm SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun listCgs(): List<ListCgsRespData> {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/listcgs"
+        val body = JsonUtil.toJson("", false)
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("get cgs list response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${response.code}"
+                    )
+                }
+
+                val resp: ListCgsResp = jacksonObjectMapper().readValue(responseContent)
+                when (resp.code) {
+                    OK -> {
+                        if (resp.data == null) {
+                            throw BuildFailureException(
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                                ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                                " 获取listcgs接口异常: data is null"
+                            )
+                        }
+                        return resp.data
+                    }
+                    else -> throw BuildFailureException(
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                        ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                        ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                        " 获取listcgs接口异常: ${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get listcgs SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                errorCode = ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                errorMessage = " 获取listcgs接口超时, url: $url"
             )
         }
     }

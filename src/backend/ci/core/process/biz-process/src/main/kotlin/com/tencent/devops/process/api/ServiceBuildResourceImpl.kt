@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -720,6 +722,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartupNew(
         userId: String,
         projectId: String,
@@ -746,6 +749,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
         return Result(
             pipelineBuildFacadeService.buildRestart(

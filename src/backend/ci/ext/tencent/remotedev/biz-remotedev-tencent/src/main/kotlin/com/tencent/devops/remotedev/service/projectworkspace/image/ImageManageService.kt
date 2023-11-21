@@ -27,7 +27,15 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace.image
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.remotedev.dao.ImageManageDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import org.jooq.DSLContext
@@ -38,7 +46,8 @@ import org.springframework.stereotype.Service
 @Service
 class ImageManageService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val imageManageDao: ImageManageDao
+    private val imageManageDao: ImageManageDao,
+    private val windowsResourceZoneDao: WindowsResourceZoneDao
 ) {
 
     companion object {
@@ -53,6 +62,8 @@ class ImageManageService @Autowired constructor(
             projectId = projectId,
             dslContext = dslContext
         ).forEach {
+            val sourceCgsZoneShortName = it.sourceCgsZone.replace(Regex("[^a-zA-Z]"), "")
+            val sourceCgsZoneName = windowsResourceZoneDao.fetchAny(dslContext, sourceCgsZoneShortName)
             result.add(
                 ProjectImage(
                     id = it.id,
@@ -64,14 +75,28 @@ class ImageManageService @Autowired constructor(
                     sourceCgsId = it.sourceCgsId,
                     sourceCgsType = it.sourceCgsType,
                     sourceCgsZone = it.sourceCgsZone,
+                    sourceCgsZoneShortName = sourceCgsZoneShortName,
+                    sourceCgsZoneName = sourceCgsZoneName?.zone ?: "",
                     creator = it.creator,
-                    status = ImageStatus.values()[it.status]
+                    status = ImageStatus.values()[it.status],
+                    createdTime = it.createTime.timestamp()
                 )
             )
         }
         return result
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.IMAGE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.IMAGE,
+            instanceNames = "#imageId",
+            instanceIds = "#imageId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.IMAGE_DELETE_CONTENT
+    )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
         imageManageDao.deleteWorkspaceImage(projectId, imageId, dslContext)

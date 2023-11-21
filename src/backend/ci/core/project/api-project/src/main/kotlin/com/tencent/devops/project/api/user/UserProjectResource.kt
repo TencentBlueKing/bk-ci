@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -330,4 +331,13 @@ interface UserProjectResource {
         @PathParam("project_id")
         projectId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/product/getOperationalProducts")
+    @ApiOperation("查询运营产品")
+    fun getOperationalProducts(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<OperationalProductVO>>
 }

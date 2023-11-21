@@ -94,6 +94,7 @@ import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.StoreI18nConfig
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
@@ -114,6 +115,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.utils.StoreUtils
+import java.util.Date
+import java.util.concurrent.Executors
 import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -122,8 +125,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.Executors
 
 @Service
 @RefreshScope
@@ -485,6 +486,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomCode = atomRecord.atomCode
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, atomVersion)
         val repoId = atomRecord.repositoryHashId
         val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val getAtomConfResult = getAtomConfig(
@@ -509,12 +511,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repoId))
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = taskJsonMap.toMutableMap(),
-            fileDir = "$atomCode/$atomVersion",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-            repositoryHashId = repoId
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                storeCode = atomCode,
+                fileDir = "$atomCode/$atomVersion",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+                repositoryHashId = repoId
+            ),
+            version = atomVersion
         )
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!

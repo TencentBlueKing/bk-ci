@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -39,6 +40,8 @@ import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
+import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
+import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -230,4 +233,18 @@ interface UserExperienceResource {
         @QueryParam("projectId")
         projectId: String
     ): Result<List<OuterSelectorVO>>
+
+    @ApiOperation("检查是否可以添加外部用户")
+    @Path("/outer/canAdd")
+    @POST
+    fun outerCanAdd(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("入参")
+        param: OuterCanAddParam
+    ): Result<OuterCanAddVO>
 }

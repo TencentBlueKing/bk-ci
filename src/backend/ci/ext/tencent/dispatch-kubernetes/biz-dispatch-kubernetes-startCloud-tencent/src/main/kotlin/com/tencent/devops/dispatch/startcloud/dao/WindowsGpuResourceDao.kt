@@ -62,7 +62,10 @@ class WindowsGpuResourceDao {
                     MACHINE_TYPE,
                     STATUS,
                     USER_INSTANCE_LIST,
-                    LOCKED
+                    LOCKED,
+                    PROJECT_ID,
+                    DISK,
+                    HDISK
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -70,7 +73,10 @@ class WindowsGpuResourceDao {
                     it.machineType,
                     it.status,
                     JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList),
-                    ByteUtils.bool2Byte(it.locked ?: false)
+                    ByteUtils.bool2Byte(it.locked ?: false),
+                    it.projectId ?: "",
+                    it.disk,
+                    it.hDisk
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
@@ -82,7 +88,9 @@ class WindowsGpuResourceDao {
         dslContext: DSLContext
     ) {
         return with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
-            dslContext.delete(this).execute()
+            dslContext.delete(this)
+                .where(CGS_ID.isNotNull)
+                .execute()
         }
     }
 

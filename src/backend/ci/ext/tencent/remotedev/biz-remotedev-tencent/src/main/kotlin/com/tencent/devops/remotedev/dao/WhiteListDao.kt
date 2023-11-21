@@ -29,6 +29,26 @@ class WhiteListDao {
         }
     }
 
+    fun addOrUpdate(
+        dslContext: DSLContext,
+        limit: WhiteList
+    ): Int {
+        return with(TWhiteList.T_WHITE_LIST) {
+            dslContext.insertInto(
+                this,
+                NAME,
+                TYPE,
+                WINDOWS_GPU_LIMIT
+            ).values(
+                limit.name,
+                limit.type.name,
+                limit.windowsGpuLimit
+            ).onDuplicateKeyUpdate()
+                .set(WINDOWS_GPU_LIMIT, limit.windowsGpuLimit)
+                .execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         name: String,

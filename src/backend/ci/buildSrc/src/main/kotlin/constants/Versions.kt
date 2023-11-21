@@ -2,7 +2,7 @@ object Versions {
     const val HashIds = "1.0.3"
     const val Jaxrs = "2.0"
     const val CommonExec = "1.3"
-    const val CommonIo = "2.7"
+    const val CommonIo = "2.13.0"
     const val CommonText = "1.10.0"
     const val BouncyCastle = "1.46"
     const val Dom4j = "2.0.3"
@@ -48,4 +48,6 @@ object Versions {
     const val jgit = "5.13.1.202206130422-r"
     const val iam = "1.0.0"
     const val disklrucache = "2.0.2"
+    const val apachepoi = "5.2.4"
+    const val audit = "1.0.8"
 }

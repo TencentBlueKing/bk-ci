@@ -27,12 +27,19 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -71,6 +78,7 @@ class StartWorkspaceHandler @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
@@ -81,6 +89,17 @@ class StartWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_START,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_START_CONTENT
+    )
     fun startWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start project workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
@@ -162,9 +181,9 @@ class StartWorkspaceHandler @Autowired constructor(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(event.workspaceName)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(event.workspaceName)
+        )
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -173,6 +192,7 @@ class StartWorkspaceHandler @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
+                remoteDevBillingDao.newBilling(transactionContext, workspace.workspaceName, event.userId)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,

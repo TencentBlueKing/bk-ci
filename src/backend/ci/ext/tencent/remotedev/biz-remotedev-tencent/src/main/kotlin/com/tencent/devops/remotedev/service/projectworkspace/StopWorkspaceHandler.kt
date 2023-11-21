@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -79,6 +85,17 @@ class StopWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_STOP,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_STOP_CONTENT
+    )
     fun stopWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId stop project workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
@@ -162,9 +179,9 @@ class StopWorkspaceHandler @Autowired constructor(
             dslContext = dslContext,
             workspaceName = event.workspaceName
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(event.workspaceName)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(event.workspaceName)
+        )
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -182,7 +199,7 @@ class StopWorkspaceHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.RUNNING.name
+                        WorkspaceStatus.STOPPED.name
                     )
                 )
             }
@@ -207,6 +224,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 )
             )
         }
+        workspaceCommon.statisticalData(workspace, event.userId)
 
         // 分发到WS
         workspaceCommon.dispatchWebsocketPushEvent(

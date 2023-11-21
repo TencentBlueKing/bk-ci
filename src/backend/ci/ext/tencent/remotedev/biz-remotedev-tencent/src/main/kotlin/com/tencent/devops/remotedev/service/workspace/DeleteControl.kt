@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
@@ -60,15 +66,15 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -94,6 +100,15 @@ class DeleteControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_DELETE_CONTENT
+    )
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
@@ -101,20 +116,23 @@ class DeleteControl @Autowired constructor(
         checkDeleteImmediately: Boolean? = null
     ): Boolean {
         logger.info("$userId delete workspace $workspaceName")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                    params = arrayOf(workspaceName)
-                )
 
             // 校验状态以及处理异常的情况
             val deleteImmediately = checkDeleteImmediately ?: checkWorkspaceStatusForDelete(workspace, userId)
@@ -132,7 +150,7 @@ class DeleteControl @Autowired constructor(
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = userId,
+                    userId = workspace.createUserId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
@@ -158,6 +176,15 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_DELETE_CONTENT
+    )
     fun deleteWorkspace4OP(
         userId: String,
         workspaceName: String
@@ -174,6 +201,11 @@ class DeleteControl @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)
                 )
+            // 审计
+            ActionAuditContext.current()
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+                .scopeId = workspace.projectId
+
             // 创建操作历史记录
             createDeleteOperationHistoryRecord(workspace, userId)
 
@@ -294,7 +326,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -324,7 +356,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -419,6 +451,11 @@ class DeleteControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                 params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't delete again")
             )
+        }
+
+        if (workspace.status.checkDeliveringFailed()) {
+            logger.info("${workspace.workspaceName} is DELIVERING_FAILED, delete immediately.")
+            return true
         }
 
         if (workspaceCommon.notOk2doNextAction(workspace)) {

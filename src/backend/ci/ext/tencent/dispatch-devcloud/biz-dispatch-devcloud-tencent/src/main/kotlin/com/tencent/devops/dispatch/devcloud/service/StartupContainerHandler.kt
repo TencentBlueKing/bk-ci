@@ -47,6 +47,9 @@ import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_DETECTS
 import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_PATH
 import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_USER
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_CPU
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_DISK
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_MEM
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
@@ -103,7 +106,10 @@ abstract class StartupContainerHandler @Autowired constructor(
                     "TERM" to "xterm-256color",
                     SLAVE_ENVIRONMENT to "DevCloud",
                     ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
-                    ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+                    ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage,
+                    ENV_DEVCLOUD_CPU to cpu.toString(),
+                    ENV_DEVCLOUD_MEM to memory,
+                    ENV_DEVCLOUD_DISK to disk
                 )
             )
 

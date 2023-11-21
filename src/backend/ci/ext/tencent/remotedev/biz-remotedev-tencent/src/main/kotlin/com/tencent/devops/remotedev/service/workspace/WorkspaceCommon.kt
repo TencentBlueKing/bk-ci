@@ -32,6 +32,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
@@ -43,9 +45,12 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -66,6 +71,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -79,6 +85,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -93,6 +100,7 @@ class WorkspaceCommon @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val client: Client,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisCache: RedisCacheService,
@@ -112,6 +120,9 @@ class WorkspaceCommon @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
         private const val DEFAULT_WAIT_TIME = 60
     }
+
+    @Value("\${notice.wework:#{null}}")
+    private var weworkId: String? = null
 
     // 封装统一分发WS的方法
     fun dispatchWebsocketPushEvent(
@@ -178,9 +189,17 @@ class WorkspaceCommon @Autowired constructor(
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         logger.info("$workspaceName update workspaceDetail, $event")
+        // START非create时不更新detail
+        if (mountType == WorkspaceMountType.START && (event == null || event.type != UpdateEventType.CREATE)) {
+            return JsonUtil.to(
+                workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail ?: "",
+                WorkSpaceCacheInfo::class.java
+            )
+        }
+
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
+                .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
             WorkSpaceCacheInfo(
                 sshKey = "",
                 environmentHost = event.environmentHost ?: "",
@@ -211,8 +230,6 @@ class WorkspaceCommon @Autowired constructor(
                 regionId = workspaceInfo.regionId
             )
         }
-
-        logger.info("$workspaceName update workspaceDetail $cache")
 
         workspaceDao.saveOrUpdateWorkspaceDetail(
             dslContext = dslContext,
@@ -296,6 +313,11 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.stopped -> {
                 sleepControl.doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
+            }
+
+            workspaceInfo.status == EnvStatusEnum.readyToRun -> {
+                sleepControl.doStopWS(true, userId, workspaceName)
+                return WorkspaceStatus.STOPPED
             }
 
             workspaceInfo.status == EnvStatusEnum.deleted -> {
@@ -404,10 +426,15 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
-                .ifBlank { null }
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+                dslContext = dslContext,
+                userId = creator
+            ).projectId.ifBlank { null }
 
-            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.projectId
+            WorkspaceOwnerType.PROJECT -> workspaceDao.fetchAnyWorkspace(
+                dslContext = dslContext,
+                workspaceName = workspaceName
+            )?.projectId
         } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
             return false
@@ -596,5 +623,66 @@ class WorkspaceCommon @Autowired constructor(
         projectId: String
     ): Map<String, Any> {
         return mapOf("devx_meta" to JsonUtil.toJson(listOf(mapOf("projectId" to projectId)), formatted = false))
+    }
+
+    /*
+    * 工作空间进入不使用状态，对数据进行统计和闭合处理
+    * */
+    fun statisticalData(
+        workspace: WorkspaceRecord,
+        operator: String
+    ) {
+        updateLastHistory(dslContext, workspace.workspaceName, operator)
+        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+            remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
+        }
+
+        // 个人云桌面即使关机也需要计费
+        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU &&
+            workspace.ownerType == WorkspaceOwnerType.PERSONAL
+        ) {
+            return
+        }
+        remoteDevBillingDao.endBilling(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+            computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
+        )
+    }
+
+    // 按天备份数据
+    fun backupDailyCsgData() {
+        workspaceDao.backupDailyCsgData(dslContext)
+    }
+
+    fun updateStatus2DeliveringFailed(
+        workspace: WorkspaceRecord,
+        action: WorkspaceAction,
+        notifyTemplateCode: String
+    ) {
+        updateStatusAndCreateHistory(
+            workspace = workspace,
+            newStatus = WorkspaceStatus.DELIVERING_FAILED,
+            action = action
+        )
+        // 通知
+        if (!weworkId.isNullOrBlank()) {
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = notifyTemplateCode,
+                bodyParams = mapOf(
+                    WorkspaceRecord::workspaceName.name to workspace.workspaceName,
+                    WorkspaceRecord::projectId.name to workspace.projectId,
+                    WorkspaceRecord::createUserId.name to workspace.createUserId,
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                ),
+                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+                markdownContent = false
+            )
+            kotlin.runCatching {
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            }.onFailure {
+                logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+            }
+        }
     }
 }

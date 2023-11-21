@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwProjectResource {
 
-    @ApiOperation("获取单个项目信息")
+    @ApiOperation("获取单个项目信息", tags = ["v1_app_projects_getProject"])
     @GET
     @Path("/{projectId}")
     fun getProject(
@@ -68,7 +68,7 @@ interface ApigwProjectResource {
         projectId: String
     ): Result<ProjectVO?>
 
-    @ApiOperation("获取项目信息列表")
+    @ApiOperation("获取项目信息列表", tags = ["v1_app_projects_getProjectByUser"])
     @GET
     @Path("/getProjectByUser")
     fun getProjectByUser(
@@ -85,7 +85,7 @@ interface ApigwProjectResource {
 
     @GET
     @Path("/getProjectByGroup")
-    @ApiOperation("根据组织架构查询所有项目")
+    @ApiOperation("根据组织架构查询所有项目", tags = ["v1_app_projects_getProjectByGroup"])
     fun getProjectByGroup(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

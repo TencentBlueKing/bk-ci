@@ -24,5 +24,7 @@ data class EnvironmentCreateBasicBody(
     @JsonProperty("ip")
     val cgsId: String? = "",
     @JsonProperty("projectId")
-    val projectId: String? = ""
+    val projectId: String? = "",
+    @JsonProperty("image")
+    val image: String? = ""
 )

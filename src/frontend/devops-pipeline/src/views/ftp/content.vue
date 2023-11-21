@@ -35,7 +35,7 @@
     RemoteAtom.methods.onLoad = async function () {
         const containerInfo = this.container
         const currentUserInfo = this.$userInfo || {}
-        const atomDisabled = this.disabled || false
+        const atomDisabled = false
         const envConf = await this.getEnvConf()
         this.loading = false
         const iframe = document.getElementById('atom-iframe').contentWindow
@@ -72,6 +72,10 @@
                 ...this.$route.params
             },
             ...outerInfo
+        }, '*')
+
+        window.parent.postMessage({
+            action: 'atomIframeOnload'
         }, '*')
     }
 

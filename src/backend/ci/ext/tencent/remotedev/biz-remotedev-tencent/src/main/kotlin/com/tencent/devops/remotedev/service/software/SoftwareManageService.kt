@@ -184,54 +184,6 @@ class SoftwareManageService @Autowired constructor(
         return softwareManageDao.importSoftwareToProject(dslContext, software) > 0
     }
 
-    /**
-     * 安装用户自定义软件
-     */
-
-    fun installUserSoftwares(
-        projectId: String,
-        userId: String,
-        ip: String,
-        workspaceName: String
-    ) {
-        // 先获取userId安装的软件列表，封装成SoftwareCreate
-        val userSoftwareInfoList = softwareManageDao.getUserInstalledSoftwareList(dslContext, userId, projectId)
-        logger.info("installSoftwareFromXingyun|userSoftwareInfoList|$userSoftwareInfoList")
-        if (userSoftwareInfoList.isNullOrEmpty()) {
-            return
-        }
-        val softwareInfoList = mutableListOf<SoftwareInfo>()
-        userSoftwareInfoList.forEach {
-            softwareInfoList.add(
-                SoftwareInfo(
-                    name = it["NAME"] as String,
-                    version = it["VERSION"] as String
-                )
-            )
-        }
-
-        val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-                "?type=USER&key=$externalKey&workspaceName=$workspaceName&" +
-                "autoAssign=false&projectId=$projectId&userId=$userId"
-        installSoftwareFromXingyun(
-            userId = userId,
-            ip = ip.substringAfter("."),
-            callBackUrl = callBackUrl,
-            softwareInfoList = softwareInfoList
-        )?.also {
-            // 自定义软件不需要依赖安装结果，云桌面可以更新为运行中状态。
-            // 插入软件安装记录
-            softwareManageDao.batchAddUserInstalledRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                creator = userId,
-                tadkId = it.data.taskId,
-                workspaceName = workspaceName,
-                softwareInfoList = softwareInfoList
-            )
-        }
-    }
-
     /** 云桌面创建完成后安全初始化：安装ioa
      * ioa安装的脚步严格安装以下格式字符串，转base64后传入。
      * base64(-project_id "cmk-tke" -creator "raylzhang" -region_id "555" -inner_ip "SZ3.11.171.77.15")
@@ -257,13 +209,16 @@ class SoftwareManageService @Autowired constructor(
                 SoftwareInfo(
                     name = record["NAME"] as String,
                     version = record["VERSION"] as String,
-                    commonArgs = CommonArgs(base64 = base64Val).takeIf { record["NAME"] == IOANAME }
+                    commonArgs = CommonArgs(
+                        base64 = base64Val,
+                        cloudDesktopId = workspaceName
+                    ).takeIf { record["NAME"] == IOANAME }
                 )
             )
         }
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
                 "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
-                "autoAssign=$autoAssign&projectId=$projectId&userId=$creator"
+                "autoAssign=$autoAssign&projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
         installSoftwareFromXingyun(
             userId = creator,
             ip = ip.substringAfter("."),

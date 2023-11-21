@@ -142,6 +142,7 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
+        private const val SLEEP_MILLS_FOR_RETRY = 3000L
     }
 
     @Value("\${gitCI.clientId}")
@@ -1719,16 +1720,33 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String? = null,
+        format: String? = "zip",
+        isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
+        logger.info(
+            "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath is $filePath"
+        )
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
-        OkhttpUtils.downloadFile(url.toString(), response)
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        url.append("&format=$format")
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        response.contentType = "application/$format"
+        response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
+        com.tencent.devops.common.service.utils.RetryUtils.execute(
+            action = object : com.tencent.devops.common.service.utils.RetryUtils.Action<Unit> {
+            override fun execute() {
+                OkhttpUtils.downloadFile(url.toString(), response)
+            }
+        }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")

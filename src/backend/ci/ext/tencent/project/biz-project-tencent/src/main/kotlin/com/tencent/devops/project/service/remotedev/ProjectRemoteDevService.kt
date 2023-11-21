@@ -47,24 +47,26 @@ class ProjectRemoteDevService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
-        // 从 auth 获取 bizid
-        val bizId = try {
-            val data = client.get(ServiceMonitorSpaceResource::class)
-                .getMonitorSpaceBizId(userId, projectCode).data
-            if (data.isNullOrBlank()) {
-                logger.warn("enableRemoteDev getMonitorSpaceBizId null or blank")
+        // 迁移监控权限, 从 auth 获取 bizid
+        if (migrateMonitorResource(listOf(projectCode))) {
+            val bizId = try {
+                val data = client.get(ServiceMonitorSpaceResource::class)
+                    .getMonitorSpaceBizId(userId, projectCode).data
+                if (data.isNullOrBlank()) {
+                    logger.warn("enableRemoteDev getMonitorSpaceBizId null or blank")
+                    null
+                } else {
+                    data.toLong()
+                }
+            } catch (e: Exception) {
+                logger.error("enableRemoteDev getMonitorSpaceBizId error", e)
                 null
-            } else {
-                data.toLong()
             }
-        } catch (e: Exception) {
-            logger.error("enableRemoteDev getMonitorSpaceBizId error", e)
-            null
-        }
 
-        // 创建监控表盘
-        if (bizId != null) {
-            quickImportDashboard(bizId)
+            // 创建监控表盘
+            if (bizId != null) {
+                quickImportDashboard(bizId)
+            }
         }
 
         // 创建 lsync generic类型的仓库，做单向同步盘
@@ -77,7 +79,7 @@ class ProjectRemoteDevService @Autowired constructor(
     private fun quickImportDashboard(
         bizId: Long
     ) {
-        val url = "$bkMonitorUrl/stage/quick_import_dashboard/"
+        val url = "$bkMonitorUrl/quick_import_dashboard/"
         val headerStr = objectMapper.writeValueAsString(
             mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
         ).replace("\\s".toRegex(), "")
@@ -106,6 +108,16 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn("quickImportDashboard request failed", e)
+        }
+    }
+
+    private fun migrateMonitorResource(projectList: List<String>): Boolean {
+        return try {
+            logger.debug("migrateMonitorResource projects {}", projectList)
+            client.get(ServiceMonitorSpaceResource::class).migrateMonitorResource(projectList).data ?: false
+        } catch (e: Exception) {
+            logger.warn("migrateMonitorResource projects {} error", projectList, e)
+            false
         }
     }
 

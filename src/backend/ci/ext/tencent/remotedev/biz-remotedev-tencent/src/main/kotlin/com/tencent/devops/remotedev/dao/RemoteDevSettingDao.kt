@@ -37,11 +37,11 @@ import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecor
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class RemoteDevSettingDao {
@@ -132,6 +132,7 @@ class RemoteDevSettingDao {
                 .fetch()
         }
     }
+
     fun countAllUserSettings(
         dslContext: DSLContext,
         queryUser: String?
@@ -170,17 +171,6 @@ class RemoteDevSettingDao {
                 createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
                 return 0 to 0
             }
-        }
-    }
-
-    fun fetchSingleUserWsCount(
-        dslContext: DSLContext,
-        userId: String
-    ): Pair<Int?, Int?> {
-        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(WORKSPACE_MAX_RUNNING_COUNT, WORKSPACE_MAX_HAVING_COUNT).from(this)
-                .where(USER_ID.eq(userId))
-                .fetchAny()?.let { it.value1() to it.value2() } ?: (null to null)
         }
     }
 

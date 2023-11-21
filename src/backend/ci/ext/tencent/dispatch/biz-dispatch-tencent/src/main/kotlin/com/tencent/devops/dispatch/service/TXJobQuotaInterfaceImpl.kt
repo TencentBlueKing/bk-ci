@@ -32,9 +32,11 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TXJobQuotaInterfaceImpl @Autowired constructor(
     private val kafkaClient: KafkaClient
 ) : JobQuotaInterface {
