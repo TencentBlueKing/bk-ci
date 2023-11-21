@@ -810,7 +810,8 @@ class WorkspaceDao {
                 OWNER_TYPE, DSL.count(ID).`as`("VALUE"),
                 DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
             ).from(this)
-                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name).and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))))
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(STATUS.notIn(WorkspaceStatus.DELETED.ordinal, WorkspaceStatus.PREPARING.ordinal, WorkspaceStatus.DELIVERING.ordinal, WorkspaceStatus.DELIVERING_FAILED.ordinal))
                 .groupBy(OWNER_TYPE)
                 .fetch()
         }
