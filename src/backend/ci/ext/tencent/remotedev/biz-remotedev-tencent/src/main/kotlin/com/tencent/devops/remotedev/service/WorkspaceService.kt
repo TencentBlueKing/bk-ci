@@ -553,6 +553,7 @@ class WorkspaceService @Autowired constructor(
                 innerIp = detail?.hostIP,
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
+                realOwner = res["SHARED_USER"] as? String ?: "",
                 status = WorkspaceStatus.values()[res["STATUS"] as Int]
             )
         }
