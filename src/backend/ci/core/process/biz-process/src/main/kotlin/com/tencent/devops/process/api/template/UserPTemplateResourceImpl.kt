@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api.template
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -57,14 +59,17 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPTemplateResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
     UserPTemplateResource {
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_CREATE)
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
         return Result(TemplateId(templateFacadeService.createTemplate(projectId, userId, template)))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
         return Result(templateFacadeService.deleteTemplate(projectId, userId, templateId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
         return Result(
             templateFacadeService.deleteTemplate(
@@ -76,6 +81,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_DELETE)
     override fun deleteTemplate(
         userId: String,
         projectId: String,
@@ -92,6 +98,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun updateTemplate(
         userId: String,
         projectId: String,
@@ -133,6 +140,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
     }
 
     @Suppress("ALL")
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun updateTemplateSetting(
         userId: String,
         projectId: String,
@@ -165,6 +173,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(templateFacadeService.getTemplateSetting(projectId, userId, templateId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun copyTemplate(
         userId: String,
         projectId: String,
@@ -174,6 +183,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(TemplateId(templateFacadeService.copyTemplate(userId, projectId, templateId, copyTemplateReq)))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_EDIT)
     override fun saveAsTemplate(
         userId: String,
         projectId: String,
