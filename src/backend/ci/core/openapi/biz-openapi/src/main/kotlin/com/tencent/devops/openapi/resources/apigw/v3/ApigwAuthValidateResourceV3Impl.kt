@@ -25,7 +25,7 @@ class ApigwAuthValidateResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("OPENAPI_AUTH_VALIDATE_V3|$userId|is project user|$projectId|$group")
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             group = group
