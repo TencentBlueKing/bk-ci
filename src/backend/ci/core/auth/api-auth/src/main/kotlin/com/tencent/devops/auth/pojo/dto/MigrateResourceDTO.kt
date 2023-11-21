@@ -12,5 +12,5 @@ data class MigrateResourceDTO(
     @ApiModelProperty("是否迁移项目级资源")
     val migrateProjectResource: Boolean? = false,
     @ApiModelProperty("是否迁移其他资源类型的资源")
-    val migrateOtherResource: Boolean? = false,
+    val migrateOtherResource: Boolean? = false
 )

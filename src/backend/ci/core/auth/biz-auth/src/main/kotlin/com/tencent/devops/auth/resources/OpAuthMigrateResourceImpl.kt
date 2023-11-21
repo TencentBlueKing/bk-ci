@@ -30,10 +30,10 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 

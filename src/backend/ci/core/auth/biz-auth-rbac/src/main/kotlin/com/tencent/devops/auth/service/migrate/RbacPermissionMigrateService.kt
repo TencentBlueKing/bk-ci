@@ -200,8 +200,8 @@ class RbacPermissionMigrateService constructor(
         val projectCodes = migrateResourceDTO.projectCodes ?: return true
         val resourceType = migrateResourceDTO.resourceType
         val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
-        val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true
-            && resourceType != null
+        val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true &&
+            resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
                 it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
