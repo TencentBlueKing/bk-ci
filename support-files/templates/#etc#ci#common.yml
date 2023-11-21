@@ -216,6 +216,12 @@ spring:
       - index: 52
         name: T_PIPELINE_BUILD_RECORD_TASK
         databaseShardingStrategy: SHARDING
+      - index: 53
+        name: T_PIPELINE_TRIGGER_EVENT
+        databaseShardingStrategy: SHARDING
+      - index: 54
+        name: T_PIPELINE_TRIGGER_DETAIL
+        databaseShardingStrategy: SHARDING
       
 
 endpoints:
