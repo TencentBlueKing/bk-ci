@@ -511,7 +511,7 @@ class CreateControl @Autowired constructor(
             return false
         }
 
-        val vm = workspaceCommon.syncStartCloudResourceList().find { it.cgsIp == taskInfo.vmCreateResp?.cgsIp }
+        val vm = workspaceCommon.syncStartCloudResourceList().find { it.cgsId == taskInfo.vmCreateResp?.cgsIp }
             ?: kotlin.run {
                 logger.warn("createWinWorkspaceByVm not find ${taskInfo.vmCreateResp?.cgsIp}")
                 return false
