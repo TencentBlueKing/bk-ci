@@ -32,7 +32,6 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
-import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -132,15 +131,5 @@ object RepositoryUtils {
             }
             else -> throw IllegalArgumentException("Unknown repository type")
         }
-    }
-
-    fun getRepoScmType(repository: Repository) = when (repository) {
-        is CodeGitRepository -> ScmType.CODE_GIT
-        is CodeTGitRepository -> ScmType.CODE_TGIT
-        is CodeGitlabRepository -> ScmType.CODE_GITLAB
-        is CodeSvnRepository -> ScmType.CODE_SVN
-        is CodeP4Repository -> ScmType.CODE_P4
-        is GithubRepository -> ScmType.GITHUB
-        else -> throw IllegalArgumentException("Unknown repository type")
     }
 }

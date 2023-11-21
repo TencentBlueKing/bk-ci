@@ -57,7 +57,6 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -703,7 +702,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             // USERNAME_PASSWORD v1 = username, v2 = password
             val session = client.get(ServiceScmResource::class).getSession(
                 RepoSessionRequest(
-                    type = RepositoryUtils.getRepoScmType(repository),
+                    type = repository.getScmType(),
                     username = privateKey,
                     password = passPhrase,
                     url = repository.url

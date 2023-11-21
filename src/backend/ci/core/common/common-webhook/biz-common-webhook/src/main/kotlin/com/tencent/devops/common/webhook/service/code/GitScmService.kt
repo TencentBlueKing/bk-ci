@@ -45,7 +45,6 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -85,7 +84,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
@@ -126,7 +125,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
@@ -167,7 +166,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {
@@ -208,7 +207,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             for (i in 1..10) {
@@ -254,7 +253,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             val serviceGitResource = client.get(ServiceGitResource::class)
@@ -291,7 +290,7 @@ class GitScmService @Autowired constructor(
             credentialId = repo.credentialId,
             userName = repo.userName,
             authType = tokenType,
-            scmType = RepositoryUtils.getRepoScmType(repo),
+            scmType = repo.getScmType(),
             repoUrl = repo.url
         )
         if (type.first == RepoAuthType.OAUTH) {
@@ -329,7 +328,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             client.get(ServiceGitResource::class).getUserInfoByToken(
@@ -437,7 +436,7 @@ class GitScmService @Autowired constructor(
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType,
-                scmType = RepositoryUtils.getRepoScmType(repo),
+                scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
             if (type.first == RepoAuthType.OAUTH) {

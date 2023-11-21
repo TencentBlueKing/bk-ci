@@ -121,7 +121,9 @@ class GithubOAuthService @Autowired constructor(
         if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
-
+        // 回调状态信息
+        // @see com.tencent.devops.repository.service.github.GithubOAuthService.getGithubOauth
+        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}}
         val arrays = state.split(",")
         val userId = arrays[0]
         val projectId = arrays[1]
@@ -129,6 +131,7 @@ class GithubOAuthService @Autowired constructor(
         val githubToken = getAccessTokenImpl(code, githubTokenType)
         // 弹框标志位
         val popupTag = arrays.getOrNull(4) ?: ""
+        // 重置类型
         val resetType = arrays.getOrNull(5) ?: ""
         githubTokenService.createAccessToken(
             userId = userId,
