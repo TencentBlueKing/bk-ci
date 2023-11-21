@@ -23,18 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.repository.pojo.enums
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
-
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
-
-    open fun triggerCondition(): List<ElementProp> = emptyList()
+enum class RepoAtomCategoryEnum {
+    TRIGGER, // 触发器类插件
+    TASK; // 任务类插件
 }

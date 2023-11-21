@@ -23,18 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.common.pipeline.pojo.element
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+/**
+ * 插件属性
+ */
+data class ElementProp(
+    val name: String,
+    val value: Any,
+    val type: ElementPropType
+)
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
-
-    open fun triggerCondition(): List<ElementProp> = emptyList()
+/**
+ * 属性类型
+ */
+enum class ElementPropType(val value: String) {
+    VUEX_INPUT("vuex-input"),
+    STAFF_INPUT("staff-input"),
+    SELECTOR("selector");
 }

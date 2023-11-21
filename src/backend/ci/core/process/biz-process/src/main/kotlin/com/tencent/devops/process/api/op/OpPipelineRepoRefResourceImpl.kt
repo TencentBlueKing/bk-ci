@@ -23,18 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
+import org.springframework.beans.factory.annotation.Autowired
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
+@RestResource
+class OpPipelineRepoRefResourceImpl @Autowired constructor(
+    private val repoPipelineRefService: RepoPipelineRefService
+) : OpPipelineRepoRefResource {
 
-    open fun triggerCondition(): List<ElementProp> = emptyList()
+    override fun updateRepoPipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        repoPipelineRefService.updatePipelineRef(userId, projectId, pipelineId)
+        return Result(true)
+    }
+
+    override fun updateAllRepoPipelineRef(): Result<Boolean> {
+        repoPipelineRefService.updateAllPipelineRef()
+        return Result(true)
+    }
 }

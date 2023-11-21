@@ -23,18 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import com.tencent.devops.common.pipeline.pojo.element.ElementPropType
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
+object TriggerElementPropUtils {
 
-    open fun triggerCondition(): List<ElementProp> = emptyList()
+    fun vuexInput(name: String, value: String?): ElementProp? {
+        if (value.isNullOrBlank()) return null
+        return ElementProp(name = name, value = value.split(","), type = ElementPropType.VUEX_INPUT)
+    }
+
+    fun staffInput(name: String, value: List<String>?): ElementProp? {
+        if (value.isNullOrEmpty()) return null
+        return ElementProp(name = name, value = value, type = ElementPropType.STAFF_INPUT)
+    }
+
+    fun selector(name: String, value: List<String>?): ElementProp? {
+        if (value.isNullOrEmpty()) return null
+        return ElementProp(name = name, value = value, type = ElementPropType.SELECTOR)
+    }
 }

@@ -23,18 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import io.swagger.annotations.ApiModelProperty
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
-
-    open fun triggerCondition(): List<ElementProp> = emptyList()
-}
+data class RepoTriggerRefVo(
+    val projectId: String,
+    @ApiModelProperty("代码库Id")
+    val repositoryHashId: String,
+    @ApiModelProperty("插件code")
+    val atomCode: String,
+    @ApiModelProperty("触发类型")
+    val triggerType: String,
+    @ApiModelProperty("事件类型")
+    val eventType: String,
+    @ApiModelProperty("插件参数")
+    val taskParams: Map<String, Any>,
+    @ApiModelProperty("触发条件")
+    val triggerCondition: Map<String, Any>?,
+    @ApiModelProperty("触发条件md5")
+    val triggerConditionMd5: String?,
+    @ApiModelProperty("流水线引用数量")
+    val pipelineRefCount: Int,
+    val atomLogo: String? = null
+)
