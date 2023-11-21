@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.TGitTokenDao
@@ -60,11 +61,13 @@ import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.util.Base64
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -503,6 +506,26 @@ class RepoFileService @Autowired constructor(
                 partAPrivateKey = pair.privateKey
             )
         )
+
+        // username+password 关联的git代码库
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getSession(
+                RepoSessionRequest(
+                    type = repository.getScmType(),
+                    username = privateKey,
+                    password = passPhrase,
+                    url = repository.url
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

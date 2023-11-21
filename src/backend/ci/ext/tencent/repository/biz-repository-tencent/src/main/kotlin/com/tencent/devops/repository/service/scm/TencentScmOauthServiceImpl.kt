@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceScmOauthResource
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
@@ -157,6 +158,43 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             region = region,
             userName = userName,
             event = event
+        )
+    }
+
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): List<GitHook> {
+        return client.getScm(ServiceScmOauthResource::class).getWebHooks(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token
+        ).data ?: emptyList()
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ) {
+        client.getScm(ServiceScmOauthResource::class).updateWebHook(
+            hookId = hookId,
+            projectName = projectName,
+            url = url,
+            type = type,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName,
+            event = event,
+            hookUrl = hookUrl
         )
     }
 

@@ -175,4 +175,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun getCgsConfig(userId: String): Result<CgsResourceConfig> {
         return Result(workspaceCommon.getCgsConfig())
     }
+
+    override fun initTaiUserInfo(userId: String, taiUsers: List<String>): Result<Boolean> {
+        remoteDevSettingService.updateAllTaiUserInfo(taiUsers)
+        return Result(true)
+    }
 }

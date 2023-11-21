@@ -34,18 +34,21 @@ class ClientVersionDao {
         dslContext: DSLContext,
         ip: String,
         userId: String,
-        version: String
+        version: String,
+        macAddress: String
     ): Int {
         return with(TClientVersion.T_CLIENT_VERSION) {
             dslContext.insertInto(
                 this,
                 IP,
                 USER,
-                VERSION
+                VERSION,
+                MAC_ADDRESS
             ).values(
                 ip,
                 userId,
-                version
+                version,
+                macAddress
             ).onDuplicateKeyIgnore().execute()
         }
     }
@@ -55,13 +58,30 @@ class ClientVersionDao {
         ip: String,
         userId: String,
         version: String,
-        lastVersion: String
+        lastVersion: String,
+        macAddress: String
     ): Int {
         return with(TClientVersion.T_CLIENT_VERSION) {
             dslContext.update(this)
                 .set(VERSION, version)
                 .set(LAST_UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_VERSION, lastVersion)
+                .where(USER.eq(userId).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
+        }
+    }
+
+    fun updateTime(
+        dslContext: DSLContext,
+        ip: String,
+        macAddress: String,
+        userId: String,
+        lastVersion: String
+    ) {
+        return with(TClientVersion.T_CLIENT_VERSION) {
+            dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MAC_ADDRESS, macAddress)
                 .where(USER.eq(userId).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
         }
     }

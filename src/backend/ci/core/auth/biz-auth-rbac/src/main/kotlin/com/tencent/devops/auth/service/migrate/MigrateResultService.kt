@@ -230,7 +230,7 @@ class MigrateResultService constructor(
             val createPermission = actions.filter { it.contains("create") }.all {
                 client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermission(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     action = it.substringAfterLast("_"),
                     projectCode = projectCode,
                     resourceCode = it.substringBeforeLast("_")
@@ -240,7 +240,7 @@ class MigrateResultService constructor(
             val notCreatePermission =
                 client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     action = actions.filterNot {
                         it.contains("create")
                     }.map { it.substringAfterLast("_") },

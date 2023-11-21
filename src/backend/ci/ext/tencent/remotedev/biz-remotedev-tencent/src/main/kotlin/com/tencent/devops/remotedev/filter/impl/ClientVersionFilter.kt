@@ -1,5 +1,7 @@
 package com.tencent.devops.remotedev.filter.impl
 
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -16,6 +18,7 @@ import javax.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.TimeUnit
 
 @Provider
 @PreMatching
@@ -29,6 +32,7 @@ class ClientVersionFilter constructor(
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private const val HEADER_IP = "x-client-ip"
+        private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
     }
 
     @Value("\${remoteDev.clientVersionLimit:0.3.0}")
@@ -75,7 +79,7 @@ class ClientVersionFilter constructor(
         val split = version?.substringBefore("-")?.split(".") ?: kotlin.run {
             logger.info(
                 "user(${requestContext.headers[AUTH_HEADER_USER_ID]}) request" +
-                    " $path not have $BK_CI_CLIENT_VERSION,return error."
+                        " $path not have $BK_CI_CLIENT_VERSION,return error."
             )
             return false
         }
@@ -83,7 +87,8 @@ class ClientVersionFilter constructor(
             recordClientVersion(
                 requestContext.headers[HEADER_IP]?.get(0).toString(),
                 requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString(),
-                version.toString()
+                version.toString(),
+                requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
         if (!this::clientVersionLimitList.isInitialized) {
@@ -104,7 +109,7 @@ class ClientVersionFilter constructor(
         return true
     }
 
-    private fun recordClientVersion(ip: String, user: String, version: String) {
+    private fun recordClientVersion(ip: String, user: String, version: String, macAddress: String) {
         if (!this::clientVersion.isInitialized) {
             clientVersion = clientVersionDao.fetchAll(dslContext)
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
@@ -117,7 +122,8 @@ class ClientVersionFilter constructor(
                     dslContext = dslContext,
                     ip = ip,
                     userId = user,
-                    version = version
+                    version = version,
+                    macAddress = macAddress
                 )
                 logger.info("init client version record|$ip|$user|$version|$count")
                 clientVersion["$ip-$user"] = version
@@ -129,7 +135,8 @@ class ClientVersionFilter constructor(
                     ip = ip,
                     userId = user,
                     version = version,
-                    lastVersion = recordVersion
+                    lastVersion = recordVersion,
+                    macAddress = macAddress
                 )
                 logger.info("client update now|$ip|$user|$version|$recordVersion|$count")
                 if (count > 0) {
@@ -140,8 +147,21 @@ class ClientVersionFilter constructor(
                     )!!
                 }
             }
+
+            // 只要上报就更新时间
+            else -> {
+                val key = "$macAddress-$user"
+                if (recordClientCache.getIfPresent(key) != null) {
+                    return
+                }
+                recordClientCache.put(key, "")
+                clientVersionDao.updateTime(dslContext, ip, macAddress, user, recordVersion)
+            }
         }
     }
+
+    private val recordClientCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES).build()
 
     override fun filter(requestContext: ContainerRequestContext) {
         if (!verify(requestContext)) {

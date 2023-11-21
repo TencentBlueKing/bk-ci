@@ -348,7 +348,7 @@ class DeleteControl @Autowired constructor(
 
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
 
-        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
+        val projectId = remoteDevSettingDao.fetchOneSetting(dslContext, workspace.createUserId).projectId
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)

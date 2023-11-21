@@ -144,7 +144,7 @@ class StopWorkspaceHandler @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START
                 )
