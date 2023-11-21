@@ -47,7 +47,7 @@ class RbacAuthPermissionApi(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
             projectCode = projectCode,
@@ -68,7 +68,7 @@ class RbacAuthPermissionApi(
         relationResourceType: AuthResourceType?
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType.value,
             projectCode = projectCode,
@@ -87,7 +87,7 @@ class RbacAuthPermissionApi(
     ): Boolean {
         val resourceType = RbacAuthUtils.getResourceTypeByStr(resource.resourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByInstance(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
@@ -104,7 +104,7 @@ class RbacAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
@@ -122,7 +122,7 @@ class RbacAuthPermissionApi(
     ): Map<AuthPermission, List<String>> {
         val action = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType.value,
             projectCode = projectCode,
@@ -141,7 +141,7 @@ class RbacAuthPermissionApi(
     ): Map<AuthPermission, List<String>> {
         val actions = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             resourceType = resourceType.value,
             projectCode = scopeId,
@@ -157,7 +157,7 @@ class RbacAuthPermissionApi(
         resourceType: AuthResourceType
     ): Map<String, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceAndParentByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
@@ -175,7 +175,7 @@ class RbacAuthPermissionApi(
     ): Map<AuthPermission, List<String>> {
         val actions = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
         return client.get(ServicePermissionAuthResource::class).filterUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             actions = actions,
