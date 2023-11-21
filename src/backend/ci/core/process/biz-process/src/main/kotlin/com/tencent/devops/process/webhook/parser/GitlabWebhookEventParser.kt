@@ -23,19 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.webhook.parser
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import org.slf4j.LoggerFactory
 
 /**
- * webhook事件触发插件参数配置
+ * gitlab webhook事件解析
  */
-data class WebhookElementParams(
-    val repositoryConfig: RepositoryConfig,
-    val scmType: ScmType,
-    val eventType: CodeEventType?
-)
+class GitlabWebhookEventParser(
+    private val objectMapper: ObjectMapper
+) : IWebhookEventParser {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitlabWebhookEventParser::class.java)
+    }
+
+    override fun parseEvent(request: WebhookRequest): CodeWebhookEvent? {
+        logger.info("Trigger gitlab build(${request.body})")
+        return try {
+            objectMapper.readValue(request.body, GitEvent::class.java)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the gitlab web hook commit event", e)
+            return null
+        }
+    }
+}

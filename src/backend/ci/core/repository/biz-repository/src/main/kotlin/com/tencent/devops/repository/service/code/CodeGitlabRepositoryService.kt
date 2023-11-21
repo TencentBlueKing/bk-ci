@@ -143,7 +143,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitLabDao.edit(
                 dslContext = transactionContext,
@@ -151,7 +152,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 projectName = GitUtils.getProjectName(repository.url),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                authType = repository.authType?.name ?: RepoAuthType.HTTP.name
             )
         }
     }
@@ -166,7 +168,13 @@ class CodeGitlabRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            // gitlab代码库的老数据authType字段为null
+            authType = if (record.authType.isNullOrBlank()) {
+                RepoAuthType.HTTP
+            } else {
+                RepoAuthType.valueOf(record.authType)
+            }
         )
     }
 

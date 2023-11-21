@@ -313,7 +313,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -332,7 +332,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -350,7 +350,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -368,7 +368,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -386,7 +386,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -404,7 +404,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -422,7 +422,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -448,7 +448,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -476,7 +476,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -498,7 +498,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -519,7 +519,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(
@@ -540,7 +540,7 @@ class PathRegexFilterTest {
             caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
-        response.getParam()[MATCH_PATHS]?.let {
+        response.params[MATCH_PATHS]?.let {
             Assertions.assertTrue(
                 it.split(",").toSet().containsAll(
                     setOf(

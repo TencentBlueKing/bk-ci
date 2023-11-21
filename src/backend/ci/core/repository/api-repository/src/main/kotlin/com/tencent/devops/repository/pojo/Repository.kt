@@ -58,4 +58,6 @@ interface Repository {
     fun getFormatURL() = url
 
     fun getScmType(): ScmType
+
+    fun getExternalId(): String = projectName
 }

@@ -62,4 +62,6 @@ data class CodeP4Repository(
     }
 
     override fun getScmType() = ScmType.CODE_P4
+
+    override fun getExternalId(): String = projectName
 }

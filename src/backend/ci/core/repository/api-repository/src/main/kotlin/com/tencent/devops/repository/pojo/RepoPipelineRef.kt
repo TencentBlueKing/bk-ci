@@ -23,32 +23,46 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
 
-interface PipelineWebhookBuildLogService {
-
-    /**
-     * 保存webhook构建日志
-     */
-    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
-
-    /**
-     * 查询webhook构建日志明细
-     */
-    @Suppress("ALL")
-    fun listWebhookBuildLogDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail>?
-}
+data class RepoPipelineRef(
+    val projectId: String,
+    @ApiParam("流水线ID")
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称")
+    val pipelineName: String,
+    @ApiModelProperty("代码库Id")
+    val repositoryId: Long,
+    @ApiModelProperty("插件ID")
+    val taskId: String,
+    @ApiModelProperty("插件名")
+    val taskName: String,
+    @ApiModelProperty("插件code")
+    val atomCode: String,
+    @ApiModelProperty("插件版本")
+    val atomVersion: String? = null,
+    @ApiModelProperty("插件类别")
+    val atomCategory: String,
+    @ApiModelProperty("插件参数")
+    val taskParams: Map<String, Any>,
+    @ApiModelProperty("插件配置的代码库类型")
+    val taskRepoType: String,
+    @ApiModelProperty("插件配置的代码库hashId")
+    val taskRepoHashId: String?,
+    @ApiModelProperty("插件配置的代码库别名")
+    val taskRepoRepoName: String?,
+    @ApiModelProperty("触发类型")
+    val triggerType: String?,
+    @ApiModelProperty("事件类型")
+    val eventType: String?,
+    @ApiModelProperty("触发条件")
+    val triggerCondition: String?,
+    @ApiModelProperty("触发条件md5")
+    val triggerConditionMd5: String?
+)

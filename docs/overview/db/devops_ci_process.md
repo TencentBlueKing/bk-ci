@@ -50,8 +50,6 @@
 | [T_PIPELINE_VIEW_USER_LAST_VIEW](#T_PIPELINE_VIEW_USER_LAST_VIEW) |  |
 | [T_PIPELINE_VIEW_USER_SETTINGS](#T_PIPELINE_VIEW_USER_SETTINGS) |  |
 | [T_PIPELINE_WEBHOOK](#T_PIPELINE_WEBHOOK) |  |
-| [T_PIPELINE_WEBHOOK_BUILD_LOG](#T_PIPELINE_WEBHOOK_BUILD_LOG) |  |
-| [T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL](#T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) |  |
 | [T_PIPELINE_WEBHOOK_QUEUE](#T_PIPELINE_WEBHOOK_QUEUE) |  |
 | [T_PROJECT_PIPELINE_CALLBACK](#T_PROJECT_PIPELINE_CALLBACK) |  |
 | [T_PROJECT_PIPELINE_CALLBACK_HISTORY](#T_PROJECT_PIPELINE_CALLBACK_HISTORY) |  |
@@ -60,6 +58,8 @@
 | [T_TEMPLATE_INSTANCE_BASE](#T_TEMPLATE_INSTANCE_BASE) | 模板实列化基本信息表 |
 | [T_TEMPLATE_INSTANCE_ITEM](#T_TEMPLATE_INSTANCE_ITEM) | 模板实列化项信息表 |
 | [T_TEMPLATE_PIPELINE](#T_TEMPLATE_PIPELINE) | 流水线模板-实例映射表 |
+| [T_PIPELINE_TRIGGER_EVENT](#T_PIPELINE_TRIGGER_EVENT) | 流水线触发事件表 |
+| [T_PIPELINE_TRIGGER_DETAIL](#T_PIPELINE_TRIGGER_DETAIL) | 流水线触发事件明细表 |
 
 **表名：** <a id="T_AUDIT_RESOURCE">T_AUDIT_RESOURCE</a>
 
@@ -848,44 +848,10 @@
 |  8   | PROJECT_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 项目名称  |
 |  9   | TASK_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 任务id  |
 |  10   | DELETE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除  |
+|  11   | EXTERNAL_ID |   varchar   | 255 |   0    |    Y     |  N   |      | webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port  |
+|  12   | EVENT_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       | 事件类型  |
+|  13   | REPOSITORY_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库hashId  |
 
-**表名：** <a id="T_PIPELINE_WEBHOOK_BUILD_LOG">T_PIPELINE_WEBHOOK_BUILD_LOG</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | CODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 代码库类型  |
-|  3   | REPO_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 代码库别名  |
-|  4   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 代码提交ID  |
-|  5   | REQUEST_CONTENT |   text   | 65535 |   0    |    Y     |  N   |       | 事件内容  |
-|  6   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  7   | RECEIVED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 接收时间  |
-|  8   | FINISHED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 完成时间  |
-
-**表名：** <a id="T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL">T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | LOG_ID |   bigint   | 20 |   0    |    N     |  N   |       |   |
-|  3   | CODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 代码库类型  |
-|  4   | REPO_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 代码库别名  |
-|  5   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 代码提交ID  |
-|  6   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
-|  7   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
-|  8   | TASK_ID |   varchar   | 34 |   0    |    N     |  N   |       | 任务id  |
-|  9   | TASK_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 任务名称  |
-|  10   | SUCCESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否成功  |
-|  11   | TRIGGER_RESULT |   text   | 65535 |   0    |    Y     |  N   |       | 触发结果  |
-|  12   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a id="T_PIPELINE_WEBHOOK_QUEUE">T_PIPELINE_WEBHOOK_QUEUE</a>
 
@@ -1055,3 +1021,44 @@
 |  12   | BUILD_NO |   text   | 65535 |   0    |    Y     |  N   |       | 构建号  |
 |  13   | PARAM |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 参数  |
 |  14   | DELETED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 流水线已被软删除  |
+
+**表名：** <a id="T_PIPELINE_TRIGGER_EVENT">T_PIPELINE_TRIGGER_EVENT</a>
+
+**说明：** 流水线触发事件表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | REQUEST_ID |   varchar   | 64 |   0    |    N     |  N   |       | 请求ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 事件ID  |
+|  4   | TRIGGER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 触发类型  |
+|  5   | EVENT_SOURCE |   varchar   | 20 |   0    |    N     |  N   |       | 触发源,代码库hashId/触发人/远程ip  |
+|  6   | EVENT_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 事件类型  |
+|  7   | TRIGGER_USER |   varchar   | 100 |   0    |    N     |  N   |       | 触发用户  |
+|  8   | EVENT_DESC |   text   |  |   0    |    N     |  N   |       | 事件描述  |
+|  9   | REPLAY_REQUEST_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 重放请求ID  |
+|  10   | REQUEST_PARAMS |   text   |  |   0    |    N     |  N   |       | 请求参数  |
+|  11   | CREATE_TIME |   timestamp   |   |   0    |    N     |  Y   |       | 事件时间  |
+
+**表名：** <a id="T_PIPELINE_TRIGGER_DETAIL">T_PIPELINE_TRIGGER_DETAIL</a>
+
+**说明：** 流水线触发事件明细表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | DETAIL_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 事件明细ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 事件ID  |
+|  4   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 状态(success or failure)  |
+|  5   | PIPELINE_ID |   varchar   | 20 |   0    |    Y     |  N   |       | 流水线ID  |
+|  6   | PIPELINE_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 流水线名称  |
+|  7   | VERSION |   varchar   | 100 |   0    |    Y     |  N   |       | 流水线版本号  |
+|  8   | BUILD_ID |   text   |  |   0    |    Y     |  N   |       | 构建ID  |
+|  9   | BUILD_NUM |   varchar   | 64 |   0    |    Y     |  N   |       | 构建编号  |
+|  10   | REASON |   text   |  |   0    |    Y     |  N   |       | 失败原因  |
+|  11   | REASON_DETAIL |   timestamp   |   |   0    |    Y     |  N   |       | 原因详情  |
+|  12   | CREATE_TIME |   timestamp   |   |   0    |    Y     |  Y   |       | 创建时间  |
