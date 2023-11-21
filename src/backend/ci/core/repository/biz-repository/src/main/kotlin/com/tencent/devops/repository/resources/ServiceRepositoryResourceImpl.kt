@@ -38,11 +38,13 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
@@ -50,7 +52,8 @@ import java.net.URLDecoder
 @RestResource
 @Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
-    private val repositoryService: RepositoryService
+    private val repositoryService: RepositoryService,
+    private val repoPipelineService: RepoPipelineService
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])
@@ -201,5 +204,18 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         repositoryIds: Set<String>
     ): Result<List<Repository>> {
         return (Result(repositoryService.getRepositoryByHashIds(repositoryIds.toList())))
+    }
+
+    override fun updatePipelineRef(
+        userId: String,
+        projectId: String,
+        request: RepoPipelineRefRequest
+    ): Result<Boolean> {
+        repoPipelineService.updatePipelineRef(
+            userId = userId,
+            projectId = projectId,
+            request = request
+        )
+        return Result(true)
     }
 }

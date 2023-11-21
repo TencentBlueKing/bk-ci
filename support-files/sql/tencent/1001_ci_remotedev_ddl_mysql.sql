@@ -119,7 +119,9 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
 -- Table structure for T_REMOTE_DEV_SETTINGS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
-    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID',
+    `USER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '用户中文名',
+    `COMPANY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '公司名称',
     `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
     `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
     `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
@@ -137,7 +139,9 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `USER_SETTING` mediumtext NOT NULL COMMENT '用户设置，统一维护一个json字符串',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`USER_ID`)
+    PRIMARY KEY (`USER_ID`),
+    KEY `uni_1` (`USER_NAME`),
+    KEY `uni_2` (`COMPANY_NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户远程开发配置表';
 
 -- ----------------------------
@@ -256,9 +260,12 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
     `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
     `TYPE` varchar(32) NOT NULL DEFAULT '3080' COMMENT 'GPU卡类型',
-    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
+    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU,备注：后续要删掉',
+    `VGPU` varchar(32) NOT NULL DEFAULT '1' COMMENT 'vGPU',
     `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
+    `VCPU` varchar(128) NOT NULL DEFAULT '' COMMENT '主频跟核数配置',
     `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
+    `VMEMORY` varchar(32) NOT NULL DEFAULT '' COMMENT '内存配置，可独享',
     `SDISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '系统盘，本地SSD盘，单位GB',
     `DISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '本地SSD盘，单位GB',
     `HDISK` varchar(32) NOT NULL DEFAULT '1' COMMENT '云SSD盘，单位TB',
@@ -403,6 +410,8 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     `VERSION` varchar(16) NOT NULL COMMENT '客户端版本',
     `LAST_UPDATE_TIME` timestamp NULL COMMENT '最近版本更新时间',
     `LAST_VERSION` varchar(16) NULL COMMENT '上次的版本',
+    `MAC_ADDRESS` varchar(64) NULL COMMENT 'MAC地址',
+    `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NULL COMMENT '最近更新时间',
     UNIQUE `ukey`(`IP`,`USER`),
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
@@ -476,7 +485,8 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
 	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
 	`TYPE` varchar(16)  NOT NULL COMMENT '配置类型',
 	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
-    PRIMARY KEY (`ID`)
+    PRIMARY KEY (`ID`),
+    KEY `idx_type` (`TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

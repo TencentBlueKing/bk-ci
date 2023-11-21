@@ -6,7 +6,7 @@ import com.tencent.devops.remotedev.pojo.windows.ComputerStatusEnum
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserData
 import com.tencent.devops.remotedev.pojo.windows.ComputerUserEnum
-import com.tencent.devops.remotedev.service.startcloud.StartCloudClient
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

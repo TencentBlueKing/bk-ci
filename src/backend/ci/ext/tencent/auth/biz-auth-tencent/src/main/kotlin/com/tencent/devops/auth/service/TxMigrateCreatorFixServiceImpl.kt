@@ -43,7 +43,7 @@ class TxMigrateCreatorFixServiceImpl @Autowired constructor(
             authSystemType == AuthSystemType.V0_AUTH_TYPE -> {
                 val managers = bkTag.invokeByTag(prodTag) {
                     client.getGateway(ServiceProjectAuthResource::class).getProjectUsers(
-                        token = tokenService.getSystemToken(null)!!,
+                        token = tokenService.getSystemToken()!!,
                         projectCode = projectCode,
                         group = BkAuthGroup.MANAGER
                     ).data

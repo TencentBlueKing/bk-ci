@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -41,7 +43,6 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -71,8 +72,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -722,6 +722,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartupNew(
         userId: String,
         projectId: String,
@@ -734,20 +735,21 @@ class ServiceBuildResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
-            pipelineBuildFacadeService.buildManualStartup(
-                userId = userId,
-                startType = startType,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                values = values,
-                channelCode = channelCode,
-                buildNo = buildNo,
-                checkPermission = ChannelCode.isNeedAuth(channelCode),
-                frequencyLimit = true
-            )
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = startType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = true
+                )
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
         return Result(
             pipelineBuildFacadeService.buildRestart(

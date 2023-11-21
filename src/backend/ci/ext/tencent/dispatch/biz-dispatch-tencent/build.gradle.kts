@@ -30,5 +30,5 @@ dependencies {
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":core:dispatch:biz-dispatch"))
-    api(project(":ext:tencent:dispatch:biz-dispatch-bcs"))
+    api(project(":ext:tencent:dispatch:api-dispatch-tencent"))
 }

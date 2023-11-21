@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTemplateInstanceResource {
-    @ApiOperation("实例化流水线模板")
+    @ApiOperation("实例化流水线模板", tags = ["v1_app_templateInstances"])
     @POST
     @Path("/projects/{projectId}/templates/{templateId}")
     fun createTemplateInstances(

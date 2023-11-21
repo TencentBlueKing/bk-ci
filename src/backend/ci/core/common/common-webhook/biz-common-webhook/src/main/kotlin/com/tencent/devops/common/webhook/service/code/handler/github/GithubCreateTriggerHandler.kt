@@ -27,12 +27,15 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -71,6 +74,29 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
 
     override fun getMessage(event: GithubCreateEvent): String? {
         return event.ref
+    }
+
+    override fun getEventDesc(event: GithubCreateEvent): String {
+        val (i18Code, linkUrl) = if (event.ref_type == "tag") {
+            WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC to
+                    "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/releases/tag/${event.ref}"
+        } else {
+            WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC to
+                    "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}/tree/${event.ref}"
+        }
+        // 事件重放
+        return I18Variable(
+            code = i18Code,
+            params = listOf(
+                linkUrl,
+                getBranchName(event),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GithubCreateEvent): String {
+        return event.repository.id.toString()
     }
 
     override fun retrieveParams(

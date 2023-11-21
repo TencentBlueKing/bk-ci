@@ -82,7 +82,6 @@ import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.time.Duration
 import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -427,7 +426,7 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchOneSetting(
                 dslContext = dslContext,
                 userId = creator
             ).projectId.ifBlank { null }
@@ -572,6 +571,8 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         assigns.forEach {
+            // 没有注册setting就注册
+            remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
         }
     }
@@ -633,19 +634,22 @@ class WorkspaceCommon @Autowired constructor(
         workspace: WorkspaceRecord,
         operator: String
     ) {
+        updateLastHistory(dslContext, workspace.workspaceName, operator)
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             remoteDevSettingService.computeWinUsageTime(userId = workspace.createUserId)
         }
 
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            updateLastHistory(transactionContext, workspace.workspaceName, operator)
-            remoteDevBillingDao.endBilling(
-                dslContext = transactionContext,
-                workspaceName = workspace.workspaceName,
-                computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
-            )
+        // 个人云桌面即使关机也需要计费
+        if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU &&
+            workspace.ownerType == WorkspaceOwnerType.PERSONAL
+        ) {
+            return
         }
+        remoteDevBillingDao.endBilling(
+            dslContext = dslContext,
+            workspaceName = workspace.workspaceName,
+            computeUsageTime = workspace.ownerType == WorkspaceOwnerType.PERSONAL
+        )
     }
 
     // 按天备份数据

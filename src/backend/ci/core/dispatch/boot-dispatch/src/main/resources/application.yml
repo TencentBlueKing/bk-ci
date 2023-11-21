@@ -6,6 +6,9 @@ spring:
     desc: DevOps Dispatch Service
     version: 4.0.0
     packageName: com.tencent.devops.dispatch
+  autoconfigure:
+    exclude:
+      - com.tencent.devops.common.dispatch.sdk.config.MQConfiguration
 
 server:
   port: 21922

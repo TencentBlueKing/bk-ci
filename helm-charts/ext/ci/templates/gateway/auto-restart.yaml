@@ -1,6 +1,6 @@
 ## 每天1点自动重启 , 避免日志过多挤压
 {{ if .Values.gateway.enabled -}}
-apiVersion: batch/v1beta1
+apiVersion: {{ .Values.gateway.cronjob.apiVersion }}
 kind: CronJob
 metadata:
   name: auto-restart-gateway

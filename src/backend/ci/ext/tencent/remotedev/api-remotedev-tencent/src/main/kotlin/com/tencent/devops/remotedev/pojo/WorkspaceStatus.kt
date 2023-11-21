@@ -80,7 +80,7 @@ fun WorkspaceStatus.display(): String {
     return when (this) {
         WorkspaceStatus.PREPARING -> "准备中"
         WorkspaceStatus.RUNNING -> "运行中"
-        WorkspaceStatus.STOPPED -> "已停止"
+        WorkspaceStatus.STOPPED -> "已关机"
         WorkspaceStatus.SLEEP -> "已休眠"
         WorkspaceStatus.DELETED -> "已删除"
         WorkspaceStatus.EXCEPTION -> "异常"
