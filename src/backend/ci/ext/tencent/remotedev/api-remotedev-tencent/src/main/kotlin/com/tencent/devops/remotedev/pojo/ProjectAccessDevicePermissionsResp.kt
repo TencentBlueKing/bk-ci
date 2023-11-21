@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ProjectAccessDevicePermissionsResp(
-    @JsonProperty("access_control")
-    val accessControl: Boolean,
-    @JsonProperty("has_permissions")
-    val hasPermissions: Boolean
+    @JsonProperty("has_ip_permissions")
+    val hasIpPermissions: Boolean,
+    @JsonProperty("has_mac_permissions")
+    val hasMacPermissions: Boolean
 )

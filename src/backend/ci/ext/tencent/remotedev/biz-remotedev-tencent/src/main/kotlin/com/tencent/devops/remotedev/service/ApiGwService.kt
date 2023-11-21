@@ -24,10 +24,11 @@ class ApiGwService @Autowired constructor(
     fun projectAccessDevicePermissions(
         mac: String,
         userId: String,
-        projects: String
+        projects: String,
+        ip: String
     ): Map<String, ProjectAccessDevicePermissionsResp>? {
         val url = "${bkConfig.remoteDevUrl}/apigw/v1/remote_dev/project_access_device_permissions/" +
-                "?mac=$mac&account=$userId&project_codes=$projects"
+                "?mac=$mac&account=$userId&project_codes=$projects&ip=$ip"
         val request = Request.Builder()
             .url(url)
             .get()

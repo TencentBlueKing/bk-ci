@@ -101,6 +101,8 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -1227,8 +1229,18 @@ class WorkspaceService @Autowired constructor(
             return emptyMap()
         }
         // 调用安全接口
-        return apiGwService.projectAccessDevicePermissions(macAddress, userId, projects.joinToString(","))
-            ?: emptyMap()
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        val ip = attributes?.request?.getHeader("X-Forwarded-For")?.get(0)?.toString()
+        if (ip.isNullOrBlank()) {
+            logger.debug("projectAccessDevicePermissions ip null")
+            return emptyMap()
+        }
+        return apiGwService.projectAccessDevicePermissions(
+            mac = macAddress,
+            userId = userId,
+            projects = projects.joinToString(","),
+            ip = ip
+        ) ?: emptyMap()
     }
 
     companion object {
