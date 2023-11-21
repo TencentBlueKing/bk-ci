@@ -29,7 +29,6 @@ package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 
 @ApiModel("代码库模型-多态基类")
@@ -50,7 +49,6 @@ interface Repository {
     var userName: String
     val projectId: String?
     val repoHashId: String?
-    val scmType: ScmType
 
     fun isLegal() = url.startsWith(getStartPrefix())
 

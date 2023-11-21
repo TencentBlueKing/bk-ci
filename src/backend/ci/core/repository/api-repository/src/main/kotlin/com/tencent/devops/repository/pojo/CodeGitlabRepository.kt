@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.annotations.ApiModel
@@ -52,9 +51,7 @@ data class CodeGitlabRepository(
     @ApiModelProperty("仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.HTTP,
     @ApiModelProperty("Gitlab仓库ID", required = false)
-    val gitProjectId: Long?,
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.CODE_GITLAB
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeGitLab"

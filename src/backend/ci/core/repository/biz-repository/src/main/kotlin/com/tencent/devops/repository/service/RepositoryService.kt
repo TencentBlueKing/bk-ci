@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -860,14 +861,11 @@ class RepositoryService @Autowired constructor(
 
         deleteResource(projectId, repositoryId)
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-        var deleteAliasName = "${record.aliasName}[$deleteTime]"
-        if (deleteAliasName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
-            deleteAliasName = deleteAliasName.substring(0, MAX_LEN_FOR_NAME)
-        }
+        val deleteAliasName = "${record.aliasName}[$deleteTime]"
         repositoryDao.delete(
             dslContext = dslContext,
             repositoryId = repositoryId,
-            deleteAliasName = deleteAliasName,
+            deleteAliasName = deleteAliasName.coerceAtMaxLength(MAX_ALIAS_LENGTH),
             updateUser = userId
         )
     }
@@ -1138,6 +1136,6 @@ class RepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
-        private const val MAX_LEN_FOR_NAME = 255
+        const val MAX_ALIAS_LENGTH = 255
     }
 }

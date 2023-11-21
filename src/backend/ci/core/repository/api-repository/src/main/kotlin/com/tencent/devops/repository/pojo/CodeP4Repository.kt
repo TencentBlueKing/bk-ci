@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -46,9 +45,7 @@ data class CodeP4Repository(
     @ApiModelProperty("项目id", required = true)
     override var projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?,
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.CODE_P4
+    override val repoHashId: String?
 ) : Repository {
 
     companion object {
