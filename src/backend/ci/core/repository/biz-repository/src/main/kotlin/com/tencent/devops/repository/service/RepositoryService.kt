@@ -588,7 +588,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(

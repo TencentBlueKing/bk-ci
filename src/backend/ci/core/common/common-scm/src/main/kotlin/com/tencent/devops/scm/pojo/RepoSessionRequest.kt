@@ -25,37 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.scm.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
 
-@SuppressWarnings("ObjectPropertyNaming")
-@ApiModel("代码库模型-GitHub代码库")
-data class GithubRepository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String = "",
-    @ApiModelProperty("github项目名称", example = "Tencent/bkci", required = true)
-    override val projectName: String,
-    @ApiModelProperty("项目id", required = true)
-    override val projectId: String = "",
-    @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?,
-    @ApiModelProperty("Git仓库ID", required = false)
-    val gitProjectId: Long? = null,
-    @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
-    override val credentialId: String = ""
-) : Repository {
-    companion object {
-        const val classType = "github"
-    }
-
-    override fun getStartPrefix() = "https://github.com/"
-
-    override fun getScmType() = ScmType.GITHUB
-}
+data class RepoSessionRequest(
+    @ApiParam("仓库类型", required = true)
+    val type: ScmType,
+    @ApiParam("username", required = true)
+    val username: String,
+    @ApiParam("password", required = true)
+    val password: String,
+    @ApiParam("url", required = true)
+    val url: String
+)
