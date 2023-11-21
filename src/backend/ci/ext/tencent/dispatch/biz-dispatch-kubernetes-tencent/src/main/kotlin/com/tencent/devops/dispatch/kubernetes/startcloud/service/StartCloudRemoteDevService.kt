@@ -29,20 +29,22 @@ package com.tencent.devops.dispatch.kubernetes.startcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
@@ -50,6 +52,8 @@ import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateB
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,8 +63,10 @@ import org.springframework.stereotype.Service
 
 @Service("startcloudRemoteDevService")
 class StartCloudRemoteDevService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val startCloudRedisUtils: StartCloudRedisUtils
@@ -74,6 +80,10 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
+
+        if (event.devFile.checkWorkspaceAutomaticCorrection()) {
+            return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
+        }
 
         kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
             logger.warn("create user failed.|${it.message}")
@@ -89,7 +99,7 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.machineType == event.devFile.machineType
+                it.machineType == event.devFile.machineType
         }.randomOrNull() ?: throw BuildFailureException(
             ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
             ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -199,7 +209,20 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid)
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
+            val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
+                logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
+                return false
+            }
+            kotlin.runCatching {
+                client.get(ServiceRemoteDevResource::class)
+                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+            }.onFailure {
+                logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
+            }
+        }
         return true
     }
 
@@ -240,6 +263,13 @@ class StartCloudRemoteDevService @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout) {
                 logger.error("Wait task: $taskId finish timeout($timeout)")
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = taskId,
+                    status = EnvironmentActionStatus.WAIT_TIMEOUT,
+                    fStatus = EnvironmentActionStatus.PENDING,
+                    actionMsg = "$taskId finish timeout($timeout)"
+                )
                 return DispatchBuildTaskStatus(
                     DispatchBuildTaskStatusEnum.FAILED,
                     I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
@@ -250,11 +280,12 @@ class StartCloudRemoteDevService @Autowired constructor(
 
             val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
+                workspaceRedisUtils.deleteTask(taskId)
                 logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(
-                            DispatchBuildTaskStatusEnum.SUCCEEDED,
-                            JsonUtil.toJson(taskStatus)
+                        DispatchBuildTaskStatusEnum.SUCCEEDED,
+                        JsonUtil.toJson(taskStatus)
                     )
                 } else {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())

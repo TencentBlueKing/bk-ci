@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
@@ -70,6 +71,15 @@ class RemoteDevService @Autowired constructor(
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
 
+        dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = event.workspaceName,
+            environmentUid = result.enviromentUid,
+            operator = userId,
+            uid = result.taskId,
+            action = EnvironmentAction.CREATE
+        )
+
         // 记录创建历史
         dispatchWorkspaceDao.createWorkspace(
             userId = userId,
@@ -86,6 +96,18 @@ class RemoteDevService @Autowired constructor(
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. ${result.enviromentUid}")
+            if (event.devFile.checkWorkspaceAutomaticCorrection()) {
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext = dslContext,
+                    uid = result.taskId,
+                    status = EnvironmentActionStatus.AUTOMATIC_CORRECTION,
+                    workspaceName = event.workspaceName
+                )
+            } else {
+                dispatchWorkspaceOpHisDao.update(
+                    dslContext, result.taskId, EnvironmentActionStatus.SUCCEEDED
+                )
+            }
             if (mountType == WorkspaceMountType.START) {
                 val vmCreateResp = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).vmCreateResp
                 dslContext.transaction { t ->
@@ -96,14 +118,6 @@ class RemoteDevService @Autowired constructor(
                         envId = vmCreateResp?.envId ?: "",
                         regionId = vmCreateResp?.cloudZoneId?.toInt() ?: 0,
                         dslContext = context
-                    )
-
-                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                        dslContext = context,
-                        workspaceName = event.workspaceName,
-                        environmentUid = vmCreateResp?.envId ?: "",
-                        operator = userId,
-                        action = EnvironmentAction.CREATE
                     )
                 }
 
@@ -121,14 +135,6 @@ class RemoteDevService @Autowired constructor(
                         workspaceName = event.workspaceName,
                         status = EnvStatusEnum.running,
                         dslContext = context
-                    )
-
-                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                        dslContext = context,
-                        workspaceName = event.workspaceName,
-                        environmentUid = result.enviromentUid,
-                        operator = userId,
-                        action = EnvironmentAction.CREATE
                     )
                 }
 
@@ -161,12 +167,11 @@ class RemoteDevService @Autowired constructor(
                     dslContext = context
                 )
 
-                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                dispatchWorkspaceOpHisDao.update(
                     dslContext = context,
-                    workspaceName = event.workspaceName,
-                    environmentUid = result.enviromentUid,
-                    operator = "admin",
-                    action = EnvironmentAction.CREATE,
+                    uid = result.taskId,
+                    status = EnvironmentActionStatus.FAILED,
+                    fStatus = EnvironmentActionStatus.PENDING,
                     actionMsg = taskMessage ?: ""
                 )
             }
