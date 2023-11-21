@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.service.startcloud
+package com.tencent.devops.remotedev.service.client
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
