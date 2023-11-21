@@ -410,6 +410,8 @@ CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
     `VERSION` varchar(16) NOT NULL COMMENT '客户端版本',
     `LAST_UPDATE_TIME` timestamp NULL COMMENT '最近版本更新时间',
     `LAST_VERSION` varchar(16) NULL COMMENT '上次的版本',
+    `MAC_ADDRESS` varchar(64) NULL COMMENT 'MAC地址',
+    `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NULL COMMENT '最近更新时间',
     UNIQUE `ukey`(`IP`,`USER`),
     KEY `idx_version` (`VERSION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
