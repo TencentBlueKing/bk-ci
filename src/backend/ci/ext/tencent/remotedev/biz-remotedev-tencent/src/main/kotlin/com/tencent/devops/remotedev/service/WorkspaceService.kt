@@ -1230,7 +1230,8 @@ class WorkspaceService @Autowired constructor(
         }
         // 调用安全接口
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val ip = attributes?.request?.getHeader("X-Forwarded-For")?.get(0)?.toString()
+        val ip = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
+            ?.firstOrNull { it.isNotBlank() }?.trim()
         if (ip.isNullOrBlank()) {
             logger.debug("projectAccessDevicePermissions ip null")
             return emptyMap()
