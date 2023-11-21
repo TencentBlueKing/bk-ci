@@ -340,14 +340,13 @@ class TemplateDao {
         dslContext: DSLContext,
         projectId: String,
         templateType: TemplateType
-    ): TTemplateRecord {
+    ): Result<TTemplateRecord> {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(TYPE.eq(templateType.name))
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
+                .orderBy(CREATED_TIME.asc())
+                .fetch()
         }
     }
 

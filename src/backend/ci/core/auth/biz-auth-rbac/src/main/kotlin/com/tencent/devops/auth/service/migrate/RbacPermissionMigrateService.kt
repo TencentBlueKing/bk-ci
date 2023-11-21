@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
@@ -43,7 +44,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -195,16 +196,81 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
-        migrateResourceService.migrateResource(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            projectCreator = projectCreator
-        )
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        val projectCodes = migrateResourceDTO.projectCodes ?: return true
+        val resourceType = migrateResourceDTO.resourceType
+        val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
+        val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true
+            && resourceType != null
+        val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
+            .data!!.filter {
+                it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+            }
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectInfoList.forEach {
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                if (isMigrateProjectResource) {
+                    val gradeManagerId = authResourceService.get(
+                        projectCode = it.englishName,
+                        resourceType = AuthResourceType.PROJECT.value,
+                        resourceCode = it.englishName
+                    ).relationId
+                    val isRegisterMonitorPermission = authMigrationDao.get(
+                        dslContext = dslContext,
+                        projectCode = it.englishName
+                    ) != null
+                    migrateResourceService.migrateProjectResource(
+                        projectCode = it.englishName,
+                        projectName = it.projectName,
+                        gradeManagerId = gradeManagerId,
+                        async = true,
+                        registerMonitorPermission = isRegisterMonitorPermission
+                    )
+                }
+                if (isMigrateOtherResource) {
+                    migrateResourceService.migrateResource(
+                        projectCode = it.englishName,
+                        resourceType = resourceType!!,
+                        projectCreator = migrateCreatorFixService.getProjectCreator(
+                            projectCode = it.projectCode,
+                            authSystemType = AuthSystemType.V0_AUTH_TYPE,
+                            projectCreator = it.creator!!,
+                            projectUpdator = it.updator
+                        )!!
+                    )
+                }
+            }
+            // 若迁移流水线模板权限，需要修改项目的properties字段
+            if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
+                val properties = it.properties ?: ProjectProperties()
+                properties.enableTemplatePermissionManage = true
+                logger.info("update project(${it.englishName}) properties|$properties")
+                client.get(ServiceProjectResource::class).updateProjectProperties(it.englishName, properties)
+            }
+        }
+        return true
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        logger.info("start to migrate specific resource of all project|$migrateResourceDTO")
+        toRbacExecutorService.submit {
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE
+            do {
+                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    ),
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                migrateSpecificResource(
+                    migrateResourceDTO = migrateResourceDTO.copy(projectCodes = migrateProjects.map { it.englishName })
+                )
+                offset += limit
+            } while (migrateProjects.size == limit)
+        }
         return true
     }
 
@@ -244,58 +310,6 @@ class RbacPermissionMigrateService constructor(
                     async = async,
                     registerMonitorPermission = true
                 )
-            }
-        }
-        return true
-    }
-
-    override fun migrateResourcesOfNewResourceType(
-        resourceType: String,
-        projectCodes: List<String>
-    ): Boolean {
-        val traceId = MDC.get(TraceTag.BIZID)
-        client.get(ServiceProjectResource::class).listByProjectCode(
-            projectCodes = projectCodes.toSet()
-        ).data?.filter {
-            // 仅迁移已迁移成功的项目
-            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
-        }?.forEach {
-            val gradeManagerId = authResourceService.get(
-                projectCode = it.englishName,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = it.englishName
-            ).relationId
-            migrateProjectsExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                val isRegisterMonitorPermission = authMigrationDao.get(
-                    dslContext = dslContext,
-                    projectCode = it.englishName
-                ) != null
-                migrateResourceService.migrateProjectResource(
-                    projectCode = it.englishName,
-                    projectName = it.projectName,
-                    gradeManagerId = gradeManagerId,
-                    async = true,
-                    registerMonitorPermission = isRegisterMonitorPermission
-                )
-                logger.info("migrate resources of new resource type:$resourceType|$projectCodes")
-                migrateResourceService.migrateResource(
-                    projectCode = it.englishName,
-                    resourceType = resourceType,
-                    projectCreator = migrateCreatorFixService.getProjectCreator(
-                        projectCode = it.projectCode,
-                        authSystemType = AuthSystemType.V0_AUTH_TYPE,
-                        projectCreator = it.creator!!,
-                        projectUpdator = it.updator
-                    )!!
-                )
-                // 若迁移流水线模板权限，需要修改项目的properties字段
-                if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
-                    val properties = it.properties ?: ProjectProperties()
-                    properties.enableTemplatePermissionManage = true
-                    logger.info("update project(${it.englishName}) properties|$properties")
-                    client.get(ServiceProjectResource::class).updateProjectProperties(it.englishName, properties)
-                }
             }
         }
         return true

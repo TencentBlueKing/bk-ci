@@ -29,10 +29,11 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,17 +66,15 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.compareResult(projectCode = projectCode))
     }
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Result<Boolean> {
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
         return Result(
-            permissionMigrateService.migrateResource(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                projectCreator = projectCreator
-            )
+            permissionMigrateService.migrateSpecificResource(migrateResourceDTO = migrateResourceDTO)
+        )
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateSpecificResourceOfAllProject(migrateResourceDTO = migrateResourceDTO)
         )
     }
 
@@ -89,13 +88,5 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
 
     override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
-    }
-
-    override fun migrateResourcesOfNewResourceType(resourceType: String, projectCodes: List<String>): Result<Boolean> {
-        return Result(
-            permissionMigrateService.migrateResourcesOfNewResourceType(
-                resourceType = resourceType, projectCodes = projectCodes
-            )
-        )
     }
 }

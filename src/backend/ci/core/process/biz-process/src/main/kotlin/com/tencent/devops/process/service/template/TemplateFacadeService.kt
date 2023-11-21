@@ -775,17 +775,16 @@ class TemplateFacadeService @Autowired constructor(
         val templatesWithDeletePermIds = templatesByPermissionMap[AuthPermission.DELETE]
         val templatesWithEditPermIds = templatesByPermissionMap[AuthPermission.EDIT]
         val templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]
-        var templatesWithListPermIds = templatesByPermissionMap[AuthPermission.LIST]?.toMutableList()
-        if (includePublicFlag == true) {
-            val blankPipelineTemplateId = templateDao.getTemplateByType(
+        val templatesWithListPermIds = if (includePublicFlag == true) {
+            templateDao.getTemplateByType(
                 dslContext = dslContext,
                 projectId = "",
                 templateType = TemplateType.PUBLIC
-            ).id
-            templatesWithListPermIds = templatesWithListPermIds?.apply {
-                add(0, blankPipelineTemplateId)
-            }
-        }
+            ).map { it.id }
+        } else {
+            emptyList()
+        }.toMutableList().apply { addAll(templatesByPermissionMap[AuthPermission.LIST] ?: emptyList()) }
+
         val templatesWithListPermRecords = templateDao.listTemplate(
             dslContext = dslContext,
             projectId = projectId,

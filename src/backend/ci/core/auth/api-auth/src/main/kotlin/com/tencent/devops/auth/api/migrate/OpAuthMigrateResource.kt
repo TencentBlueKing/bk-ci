@@ -28,9 +28,10 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -86,18 +87,19 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/{projectCode}/migrateResource")
+    @Path("/migrateSpecificResource")
     @ApiOperation("迁移特定资源类型资源")
-    fun migrateResource(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
-        @ApiParam("项目创建人", required = true)
-        @QueryParam("projectCreator")
-        projectCreator: String
+    fun migrateSpecificResource(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateSpecificResourceOfAllProject")
+    @ApiOperation("迁移所有项目的特定资源类型资源")
+    fun migrateSpecificResourceOfAllProject(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
     @POST
@@ -120,17 +122,6 @@ interface OpAuthMigrateResource {
     @Path("/migrateMonitorResource")
     @ApiOperation("迁移监控空间权限资源")
     fun migrateMonitorResource(
-        @ApiParam("迁移项目", required = true)
-        projectCodes: List<String>
-    ): Result<Boolean>
-
-    @POST
-    @Path("/migrateResourcesOfNewResourceType")
-    @ApiOperation("迁移新增资源类型的资源")
-    fun migrateResourcesOfNewResourceType(
-        @ApiParam("资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
