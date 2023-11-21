@@ -38,6 +38,8 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.Api
@@ -488,4 +490,11 @@ interface ServiceScmResource {
         @QueryParam("crId")
         crId: Long
     ): Result<GitCommitReviewInfo?>
+
+    @ApiOperation("获取会话信息")
+    @POST
+    @Path("getGitSession")
+    fun getSession(
+        reposSessionRequest: RepoSessionRequest
+    ): Result<GitSession?>
 }

@@ -40,6 +40,8 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmService
@@ -409,6 +411,19 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 crId = crId
             )
         )
+    }
+
+    override fun getSession(reposSessionRequest: RepoSessionRequest): Result<GitSession?> {
+        return with(reposSessionRequest) {
+            Result(
+                scmService.getSession(
+                    type = type,
+                    username = username,
+                    password = password,
+                    url = url
+                )
+            )
+        }
     }
 
     companion object {
