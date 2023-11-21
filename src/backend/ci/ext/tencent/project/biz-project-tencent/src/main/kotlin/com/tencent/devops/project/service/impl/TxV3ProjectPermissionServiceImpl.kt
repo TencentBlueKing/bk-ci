@@ -74,7 +74,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode,
             group = null
@@ -120,7 +120,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun getUserProjects(userId: String): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjects(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId
         ).data ?: emptyList()
     }
@@ -147,7 +147,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode,
             resourceCode = projectCode,
