@@ -430,8 +430,8 @@
     import pipelineList from '@/components/devops/pipeline-list'
     import TemplateList from '@/components/devops/template-list'
     import i18nImages from '@/utils/i18nImages'
-    import { getQueryString } from '@/utils/util'
     import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
+    import { getQueryString } from '@/utils/util'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -1394,34 +1394,13 @@
                                     theme
                                 })
                             } catch (e) {
-                                if (this.ruleId) {
-                                    this.handleError(
-                                        e,
-                                        {
-                                            projectId: this.projectId,
-                                            resourceType: RULE_RESOURCE_TYPE,
-                                            resourceCode: this.projectId,
-                                            action: RULE_RESOURCE_ACTION.CREATE
-                                        }
-                                    )
-                                } else {
-                                    this.handleError(
-                                        e,
-                                        {
-                                            projectId: this.projectId,
-                                            resourceType: RULE_RESOURCE_TYPE,
-                                            resourceCode: this.ruleId,
-                                            action: RULE_RESOURCE_ACTION.EDIT
-                                        }
-                                    )
-                                }
                                 this.handleError(
                                     e,
                                     {
                                         projectId: this.projectId,
                                         resourceType: RULE_RESOURCE_TYPE,
-                                        resourceCode: this.ruleId,
-                                        action: RULE_RESOURCE_ACTION.EDIT
+                                        resourceCode: this.ruleId || this.projectId,
+                                        action: RULE_RESOURCE_ACTION[this.ruleId ? 'EDIT' : 'CREATE']
                                     }
                                 )
                             } finally {
