@@ -650,7 +650,6 @@ class AtomDao : AtomBaseDao() {
                     .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
                     .where(initTestAtomCondition)
                     .groupBy(ta.ATOM_CODE)
-                    .orderBy(ta.CREATE_TIME.desc())
             )
         }
         val t = queryAtomStep.asTable("t")
