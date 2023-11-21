@@ -21,6 +21,7 @@ const (
 	ExitNotWorker          ExitErrorEnum = "THIRD_AGENT_EXIT_NOT_WORKER"
 	ExitLeftDevice                       = "THIRD_AGENT_EXIT_LEFT_DEVICE"
 	ExitNoPermissionDenied               = "THIRD_AGENT_EXIT_PERMISSION_DENIED"
+	ExitJdkError                         = "THIRD_AGENT_EXIT_JDK_ERROR"
 )
 
 var exitError *ExitErrorType = nil

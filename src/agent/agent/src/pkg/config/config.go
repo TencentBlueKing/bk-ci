@@ -204,7 +204,16 @@ func DetectWorkerVersionByDir(workDir string) string {
 		return ""
 	}
 
-	return parseWorkerVersion(string(output))
+	detectVersion := parseWorkerVersion(string(output))
+
+	// 更新下 worker 的版本信息
+	if detectVersion == "" {
+		logs.Warn("parseWorkerVersion null")
+	} else {
+		GAgentEnv.SlaveVersion = detectVersion
+	}
+
+	return detectVersion
 }
 
 // parseWorkerVersion 解析worker版本
