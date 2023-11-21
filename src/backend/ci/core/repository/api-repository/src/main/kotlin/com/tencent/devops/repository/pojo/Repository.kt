@@ -29,6 +29,7 @@ package com.tencent.devops.repository.pojo
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 
 @ApiModel("代码库模型-多态基类")
@@ -55,4 +56,6 @@ interface Repository {
     fun getStartPrefix(): String
 
     fun getFormatURL() = url
+
+    fun getScmType(): ScmType
 }

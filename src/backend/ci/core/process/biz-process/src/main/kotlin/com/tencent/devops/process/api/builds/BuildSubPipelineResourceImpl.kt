@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api.builds
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
@@ -45,6 +47,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
     private val subPipeService: SubPipelineStartUpService,
     private val client: Client
 ) : BuildSubPipelineResource {
+
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun callOtherProjectPipelineStartup(
         projectId: String,
         parentPipelineId: String,
