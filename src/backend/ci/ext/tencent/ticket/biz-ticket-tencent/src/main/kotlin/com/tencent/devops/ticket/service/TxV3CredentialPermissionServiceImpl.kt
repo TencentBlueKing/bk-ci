@@ -74,7 +74,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -91,7 +91,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = resourceCode,
@@ -103,7 +103,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
 
     override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         val credentialList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = buildCredentialAction(authPermission),
@@ -126,7 +126,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL)
 
         val credentialAuthResult = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = actions,

@@ -65,7 +65,7 @@ class StatProjectPermissionServiceImpl @Autowired constructor(
             val iamProjectList = bkTag.invokeByTag(tag) {
                 client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!
+                    token = tokenService.getSystemToken()!!
                 ).data
             }
             if (iamProjectList != null) {

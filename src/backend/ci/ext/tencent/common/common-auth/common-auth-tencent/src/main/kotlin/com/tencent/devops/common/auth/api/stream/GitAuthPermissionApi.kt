@@ -49,7 +49,7 @@ class GitAuthPermissionApi(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             action = permission.value,
             projectCode = projectCode,
@@ -67,7 +67,7 @@ class GitAuthPermissionApi(
         relationResourceType: AuthResourceType?
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType.value,
             projectCode = projectCode,
@@ -104,7 +104,7 @@ class GitAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             action = permission.value,
@@ -121,7 +121,7 @@ class GitAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType.value,
             projectCode = projectCode,
@@ -139,7 +139,7 @@ class GitAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             resourceType = resourceType.value,
             projectCode = scopeId,
