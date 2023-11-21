@@ -6,10 +6,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ProjectAccessDevicePermissionsResp(
-    @ApiModelProperty("出口IP管控权限")
+    @ApiModelProperty(name = "has_ip_permissions", value = "出口IP管控权限")
     @JsonProperty("has_ip_permissions")
     val hasIpPermissions: Boolean,
-    @ApiModelProperty("用户id")
-    @JsonProperty("设备管控权限")
+    @ApiModelProperty(name = "has_mac_permissions", value = "设备管控权限")
+    @JsonProperty("has_mac_permissions")
     val hasMacPermissions: Boolean
 )
