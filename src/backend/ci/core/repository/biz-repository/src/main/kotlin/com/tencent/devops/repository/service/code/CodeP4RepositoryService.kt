@@ -30,8 +30,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.P4_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -96,6 +98,16 @@ class CodeP4RepositoryService @Autowired constructor(
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_P4.name) {
             throw OperationException(I18nUtil.getCodeLanMessage(P4_INVALID))
+        }
+        // 不得切换代码库
+        if (diffRepoUrl(record, repository)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -193,6 +205,13 @@ class CodeP4RepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
+    }
+
+    private fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: CodeP4Repository
+    ): Boolean {
+        return sourceRepo.url != targetRepo.url
     }
 
     companion object {

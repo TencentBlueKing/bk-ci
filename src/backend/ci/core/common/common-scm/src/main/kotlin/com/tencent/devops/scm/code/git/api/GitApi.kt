@@ -53,6 +53,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
@@ -658,5 +659,29 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun getGitSession(
+        host: String,
+        url: String,
+        username: String,
+        password: String
+    ): GitSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", url, body)
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_SESSION_INFO),
+            request
+        ).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 }

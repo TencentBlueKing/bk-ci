@@ -24,38 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.scm.pojo
 
-package com.tencent.devops.repository.pojo
-
-import com.tencent.devops.common.api.enums.ScmType
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@SuppressWarnings("ObjectPropertyNaming")
-@ApiModel("代码库模型-GitHub代码库")
-data class GithubRepository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String = "",
-    @ApiModelProperty("github项目名称", example = "Tencent/bkci", required = true)
-    override val projectName: String,
-    @ApiModelProperty("项目id", required = true)
-    override val projectId: String = "",
-    @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?,
-    @ApiModelProperty("Git仓库ID", required = false)
-    val gitProjectId: Long? = null,
-    @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
-    override val credentialId: String = ""
-) : Repository {
-    companion object {
-        const val classType = "github"
-    }
-
-    override fun getStartPrefix() = "https://github.com/"
-
-    override fun getScmType() = ScmType.GITHUB
-}
+@ApiModel("工蜂会话信息")
+data class GitSession(
+    val id: String,
+    @ApiModelProperty("邮箱地址")
+    val email: String,
+    @ApiModelProperty("用户名")
+    val username: String,
+    @JsonProperty("private_token")
+    val privateToken: String
+)
