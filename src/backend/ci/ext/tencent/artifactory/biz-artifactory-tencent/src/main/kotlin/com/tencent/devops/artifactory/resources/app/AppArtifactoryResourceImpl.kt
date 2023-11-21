@@ -220,7 +220,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             var resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 projectCode = projectId,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceCode = pipelineId,
@@ -228,7 +228,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             ).data
             if (resourceGroupMembers.isNullOrEmpty()) {
                 resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     projectCode = projectId,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectId,
