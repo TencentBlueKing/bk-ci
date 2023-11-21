@@ -3,7 +3,7 @@ package com.tencent.devops.environment.pojo.job.jobcloudres
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class JobCloudStepHostResultForGetStepInstanceStatus (
+data class JobCloudStepHostResultForGetStepInstanceStatus(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
     val bkHostId: Long?,
@@ -28,7 +28,7 @@ data class JobCloudStepHostResultForGetStepInstanceStatus (
     val tag: String? = null,
     @ApiModelProperty(value = "基于status与tag字段的分组键，仅用于调用方验证分组内数据数量是否正确，请勿强依赖该字段")
     @JsonProperty("group_key")
-    val groupKey:String,
+    val groupKey: String,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
     @JsonProperty("exit_code")
     val exitCode: Int,

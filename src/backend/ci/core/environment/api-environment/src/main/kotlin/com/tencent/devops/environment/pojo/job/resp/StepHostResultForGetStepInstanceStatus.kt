@@ -2,7 +2,7 @@ package com.tencent.devops.environment.pojo.job.resp
 
 import io.swagger.annotations.ApiModelProperty
 
-data class StepHostResultForGetStepInstanceStatus (
+data class StepHostResultForGetStepInstanceStatus(
     @ApiModelProperty(value = "主机ID")
     val bkHostId: Long?,
     @ApiModelProperty(value = "IP地址", required = true)
@@ -24,7 +24,7 @@ data class StepHostResultForGetStepInstanceStatus (
     )
     val tag: String? = null,
     @ApiModelProperty(value = "基于status与tag字段的分组键，仅用于调用方验证分组内数据数量是否正确，请勿强依赖该字段")
-    val groupKey:String,
+    val groupKey: String,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
     val exitCode: Int,
     @ApiModelProperty(value = "开始执行时间", notes = "Unix时间戳，单位毫秒", required = true)

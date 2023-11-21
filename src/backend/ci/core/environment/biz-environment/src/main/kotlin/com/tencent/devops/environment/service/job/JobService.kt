@@ -601,7 +601,7 @@ class JobService @Autowired constructor(
                             endTime = stepHostResult.endTime,
                             totalTime = stepHostResult.totalTime
                         )
-                    },
+                    }
                 )
             }
         )
