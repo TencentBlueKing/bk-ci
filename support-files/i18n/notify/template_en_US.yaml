@@ -131,7 +131,7 @@
   templateName: "Successful execution of details notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -335,7 +335,7 @@
   templateName: "Failed to execute notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -458,7 +458,7 @@
   templateName: "Failed execution of details notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -601,7 +601,7 @@
   templateName: "Successful execution of notification template code"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0

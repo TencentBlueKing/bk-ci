@@ -131,7 +131,7 @@
   templateName: "执行成功的详情通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -335,7 +335,7 @@
   templateName: "执行失败的通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -458,7 +458,7 @@
   templateName: "执行失败的详情通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
@@ -601,7 +601,7 @@
   templateName: "执行成功的通知模板代码"
   notifyTypeScope:
   - "EMAIL"
-  - "RTX"
+  - "WEWORK"
   - "VOICE"
   priority: 1
   source: 0
