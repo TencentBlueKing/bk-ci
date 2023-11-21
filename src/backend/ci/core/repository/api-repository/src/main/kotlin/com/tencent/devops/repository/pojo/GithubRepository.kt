@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -55,4 +56,6 @@ data class GithubRepository(
     }
 
     override fun getStartPrefix() = "https://github.com/"
+
+    override fun getScmType() = ScmType.GITHUB
 }

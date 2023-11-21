@@ -35,6 +35,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
@@ -95,4 +96,6 @@ interface IScm {
     fun getProjectInfo(projectName: String): GitProjectInfo? = null
 
     fun getCommitReviewInfo(crId: Long): GitCommitReviewInfo? = null
+
+    fun getGitSession(): GitSession? = null
 }

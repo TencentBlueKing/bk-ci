@@ -59,4 +59,8 @@ enum class CodeEventType {
     SHELVE_COMMIT,
     SHELVE_DELETE,
     SHELVE_SUBMIT;
+
+    companion object {
+        const val MESSAGE_CODE_PREFIX = "EVENT_TYPE"
+    }
 }
