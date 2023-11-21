@@ -164,7 +164,8 @@ class PipelineBuildRecordService @Autowired constructor(
     fun getBuildRecord(
         buildInfo: BuildInfo,
         executeCount: Int?,
-        refreshStatus: Boolean = true
+        refreshStatus: Boolean = true,
+        queryDslContext: DSLContext? = null
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -177,7 +178,11 @@ class PipelineBuildRecordService @Autowired constructor(
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         watcher.start("buildRecordModel")
         val buildRecordModel = recordModelDao.getRecord(
-            dslContext, projectId, pipelineId, buildId, fixedExecuteCount
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = fixedExecuteCount
         )
         watcher.start("genRecordModel")
         val version = buildInfo.version
@@ -187,7 +192,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 version = version, buildId = buildId,
                 fixedExecuteCount = fixedExecuteCount,
                 buildRecordModel = buildRecordModel,
-                executeCount = executeCount
+                executeCount = executeCount,
+                queryDslContext = queryDslContext
             )
             if (record == null) fixedExecuteCount = buildInfo.executeCount!!
             record
@@ -199,16 +205,20 @@ class PipelineBuildRecordService @Autowired constructor(
                     "fixedExecuteCount=$fixedExecuteCount"
             )
             watcher.start("getDetailModel")
-            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId, queryDslContext) ?: return null
             fixDetailTimeCost(buildInfo, detail)
             detail
         }
         watcher.start("getPipelineInfo")
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-            projectId, buildInfo.pipelineId
+            projectId = projectId, pipelineId = buildInfo.pipelineId, queryDslContext = queryDslContext
         ) ?: return null
 
-        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = buildInfo.pipelineId
+        )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
@@ -247,14 +257,14 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
         )
         watcher.start("startUserList")
         val startUserList = recordModelDao.getRecordStartUserList(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             pipelineId = pipelineInfo.pipelineId,
             projectId = projectId,
             buildId = buildId

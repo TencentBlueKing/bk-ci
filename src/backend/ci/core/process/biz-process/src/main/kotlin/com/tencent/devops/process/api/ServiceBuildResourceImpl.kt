@@ -327,7 +327,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         executeCount: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -340,7 +341,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
-                channelCode = channelCode
+                channelCode = channelCode,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -372,7 +374,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        startUser: List<String>?
+        startUser: List<String>?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -404,7 +407,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             startUser = startUser?.filter { it.isNotBlank() },
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            archiveFlag = archiveFlag
         )
         return Result(result)
     }

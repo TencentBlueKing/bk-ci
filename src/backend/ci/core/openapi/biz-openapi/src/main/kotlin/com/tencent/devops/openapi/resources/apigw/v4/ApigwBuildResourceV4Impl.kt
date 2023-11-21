@@ -81,7 +81,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         logger.info("OPENAPI_BUILD_V4|$userId|detail|$projectId|$pipelineId|$buildId")
         return client.get(ServiceBuildResource::class).getBuildRecordByExecuteCount(
@@ -90,7 +91,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             executeCount = executeCount,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            archiveFlag = archiveFlag
         )
     }
 
@@ -122,7 +124,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        startUser: List<String>?
+        startUser: List<String>?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info(
             "OPENAPI_BUILD_V4|$userId|get history build|$projectId|$pipelineId|$page|$pageSize" +
@@ -158,7 +161,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            startUser = startUser
+            startUser = startUser,
+            archiveFlag = archiveFlag
         )
     }
 

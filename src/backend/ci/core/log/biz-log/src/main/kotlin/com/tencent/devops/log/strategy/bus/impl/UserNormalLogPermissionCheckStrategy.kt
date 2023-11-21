@@ -25,22 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.service
+package com.tencent.devops.log.strategy.bus.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.log.service.LogPermissionService
+import com.tencent.devops.log.strategy.bus.IUserLogPermissionCheckStrategy
 
-interface LogPermissionService {
+class UserNormalLogPermissionCheckStrategy : IUserLogPermissionCheckStrategy {
 
-    fun verifyUserLogPermission(
-        projectCode: String,
+    override fun checkUserLogPermission(
         userId: String,
-        permission: AuthPermission?
-    ): Boolean
-
-    fun verifyUserLogPermission(
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
-        userId: String,
-        permission: AuthPermission?
-    ): Boolean
+        permission: AuthPermission
+    ) {
+        val logPermissionService = SpringContextUtil.getBean(LogPermissionService::class.java)
+        val language = I18nUtil.getLanguage()
+        if (!logPermissionService.verifyUserLogPermission(
+                projectCode = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                permission = permission
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
+            )
+        }
+    }
 }

@@ -25,22 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.service
+package com.tencent.devops.process.strategy.bus
 
 import com.tencent.devops.common.auth.api.AuthPermission
 
-interface LogPermissionService {
+interface IUserPipelinePermissionCheckStrategy {
 
-    fun verifyUserLogPermission(
-        projectCode: String,
+    /**
+     * 检查用户是否有流水线对应权限
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param permission 权限
+     */
+    fun checkUserPipelinePermission(
         userId: String,
-        permission: AuthPermission?
-    ): Boolean
-
-    fun verifyUserLogPermission(
-        projectCode: String,
+        projectId: String,
         pipelineId: String,
-        userId: String,
-        permission: AuthPermission?
-    ): Boolean
+        permission: AuthPermission
+    )
 }

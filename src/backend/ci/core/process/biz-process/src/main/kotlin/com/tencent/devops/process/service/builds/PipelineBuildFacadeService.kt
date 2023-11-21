@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.builds
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -61,10 +63,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES_VALUE
@@ -117,6 +121,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -323,21 +329,19 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        archiveFlag: Boolean? = false
     ): List<BuildParameters> {
-
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.VIEW,
-            message = MessageUtil.getMessageByLocale(
-                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
-                I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "")
-            )
+            permission = AuthPermission.VIEW
         )
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
     }
 
     fun retry(
@@ -1409,11 +1413,14 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         executeCount: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        archiveFlag: Boolean? = false
     ): ModelRecord {
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
-            buildId = buildId
+            buildId = buildId,
+            queryDslContext = queryDslContext
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1428,7 +1435,8 @@ class PipelineBuildFacadeService(
         }
         return buildRecordService.getBuildRecord(
             buildInfo = buildInfo,
-            executeCount = executeCount
+            executeCount = executeCount,
+            queryDslContext = queryDslContext
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1443,16 +1451,18 @@ class PipelineBuildFacadeService(
         buildId: String,
         executeCount: Int?,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        archiveFlag: Boolean? = false
     ): ModelRecord {
 
         if (checkPermission) {
-            pipelinePermissionService.validPipelinePermission(
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = null
+                permission = AuthPermission.VIEW
             )
         }
 
@@ -1461,7 +1471,8 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount,
-            channelCode = channelCode
+            channelCode = channelCode,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -1795,7 +1806,8 @@ class PipelineBuildFacadeService(
         buildMsg: String? = null,
         checkPermission: Boolean = true,
         startUser: List<String>? = null,
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1805,8 +1817,13 @@ class PipelineBuildFacadeService(
         val limit = sqlLimit?.limit ?: 1000
 
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
-
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            queryDslContext = queryDslContext
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
@@ -1816,16 +1833,13 @@ class PipelineBuildFacadeService(
         val apiStartEpoch = System.currentTimeMillis()
         try {
             if (checkPermission) {
-                pipelinePermissionService.validPipelinePermission(
+                val userPipelinePermissionCheckStrategy =
+                    UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+                UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                     userId = userId!!,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    permission = AuthPermission.VIEW,
-                    message = MessageUtil.getMessageByLocale(
-                        ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
-                    )
+                    permission = AuthPermission.VIEW
                 )
             }
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
@@ -1850,7 +1864,8 @@ class PipelineBuildFacadeService(
                 buildNoStart = buildNoStart,
                 buildNoEnd = buildNoEnd,
                 buildMsg = buildMsg,
-                startUser = startUser
+                startUser = startUser,
+                queryDslContext = queryDslContext
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1878,7 +1893,8 @@ class PipelineBuildFacadeService(
                 buildNoEnd = buildNoEnd,
                 buildMsg = buildMsg,
                 startUser = startUser,
-                updateTimeDesc = updateTimeDesc
+                updateTimeDesc = updateTimeDesc,
+                queryDslContext = queryDslContext
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)

@@ -282,7 +282,10 @@ interface ApigwBuildResourceV4 {
         buildMsg: String?,
         @ApiParam("执行人", required = false)
         @QueryParam("startUser")
-        startUser: List<String>?
+        startUser: List<String>?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
@@ -330,7 +333,10 @@ interface ApigwBuildResourceV4 {
         buildId: String,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<ModelRecord>
 
     @ApiOperation("手动审核启动阶段", tags = ["v4_app_build_stage_start", "v4_user_build_stage_start"])

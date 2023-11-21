@@ -45,6 +45,26 @@ class V3LogPermissionService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : LogPermissionService {
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
+        logger.info("checkPipelinePermission only check action project[$projectCode]")
+        if (isProjectOwner(projectCode, userId)) {
+            logger.info("project owner checkPipelinePermission success |$projectCode|$userId")
+            return true
+        }
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectCode,
+            permission = permission ?: AuthPermission.VIEW
+        )
+    }
+
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
