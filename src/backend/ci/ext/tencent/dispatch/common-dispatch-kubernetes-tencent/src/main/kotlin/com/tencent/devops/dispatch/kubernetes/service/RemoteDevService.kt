@@ -211,6 +211,9 @@ class RemoteDevService @Autowired constructor(
             .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
             logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
             val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
             // 更新db状态
@@ -235,6 +238,9 @@ class RemoteDevService @Autowired constructor(
                 sourceCgsZone = image?.zoneId ?: ""
             )
         } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
@@ -274,6 +280,9 @@ class RemoteDevService @Autowired constructor(
             .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
             val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
                 .getWorkspaceInfo(event.userId, event.workspaceName)
 
@@ -299,6 +308,9 @@ class RemoteDevService @Autowired constructor(
                 environmentIp = workspaceInfo.environmentIP
             )
         } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
@@ -315,6 +327,9 @@ class RemoteDevService @Autowired constructor(
             .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
@@ -324,6 +339,9 @@ class RemoteDevService @Autowired constructor(
 
             return true
         } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
@@ -340,6 +358,9 @@ class RemoteDevService @Autowired constructor(
             .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
@@ -349,6 +370,9 @@ class RemoteDevService @Autowired constructor(
 
             return true
         } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
@@ -365,6 +389,9 @@ class RemoteDevService @Autowired constructor(
             .waitTaskFinish(event.userId, taskId, event.type)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
@@ -374,6 +401,9 @@ class RemoteDevService @Autowired constructor(
 
             return true
         } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
             throw BuildFailureException(
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
                 ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
