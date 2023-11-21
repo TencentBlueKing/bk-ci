@@ -76,7 +76,7 @@ class RbacCredentialPermissionService constructor(
         authPermission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -93,7 +93,7 @@ class RbacCredentialPermissionService constructor(
         authPermission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = resourceCode,
@@ -109,7 +109,7 @@ class RbacCredentialPermissionService constructor(
         authPermission: AuthPermission
     ): List<String> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = buildCredentialAction(authPermission),
@@ -123,7 +123,7 @@ class RbacCredentialPermissionService constructor(
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL),
@@ -139,7 +139,7 @@ class RbacCredentialPermissionService constructor(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
             resourceCode = credentialId,
@@ -152,7 +152,7 @@ class RbacCredentialPermissionService constructor(
         credentialId: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
             resourceCode = credentialId
