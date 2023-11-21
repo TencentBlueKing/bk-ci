@@ -144,7 +144,7 @@ open class GitApi {
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
-                if (it.url == hookUrl) {
+                if (it.url.contains(hookUrl)) {
                     val exist = when (event) {
                         null -> {
                             it.pushEvents
@@ -315,7 +315,7 @@ open class GitApi {
         return JsonUtil.getObjectMapper().writeValueAsString(params)
     }
 
-    private fun updateHook(
+    fun updateHook(
         host: String,
         hookId: Long,
         token: String,
@@ -341,7 +341,7 @@ open class GitApi {
         }
     }
 
-    private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
         try {
             val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
