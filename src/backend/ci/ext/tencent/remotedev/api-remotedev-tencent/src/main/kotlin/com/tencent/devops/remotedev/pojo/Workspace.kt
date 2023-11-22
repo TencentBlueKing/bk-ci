@@ -60,6 +60,8 @@ data class Workspace(
     val createUserId: String,
     @ApiModelProperty("工作空间拥有人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val owner: String? = null,
+    @ApiModelProperty("工作空间拥有人CN<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val ownerCN: String? = null,
     @ApiModelProperty("工作空间操作路径")
     val workPath: String? = null,
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")

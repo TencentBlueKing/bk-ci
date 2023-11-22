@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
@@ -40,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -138,13 +140,21 @@ class TGitNoteTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "noteTypeAction",
                 triggerOn = event.objectAttributes.noteableType,
-                included = WebhookUtils.convert(includeNoteTypes)
+                included = WebhookUtils.convert(includeNoteTypes),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.NOTE_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             val commentActionFilter = RegexContainFilter(
                 pipelineId = pipelineId,
                 filterName = "noteCommentAction",
                 triggerOn = event.objectAttributes.note,
-                included = WebhookUtils.convert(includeNoteComment)
+                included = WebhookUtils.convert(includeNoteComment),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.NOTE_CONTENT_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             return listOf(urlFilter, eventTypeFilter, typeActionFilter, commentActionFilter)
         }
@@ -152,6 +162,21 @@ class TGitNoteTriggerHandler(
 
     override fun getMessage(event: GitNoteEvent): String? {
         return event.objectAttributes.note
+    }
+
+    override fun getEventDesc(event: GitNoteEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
+            params = listOf(
+                event.objectAttributes.url,
+                event.objectAttributes.id.toString(),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GitNoteEvent): String {
+        return event.objectAttributes.projectId.toString()
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")

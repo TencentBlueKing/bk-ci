@@ -426,7 +426,7 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchOneSetting(
                 dslContext = dslContext,
                 userId = creator
             ).projectId.ifBlank { null }
@@ -570,6 +570,8 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         assigns.forEach {
+            // 没有注册setting就注册
+            remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
         }
     }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -59,4 +60,8 @@ data class CodeP4Repository(
     override fun isLegal(): Boolean {
         return true
     }
+
+    override fun getScmType() = ScmType.CODE_P4
+
+    override fun getExternalId(): String = projectName
 }

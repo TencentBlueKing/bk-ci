@@ -106,7 +106,8 @@ config = {
             host = "kubernetes.demo.com",
             port = 6443 ,
             token = ""
-        }
+        },
+        special_domain={}
     }
 }
 

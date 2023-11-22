@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.app
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
@@ -55,6 +56,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -218,7 +220,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             var resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 projectCode = projectId,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
                 resourceCode = pipelineId,
@@ -226,7 +228,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             ).data
             if (resourceGroupMembers.isNullOrEmpty()) {
                 resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     projectCode = projectId,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectId,
@@ -280,6 +282,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun externalUrl(
         userId: String,
         projectId: String,
@@ -302,6 +305,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun getFilePlist(
         userId: String,
         projectId: String,
@@ -326,6 +330,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         userId: String,
         projectId: String,

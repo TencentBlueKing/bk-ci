@@ -47,7 +47,7 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         userId: String
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false
@@ -88,11 +88,11 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
             return client.get(ServiceProjectAuthResource::class).checkProjectManager(
                 userId = userId,
                 projectCode = projectCode,
-                token = tokenService.getSystemToken(null)!!
+                token = tokenService.getSystemToken()!!
             ).data ?: false
         }
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false
