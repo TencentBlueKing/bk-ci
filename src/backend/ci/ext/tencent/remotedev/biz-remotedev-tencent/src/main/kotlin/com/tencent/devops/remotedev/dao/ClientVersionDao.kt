@@ -67,6 +67,7 @@ class ClientVersionDao {
                 .set(LAST_UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_VERSION, lastVersion)
+                .set(MAC_ADDRESS, macAddress)
                 .where(USER.eq(userId).and(IP.eq(ip)).and(VERSION.eq(lastVersion))).execute()
         }
     }
