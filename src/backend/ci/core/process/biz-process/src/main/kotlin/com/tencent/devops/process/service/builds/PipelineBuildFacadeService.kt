@@ -1121,13 +1121,15 @@ class PipelineBuildFacadeService(
                     pipelineName = pipelineInfo.pipelineName,
                     buildNum = buildInfo.buildNum,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             } else {
                 pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             }
             if (!success) throw ErrorCodeException(

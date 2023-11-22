@@ -151,7 +151,8 @@ class StageControl @Autowired constructor(
             variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
             pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount,
-            previousStageStatus = addPreviousStageStatus(stage)
+            previousStageStatus = addPreviousStageStatus(stage),
+            debug = buildInfo.debug
         )
         watcher.stop()
 

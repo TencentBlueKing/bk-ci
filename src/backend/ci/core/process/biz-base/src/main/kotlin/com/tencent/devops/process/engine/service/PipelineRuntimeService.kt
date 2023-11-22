@@ -1265,7 +1265,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun StartBuildContext.sendBuildStartEvent() {
         // #8275 在发送运行或排队的开始事件时，进行排队计数+1
-        pipelineBuildSummaryDao.updateQueueCount(
+        if (!debug) pipelineBuildSummaryDao.updateQueueCount(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1552,7 +1552,8 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = latestRunningBuild.pipelineId,
                 startTime = startTime
             )
-            pipelineBuildSummaryDao.startLatestRunningBuild(
+            // #8161 调试构建不参与刷新summary表
+            if (!latestRunningBuild.debug) pipelineBuildSummaryDao.startLatestRunningBuild(
                 dslContext = transactionContext,
                 latestRunningBuild = latestRunningBuild,
                 executeCount = latestRunningBuild.executeCount
@@ -1587,20 +1588,22 @@ class PipelineRuntimeService @Autowired constructor(
         errorInfoList: List<ErrorInfo>?,
         timeCost: BuildRecordTimeCost?
     ) {
-        if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
-            // 减1,当作没执行过
-            pipelineBuildSummaryDao.updateQueueCount(
-                dslContext = dslContext,
-                projectId = latestRunningBuild.projectId,
-                pipelineId = latestRunningBuild.pipelineId,
-                queueIncrement = -1
-            )
-        } else {
-            pipelineBuildSummaryDao.finishLatestRunningBuild(
-                dslContext = dslContext,
-                latestRunningBuild = latestRunningBuild,
-                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
-            )
+        if (!latestRunningBuild.debug) {
+            if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
+                // 减1,当作没执行过
+                pipelineBuildSummaryDao.updateQueueCount(
+                    dslContext = dslContext,
+                    projectId = latestRunningBuild.projectId,
+                    pipelineId = latestRunningBuild.pipelineId,
+                    queueIncrement = -1
+                )
+            } else {
+                pipelineBuildSummaryDao.finishLatestRunningBuild(
+                    dslContext = dslContext,
+                    latestRunningBuild = latestRunningBuild,
+                    isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
+                )
+            }
         }
         with(latestRunningBuild) {
             val executeTime = try {
