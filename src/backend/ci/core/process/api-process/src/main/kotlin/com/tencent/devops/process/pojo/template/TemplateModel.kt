@@ -44,7 +44,7 @@ data class TemplateListModel(
     @ApiModelProperty("是否有操作权限", required = false)
     val hasCreatePermission: Boolean? = null,
     @ApiModelProperty("是否开启模板权限", required = false)
-    val enableTemplatePermissionManage: Boolean? = null,
+    val enableTemplatePermissionManage: Boolean? = null
 )
 
 @ApiModel("模板模型")

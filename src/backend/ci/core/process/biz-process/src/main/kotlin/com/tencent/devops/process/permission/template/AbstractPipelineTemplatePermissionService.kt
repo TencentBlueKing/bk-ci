@@ -71,7 +71,7 @@ abstract class AbstractPipelineTemplatePermissionService constructor(
         return true
     }
 
-    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String) :Boolean{
+    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String): Boolean {
         return true
     }
 

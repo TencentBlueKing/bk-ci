@@ -38,7 +38,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.permission.RbacPipelinePermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

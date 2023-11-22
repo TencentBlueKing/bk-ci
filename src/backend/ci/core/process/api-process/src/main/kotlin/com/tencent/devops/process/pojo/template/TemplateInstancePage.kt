@@ -47,5 +47,5 @@ data class TemplateInstancePage(
     @ApiModelProperty("每页数量", required = false)
     val pageSize: Int?,
     @ApiModelProperty("是否有创建模板实例权限", required = false)
-    val hasCreateTemplateInstancePerm: Boolean? = null,
+    val hasCreateTemplateInstancePerm: Boolean? = null
 )
