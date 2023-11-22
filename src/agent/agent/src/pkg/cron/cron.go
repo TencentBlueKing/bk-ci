@@ -141,9 +141,12 @@ func cleanLogFile(timeBeforeInHours int) {
 
 	// 清理docker构建记录
 	dockerLogDir := job_docker.LocalDockerWorkSpaceDirName + "/logs"
+	if _, err := os.Stat(dockerLogDir); err != nil && os.IsNotExist(err) {
+		return
+	}
 	dockerFiles, err := os.ReadDir(dockerLogDir)
 	if err != nil {
-		logs.Warn("read docker log dir error: ", err.Error())
+		logs.Error("read docker log dir error: ", err.Error())
 		return
 	}
 

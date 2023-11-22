@@ -173,7 +173,10 @@ func agentUpgrade() {
 
 	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
 	// 放到下载文件前，这样就不会因为有长时间构建任务重复下载文件
-	job.BuildTotalManager.Lock.Lock()
+	// 使用 trylock 防止有频繁的任务时长时间阻塞住
+	if !job.BuildTotalManager.Lock.TryLock() {
+		return
+	}
 	defer func() {
 		job.BuildTotalManager.Lock.Unlock()
 	}()
