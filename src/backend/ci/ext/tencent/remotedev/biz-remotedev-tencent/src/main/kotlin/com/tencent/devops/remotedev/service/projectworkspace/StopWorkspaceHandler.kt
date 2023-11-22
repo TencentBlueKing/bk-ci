@@ -99,12 +99,26 @@ class StopWorkspaceHandler @Autowired constructor(
     fun stopWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId stop project workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't start now"
+                    )
+                )
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -120,7 +134,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STOP,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.RUNNING.name,
+                    workspace.status,
                     WorkspaceStatus.STOPPING.name
                 )
             )
