@@ -61,6 +61,17 @@ interface PipelineTemplatePermissionService {
     ): Boolean
 
     /**
+     * 校验有创建模板实例权限
+     * @param userId userId
+     * @param projectId projectId
+     * @return 有权限返回true
+     */
+    fun hasCreateTemplateInstancePermission(
+        userId: String,
+        projectId: String
+    ): Boolean
+
+    /**
      * 获取拥有指定权限的流水线模板资源
      * @param userId userId
      * @param projectId projectId

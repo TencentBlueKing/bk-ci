@@ -766,7 +766,23 @@ class TemplateFacadeService @Autowired constructor(
             templateWithPermission = templateWithPermission,
             projectId = projectId
         )
-        return TemplateListModel(projectId, hasManagerPermission, result, templateWithPermission.count)
+
+        val hasCreatePermission = pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        val enableTemplatePermissionManage = pipelineTemplatePermissionService.enableTemplatePermissionManage(
+            projectId = projectId
+        )
+        return TemplateListModel(
+            projectId = projectId,
+            hasPermission = hasManagerPermission,
+            models = result,
+            count = templateWithPermission.count,
+            hasCreatePermission = hasCreatePermission,
+            enableTemplatePermissionManage = enableTemplatePermissionManage
+        )
     }
 
     private fun getTemplateListAndCount(
@@ -2155,6 +2171,11 @@ class TemplateFacadeService @Autowired constructor(
                 else -> 0
             }
         }
+        val hasCreateTemplateInstancePerm = pipelineTemplatePermissionService.hasCreateTemplateInstancePermission(
+            userId = userId,
+            projectId = projectId
+        )
+
         return TemplateInstancePage(
             projectId = projectId,
             templateId = templateId,
@@ -2167,7 +2188,8 @@ class TemplateFacadeService @Autowired constructor(
             ),
             count = instancePage.count.toInt(),
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            hasCreateTemplateInstancePerm = hasCreateTemplateInstancePerm
         )
     }
 

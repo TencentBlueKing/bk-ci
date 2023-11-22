@@ -34,6 +34,8 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.RbacPipelinePermissionService
 import com.tencent.devops.process.permission.template.MockPipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.permission.template.RbacPipelineTemplatePermissionService
@@ -63,7 +65,8 @@ class PipelineTemplatePermConfiguration {
         pipelineInfoDao: PipelineInfoDao,
         pipelineViewGroupService: PipelineViewGroupService,
         client: Client,
-        authResourceApi: AuthResourceApi
+        authResourceApi: AuthResourceApi,
+        pipelinePermissionService: PipelinePermissionService
     ): PipelineTemplatePermissionService = RbacPipelineTemplatePermissionService(
         authPermissionApi = authPermissionApi,
         authProjectApi = authProjectApi,
@@ -71,7 +74,8 @@ class PipelineTemplatePermConfiguration {
         dslContext = dslContext,
         pipelineInfoDao = pipelineInfoDao,
         client = client,
-        authResourceApi = authResourceApi
+        authResourceApi = authResourceApi,
+        pipelinePermissionService = pipelinePermissionService
     )
 
     @Bean

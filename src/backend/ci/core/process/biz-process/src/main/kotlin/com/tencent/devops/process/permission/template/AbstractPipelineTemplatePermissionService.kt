@@ -71,6 +71,10 @@ abstract class AbstractPipelineTemplatePermissionService constructor(
         return true
     }
 
+    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String) :Boolean{
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(AbstractPipelineTemplatePermissionService::class.java)
     }
