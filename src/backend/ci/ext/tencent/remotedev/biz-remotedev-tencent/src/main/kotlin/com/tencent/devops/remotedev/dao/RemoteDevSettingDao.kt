@@ -311,8 +311,8 @@ class RemoteDevSettingDao {
                     userSetting.maxRunningCount,
                     userSetting.maxHavingCount,
                     JsonUtil.toJson(userSetting, false),
-                    userInfo.value?.username,
-                    userInfo.value?.companyTags?.joinToString(",") { it.tagName }
+                    userInfo.value?.username ?: "",
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(
