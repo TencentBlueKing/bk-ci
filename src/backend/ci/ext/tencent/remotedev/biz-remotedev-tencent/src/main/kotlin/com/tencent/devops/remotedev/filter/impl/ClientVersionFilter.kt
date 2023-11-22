@@ -157,7 +157,6 @@ class ClientVersionFilter constructor(
                 recordClientCache.put(key, "")
                 clientVersionDao.updateTime(dslContext, ip, macAddress, user, recordVersion)
                 logger.info("client update time|$ip|$user|$version|$recordVersion|$macAddress")
-
             }
         }
     }
