@@ -124,6 +124,21 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun listPipelineIdWithFolder(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        folder: String?
+    ): List<String> {
+        return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .let { if (folder == null) it else it.and(FILE_PATH.like(".ci/$folder/%")) }
+                .fetch().map { it.value1() }
+        }
+    }
+
     fun getAllByRepo(
         dslContext: DSLContext,
         projectId: String,

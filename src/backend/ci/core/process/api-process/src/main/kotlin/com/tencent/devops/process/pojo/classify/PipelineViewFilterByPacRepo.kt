@@ -27,14 +27,20 @@
 
 package com.tencent.devops.process.pojo.classify
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.process.pojo.classify.enums.Condition
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = PipelineViewFilterByName::class, name = PipelineViewFilterByName.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByCreator::class, name = PipelineViewFilterByCreator.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByLabel::class, name = PipelineViewFilterByLabel.classType),
-    JsonSubTypes.Type(value = PipelineViewFilterByPacRepo::class, name = PipelineViewFilterByPacRepo.classType)
-)
-abstract class PipelineViewFilter
+@ApiModel("流水线视图-通过PAC仓库过滤", description = PipelineViewFilterByPacRepo.classType)
+data class PipelineViewFilterByPacRepo(
+    @ApiModelProperty("条件", required = false)
+    val condition: Condition,
+    @ApiModelProperty("代码库HashId", required = false)
+    val repoHashId: String,
+    @ApiModelProperty("文件夹名称", required = false)
+    val folder: String? = null
+) : PipelineViewFilter() {
+    companion object {
+        const val classType = "filterByPacRepo"
+    }
+}
