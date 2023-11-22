@@ -807,6 +807,7 @@ class AtomDao : AtomBaseDao() {
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
         val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {
             0
