@@ -96,7 +96,7 @@ class BSAuthTokenApi @Autowired constructor(
             envName = bkAuthProperties.envName!!,
             appCode = appCode,
             appSecret = appSecret,
-            idProvider = bkAuthProperties.idProvider!!,
+            idProvider = v0IdProvider,
             grantType = bkAuthProperties.grantType!!
         )
         val content = objectMapper.writeValueAsString(bkAuthTokenRequest)
@@ -160,5 +160,6 @@ class BSAuthTokenApi @Autowired constructor(
         private const val SleepMills = 100L
         private const val AccessTokenExpiredInSecond: Long = 3600 * 3
         private const val expiredTimeInSeconds: Long = 10
+        private const val v0IdProvider = "client"
     }
 }
