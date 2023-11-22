@@ -246,9 +246,9 @@ interface ApigwJobResourceV4 {
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult>
 
-    @ApiOperation("获取步骤实例中各主机的任务执行状态数据", tags = ["v4_app_job_get_account_list"])
+    @ApiOperation("获取步骤实例中各主机的任务执行状态数据", tags = ["v4_app_job_get_step_instance_status"])
     @GET
-    @Path("/{projectId}/get_account_list")
+    @Path("/{projectId}/get_step_instance_status")
     fun getStepInstanceStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

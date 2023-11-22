@@ -466,7 +466,7 @@ class JobService @Autowired constructor(
         ApigwJobCloudApi.setThreadLocal("getStepInstanceDetail")
         val jobCloudGetStepInstanceDetailRes: JobCloudResult<JobCloudGetStepInstanceDetailResult> =
             apigwJobCloudApi.executeGetRequest(
-                JobCloudGetStepInstanceDetailResult::class.java, jobInstanceId ?: "", stepInstanceId ?: ""
+                JobCloudGetStepInstanceDetailResult::class.java, jobInstanceId, stepInstanceId
             )
         val getStepInstanceDetailRes: JobResult<GetStepInstanceDetailResult> = JobResult(
             code = jobCloudGetStepInstanceDetailRes.code,
@@ -569,7 +569,7 @@ class JobService @Autowired constructor(
         val jobCloudGetStepInstanceStatusRes: JobCloudResult<JobCloudGetStepInstanceStatusResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetStepInstanceStatusResult::class.java,
-                jobInstanceId ?: "", stepInstanceId ?: "", executeCount ?: "", batch ?: "",
+                jobInstanceId, stepInstanceId, executeCount ?: "", batch ?: "",
                 maxHostNumPerGroup ?: "", keyword ?: "", searchIp ?: "", status ?: "", tag ?: ""
             )
         val getStepInstanceStatusRes: JobResult<GetStepInstanceStatusResult> = JobResult(
