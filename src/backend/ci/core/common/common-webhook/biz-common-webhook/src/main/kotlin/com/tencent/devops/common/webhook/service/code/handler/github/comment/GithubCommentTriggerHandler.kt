@@ -27,7 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_COMMENT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT
@@ -47,7 +49,7 @@ import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 
@@ -86,8 +88,23 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
         return event.comment.body
     }
 
-    override fun preMatch(event: T): ScmWebhookMatcher.MatchResult {
-        return ScmWebhookMatcher.MatchResult(true)
+    override fun getExternalId(event: T): String {
+        return event.repository.id.toString()
+    }
+
+    override fun getEventDesc(event: T): String {
+        return I18Variable(
+            code = WebhookI18nConstants.TGIT_NOTE_EVENT_DESC,
+            params = listOf(
+                buildCommentUrl(event),
+                event.comment.id.toString(),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun preMatch(event: T): WebhookMatchResult {
+        return WebhookMatchResult(true)
     }
 
     override fun getWebhookFilters(
@@ -113,13 +130,21 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
                 pipelineId = pipelineId,
                 filterName = "noteTypeAction",
                 triggerOn = event.getCommentType(),
-                included = WebhookUtils.convert(includeNoteTypes)
+                included = WebhookUtils.convert(includeNoteTypes),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.NOTE_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             val commentActionFilter = RegexContainFilter(
                 pipelineId = pipelineId,
                 filterName = "noteCommentAction",
                 triggerOn = event.comment.body,
-                included = WebhookUtils.convert(includeNoteComment)
+                included = WebhookUtils.convert(includeNoteComment),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.NOTE_CONTENT_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             return listOf(urlFilter, eventTypeFilter, typeActionFilter, commentActionFilter)
         }
@@ -153,4 +178,6 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
      * Github 评论事件关联参数，根据具体事件类型进行填充
      */
     fun getCommentParam(event: T): Map<String, Any>
+
+    fun buildCommentUrl(event: T): String
 }

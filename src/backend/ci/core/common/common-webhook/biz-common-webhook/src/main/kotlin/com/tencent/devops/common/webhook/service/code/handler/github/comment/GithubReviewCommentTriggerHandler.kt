@@ -37,6 +37,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubReviewCommentEvent
 
 @CodeWebhookHandler
@@ -62,5 +63,17 @@ class GithubReviewCommentTriggerHandler : GithubCommentTriggerHandler<GithubRevi
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = pullRequest.base.repo.id
         }
         return startParams
+    }
+
+    override fun buildCommentUrl(event: GithubReviewCommentEvent): String {
+        // https://github.com/TencentBlueKing/bk-ci/pull/{{pullNumber}}#issuecomment-{{commentId}}
+        return with(event) {
+            if (comment.htmlUrl.isNullOrBlank()) {
+                "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/pull/" +
+                        "${pullRequest.number}#discussion_r${comment.id}"
+            } else {
+                comment.htmlUrl!!
+            }
+        }
     }
 }

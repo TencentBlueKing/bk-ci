@@ -25,30 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.annotations.ApiParam
 
-interface PipelineWebhookBuildLogService {
-
-    /**
-     * 保存webhook构建日志
-     */
-    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
-
-    /**
-     * 查询webhook构建日志明细
-     */
-    @Suppress("ALL")
-    fun listWebhookBuildLogDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoName: String?,
-        commitId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail>?
-}
+data class RepoSessionRequest(
+    @ApiParam("仓库类型", required = true)
+    val type: ScmType,
+    @ApiParam("username", required = true)
+    val username: String,
+    @ApiParam("password", required = true)
+    val password: String,
+    @ApiParam("url", required = true)
+    val url: String
+)

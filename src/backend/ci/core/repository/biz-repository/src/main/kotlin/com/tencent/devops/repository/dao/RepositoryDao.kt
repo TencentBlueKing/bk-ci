@@ -35,14 +35,14 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -70,7 +70,8 @@ class RepositoryDao {
                     TYPE,
                     CREATED_TIME,
                     UPDATED_TIME,
-                    IS_DELETED
+                    IS_DELETED,
+                    UPDATED_USER
                 ).values(
                     projectId,
                     userId,
@@ -79,7 +80,8 @@ class RepositoryDao {
                     type.name,
                     now,
                     now,
-                    false
+                    false,
+                    userId
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -93,13 +95,20 @@ class RepositoryDao {
         return repoId
     }
 
-    fun edit(dslContext: DSLContext, repositoryId: Long, aliasName: String, url: String) {
+    fun edit(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        aliasName: String,
+        url: String,
+        updateUser: String
+    ) {
         val now = LocalDateTime.now()
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(ALIAS_NAME, aliasName)
                 .set(URL, url)
                 .set(UPDATED_TIME, now)
+                .set(UPDATED_USER, updateUser)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -120,6 +129,7 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
+
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
@@ -245,11 +255,9 @@ class RepositoryDao {
             if (repositoryIds != null) {
                 step.and(REPOSITORY_ID.`in`(repositoryIds))
             }
-
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
-
             when (repositoryTypes) {
                 null -> {
                 }
@@ -261,7 +269,8 @@ class RepositoryDao {
                 RepositorySortEnum.ALIAS_NAME.name -> ALIAS_NAME
                 RepositorySortEnum.URL.name -> URL
                 RepositorySortEnum.TYPE.name -> TYPE
-                else -> REPOSITORY_ID
+                RepositorySortEnum.REPOSITORY_ID.name -> REPOSITORY_ID
+                else -> UPDATED_TIME
             }
 
             val sort = when (sortType) {
@@ -277,10 +286,12 @@ class RepositoryDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, repositoryId: Long) {
+    fun delete(dslContext: DSLContext, repositoryId: Long, deleteAliasName: String, updateUser: String) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(IS_DELETED, true)
+                .set(ALIAS_NAME, deleteAliasName)
+                .set(UPDATED_USER, updateUser)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -293,7 +304,7 @@ class RepositoryDao {
                 query.and(PROJECT_ID.eq(projectId))
             }
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
-                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryId.toString()))
             )
         }
     }
@@ -389,6 +400,23 @@ class RepositoryDao {
         return with(TRepository.T_REPOSITORY) {
             dslContext.update(this).set(URL, DSL.replace(URL, oldGitDomain, newGitDomain))
                 .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun rename(
+        dslContext: DSLContext,
+        hashId: String,
+        updateUser: String,
+        projectId: String,
+        newName: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ALIAS_NAME, newName)
+                .set(UPDATED_USER, updateUser)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(REPOSITORY_HASH_ID.eq(hashId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

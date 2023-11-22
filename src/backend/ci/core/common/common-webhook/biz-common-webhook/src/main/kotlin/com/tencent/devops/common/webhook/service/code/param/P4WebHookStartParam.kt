@@ -33,6 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_INCLUDE_PA
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_P4PORT
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.Repository
 import org.springframework.stereotype.Service
 
@@ -50,7 +51,7 @@ class P4WebHookStartParam : ScmWebhookStartParams<CodeP4WebHookTriggerElement> {
         matcher: ScmWebhookMatcher,
         variables: Map<String, String>,
         params: WebHookParams,
-        matchResult: ScmWebhookMatcher.MatchResult
+        matchResult: WebhookMatchResult
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         with(element.data.input) {
