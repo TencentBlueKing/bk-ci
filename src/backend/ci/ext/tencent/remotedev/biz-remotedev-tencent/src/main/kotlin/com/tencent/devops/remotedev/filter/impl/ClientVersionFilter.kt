@@ -115,7 +115,7 @@ class ClientVersionFilter constructor(
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
         }
         val recordVersion = clientVersion["$ip-$user"]
-        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion")
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|macAddress|$macAddress")
         when {
             recordVersion == null -> {
                 val count = clientVersionDao.create(
@@ -125,7 +125,7 @@ class ClientVersionFilter constructor(
                     version = version,
                     macAddress = macAddress
                 )
-                logger.info("init client version record|$ip|$user|$version|$count")
+                logger.info("init client version record|$ip|$user|$version|$count|$macAddress")
                 clientVersion["$ip-$user"] = version
             }
 
@@ -138,7 +138,7 @@ class ClientVersionFilter constructor(
                     lastVersion = recordVersion,
                     macAddress = macAddress
                 )
-                logger.info("client update now|$ip|$user|$version|$recordVersion|$count")
+                logger.info("client update now|$ip|$user|$version|$recordVersion|$count|$macAddress")
                 if (count > 0) {
                     clientVersion["$ip-$user"] = version
                 } else {
@@ -156,6 +156,8 @@ class ClientVersionFilter constructor(
                 }
                 recordClientCache.put(key, "")
                 clientVersionDao.updateTime(dslContext, ip, macAddress, user, recordVersion)
+                logger.info("client update time|$ip|$user|$version|$recordVersion|$macAddress")
+
             }
         }
     }
