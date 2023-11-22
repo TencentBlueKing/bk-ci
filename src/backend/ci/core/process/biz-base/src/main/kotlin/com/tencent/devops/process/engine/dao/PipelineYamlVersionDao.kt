@@ -89,53 +89,6 @@ class PipelineYamlVersionDao {
         }
     }
 
-    fun saveFailed(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        blobId: String,
-        ref: String?,
-        pipelineId: String,
-        reason: String,
-        reasonDetail: String,
-        userId: String
-    ) {
-        val now = LocalDateTime.now()
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                REPO_HASH_ID,
-                FILE_PATH,
-                BLOB_ID,
-                REF,
-                PIPELINE_ID,
-                STATUS,
-                REASON,
-                REASON_DETAIL,
-                CREATOR,
-                MODIFIER,
-                CREATE_TIME,
-                UPDATE_TIME
-            ).values(
-                projectId,
-                repoHashId,
-                filePath,
-                blobId,
-                ref,
-                pipelineId,
-                RepoYamlSyncStatusEnum.FAILED.name,
-                reason,
-                reasonDetail,
-                userId,
-                userId,
-                now,
-                now
-            ).execute()
-        }
-    }
-
     fun get(
         dslContext: DSLContext,
         projectId: String,
@@ -167,6 +120,21 @@ class PipelineYamlVersionDao {
                 .and(VERSION.eq(version))
                 .fetchAny()
             return record?.let { convert(it) }
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String
+    ) {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .execute()
         }
     }
 

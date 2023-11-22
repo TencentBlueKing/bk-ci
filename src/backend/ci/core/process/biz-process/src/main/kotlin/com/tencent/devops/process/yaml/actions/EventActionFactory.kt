@@ -41,10 +41,10 @@ import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
-import com.tencent.devops.process.yaml.actions.pacActions.PacEnableAction
-import com.tencent.devops.process.yaml.actions.pacActions.PacPushYamlFileAction
-import com.tencent.devops.process.yaml.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.yaml.actions.pacActions.data.PacPushYamlFileEvent
+import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlEnableAction
+import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.actions.tgit.TGitIssueActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitNoteActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitPushActionGit
@@ -134,32 +134,32 @@ class EventActionFactory @Autowired constructor(
 
     fun loadEnableEvent(
         setting: PacRepoSetting,
-        event: PacEnableEvent
-    ): PacEnableAction {
-        val pacEnableAction = PacEnableAction()
-        pacEnableAction.data = ActionData(event, PacTriggerContext())
-        pacEnableAction.api = when (event.scmType) {
+        event: PipelineYamlEnableActionEvent
+    ): PipelineYamlEnableAction {
+        val pipelineYamlEnableAction = PipelineYamlEnableAction()
+        pipelineYamlEnableAction.data = ActionData(event, PacTriggerContext())
+        pipelineYamlEnableAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
-        pacEnableAction.data.setting = setting
-        pacEnableAction.init()
-        return pacEnableAction
+        pipelineYamlEnableAction.data.setting = setting
+        pipelineYamlEnableAction.init()
+        return pipelineYamlEnableAction
     }
 
-    fun loadPushYamlFileEvent(
+    fun loadYamlPushEvent(
         setting: PacRepoSetting,
-        event: PacPushYamlFileEvent
-    ): PacPushYamlFileAction {
-        val pacPushYamlFileAction = PacPushYamlFileAction()
-        pacPushYamlFileAction.data = ActionData(event, PacTriggerContext())
-        pacPushYamlFileAction.api = when (event.scmType) {
+        event: PipelineYamlPushActionEvent
+    ): PipelineYamlPushAction {
+        val pipelineYamlPushAction = PipelineYamlPushAction()
+        pipelineYamlPushAction.data = ActionData(event, PacTriggerContext())
+        pipelineYamlPushAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
-        pacPushYamlFileAction.data.setting = setting
-        pacPushYamlFileAction.init()
-        return pacPushYamlFileAction
+        pipelineYamlPushAction.data.setting = setting
+        pipelineYamlPushAction.init()
+        return pipelineYamlPushAction
     }
 
     fun loadEnableEvent(
@@ -168,16 +168,16 @@ class EventActionFactory @Autowired constructor(
         actionContext: PacTriggerContext,
         actionSetting: PacRepoSetting
     ): BaseAction? {
-        val event = objectMapper.readValue<PacEnableEvent>(eventStr)
-        val pacEnableAction = PacEnableAction()
+        val event = objectMapper.readValue<PipelineYamlEnableActionEvent>(eventStr)
+        val pipelineYamlEnableAction = PipelineYamlEnableAction()
 
-        pacEnableAction.api = when (event.scmType) {
+        pipelineYamlEnableAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
-        pacEnableAction.data = ActionData(event, actionContext)
-        pacEnableAction.data.eventCommon = actionCommonData
-        pacEnableAction.data.setting = actionSetting
-        return pacEnableAction
+        pipelineYamlEnableAction.data = ActionData(event, actionContext)
+        pipelineYamlEnableAction.data.eventCommon = actionCommonData
+        pipelineYamlEnableAction.data.setting = actionSetting
+        return pipelineYamlEnableAction
     }
 }

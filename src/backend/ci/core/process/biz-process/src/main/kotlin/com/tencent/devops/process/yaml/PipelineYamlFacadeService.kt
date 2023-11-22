@@ -44,11 +44,10 @@ import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.PacTriggerPipeline
-import com.tencent.devops.process.yaml.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.yaml.actions.pacActions.data.PacPushYamlFileEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
-import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -83,7 +82,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             repositoryType = RepositoryType.ID
         ).data ?: return
         val setting = PacRepoSetting(repository = repository)
-        val event = PacEnableEvent(
+        val event = PipelineYamlEnableActionEvent(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
@@ -146,7 +145,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         requestId: String,
         eventTime: LocalDateTime
     ) {
-        logger.info("pac yaml trigger|$requestId|$scmType")
+        logger.info("pipeline yaml trigger|$requestId|$scmType")
         val action = eventActionFactory.load(eventObject)
         if (action == null) {
             logger.warn("pac trigger|request event not support|$eventObject")
@@ -156,7 +155,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
             externalId = externalId, scmType = scmType
         ).data ?: run {
-            logger.info("pac yaml trigger|repository not enable pac|$externalId|$scmType")
+            logger.info("pipeline yaml trigger|repository not enable pac|$externalId|$scmType")
             return
         }
         val setting = PacRepoSetting(repository = repository)
@@ -168,20 +167,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         val yamlPathList = action.getYamlPathList()
         // 如果没有Yaml文件则不初始化
         if (yamlPathList.isEmpty()) {
-            logger.warn("pac yaml trigger not found ci yaml from git|$projectId|$repoHashId")
+            logger.warn("pipeline yaml trigger not found ci yaml from git|$projectId|$repoHashId")
             return
-        }
-        val deleteFiles = action.getDeleteYamlFiles()
-        // 在默认分支上删除文件需要删除流水线
-        if (action.data.context.defaultBranch == action.data.eventCommon.branch && !deleteFiles.isNullOrEmpty()) {
-            deleteFiles.forEach { filePath ->
-                pipelineYamlService.deletePipelineYaml(
-                    userId = action.data.getUserId(),
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath
-                )
-            }
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
         val eventId = pipelineTriggerEventService.getEventId(
@@ -215,22 +202,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
         }
         yamlPathList.forEach {
-            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: run {
-                // ci文件没有变更,流水线不存在则不创建,可能默认分支已经将文件删除,其他分支还存在
-                if (it.checkType == CheckType.NEED_CHECK) {
-                    PacTriggerPipeline(
-                        projectId = projectId,
-                        repoHashId = repoHashId,
-                        filePath = it.yamlPath,
-                        pipelineId = "",
-                        userId = action.data.getUserId(),
-                        delete = false
-                    )
-                } else {
-                    return@forEach
-                }
-            }
-            action.data.context.pipeline = triggerPipeline
+            action.data.context.pipeline = path2PipelineExists[it.yamlPath]
             action.data.context.yamlFile = it
             action.data.context.eventId = eventId
             pipelineEventDispatcher.dispatch(
@@ -297,13 +269,13 @@ class PipelineYamlFacadeService @Autowired constructor(
             repositoryType = RepositoryType.ID
         ).data ?: return
         val setting = PacRepoSetting(repository = repository)
-        val event = PacPushYamlFileEvent(
+        val event = PipelineYamlPushActionEvent(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
         )
-        val action = eventActionFactory.loadPushYamlFileEvent(setting = setting, event = event)
+        val action = eventActionFactory.loadYamlPushEvent(setting = setting, event = event)
         action.pushYamlFile(
             pipelineId = pipelineId,
             filePath = filePath,

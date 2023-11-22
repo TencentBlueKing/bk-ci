@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
@@ -43,7 +42,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PipelineYamlService(
@@ -55,7 +53,6 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
-        private const val MAX_LEN_FOR_NAME = 512
     }
 
     fun save(
@@ -146,41 +143,6 @@ class PipelineYamlService(
         }
     }
 
-    fun saveFailed(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        pipelineId: String,
-        userId: String,
-        blobId: String,
-        ref: String?,
-        reason: String,
-        reasonDetail: String
-    ) {
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineYamlInfoDao.update(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                userId = userId
-            )
-            pipelineYamlVersionDao.saveFailed(
-                dslContext = dslContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                ref = ref,
-                pipelineId = pipelineId,
-                reason = reason,
-                reasonDetail = reasonDetail,
-                userId = userId
-            )
-        }
-    }
-
     fun getPipelineYamlInfo(
         projectId: String,
         repoHashId: String,
@@ -211,6 +173,23 @@ class PipelineYamlService(
 
     fun getPipelineYamlVo(
         projectId: String,
+        pipelineId: String
+    ): PipelineYamlVo? {
+        val pipelineInfo = pipelineYamlInfoDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: run {
+            logger.info("pipeline yaml info not found|$projectId|$pipelineId")
+            return null
+        }
+        with(pipelineInfo) {
+            return pipelineYamlVo(projectId, pipelineId, repoHashId, filePath)
+        }
+    }
+
+    fun getPipelineYamlVo(
+        projectId: String,
         pipelineId: String,
         version: Int
     ): PipelineYamlVo? {
@@ -224,28 +203,37 @@ class PipelineYamlService(
             return null
         }
         with(pipelineYamlVersion) {
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
-            ).data ?: run {
-                logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$version|$repoHashId")
-                return null
-            }
-            return when (repository) {
-                is CodeGitRepository -> {
-                    val homePage =
-                        repository.url.replace("git@", "https://").removeSuffix(".git")
-                    PipelineYamlVo(
-                        repoHashId = repoHashId,
-                        scmType = ScmType.CODE_GIT,
-                        pathWithNamespace = repository.projectName,
-                        webUrl = homePage,
-                        filePath = filePath,
-                        fileUrl = "$homePage/blob/master/$filePath"
-                    )
-                }
+            return pipelineYamlVo(projectId, pipelineId, repoHashId, filePath)
+        }
+    }
 
-                else -> null
+    private fun pipelineYamlVo(
+        projectId: String,
+        pipelineId: String,
+        repoHashId: String,
+        filePath: String
+    ): PipelineYamlVo? {
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
+        ).data ?: run {
+            logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$repoHashId")
+            return null
+        }
+        return when (repository) {
+            is CodeGitRepository -> {
+                val homePage =
+                    repository.url.replace("git@", "https://").removeSuffix(".git")
+                PipelineYamlVo(
+                    repoHashId = repoHashId,
+                    scmType = ScmType.CODE_GIT,
+                    pathWithNamespace = repository.projectName,
+                    webUrl = homePage,
+                    filePath = filePath,
+                    fileUrl = "$homePage/blob/master/$filePath"
+                )
             }
+
+            else -> null
         }
     }
 
@@ -273,25 +261,27 @@ class PipelineYamlService(
         )
     }
 
-    fun deletePipelineYaml(
+    fun delete(
         userId: String,
         projectId: String,
         repoHashId: String,
         filePath: String
     ) {
-        // 删除前改名，防止文件名占用
-        val delTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-        var delFilePath = "$filePath[$delTime]"
-        if (delFilePath.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
-            delFilePath = delFilePath.substring(0, MAX_LEN_FOR_NAME)
+        logger.info("delete pipeline yaml|$userId|$projectId|$repoHashId|$filePath")
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.delete(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
+            pipelineYamlVersionDao.delete(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
         }
-        pipelineYamlInfoDao.delete(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            delFilePath = delFilePath
-        )
     }
 }

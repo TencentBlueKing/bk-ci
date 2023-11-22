@@ -26,17 +26,30 @@
  *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions.data
+package com.tencent.devops.process.yaml.exception.hanlder
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
+import com.tencent.devops.process.yaml.exception.YamlTriggerException
 
-/**
- * pac开启事件
- */
-data class PacEnableEvent(
-    val userId: String,
-    val projectId: String,
-    val repoHashId: String,
-    val scmType: ScmType
-) : CodeWebhookEvent
+object YamlTriggerExceptionUtil {
+
+    fun getReason(exception: Exception): Pair<String, String> {
+        return when (exception) {
+            is YamlTriggerException -> Pair(
+                PipelineTriggerStatus.FAILED.name,
+                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+            )
+            is ErrorCodeException -> Pair(
+                PipelineTriggerStatus.FAILED.name,
+                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+            )
+            else -> Pair(
+                PipelineTriggerReason.UNKNOWN_ERROR.name,
+                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
+            )
+        }
+    }
+}

@@ -38,6 +38,9 @@ enum class CheckType {
     // 需要校验
     NEED_CHECK,
 
+    // 需要删除
+    NEED_DELETE,
+
     // 无需校验
     NO_NEED_CHECK,
 

@@ -31,7 +31,7 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.yaml.actions.BaseAction
-import com.tencent.devops.process.yaml.pojo.PacTriggerLock
+import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,31 +52,36 @@ class PipelineYamlRepositoryService @Autowired constructor(
         projectId: String,
         action: BaseAction
     ) {
-        val triggerPipeline = action.data.context.pipeline!!
-        val filePath = triggerPipeline.filePath
+        val triggerPipeline = action.data.context.pipeline
         val yamlFile = action.data.context.yamlFile!!
+        val filePath = yamlFile.yamlPath
         logger.info("syncYamlPipeline|$projectId|pipeline:${triggerPipeline}|yamlFile:${yamlFile}")
-        PacTriggerLock(
-            redisOperation = redisOperation,
-            projectId = projectId,
-            repoHashId = action.data.setting.repoHashId,
-            filePath = filePath
-        ).use {
-            it.lock()
-            if (triggerPipeline.pipelineId.isBlank()) {
-                createPipelineIfAbsent(
-                    projectId = projectId,
-                    action = action,
-                    yamlFile = yamlFile
-                )
-            } else {
-                updatePipelineIfAbsent(
-                    projectId = projectId,
-                    pipelineId = triggerPipeline.pipelineId,
-                    action = action,
-                    yamlFile = yamlFile
-                )
+        try {
+            PipelineYamlTriggerLock(
+                redisOperation = redisOperation,
+                projectId = projectId,
+                repoHashId = action.data.setting.repoHashId,
+                filePath = filePath
+            ).use {
+                it.lock()
+                if (triggerPipeline == null) {
+                    createPipelineIfAbsent(
+                        projectId = projectId,
+                        action = action,
+                        yamlFile = yamlFile
+                    )
+                } else {
+                    updatePipelineIfAbsent(
+                        projectId = projectId,
+                        pipelineId = triggerPipeline.pipelineId,
+                        action = action,
+                        yamlFile = yamlFile
+                    )
+                }
             }
+        } catch (e: Exception) {
+            logger.error("Failed to deploy pipeline yaml|$projectId|${action.format()}", e)
+            throw e
         }
     }
 
@@ -185,6 +190,21 @@ class PipelineYamlRepositoryService @Autowired constructor(
             version = deployPipelineResult.version,
             versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId()
+        )
+    }
+
+    fun deleteYamlPipeline(
+        projectId: String,
+        action: BaseAction
+    ) {
+        val yamlFile = action.data.context.yamlFile!!
+        val filePath = yamlFile.yamlPath
+        val repoHashId = action.data.setting.repoHashId
+        pipelineYamlService.delete(
+            userId = action.data.getUserId(),
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
         )
     }
 }

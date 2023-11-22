@@ -34,8 +34,7 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.actions.pacActions.data.PacEnableEvent
-import com.tencent.devops.process.yaml.common.Constansts.ciFileDirectoryName
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
@@ -45,11 +44,11 @@ import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
-class PacEnableAction : BaseAction {
+class PipelineYamlEnableAction : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.ENABLE)
 
     override lateinit var data: ActionData
-    fun event() = data.event as PacEnableEvent
+    fun event() = data.event as PipelineYamlEnableActionEvent
 
     override lateinit var api: PacGitApiService
 
@@ -57,7 +56,7 @@ class PacEnableAction : BaseAction {
         return initCommonData()
     }
 
-    private fun initCommonData(): PacEnableAction {
+    private fun initCommonData(): PipelineYamlEnableAction {
         val event = event()
         val gitProjectId = getGitProjectIdOrName()
         val defaultBranch = api.getGitProjectInfo(
@@ -111,16 +110,6 @@ class PacEnableAction : BaseAction {
                 retry = ApiRequestRetryInfo(true)
             )
         )
-    }
-
-    fun getCiDirId(): String? {
-        return api.getFileInfo(
-            cred = this.getGitCred(),
-            gitProjectId = getGitProjectIdOrName(),
-            fileName = ciFileDirectoryName,
-            ref = data.eventCommon.branch,
-            retry = ApiRequestRetryInfo(true)
-        )?.blobId
     }
 
     override fun getChangeSet(): Set<String>? = null

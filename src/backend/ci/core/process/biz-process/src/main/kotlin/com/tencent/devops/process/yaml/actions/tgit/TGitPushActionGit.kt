@@ -85,6 +85,9 @@ class TGitPushActionGit(
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
+        val deleteSet = data.context.deleteSet
+        val defaultBranch = data.context.defaultBranch
+        val branch = data.eventCommon.branch
         return GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
@@ -92,10 +95,15 @@ class TGitPushActionGit(
         ).map { (name, blobId) ->
             YamlPathListEntry(
                 yamlPath = name,
-                checkType = if (changeSet?.contains(name) == true) {
-                    CheckType.NEED_CHECK
-                } else {
-                    CheckType.NO_NEED_CHECK
+                checkType = when {
+                    branch == defaultBranch && deleteSet?.contains(name) == true ->
+                        CheckType.NEED_DELETE
+
+                    changeSet?.contains(name) == true ->
+                        CheckType.NEED_CHECK
+
+                    else ->
+                        CheckType.NO_NEED_CHECK
                 },
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
@@ -117,10 +125,14 @@ class TGitPushActionGit(
 
     override fun getChangeSet(): Set<String>? {
         val changeFileList = mutableSetOf<String>()
+        val deleteFileList = mutableSetOf<String>()
         event().diffFiles?.forEach {
             when {
                 // 删除文件
-                it.deletedFile -> changeFileList.add(it.oldPath)
+                it.deletedFile -> {
+                    changeFileList.add(it.oldPath)
+                    deleteFileList.add(it.oldPath)
+                }
                 // 重命名文件
                 it.renamedFile -> {
                     changeFileList.add(it.newPath)
@@ -130,16 +142,8 @@ class TGitPushActionGit(
                 else -> changeFileList.add(it.newPath)
             }
         }
+        data.context.changeSet = changeFileList
+        data.context.deleteSet = deleteFileList
         return changeFileList
-    }
-
-    override fun getDeleteYamlFiles(): Set<String>? {
-        return event().commits?.flatMap {
-            if (it.removed != null) {
-                it.removed!!.asIterable()
-            } else {
-                emptyList()
-            }
-        }?.filter { GitActionCommon.isCiFile(it) }?.toSet()
     }
 }

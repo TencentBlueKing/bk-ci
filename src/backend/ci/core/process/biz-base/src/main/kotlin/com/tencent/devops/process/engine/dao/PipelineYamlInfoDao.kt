@@ -110,6 +110,20 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineYamlInfo? {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetchOne()
+            return record?.let { convert(it) }
+        }
+    }
+
     fun getAllByRepo(
         dslContext: DSLContext,
         projectId: String,
@@ -127,18 +141,12 @@ class PipelineYamlInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        userId: String,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        delFilePath: String
+        filePath: String
     ) {
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            dslContext.update(this)
-                .set(DELETE, true)
-                .set(FILE_PATH, delFilePath)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(MODIFIER, userId)
+            dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))

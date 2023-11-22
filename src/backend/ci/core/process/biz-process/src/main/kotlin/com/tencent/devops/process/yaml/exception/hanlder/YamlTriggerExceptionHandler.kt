@@ -28,18 +28,10 @@
 
 package com.tencent.devops.process.yaml.exception.hanlder
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.process.yaml.PipelineYamlService
-import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.BaseAction
-import com.tencent.devops.process.yaml.actions.pacActions.PacEnableAction
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -48,9 +40,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class YamlTriggerExceptionHandler(
-    private val pipelineYamlSyncService: PipelineYamlSyncService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     companion object {
@@ -61,25 +51,11 @@ class YamlTriggerExceptionHandler(
         action: BaseAction,
         f: () -> T?
     ): T? {
-        try {
-            return f()
-        } catch (e: Throwable) {
-            return try {
-                when (e) {
-                    is YamlTriggerException -> handleYamlTriggerException(e)
-                    is ErrorCodeException -> handleErrorCodeException(action = action, e = e)
-                    else -> {
-                        logger.warn("YamlTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
-                        handleYamlTriggerException(
-                            YamlTriggerException(
-                                action = action,
-                                reason = PipelineTriggerReason.UNKNOWN_ERROR,
-                                errorCode = ProcessMessageCode.UNKNOWN_ERROR,
-                                errorMessage = e.message
-                            )
-                        )
-                    }
-                }
+        return try {
+            f()
+        } catch (exception: Exception) {
+            try {
+                handleYamlTriggerException(action = action, exception = exception)
                 null
             } catch (ignored: Throwable) {
                 // 防止Hanlder处理过程中报错，兜底
@@ -90,46 +66,13 @@ class YamlTriggerExceptionHandler(
     }
 
     /**
-     * 其他微服务调用的部分异常会被整合为errorCodeEx，这里做保守处理
-     */
-    private fun handleErrorCodeException(action: BaseAction, e: ErrorCodeException) {
-        handleYamlTriggerException(
-            YamlTriggerException(
-                action = action,
-                reason = PipelineTriggerReason.TRIGGER_FAILED,
-                errorCode = e.errorCode,
-                params = e.params
-            )
-        )
-    }
-
-    /**
      * 对已知触发异常做逻辑处理
      */
-    private fun handleYamlTriggerException(e: YamlTriggerException) {
-        val action = e.action
-        val projectId = action.data.setting.projectId
-        val repoHashId = action.data.setting.repoHashId
+    private fun handleYamlTriggerException(action: BaseAction, exception: Exception) {
         val yamlFile = action.data.context.yamlFile!!
         val pipeline = action.data.context.pipeline
         val eventId = action.data.context.eventId
-        val reason = e.reason.name
-        val reasonDetail = if (e.reason == PipelineTriggerReason.UNKNOWN_ERROR) {
-            e.errorMessage ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-        } else {
-            I18nUtil.getCodeLanMessage(messageCode = e.errorCode, params = e.params)
-        }
-        // 如果开启pac异常,需要把同步结果写回代码库
-        if (action is PacEnableAction) {
-            pipelineYamlSyncService.syncFailed(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = action.data.context.yamlFile!!.yamlPath,
-                reason = reason,
-                reasonDetail = reasonDetail
-            )
-        }
-        // 开启pac和关闭pac是没有eventId的，不需要报错触发事件
+        val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = exception)
         if (eventId != null) {
             val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
                 .projectId(action.data.setting.projectId)
@@ -141,19 +84,6 @@ class YamlTriggerExceptionHandler(
                 .reasonDetail(reasonDetail)
                 .build()
             pipelineTriggerEventService.saveTriggerDetail(pipelineTriggerDetail)
-        }
-        if (pipeline != null) {
-            pipelineYamlService.saveFailed(
-                projectId = projectId,
-                repoHashId = action.data.setting.repoHashId,
-                filePath = yamlFile.yamlPath,
-                blobId = yamlFile.blobId!!,
-                ref = action.data.eventCommon.branch,
-                pipelineId = pipeline.pipelineId,
-                reason = reason,
-                reasonDetail = reasonDetail,
-                userId = action.data.getUserId()
-            )
         }
     }
 }

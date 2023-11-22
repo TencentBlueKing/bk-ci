@@ -35,6 +35,7 @@ import com.tencent.devops.process.yaml.PipelineYamlRepositoryService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionHandler
+import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
 import com.tencent.devops.process.yaml.pojo.CheckType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -61,7 +62,7 @@ class PipelineYamlTriggerListener @Autowired constructor(
             }
 
             else -> {
-                logger.warn("PacTriggerListener|not support pac yaml event|$event")
+                logger.warn("pipeline yaml trigger listener|not support pac yaml event|$event")
             }
         }
     }
@@ -76,28 +77,34 @@ class PipelineYamlTriggerListener @Autowired constructor(
                 actionSetting = event.actionSetting
             )
             if (action == null) {
-                logger.warn("PacTriggerListener|run|$event")
+                logger.warn("pipeline yaml trigger listener|run|$event")
                 return
             }
             action
         } catch (ignored: Throwable) {
-            logger.warn("enable pac|load|action|error", ignored)
+            logger.warn("enable pipeline yaml|load|action|error", ignored)
             return
         }
-        exceptionHandler.handle(action = action) {
+        val repoHashId = action.data.setting.repoHashId
+        val filePath = action.data.context.yamlFile!!.yamlPath
+        try {
             pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
-            val repoHashId = action.data.setting.repoHashId
-            val filePath = action.data.context.yamlFile!!.yamlPath
-            pipelineYamlSyncService.syncSuccess(
+            pipelineYamlSyncService.syncSuccess(projectId = projectId, repoHashId = repoHashId, filePath = filePath)
+        } catch (ignored: Exception) {
+            logger.warn("enable pipeline yaml error", ignored)
+            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = ignored)
+            pipelineYamlSyncService.syncFailed(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = filePath
+                filePath = filePath,
+                reason = reason,
+                reasonDetail = reasonDetail
             )
         }
     }
 
     private fun trigger(projectId: String, event: PipelineYamlTriggerEvent) {
-        logger.info("receive pac yaml trigger|$projectId|${event.actionSetting}")
+        logger.info("receive pipeline yaml trigger|$projectId|${event.actionSetting}")
         val action = try {
             val action = actionFactory.loadByData(
                 eventStr = event.eventStr,
@@ -106,18 +113,24 @@ class PipelineYamlTriggerListener @Autowired constructor(
                 actionSetting = event.actionSetting
             )
             if (action == null) {
-                logger.warn("PacTriggerListener|run|$event")
+                logger.warn("pipeline yaml trigger listener|run|$event")
                 return
             }
             action
         } catch (ignored: Throwable) {
-            logger.warn("enable pac|load|action|error", ignored)
+            logger.warn("pipeline yaml trigger|load action error", ignored)
             return
         }
         exceptionHandler.handle(action = action) {
             val yamlFile = action.data.context.yamlFile!!
-            if (yamlFile.checkType == CheckType.NEED_CHECK) {
-                pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
+            when (yamlFile.checkType) {
+                CheckType.NEED_CHECK ->
+                    pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
+
+                CheckType.NEED_DELETE ->
+                    pipelineYamlRepositoryService.deleteYamlPipeline(projectId = projectId, action = action)
+
+                else -> Unit
             }
             pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
         }
