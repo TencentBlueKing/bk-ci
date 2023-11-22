@@ -34,10 +34,10 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import org.jooq.JSON
 
 @Repository
 @Suppress("ALL")
@@ -94,7 +94,8 @@ class ThirdPartyAgentBuildDao {
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
                     .set(
-                        DOCKER_INFO, if (dockerInfo == null) {
+                        DOCKER_INFO,
+                        if (dockerInfo == null) {
                             null
                         } else {
                             JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
@@ -300,6 +301,20 @@ class ThirdPartyAgentBuildDao {
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(DOCKER_INFO.isNotNull)
                 .fetchAny()
+        }
+    }
+
+    fun checkIfRunningAndQueueBuildsCount(
+        dslContext: DSLContext,
+        agentId: String
+    ): Boolean {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+                .where(AGENT_ID.eq(agentId))
+                .and(DOCKER_INFO.isNull)
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .limit(1)
+                .fetchAny() != null
         }
     }
 }
