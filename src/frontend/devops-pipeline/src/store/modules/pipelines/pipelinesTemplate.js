@@ -117,6 +117,9 @@ const actions = {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/deletetemplate?versionName=${versionName}`).then(response => {
             return response.data
         })
+    },
+    enableTemplatePermissionManage (_, projectId) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/enableTemplatePermissionManage`)
     }
 }
 
