@@ -22,7 +22,19 @@
                                     <logo size="40" name="pipeline" v-else></logo>
                                 </td>
                                 <td width="16%" :class="[{ 'manager-user': isManagerUser }, 'template-name']" :title="row.name">
-                                    <span @click="editTemplate(row)">{{row.name}}</span>
+                                    <span
+                                        @click="editTemplate(row)"
+                                        v-perm="{
+                                            hasPermission: row.canEdit,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: row.templateId,
+                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                    >{{row.name}}</span>
                                 </td>
                                 <td width="10%" class="template-version" :title="row.versionName">{{ row.versionName }}</td>
                                 <td width="10%">{{templateTypeFilter(row.templateType)}}</td>
@@ -33,19 +45,94 @@
                                     </section>
                                 </td>
                                 <td width="8%">
-                                    <div @click="toInstanceList(row)" :class="[canCreatePP ? 'create-permission' : 'not-create-permission', 'pipeline-instance']">{{ row.associatePipelines.length }}</div>
+                                    <div
+                                        @click="toInstanceList(row)"
+                                        v-perm="{
+                                            hasPermission: row.canView,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: row.templateId,
+                                                action: TEMPLATE_RESOURCE_ACTION.VIEW
+                                            }
+                                        }"
+                                        :class="[canCreatePP ? 'create-permission' : 'not-create-permission', 'pipeline-instance']"
+                                    >
+                                        {{ row.associatePipelines.length }}
+                                    </div>
                                 </td>
                                 <td width="16%" :class="[{ 'not-permission': !isManagerUser }, 'handler-btn']">
-                                    <span @click="toInstanceList(row)" :class="canCreatePP ? 'create-permission' : 'not-create-permission'">{{ $t('template.instantiate') }}</span>
+                                    <span
+                                        @click="toInstanceList(row)"
+                                        :class="canCreatePP ? 'create-permission' : 'not-create-permission'"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline',
+                                                resourceCode: projectId,
+                                                action: RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                    >
+                                        {{ $t('template.instantiate') }}
+                                    </span>
                                     <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
                                         {{ $t('more') }}
                                         <ul v-show="row.showMore" class="btn-more">
                                             <li @click="copyTemplate(row)" data-name="copy">{{ $t('clone') }}</li>
                                             <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
-                                                <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">{{ $t('template.alreadyToStore') }}</li>
-                                                <li @click="toRelativeStore(row)" v-else data-name="store">{{ $t('template.toStore') }}</li>
+                                                <li
+                                                    v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
+                                                    data-name="stored"
+                                                    class="has-stored"
+                                                    v-perm="{
+                                                        hasPermission: row.canEdit,
+                                                        disablePermissionApi: true,
+                                                        permissionData: {
+                                                            projectId: projectId,
+                                                            resourceType: 'pipeline_template',
+                                                            resourceCode: row.templateId,
+                                                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                        }
+                                                    }"
+                                                >
+                                                    {{ $t('template.alreadyToStore') }}
+                                                </li>
+                                                <li
+                                                    v-else
+                                                    @click="toRelativeStore(row)"
+                                                    data-name="store"
+                                                    v-perm="{
+                                                        hasPermission: row.canEdit,
+                                                        disablePermissionApi: true,
+                                                        permissionData: {
+                                                            projectId: projectId,
+                                                            resourceType: 'pipeline_template',
+                                                            resourceCode: row.templateId,
+                                                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                        }
+                                                    }"
+                                                >
+                                                    {{ $t('template.toStore') }}
+                                                </li>
                                             </template>
-                                            <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}</li>
+                                            <li
+                                                @click="deleteTemplate(row)"
+                                                data-name="delete"
+                                                v-perm="{
+                                                    hasPermission: row.canEdit,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: 'pipeline_template',
+                                                        resourceCode: row.templateId,
+                                                        action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                    }
+                                                }"
+                                            >
+                                                {{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}
+                                            </li>
                                         </ul>
                                     </span>
                                 </td>
@@ -114,6 +201,10 @@
 <script>
     import Logo from '@/components/Logo'
     import { navConfirm } from '@/utils/util'
+    import {
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -158,6 +249,12 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
 
@@ -424,14 +521,12 @@
                             max-width: 192px;
                             padding: 0;
                             span {
+                                cursor: pointer;
                                 margin: 8px 13px;
                             }
                         }
                         &.manager-user {
                             color: $primaryColor;
-                            span {
-                                cursor: pointer;
-                            }
                         }
                         &.template-version {
                             max-width: 120px;

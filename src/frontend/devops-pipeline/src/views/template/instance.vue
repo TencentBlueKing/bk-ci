@@ -12,8 +12,23 @@
         <div class="sub-view-port" v-if="showContent && showInstanceList">
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
-                    <bk-button theme="primary" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
+                    <bk-button class="batch-update" :disabled="!selectItemList.length" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
+                    <bk-button
+                        theme="primary"
+                        @click="createInstance()"
+                        v-perm="{
+                            hasPermission: !hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                    >
+                        {{ $t('template.addInstance') }}
+                    </bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
@@ -29,16 +44,24 @@
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    ref="instanceList"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
                     @select="selectItem"
                     @select-all="selectItem"
                 >
+                    
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
-                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
+                    <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
-                            <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
+                            <label
+                                v-if="!props.row.hasPermission"
+                                class="disabled-checkbox bk-form-checkbox is-disabled"
+                            >
+                                <span class="bk-checkbox"></span>
+                            </label>
+                            <span class="pipeline-name" :title="props.row.pipelineName" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
                     <bk-table-column :label="$t('version')" prop="versionName"></bk-table-column>
@@ -61,8 +84,39 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('operate')" width="250">
                         <template slot-scope="props">
-                            <bk-button class="mr10" theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
-                            <bk-button class="mr10" theme="primary" text @click="copyAsTemplateInstance(props.row)">{{ $t('copy') }}</bk-button>
+                            <bk-button
+                                class="mr10"
+                                theme="primary"
+                                text
+                                :disabled="!props.row.hasPermission"
+                                @click="updateInstance(props.row)"
+                                v-perm="{
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: templateId,
+                                        action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                v-perm="{
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: templateId,
+                                        action: TEMPLATE_RESOURCE_ACTION.VIEW
+                                    }
+                                }"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
                             <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
                         </template>
                     </bk-table-column>
@@ -96,6 +150,10 @@
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
     import { convertTime } from '@/utils/util'
+    import {
+        TEMPLATE_RESOURCE_ACTION,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -160,7 +218,8 @@
                         label: this.$t('template.updating'),
                         className: 'updating'
                     }
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -175,6 +234,12 @@
             },
             showInstanceList () {
                 return this.showContent && (this.instanceList.length || this.searchable)
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
         watch: {
@@ -233,6 +298,8 @@
                     this.currentVersionName = res.latestVersion.versionName
                     this.instanceList = res.instances
                     this.pagination.count = res.count
+                    this.hasCreatePermission = res.hasCreateTemplateInstancePerm
+                    console.log(this.hasCreatePermission, 11111)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -265,7 +332,7 @@
                 this.$router.push(route)
             },
             selectItem (items) {
-                this.selectItemList = items
+                this.selectItemList = items.filter(i => i.hasPermission)
             },
             async handlePageChange (page) {
                 if (page !== this.pagination.current) {
@@ -465,6 +532,11 @@
             .pipeline-name {
                 color: $primaryColor;
                 cursor: pointer;
+            }
+            .disabled-checkbox {
+                position: absolute;
+                left: -38px;
+                top:  12px;
             }
             .status-card {
                 max-width: 120px;

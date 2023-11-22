@@ -3,9 +3,21 @@
         <template v-if="template">
             <pipeline :pipeline="pipeline" :template-type="template.templateType" :is-saving="isSaving" :is-editing="isEditing">
                 <div slot="pipeline-bar">
-                    <bk-button @click="savePipeline()" theme="primary"
+                    <bk-button
+                        @click="savePipeline()"
+                        theme="primary"
                         :disabled="isSaveDisable"
-                    >{{ $t('save') }}</bk-button>
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline_template',
+                                resourceCode: templateId,
+                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
                     <bk-button @click="openVersionSideBar">{{ $t('template.versionList') }}</bk-button>
                     <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
@@ -26,8 +38,29 @@
                             <bk-table-column :label="$t('lastUpdater')" prop="creator"></bk-table-column>
                             <bk-table-column :label="$t('operate')" width="150">
                                 <template slot-scope="props">
-                                    <bk-button theme="primary" text @click.stop="requestTemplateByVersion(props.row.version)">{{ $t('load') }}</bk-button>
-                                    <bk-button theme="primary" text :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'" @click="deleteVersion(props.row)">{{ $t('delete') }}</bk-button>
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        @click.stop="requestTemplateByVersion(props.row.version)"
+                                    >
+                                        {{ $t('load') }}
+                                    </bk-button>
+                                    <bk-button
+                                        theme="primary"
+                                        text
+                                        :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'"
+                                        @click="deleteVersion(props.row)"
+                                        v-perm="{
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: templateId,
+                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                    >
+                                        {{ $t('delete') }}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -63,6 +96,9 @@
         convertMStoStringByRule,
         navConfirm
     } from '@/utils/util'
+    import {
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -116,6 +152,9 @@
             },
             isSaveDisable () {
                 return this.isSaving || !this.template.hasPermission || this.template.templateType === 'CONSTRAINT'
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
             }
         },
         watch: {

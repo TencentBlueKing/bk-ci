@@ -98,7 +98,21 @@
             </form-field>
 
             <div class="handle-btn" style="margin-left: 146px;">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button
+                    @click="savePipelineSetting()"
+                    theme="primary"
+                    :disabled="isDisabled || noPermission"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline_template',
+                            resourceCode: templateId,
+                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                >
+                    {{ $t('save') }}
+                </bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -112,6 +126,9 @@
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import {
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
             FormField,
@@ -232,6 +249,9 @@
                         }
                     ]
                 }
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
             }
         },
         watch: {

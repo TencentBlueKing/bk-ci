@@ -71,7 +71,7 @@
                         class="ml5 template-mode-icon"
                         name="template-mode"
                         size="12"
-                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
+                        v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
                     />
                 </div>
             </template>
