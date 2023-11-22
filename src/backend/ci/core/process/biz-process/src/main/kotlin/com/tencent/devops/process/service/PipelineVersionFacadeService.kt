@@ -200,7 +200,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             updateVersion = false,
             setting = draftSetting.copy(
-                labels = request.labels,
                 desc = request.description ?: ""
             )
         )
