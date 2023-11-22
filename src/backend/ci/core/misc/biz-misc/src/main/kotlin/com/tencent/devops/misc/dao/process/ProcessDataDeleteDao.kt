@@ -59,7 +59,6 @@ import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
-import com.tencent.devops.model.process.tables.TPipelineWebhookBuildLogDetail
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
@@ -268,14 +267,6 @@ class ProcessDataDeleteDao {
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun deletePipelineWebhookBuildLogDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(TPipelineWebhookBuildLogDetail.T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }

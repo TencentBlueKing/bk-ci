@@ -27,24 +27,28 @@
 
 package com.tencent.devops.log.service.impl
 
-import com.tencent.devops.common.api.util.OwnerUtils
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 class V3LogPermissionService @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val client: Client,
-    private val redisOperation: RedisOperation
+    private val client: Client
 ) : LogPermissionService {
+
+    private val projectOwnerCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .build<String/*projectId*/, String/*userId*/>()
 
     override fun verifyUserLogPermission(
         projectCode: String,
@@ -88,23 +92,14 @@ class V3LogPermissionService @Autowired constructor(
     }
 
     private fun isProjectOwner(projectId: String, userId: String): Boolean {
-        val cacheOwner = redisOperation.get(OwnerUtils.getOwnerRedisKey(projectId))
-        if (cacheOwner.isNullOrEmpty()) {
-            val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
-            val projectCreator = projectVo.creator
-            logger.info("pipeline permission get ProjectOwner $projectId | $projectCreator| $userId")
-            return if (!projectCreator.isNullOrEmpty()) {
-                redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
-                userId == projectCreator
-            } else {
-                false
-            }
-        } else {
-            return userId == cacheOwner
+        val projectCreator = projectOwnerCache.get(projectId) {
+            val projectVo = client.get(ServiceProjectResource::class).get(projectId).data
+            projectVo?.creator ?: ""
         }
+        return userId == projectCreator
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(V3LogPermissionService::class.java)
+        private val logger = LoggerFactory.getLogger(V3LogPermissionService::class.java)
     }
 }

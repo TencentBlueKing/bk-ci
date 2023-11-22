@@ -597,10 +597,8 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
         val startEpoch = System.currentTimeMillis()
         try {
-
             val model = getModel(projectId, pipelineId)
 
             /**
@@ -699,7 +697,6 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,

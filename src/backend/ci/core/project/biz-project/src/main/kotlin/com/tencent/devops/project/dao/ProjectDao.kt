@@ -347,7 +347,8 @@ class ProjectDao {
                 ENABLED,
                 PROPERTIES,
                 SUBJECT_SCOPES,
-                AUTH_SECRECY
+                AUTH_SECRECY,
+                PRODUCT_ID
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -375,7 +376,8 @@ class ProjectDao {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,
-                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value
+                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
+                projectCreateInfo.productId
             ).execute()
         }
     }
@@ -406,6 +408,7 @@ class ProjectDao {
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
+                .set(PRODUCT_ID, projectUpdateInfo.productId)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
@@ -453,7 +456,8 @@ class ProjectDao {
         approvalStatus: Int?,
         routerTag: String?,
         otherRouterTagMaps: Map<String, String>?,
-        remoteDevFlag: Boolean?
+        remoteDevFlag: Boolean?,
+        productId: Int?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!projectName.isNullOrBlank()) {
@@ -464,6 +468,7 @@ class ProjectDao {
         }
         projectType?.let { conditions.add(PROJECT_TYPE.eq(projectType)) }
         isSecrecy?.let { conditions.add(IS_SECRECY.eq(isSecrecy)) }
+        productId?.let { conditions.add(PRODUCT_ID.eq(productId)) }
         if (!creator.isNullOrBlank()) conditions.add(CREATOR.eq(creator))
         if (!approver.isNullOrBlank()) conditions.add(APPROVER.eq(approver))
         approvalStatus?.let { conditions.add(APPROVAL_STATUS.eq(approvalStatus)) }
@@ -477,9 +482,9 @@ class ProjectDao {
         }
 
         if (remoteDevFlag != null && remoteDevFlag) {
+            conditions.add(CHANNEL.eq(ProjectChannelCode.BS.name))
             conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
         }
-
         return conditions
     }
 
@@ -496,7 +501,8 @@ class ProjectDao {
         limit: Int,
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
-        remoteDevFlag: Boolean? = null
+        remoteDevFlag: Boolean? = null,
+        productId: Int? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -509,7 +515,8 @@ class ProjectDao {
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
-                remoteDevFlag = remoteDevFlag
+                remoteDevFlag = remoteDevFlag,
+                productId = productId
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -576,8 +583,13 @@ class ProjectDao {
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
-                .let { it.takeIf { projectName != null }?.and(PROJECT_NAME.like("%${projectName!!.trim()}%")) ?: it }
+                .let {
+                    it.takeIf { projectName != null }?.and(
+                        PROJECT_NAME.like("%${projectName!!.trim()}%")
+                    ) ?: it
+                }
                 .let { it.takeIf { projectId != null }?.and(ENGLISH_NAME.eq(projectId)) ?: it }
+                .and(CHANNEL.eq("BS"))
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
@@ -608,16 +620,15 @@ class ProjectDao {
                 .set(IS_SECRECY, projectInfoRequest.secrecyFlag)
                 .set(APPROVAL_STATUS, projectInfoRequest.approvalStatus)
                 .set(APPROVAL_TIME, projectInfoRequest.approvalTime?.let { java.sql.Timestamp(it).toLocalDateTime() })
-                .set(APPROVER, projectInfoRequest.approver)
                 .set(USE_BK, projectInfoRequest.useBk)
                 .set(CC_APP_ID, projectInfoRequest.ccAppId)
                 .set(CC_APP_NAME, projectInfoRequest.cc_app_name ?: "")
-                .set(UPDATOR, projectInfoRequest.updator)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(KIND, projectInfoRequest.kind)
                 .set(ENABLED, projectInfoRequest.enabled)
                 .set(PIPELINE_LIMIT, projectInfoRequest.pipelineLimit)
                 .set(PROPERTIES, projectInfoRequest.properties?.let { JsonUtil.toJson(it, false) })
+                .set(PRODUCT_ID, projectInfoRequest.productId)
 
             if (projectInfoRequest.hybridCCAppId != null) {
                 step.set(HYBRID_CC_APP_ID, projectInfoRequest.hybridCCAppId)
@@ -645,7 +656,8 @@ class ProjectDao {
         approvalStatus: Int?,
         routerTag: String? = null,
         otherRouterTagMaps: Map<String, String>? = null,
-        remoteDevFlag: Boolean? = null
+        remoteDevFlag: Boolean? = null,
+        productId: Int? = null
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -658,7 +670,8 @@ class ProjectDao {
                 approvalStatus = approvalStatus,
                 routerTag = routerTag,
                 otherRouterTagMaps = otherRouterTagMaps,
-                remoteDevFlag = remoteDevFlag
+                remoteDevFlag = remoteDevFlag,
+                productId = productId
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }

@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
@@ -39,7 +39,7 @@ class ItsmService @Autowired constructor(
     private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
-        val itsmResponseDTO = executeHttpPost(
+        val itsmResponseDTO: ResponseDTO<List<Any>> = executeHttpPost(
             urlSuffix = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
@@ -56,11 +56,11 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
-        val itsmResponseDTO = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
-        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
+        val itsmResponseDTO: ResponseDTO<Map<*, *>> = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
+        val itsmApiResData = itsmResponseDTO.data
         logger.info("itsmApiResData:$itsmApiResData")
 
-        if (!itsmApiResData["is_passed"].toString().toBoolean()) {
+        if (!itsmApiResData?.get("is_passed").toString().toBoolean()) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_ITSM_VERIFY_TOKEN_FAIL,
@@ -70,12 +70,12 @@ class ItsmService @Autowired constructor(
     }
 
     fun getItsmTicketStatus(sn: String): String {
-        val itsmResponseDTO = executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
-        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
-        return itsmApiResData["current_status"].toString()
+        val itsmResponseDTO: ResponseDTO<Map<*, *>> =
+            executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
+        return itsmResponseDTO.data?.get("current_status").toString()
     }
 
-    private fun executeHttpPost(urlSuffix: String, body: Any): ResponseDTO {
+    private fun <T> executeHttpPost(urlSuffix: String, body: Any): ResponseDTO<T> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val requestBody = objectMapper.writeValueAsString(body)
@@ -90,7 +90,7 @@ class ItsmService @Autowired constructor(
         return executeHttpRequest(url, request)
     }
 
-    private fun executeHttpGet(urlSuffix: String): ResponseDTO {
+    private fun <T> executeHttpGet(urlSuffix: String): ResponseDTO<T> {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val url = itsmUrlPrefix + urlSuffix
@@ -102,14 +102,15 @@ class ItsmService @Autowired constructor(
         return executeHttpRequest(url, request)
     }
 
-    private fun executeHttpRequest(url: String, request: Request): ResponseDTO {
+    private fun <T> executeHttpRequest(url: String, request: Request): ResponseDTO<T> {
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 logger.warn("request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
             val responseStr = it.body!!.string()
-            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
+            val responseDTO: ResponseDTO<T> =
+                objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<T>>() {})
             if (responseDTO.code != 0L || !responseDTO.result) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
@@ -127,8 +128,11 @@ class ItsmService @Autowired constructor(
         desc: String,
         organization: String,
         authSecrecy: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        subjectScopes: List<SubjectScopeInfo>,
+        productName: String,
+        isCreateProject: Boolean = true
     ): ItsmContentDTO {
+        logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName")
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
@@ -143,7 +147,9 @@ class ItsmService @Autowired constructor(
             ItsmColumn.builder().key("authSecrecy")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("subjectScopes")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build()
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("productName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
@@ -154,13 +160,19 @@ class ItsmService @Autowired constructor(
         value["projectId"] = ItsmStyle.builder().value(projectId).build()
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
+        value["productName"] = ItsmStyle.builder().value(productName).build()
         value["authSecrecy"] =
             ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
             .label(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL)
+                I18nUtil.getCodeLanMessage(
+                    if (isCreateProject)
+                        AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
+                    else
+                        AuthI18nConstants.BK_UPDATE_PROJECT_APPROVAL
+                )
             )
             .value(listOf(value))
             .build()

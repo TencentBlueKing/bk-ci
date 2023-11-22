@@ -62,7 +62,6 @@ import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
 import com.tencent.devops.model.process.tables.TPipelineWebhook
-import com.tencent.devops.model.process.tables.TPipelineWebhookBuildLogDetail
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
@@ -104,7 +103,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewTopRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewUserLastViewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewUserSettingsRecord
-import com.tencent.devops.model.process.tables.records.TPipelineWebhookBuildLogDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookBuildParameterRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookQueueRecord
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
@@ -116,7 +114,6 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 @Repository
@@ -712,31 +709,6 @@ class ProcessDataMigrateDao {
     ) {
         with(TPipelineViewUserSettings.T_PIPELINE_VIEW_USER_SETTINGS) {
             val insertRecords = pipelineViewUserSettingsRecords.map { migratingShardingDslContext.newRecord(this, it) }
-            migratingShardingDslContext.batchInsert(insertRecords).execute()
-        }
-    }
-
-    fun getPipelineWebhookBuildLogDetailRecords(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        limit: Int,
-        offset: Int
-    ): List<TPipelineWebhookBuildLogDetailRecord> {
-        with(TPipelineWebhookBuildLogDetail.T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .orderBy(ID.asc())
-                .limit(limit).offset(offset).fetchInto(TPipelineWebhookBuildLogDetailRecord::class.java)
-        }
-    }
-
-    fun migratePipelineWebhookBuildLogDetailData(
-        migratingShardingDslContext: DSLContext,
-        webhookBuildLogDetailRecords: List<TPipelineWebhookBuildLogDetailRecord>
-    ) {
-        with(TPipelineWebhookBuildLogDetail.T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
-            val insertRecords = webhookBuildLogDetailRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }
