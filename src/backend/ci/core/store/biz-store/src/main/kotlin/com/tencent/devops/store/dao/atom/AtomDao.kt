@@ -697,7 +697,7 @@ class AtomDao : AtomBaseDao() {
             ta.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
             ta.WEIGHT.`as`(KEY_WEIGHT),
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
-            ta.BRANCH_TEST_FLAG,
+            ta.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
             tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
