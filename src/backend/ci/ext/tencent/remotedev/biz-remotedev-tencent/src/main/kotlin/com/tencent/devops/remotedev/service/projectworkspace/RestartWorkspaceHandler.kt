@@ -124,7 +124,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                     params = arrayOf(
                         workspace.workspaceName,
-                        "status is already ${workspace.status}, can't start now"
+                        "status is already ${workspace.status}, can't restart now"
                     )
                 )
             }
