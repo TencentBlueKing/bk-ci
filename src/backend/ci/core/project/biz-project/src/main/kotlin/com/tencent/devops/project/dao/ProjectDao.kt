@@ -739,11 +739,17 @@ class ProjectDao {
         }
     }
 
-    fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
+    fun countByProjectName(
+        dslContext: DSLContext,
+        projectName: String,
+        channelCodes: List<String>,
+    ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                .and(CHANNEL.`in`(channelCodes))
                 .fetchOne(0, Int::class.java)!!
         }
     }
