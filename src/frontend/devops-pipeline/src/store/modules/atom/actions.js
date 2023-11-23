@@ -50,12 +50,12 @@ import {
     SET_ATOM_VERSION_LIST,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
+    SET_COMMON_PARAMS,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
-    SET_COMMON_PARAMS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
@@ -66,12 +66,12 @@ import {
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
+    SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_SHOW_VARIABLE,
     UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
     UPDATE_ATOM_OUTPUT,
@@ -212,6 +212,25 @@ export default {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
             return res.data
         })
+    },
+    async canSwitchToYaml (_, { projectId, pipelineId, actionType, ...params }) {
+        try {
+            const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+                params: {
+                    pipelineId,
+                    actionType: 'FULL_MODEL2YAML'
+                }
+            })
+            return {
+                yamlSupported: data.yamlSupported,
+                yamlInvalidMsg: data.yamlInvalidMsg
+            }
+        } catch (error) {
+            return {
+                yamlSupported: false,
+                yamlInvalidMsg: error.message
+            }
+        }
     },
     async transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
         try {

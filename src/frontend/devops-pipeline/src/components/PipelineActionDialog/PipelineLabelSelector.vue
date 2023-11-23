@@ -7,6 +7,7 @@
             >
                 <label class="pipeline-selector-label"> {{item.name}} </label>
                 <bk-select
+                    :disabled="!editable"
                     class="sub-label-select"
                     :value="labelIdMap[item.id]"
                     @change="item.handleChange"
@@ -36,6 +37,10 @@
             value: {
                 type: Object,
                 default: () => ({})
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {

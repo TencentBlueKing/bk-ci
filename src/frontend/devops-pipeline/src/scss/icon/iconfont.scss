@@ -38,7 +38,6 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
-
 .devops-icon.icon-close-circle-fill:before {
     content: "\e921";
   }
@@ -65,6 +64,12 @@
   }
   .devops-icon.icon-edit:before {
     content: "\e909";
+  }
+  .devops-icon.icon-question-circle-shape:before {
+    content: "\e92a";
+  }
+  .devops-icon.icon-question-circle:before {
+    content: "\e94c";
   }
   .devops-icon.icon-check-1:before {
     content: "\e977";
@@ -511,9 +516,6 @@
   .devops-icon.icon-qq-shape:before {
     content: "\e94b";
   }
-  .devops-icon.icon-question-circle-shape:before {
-    content: "\e94c";
-  }
   .devops-icon.icon-right-shape:before {
     content: "\e94d";
   }
@@ -819,12 +821,6 @@
   }
   .devops-icon.icon-qq:before {
     content: "\e9ba";
-  }
-  .devops-icon.icon-question:before {
-    content: "\e9bb";
-  }
-  .devops-icon.icon-question-circle:before {
-    content: "\e9bc";
   }
   .devops-icon.icon-refresh:before {
     content: "\e9bd";

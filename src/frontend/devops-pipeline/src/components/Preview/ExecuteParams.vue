@@ -1,68 +1,73 @@
 <template>
     <bk-collapse class="execute-params-collapse" v-model="activeName">
-        <bk-collapse-item v-if="!isDebug && buildList.length" custom-trigger-area name="1">
-            <header class="params-collapse-trigger">
-                {{ $t('preview.build') }}
-                <i class="devops-icon icon-arrow-right" />
-            </header>
-            <div slot="content" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="buildForm"
-                    :param-values="buildValues"
-                    :handle-param-change="handleBuildChange"
-                    :params="buildList"
-                />
-            </div>
-        </bk-collapse-item>
-        <bk-collapse-item name="2" custom-trigger-area v-if="isVisibleVersion">
-            <header class="params-collapse-trigger">
-                {{ $t('preview.introVersion') }}
-            </header>
-            <div slot="content" class="params-collapse-content">
-                <pipeline-versions-form
-                    ref="versionParamForm"
-                    :build-no="buildNo"
-                    :is-preview="true"
-                    :version-param-values="versionParamValues"
-                    :handle-version-change="handleVersionChange"
-                    :handle-build-no-change="handleBuildNoChange"
-                ></pipeline-versions-form>
-            </div>
-        </bk-collapse-item>
-        <bk-collapse-item name="3" custom-trigger-area>
-            <header class="params-collapse-trigger">
-                {{ $t('template.pipelineVar') }}
-                <span class="collapse-trigger-divider">|</span>
-                <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
-                    {{ $t('resetDefault') }}
-                    <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
-                </span>
-                <span v-else class="text-link" @click.stop="updateParams('value')">
-                    {{ $t('useLastParams') }}
-                </span>
-            </header>
-            <div slot="content" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="paramsForm"
-                    :param-values="paramsValues"
-                    :handle-param-change="handleParamChange"
-                    :params="paramList"
-                />
-            </div>
-        </bk-collapse-item>
-        <bk-collapse-item name="4" custom-trigger-area v-if="constantParams.length > 0">
-            <header class="params-collapse-trigger">
-                {{ $t('常量') }}
-                <i class="devops-icon icon-arrow-right" />
-            </header>
-            <div slot="content" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="paramsForm"
-                    :param-values="constantValues"
-                    :params="constantParams"
-                />
-            </div>
-        </bk-collapse-item>
+        <template v-if="hasParams">
+            <bk-collapse-item v-if="!isDebug && buildList.length" custom-trigger-area name="1">
+                <header class="params-collapse-trigger">
+                    {{ $t('preview.build') }}
+                    <i class="devops-icon icon-arrow-right" />
+                </header>
+                <div slot="content" class="params-collapse-content">
+                    <pipeline-params-form
+                        ref="buildForm"
+                        :param-values="buildValues"
+                        :handle-param-change="handleBuildChange"
+                        :params="buildList"
+                    />
+                </div>
+            </bk-collapse-item>
+            <bk-collapse-item name="2" custom-trigger-area v-if="isVisibleVersion">
+                <header class="params-collapse-trigger">
+                    {{ $t('preview.introVersion') }}
+                </header>
+                <div slot="content" class="params-collapse-content">
+                    <pipeline-versions-form
+                        ref="versionParamForm"
+                        :build-no="buildNo"
+                        :is-preview="true"
+                        :version-param-values="versionParamValues"
+                        :handle-version-change="handleVersionChange"
+                        :handle-build-no-change="handleBuildNoChange"
+                    ></pipeline-versions-form>
+                </div>
+            </bk-collapse-item>
+            <bk-collapse-item name="3" custom-trigger-area>
+                <header class="params-collapse-trigger">
+                    {{ $t('template.pipelineVar') }}
+                    <span class="collapse-trigger-divider">|</span>
+                    <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
+                        {{ $t('resetDefault') }}
+                        <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
+                    </span>
+                    <span v-else class="text-link" @click.stop="updateParams('value')">
+                        {{ $t('useLastParams') }}
+                    </span>
+                </header>
+                <div slot="content" class="params-collapse-content">
+                    <pipeline-params-form
+                        ref="paramsForm"
+                        :param-values="paramsValues"
+                        :handle-param-change="handleParamChange"
+                        :params="paramList"
+                    />
+                </div>
+            </bk-collapse-item>
+            <bk-collapse-item name="4" custom-trigger-area v-if="constantParams.length > 0">
+                <header class="params-collapse-trigger">
+                    {{ $t('常量') }}
+                    <i class="devops-icon icon-arrow-right" />
+                </header>
+                <div slot="content" class="params-collapse-content">
+                    <pipeline-params-form
+                        ref="paramsForm"
+                        :param-values="constantValues"
+                        :params="constantParams"
+                    />
+                </div>
+            </bk-collapse-item>
+        </template>
+        <bk-exception v-else type="empty">
+            {{$t('无执行参数')}}
+        </bk-exception>
     </bk-collapse>
 </template>
 
@@ -112,6 +117,9 @@
             },
             useLastParams () {
                 return this.isDebug || this.startupInfo?.useLatestParameters
+            },
+            hasParams () {
+                return this.startupInfo?.properties?.length > 0 || this.isVisibleVersion
             }
         },
         watch: {

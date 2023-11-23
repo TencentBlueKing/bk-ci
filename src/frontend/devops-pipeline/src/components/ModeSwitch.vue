@@ -55,7 +55,7 @@
         methods: {
             ...mapActions({
                 updatePipelineMode: 'updatePipelineMode',
-                transferModelToYaml: 'atom/transferModelToYaml'
+                canSwitchToYaml: 'atom/canSwitchToYaml'
             }),
             async detectYamlSupport () {
                 try {
@@ -71,18 +71,17 @@
                             ...(this.pipelineWithoutTrigger?.stages ?? [])
                         ]
                     })
-                    const data = await this.transferModelToYaml({
+                    const { yamlSupported, yamlInvalidMsg } = await this.canSwitchToYaml({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
-                        actionType: 'FULL_MODEL2YAML',
                         modelAndSetting: {
                             model: pipeline,
                             setting: this.pipelineSetting
                         }
                     })
                     return {
-                        yamlSupported: data.yamlSupported,
-                        yamlInvalidMsg: data.yamlInvalidMsg
+                        yamlSupported,
+                        yamlInvalidMsg
                     }
                 } catch (error) {
                     console.log(error)

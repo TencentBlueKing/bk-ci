@@ -1,7 +1,7 @@
 <template>
     <bk-form form-type="vertical">
         <bk-form-item>
-            <label class="label-selector-label">
+            <label v-if="editable" class="label-selector-label">
                 <span>{{ $t('label') }}</span>
                 <span class="pipeline-label-action-span">
                     <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
@@ -17,6 +17,7 @@
             <PipelineLabelSelector
                 ref="labelSelector"
                 v-model="initTags"
+                :editable="editable"
                 @change="updateDynamicGroup"
             />
         </bk-form-item>
@@ -41,6 +42,7 @@
         <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
             <bk-select
                 multiple
+                :disabled="!editable"
                 v-model="staticViews"
                 @change="emitChange"
             >
@@ -73,6 +75,10 @@
         },
         mixins: [piplineActionMixin],
         props: {
+            editable: {
+                type: Boolean,
+                default: true
+            },
             pipelineName: {
                 type: String,
                 required: true

@@ -9,6 +9,9 @@
             />
         </div>
         <aside class="pipeline-history-right-aside">
+            <router-link :to="editRouteName">
+                <bk-button>{{ $t("edit") }}</bk-button>
+            </router-link>
             <span v-bk-tooltips="tooltip">
                 <bk-button
                     theme="primary"
@@ -18,9 +21,6 @@
                     {{ $t("exec") }}
                 </bk-button>
             </span>
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
             <more-actions />
         </aside>
     </div>

@@ -12,9 +12,9 @@
                     <bk-link
                         class="pac-info-row-link"
                         target="_blank"
-                        :href="info.repoUrl"
+                        :href="info.webUrl"
                     >
-                        {{info.repoName}}
+                        {{info.pathWithNamespace}}
                     </bk-link>
                 </p>
                 <p class="pac-info-row">

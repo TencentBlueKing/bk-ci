@@ -4,6 +4,7 @@
         :width="800"
         @showen="showReleaseSlider"
         @hidden="hideReleaseSlider"
+        ext-cls="release-pipeline-side-slider"
     >
         <header slot="header" class="release-pipeline-side-slider-header">
             {{ $t('releasePipeline') }}
@@ -18,7 +19,12 @@
                     <label for="enablePac">
                         {{ $t('pacMode') }}
                     </label>
-                    <bk-switcher theme="primary" name="enablePac" v-model="releaseParams.enablePac" />
+                    <bk-switcher
+                        :disabled="pacEnabled"
+                        theme="primary"
+                        name="enablePac"
+                        v-model="releaseParams.enablePac"
+                    />
                 </aside>
                 <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
                     <label for="enablePac">
@@ -28,7 +34,7 @@
                         <bk-radio
                             v-for="item in pacSupportScmTypeList"
                             :key="item.id"
-                            :value="item.value"
+                            :value="item.id"
                         >
                             {{ $t(item.value) }}
                         </bk-radio>
@@ -53,15 +59,16 @@
                         }]" />
                     </header>
                     <section v-show="showPacCodelibSetting">
-                        <bk-form-item
-                            required
-                            :label="$t('yamlCodeLib')"
-                            :desc="$t('aaaa')"
-                            desc-type="icon"
-                            desc-icon="bk-icon icon-question-circle-shape"
-                            property="repoHashId"
-                        >
+                        <label class="yaml-info-codelib-label" for="yamlCodelib">
+                            {{$t('yamlCodeLib')}}
+                            <i
+                                class="devops-icon icon-question-circle-shape"
+                                v-bk-tooltips="$t('aaaa')"
+                            />
+                        </label>
+                        <bk-form-item required property="repoHashId">
                             <bk-select
+                                id="yamlCodelib"
                                 searchable
                                 enable-scroll-load
                                 v-model="releaseParams.repoHashId"
@@ -88,16 +95,20 @@
                                 </p>
                             </bk-select>
                         </bk-form-item>
+                        <label class="yaml-info-codelib-label" for="yamlFilePath">
+                            {{$t('yamlDir')}}
+                            <i
+                                class="devops-icon icon-question-circle-shape"
+                                v-bk-tooltips="$t('aaaa')"
+                            />
+                        </label>
                         <bk-form-item
                             required
-                            :label="$t('yamlDir')"
-                            :desc="$t('aaaa')"
-                            desc-type="icon"
-                            desc-icon="bk-icon icon-question-circle-shape"
                             property="filePath"
                         >
                             <bk-input
                                 v-model="releaseParams.filePath"
+                                id="yamlFilePath"
                             >
                                 <span class="group-text" slot="prepend">.ci/</span>
                             </bk-input>
@@ -138,7 +149,8 @@
                         {{ $t('pipelineSetting') }}
                     </header>
                     <PipelineGroupSelector
-                        v-model="releaseParams.groupValue"
+                        :value="groupValue"
+                        :editable="false"
                         :pipeline-name="pipelineName"
                         ref="pipelineGroupSelector"
                         :has-manage-permission="isManage"
@@ -227,21 +239,19 @@
                 },
                 releaseParams: {
                     enablePac: false,
-                    repoHashId: '',
                     scmType: '',
                     description: '',
+                    repoHashId: '',
                     filePath: '',
-                    targetAction: 'COMMIT_TO_MASTER',
-                    groupValue: {
-                        labels: [],
-                        staticViews: []
-                    }
+                    staticViews: [],
+                    targetAction: 'COMMIT_TO_MASTER'
                 }
             }
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'pipelineSetting'
             ]),
             ...mapState('pipelines', [
                 'isManage'
@@ -250,6 +260,12 @@
             ...mapState('common', ['pacSupportScmTypeList']),
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionBranch
+            },
+            groupValue () {
+                return {
+                    labels: this.pipelineSetting?.labels || [],
+                    staticViews: []
+                }
             },
             rules () {
                 return {
@@ -283,6 +299,16 @@
             }
         },
         watch: {
+            value: {
+                handler (val) {
+                    if (val) {
+                        window.__bk_zIndex_manager.zIndex = 2020
+                    } else {
+                        window.__bk_zIndex_manager.zIndex = 2000
+                    }
+                },
+                immediate: true
+            },
             yamlInfo: {
                 handler: function (val) {
                     if (val) {
@@ -323,6 +349,9 @@
                 },
                 immediate: true
             }
+        },
+        beforeDestroy () {
+            window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
             ...mapActions('atom', [
@@ -378,14 +407,18 @@
                 try {
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
-                    const { groupValue, ...rest } = this.releaseParams
+                    const { repoHashId, scmType, filePath, ...rest } = this.releaseParams
                     const { data: { version, versionName } } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
                         version: this.version,
                         params: {
                             ...rest,
-                            ...groupValue
+                            yamlInfo: {
+                                scmType,
+                                repoHashId,
+                                filePath
+                            }
                         }
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
@@ -476,6 +509,14 @@
             },
             hideReleaseSlider () {
                 this.$emit('input', false)
+                this.releaseParams = {
+                    enablePac: false,
+                    repoHashId: '',
+                    scmType: '',
+                    description: '',
+                    filePath: '',
+                    targetAction: 'COMMIT_TO_MASTER'
+                }
             },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
@@ -520,6 +561,9 @@
 
 <style lang="scss">
 @import '@/scss/conf';
+.release-pipeline-side-slider {
+    z-index: 2020;
+}
 .release-pipeline-side-slider-header {
     display: flex;
     align-items: center;
@@ -588,6 +632,30 @@
         .pac-pipeline-dest-branch-radio {
             margin-right: 24px;
         }
+    }
+}
+
+.yaml-info-codelib-label {
+    position: relative;
+    font-size: 12px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    grid-gap: 24px;
+    & +.yaml-info-codelib-label {
+        margin-top: 20px;
+    }
+    &:after {
+        content: '*';
+        position: absolute;
+        display: inline-block;
+        right: 28px;
+        top: 2px;
+        color: #EA3636;
+    }
+    > .devops-icon {
+        font-size: 14px;
+        color: #979BA5;
     }
 }
 
