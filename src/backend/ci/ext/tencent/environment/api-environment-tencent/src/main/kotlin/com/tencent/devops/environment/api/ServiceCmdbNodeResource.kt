@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -82,5 +83,5 @@ interface ServiceCmdbNodeResource {
         projectId: String,
         @ApiParam(value = "CMDB节点 IP", required = true)
         nodeIps: List<String>
-    ): Result<Boolean>
+    ): Result<AddCmdbNodesRes>
 }

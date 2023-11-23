@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,17 +48,19 @@ class ServiceCmdbNodeResourceImpl @Autowired constructor(
         pageSize: Int,
         ips: List<String>?
     ): Result<Page<CmdbNode>> {
-        return Result(cmdbNodeService.getUserCmdbNodesNew(
-            userId = userId,
-            bakOperator = bakOperator,
-            page = page,
-            pageSize = pageSize,
-            ips = ips ?: listOf()
-        ))
+        return Result(
+            cmdbNodeService.getUserCmdbNodesNew(
+                userId = userId,
+                bakOperator = bakOperator,
+                page = page,
+                pageSize = pageSize,
+                ips = ips ?: listOf()
+            )
+        )
     }
 
-    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
-        cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
-        return Result(true)
+    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<AddCmdbNodesRes> {
+        val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        return Result(addCmdbNodesRes)
     }
 }

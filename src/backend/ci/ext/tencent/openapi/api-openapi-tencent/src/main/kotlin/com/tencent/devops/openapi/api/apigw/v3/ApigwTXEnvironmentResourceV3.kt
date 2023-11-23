@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -40,5 +41,5 @@ interface ApigwTXEnvironmentResourceV3 {
         projectId: String,
         @ApiParam(value = "CMDB节点 IP", required = true)
         nodeIps: List<String>
-    ): Result<Boolean>
+    ): Result<AddCmdbNodesRes>
 }

@@ -41,6 +41,8 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
+import com.tencent.devops.environment.pojo.job.NodeAgent
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
@@ -111,7 +113,7 @@ class CmdbNodeService @Autowired constructor(
         )
     }
 
-    fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>) {
+    fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {
         // 验证 CMDB 节点IP和责任人
         val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes // 查出所有ip对应记录
         val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip } // ip - 记录 映射
@@ -175,6 +177,16 @@ class CmdbNodeService @Autowired constructor(
             )
             batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
         }
+        return AddCmdbNodesRes(
+            nodeStatus = true,
+            nodesAgentList = toAddNodeList.map {
+                NodeAgent(
+                    nodeIp = it.nodeIp,
+                    nodesAgentStatus = it.agentStatus,
+                    nodesAgentVersion = "1.0.0"
+                )
+            }
+        )
     }
 
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
