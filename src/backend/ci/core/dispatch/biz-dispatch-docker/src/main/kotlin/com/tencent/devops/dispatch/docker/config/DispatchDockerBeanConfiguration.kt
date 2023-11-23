@@ -40,11 +40,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
+@DependsOn(value = ["jooqConfiguration"])
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchDockerBeanConfiguration {
 
