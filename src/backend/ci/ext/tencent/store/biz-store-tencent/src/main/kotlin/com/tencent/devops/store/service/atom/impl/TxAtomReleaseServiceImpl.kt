@@ -204,7 +204,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     dslContext,
                     marketAtomCreateRequest.language,
                     StoreTypeEnum.ATOM
-                ).sampleProjectPath,
+                )!!.sampleProjectPath,
                 namespaceId = pluginNameSpaceId.toInt(),
                 visibilityLevel = marketAtomCreateRequest.visibilityLevel,
                 tokenType = TokenTypeEnum.PRIVATE_KEY,
