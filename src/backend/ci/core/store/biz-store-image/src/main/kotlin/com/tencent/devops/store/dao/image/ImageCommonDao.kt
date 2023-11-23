@@ -26,10 +26,19 @@
  */
 package com.tencent.devops.store.dao.image
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
+import com.tencent.devops.model.store.tables.TStorePipelineRel
+import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -59,7 +68,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TImage.T_IMAGE) {
-            dslContext.select(IMAGE_CODE.`as`("storeCode")).from(this)
+            dslContext.select(IMAGE_CODE.`as`(KEY_STORE_CODE)).from(this)
                 .where(IMAGE_NAME.contains(storeName))
                 .groupBy(IMAGE_CODE)
                 .fetch()
@@ -85,15 +94,23 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         dslContext: DSLContext,
         storeCodeList: List<String>
     ): Result<out Record>? {
-        return with(TImage.T_IMAGE) {
-            dslContext.select(
-                IMAGE_CODE.`as`("storeCode"),
-                VERSION.`as`("version")
-            ).from(this)
-                .where(IMAGE_CODE.`in`(storeCodeList))
-                .and(LATEST_FLAG.eq(true))
-                .fetch()
-        }
+        val ti = TImage.T_IMAGE
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
+        val tspir = TStorePipelineRel.T_STORE_PIPELINE_REL
+        return dslContext.select(
+            ti.IMAGE_CODE.`as`(KEY_STORE_CODE),
+            ti.VERSION.`as`(KEY_VERSION),
+            tspr.PROJECT_CODE.`as`(KEY_PROJECT_CODE),
+            tspr.CREATOR.`as`(KEY_CREATOR),
+            tspir.PIPELINE_ID.`as`(KEY_PIPELINE_ID)
+        ).from(ti)
+            .join(tspr).on(ti.IMAGE_CODE.eq(tspr.STORE_CODE))
+            .join(tspir).on(ti.IMAGE_CODE.eq(tspir.STORE_CODE).and(tspr.STORE_TYPE.eq(tspir.STORE_TYPE)))
+            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .and(ti.LATEST_FLAG.eq(true))
+            .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            .and(ti.IMAGE_CODE.`in`(storeCodeList))
+            .fetch()
     }
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
