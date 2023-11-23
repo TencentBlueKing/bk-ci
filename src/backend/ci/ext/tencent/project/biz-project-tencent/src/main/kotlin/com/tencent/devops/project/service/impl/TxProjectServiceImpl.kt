@@ -250,7 +250,11 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val iamV0List = getV0UserProject(userId, accessToken)
+        val iamV0List = projectDao.list(
+            dslContext = dslContext,
+            englishNameList = getV0UserProject(userId, accessToken).toSet(),
+            routerTag = AuthSystemType.RBAC_AUTH_TYPE.value
+        ).map { it.englishName }
         logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
