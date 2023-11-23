@@ -731,12 +731,12 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String) {
+    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(
                     LATEST_TEST_FLAG,
-                    DSL.case_().`when`(ID.eq(atomCode), true).otherwise(false)
+                    DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
                 )
                 .set(MODIFIER, userId)
                 .where(ATOM_CODE.eq(atomCode))

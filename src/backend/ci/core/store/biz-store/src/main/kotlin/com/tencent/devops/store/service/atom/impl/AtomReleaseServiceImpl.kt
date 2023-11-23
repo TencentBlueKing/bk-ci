@@ -1455,7 +1455,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     marketAtomDao.setupAtomLatestTestFlag(
                         dslContext = dslContext,
                         userId = userId,
-                        atomCode = atomCode
+                        atomCode = atomCode,
+                        atomId = atomId
                     )
                 }
             }

@@ -95,7 +95,8 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 marketAtomDao.setupAtomLatestTestFlag(
                     dslContext = dslContext,
                     userId = storeBuildResultRequest.userId,
-                    atomCode = atomCode
+                    atomCode = atomCode,
+                    atomId = atomId
                 )
             }
             // 插件errorCodes.json文件数据入库
