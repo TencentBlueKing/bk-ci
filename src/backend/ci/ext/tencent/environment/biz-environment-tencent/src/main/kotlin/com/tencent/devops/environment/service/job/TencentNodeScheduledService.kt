@@ -4,6 +4,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.service.CmdbNodeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +16,8 @@ import org.springframework.stereotype.Service
 class TencentNodeScheduledService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val tencentQueryFromCmdbService: TencentQueryFromCmdbService
+    private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
+    private val cmdbNodeService: CmdbNodeService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentNodeScheduledService::class.java)
@@ -57,10 +60,28 @@ class TencentNodeScheduledService @Autowired constructor(
         val nodeRecords = nodeDao.getCmdbNodes(dslContext) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
         val nodeIpList = nodeRecords.map { it.nodeIp } // 要判断在不在cmdb中的 所有ip
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList) // 从cmdb中查到的 所有ip - 记录 映射
-        val invalidIpList = nodeIpList.filterNot {
-            ipToCmdbInfoMap?.containsKey(it) ?: false
-        } // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
+
+        // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
+        val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
         nodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+
+        // 在cmdb中，但对应节点的 NODE_STATUS字段==NOT_IN_CMDB，再查询一次CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
+        val inCmdbIpList = nodeIpList.filter { ipToCmdbInfoMap?.containsKey(it) ?: false }
+        val inCmdbIpRecords = nodeDao.getNotInCmdbNodes(dslContext, inCmdbIpList)
+        if (inCmdbIpRecords.isNotEmpty()) {
+            val inCmdbIpList = inCmdbIpRecords.map { it.nodeIp } // 需要再查询一次CC的ip
+            val inCmdbSvrIdList = inCmdbIpList.map {
+                ipToCmdbInfoMap?.get(it)?.serverId?.toLong()
+            }.filterNotNull() // 需要再查询一次CC的svrId
+
+            val (svrIdQueryCCRes, _, _)
+                = cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
+            val ccData = svrIdQueryCCRes.data?.info
+            val inCCIpList = ccData?.mapNotNull { it.bkHostInnerip }
+            val notInCCIpList = inCmdbIpList.filterNot { inCCIpList?.contains(it) ?: false }
+            if (!inCCIpList.isNullOrEmpty()) nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC-改为NORMAL
+            if (notInCCIpList.isNotEmpty()) nodeDao.updateNodeNotInCCByIp(dslContext, notInCCIpList) // 不在CC-改为NOT_IN_CC
+        }
         if (logger.isDebugEnabled) logger.debug("---[checkNodeInCmdb]End Check whether the node is in the cmdb.---")
     }
 }

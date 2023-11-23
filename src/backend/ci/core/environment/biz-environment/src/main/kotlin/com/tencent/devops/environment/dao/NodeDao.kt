@@ -48,6 +48,40 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .where(NODE_IP.`in`(notInCCIpList))
+                .execute()
+        }
+    }
+
+    fun updateNodeInCCByIp(dslContext: DSLContext, inCCIpList: List<String>) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(NODE_STATUS, NodeStatus.NORMAL.toString())
+                .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .where(NODE_IP.`in`(inCCIpList))
+                .execute()
+        }
+    }
+
+    fun getNotInCmdbNodes(dslContext: DSLContext, ipList: List<String>): MutableList<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(NODE_IP.`in`(ipList))
+                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.toString()))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }.map {
+            if (it != null) nodeRecords.add(it)
+        }
+        return nodeRecords
+    }
+
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
         with(TNode.T_NODE) {
             dslContext.update(this)
@@ -57,6 +91,7 @@ class NodeDao {
                 .execute()
         }
     }
+
     fun getCmdbNodes(dslContext: DSLContext): MutableList<TNodeRecord> {
         val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
         with(TNode.T_NODE) {
@@ -69,6 +104,7 @@ class NodeDao {
         }
         return nodeRecords
     }
+
     fun updateNodeNotInCC(dslContext: DSLContext, hostList: List<Long>) {
         val hostIdDefault: Long? = null
         with(TNode.T_NODE) {
