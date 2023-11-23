@@ -67,6 +67,7 @@ import io.mockk.mockk
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.LinkedList
+import org.json.JSONObject
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -86,13 +87,14 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         client = client, creator = creator, transferCache = transferCache
     )
     private val dispatchTransfer: DispatchTransfer = TXDispatchTransfer(
-        client = client, objectMapper = objectMapper, inner = creator, transferCache = transferCache
+        client = client, objectMapper = objectMapper, inner = creator
     )
     private val modelContainer: ContainerTransfer = ContainerTransfer(
         client = client,
         objectMapper = objectMapper,
         transferCache = transferCache,
-        dispatchTransfer = dispatchTransfer
+        dispatchTransfer = dispatchTransfer,
+        inner = creator
     )
     private val elementTransfer: ElementTransfer = ElementTransfer(
         client = client, creator = creator, transferCache = transferCache, triggerTransfer = triggerTransfer
@@ -106,7 +108,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         objectMapper = objectMapper,
         containerTransfer = modelContainer,
         elementTransfer = elementTransfer,
-        variableTransfer = variableTransfer
+        variableTransfer = variableTransfer,
+        transferCacheService = transferCache,
+        transferCreator = creator
     )
     private val modelTransfer: ModelTransfer = ModelTransfer(
         client = client,
@@ -382,6 +386,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
     @ParameterizedTest
     @ValueSource(
         strings = [
+            "yaml-model-004-v3",
             "yaml-model-003-v3-template",
             "yaml-model-002-v3",
             "yaml-model-001-v3"
@@ -432,7 +437,10 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         val setting = modelTransfer.yaml2Setting(input)
         watcher.start("last")
         val newModel = JsonUtil.toJson(PipelineModelAndSetting(model, setting))
-        Assertions.assertEquals(newModel, JsonUtil.toJson(JsonUtil.to(modelFile)))
+        val compare = JsonUtil.toJson(JsonUtil.to(modelFile))
+        if (!JSONObject(newModel).similar(JSONObject(compare))) {
+            Assertions.assertEquals(newModel, compare)
+        }
         watcher.stop()
         println(watcher.toString())
     }
