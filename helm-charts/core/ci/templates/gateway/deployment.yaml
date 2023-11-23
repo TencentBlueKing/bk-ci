@@ -53,6 +53,8 @@ spec:
       initContainers:
         - name: frontend
           image: {{ include "bkci-frontend.image" . }}
+          securityContext:
+            privileged: true
           volumeMounts:
           - mountPath: /tmp/frontend
             name: frontend
@@ -61,6 +63,8 @@ spec:
             - "-c"
             - |
               cp -r /data/workspace/frontend/* /tmp/frontend/
+              sysctl -w net.core.somaxconn=65535
+              sysctl -w net.ipv4.ip_local_port_range="1024 65535"
       containers:
         - name: gateway
           image: {{ include "bkci-gateway.image" . }}
