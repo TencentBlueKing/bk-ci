@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -158,12 +159,13 @@ class ExpertSupportService @Autowired constructor(
             SendNotifyMessageTemplateRequest(
                 templateCode = rtxAssignTemplate ?: return false,
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                titleParams = null,
-                bodyParams = mapOf(
+                titleParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
                     "id" to id.toString(),
-                    "userId" to userId
+                    "userId" to userId,
+                    "time" to LocalDateTime.now().format(dateTimeFormatter)
                 ),
+                bodyParams = null,
                 markdownContent = true
             )
         )
@@ -174,5 +176,6 @@ class ExpertSupportService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH:mm:ss")
     }
 }
