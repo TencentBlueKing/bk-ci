@@ -162,7 +162,7 @@ class ExpertSupportService @Autowired constructor(
                 bodyParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
                     "id" to id.toString(),
-                    "userId" to userId,
+                    "userId" to userId
                 ),
                 markdownContent = true
             )
@@ -174,6 +174,5 @@ class ExpertSupportService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
-        const val SHARED_OPERATOR = "system"
     }
 }
