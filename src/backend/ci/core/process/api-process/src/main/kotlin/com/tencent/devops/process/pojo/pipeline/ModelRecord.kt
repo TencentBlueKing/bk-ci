@@ -95,5 +95,7 @@ data class ModelRecord(
     @ApiModelProperty("备注", required = false)
     val remark: String?,
     @ApiModelProperty("触发信息（包括代码库等）", required = false)
-    val webhookInfo: WebhookInfo?
+    val webhookInfo: WebhookInfo?,
+    @ApiModelProperty("约束模式下的模板信息", required = false)
+    var templateInfo: TemplateInfo? = null
 )

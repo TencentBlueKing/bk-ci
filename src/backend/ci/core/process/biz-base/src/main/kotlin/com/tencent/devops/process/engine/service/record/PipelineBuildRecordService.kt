@@ -349,7 +349,8 @@ class PipelineBuildRecordService @Autowired constructor(
             ),
             material = buildInfo.material,
             remark = buildInfo.remark,
-            webhookInfo = buildInfo.webhookInfo
+            webhookInfo = buildInfo.webhookInfo,
+            templateInfo = pipelineInfo.templateInfo
         )
     }
 

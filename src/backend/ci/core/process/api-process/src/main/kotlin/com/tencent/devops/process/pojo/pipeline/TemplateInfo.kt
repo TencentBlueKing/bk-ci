@@ -25,49 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.pipeline.TemplateInfo
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线信息")
-data class PipelineInfo(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("流水线DI")
-    val pipelineId: String,
-    @ApiModelProperty("模板ID")
-    val templateId: String?,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String,
-    @ApiModelProperty("流水线描述")
-    val pipelineDesc: String,
-    @ApiModelProperty("版本")
-    var version: Int = 1,
-    @ApiModelProperty("创建时间")
-    val createTime: Long = 0,
-    @ApiModelProperty("更新时间")
-    val updateTime: Long = 0,
-    @ApiModelProperty("创建者")
-    val creator: String,
-    @ApiModelProperty("上一次的更新者")
-    val lastModifyUser: String,
-    @ApiModelProperty("渠道号")
-    val channelCode: ChannelCode,
-    @ApiModelProperty("是否能够手动启动")
-    val canManualStartup: Boolean,
-    @ApiModelProperty("是否可以跳过")
-    val canElementSkip: Boolean,
-    @ApiModelProperty("任务数")
-    val taskCount: Int,
-    @ApiModelProperty("版本名称")
-    var versionName: String = "init",
-    @ApiModelProperty("ID")
-    val id: Long?,
-    @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null,
-    @ApiModelProperty("约束模式下的模板信息", required = false)
-    var templateInfo: TemplateInfo? = null
+@ApiModel("子流水线参数键值对")
+data class TemplateInfo(
+    @ApiModelProperty("模板ID", required = true)
+    val templateId: String,
+    @ApiModelProperty("版本号", required = true)
+    val version: Long,
+    @ApiModelProperty("版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("关联模式", required = true)
+    val instanceType: PipelineInstanceTypeEnum,
+    @ApiModelProperty("版本描述", required = true)
+    val desc: String? = null
 )
