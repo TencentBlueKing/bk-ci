@@ -742,7 +742,7 @@ class ProjectDao {
     fun countByProjectName(
         dslContext: DSLContext,
         projectName: String,
-        channelCodes: List<String>,
+        channelCodes: List<String>
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
