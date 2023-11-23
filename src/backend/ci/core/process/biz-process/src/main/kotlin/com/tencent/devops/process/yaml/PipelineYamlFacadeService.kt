@@ -148,7 +148,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         logger.info("pipeline yaml trigger|$requestId|$scmType")
         val action = eventActionFactory.load(eventObject)
         if (action == null) {
-            logger.warn("pac trigger|request event not support|$eventObject")
+            logger.warn("pipeline yaml trigger|request event not support|$eventObject")
             return
         }
         val externalId = action.data.eventCommon.gitProjectId

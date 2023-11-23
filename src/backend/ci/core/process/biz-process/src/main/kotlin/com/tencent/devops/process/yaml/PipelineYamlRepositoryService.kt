@@ -200,8 +200,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
         val repoHashId = action.data.setting.repoHashId
+        val triggerPipeline = action.data.context.pipeline
+        val userId = action.data.getUserId()
+        logger.info("deleteYamlPipeline|$userId|$projectId|pipeline:${triggerPipeline}|yamlFile:${yamlFile}")
         pipelineYamlService.delete(
-            userId = action.data.getUserId(),
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath

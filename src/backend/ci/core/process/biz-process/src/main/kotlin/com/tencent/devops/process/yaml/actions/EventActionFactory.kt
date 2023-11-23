@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
@@ -46,6 +47,7 @@ import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.actions.tgit.TGitIssueActionGit
+import com.tencent.devops.process.yaml.actions.tgit.TGitMrActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitNoteActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitPushActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitReviewActionGit
@@ -98,6 +100,12 @@ class EventActionFactory @Autowired constructor(
                     apiService = tGitApiService
                 )
                 tGitPushAction
+            }
+            is GitMergeRequestEvent -> {
+                val tGitMrAction = TGitMrActionGit(
+                    apiService = tGitApiService
+                )
+                tGitMrAction
             }
             is GitTagPushEvent -> {
                 val tGitTagPushAction = TGitTagPushActionGit(

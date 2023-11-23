@@ -376,12 +376,12 @@ class TGitMrActionGit(
 
         sourceBranchYamlPathList.forEach { (source, blobId) ->
             when {
-                // 源分支有，目标分支没有，变更列表有，以源分支为主，不需要校验版本
+                // 源分支有，目标分支没有，变更列表有，以源分支为主，需要校验版本
                 source !in targetList && source in changeSet -> {
                     result.add(
                         YamlPathListEntry(
                             source,
-                            CheckType.NO_NEED_CHECK,
+                            CheckType.NEED_CHECK,
                             sourceRef,
                             blobId
                         )

@@ -262,12 +262,10 @@ class PipelineYamlService(
     }
 
     fun delete(
-        userId: String,
         projectId: String,
         repoHashId: String,
         filePath: String
     ) {
-        logger.info("delete pipeline yaml|$userId|$projectId|$repoHashId|$filePath")
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.delete(
