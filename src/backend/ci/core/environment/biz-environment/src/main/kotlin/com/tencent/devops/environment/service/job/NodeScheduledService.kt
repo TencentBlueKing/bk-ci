@@ -4,6 +4,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,10 +60,21 @@ class NodeScheduledService @Autowired constructor(
         val hostIdList = nodeRecords.map { it.hostId } // 要判断在不在cc中的 所有host_id
         val nodeCCList = queryFromCCService.queryCCFindHostBizRelations(hostIdList).data // 在cc中的 host_id对应cc记录
         val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
-        val invalidHostIdList = hostIdList.filterNot {
-            hostIdToNodeCCMap?.containsKey(it) ?: false
-        } // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
+        // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
+        val invalidHostIdList = hostIdList.filterNot { hostIdToNodeCCMap?.containsKey(it) ?: false }
         nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
+
+        // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：不在CC中 - 不处理；在CC中 - 将host_id写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
+        val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(dslContext)
+        val notInCCIpList = nodeRecordsNotInCC.map { it.nodeIp }
+        val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
+            listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
+        ).data?.info
+        if (!inCCInfoList.isNullOrEmpty()) {
+            nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
+            val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }
+            nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC中 - NODE_STATUS字段 改成 NORMAL
+        }
         if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
     }
 }

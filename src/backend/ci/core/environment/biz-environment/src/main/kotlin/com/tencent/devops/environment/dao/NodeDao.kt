@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TEnv
@@ -65,6 +66,18 @@ class NodeDao {
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(inCCIpList))
                 .execute()
+        }
+    }
+
+    fun updateNodeHostIdByIp(dslContext: DSLContext, ccInfoList: List<CCInfo>) {
+        with(TNode.T_NODE) {
+            ccInfoList.map {
+                dslContext.update(this)
+                    .set(HOST_ID, it.bkHostId)
+                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                    .where(NODE_IP.eq(it.bkHostInnerip))
+                    .execute()
+            }
         }
     }
 
@@ -115,6 +128,19 @@ class NodeDao {
                 .where(HOST_ID.`in`(hostList))
                 .execute()
         }
+    }
+
+    fun getNodesNotInCC(dslContext: DSLContext): MutableList<TNodeRecord> {
+        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+        with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }.map {
+            if (it != null) nodeRecords.add(it)
+        }
+        return nodeRecords
     }
 
     fun getNodesWhoseHostIdNotNull(dslContext: DSLContext): MutableList<TNodeRecord> {
