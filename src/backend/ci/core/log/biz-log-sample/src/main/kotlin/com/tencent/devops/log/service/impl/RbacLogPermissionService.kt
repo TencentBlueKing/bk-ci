@@ -13,6 +13,23 @@ class RbacLogPermissionService @Autowired constructor(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(),
+            action = RbacAuthUtils.buildAction(
+                permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT
+            ),
+            projectCode = projectCode,
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
+    }
+
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
@@ -21,7 +38,7 @@ class RbacLogPermissionService @Autowired constructor(
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken() ?: "",
+            token = tokenCheckService.getSystemToken(),
             action = RbacAuthUtils.buildAction(
                 permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT
             ),

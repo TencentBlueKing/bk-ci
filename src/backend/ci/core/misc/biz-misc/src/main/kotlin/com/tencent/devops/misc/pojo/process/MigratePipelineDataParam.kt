@@ -39,10 +39,10 @@ data class MigratePipelineDataParam(
     val projectId: String,
     val pipelineId: String,
     val cancelFlag: Boolean,
-    val semaphore: Semaphore,
-    val doneSignal: CountDownLatch,
     val dslContext: DSLContext,
     val migratingShardingDslContext: DSLContext,
     val processDao: ProcessDao,
-    val processDataMigrateDao: ProcessDataMigrateDao
+    val processDataMigrateDao: ProcessDataMigrateDao,
+    val semaphore: Semaphore? = null,
+    val doneSignal: CountDownLatch? = null
 )

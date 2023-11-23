@@ -22,6 +22,14 @@ object BkApiUtil {
     }
 
     /**
+     * 获取需要进行api接口权限校验的流水线在缓存中的key
+     * @return 需要进行api接口权限校验的流水线在缓存中的key
+     */
+    fun getApiAccessLimitPipelinesKey(): String {
+        return "${BkApiHandleType.PIPELINE_API_ACCESS_LIMIT}:pipelines"
+    }
+
+    /**
      * 把接口权限校验标识保存到ThreadLocal中
      * @param permissionFlag 当次接口调用权限校验标识
      */

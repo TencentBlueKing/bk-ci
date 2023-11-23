@@ -30,6 +30,13 @@ package com.tencent.devops.log.service
 import com.tencent.devops.common.auth.api.AuthPermission
 
 interface LogPermissionService {
+
+    fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean
+
     fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,

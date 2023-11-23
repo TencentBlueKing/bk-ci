@@ -56,9 +56,15 @@ abstract class AbstractPipelinePermissionService constructor(
      * @param userId userId
      * @param projectId projectId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
+    ): Boolean {
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,

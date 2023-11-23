@@ -33,7 +33,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -43,13 +42,32 @@ import java.util.concurrent.TimeUnit
 class V3LogPermissionService @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val client: Client,
-    private val redisOperation: RedisOperation
+    private val client: Client
 ) : LogPermissionService {
+
     private val projectOwnerCache = Caffeine.newBuilder()
         .maximumSize(10000)
         .expireAfterAccess(1, TimeUnit.HOURS)
         .build<String/*projectId*/, String/*userId*/>()
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
+        logger.info("checkPipelinePermission only check action project[$projectCode]")
+        if (isProjectOwner(projectCode, userId)) {
+            logger.info("project owner checkPipelinePermission success |$projectCode|$userId")
+            return true
+        }
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectCode,
+            permission = permission ?: AuthPermission.VIEW
+        )
+    }
 
     override fun verifyUserLogPermission(
         projectCode: String,

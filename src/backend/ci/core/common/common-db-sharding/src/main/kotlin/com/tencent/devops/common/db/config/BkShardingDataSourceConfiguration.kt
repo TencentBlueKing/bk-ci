@@ -30,6 +30,7 @@ package com.tencent.devops.common.db.config
 import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.db.pojo.ARCHIVE_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.BindingTableGroupConfig
 import com.tencent.devops.common.db.pojo.DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.DataSourceConfig
@@ -89,6 +90,9 @@ class BkShardingDataSourceConfiguration {
     @Value("\${sharding.databaseShardingStrategy.migratingAlgorithmClassName:#{null}}")
     private val migratingDatabaseAlgorithmClassName: String? = null
 
+    @Value("\${sharding.databaseShardingStrategy.archiveAlgorithmClassName:#{null}}")
+    private val archiveDatabaseAlgorithmClassName: String? = null
+
     @Value("\${sharding.databaseShardingStrategy.shardingField:#{null}}")
     private val databaseShardingField: String? = null
 
@@ -97,6 +101,9 @@ class BkShardingDataSourceConfiguration {
 
     @Value("\${sharding.tableShardingStrategy.migratingAlgorithmClassName:#{null}}")
     private val migratingTableAlgorithmClassName: String? = null
+
+    @Value("\${sharding.tableShardingStrategy.archiveAlgorithmClassName:#{null}}")
+    private val archiveTableAlgorithmClassName: String? = null
 
     @Value("\${sharding.tableShardingStrategy.shardingField:#{null}}")
     private val tableShardingField: String? = null
@@ -192,6 +199,29 @@ class BkShardingDataSourceConfiguration {
         )
     }
 
+    @Bean
+    @ConditionalOnProperty(prefix = "sharding", name = ["archiveFlag"], havingValue = "Y")
+    fun archiveShardingDataSource(config: DataSourceProperties, registry: MeterRegistry): DataSource {
+        val archiveDataSourceConfigs = config.archiveDataSourceConfigs
+        val archiveTableRuleConfigs = config.archiveTableRuleConfigs
+        if (archiveDataSourceConfigs == null && archiveTableRuleConfigs == null) {
+            logger.warn("archiveDataSourceConfigs and archiveTableRuleConfigs cannot be empty at the same time")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "archiveDataSourceConfigs and archiveTableRuleConfigs cannot be empty at the same time"
+            )
+        }
+        return createShardingDataSource(
+            dataSourcePrefixName = ARCHIVE_DATA_SOURCE_NAME_PREFIX,
+            databaseAlgorithmClassName = archiveDatabaseAlgorithmClassName,
+            tableAlgorithmClassName = archiveTableAlgorithmClassName,
+            dataSourceConfigs = archiveDataSourceConfigs ?: config.dataSourceConfigs,
+            tableRuleConfigs = archiveTableRuleConfigs ?: config.tableRuleConfigs,
+            bindingTableGroupConfigs = config.archiveBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
+            registry = registry
+        )
+    }
+
     fun createShardingDataSource(
         dataSourcePrefixName: String,
         databaseAlgorithmClassName: String? = null,
@@ -268,7 +298,8 @@ class BkShardingDataSourceConfiguration {
     fun getTableRuleConfiguration(
         dataSourcePrefixName: String,
         dataSourceSize: Int,
-        tableRuleConfig: TableRuleConfig
+        tableRuleConfig: TableRuleConfig,
+        logicTableSuffixName: String? = null
     ): ShardingTableRuleConfiguration? {
         // 生成实际节点规则
         val tableName = tableRuleConfig.name
@@ -276,27 +307,33 @@ class BkShardingDataSourceConfiguration {
         val tableShardingStrategy = tableRuleConfig.tableShardingStrategy
         val lastDsIndex = dataSourceSize - 1
         val lastTableIndex = tableRuleConfig.shardingNum - 1
+        // 生成逻辑表名称
+        val logicTableName = if (logicTableSuffixName.isNullOrBlank()) {
+            tableName
+        } else {
+            "${tableName}_${logicTableSuffixName}"
+        }
         val actualDataNodes = if (databaseShardingStrategy != null &&
             tableShardingStrategy == TableShardingStrategyEnum.SHARDING
         ) {
             // 生成分库分表场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${dataSourcePrefixName}0.${tableName}_\${0..$lastTableIndex}"
+                "${dataSourcePrefixName}0.${logicTableName}_\${0..$lastTableIndex}"
             } else {
-                "$dataSourcePrefixName\${0..$lastDsIndex}.${tableName}_\${0..$lastTableIndex}"
+                "$dataSourcePrefixName\${0..$lastDsIndex}.${logicTableName}_\${0..$lastTableIndex}"
             }
         } else if (databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
             // 生成分库场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${dataSourcePrefixName}0.$tableName"
+                "${dataSourcePrefixName}0.$logicTableName"
             } else {
-                "$dataSourcePrefixName\${0..$lastDsIndex}.$tableName"
+                "$dataSourcePrefixName\${0..$lastDsIndex}.$logicTableName"
             }
         } else if (databaseShardingStrategy == null && tableShardingStrategy == TableShardingStrategyEnum.SHARDING) {
             // 生成分表场景下的节点规则
-            "${dataSourcePrefixName}0.${tableName}_\${0..$lastTableIndex}"
+            "${dataSourcePrefixName}0.${logicTableName}_\${0..$lastTableIndex}"
         } else {
-            "${dataSourcePrefixName}0.$tableName"
+            "${dataSourcePrefixName}0.$logicTableName"
         }
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         logger.info(

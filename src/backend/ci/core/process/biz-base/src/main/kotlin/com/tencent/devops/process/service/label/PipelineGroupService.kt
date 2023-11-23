@@ -460,13 +460,21 @@ class PipelineGroupService @Autowired constructor(
         return pairs
     }
 
-    fun getViewLabelToPipelinesMap(projectId: String, labels: List<String>): Map<String, List<String>> {
+    fun getViewLabelToPipelinesMap(
+        projectId: String,
+        labels: List<String>,
+        queryDSLContext: DSLContext? = null
+    ): Map<String, List<String>> {
         val labelIds = labels.map { decode(it) }.toSet()
         if (labelIds.isEmpty()) {
             return emptyMap()
         }
 
-        val pipelines = pipelineLabelPipelineDao.listPipelines(dslContext, projectId, labelIds)
+        val pipelines = pipelineLabelPipelineDao.listPipelines(
+            dslContext = queryDSLContext ?: dslContext,
+            projectId = projectId,
+            labelId = labelIds
+        )
 
         val labelToPipelineMap = mutableMapOf<String, MutableList<String>>()
         pipelines.forEach {

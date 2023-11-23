@@ -754,13 +754,14 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean? = false
+        delete: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val template = templatePipelineDao.get(queryDslContext ?: dslContext, projectId, pipelineId)
         val templateId = template?.templateId
         return pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
+                dslContext = queryDslContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -1158,9 +1159,10 @@ class PipelineRepositoryService constructor(
         sortType: PipelineSortType,
         collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+        val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
             projectId = projectId,
+            deleteFlag = true,
             days = days,
             offset = offset,
             limit = limit,

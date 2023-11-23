@@ -28,9 +28,13 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserArchivePipelineResource
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.ArchivePipelineFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,6 +63,36 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         }
 
         return Result(archivePipelineFacadeService.getDownloadAllPipelines(userId, projectId))
+    }
+
+    override fun migrateArchivePipelineData(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        return Result(archivePipelineFacadeService.migrateArchivePipelineData(userId, projectId, pipelineId))
+    }
+
+    override fun getArchivedPipelineList(
+        userId: String,
+        projectId: String,
+        page: Int,
+        pageSize: Int,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?,
+        sortType: PipelineSortType?,
+        collation: PipelineCollation?
+    ): Result<Page<PipelineInfo>> {
+        return Result(
+            archivePipelineFacadeService.getArchivedPipelineList(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                filterByPipelineName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels,
+                sortType = sortType,
+                collation = collation
+            )
+        )
     }
 
     override fun getAllBuildNo(

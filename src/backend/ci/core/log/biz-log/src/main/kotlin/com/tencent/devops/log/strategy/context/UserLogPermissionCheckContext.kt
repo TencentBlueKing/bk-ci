@@ -25,19 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.lock
+package com.tencent.devops.log.strategy.context
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.log.strategy.bus.IUserLogPermissionCheckStrategy
 
-class ProjectMigrationLock(redisOperation: RedisOperation, projectId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "lock:project:$projectId:migration",
-        expiredTimeInSeconds = 1800L
+class UserLogPermissionCheckContext(
+    private val strategy: IUserLogPermissionCheckStrategy
+) {
+
+    fun checkUserLogPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
     ) {
-    override fun decorateKey(key: String): String {
-        // key无需加上集群信息前缀来区分
-        return key
+        strategy.checkUserLogPermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission
+        )
     }
 }

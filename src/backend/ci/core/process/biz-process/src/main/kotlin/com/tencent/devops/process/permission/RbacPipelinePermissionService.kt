@@ -53,11 +53,16 @@ class RbacPipelinePermissionService constructor(
     val authResourceApi: AuthResourceApi
 ) : PipelinePermissionService {
 
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
+    ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = authResourceType ?: resourceType,
             permission = permission,
             projectCode = projectId
         )
