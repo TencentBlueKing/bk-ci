@@ -8,25 +8,35 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+
 @Service
 class ExpertSupportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val expertSupportDao: ExpertSupportDao
+    private val expertSupportDao: ExpertSupportDao,
+    private val workspaceCommon: WorkspaceCommon
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
+
+    @Value("\${expertsupport.rtxAssignTemplate:#{null}}")
+    val rtxAssignTemplate: String? = null
 
     @Value("\${expertsupport.jumpurl:#{null}}")
     val jumpUrl: String? = null
@@ -45,13 +55,13 @@ class ExpertSupportService @Autowired constructor(
             status = ExpertSupportStatus.CREATE,
             content = data.content,
             internalTime = DEFAULT_WAIT_TIME
+        )
+        if (fetchExpertSupportData.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
+                params = arrayOf(data.content)
             )
-            if (fetchExpertSupportData.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.REAPPLY_EXPERT_SUPPORT_ERROR.errorCode,
-                    params = arrayOf(data.content)
-                )
-            }
+        }
 
         val id = expertSupportDao.addSupport(
             dslContext = dslContext,
@@ -121,8 +131,49 @@ class ExpertSupportService @Autowired constructor(
         expertSupportDao.deleteExpertSupportConfig(dslContext, id)
     }
 
+    fun assignExpSup(userId: String, id: Long, workspaceName: String): Boolean {
+        // 校验这个人是不是可以分配的运维
+        if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
+            .map { it.content }.toSet().contains(userId)
+        ) {
+            return false
+        }
+
+        // 分配
+        workspaceCommon.shareWorkspace(
+            workspaceName = workspaceName,
+            operator = "system",
+            assigns = listOf(
+                ProjectWorkspaceAssign(
+                    userId = userId,
+                    type = WorkspaceShared.AssignType.VIEWER,
+                    expiration = LocalDateTime.now().plusHours(1)
+                )
+            ),
+            mountType = WorkspaceMountType.START
+        )
+
+        // 发送认领通知
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = rtxAssignTemplate ?: return false,
+                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
+                titleParams = null,
+                bodyParams = mapOf(
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
+                    "id" to id.toString(),
+                    "userId" to userId,
+                ),
+                markdownContent = true
+            )
+        )
+
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
+        const val SHARED_OPERATOR = "system"
     }
 }

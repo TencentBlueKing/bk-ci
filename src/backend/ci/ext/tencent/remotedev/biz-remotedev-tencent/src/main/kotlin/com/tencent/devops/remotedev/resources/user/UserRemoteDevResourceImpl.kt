@@ -41,12 +41,13 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
@@ -57,7 +58,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceCommon: WorkspaceCommon,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val expertSupportService: ExpertSupportService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -139,5 +141,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
         return Result(permissionService.init1Password(userId, workspaceName))
+    }
+
+    override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
+        return Result(expertSupportService.assignExpSup(userId, id, workspaceName))
     }
 }
