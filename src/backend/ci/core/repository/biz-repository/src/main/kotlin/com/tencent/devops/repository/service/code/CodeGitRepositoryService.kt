@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
@@ -48,6 +50,7 @@ import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -117,6 +120,16 @@ class CodeGitRepositoryService @Autowired constructor(
                 )
             )
         }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -126,11 +139,13 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId: Long? = 0L
+        var gitProjectId: Long? = null
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
-            logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
-                            "targetUrl=[${repository.url}]")
+            logger.info(
+                "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
+                        "targetUrl=[${repository.url}]"
+            )
             // Git项目ID
             gitProjectId = getGitProjectId(
                 repo = repository,
@@ -143,7 +158,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeGitDao.edit(
                 dslContext = transactionContext,
@@ -199,6 +215,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     userName = repository.userName
                 )
             }
+
             RepoAuthType.HTTP -> {
                 if (repoCredentialInfo.username.isEmpty()) {
                     throw OperationException(
@@ -221,6 +238,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     repoUsername = repository.userName
                 )
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = REPO_TYPE_NO_NEED_CERTIFICATION,
@@ -280,6 +298,16 @@ class CodeGitRepositoryService @Autowired constructor(
         val repoCredentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
         // 若授权类型不为OAUTH则需要检查Token
         if (repository.authType != RepoAuthType.OAUTH) {
+            // 授权凭证信息
+            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
+                repoCredentialInfo.token = scmService.getGitSession(
+                    type = ScmType.CODE_GIT,
+                    username = repoCredentialInfo.username,
+                    password = repoCredentialInfo.password,
+                    url = repository.url
+                )?.privateToken ?: ""
+            }
             val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository

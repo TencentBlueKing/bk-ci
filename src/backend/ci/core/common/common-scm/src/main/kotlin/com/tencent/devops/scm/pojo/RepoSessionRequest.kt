@@ -25,17 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import io.swagger.annotations.ApiParam
 
-/**
- * webhook事件触发插件参数配置
- */
-data class WebhookElementParams(
-    val repositoryConfig: RepositoryConfig,
-    val scmType: ScmType,
-    val eventType: CodeEventType?
+data class RepoSessionRequest(
+    @ApiParam("仓库类型", required = true)
+    val type: ScmType,
+    @ApiParam("username", required = true)
+    val username: String,
+    @ApiParam("password", required = true)
+    val password: String,
+    @ApiParam("url", required = true)
+    val url: String
 )

@@ -24,28 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.blueking.service.inner
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.notify.service.OrgService
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Suppress("ALL")
-class OrgServiceImpl : OrgService {
-
-    override fun parseStaff(staffs: Set<String>): Set<String> {
-        val result = LinkedHashSet<String>()
-        val staffIds = LinkedHashSet<Int>()
-        if (staffs.isNotEmpty()) {
-            staffs.forEach { staff ->
-                try {
-                    val staffId = Integer.parseInt(staff, 10)
-                    if (staffId > 10) {
-                        staffIds.add(staffId)
-                    }
-                } catch (ignore: NumberFormatException) {
-                    result.add(staff)
-                }
-            }
-        }
-        return result
-    }
-}
+@ApiModel("工蜂会话信息")
+data class GitSession(
+    val id: String,
+    @ApiModelProperty("邮箱地址")
+    val email: String,
+    @ApiModelProperty("用户名")
+    val username: String,
+    @JsonProperty("private_token")
+    val privateToken: String
+)
