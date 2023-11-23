@@ -74,10 +74,10 @@ abstract class AtomBaseDao {
         }
     }
 
-    fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean = false): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(BRANCH_TEST_FLAG.eq(false)))
+                .where(ATOM_CODE.eq(atomCode).and(BRANCH_TEST_FLAG.eq(branchTestFlag)))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

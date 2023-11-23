@@ -344,7 +344,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val name = it[NAME] as String
             val atomCode = it[KEY_ATOM_CODE] as String
             val version = it[VERSION] as String
-            val defaultVersion = VersionUtils.convertLatestVersion(version)
+            val branchTestFlag = it[KEY_BRANCH_TEST_FLAG] as Boolean
+            val defaultVersion = if (branchTestFlag) {
+                version
+            } else {
+                VersionUtils.convertLatestVersion(version)
+            }
             val classType = it[KEY_CLASS_TYPE] as String
             val serviceScopeStr = it[KEY_SERVICE_SCOPE] as? String
             val honorInfos = atomHonorInfoMap[atomCode]

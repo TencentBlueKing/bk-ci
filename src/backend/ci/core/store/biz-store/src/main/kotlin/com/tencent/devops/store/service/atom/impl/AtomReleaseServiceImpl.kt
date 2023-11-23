@@ -1452,10 +1452,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
                 val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode)
                 latestTestVersionId?.let {
-                    marketAtomDao.setupAtomLatestTestFlagByAtomId(
+                    marketAtomDao.setupAtomLatestTestFlag(
                         dslContext = dslContext,
                         userId = userId,
-                        atomId = latestTestVersionId
+                        atomCode = atomCode,
+                        atomId = atomId
                     )
                 }
             }

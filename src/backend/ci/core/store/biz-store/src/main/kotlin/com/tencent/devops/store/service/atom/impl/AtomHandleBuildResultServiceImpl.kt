@@ -92,9 +92,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 60L
             ).use { redisLock ->
                 redisLock.lock()
-                marketAtomDao.setupAtomLatestTestFlagByAtomId(
+                marketAtomDao.setupAtomLatestTestFlag(
                     dslContext = dslContext,
                     userId = storeBuildResultRequest.userId,
+                    atomCode = atomCode,
                     atomId = atomId
                 )
             }

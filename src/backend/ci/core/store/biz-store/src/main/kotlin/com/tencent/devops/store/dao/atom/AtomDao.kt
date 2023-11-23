@@ -644,6 +644,7 @@ class AtomDao : AtomBaseDao() {
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
         if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
                     .join(tspr)
@@ -696,6 +697,7 @@ class AtomDao : AtomBaseDao() {
             ta.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
             ta.WEIGHT.`as`(KEY_WEIGHT),
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
+            ta.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
             tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
@@ -805,6 +807,7 @@ class AtomDao : AtomBaseDao() {
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
         val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {
             0
@@ -990,8 +993,14 @@ class AtomDao : AtomBaseDao() {
             fitOsFlag = fitOsFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
         )
-        // 只查最新的测试中和审核中的插件
-        conditions.add(ta.LATEST_TEST_FLAG.eq(true))
+        conditions.add(
+            ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.TESTING.status.toByte(),
+                    AtomStatusEnum.AUDITING.status.toByte()
+                )
+            )
+        ) // 只查测试中和审核中的插件
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
         conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
