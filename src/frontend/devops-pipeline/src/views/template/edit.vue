@@ -6,7 +6,6 @@
                     <bk-button
                         @click="savePipeline()"
                         theme="primary"
-                        :disabled="isSaveDisable"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,

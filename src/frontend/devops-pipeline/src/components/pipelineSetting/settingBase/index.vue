@@ -110,6 +110,7 @@
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     }"
+                    key="saveBtn"
                 >
                     {{ $t('save') }}
                 </bk-button>

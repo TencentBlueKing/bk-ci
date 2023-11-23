@@ -88,7 +88,6 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!props.row.hasPermission"
                                 @click="updateInstance(props.row)"
                                 v-perm="{
                                     permissionData: {
@@ -107,11 +106,13 @@
                                 text
                                 @click="copyAsTemplateInstance(props.row)"
                                 v-perm="{
+                                    hasPermission: hasCreatePermission,
+                                    disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: 'pipeline_template',
-                                        resourceCode: templateId,
-                                        action: TEMPLATE_RESOURCE_ACTION.VIEW
+                                        resourceType: 'pipeline',
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
                                     }
                                 }"
                             >
