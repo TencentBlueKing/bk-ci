@@ -52,7 +52,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         projectId: String?
     ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
-        return client.get(ServiceRemoteDevResource::class).getRemotedevProjects()
+        return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
     }
 
     override fun queryProjectRemoteDevCvm(
