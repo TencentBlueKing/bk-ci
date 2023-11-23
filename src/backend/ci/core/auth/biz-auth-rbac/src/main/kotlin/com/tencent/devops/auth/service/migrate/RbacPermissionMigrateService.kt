@@ -225,7 +225,8 @@ class RbacPermissionMigrateService constructor(
                         projectName = it.projectName,
                         gradeManagerId = gradeManagerId,
                         async = true,
-                        registerMonitorPermission = isRegisterMonitorPermission
+                        registerMonitorPermission = isRegisterMonitorPermission,
+                        migrateProjectDefaultGroup = migrateResourceDTO.migrateProjectDefaultGroup!!
                     )
                 }
                 if (isMigrateOtherResource) {
