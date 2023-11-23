@@ -152,7 +152,7 @@ class ProjectDao {
                 .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
                 .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
-                .orderBy(CREATED_AT.desc())
+                .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
