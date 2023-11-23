@@ -568,7 +568,8 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
                 realOwner = res["SHARED_USER"] as? String ?: "",
-                status = WorkspaceStatus.values()[res["STATUS"] as Int]
+                status = WorkspaceStatus.values()[res["STATUS"] as Int],
+                displayName = res["DISPLAY_NAME"] as String
             )
         }
 
@@ -590,10 +591,17 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START
         ) ?: emptyList()
+
+        val projectIds = result.map { it.value1() as String }.toSet()
+
+        val detailMap = client.get(ServiceProjectResource::class).listOnlyByProjectCode(projectIds).data
+            ?.associateBy { it.projectCode }
+
         return result.map {
             RemotedevProject(
                 projectId = it.value1(),
-                projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
+                projectName = detailMap?.get(it.value1())?.projectName ?: "",
+                remotedevManager = detailMap?.get(it.value1())?.properties?.remotedevManager ?: ""
             )
         }
     }
