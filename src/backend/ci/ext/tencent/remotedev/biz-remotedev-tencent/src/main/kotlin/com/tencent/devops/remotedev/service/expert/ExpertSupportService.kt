@@ -139,7 +139,7 @@ class ExpertSupportService @Autowired constructor(
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
             .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
-            return Pair(false, "${userId}非云桌面运维人员，不可认领。")
+            return Pair(false, "${userId}非云研发运维人员，不可认领")
         }
 
         // 校验 1 小时之内是否分配过
