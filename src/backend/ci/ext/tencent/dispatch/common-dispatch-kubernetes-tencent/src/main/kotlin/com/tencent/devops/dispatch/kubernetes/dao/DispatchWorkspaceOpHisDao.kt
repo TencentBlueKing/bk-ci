@@ -107,7 +107,6 @@ class DispatchWorkspaceOpHisDao {
         }
     }
 
-
     class RecordJooqMapper : RecordMapper<TDispatchWorkspaceOpHisRecord, DispatchWorkspaceOpHisRecord> {
         override fun map(record: TDispatchWorkspaceOpHisRecord?): DispatchWorkspaceOpHisRecord? {
             return record?.run {
