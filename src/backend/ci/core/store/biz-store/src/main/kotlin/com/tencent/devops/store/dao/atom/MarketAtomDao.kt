@@ -731,14 +731,14 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlagByAtomId(dslContext: DSLContext, userId: String, atomId: String) {
+    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(LATEST_TEST_FLAG, DSL.case_()
-                    .`when`(ID.eq(atomId), true)
+                    .`when`(ID.eq(atomCode), true)
                     .otherwise(false))
                 .set(MODIFIER, userId)
-                .where(ID.eq(atomId))
+                .where(ATOM_CODE.eq(atomCode))
                 .execute()
         }
     }
