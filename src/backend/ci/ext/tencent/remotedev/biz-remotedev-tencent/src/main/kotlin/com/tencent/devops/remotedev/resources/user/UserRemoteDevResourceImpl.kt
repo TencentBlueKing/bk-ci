@@ -144,6 +144,11 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
-        return Result(expertSupportService.assignExpSup(userId, id, workspaceName))
+        val (res, message) = expertSupportService.assignExpSup(userId, id, workspaceName)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
     }
 }

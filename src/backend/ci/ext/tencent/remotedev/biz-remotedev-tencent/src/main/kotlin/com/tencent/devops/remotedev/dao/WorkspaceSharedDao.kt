@@ -29,13 +29,15 @@ class WorkspaceSharedDao {
                         OPERATOR,
                         SHARED_USER,
                         ASSIGN_TYPE,
-                        RESOURCE_ID
+                        RESOURCE_ID,
+                        EXPIRATION
                     ).values(
                         workspaceName,
                         operator,
                         it.userId,
                         it.type.name,
-                        resourceId
+                        resourceId,
+                        it.expiration
                     )
                 }
             ).execute()
@@ -127,6 +129,25 @@ class WorkspaceSharedDao {
                 .where(EXPIRATION.isNotNull)
                 .and(EXPIRATION.lessThan(LocalDateTime.now()))
                 .fetch()
+        }
+    }
+
+    fun checkAlreadyExpireShare(
+        dslContext: DSLContext,
+        workspaceName: String,
+        operator: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(OPERATOR.eq(operator))
+                .and(SHARED_USER.eq(sharedUser))
+                .and(ASSIGN_TYPE.eq(assignType.name))
+                .and(EXPIRATION.isNotNull)
+                .and(EXPIRATION.greaterThan(LocalDateTime.now()))
+                .fetchAny() != null
         }
     }
 

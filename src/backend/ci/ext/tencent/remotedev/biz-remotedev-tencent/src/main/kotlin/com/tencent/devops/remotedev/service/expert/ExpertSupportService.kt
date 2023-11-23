@@ -8,6 +8,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
@@ -31,7 +32,8 @@ class ExpertSupportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val expertSupportDao: ExpertSupportDao,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -132,12 +134,24 @@ class ExpertSupportService @Autowired constructor(
         expertSupportDao.deleteExpertSupportConfig(dslContext, id)
     }
 
-    fun assignExpSup(userId: String, id: Long, workspaceName: String): Boolean {
+    fun assignExpSup(userId: String, id: Long, workspaceName: String): Pair<Boolean, String?> {
         // 校验这个人是不是可以分配的运维
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
             .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
-            return false
+            return Pair(false, "当前用户${userId}不是可分配运维人员")
+        }
+
+        // 校验 1 小时之内是否分配过
+        if (workspaceSharedDao.checkAlreadyExpireShare(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = "system",
+                sharedUser = userId,
+                assignType = WorkspaceShared.AssignType.VIEWER
+            )
+        ) {
+            return Pair(false, "${userId}已被分配")
         }
 
         // 分配
@@ -157,7 +171,7 @@ class ExpertSupportService @Autowired constructor(
         // 发送认领通知
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
-                templateCode = rtxAssignTemplate ?: return false,
+                templateCode = rtxAssignTemplate ?: return Pair(true, "通知模板为空"),
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 titleParams = mapOf(
                     NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!,
@@ -165,12 +179,14 @@ class ExpertSupportService @Autowired constructor(
                     "userId" to userId,
                     "time" to LocalDateTime.now().format(dateTimeFormatter)
                 ),
-                bodyParams = null,
+                bodyParams = mapOf(
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkGroupId!!
+                ),
                 markdownContent = true
             )
         )
 
-        return true
+        return Pair(true, null)
     }
 
     companion object {
