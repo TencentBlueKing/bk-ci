@@ -300,7 +300,7 @@ class MigrateResourceService @Autowired constructor(
                 registerMonitorPermission = registerMonitorPermission
             )
         }
-        if (migrateProjectDefaultGroup){
+        if (migrateProjectDefaultGroup) {
             val defaultGroupConfigs = authResourceGroupConfigDao.get(
                 dslContext = dslContext,
                 resourceType = AuthResourceType.PROJECT.value,
