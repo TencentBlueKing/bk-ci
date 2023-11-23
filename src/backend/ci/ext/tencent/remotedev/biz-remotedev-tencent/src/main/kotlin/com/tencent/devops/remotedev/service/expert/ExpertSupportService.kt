@@ -134,7 +134,7 @@ class ExpertSupportService @Autowired constructor(
     fun assignExpSup(userId: String, id: Long, workspaceName: String): Boolean {
         // 校验这个人是不是可以分配的运维
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
-            .map { it.content }.toSet().contains(userId)
+            .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
             return false
         }
