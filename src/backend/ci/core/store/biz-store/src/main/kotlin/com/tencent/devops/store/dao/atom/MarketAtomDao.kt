@@ -738,6 +738,7 @@ class MarketAtomDao : AtomBaseDao() {
                     .`when`(ID.eq(atomId), true)
                     .otherwise(false))
                 .set(MODIFIER, userId)
+                .where(ID.eq(atomId))
                 .execute()
         }
     }
