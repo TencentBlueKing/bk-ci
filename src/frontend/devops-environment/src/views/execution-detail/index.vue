@@ -1,8 +1,11 @@
 <template>
     <div class="execution-detail">
         <header class="header-wrapper">
-            <div>{{ jobInstanceData.jobInstance.name }}</div>
-            <div class="status-box">
+            <bk-breadcrumb separator=">">
+                <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
+                <bk-breadcrumb-item>{{ jobInstanceData.jobInstance.name }}</bk-breadcrumb-item>
+            </bk-breadcrumb>
+            <div class="status-box" :class="statusStyleMap[checkStatus(jobInstanceData.jobInstance.status)]">
                 <div class="status">
                     <span>{{ $t('environment.状态') }}：</span>
                     <span class="status-text">{{ stepStatusMap[jobInstanceData.jobInstance.status] }}</span>
@@ -64,6 +67,10 @@
     import ipList from '@/components/ipList'
     import ExecutionInfo from '@/components/executionInfo'
     import { mapActions } from 'vuex'
+    import {
+        statusStyleMap,
+        checkStatus
+    } from '@/utils/execution'
     export default {
         components: {
             ipList,
@@ -72,7 +79,10 @@
         data () {
             return {
                 jobInstanceData: {},
-                stepStatusMap: {}
+                stepStatusMap: {},
+                statusStyleMap,
+                checkStatus,
+                stepInstanceId: ''
             }
         },
         computed: {
@@ -206,6 +216,43 @@
         justify-content: center;
         width: 500px;
         transform: translateX(-50%);
+        &.fail,
+        &.confirm-forced {
+            .status-text {
+                color: #ea3636;
+            }
+        }
+
+        &.loading {
+            .status-text {
+                color: #3a84ff;
+            }
+        }
+
+        &.ingore {
+            .status-text {
+                color: #abd88a;
+            }
+        }
+
+        &.success,
+        &.forced {
+            .status-text {
+                color: #2dcb8d;
+            }
+        }
+
+        &.confirm {
+            .status-text {
+                color: #ff9c01;
+            }
+        }
+
+        &.disable {
+            .status-text {
+                color: #c4c6cc;
+            }
+        }
     }
 
     .status {

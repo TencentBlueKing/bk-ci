@@ -1,30 +1,3 @@
-<!--
- * Tencent is pleased to support the open source community by making BK-JOB蓝鲸智云作业平台 available.
- *
- * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-JOB蓝鲸智云作业平台 is licensed under the MIT License.
- *
- * License for BK-JOB蓝鲸智云作业平台:
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
- * the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
--->
-
 <template>
     <div
         ref="contentBox"
@@ -112,7 +85,24 @@
                 return this.onePageNums + this.pageSize * this.page
             },
             renderList () {
-                return this.contentList.slice(0, this.renderNums)
+                // return this.contentList.slice(0, this.renderNums)
+                return [
+                    {
+                        destIp: '9.146.98.65',
+                        destIpv6: 'fe80::5054:ff:fe79:8098',
+                        fileName: '/afwaf/awrfawr',
+                        fileSize: '--',
+                        logContent: '[2023-11-14 15:47:17] the source file [/awrfawr] is not exist, please check. Status: 500, StatusDesc: initailize file data\n',
+                        mode: 1,
+                        progress: '--',
+                        speed: '--',
+                        srcIp: '9.146.98.65',
+                        srcIpv6: 'fe80::5054:ff:fe79:8098',
+                        status: 5,
+                        statusDesc: 'Failed',
+                        taskId: '1_2_/awrfawr_2_/afwaf/awrfawr'
+                    }
+                ]
             }
         },
         watch: {
@@ -280,18 +270,19 @@
         overflow-y: scroll;
 
         &::-webkit-scrollbar {
-            width: 14px !important;
-            background-color: #3b3c42 !important;
-            border: 1px solid #63656e !important;
+            background-color: #1d1d1d !important;
+            width: 14px;
+            height: 14px;
         }
 
         &::-webkit-scrollbar-thumb {
             background-color: #3b3c42 !important;
+            border-radius: 0 !important;
             border: 1px solid #63656e !important;
         }
 
         &::-webkit-scrollbar-corner {
-            background-color: transparent !important;
+            background-color: transparent !important;;
         }
 
         .load-more {

@@ -37,7 +37,7 @@
                 </template>
             </template>
             <template v-else>
-                ddddddddddddddd
+                {{ message }}
             </template>
         </div>
     </bk-dialog>
@@ -45,7 +45,8 @@
 <script>
     export default {
         props: {
-            status: String
+            status: String,
+            message: String
         },
         data () {
             return {

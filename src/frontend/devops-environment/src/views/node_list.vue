@@ -93,7 +93,11 @@
                                         }
                                     } : {}"
                                     class="node-name"
-                                    :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                                    :class="{
+                                        'pointer': canShowDetail(props.row),
+                                        'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                        'unavailable': removedStatus.includes(props.row.nodeStatus)
+                                    }"
                                     :title="props.row.displayName"
                                     @click="toNodeDetail(props.row)"
                                 >
@@ -126,7 +130,7 @@
                             {{ props.row.osName || '-' }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus" min-width="150">
+                    <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus" min-width="150" show-overflow-tooltip>
                         <template slot-scope="props">
                             <div class="table-node-item node-item-status"
                                 v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
@@ -134,37 +138,49 @@
                                 <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                             </div>
                             <div class="table-node-item node-item-status">
-                                <!-- 状态icon -->
-                                <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
-                                <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
-                                <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                    v-if="runningStatus.includes(props.row.nodeStatus)">
-                                    <div class="rotate rotate1"></div>
-                                    <div class="rotate rotate2"></div>
-                                    <div class="rotate rotate3"></div>
-                                    <div class="rotate rotate4"></div>
-                                    <div class="rotate rotate5"></div>
-                                    <div class="rotate rotate6"></div>
-                                    <div class="rotate rotate7"></div>
-                                    <div class="rotate rotate8"></div>
-                                </div>
-                                <!-- 状态值 -->
-                                <span class="install-agent"
-                                    v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
-                                    @click="installAgent(props.row)">
-                                    {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                                </span>
-                                <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                                <!-- 已从 CMDB 、蓝鲸CC 移除 -->
+                                <template v-if="removedStatus.includes(props.row.nodeStatus)">
+                                    <i class="bk-icon node-removed-icon icon-close error"></i>
+                                    <span class="node-removed-message">
+                                        {{ removedMessage[props.row.nodeStatus] }}
+                                        {{ $t('environment.节点已从CMDB移除，不可使用') }}
+                                    </span>
+                                </template>
+                                <template v-else>
+                                    <!-- 状态icon -->
+                                    <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
+                                    <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
+                                
+                                    <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
+                                        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                    >
+                                        <div class="rotate rotate1"></div>
+                                        <div class="rotate rotate2"></div>
+                                        <div class="rotate rotate3"></div>
+                                        <div class="rotate rotate4"></div>
+                                        <div class="rotate rotate5"></div>
+                                        <div class="rotate rotate6"></div>
+                                        <div class="rotate rotate7"></div>
+                                        <div class="rotate rotate8"></div>
+                                    </div>
+                                    <!-- 状态值 -->
+                                    <span class="install-agent"
+                                        v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
+                                        @click="installAgent(props.row)">
+                                        {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                    </span>
+                                    <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                                 <!-- <div class="install-agent"
                                     v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                     @click="installAgent(props.row)"
                                 >{{ `（${$t('environment.install')}Agent）` }}</div> -->
+                                </template>
                             </div>
                         </template>
                     </bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.usage" :label="$t('environment.nodeInfo.usage')" prop="usage" min-width="80" show-overflow-tooltip>
                         <template slot-scope="props">
-                            {{ props.row.ip || '-' }}
+                            {{ usageMap[props.row.nodeType] || '-' }}
                         </template>
                     </bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80" show-overflow-tooltip></bk-table-column>
@@ -192,7 +208,7 @@
                             </div>
                         </template>
                     </bk-table-column> -->
-                    <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyBy" min-width="80" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyUser" min-width="80" show-overflow-tooltip></bk-table-column>
                     <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
                         <template slot-scope="props">
                             {{ props.row.createTime || '-' }}
@@ -208,16 +224,19 @@
                             <template v-if="props.row.canUse">
                                 <div class="table-node-item">
                                     <span
+                                        v-if="['NOT_IN_CC'].includes(props.row.nodeStatus)"
+                                        @click="handleReImport"
                                         class="node-handle delete-node-text">
                                         {{ $t('environment.reImport') }}
                                     </span>
-                                    <span
+                                    <!-- <span
                                         class="node-handle delete-node-text"
                                         @click="handleInstallAgent"
                                     >
                                         {{ $t('environment.installAgent') }}
-                                    </span>
+                                    </span> -->
                                     <span
+                                        v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                         class="node-handle delete-node-text"
                                         @click="handleInstallAgent"
                                     >
@@ -315,6 +334,7 @@
         <import-tips-dialog
             ref="importTipsDialog"
             :status="importStatus"
+            :message="importMessage"
         />
 
         <!-- 重装/安装Agent -->
@@ -371,6 +391,11 @@
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
                 failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB'],
+                removedMessage: {
+                    NOT_IN_CMDB: this.$t('environment.节点已从CMDB移除，不可使用'),
+                    NOT_IN_CC: this.$t('environment.节点已从蓝鲸CC移除，不可使用')
+                },
                 // 页面loading
                 loading: {
                     isLoading: false,
@@ -439,6 +464,7 @@
                 tableSize: 'small',
                 searchValue: [],
                 importStatus: 'success',
+                importMessage: '',
                 pagination: {
                     current: 1,
                     count: 0,
@@ -499,6 +525,15 @@
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            usageMap () {
+                return {
+                    DEVCLOUD: this.$t('environment.构建'),
+                    THIRDPARTY: this.$t('environment.构建'),
+                    CMDB: this.$t('environment.部署'),
+                    UNKNOWN: this.$t('environment.部署'),
+                    OTHER: this.$t('environment.部署')
+                }
             }
         },
         watch: {
@@ -1108,8 +1143,9 @@
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
             },
-            confirmCmdbFn (theme) {
+            confirmCmdbFn ({ theme, message }) {
                 this.importStatus = theme
+                this.importMessage = message
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
                 this.requestList()
@@ -1134,6 +1170,9 @@
             },
             handleInstallAgent () {
                 this.$refs.installAgent.isShow = true
+            },
+            handleReImport () {
+                this.toImportNode('cmdb')
             }
         }
     }
@@ -1290,6 +1329,9 @@
                 .useless {
                   color: $fontLighterColor;
                 }
+                .unavailable {
+                    text-decoration: line-through;
+                }
                 .icon-edit {
                     position: relative;
                     left: 4px;
@@ -1326,6 +1368,25 @@
             .install-agent {
                 color: $primaryColor;
                 cursor: pointer;
+            }
+
+            .node-removed-icon {
+                width: 20px;
+                height: 20px;
+                line-height: 20px;
+                font-size: 16px;
+                border-radius: 50%;
+                &.success {
+                    background-color: #e5f6ea;
+                    color: #3fc06d;
+                }
+                &.error {
+                    background-color: #fdd;
+                    color: #ea3636;
+                }
+            }
+            .node-removed-message {
+                color: #ea3636;
             }
         }
     }

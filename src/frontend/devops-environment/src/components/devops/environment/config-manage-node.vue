@@ -236,9 +236,9 @@
                     res.records && res.records.forEach(item => {
                         this.rowList.push({
                             ...item,
-                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),
+                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC'),
                             isDisplay: true,
-                            isEixtEnvNode: this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip)
+                            isEixtEnvNode: this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC')
                         })
                     })
 
@@ -371,7 +371,7 @@
             async confirmFn () {
                 const selectNodeId = []
                 this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
-                let theme
+                let theme, message
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
@@ -381,13 +381,16 @@
                         projectId: this.projectId,
                         params: selectNodeId
                     })
-
                     theme = 'success'
-                } catch (err) {
+                } catch (e) {
                     theme = 'error'
+                    message = e || e.message
                 } finally {
                     this.loading.isLoading = false
-                    this.$emit('confirm-fn', theme)
+                    this.$emit('confirm-fn', {
+                        theme,
+                        message
+                    })
                     this.importText = this.$t('environment.import')
                 }
             },
