@@ -7,11 +7,12 @@ import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 
 abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
@@ -94,6 +95,22 @@ abstract class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
             ""
         } finally {
             tmpFile.delete()
+        }
+    }
+
+    override fun downloadAtomFile(filePath: String, response: HttpServletResponse) {
+        try {
+            bkRepoClient.downloadFile(
+                userId = BKREPO_DEFAULT_USER,
+                projectId = getBkRepoProjectId(),
+                repoName = getBkRepoName(),
+                fullPath = filePath,
+                outputStream = response.outputStream
+            )
+        } catch (ignored: NotFoundException) {
+            logger.warn("file[$filePath] not exists")
+        } catch (ignored: RemoteServiceException) {
+            logger.warn("download file[$filePath] error: $ignored")
         }
     }
 
