@@ -85,29 +85,33 @@ class TGitPushActionGit(
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
-        val deleteSet = data.context.deleteSet
-        val defaultBranch = data.context.defaultBranch
-        val branch = data.eventCommon.branch
-        return GitActionCommon.getYamlPathList(
+        val changeYamlPathList = GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { (name, blobId) ->
             YamlPathListEntry(
                 yamlPath = name,
-                checkType = when {
-                    branch == defaultBranch && deleteSet?.contains(name) == true ->
-                        CheckType.NEED_DELETE
-
-                    changeSet?.contains(name) == true ->
-                        CheckType.NEED_CHECK
-
-                    else ->
-                        CheckType.NO_NEED_CHECK
+                checkType = if (changeSet?.contains(name) == true) {
+                    CheckType.NEED_CHECK
+                } else {
+                    CheckType.NO_NEED_CHECK
                 },
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
+        }.toMutableList()
+        // 补充删除的ci文件
+        if (data.eventCommon.branch == data.context.defaultBranch) {
+            val deleteYamlPathList = data.context.deleteCiSet?.map {
+                YamlPathListEntry(
+                    yamlPath = it,
+                    checkType = CheckType.NEED_DELETE,
+                    ref = this.data.eventCommon.branch, blobId = null
+                )
+            } ?: emptyList()
+            changeYamlPathList.addAll(deleteYamlPathList)
         }
+        return changeYamlPathList
     }
 
     override fun getYamlContent(fileName: String): YamlContent {
@@ -125,13 +129,15 @@ class TGitPushActionGit(
 
     override fun getChangeSet(): Set<String>? {
         val changeFileList = mutableSetOf<String>()
-        val deleteFileList = mutableSetOf<String>()
+        val deleteCiFileList = mutableSetOf<String>()
         event().diffFiles?.forEach {
             when {
                 // 删除文件
                 it.deletedFile -> {
                     changeFileList.add(it.oldPath)
-                    deleteFileList.add(it.oldPath)
+                    if (GitActionCommon.isCiFile(it.oldPath)) {
+                        deleteCiFileList.add(it.oldPath)
+                    }
                 }
                 // 重命名文件
                 it.renamedFile -> {
@@ -143,7 +149,7 @@ class TGitPushActionGit(
             }
         }
         data.context.changeSet = changeFileList
-        data.context.deleteSet = deleteFileList
+        data.context.deleteCiSet = deleteCiFileList
         return changeFileList
     }
 }

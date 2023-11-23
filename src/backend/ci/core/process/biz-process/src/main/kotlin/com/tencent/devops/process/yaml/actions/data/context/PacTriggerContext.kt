@@ -50,8 +50,8 @@ data class PacTriggerContext(
     var defaultBranch: String? = null,
     // 缓存
     var changeSet: Set<String>? = null,
-    // 删除文件列表
-    var deleteSet: Set<String>? = null,
+    // 删除ci文件列表
+    var deleteCiSet: Set<String>? = null,
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null
 )
