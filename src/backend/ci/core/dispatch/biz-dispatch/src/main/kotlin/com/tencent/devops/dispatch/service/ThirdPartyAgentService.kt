@@ -297,8 +297,19 @@ class ThirdPartyAgentService @Autowired constructor(
         secretKey: String,
         info: ThirdPartyAgentUpgradeByVersionInfo
     ): AgentResult<UpgradeItem> {
-        // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
+            // 校验当前是否存在正在执行的任务，存在则不升级
+            if (thirdPartyAgentBuildDao.checkIfRunningAndQueueBuildsCount(dslContext, agentId)) {
+                return AgentResult(
+                    AgentStatus.IMPORT_OK,
+                    UpgradeItem(
+                        agent = false,
+                        worker = false,
+                        jdk = false,
+                        dockerInitFile = false
+                    )
+                )
+            }
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
                 .upgradeByVersionNew(projectId, agentId, secretKey, info)
             return if (!agentUpgradeResult.data!!.agent && !agentUpgradeResult.data!!.worker &&
