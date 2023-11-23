@@ -124,7 +124,7 @@ class ResourceService @Autowired constructor(
         return when (method) {
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
-                if (searchResult.data?.count!! > 100L) {
+                if (searchResult.data?.count!! > 500L) {
                     searchResult.buildSearchInstanceResultFailResult()
                 } else {
                     searchResult

@@ -74,7 +74,14 @@ class AuthProjectService @Autowired constructor(
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }
-        val projectRecords = projectService.listByChannel(limit, offset, ProjectChannelCode.BS)
+        val projectRecords = projectService.listByChannel(
+            limit = limit,
+            offset = offset,
+            projectChannelCode = listOf(
+                ProjectChannelCode.BS.name,
+                ProjectChannelCode.PREBUILD.name
+            )
+        )
         val count = projectRecords?.count
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {

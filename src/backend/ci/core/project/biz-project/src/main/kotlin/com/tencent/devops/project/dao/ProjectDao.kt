@@ -154,11 +154,11 @@ class ProjectDao {
         dslContext: DSLContext,
         limit: Int,
         offset: Int,
-        channelCode: ProjectChannelCode
+        channelCodes: List<String>
     ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
-                .where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
+                .where(ENABLED.eq(true).and(CHANNEL.`in`(channelCodes)))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .limit(limit).offset(offset).fetch()
@@ -725,6 +725,7 @@ class ProjectDao {
     fun searchByProjectName(
         dslContext: DSLContext,
         projectName: String,
+        channelCodes: List<String>,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
@@ -733,6 +734,7 @@ class ProjectDao {
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                .and(CHANNEL.`in`(channelCodes))
                 .limit(limit).offset(offset).fetch()
         }
     }

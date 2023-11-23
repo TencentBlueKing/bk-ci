@@ -804,7 +804,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: List<String>): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
             val list = ArrayList<ProjectVO>()
@@ -961,6 +961,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectDao.searchByProjectName(
             dslContext = dslContext,
             projectName = projectName,
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name),
             limit = limit,
             offset = offset
         ).map {
