@@ -594,14 +594,15 @@ class WorkspaceService @Autowired constructor(
 
         val projectIds = result.map { it.value1() as String }.toSet()
 
-        val detailMap = client.get(ServiceProjectResource::class).listOnlyByProjectCode(projectIds).data
-            ?.associateBy { it.projectCode }
+        val projectInfoData = client.get(ServiceProjectResource::class).listOnlyByProjectCode(projectIds).data ?: return emptyList()
+
+        val detailMap = projectInfoData.associateBy { it.projectCode }
 
         return result.map {
             RemotedevProject(
                 projectId = it.value1(),
-                projectName = detailMap?.get(it.value1())?.projectName ?: "",
-                remotedevManager = detailMap?.get(it.value1())?.properties?.remotedevManager ?: ""
+                projectName = detailMap[it.value1()]?.projectName ?: "",
+                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: ""
             )
         }
     }
