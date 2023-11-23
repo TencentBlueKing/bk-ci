@@ -299,7 +299,8 @@ class PipelineListFacadeService @Autowired constructor(
         pageSize: Int?,
         sortType: PipelineSortType,
         channelCode: ChannelCode,
-        checkPermission: Boolean
+        checkPermission: Boolean,
+        filterByPipelineName: String? = null
     ): PipelinePage<Pipeline> {
 
         val watcher = Watcher(id = "listPermissionPipeline|$projectId|$userId")
@@ -342,13 +343,16 @@ class PipelineListFacadeService @Autowired constructor(
             }
 
             watcher.start("s_r_summary")
+            val pipelineFilterParamList =
+                pipelineFilterParams(projectId, filterByPipelineName, null, null)
             val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                sortType = sortType
+                sortType = sortType,
+                pipelineFilterParamList = pipelineFilterParamList
             )
             val buildPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
@@ -477,27 +481,8 @@ class PipelineListFacadeService @Autowired constructor(
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
-            val (
-                filterByPipelineNames: List<PipelineViewFilterByName>,
-                filterByPipelineCreators: List<PipelineViewFilterByCreator>,
-                filterByPipelineLabels: List<PipelineViewFilterByLabel>
-            ) = generatePipelineFilterInfo(
-                projectId = projectId,
-                filterByName = filterByPipelineName,
-                filterByCreator = filterByCreator,
-                filterByLabels = filterByLabels
-            )
-            val pipelineFilterParamList = mutableListOf<PipelineFilterParam>()
-            val pipelineFilterParam = PipelineFilterParam(
-                logic = Logic.AND,
-                filterByPipelineNames = filterByPipelineNames,
-                filterByPipelineCreators = filterByPipelineCreators,
-                filterByLabelInfo = PipelineFilterByLabelInfo(
-                    filterByLabels = filterByPipelineLabels,
-                    labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap(projectId)
-                )
-            )
-            pipelineFilterParamList.add(pipelineFilterParam)
+            val pipelineFilterParamList =
+                pipelineFilterParams(projectId, filterByPipelineName, filterByCreator, filterByLabels)
 
             val pipelineIds = mutableSetOf<String>()
             val viewIdList = listOf(
@@ -728,6 +713,36 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
         }
+    }
+
+    private fun pipelineFilterParams(
+        projectId: String,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?
+    ): MutableList<PipelineFilterParam> {
+        val (
+            filterByPipelineNames: List<PipelineViewFilterByName>,
+            filterByPipelineCreators: List<PipelineViewFilterByCreator>,
+            filterByPipelineLabels: List<PipelineViewFilterByLabel>
+        ) = generatePipelineFilterInfo(
+            projectId = projectId,
+            filterByName = filterByPipelineName,
+            filterByCreator = filterByCreator,
+            filterByLabels = filterByLabels
+        )
+        val pipelineFilterParamList = mutableListOf<PipelineFilterParam>()
+        val pipelineFilterParam = PipelineFilterParam(
+            logic = Logic.AND,
+            filterByPipelineNames = filterByPipelineNames,
+            filterByPipelineCreators = filterByPipelineCreators,
+            filterByLabelInfo = PipelineFilterByLabelInfo(
+                filterByLabels = filterByPipelineLabels,
+                labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap(projectId)
+            )
+        )
+        pipelineFilterParamList.add(pipelineFilterParam)
+        return pipelineFilterParamList
     }
 
     private fun fillPipelinePermissions(
