@@ -46,7 +46,11 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun queryWorkspaceProjects(appCode: String?, apigwType: String?): Result<List<RemotedevProject>> {
+    override fun queryWorkspaceProjects(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
         return client.get(ServiceRemoteDevResource::class).getRemotedevProjects()
     }

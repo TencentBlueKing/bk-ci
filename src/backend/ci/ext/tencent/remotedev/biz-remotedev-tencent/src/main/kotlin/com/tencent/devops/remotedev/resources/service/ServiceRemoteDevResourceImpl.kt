@@ -28,8 +28,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId, ip))
     }
 
-    override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
-        return Result(workspaceService.getWorkspaceProject())
+    override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
+        return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
     override fun queryProjectRemoteDevCvm(projectId: String?): Result<List<RemotedevCvmData>> {

@@ -585,11 +585,12 @@ class WorkspaceService @Autowired constructor(
         return data
     }
 
-    fun getWorkspaceProject(): List<RemotedevProject> {
+    fun getWorkspaceProject(projectId: String?): List<RemotedevProject> {
         logger.info("get workspace project list")
         val result = workspaceDao.getWorkspaceProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START
+            mountType = WorkspaceMountType.START,
+            projectId = projectId
         ) ?: emptyList()
 
         val projectIds = result.map { it.value1() as String }.toSet()

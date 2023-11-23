@@ -364,7 +364,8 @@ class WorkspaceDao {
 
     fun getWorkspaceProject(
         dslContext: DSLContext,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): Result<Record1<String>>? {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectDistinct(PROJECT_ID).from(this)
@@ -372,6 +373,13 @@ class WorkspaceDao {
                 .let { i ->
                     if (mountType != null) {
                         i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+                    } else {
+                        i
+                    }
+                }
+                .let { i ->
+                    if (projectId != null) {
+                        i.and(PROJECT_ID.eq(projectId))
                     } else {
                         i
                     }
