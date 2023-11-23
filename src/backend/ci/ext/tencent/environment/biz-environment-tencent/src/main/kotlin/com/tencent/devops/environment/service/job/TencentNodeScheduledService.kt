@@ -4,7 +4,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,8 +73,8 @@ class TencentNodeScheduledService @Autowired constructor(
                 ipToCmdbInfoMap?.get(it)?.serverId?.toLong()
             }.filterNotNull() // 需要再查询一次CC的svrId
 
-            val (svrIdQueryCCRes, _, _)
-                = cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
+            val (svrIdQueryCCRes, _, _) =
+                cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
             val ccData = svrIdQueryCCRes.data?.info
             val inCCIpList = ccData?.mapNotNull { it.bkHostInnerip }
             val notInCCIpList = inCmdbIpList.filterNot { inCCIpList?.contains(it) ?: false }

@@ -212,8 +212,8 @@ class CmdbNodeService @Autowired constructor(
         return queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
     }
 
-    fun checkNodeInCCBySvrId(svrIdList: List<Long>)
-        : Triple<CCResp<QueryCCListHostWithoutBizData>, List<Long>, List<Long>> {
+    fun checkNodeInCCBySvrId(svrIdList: List<Long>):
+        Triple<CCResp<QueryCCListHostWithoutBizData>, List<Long>, List<Long>> {
         val svrIdQueryCCRes = queryFromCCService.queryCCListHostWithoutBizByInRules(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP, FIELD_BK_SVR_ID), svrIdList, FIELD_BK_SVR_ID
         )
