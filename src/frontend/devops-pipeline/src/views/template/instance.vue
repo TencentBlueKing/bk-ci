@@ -17,7 +17,7 @@
                         theme="primary"
                         @click="createInstance()"
                         v-perm="{
-                            hasPermission: !hasCreatePermission,
+                            hasPermission: hasCreatePermission,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
