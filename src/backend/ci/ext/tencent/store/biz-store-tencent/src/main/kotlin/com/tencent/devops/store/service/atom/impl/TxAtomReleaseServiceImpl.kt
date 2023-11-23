@@ -1047,7 +1047,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             marketAtomUpdateRequest.version = versionRecord!!.version
             versionRecord.id
         }
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        val atomRecord = if (versionRecord == null) {
+            atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        } else {
+            versionRecord
+        }
+
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
 
         val getAtomConfResult = getAtomConfig(
