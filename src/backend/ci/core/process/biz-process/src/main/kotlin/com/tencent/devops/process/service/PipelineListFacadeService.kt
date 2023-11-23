@@ -1409,7 +1409,6 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildNum = pipelineBuildSummaryRecord.buildNum
 //                it.latestBuildTaskName = pipelineBuildSummaryRecord.latestTaskName // 卡片界面不再需要该信息
                 it.latestBuildId = pipelineBuildSummaryRecord.latestBuildId
-                it.latestBuildUserId = pipelineBuildSummaryRecord.latestStartUser ?: ""
                 it.latestBuildNumAlias = pipelineBuildSummaryRecord.buildNumAlias
                 it.viewNames = pipelineViewNameMap[it.pipelineId]
             }
@@ -1419,6 +1418,7 @@ class PipelineListFacadeService @Autowired constructor(
                     startType = StartType.toStartType(lastBuild.trigger),
                     channelCode = ChannelCode.getChannel(lastBuild.channel)
                 )
+                it.latestBuildUserId = lastBuild.triggerUser
                 it.trigger = lastBuild.trigger
                 val webhookInfo = lastBuild.webhookInfo?.let { self ->
                     JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})
