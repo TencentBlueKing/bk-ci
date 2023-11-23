@@ -14,6 +14,22 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
+        val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(),
+            action = action,
+            projectCode = projectCode,
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+        ).data ?: false
+    }
+
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
@@ -23,7 +39,7 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
         val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken() ?: "",
+            token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,

@@ -43,6 +43,40 @@ class LogPermissionServiceImpl @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val managerService: ManagerService
 ) : LogPermissionService {
+
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
+        if (authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectCode = projectCode,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            return true
+        }
+
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                authPermission = AuthPermission.VIEW
+            )) {
+            return true
+        }
+        throw PermissionForbiddenException(
+            MessageUtil.getMessageByLocale(
+                messageCode = USER_NO_RIGHT_VIEW_PIPELINE,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectCode)
+            )
+        )
+    }
+
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
