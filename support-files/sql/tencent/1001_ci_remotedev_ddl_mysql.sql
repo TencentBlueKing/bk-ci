@@ -159,7 +159,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     PRIMARY KEY (`ID`),
     KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
-    KEY `uni_3` (`OPERATOR`)
+    KEY `uni_3` (`OPERATOR`),
+    KEY `EXPIRATION_IDX` (`EXPIRATION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
 
 -- ----------------------------
