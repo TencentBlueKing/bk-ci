@@ -91,7 +91,7 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevCvmData>>
 
-    @ApiOperation("提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission", "v4_user_check_cgs_permission"])
+    @ApiOperation("提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
     @GET
     @Path("/check/cgs/permission")
     fun checkUserCgsPermission(
