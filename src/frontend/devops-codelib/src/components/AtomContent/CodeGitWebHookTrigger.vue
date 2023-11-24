@@ -19,7 +19,7 @@
                         <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('codelib.满足基础过滤条件后，根据第三方接口返回判断是否能够触发')"></i>
                         <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('codelib.查看使用指引和示例') }}</a>
                     </span>
-                    <input class="accordion-checkbox" disabled :checked="enableThirdFilter" type="checkbox" />
+                    <input class="accordion-checkbox" :checked="enableThirdFilter" type="checkbox" @change="toggleEnableThirdFilter" />
                 </header>
                 <div slot="content" class="bk-form bk-form-vertical">
                     <template v-for="(obj, key) in customTriggerControlModel">
@@ -50,7 +50,7 @@
         data () {
             return {
                 customTriggerControlModel: {},
-                enableThirdFilter: true,
+                enableThirdFilter: false,
                 customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
             }
         },
@@ -72,6 +72,11 @@
                 this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
                 this.atomPropsModel.thirdUrl.hidden = true
                 this.atomPropsModel.thirdSecretToken.hidden = true
+            }
+        },
+        methods: {
+            toggleEnableThirdFilter () {
+                this.enableThirdFilter = !this.enableThirdFilter
             }
         }
     }
