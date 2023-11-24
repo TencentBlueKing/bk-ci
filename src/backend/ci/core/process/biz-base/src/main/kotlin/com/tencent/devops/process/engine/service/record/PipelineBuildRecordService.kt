@@ -265,7 +265,9 @@ class PipelineBuildRecordService @Autowired constructor(
             val modelVar = JsonUtil.to(
                 pair.component2(), object : TypeReference<Map<String, Any>>() {}
             ).toMutableMap()
-            val timeCost = modelVar[Model::timeCost.name]?.let { it as BuildRecordTimeCost }
+            val timeCost = modelVar[Model::timeCost.name]?.let {
+                JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
+            }
             BuildRecordInfo(pair.component2(), timeCost)
         }
         watcher.start("parseTriggerInfo")
