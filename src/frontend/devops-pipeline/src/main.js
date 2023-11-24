@@ -62,7 +62,7 @@ Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
-Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(PermissionDirective(handlePipelineNoPermission, '//dev.devops.woa.com'))
 Vue.use(BkPermission, {
     i18n
 })

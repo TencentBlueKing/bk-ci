@@ -486,6 +486,7 @@
     "freedomMode": "Free Mode",
     "freedomModeTips": " You can arrange the pipeline freely without being constrained by the template.",
     "constraintMode": "Constraint Mode",
+    "constraintModeDesc": "Constraint Mode the arrangement is controlled by the template",
     "constraintModeTips": "You can't arrange the pipeline freely and should update the instance through template",
     "noTemplateTips": " Please select a template first",
     "noSearchResult": " No results found",
@@ -1220,5 +1221,7 @@
   "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute.",
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
-  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository."
+  "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
+  "templateName": "Template",
+  "templateVersion": "Template Version"
 }
