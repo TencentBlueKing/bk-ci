@@ -779,6 +779,7 @@ class PipelineRepositoryService constructor(
         if (info != null && srcTemplate != null) {
             info.templateInfo = TemplateInfo(
                 templateId = srcTemplate.id,
+                templateName = srcTemplate.templateName,
                 version = srcTemplate.version,
                 versionName = srcTemplate.versionName,
                 instanceType = PipelineInstanceTypeEnum.valueOf(template.instanceType)

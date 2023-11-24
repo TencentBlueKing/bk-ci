@@ -35,6 +35,8 @@ import io.swagger.annotations.ApiModelProperty
 data class TemplateInfo(
     @ApiModelProperty("模板ID", required = true)
     val templateId: String,
+    @ApiModelProperty("模板名称", required = true)
+    val templateName: String,
     @ApiModelProperty("版本号", required = true)
     val version: Long,
     @ApiModelProperty("版本名称", required = true)
