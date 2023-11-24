@@ -30,11 +30,14 @@ package com.tencent.devops.process.dao.record
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
+import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
 import org.jooq.Record2
@@ -143,14 +146,23 @@ class BuildRecordModelDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<Record2<String, String>> {
+    ): List<BuildRecordInfo> {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             return dslContext.select(START_USER, MODEL_VAR).from(this)
                 .where(
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
-                ).orderBy(EXECUTE_COUNT.desc()).fetch()
+                ).orderBy(EXECUTE_COUNT.desc())
+                .fetch().map { pair ->
+                    val modelVar = JsonUtil.to(
+                        pair.component2(), object : TypeReference<Map<String, Any>>() {}
+                    ).toMutableMap()
+                    val timeCost = modelVar[Model::timeCost.name]?.let {
+                        JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
+                    }
+                    BuildRecordInfo(pair.component1(), timeCost)
+                }
         }
     }
 

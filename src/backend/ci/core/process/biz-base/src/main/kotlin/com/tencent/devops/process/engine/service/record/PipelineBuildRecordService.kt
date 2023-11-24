@@ -27,9 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -72,7 +70,6 @@ import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -261,15 +258,7 @@ class PipelineBuildRecordService @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             projectId = projectId,
             buildId = buildId
-        ).map { pair ->
-            val modelVar = JsonUtil.to(
-                pair.component2(), object : TypeReference<Map<String, Any>>() {}
-            ).toMutableMap()
-            val timeCost = modelVar[Model::timeCost.name]?.let {
-                JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
-            }
-            BuildRecordInfo(pair.component2(), timeCost)
-        }
+        )
         watcher.start("parseTriggerInfo")
         // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
         val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
