@@ -34,7 +34,7 @@ class AuthOauth2ScopeOperationDao {
                 scopeOperationDTO.operationId,
                 scopeOperationDTO.operationNameCn,
                 scopeOperationDTO.operationNameEn
-            )
+            ).execute()
         }
     }
 
@@ -43,7 +43,7 @@ class AuthOauth2ScopeOperationDao {
         operationId: String
     ) {
         with(TAuthOauth2ScopeOperation.T_AUTH_OAUTH2_SCOPE_OPERATION) {
-            dslContext.deleteFrom(this).where(OPERATION_ID.eq(operationId))
+            dslContext.deleteFrom(this).where(OPERATION_ID.eq(operationId)).execute()
         }
     }
 }
