@@ -90,4 +90,22 @@ interface ApigwRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevCvmData>>
+
+    @ApiOperation("提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission", "v4_user_check_cgs_permission"])
+    @GET
+    @Path("/check/cgs/permission")
+    fun checkUserCgsPermission(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("云桌面IP", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }
