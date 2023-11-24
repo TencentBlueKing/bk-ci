@@ -21,7 +21,7 @@
                                     <img :src="row.logoUrl" class="pipeline-icon" v-if="row.logoUrl">
                                     <logo size="40" name="pipeline" v-else></logo>
                                 </td>
-                                <td width="16%" :class="[{ 'manager-user': isManagerUser }, 'template-name']" :title="row.name">
+                                <td width="16%" :class="[{ 'manager-user': row.canEdit }, 'template-name']" :title="row.name">
                                     <span
                                         @click="editTemplate(row)"
                                         v-perm="{
@@ -62,7 +62,7 @@
                                         {{ row.associatePipelines.length }}
                                     </div>
                                 </td>
-                                <td width="16%" :class="[{ 'not-permission': !isManagerUser }, 'handler-btn']">
+                                <td width="16%" class="handler-btn">
                                     <span
                                         @click="toInstanceList(row)"
                                         :class="canCreatePP ? 'create-permission' : 'not-create-permission'"
@@ -80,12 +80,26 @@
                                     <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
                                         {{ $t('more') }}
                                         <ul v-show="row.showMore" class="btn-more">
-                                            <li @click="copyTemplate(row)" data-name="copy">{{ $t('clone') }}</li>
+                                            <li
+                                                @click="copyTemplate(row)"
+                                                data-name="copy"
+                                                v-perm="{
+                                                    hasPermission: hasCreatePermission,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: 'pipeline_template',
+                                                        resourceCode: projectId,
+                                                        action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                                    }
+                                                }"
+                                            >
+                                                {{ $t('clone') }}
+                                            </li>
                                             <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
                                                 <li
                                                     v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
                                                     data-name="stored"
-                                                    class="has-stored"
                                                     v-perm="{
                                                         hasPermission: row.canEdit,
                                                         disablePermissionApi: true,
@@ -210,13 +224,9 @@
         components: {
             Logo
         },
-
-        filters: {
-
-        },
-
         data () {
             return {
+                hasCreatePermission: true,
                 pagingConfig: {
                     current: 1,
                     limit: 10,
@@ -298,6 +308,7 @@
             getListData () {
                 this.$emit('getApiData', (res) => {
                     if (res) {
+                        this.hasCreatePermission = res.hasCreatePermission
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
                             x.showMore = false
@@ -328,7 +339,7 @@
             },
 
             toInstanceList (row) {
-                if (!this.canCreatePP) return
+                if (!row.canView) return
                 this.$router.push({
                     name: 'templateInstance',
                     params: { templateId: row.templateId }
@@ -336,7 +347,7 @@
             },
 
             editTemplate (row) {
-                if (!this.isManagerUser) return
+                if (!row.canEdit) return
 
                 this.$router.push({
                     name: 'templateEdit',
@@ -345,14 +356,14 @@
             },
 
             toRelativeStore (row) {
-                if (!this.isManagerUser) return
+                if (!row.canEdit) return
 
                 const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.templateId}`
                 window.open(href, '_blank')
             },
 
             deleteTemplate (row) {
-                if (!this.isManagerUser) return
+                if (!row.canEdit) return
                 const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
                 navConfirm({ type: 'warning', content })
@@ -362,7 +373,7 @@
             },
 
             copyTemplate (row) {
-                if (!this.isManagerUser) return
+                if (!this.hasCreatePermission) return
 
                 this.copyTemp.templateName = `${row.name}_copy`
                 this.copyTemp.isShow = true
@@ -592,9 +603,6 @@
                         color: $primaryColor;
                         background: $primaryLightColor;
                     }
-                }
-                .has-stored {
-                    cursor: not-allowed;
                 }
             }
             .show-more {

@@ -44,7 +44,12 @@
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                 </template>
-                <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>
+                <template-table
+                    ref="selfTemp"
+                    :has-create-permission="hasCreatePermission"
+                    @getApiData="getTempFromSelf"
+                >
+                </template-table>
                 <empty-tips v-if="showSelfEmpty"
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
