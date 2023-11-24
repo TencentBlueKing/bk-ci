@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service.oauth2
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthOauth2ClientDetailsDao
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
+import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.jooq.DSLContext
@@ -42,6 +43,22 @@ class Oauth2ClientService constructor(
             refreshTokenValidity = refreshTokenValidity,
             icon = icon
         )
+    }
+
+    fun createClientDetails(clientDetailsDTO: ClientDetailsDTO): Boolean {
+        authOauth2ClientDetailsDao.create(
+            dslContext = dslContext,
+            clientDetailsDTO = clientDetailsDTO
+        )
+        return true
+    }
+
+    fun deleteClientDetails(clientId: String): Boolean {
+        authOauth2ClientDetailsDao.delete(
+            dslContext = dslContext,
+            clientId = clientId
+        )
+        return true
     }
 
     @Suppress("ThrowsCount", "LongParameterList")
