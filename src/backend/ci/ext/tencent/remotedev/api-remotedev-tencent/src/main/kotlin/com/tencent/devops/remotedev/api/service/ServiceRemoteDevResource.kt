@@ -73,4 +73,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>
+
+    @ApiOperation("校验当前用户是否有当前云桌面的权限")
+    @GET
+    @Path("/checkUserIpPermission")
+    fun checkUserIpPermission(
+        @ApiParam("user", required = true)
+        @QueryParam("user")
+        user: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }

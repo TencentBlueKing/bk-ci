@@ -39,4 +39,8 @@ class ServiceRemoteDevResourceImpl(
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
         return Result(desktopWorkspaceService.checkWorkspaceProject(projectId, ip))
     }
+
+    override fun checkUserIpPermission(user: String, ip: String): Result<Boolean> {
+        return Result(desktopWorkspaceService.checkUserIpPermission(user, ip))
+    }
 }

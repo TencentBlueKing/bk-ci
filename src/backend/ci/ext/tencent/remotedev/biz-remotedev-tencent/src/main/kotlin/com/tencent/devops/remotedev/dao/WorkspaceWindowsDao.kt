@@ -1,8 +1,11 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceWindowsRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -73,6 +76,33 @@ class WorkspaceWindowsDao {
                 .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId))
                 .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
+        )
+    }
+
+    fun countUserIp(
+        dslContext: DSLContext,
+        user: String,
+        ip: String
+    ): Int {
+        return dslContext.fetchCount(
+            dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
+                .from(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .where(TWorkspace.T_WORKSPACE.CREATOR.eq(user))
+                .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+                .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
+                .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+                .unionAll(
+                    dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
+                        .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                        .where(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(user))
+                        .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+                        .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+                        .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
+                        .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                        .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                )
+
         )
     }
 }
