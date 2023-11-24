@@ -25,37 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.atom
 
-enum class ReleaseTypeEnum(val releaseType: Int) {
-    NEW(0), // 新上架
-    INCOMPATIBILITY_UPGRADE(1), // 非兼容性升级
-    COMPATIBILITY_UPGRADE(2), // 兼容性功能更新
-    COMPATIBILITY_FIX(3), // 兼容性问题修正
-    CANCEL_RE_RELEASE(4), // 取消发布后重新发布
-    HIS_VERSION_UPGRADE(5), // 历史大版本下的小版本更新
-    BRANCH_TEST(6); // 分支测试
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun isDefaultShow(): Boolean = this == COMPATIBILITY_UPGRADE || this == COMPATIBILITY_FIX
-
-    companion object {
-
-        fun getReleaseTypeObj(releaseType: Int): ReleaseTypeEnum? {
-            values().forEach { enumObj ->
-                if (enumObj.releaseType == releaseType) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-
-        fun getReleaseType(releaseType: Int): String {
-            values().forEach { enumObj ->
-                if (enumObj.releaseType == releaseType) {
-                    return enumObj.name
-                }
-            }
-            return NEW.name
-        }
-    }
-}
+@ApiModel("升级插件包信息")
+data class UpdateAtomPackageInfo(
+    @ApiModelProperty("插件ID")
+    val atomId: String,
+    @ApiModelProperty("国际化资源目录路径")
+    val i18nDir: String,
+    @ApiModelProperty("包路径")
+    val packagePath: String?,
+    @ApiModelProperty("插件包资源类型")
+    val atomPackageSourceType: PackageSourceTypeEnum
+)
