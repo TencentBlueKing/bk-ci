@@ -31,8 +31,66 @@ package com.tencent.devops.process.webhook
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ACTION
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ACTOR
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BASE_REF
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BASE_REPO_URL
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BEFORE_SHA
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BEFORE_SHA_SHORT
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BRANCH
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_BUILD_MSG
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_COMMIT_AUTHOR
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_COMMIT_MESSAGE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_CREATE_REF
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_CREATE_REF_TYPE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_CREATE_TIME
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_EVENT
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_EVENT_URL
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_HEAD_REF
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_HEAD_REPO_URL
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_DESCRIPTION
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_IID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_MILESTONE_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_OWNER
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_STATE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ISSUE_TITLE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MILESTONE_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MILESTONE_NAME
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MODIFY_TIME
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_DESC
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_IID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_PROPOSER
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_REVIEWERS
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_TITLE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_MR_URL
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_AUTHOR
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_COMMENT
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_TYPE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_OPERATION_KIND
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_ALIAS_NAME
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_GROUP
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_NAME
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_TYPE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_URL
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_ID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_IID
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_OWNER
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_REVIEWERS
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_STATE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_TYPE
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA_SHORT
+import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_TAG_FROM
 
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
@@ -41,8 +99,20 @@ object TriggerBuildParamUtils {
     private const val TRIGGER_BUILD_PARAM_DESC = "desc"
 
     init {
+        // GIT事件触发参数
         gitWebhookTriggerCommon()
         gitWebhookTriggerPush()
+        gitWebhookTriggerMr()
+        gitWebhookTriggerTag()
+        gitWebhookTriggerIssue()
+        gitWebhookTriggerReview()
+        gitWebhookTriggerNote()
+        // Github事件触发参数
+        githubWebhookTrigger()
+        // svn事件触发参数
+        svnWebhookTrigger()
+        // p4事件触发参数
+        p4WebhookTrigger()
     }
 
     fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {
@@ -68,21 +138,179 @@ object TriggerBuildParamUtils {
      */
     private fun gitWebhookTriggerCommon() {
         val commonParams = listOf(
-            "ci.repo_type",
-            "ci.repo_url"
+            CI_REPO_TYPE,
+            CI_REPO_URL,
+            CI_REPO,
+            CI_REPO_GROUP,
+            CI_REPO_NAME,
+            CI_REPO_ALIAS_NAME,
+            CI_EVENT,
+            CI_EVENT_URL,
+            CI_BRANCH,
+            CI_BUILD_MSG,
+            CI_COMMIT_MESSAGE,
+            CI_ACTION
         )
 
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] = mapOf("common" to commonParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf("common" to commonParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf("common" to commonParams)
     }
 
     /**
      * git事件触发push变量名列表
      */
     private fun gitWebhookTriggerPush() {
-        val pushParams = listOf(
-            "ci.actor"
+        val params = listOf(
+            CI_ACTOR,
+            CI_BEFORE_SHA,
+            CI_BEFORE_SHA_SHORT,
+            CI_SHA,
+            CI_SHA_SHORT
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
-            mapOf(CodeEventType.PUSH.name to pushParams)
+            mapOf(CodeEventType.PUSH.name to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.PUSH.name to params)
+    }
+
+    /**
+     * git事件触发MR变量名列表
+     */
+    private fun gitWebhookTriggerMr() {
+        val params = listOf(
+            CI_MR_PROPOSER,
+            CI_HEAD_REPO_URL,
+            CI_BASE_REPO_URL,
+            CI_HEAD_REF,
+            CI_BASE_REF,
+            CI_MR_ID,
+            CI_MR_IID,
+            CI_MR_DESC,
+            CI_MR_TITLE,
+            CI_MR_URL,
+            CI_MR_REVIEWERS,
+            CI_MILESTONE_NAME,
+            CI_MILESTONE_ID
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.PULL_REQUEST.name to params)
+    }
+
+    /**
+     * git事件触发Tag变量名列表
+     */
+    private fun gitWebhookTriggerTag() {
+        val params = listOf(
+            CI_COMMIT_AUTHOR,
+            CI_TAG_FROM
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.TAG_PUSH.name to params)
+    }
+
+    /**
+     * git事件触发Note变量名列表
+     */
+    private fun gitWebhookTriggerNote() {
+        val params = listOf(
+            CI_NOTE_COMMENT,
+            CI_NOTE_ID,
+            CI_REPO_ID,
+            CI_NOTE_TYPE,
+            CI_NOTE_AUTHOR,
+            CI_CREATE_TIME,
+            CI_MODIFY_TIME
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.NOTE.name to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.NOTE.name to params)
+    }
+
+    /**
+     * git事件触发Issue变量名列表
+     */
+    private fun gitWebhookTriggerIssue() {
+        val params = listOf(
+            CI_ISSUE_TITLE,
+            CI_ISSUE_ID,
+            CI_ISSUE_IID,
+            CI_ISSUE_DESCRIPTION,
+            CI_ISSUE_STATE,
+            CI_ISSUE_OWNER,
+            CI_ISSUE_MILESTONE_ID
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.ISSUES.name to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.ISSUES.name to params)
+    }
+    /**
+     * git事件触发Review变量名列表
+     */
+    private fun gitWebhookTriggerReview() {
+        val params = listOf(
+            CI_REVIEW_ID,
+            CI_REVIEW_IID,
+            CI_REVIEW_TYPE,
+            CI_REVIEW_REVIEWERS,
+            CI_REVIEW_STATE,
+            CI_REVIEW_OWNER
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.REVIEW.name to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.REVIEW.name to params)
+    }
+
+
+    /**
+     * github事件触发create事件变量名列表
+     */
+    private fun githubWebhookTrigger() {
+        val params = listOf(
+            CI_CREATE_REF,
+            CI_CREATE_REF_TYPE
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] =
+            mapOf(CodeEventType.CREATE.name to params)
+    }
+
+    /**
+     * svn事件触发变量名列表
+     */
+    private fun svnWebhookTrigger() {
+        val params = listOf(
+            CI_SHA,
+            CI_ACTOR,
+            CI_EVENT,
+            CI_BUILD_MSG,
+            CI_REPO,
+            CI_REPO_ALIAS_NAME,
+            CI_REPO_URL
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeSVNWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.POST_COMMIT.name to params)
+    }
+
+    /**
+     * p4事件触发变量名列表
+     */
+    private fun p4WebhookTrigger() {
+        val params = listOf(
+            CI_SHA,
+            CI_ACTOR,
+            CI_EVENT,
+            CI_BUILD_MSG,
+            CI_REPO,
+            CI_REPO_ALIAS_NAME,
+            CI_REPO_URL
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] =
+            mapOf("common" to params)
     }
 }
