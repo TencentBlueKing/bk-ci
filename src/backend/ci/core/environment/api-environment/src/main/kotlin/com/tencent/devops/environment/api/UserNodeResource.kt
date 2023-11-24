@@ -29,6 +29,7 @@ package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
@@ -42,6 +43,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_NODE"], description = "用户-节点")
@@ -85,8 +87,14 @@ interface UserNodeResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
-    ): Result<List<NodeWithPermission>>
+        projectId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<NodeWithPermission>>
 
     @ApiOperation("获取用户有权限使用的服务器列表")
     @GET

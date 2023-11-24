@@ -238,6 +238,16 @@ class NodeDao {
         }
     }
 
+    fun listNodesWithPageLimit(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
     fun listNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

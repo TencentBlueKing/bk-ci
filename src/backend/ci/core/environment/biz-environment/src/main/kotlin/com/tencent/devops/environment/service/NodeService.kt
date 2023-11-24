@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -55,6 +56,7 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -159,13 +161,19 @@ class NodeService @Autowired constructor(
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
 
-    fun list(userId: String, projectId: String): List<NodeWithPermission> {
-        val nodeRecordList = nodeDao.listNodes(dslContext, projectId)
+    fun list(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<NodeWithPermission> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSize ?: 20)
+        val count = nodeDao.countForAuth(dslContext, projectId).toLong()
+        val nodeRecordList = nodeDao.listNodesWithPageLimit(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
         if (nodeRecordList.isEmpty()) {
-            return emptyList()
+            return Page(1, 0, 0, emptyList())
         }
-
-        return formatNodeWithPermissions(userId, projectId, nodeRecordList)
+        return Page(
+            page = page ?: 0,
+            pageSize = pageSize ?: 20,
+            count = count,
+            records = NodeUtils.sortByUser(formatNodeWithPermissions(userId, projectId, nodeRecordList), userId)
+        )
     }
 
     fun formatNodeWithPermissions(
