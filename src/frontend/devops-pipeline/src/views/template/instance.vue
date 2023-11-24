@@ -99,6 +99,8 @@
                                 text
                                 @click="updateInstance(props.row)"
                                 v-perm="{
+                                    hasPermission: props.row.hasPermission,
+                                    disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: 'pipeline_template',
