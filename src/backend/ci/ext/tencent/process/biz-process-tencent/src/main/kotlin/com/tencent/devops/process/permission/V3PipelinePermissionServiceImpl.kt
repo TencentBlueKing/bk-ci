@@ -60,12 +60,13 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = bsPipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             permission = permission,
             projectCode = projectId
         )
@@ -76,13 +77,15 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         if (pipelineId == "*") {
             return checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
-                permission = permission
+                permission = permission,
+                authResourceType = authResourceType
             )
         }
         val iamId = findInstanceId(projectId, pipelineId)
@@ -92,7 +95,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceCode = iamId,
             permission = permission,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             serviceCode = bsPipelineAuthServiceCode
         )
     }
