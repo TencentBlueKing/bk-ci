@@ -40,9 +40,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.jooq.RecordMapper
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
