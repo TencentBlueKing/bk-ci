@@ -92,7 +92,7 @@
                 },
                 filterByPipelineName: '',
                 bottomLoadingOptions: {
-                    size: 'small',
+                    size: 'mini',
                     isLoading: true
                 },
                 pagination: {
@@ -186,7 +186,7 @@
                     })
                     this.pipelineList = res.records
                 } catch (error) {
-                    
+                    console.error(error)
                 }
             },
             handleFileSelect (file) {
