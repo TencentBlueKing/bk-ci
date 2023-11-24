@@ -51,7 +51,7 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchDockerBeanConfiguration @Autowired constructor(
     private val dslContext: DSLContext
-){
+) {
 
     @Bean
     @ConditionalOnMissingBean(DockerHostProxyService::class)
