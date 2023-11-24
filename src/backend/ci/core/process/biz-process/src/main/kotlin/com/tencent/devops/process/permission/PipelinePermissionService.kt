@@ -54,13 +54,15 @@ interface PipelinePermissionService {
      * @param projectId projectId
      * @param pipelineId pipelineId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
     fun checkPipelinePermission(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType? = AuthResourceType.PIPELINE_DEFAULT
     ): Boolean
 
     /**

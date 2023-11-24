@@ -65,12 +65,19 @@ class V3PipelinePermissionService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
-        return super.checkPipelinePermission(userId, projectId, pipelineId, permission)
+        return super.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            authResourceType = authResourceType
+        )
     }
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {

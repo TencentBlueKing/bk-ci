@@ -65,12 +65,14 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
