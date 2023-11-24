@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import io.swagger.annotations.Api
@@ -52,6 +53,8 @@ interface ServiceQualityControlPointMarketResource {
     fun setTestControlPoint(
         @QueryParam("userId")
         userId: String,
+        @QueryParam("tag")
+        tag: String = IN_READY_TEST,
         controlPoint: QualityControlPoint
     ): Result<Long>
 
@@ -68,6 +71,8 @@ interface ServiceQualityControlPointMarketResource {
     @DELETE
     fun deleteTestControlPoint(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("tag")
+        tag: String = IN_READY_TEST
     ): Result<Int>
 }
