@@ -7,7 +7,7 @@
                 :sub-system-name="'pipelines'">
             </side-bar>
         </div>
-        <router-view class="biz-content"></router-view>
+        <router-view class="biz-content" :is-enabled-permission="isEnabledPermission"></router-view>
     </div>
 </template>
 
@@ -21,6 +21,7 @@
 
         data () {
             return {
+                isEnabledPermission: false,
                 sideMenuList: [
                     {
                         list: [
@@ -63,6 +64,7 @@
             this.$store.dispatch('requestProjectDetail', { projectId })
             this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {
                 if (res.data) {
+                    this.isEnabledPermission = res.data
                     this.sideMenuList[0].list.push({
                         id: 'templatePermission',
                         name: this.$t('template.permissionSetting'),

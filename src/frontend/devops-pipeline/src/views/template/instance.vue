@@ -14,6 +14,7 @@
                 <div class="instance-handle-row">
                     <bk-button class="batch-update" :disabled="!selectItemList.length" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
                     <bk-button
+                        v-if="isEnabledPermission"
                         theme="primary"
                         @click="createInstance()"
                         v-perm="{
@@ -28,6 +29,13 @@
                         }"
                     >
                         {{ $t('template.addInstance') }}
+                    </bk-button>
+                    <bk-button
+                        v-else
+                        theme="primary"
+                        @click="createInstance()"
+                    >
+                        <span>{{ $t('template.addInstance') }}</span>
                     </bk-button>
                 </div>
                 <bk-input
@@ -85,6 +93,7 @@
                     <bk-table-column :label="$t('operate')" width="250">
                         <template slot-scope="props">
                             <bk-button
+                                v-if="isEnabledPermission"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -101,6 +110,16 @@
                                 {{ $t('edit') }}
                             </bk-button>
                             <bk-button
+                                v-else
+                                theme="primary"
+                                text
+                                :disabled="!props.row.hasPermission"
+                                @click="updateInstance(props.row)"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                v-if="isEnabledPermission"
                                 class="mr10"
                                 theme="primary"
                                 text
@@ -115,6 +134,16 @@
                                         action: RESOURCE_ACTION.CREATE
                                     }
                                 }"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                :disabled="!hasCreatePermission"
                             >
                                 {{ $t('copy') }}
                             </bk-button>
@@ -161,6 +190,9 @@
             'inner-header': innerHeader,
             'empty-tips': emptyTips,
             'instance-compared': instanceCompared
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {
@@ -300,7 +332,6 @@
                     this.instanceList = res.instances
                     this.pagination.count = res.count
                     this.hasCreatePermission = res.hasCreateTemplateInstancePerm
-                    console.log(this.hasCreatePermission, 11111)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,

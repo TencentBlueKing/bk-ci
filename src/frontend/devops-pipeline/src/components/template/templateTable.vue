@@ -23,6 +23,7 @@
                                 </td>
                                 <td width="16%" :class="[{ 'manager-user': row.canEdit }, 'template-name']" :title="row.name">
                                     <span
+                                        v-if="isEnabledPermission"
                                         @click="editTemplate(row)"
                                         v-perm="{
                                             hasPermission: row.canEdit,
@@ -34,7 +35,10 @@
                                                 action: TEMPLATE_RESOURCE_ACTION.EDIT
                                             }
                                         }"
-                                    >{{row.name}}</span>
+                                    >
+                                        {{row.name}}
+                                    </span>
+                                    <span v-else @click="editTemplate(row)">{{row.name}}</span>
                                 </td>
                                 <td width="10%" class="template-version" :title="row.versionName">{{ row.versionName }}</td>
                                 <td width="10%">{{templateTypeFilter(row.templateType)}}</td>
@@ -46,6 +50,7 @@
                                 </td>
                                 <td width="8%">
                                     <div
+                                        v-if="isEnabledPermission"
                                         @click="toInstanceList(row)"
                                         v-perm="{
                                             hasPermission: row.canView,
@@ -61,9 +66,17 @@
                                     >
                                         {{ row.associatePipelines.length }}
                                     </div>
+                                    <div
+                                        v-else
+                                        @click="toInstanceList(row)"
+                                        :class="[canCreatePP ? 'create-permission' : 'not-create-permission', 'pipeline-instance']"
+                                    >
+                                        {{ row.associatePipelines.length }}
+                                    </div>
                                 </td>
-                                <td width="16%" class="handler-btn">
+                                <td width="16%" :class="[{ 'not-permission': !isManagerUser && !isEnabledPermission }, 'handler-btn']">
                                     <span
+                                        v-if="isEnabledPermission"
                                         @click="toInstanceList(row)"
                                         :class="canCreatePP ? 'create-permission' : 'not-create-permission'"
                                         v-perm="{
@@ -77,29 +90,71 @@
                                     >
                                         {{ $t('template.instantiate') }}
                                     </span>
+                                    <span
+                                        v-else
+                                        @click="toInstanceList(row)"
+                                        :class="canCreatePP ? 'create-permission' : 'not-create-permission'"
+                                    >
+                                        {{ $t('template.instantiate') }}
+                                    </span>
                                     <span @click.stop="showTools(row)" :class="[{ 'has-show': row.showMore }, 'show-more']" data-name="btns">
                                         {{ $t('more') }}
-                                        <ul v-show="row.showMore" class="btn-more">
-                                            <li
-                                                @click="copyTemplate(row)"
-                                                data-name="copy"
-                                                v-perm="{
-                                                    hasPermission: hasCreatePermission,
-                                                    disablePermissionApi: true,
-                                                    permissionData: {
-                                                        projectId: projectId,
-                                                        resourceType: 'pipeline_template',
-                                                        resourceCode: projectId,
-                                                        action: TEMPLATE_RESOURCE_ACTION.CREATE
-                                                    }
-                                                }"
-                                            >
-                                                {{ $t('clone') }}
-                                            </li>
-                                            <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
+                                        <template v-if="isEnabledPermission">
+                                            <ul v-show="row.showMore" class="btn-more">
                                                 <li
-                                                    v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
-                                                    data-name="stored"
+                                                    @click="copyTemplate(row)"
+                                                    data-name="copy"
+                                                    v-perm="{
+                                                        hasPermission: hasCreatePermission,
+                                                        disablePermissionApi: true,
+                                                        permissionData: {
+                                                            projectId: projectId,
+                                                            resourceType: 'pipeline_template',
+                                                            resourceCode: projectId,
+                                                            action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                                        }
+                                                    }"
+                                                >
+                                                    {{ $t('clone') }}
+                                                </li>
+                                                <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
+                                                    <li
+                                                        v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
+                                                        data-name="stored"
+                                                        v-perm="{
+                                                            hasPermission: row.canEdit,
+                                                            disablePermissionApi: true,
+                                                            permissionData: {
+                                                                projectId: projectId,
+                                                                resourceType: 'pipeline_template',
+                                                                resourceCode: row.templateId,
+                                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                            }
+                                                        }"
+                                                    >
+                                                        {{ $t('template.alreadyToStore') }}
+                                                    </li>
+                                                    <li
+                                                        v-else
+                                                        @click="toRelativeStore(row)"
+                                                        data-name="store"
+                                                        v-perm="{
+                                                            hasPermission: row.canEdit,
+                                                            disablePermissionApi: true,
+                                                            permissionData: {
+                                                                projectId: projectId,
+                                                                resourceType: 'pipeline_template',
+                                                                resourceCode: row.templateId,
+                                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                            }
+                                                        }"
+                                                    >
+                                                        {{ $t('template.toStore') }}
+                                                    </li>
+                                                </template>
+                                                <li
+                                                    @click="deleteTemplate(row)"
+                                                    data-name="delete"
                                                     v-perm="{
                                                         hasPermission: row.canEdit,
                                                         disablePermissionApi: true,
@@ -111,43 +166,20 @@
                                                         }
                                                     }"
                                                 >
-                                                    {{ $t('template.alreadyToStore') }}
+                                                    {{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}
                                                 </li>
-                                                <li
-                                                    v-else
-                                                    @click="toRelativeStore(row)"
-                                                    data-name="store"
-                                                    v-perm="{
-                                                        hasPermission: row.canEdit,
-                                                        disablePermissionApi: true,
-                                                        permissionData: {
-                                                            projectId: projectId,
-                                                            resourceType: 'pipeline_template',
-                                                            resourceCode: row.templateId,
-                                                            action: TEMPLATE_RESOURCE_ACTION.EDIT
-                                                        }
-                                                    }"
-                                                >
-                                                    {{ $t('template.toStore') }}
-                                                </li>
-                                            </template>
-                                            <li
-                                                @click="deleteTemplate(row)"
-                                                data-name="delete"
-                                                v-perm="{
-                                                    hasPermission: row.canEdit,
-                                                    disablePermissionApi: true,
-                                                    permissionData: {
-                                                        projectId: projectId,
-                                                        resourceType: 'pipeline_template',
-                                                        resourceCode: row.templateId,
-                                                        action: TEMPLATE_RESOURCE_ACTION.EDIT
-                                                    }
-                                                }"
-                                            >
-                                                {{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}
-                                            </li>
-                                        </ul>
+                                            </ul>
+                                        </template>
+                                        <template v-else>
+                                            <ul v-show="row.showMore" class="btn-more">
+                                                <li @click="copyTemplate(row)" data-name="copy">{{ $t('clone') }}</li>
+                                                <template v-if="!['constraint','CONSTRAINT'].includes(row.templateType)">
+                                                    <li v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag" data-name="stored" class="has-stored">{{ $t('template.alreadyToStore') }}</li>
+                                                    <li @click="toRelativeStore(row)" v-else data-name="store">{{ $t('template.toStore') }}</li>
+                                                </template>
+                                                <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}</li>
+                                            </ul>
+                                        </template>
                                     </span>
                                 </td>
                             </tr>
@@ -227,6 +259,7 @@
         data () {
             return {
                 hasCreatePermission: true,
+                isEnabledPermission: false,
                 pagingConfig: {
                     current: 1,
                     limit: 10,
@@ -309,6 +342,7 @@
                 this.$emit('getApiData', (res) => {
                     if (res) {
                         this.hasCreatePermission = res.hasCreatePermission
+                        this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
                         this.listData = (res.models || []).map(x => {
                             x.showMore = false

@@ -99,9 +99,9 @@
 
             <div class="handle-btn" style="margin-left: 146px;">
                 <bk-button
+                    v-if="isEnabledPermission"
                     @click="savePipelineSetting()"
                     theme="primary"
-                    :disabled="isDisabled || noPermission"
                     v-perm="{
                         permissionData: {
                             projectId: projectId,
@@ -114,6 +114,7 @@
                 >
                     {{ $t('save') }}
                 </bk-button>
+                <bk-button v-else @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -142,7 +143,8 @@
             isDisabled: {
                 type: Boolean,
                 default: false
-            }
+            },
+            isEnabledPermission: Boolean
         },
         data () {
             return {

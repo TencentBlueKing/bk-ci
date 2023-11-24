@@ -4,6 +4,7 @@
             <pipeline :pipeline="pipeline" :template-type="template.templateType" :is-saving="isSaving" :is-editing="isEditing">
                 <div slot="pipeline-bar">
                     <bk-button
+                        v-if="isEnabledPermission"
                         @click="savePipeline()"
                         theme="primary"
                         v-perm="{
@@ -14,6 +15,13 @@
                                 action: TEMPLATE_RESOURCE_ACTION.EDIT
                             }
                         }"
+                    >
+                        {{ $t('save') }}
+                    </bk-button>
+                    <bk-button
+                        v-else
+                        @click="savePipeline()" theme="primary"
+                        :disabled="isSaveDisable"
                     >
                         {{ $t('save') }}
                     </bk-button>
@@ -45,9 +53,9 @@
                                         {{ $t('load') }}
                                     </bk-button>
                                     <bk-button
+                                        v-if="isEnabledPermission"
                                         theme="primary"
                                         text
-                                        :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'"
                                         @click="deleteVersion(props.row)"
                                         v-perm="{
                                             permissionData: {
@@ -57,6 +65,15 @@
                                                 action: TEMPLATE_RESOURCE_ACTION.EDIT
                                             }
                                         }"
+                                    >
+                                        {{ $t('delete') }}
+                                    </bk-button>
+                                    <bk-button
+                                        v-else
+                                        theme="primary"
+                                        text
+                                        :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'"
+                                        @click="deleteVersion(props.row)"
                                     >
                                         {{ $t('delete') }}
                                     </bk-button>
@@ -105,6 +122,9 @@
             AutoComplete,
             FormField,
             MiniMap
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {
