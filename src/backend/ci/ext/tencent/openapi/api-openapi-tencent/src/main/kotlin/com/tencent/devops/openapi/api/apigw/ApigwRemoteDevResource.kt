@@ -25,7 +25,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
-    @ApiOperation("提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate", "v4_user_ticket_validate"])
+    @ApiOperation("提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate"])
     @GET
     @Path("/ticket/validate")
     fun validateUserTicket(
@@ -46,7 +46,7 @@ interface ApigwRemoteDevResource {
         ticket: String
     ): Result<Boolean>
 
-    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace", "v4_user_project_workspace"])
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace"])
     @GET
     @Path("/project/workspace")
     fun queryProjectWorkspace(
@@ -64,7 +64,7 @@ interface ApigwRemoteDevResource {
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
-    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list", "v4_user_remotedev_project_list"])
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET
     @Path("/project/list")
     fun queryWorkspaceProjects(
@@ -76,7 +76,7 @@ interface ApigwRemoteDevResource {
         apigwType: String?
     ): Result<List<RemotedevProject>>
 
-    @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
+    @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])
     @GET
     @Path("/project/cvm")
     fun queryProjectRemoteDevCvm(
