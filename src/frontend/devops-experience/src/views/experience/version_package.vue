@@ -14,7 +14,16 @@
         <div class="artifactory-container" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <bk-form :model="selectInfo" form-type="inline" class="select-nav">
                 <bk-form-item label="流水线">
-                    <bk-select ref="pipeline" searchable :loading="isPipelineLoading" v-model="selectInfo.pipelineId" @toggle="refreshPipelineList" :clearable="false">
+                    <bk-select
+                        enable-scroll-load
+                        searchable
+                        ref="pipeline"
+                        v-model="selectInfo.pipelineId"
+                        :remote-method="handleSearch"
+                        :scroll-loading="bottomLoadingOptions"
+                        @scroll-end="handleScrollToBottom"
+                        :clearable="false"
+                    >
                         <bk-option v-for="item in pipelineList" :key="item.pipelineId" class="artifactory-option"
                             :id="item.pipelineId"
                             :name="item.pipelineName"
@@ -66,7 +75,6 @@
         },
         data () {
             return {
-                isPipelineLoading: false,
                 isConstructLoading: false,
                 fileList: [],
                 pipelineList: [],
@@ -81,6 +89,16 @@
                 },
                 selectedFile: {
                     file: {}
+                },
+                filterByPipelineName: '',
+                bottomLoadingOptions: {
+                    size: 'small',
+                    isLoading: true
+                },
+                pagination: {
+                    page: 0,
+                    pageSize: 10,
+                    total: 0
                 }
             }
         },
@@ -111,7 +129,66 @@
                 })
             }
         },
+        mounted () {
+            this.handleScrollToBottom()
+        },
         methods: {
+            async handleScrollToBottom () {
+                if (this.pipelineList.length > 0 && this.pipelineList.length >= this.pagination.total) {
+                    return
+                }
+                try {
+                    this.bottomLoadingOptions.isLoading = true
+
+                    const res = await this.fetchPipelineList(this.pagination.page + 1, this.filterByPipelineName)
+                    if (res.records.length === 0) {
+                        this.bottomLoadingOptions.isLoading = false
+                        Object.assign(this.pagination, {
+                            total: this.pipelineList.length
+                        })
+                        return
+                    }
+                    this.pipelineList = [
+                        ...this.pipelineList,
+                        ...res.records
+                    ]
+                    Object.assign(this.pagination, {
+                        page: res.page,
+                        total: res.count
+                    })
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                } finally {
+                    this.bottomLoadingOptions.isLoading = false
+                }
+            },
+            async fetchPipelineList (page, filterByPipelineName) {
+                const res = await this.$store.dispatch('experience/requestPipelineList', {
+                    projectId: this.projectId,
+                    params: {
+                        page,
+                        pageSize: this.pagination.pageSize,
+                        filterByPipelineName
+                    }
+                })
+                return res
+            },
+            async handleSearch (keyword) {
+                try {
+                    this.filterByPipelineName = keyword
+                    const res = await this.fetchPipelineList(1, keyword)
+                    Object.assign(this.pagination, {
+                        page: res.page,
+                        total: res.count
+                    })
+                    this.pipelineList = res.records
+                } catch (error) {
+                    
+                }
+            },
             handleFileSelect (file) {
                 this.selectedFile.file = file
             },
@@ -163,31 +240,6 @@
                     })
                 } finally {
                     this.listLoading.isLoading = false
-                }
-            },
-            async refreshPipelineList (val) {
-                if (val) {
-                    this.$refs.pipeline.condition = ''
-                    this.isPipelineLoading = true
-
-                    try {
-                        const res = await this.$store.dispatch('experience/requestPipelineList', {
-                            projectId: this.projectId,
-                            params: {
-                                page: 1,
-                                pageSize: 1000
-                            }
-                        })
-
-                        this.pipelineList.splice(0, this.pipelineList.length, ...res.records)
-                    } catch (err) {
-                        this.$bkMessage({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    } finally {
-                        this.isPipelineLoading = false
-                    }
                 }
             },
             async refreshConstructList (val) {
