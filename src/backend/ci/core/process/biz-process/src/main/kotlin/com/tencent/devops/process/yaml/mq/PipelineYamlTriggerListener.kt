@@ -104,7 +104,7 @@ class PipelineYamlTriggerListener @Autowired constructor(
     }
 
     private fun trigger(projectId: String, event: PipelineYamlTriggerEvent) {
-        logger.info("receive pipeline yaml trigger|$projectId|${event.actionSetting}")
+        logger.info("receive pipeline yaml trigger|$projectId|${event.actionSetting.repoHashId}|${event.yamlPath}")
         val action = try {
             val action = actionFactory.loadByData(
                 eventStr = event.eventStr,
