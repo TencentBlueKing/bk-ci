@@ -498,7 +498,7 @@ class NodeDao {
         val now = LocalDateTime.now()
         with(TNode.T_NODE) {
             nodes.map {
-                val nodeId = dslContext.insertInto(
+                dslContext.insertInto(
                     this,
                     NODE_STRING_ID,
                     PROJECT_ID,
@@ -549,12 +549,15 @@ class NodeDao {
                     it.lastBuildTime,
                     it.hostId,
                     it.cloudAreaId
-                ).returning(NODE_ID).fetchOne()!!.nodeId
-                val hashId = HashUtil.encodeLongId(nodeId)
-                dslContext.update(this)
-                    .set(NODE_HASH_ID, hashId)
-                    .where(NODE_ID.eq(nodeId))
-                    .execute()
+                ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
+                    val hashId = HashUtil.encodeLongId(newRecord.nodeId)
+                    val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId
+                    dslContext.update(this)
+                        .set(NODE_HASH_ID, hashId)
+                        .set(DISPLAY_NAME, displayName)
+                        .where(NODE_ID.eq(newRecord.nodeId))
+                        .execute()
+                }
             }
         }
     }
