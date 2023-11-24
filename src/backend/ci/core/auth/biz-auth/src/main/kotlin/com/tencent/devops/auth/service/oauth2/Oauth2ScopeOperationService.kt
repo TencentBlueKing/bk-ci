@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class Oauth2ScopeOperationService constructor(
-    private val dslContext: DSLContext, private val oauth2ScopeOperationDao: AuthOauth2ScopeOperationDao
+    private val dslContext: DSLContext,
+    private val oauth2ScopeOperationDao: AuthOauth2ScopeOperationDao
 ) {
     fun get(
         operationId: String

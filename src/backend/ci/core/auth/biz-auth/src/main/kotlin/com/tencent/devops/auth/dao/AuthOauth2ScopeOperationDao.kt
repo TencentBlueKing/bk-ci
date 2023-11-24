@@ -41,7 +41,7 @@ class AuthOauth2ScopeOperationDao {
     fun delete(
         dslContext: DSLContext,
         operationId: String
-    ){
+    ) {
         with(TAuthOauth2ScopeOperation.T_AUTH_OAUTH2_SCOPE_OPERATION) {
             dslContext.deleteFrom(this).where(OPERATION_ID.eq(operationId))
         }
