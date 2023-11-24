@@ -10,9 +10,9 @@ data class GetStepInstanceDetailResult(
     @ApiModelProperty(value = "name")
     val name: String,
     @ApiModelProperty(value = "脚本步骤信息")
-    val scriptStepInfo: ScriptStepInfo,
+    val scriptStepInfo: ScriptStepInfo?,
     @ApiModelProperty(value = "文件步骤信息")
-    val fileStepInfo: FileStepInfo,
+    val fileStepInfo: FileStepInfo?,
     @ApiModelProperty(value = "审批步骤信息")
-    val approvalStepInfo: ApprovalStepInfo
+    val approvalStepInfo: ApprovalStepInfo?
 )

@@ -29,11 +29,13 @@ import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudTaskTerminate
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudCreateAccountResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.resp.Account
 import com.tencent.devops.environment.pojo.job.resp.ApprovalStepInfo
 import com.tencent.devops.environment.pojo.job.resp.AuthorizedAccount
 import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DeleteAccountResult
 import com.tencent.devops.environment.pojo.job.resp.DynamicGroup
+import com.tencent.devops.environment.pojo.job.resp.FileDestination
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeLog
 import com.tencent.devops.environment.pojo.job.resp.FileDistributeResult
 import com.tencent.devops.environment.pojo.job.resp.FileLog
@@ -52,7 +54,6 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExcuteLog
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptStepInfo
-import com.tencent.devops.environment.pojo.job.resp.Server
 import com.tencent.devops.environment.pojo.job.resp.StepHostResult
 import com.tencent.devops.environment.pojo.job.resp.StepHostResultForGetStepInstanceStatus
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
@@ -478,75 +479,103 @@ class JobService @Autowired constructor(
                     type = jobCloudGetStepInstanceDetail.type,
                     name = jobCloudGetStepInstanceDetail.name,
                     scriptStepInfo = jobCloudGetStepInstanceDetail.jobCloudScriptStepInfo
-                        .let { jobCloudScriptStepInfo ->
+                        ?.let { jobCloudScriptStepInfo ->
                             ScriptStepInfo(
-                                scriptSource = jobCloudScriptStepInfo.scriptSource,
+                                scriptType = jobCloudScriptStepInfo.scriptType,
                                 scriptId = jobCloudScriptStepInfo.scriptId,
                                 scriptVersionId = jobCloudScriptStepInfo.scriptVersionId,
-                                content = jobCloudScriptStepInfo.content,
+                                scriptContent = jobCloudScriptStepInfo.scriptContent,
                                 scriptLanguage = jobCloudScriptStepInfo.scriptLanguage,
                                 scriptParam = jobCloudScriptStepInfo.scriptParam,
-                                timeout = jobCloudScriptStepInfo.timeout,
-                                accountId = jobCloudScriptStepInfo.accountId,
-                                accountName = jobCloudScriptStepInfo.accountName,
-                                executeTarget = jobCloudScriptStepInfo.executeTarget.let { jobCloudVariableServer ->
+                                scriptTimeout = jobCloudScriptStepInfo.scriptTimeout,
+                                account = jobCloudScriptStepInfo.account.let { jobCloudAccount ->
+                                    Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                },
+                                server = jobCloudScriptStepInfo.server.let { jobCloudVariableServer ->
                                     VariableServer(
                                         variable = jobCloudVariableServer.variable,
-                                        server = jobCloudVariableServer.jobCloudServer.let { jobCloudServer ->
-                                            Server(
-                                                hostList = jobCloudServer.jobCloudHostList.map {
-                                                    HostIpv6(bkHostId = it.bkHostId, ip = it.ip, ipv6 = it.ipv6)
-                                                },
-                                                topoNodeList = jobCloudServer.jobCloudTopoNodeList.map {
-                                                    TopoNode(nodeType = it.nodeType, id = it.id)
-                                                },
-                                                dynamicGroupList = jobCloudServer.jobCloudDynamicGroupList.map {
-                                                    DynamicGroup(id = it.id)
-                                                }
+                                        hostList = jobCloudVariableServer.jobCloudHostList?.map {
+                                            HostIpv6(
+                                                bkHostId = it.bkHostId, bkCloudId = it.bkCloudId,
+                                                ip = it.ip, ipv6 = it.ipv6
                                             )
+                                        },
+                                        topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
+                                            TopoNode(nodeType = it.nodeType, id = it.id)
+                                        },
+                                        dynamicGroupList = jobCloudVariableServer.jobCloudDynamicGroupList?.map {
+                                            DynamicGroup(id = it.id)
                                         }
                                     )
                                 },
-                                secureParam = jobCloudScriptStepInfo.secureParam,
-                                ignoreError = jobCloudScriptStepInfo.ignoreError
+                                isParamSensitive = jobCloudScriptStepInfo.isParamSensitive,
+                                isIgnoreError = jobCloudScriptStepInfo.isIgnoreError
                             )
                         },
-                    fileStepInfo = FileStepInfo(
-                        fileSourceList = jobCloudGetStepInstanceDetail.jobCloudFileStepInfo
-                            .jobCloudFileSourceList.map { jobCloudFileSource ->
+                    fileStepInfo = jobCloudGetStepInstanceDetail.jobCloudFileStepInfo?.let { jobCloudFileStepInfo ->
+                        FileStepInfo(
+                            fileSourceList = jobCloudFileStepInfo.jobCloudFileSourceList.map { jobCloudFileSource ->
                                 FileSource(
                                     fileType = jobCloudFileSource.fileType,
-                                    fileLocation = jobCloudFileSource.fileLocation.map { it },
-                                    fileHash = jobCloudFileSource.fileHash,
-                                    fileSize = jobCloudFileSource.fileSize,
-                                    host = jobCloudFileSource.host.let { variableServer ->
+                                    fileList = jobCloudFileSource.fileList,
+                                    server = jobCloudFileSource.server.let { jobCloudVariableServer ->
                                         VariableServer(
-                                            variable = variableServer.variable,
-                                            server = variableServer.jobCloudServer.let { jobCloudServer ->
-                                                Server(
-                                                    hostList = jobCloudServer.jobCloudHostList.map {
-                                                        HostIpv6(bkHostId = it.bkHostId, ip = it.ip, ipv6 = it.ipv6)
-                                                    },
-                                                    topoNodeList = jobCloudServer.jobCloudTopoNodeList.map {
-                                                        TopoNode(nodeType = it.nodeType, id = it.id)
-                                                    },
-                                                    dynamicGroupList = jobCloudServer.jobCloudDynamicGroupList.map {
-                                                        DynamicGroup(id = it.id)
-                                                    }
+                                            variable = jobCloudVariableServer?.variable,
+                                            hostList = jobCloudVariableServer?.jobCloudHostList?.map {
+                                                HostIpv6(
+                                                    bkHostId = it.bkHostId, bkCloudId = it.bkCloudId,
+                                                    ip = it.ip, ipv6 = it.ipv6
                                                 )
+                                            },
+                                            topoNodeList = jobCloudVariableServer?.jobCloudTopoNodeList?.map {
+                                                TopoNode(nodeType = it.nodeType, id = it.id)
+                                            },
+                                            dynamicGroupList = jobCloudVariableServer?.jobCloudDynamicGroupList?.map {
+                                                DynamicGroup(id = it.id)
                                             }
                                         )
                                     },
-                                    accountId = jobCloudFileSource.accountId,
-                                    accountName = jobCloudFileSource.accountName,
-                                    fileSourceId = jobCloudFileSource.fileSourceId,
-                                    fileSourceName = jobCloudFileSource.fileSourceName
+                                    account = jobCloudFileSource.account.let { jobCloudAccount ->
+                                        Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                    },
+                                    fileSourceId = jobCloudFileSource.fileSourceId
                                 )
-                            }
-                    ),
-                    approvalStepInfo = ApprovalStepInfo(
-                        approvalMessage = jobCloudGetStepInstanceDetail.jobCloudApprovalStepInfo.approvalMessage
-                    )
+                            },
+                            fileDestination = jobCloudFileStepInfo.fileDestination.let { jobCloudFileDestination ->
+                                FileDestination(
+                                    path = jobCloudFileDestination.path,
+                                    account = jobCloudFileDestination.account.let { jobCloudAccount ->
+                                        Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                    },
+                                    server = jobCloudFileDestination.server.let { jobCloudVariableServer ->
+                                        VariableServer(
+                                            variable = jobCloudVariableServer.variable,
+                                            hostList = jobCloudVariableServer.jobCloudHostList?.map {
+                                                HostIpv6(
+                                                    bkHostId = it.bkHostId, bkCloudId = it.bkCloudId,
+                                                    ip = it.ip, ipv6 = it.ipv6
+                                                )
+                                            },
+                                            topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
+                                                TopoNode(nodeType = it.nodeType, id = it.id)
+                                            },
+                                            dynamicGroupList = jobCloudVariableServer.jobCloudDynamicGroupList?.map {
+                                                DynamicGroup(id = it.id)
+                                            }
+                                        )
+                                    }
+                                )
+                            },
+                            timeout = jobCloudFileStepInfo.timeout,
+                            sourceSpeedLimit = jobCloudFileStepInfo.sourceSpeedLimit,
+                            destinationSpeedLimit = jobCloudFileStepInfo.destinationSpeedLimit,
+                            transferMode = jobCloudFileStepInfo.transferMode,
+                            isIgnoreError = jobCloudFileStepInfo.isIgnoreError
+                        )
+                    },
+                    approvalStepInfo = jobCloudGetStepInstanceDetail.jobCloudApprovalStepInfo?.let {
+                        ApprovalStepInfo(approvalMessage = it.approvalMessage)
+                    }
                 )
             }
         )
@@ -594,6 +623,7 @@ class JobService @Autowired constructor(
                             ipv6 = stepHostResult.ipv6,
                             bkCloudId = stepHostResult.bkCloudId,
                             status = stepHostResult.status,
+                            statusDesc = stepHostResult.statusDesc,
                             tag = stepHostResult.tag,
                             groupKey = stepHostResult.groupKey,
                             exitCode = stepHostResult.exitCode,

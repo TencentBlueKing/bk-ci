@@ -8,9 +8,9 @@ data class JobCloudStepHostResultForGetStepInstanceStatus(
     @JsonProperty("bk_host_id")
     val bkHostId: Long?,
     @ApiModelProperty(value = "IP地址", required = true)
-    val ip: String,
+    val ip: String?,
     @ApiModelProperty(value = "IPV6地址", required = true)
-    val ipv6: String,
+    val ipv6: String?,
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
     val bkCloudId: Long?,
@@ -22,16 +22,19 @@ data class JobCloudStepHostResultForGetStepInstanceStatus(
         "399-任务执行出错，403-任务强制终止成功，404-任务强制终止失败，500-未知状态", required = true
     )
     val status: Int,
+    @ApiModelProperty(value = "任务状态描述", required = true)
+    @JsonProperty("status_desc")
+    val statusDesc: Int,
     @ApiModelProperty(
         value = "用户通过job_success/job_fail函数模板自定义输出的结果。仅脚本任务存在该参数", allowEmptyValue = true
     )
     val tag: String? = null,
     @ApiModelProperty(value = "基于status与tag字段的分组键，仅用于调用方验证分组内数据数量是否正确，请勿强依赖该字段")
     @JsonProperty("group_key")
-    val groupKey: String,
+    val groupKey: String?,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
     @JsonProperty("exit_code")
-    val exitCode: Int,
+    val exitCode: Int?,
     @ApiModelProperty(value = "开始执行时间", notes = "Unix时间戳，单位毫秒", required = true)
     @JsonProperty("start_time")
     val startTime: Long,
