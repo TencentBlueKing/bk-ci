@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service.oauth2
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthOauth2ClientDetailsDao
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
+import com.tencent.devops.auth.pojo.dto.ClientDetailsDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.auth.tables.records.TAuthOauth2ClientDetailsRecord
 import org.jooq.DSLContext
@@ -44,6 +45,22 @@ class Oauth2ClientService constructor(
         )
     }
 
+    fun createClientDetails(clientDetailsDTO: ClientDetailsDTO): Boolean {
+        authOauth2ClientDetailsDao.create(
+            dslContext = dslContext,
+            clientDetailsDTO = clientDetailsDTO
+        )
+        return true
+    }
+
+    fun deleteClientDetails(clientId: String): Boolean {
+        authOauth2ClientDetailsDao.delete(
+            dslContext = dslContext,
+            clientId = clientId
+        )
+        return true
+    }
+
     @Suppress("ThrowsCount", "LongParameterList")
     fun verifyClientInformation(
         clientId: String,
@@ -62,7 +79,7 @@ class Oauth2ClientService constructor(
                 defaultMessage = "The client($clientId) does not support $grantType type"
             )
         }
-        if (redirectUri != null && redirectUri != clientDetails.redirectUri) {
+        if (redirectUri != null && !clientDetails.redirectUri.split(",").contains(redirectUri)) {
             logger.warn("The redirectUri is invalid|$clientId|$redirectUri")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.INVALID_REDIRECT_URI,
