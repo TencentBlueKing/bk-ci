@@ -359,7 +359,8 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
-                userId = userId
+                userId = userId,
+                pipelineFilterParamList = pipelineFilterParamList
             )
             watcher.stop()
 
