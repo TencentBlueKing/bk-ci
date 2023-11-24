@@ -37,8 +37,9 @@ import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.RecordMapper
-import org.jooq.impl.DSL.select
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -137,19 +138,19 @@ class BuildRecordModelDao {
         }
     }
 
-    fun getRecordStartUserList(
+    fun getRecordInfoList(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): List<String> {
+    ): Result<Record2<String, String>> {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
-            return dslContext.select(START_USER).from(this)
+            return dslContext.select(START_USER, MODEL_VAR).from(this)
                 .where(
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
-                ).orderBy(EXECUTE_COUNT.desc()).fetch(START_USER)
+                ).orderBy(EXECUTE_COUNT.desc()).fetch()
         }
     }
 
