@@ -49,6 +49,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -117,7 +118,11 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         userId: String,
         atomCodeList: List<String>
     ): Result<List<BuildParameterGroup>> {
-        TODO("Not yet implemented")
+        val buildParameterGroups = mutableListOf<BuildParameterGroup>()
+        atomCodeList.forEach { atomCode ->
+            buildParameterGroups.addAll(TriggerBuildParamUtils.getTriggerParamNameMap(atomCode = atomCode))
+        }
+        return Result(buildParameterGroups)
     }
 
     override fun listRepositoryAliasName(

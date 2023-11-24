@@ -26,37 +26,63 @@
  *
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
-    private val TRIGGER_BUILD_PARAM_MAP = mutableMapOf<String, Map<String, List<String>>>()
+    private val TRIGGER_BUILD_PARAM_NAME_MAP = mutableMapOf<String, Map<String, List<String>>>()
+    private const val TRIGGER_BUILD_PARAM_PREFIX = "trigger.build.param"
+    private const val TRIGGER_BUILD_PARAM_DESC = "desc"
 
     init {
         gitWebhookTriggerCommon()
         gitWebhookTriggerPush()
     }
 
-    fun getTriggerParams(atomCode: String): Map<String, List<String>> {
-        return TRIGGER_BUILD_PARAM_MAP[atomCode] ?: emptyMap()
+    fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {
+        val paramNameMap = TRIGGER_BUILD_PARAM_NAME_MAP[atomCode] ?: emptyMap()
+        return paramNameMap.map { (eventType, paramNames) ->
+            val params = paramNames.map { paramName ->
+                BuildEnvParameters(
+                    name = paramName,
+                    desc = I18nUtil.getCodeLanMessage(
+                        messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$paramName.$TRIGGER_BUILD_PARAM_DESC"
+                    )
+                )
+            }
+            BuildParameterGroup(
+                name = I18nUtil.getCodeLanMessage(messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$eventType"),
+                params = params
+            )
+        }
     }
 
+    /**
+     * git事件触发公共变量名列表
+     */
     private fun gitWebhookTriggerCommon() {
         val commonParams = listOf(
             "ci.repo_type",
             "ci.repo_url"
         )
 
-        TRIGGER_BUILD_PARAM_MAP[CodeGitWebHookTriggerElement.classType] = mapOf("common" to commonParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] = mapOf("common" to commonParams)
     }
 
+    /**
+     * git事件触发push变量名列表
+     */
     private fun gitWebhookTriggerPush() {
         val pushParams = listOf(
             "ci.actor"
         )
-        TRIGGER_BUILD_PARAM_MAP[CodeGitWebHookTriggerElement.classType] = mapOf(CodeEventType.PUSH.name to pushParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+            mapOf(CodeEventType.PUSH.name to pushParams)
     }
 }
