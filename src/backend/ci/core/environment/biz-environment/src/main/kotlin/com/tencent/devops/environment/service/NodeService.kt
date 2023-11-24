@@ -162,14 +162,14 @@ class NodeService @Autowired constructor(
     }
 
     fun list(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<NodeWithPermission> {
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSize ?: 20)
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
         val count = nodeDao.countForAuth(dslContext, projectId).toLong()
         val nodeRecordList = nodeDao.listNodesWithPageLimit(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
         return Page(
-            page = page ?: 0,
+            page = page ?: 1,
             pageSize = pageSize ?: 20,
             count = count,
             records = NodeUtils.sortByUser(formatNodeWithPermissions(userId, projectId, nodeRecordList), userId)
