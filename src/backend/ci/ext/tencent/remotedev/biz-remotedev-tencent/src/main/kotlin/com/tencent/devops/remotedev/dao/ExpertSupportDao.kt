@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupportConfig
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportConfigRecord
@@ -9,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.JSON
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -58,13 +60,13 @@ class ExpertSupportDao {
         dslContext: DSLContext,
         id: Long,
         status: ExpertSupportStatus,
-        supporter: String?
+        supporter: List<String>?
     ) {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             val sql = dslContext.update(this)
                 .set(STATUS, status.name)
             if (supporter != null) {
-                sql.set(SUPPORTER, supporter)
+                sql.set(SUPPORTER, JSON.json(JsonUtil.toJson(supporter, formatted = false)))
             }
             sql.set(UPDATE_TIME, LocalDateTime.now())
             sql.where(ID.eq(id))

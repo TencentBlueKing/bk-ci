@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service.expert
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -107,7 +108,11 @@ class ExpertSupportService @Autowired constructor(
             dslContext = dslContext,
             id = data.id,
             status = data.status,
-            supporter = data.supporter
+            supporter = if (data.supporter == null) {
+                null
+            } else {
+                listOf(data.supporter!!)
+            }
         )
     }
 
@@ -167,6 +172,21 @@ class ExpertSupportService @Autowired constructor(
             ),
             mountType = WorkspaceMountType.START
         )
+
+        // 添加认领人信息
+        expertSupportDao.getSup(dslContext, id)?.let {
+            val sups = mutableListOf(userId)
+            if (it.supporter != null) {
+                sups.addAll(JsonUtil.to<List<String>>(it.supporter.data()))
+            }
+
+            expertSupportDao.updateSupport(
+                dslContext = dslContext,
+                id = id,
+                status = ExpertSupportStatus.RUNNING,
+                supporter = sups
+            )
+        }
 
         // 发送认领通知
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
