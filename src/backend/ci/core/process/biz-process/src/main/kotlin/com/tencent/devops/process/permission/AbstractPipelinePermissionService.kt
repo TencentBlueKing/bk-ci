@@ -69,7 +69,8 @@ abstract class AbstractPipelinePermissionService constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = "*",
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
