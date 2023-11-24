@@ -1241,7 +1241,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
-                masterVersion = agentPropsScope.getAgentVersion(),
+                // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
+                masterVersion = newHeartbeatInfo.masterVersion,
                 slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
                 ParallelTaskCount = agentRecord.parallelTaskCount,
