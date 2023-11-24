@@ -161,10 +161,21 @@ class NodeService @Autowired constructor(
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
 
-    fun list(userId: String, projectId: String, page: Int?, pageSize: Int?): Page<NodeWithPermission> {
+    fun list(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?
+    ): Page<NodeWithPermission> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
         val count = nodeDao.countForAuth(dslContext, projectId).toLong()
-        val nodeRecordList = nodeDao.listNodesWithPageLimit(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
+        val nodeRecordList = nodeDao.listNodesWithPageLimitAndSearchCondition(
+            dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIp, displayName, createdUser, lastModifiedUser
+        )
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }

@@ -238,11 +238,32 @@ class NodeDao {
         }
     }
 
-    fun listNodesWithPageLimit(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+    fun listNodesWithPageLimitAndSearchCondition(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?
+    ): List<TNodeRecord> {
+        return with(TNode.T_NODE) {
+            val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                query.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                query.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                query.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (!lastModifiedUser.isNullOrEmpty()) {
+                query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
+            }
+            query.orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

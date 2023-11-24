@@ -93,7 +93,19 @@ interface UserNodeResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("IP", required = false, defaultValue = "")
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @ApiParam("别名", required = false, defaultValue = "")
+        @QueryParam("displayName")
+        displayName: String?,
+        @ApiParam("创建人", required = false, defaultValue = "")
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @ApiParam("最后修改人", required = false, defaultValue = "")
+        @QueryParam("lastModifiedUser")
+        lastModifiedUser: String?
     ): Result<Page<NodeWithPermission>>
 
     @ApiOperation("获取用户有权限使用的服务器列表")
