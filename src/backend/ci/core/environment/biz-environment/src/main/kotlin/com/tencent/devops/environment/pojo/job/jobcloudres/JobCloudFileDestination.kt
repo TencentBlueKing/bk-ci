@@ -3,7 +3,7 @@ package com.tencent.devops.environment.pojo.job.jobcloudres
 import com.tencent.devops.environment.pojo.job.resp.Account
 import io.swagger.annotations.ApiModelProperty
 
-data class JobCloudFileDestination (
+data class JobCloudFileDestination(
     @ApiModelProperty(value = "目标路径")
     val path: String,
     @ApiModelProperty(value = "执行账号")

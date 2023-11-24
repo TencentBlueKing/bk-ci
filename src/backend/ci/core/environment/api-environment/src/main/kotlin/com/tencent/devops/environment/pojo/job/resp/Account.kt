@@ -2,7 +2,7 @@ package com.tencent.devops.environment.pojo.job.resp
 
 import io.swagger.annotations.ApiModelProperty
 
-data class Account (
+data class Account(
     @ApiModelProperty(value = "账号ID")
     val id: Long,
     @ApiModelProperty(value = "账号名称")

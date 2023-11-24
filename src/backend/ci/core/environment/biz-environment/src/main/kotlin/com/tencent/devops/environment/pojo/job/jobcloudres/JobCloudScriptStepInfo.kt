@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.environment.pojo.job.resp.Account
 import io.swagger.annotations.ApiModelProperty
 
 data class JobCloudScriptStepInfo(
