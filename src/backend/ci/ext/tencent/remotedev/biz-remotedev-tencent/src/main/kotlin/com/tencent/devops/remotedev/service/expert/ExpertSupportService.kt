@@ -144,7 +144,7 @@ class ExpertSupportService @Autowired constructor(
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
             .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
-            return Pair(false, "当前用户${userId}不是可分配运维人员")
+            return Pair(false, "${userId}不是云研发运维，不可认领")
         }
 
         // 校验 1 小时之内是否分配过
@@ -156,7 +156,7 @@ class ExpertSupportService @Autowired constructor(
                 assignType = WorkspaceShared.AssignType.VIEWER
             )
         ) {
-            return Pair(false, "${userId}已被分配")
+            return Pair(false, "${userId}已认领该工单")
         }
 
         // 分配
