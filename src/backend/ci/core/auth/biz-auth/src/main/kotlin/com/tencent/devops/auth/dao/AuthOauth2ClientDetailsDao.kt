@@ -56,7 +56,7 @@ class AuthOauth2ClientDetailsDao {
         clientId: String
     ) {
         with(TAuthOauth2ClientDetails.T_AUTH_OAUTH2_CLIENT_DETAILS) {
-            dslContext.deleteFrom(this).where(CLIENT_ID.eq(clientId))
+            dslContext.deleteFrom(this).where(CLIENT_ID.eq(clientId)).execute()
         }
     }
 }
