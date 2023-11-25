@@ -427,7 +427,7 @@ class PipelineTriggerEventDao {
                 PROJECT_ID,
                 EVENT_ID,
                 count().`as`("total"),
-                count(`when`(STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1))
+                count(`when`(STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success")
             )
                 .from(this)
                 .where(conditions)

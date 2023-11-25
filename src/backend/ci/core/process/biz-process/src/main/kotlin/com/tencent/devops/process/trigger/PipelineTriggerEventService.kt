@@ -134,7 +134,6 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val language = I18nUtil.getLanguage(userId)
         val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
@@ -157,9 +156,7 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            it.eventDesc = it.getI18nEventDesc(language)
-            it.reason = getI18nReason(it.reason, language)
-            it
+            fillEventDetailParam(it)
         }
         return SQLPage(count = count, records = records)
     }
@@ -259,12 +256,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = it.projectId,
                 eventId = it.eventId,
                 repoHashId = it.eventSource,
-                eventDesc = try {
-                    JsonUtil.to(it.eventDesc, I18Variable::class.java).getCodeLanMessage(language)
-                } catch (ignored: Exception) {
-                    logger.warn("Failed to resolve repo trigger event|sourceDesc[${it.eventDesc}]", ignored)
-                    it.eventDesc
-                },
+                eventDesc = getI18nEventDesc(it.eventDesc),
                 eventTime = it.createTime.timestampmilli(),
                 total = eventDetailsMap[it.eventId]?.total ?: 0,
                 success = eventDetailsMap[it.eventId]?.success ?: 0
@@ -288,7 +280,6 @@ class PipelineTriggerEventService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val language = I18nUtil.getLanguage(userId)
         val records = pipelineTriggerEventDao.listTriggerDetail(
             dslContext = dslContext,
             projectId = projectId,
@@ -298,7 +289,7 @@ class PipelineTriggerEventService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         ).map {
-            fillEventDetailParam(it, language)
+            fillEventDetailParam(it)
         }
         val count = pipelineTriggerEventDao.countTriggerDetail(
             dslContext = dslContext,
@@ -400,8 +391,8 @@ class PipelineTriggerEventService @Autowired constructor(
     /**
      * 获取国际化构建事件描述
      */
-    private fun PipelineTriggerEventVo.getI18nEventDesc(language: String) = try {
-        JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage(language)
+    private fun getI18nEventDesc(eventDesc: String) = try {
+        JsonUtil.to(eventDesc, I18Variable::class.java).getCodeLanMessage()
     } catch (ignored: Exception) {
         logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
         eventDesc
@@ -410,34 +401,35 @@ class PipelineTriggerEventService @Autowired constructor(
     /**
      * 获取国际化构建事件详情描述
      */
-    private fun PipelineTriggerEventVo.getI18nReasonDetailDesc(language: String): List<String> = try {
-        logger.info("get pipeline trigger event detail desc,source[$eventDesc]")
-        if (reasonDetailList.isNullOrEmpty()) {
-            listOf()
-        } else {
-            reasonDetailList!!.map {
-                val reasonDetail = JsonUtil.to(it, PipelineTriggerReasonDetail::class.java)
-                // 国际化触发失败原因
-                val i18nReason = JsonUtil.to(
-                    json = reasonDetail.reasonMsg,
-                    typeReference = object : TypeReference<I18Variable>() {}
-                ).getCodeLanMessage(language)
-                // 详情格式： {{触发器名称}}|{{国际化后的触发失败原因}}
-                "${reasonDetail.elementName} | $i18nReason"
+    private fun getI18nReasonDetailDesc(triggerType: String, reasonDetailList: List<String>?): List<String>? {
+        return when {
+            reasonDetailList.isNullOrEmpty() -> null
+            // 非webhook触发,直接返回异常信息
+            !PipelineTriggerType.webhookTrigger(triggerType) -> reasonDetailList
+            else -> try {
+                reasonDetailList.map {
+                    val reasonDetail = JsonUtil.to(it, PipelineTriggerReasonDetail::class.java)
+                    // 国际化触发失败原因
+                    val i18nReason = JsonUtil.to(
+                        json = reasonDetail.reasonMsg,
+                        typeReference = object : TypeReference<I18Variable>() {}
+                    ).getCodeLanMessage()
+                    // 详情格式： {{触发器名称}}|{{国际化后的触发失败原因}}
+                    "${reasonDetail.elementName} | $i18nReason"
+                }
+            } catch (ignored: Exception) {
+                logger.warn("Failed to resolve repo trigger event detail", ignored)
+                reasonDetailList
             }
         }
-    } catch (ignored: Exception) {
-        logger.warn("Failed to resolve repo trigger event detail|source[$eventDesc]", ignored)
-        listOf()
     }
 
-    private fun getI18nReason(reason: String?, language: String): String = getCodeLanMessage(
+    private fun getI18nReason(reason: String?): String = getCodeLanMessage(
         messageCode = if (reason.isNullOrBlank()) {
             PipelineTriggerReason.TRIGGER_SUCCESS.name
         } else {
             reason
         },
-        language = language,
         defaultMessage = reason
     )
 
@@ -459,16 +451,15 @@ class PipelineTriggerEventService @Autowired constructor(
      * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
      */
     private fun fillEventDetailParam(
-        eventParam: PipelineTriggerEventVo,
-        language: String
+        eventParam: PipelineTriggerEventVo
     ): PipelineTriggerEventVo {
         return with(eventParam) {
-            eventDesc = getI18nEventDesc(language)
+            eventDesc = getI18nEventDesc(eventDesc)
             buildNum = getBuildNumUrl()
-            reasonDetailList = getI18nReasonDetailDesc(language)
-            reason = getI18nReason(eventParam.reason, language)
+            reasonDetailList = getI18nReasonDetailDesc(triggerType = triggerType, reasonDetailList = reasonDetailList)
+            reason = getI18nReason(eventParam.reason)
             failReason = if (!reasonDetailList.isNullOrEmpty()) {
-                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name, language)
+                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
             } else {
                 ""
             }

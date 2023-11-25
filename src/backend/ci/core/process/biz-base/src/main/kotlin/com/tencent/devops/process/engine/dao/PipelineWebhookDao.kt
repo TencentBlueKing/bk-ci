@@ -158,12 +158,12 @@ class PipelineWebhookDao {
 
     fun getByProjectNameAndType(
         dslContext: DSLContext,
-        projectName: String,
+        projectNames: List<String>,
         repositoryType: String
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .where(PROJECT_NAME.eq(projectName))
+                .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .groupBy(PROJECT_ID, PIPELINE_ID)
@@ -274,12 +274,28 @@ class PipelineWebhookDao {
 
     fun listPipelines(
         dslContext: DSLContext,
+        projectId: String?,
+        projectNames: List<String>?,
         offset: Int,
         limit: Int
     ): List<WebhookTriggerPipeline> {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .where(DELETE.eq(false))
+                .let {
+                    if (projectId.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                }
+                .let {
+                    if (projectNames.isNullOrEmpty()) {
+                        it
+                    } else {
+                        it.and(PROJECT_NAME.`in`(projectNames))
+                    }
+                }
                 .limit(offset, limit)
                 .fetch().map {
                     WebhookTriggerPipeline(
@@ -307,6 +323,21 @@ class PipelineWebhookDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
+                .execute()
+        }
+    }
+
+    fun updateProjectName(
+        dslContext: DSLContext,
+        projectId: String,
+        projectName: String,
+        id: Long
+    ) {
+        with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                .set(PROJECT_NAME, projectName)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.eq(id))
                 .execute()
         }
     }

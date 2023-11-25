@@ -89,6 +89,10 @@ class PipelineTriggerEventAspect(
 
     private fun saveTriggerEvent(pjp: ProceedingJoinPoint, result: Any?, exception: Throwable?) {
         try {
+            // openapi/远程触发/定时触发/子流水线触发 如果执行成功,则不记录事件，减少数据量
+            if (result != null && exception == null) {
+                return
+            }
             // 参数value
             val parameterValue = pjp.args
             // 参数key
@@ -118,9 +122,7 @@ class PipelineTriggerEventAspect(
                 userId = userId,
                 channelCode = channelCode,
                 startType = startType,
-                pipelineParamMap = pipelineParamMap,
-                result = result,
-                exception = exception
+                pipelineParamMap = pipelineParamMap
             )
             if (isSkip) {
                 return
@@ -156,13 +158,8 @@ class PipelineTriggerEventAspect(
         userId: String?,
         channelCode: ChannelCode?,
         startType: StartType?,
-        pipelineParamMap: MutableMap<String, BuildParameters>?,
-        result: Any?,
-        exception: Throwable?
+        pipelineParamMap: MutableMap<String, BuildParameters>?
     ): Boolean {
-        if (result == null && exception == null) {
-            return true
-        }
         if (pipeline == null || userId == null || channelCode == null || startType == null) {
             return true
         }
