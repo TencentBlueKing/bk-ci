@@ -82,13 +82,26 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
-                                <div class="enable-switcher" @click="handleChangeEnabled(row)"></div>
+                                <div class="enable-switcher"
+                                    v-perm="{
+                                        hasPermission: row.managePermission,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: row.projectCode,
+                                            resourceType: 'project',
+                                            resourceCode: row.projectCode,
+                                            action: RESOURCE_ACTION.ENABLE
+                                        }
+                                    }"
+                                    @click="handleChangeEnabled(row)"
+                                >
+                                </div>
                                 <bk-switcher
                                     :value="row.enabled"
                                     class="mr5"
                                     size="small"
                                     theme="primary"
-                                    :disabled="[1, 3, 4].includes(row.approvalStatus)"
+                                    :disabled="[1, 3, 4].includes(row.approvalStatus) || !row.managePermission"
                                 />
                                 <span class="mr5">
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
@@ -174,6 +187,7 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
                 isDataLoading: false,
                 projectList: [],
                 pagination: {
