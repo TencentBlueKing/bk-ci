@@ -30,6 +30,16 @@
                             <a
                                 v-if="activeIndex === index"
                                 class="one-click-trigger"
+                                v-perm="{
+                                    hasPermission: curRepo.canUse,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: RESOURCE_TYPE,
+                                        resourceCode: curRepo.repositoryHashId,
+                                        action: RESOURCE_ACTION.USE
+                                    }
+                                }"
                                 @click.stop="handleReplayAll(eventId)"
                             >
                                 {{ $t('codelib.一键重新触发') }}
@@ -74,7 +84,22 @@
                                     </td>
                                     <td class="replay-btn">
                                         <div class="cell">
-                                            <a class="click-trigger" @click="handleReplay(detail)">{{ $t('codelib.重新触发') }}</a>
+                                            <a
+                                                class="click-trigger"
+                                                v-perm="{
+                                                    hasPermission: curRepo.canUse,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: RESOURCE_TYPE,
+                                                        resourceCode: curRepo.repositoryHashId,
+                                                        action: RESOURCE_ACTION.USE
+                                                    }
+                                                }"
+                                                @click="handleReplay(detail)"
+                                            >
+                                                {{ $t('codelib.重新触发') }}
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -110,6 +135,10 @@
     import {
         mapActions
     } from 'vuex'
+    import {
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
+    } from '@/utils/permission'
     import StatusIcon from '../status-icon.vue'
     import EmptyTableStatusVue from '../empty-table-status.vue'
     export default {
@@ -128,10 +157,16 @@
             searchValue: {
                 type: Object,
                 default: () => {}
+            },
+            curRepo: {
+                type: Object,
+                default: () => {}
             }
         },
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isLoading: false,
                 activeIndex: -1,
                 eventDetailList: [],

@@ -43,6 +43,7 @@
                         <TimelineCollapse
                             :search-value="searchValue"
                             :data="data"
+                            :cur-repo="curRepo"
                             :time="key"
                             @replay="replayEvent"
                         />

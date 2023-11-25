@@ -41,6 +41,18 @@
                         size="16"
                     />
                     <a
+                        :class="{ 'name-flod': isListFlod }"
+                        v-bk-overflow-tips
+                        v-perm="{
+                            hasPermission: props.row.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
                         @click="handleShowDetail(props.row)"
                     >
                         {{ props.row.aliasName }}
@@ -124,6 +136,16 @@
                     <bk-button
                         theme="primary"
                         text
+                        v-perm="{
+                            hasPermission: props.row.canDelete,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
+                        }"
                         @click.stop="deleteCodeLib(props.row)"
                     >
                         {{ $t('codelib.delete') }}
@@ -156,6 +178,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
         TABLE_COLUMN_CACHE,
         CODE_REPOSITORY_CACHE,
@@ -215,6 +238,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 scmType: '',
                 selectId: '',
                 tableHeight: '',
@@ -622,7 +647,7 @@
         background-color: #E1ECFF;
         width: 60px;
         height: 24px;
-        display: inline-table;
+        display: inline-grid;
         line-height: 24px;
         border-radius: 12px;
         text-align: right;
@@ -632,6 +657,15 @@
         position: absolute;
         left: 1px;
         top: 1px;
+    }
+    .name-flod {
+        position: relative;
+        top: 3px;
+        display: inline-block;
+        max-width: 250px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
     // .codelib-aliasName {
     //     position: relative;

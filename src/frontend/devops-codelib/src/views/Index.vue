@@ -6,18 +6,19 @@
                     <template>
                         <section class="header-content">
                             <link-code-lib
-                                v-if="codelibs && codelibs.hasCreatePermission"
+                                v-perm="{
+                                    hasPermission: codelibs && codelibs.hasCreatePermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: RESOURCE_TYPE,
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }"
                                 :create-codelib="createCodelib"
                             >
                             </link-code-lib>
-                            <bk-button
-                                v-else
-                                theme="primary"
-                                @click.stop="goCreatePermission"
-                            >
-                                <i class="devops-icon icon-plus"></i>
-                                <span>{{ $t('codelib.linkCodelib') }}</span>
-                            </bk-button>
                             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
@@ -106,6 +107,7 @@
     import CodeLibDialog from '../components/CodeLibDialog'
     import { mapState, mapActions } from 'vuex'
     import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
     import {
         codelibTypes,
         getCodelibConfig,
@@ -130,6 +132,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isLoading: !this.codelibs,
                 defaultPagesize: 10,
                 startPage: 1,
@@ -311,24 +315,14 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            async toApplyPermission () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-            },
-
-            goCreatePermission () {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.code,
-                        instanceId: [],
-                        projectId: this.projectId
-                    }]
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: RESOURCE_ACTION.CREATE
                 })
             },
-
             handleSortChange (payload) {
                 const { sortBy, sortType } = payload
                 this.sortBy = sortBy

@@ -9,15 +9,40 @@
                 class="codelib-name"
             >
                 <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
-                <span @click="handleEditName">
+                <span
+                    v-perm="{
+                        hasPermission: curRepo.canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: RESOURCE_TYPE,
+                            resourceCode: curRepo.repositoryHashId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    @click="handleEditName"
+                >
                     <Icon
                         name="edit-line"
                         size="16"
                         class="edit-icon"
                     />
                 </span>
-                <span @click="handleDeleteCodeLib">
+                <span
+                    v-perm="{
+                        hasPermission: curRepo.canDelete,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: RESOURCE_TYPE,
+                            resourceCode: curRepo.repositoryHashId,
+                            action: RESOURCE_ACTION.DELETE
+                        }
+                    }"
+                    @click="handleDeleteCodeLib"
+                >
                     <Icon
+                    
                         name="delete"
                         size="14"
                         class="delete-icon"
@@ -113,6 +138,7 @@
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import Trigger from './trigger.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
@@ -148,6 +174,8 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isEditing: false,
                 isLoading: false,
                 oldAliasName: '',

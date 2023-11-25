@@ -67,7 +67,22 @@
                             {{ repoInfo.userName || curRepo.userName }}
                         </span>
                     </template>
-                    <a class="reset-bth" @click="handleResetAuth">{{ $t('codelib.resetAuth') }}</a>
+                    <a
+                        class="reset-bth"
+                        v-perm="{
+                            hasPermission: curRepo.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: curRepo.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        @click="handleResetAuth"
+                    >
+                        {{ $t('codelib.resetAuth') }}
+                    </a>
                 </div>
             </div>
         </div>
@@ -277,6 +292,10 @@
         mapActions
     } from 'vuex'
     import {
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
+    } from '@/utils/permission'
+    import {
         prettyDateTimeFormat
     } from '@/utils/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
@@ -308,6 +327,8 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isEditing: false,
                 isDeleted: false,
                 hasCiFolder: true,
