@@ -34,21 +34,21 @@ class ParseHashListService @Autowired constructor(
             val envRecord = nodeDao.getEnvsFromEnvHashList(
                 dslContext, projectId, envHashIdList
             )
-            val envIdList = envRecord.map { it.envId }
+            val envIdList = envRecord.map { it.value1() }
 
             val envNodeRecord = nodeDao.getNodeIdsFromEnvIdList(
                 dslContext, projectId, envIdList
             )
-            val nodeIdList = envNodeRecord.map { it.nodeId }
+            val nodeIdList = envNodeRecord.map { it.value1() }
 
             val nodeRecord = nodeDao.getNodesFromNodeIdList(
                 dslContext, projectId, nodeIdList
             )
             val nodeHostList = nodeRecord.map {
                 Host(
-                    bkHostId = it.hostId,
-                    bkCloudId = it.cloudAreaId,
-                    ip = it.nodeIp
+                    bkHostId = it.value2(),
+                    bkCloudId = it.value3(),
+                    ip = it.value1()
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
@@ -67,9 +67,9 @@ class ParseHashListService @Autowired constructor(
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
                 Host(
-                    bkHostId = it.hostId,
-                    bkCloudId = it.cloudAreaId,
-                    ip = it.nodeIp
+                    bkHostId = it.value2(),
+                    bkCloudId = it.value3(),
+                    ip = it.value1()
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")

@@ -57,7 +57,7 @@ class NodeScheduledService @Autowired constructor(
 
     private fun checkNodeInCC() {
         val nodeRecords = nodeDao.getNodesWhoseHostIdNotNull(dslContext) // T_NODE表中host_id不为空的记录
-        val hostIdList = nodeRecords.map { it.hostId } // 要判断在不在cc中的 所有host_id
+        val hostIdList = nodeRecords.map { it.value1() } // 要判断在不在cc中的 所有host_id
 
         val nodeCCList =
             if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
@@ -69,7 +69,7 @@ class NodeScheduledService @Autowired constructor(
 
         // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：不在CC中 - 不处理；在CC中 - 将host_id写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
         val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(dslContext)
-        val notInCCIpList = nodeRecordsNotInCC.map { it.nodeIp }
+        val notInCCIpList = nodeRecordsNotInCC.map { it.value1() }
         val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
         ).data?.info

@@ -41,6 +41,7 @@ import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -81,17 +82,13 @@ class NodeDao {
         }
     }
 
-    fun getNotInCmdbNodes(dslContext: DSLContext, ipList: List<String>): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+    fun getNotInCmdbNodes(dslContext: DSLContext, ipList: List<String>): Result<Record1<String>> {
         with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            return dslContext.select(NODE_IP).from(this)
                 .where(NODE_IP.`in`(ipList))
                 .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.toString()))
                 .fetch()
-        }.map {
-            if (it != null) nodeRecords.add(it)
         }
-        return nodeRecords
     }
 
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
@@ -104,16 +101,12 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodes(dslContext: DSLContext): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+    fun getCmdbNodes(dslContext: DSLContext): Result<Record1<String>> {
         with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            return dslContext.select(NODE_IP).from(this)
                 .where(NODE_TYPE.eq("CMDB"))
                 .fetch()
-        }.map {
-            if (it != null) nodeRecords.add(it)
         }
-        return nodeRecords
     }
 
     fun updateNodeNotInCC(dslContext: DSLContext, hostList: List<Long>) {
@@ -128,28 +121,20 @@ class NodeDao {
         }
     }
 
-    fun getNodesNotInCC(dslContext: DSLContext): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+    fun getNodesNotInCC(dslContext: DSLContext): Result<Record1<String>> {
         with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            return dslContext.select(NODE_IP).from(this)
                 .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
                 .fetch()
-        }.map {
-            if (it != null) nodeRecords.add(it)
         }
-        return nodeRecords
     }
 
-    fun getNodesWhoseHostIdNotNull(dslContext: DSLContext): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
+    fun getNodesWhoseHostIdNotNull(dslContext: DSLContext): Result<Record1<Long>> {
         with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            return dslContext.select(HOST_ID).from(this)
                 .where(HOST_ID.isNotNull)
                 .fetch()
-        }.map {
-            if (it != null) nodeRecords.add(it)
         }
-        return nodeRecords
     }
 
     fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
@@ -183,36 +168,36 @@ class NodeDao {
         return nodeRecords
     }
 
-    fun getNodesFromNodeHashList(dslContext: DSLContext, projectId: String, nodeHashIdList: List<String>): List<TNodeRecord> {
+    fun getNodesFromNodeHashList(dslContext: DSLContext, projectId: String, nodeHashIdList: List<String>): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
                 .where(NODE_HASH_ID.`in`(nodeHashIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }
 
-    fun getEnvsFromEnvHashList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): List<TEnvRecord> {
+    fun getEnvsFromEnvHashList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): Result<Record1<Long>> {
         with(TEnv.T_ENV) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(ENV_ID).from(this)
                 .where(ENV_HASH_ID.`in`(envHashIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }
 
-    fun getNodeIdsFromEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): List<TEnvNodeRecord> {
+    fun getNodeIdsFromEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): Result<Record1<Long>> {
         with(TEnvNode.T_ENV_NODE) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(NODE_ID).from(this)
                 .where(ENV_ID.`in`(envIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }
 
-    fun getNodesFromNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): List<TNodeRecord> {
+    fun getNodesFromNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
                 .where(NODE_ID.`in`(nodeIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()

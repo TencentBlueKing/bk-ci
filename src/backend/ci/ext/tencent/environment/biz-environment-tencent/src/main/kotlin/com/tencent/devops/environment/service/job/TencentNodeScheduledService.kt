@@ -57,7 +57,7 @@ class TencentNodeScheduledService @Autowired constructor(
 
     private fun checkNodeInCmdb() {
         val nodeRecords = nodeDao.getCmdbNodes(dslContext) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
-        val nodeIpList = nodeRecords.map { it.nodeIp } // 要判断在不在cmdb中的 所有ip
+        val nodeIpList = nodeRecords.map { it.value1() } // 要判断在不在cmdb中的 所有ip
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList) // 从cmdb中查到的 所有ip - 记录 映射
 
         // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
@@ -68,10 +68,8 @@ class TencentNodeScheduledService @Autowired constructor(
         val inCmdbIpList = nodeIpList.filter { ipToCmdbInfoMap?.containsKey(it) ?: false }
         val inCmdbIpRecords = nodeDao.getNotInCmdbNodes(dslContext, inCmdbIpList)
         if (inCmdbIpRecords.isNotEmpty()) {
-            val inCmdbIpList = inCmdbIpRecords.map { it.nodeIp } // 需要再查询一次CC的ip
-            val inCmdbSvrIdList = inCmdbIpList.map {
-                ipToCmdbInfoMap?.get(it)?.serverId?.toLong()
-            }.filterNotNull() // 需要再查询一次CC的svrId
+            val inCmdbSvrIdList = inCmdbIpRecords.map { it.value1() } // 需要再查询一次CC的ip
+                .map { ipToCmdbInfoMap?.get(it)?.serverId?.toLong() }.filterNotNull() // 需要再查询一次CC的svrId
 
             val (svrIdQueryCCRes, _, _) =
                 cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
