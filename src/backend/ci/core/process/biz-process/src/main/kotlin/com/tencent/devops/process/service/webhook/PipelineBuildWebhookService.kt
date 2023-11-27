@@ -170,7 +170,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     ) {
         if (!builder.getEventSource().isNullOrBlank()) {
             val eventSource = builder.getEventSource()!!
-            val eventType =  triggerEvent.eventType
+            val eventType = triggerEvent.eventType
             triggerEvent.eventSource = eventSource
             triggerEvent.projectId = projectId
             val eventId = repoEventIdMap[builder.getEventSource()] ?: run {

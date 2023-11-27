@@ -456,8 +456,7 @@ class PipelineTriggerEventService @Autowired constructor(
         return with(eventParam) {
             eventDesc = getI18nEventDesc(eventDesc)
             buildNum = getBuildNumUrl()
-            // 一期暂不展示其他触发器的触发失败原因
-            reasonDetailList = listOf()
+            reasonDetailList = getI18nReasonDetailDesc(triggerType = triggerType, reasonDetailList = reasonDetailList)
             reason = getI18nReason(eventParam.reason)
             this
         }
