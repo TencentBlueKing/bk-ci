@@ -51,7 +51,11 @@ interface ServiceRemoteDevResource {
     @ApiOperation("提供给wesec获取创建云桌面的项目")
     @GET
     @Path("/project/list")
-    fun getRemotedevProjects(): Result<List<RemotedevProject>>
+    fun getRemotedevProjects(
+        @ApiParam("project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<List<RemotedevProject>>
 
     @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
     @GET
