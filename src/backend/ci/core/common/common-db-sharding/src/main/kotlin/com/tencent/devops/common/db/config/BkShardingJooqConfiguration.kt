@@ -43,6 +43,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import javax.sql.DataSource
 
 @Configuration
@@ -51,6 +52,7 @@ import javax.sql.DataSource
 class BkShardingJooqConfiguration {
 
     @Bean
+    @Primary
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,

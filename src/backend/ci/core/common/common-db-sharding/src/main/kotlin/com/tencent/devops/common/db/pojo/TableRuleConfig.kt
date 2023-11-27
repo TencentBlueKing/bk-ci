@@ -33,5 +33,5 @@ data class TableRuleConfig(
     var shardingNum: Int = 1, // 分表数量
     val broadcastFlag: Boolean? = null, // 是否为广播表
     val databaseShardingStrategy: DatabaseShardingStrategyEnum? = null, // 分库策略
-    val tableShardingStrategy: TableShardingStrategyEnum? = null // 分表策略
+    var tableShardingStrategy: TableShardingStrategyEnum? = null // 分表策略
 )
