@@ -94,7 +94,10 @@ class WorkspaceWindowsDao {
                 .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
                 .unionAll(
                     dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
-                        .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                        .from(
+                            TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED,
+                              TWorkspaceWindows.T_WORKSPACE_WINDOWS
+                        )
                         .where(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(user))
                         .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
                         .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
