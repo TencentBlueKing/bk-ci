@@ -176,6 +176,24 @@ class PipelineWebhookDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): PipelineWebhook? {
+        with(T_PIPELINE_WEBHOOK) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                .and(EVENT_TYPE.eq(eventType))
+                .fetchAny()
+            return record?.map { convert(record) }
+        }
+    }
+
     fun listTriggerPipeline(
         dslContext: DSLContext,
         projectId: String,
@@ -272,7 +290,7 @@ class PipelineWebhookDao {
         }?.map { convert(it) }
     }
 
-    fun listPipelines(
+    fun groupPipelineList(
         dslContext: DSLContext,
         projectId: String?,
         projectNames: List<String>?,
@@ -296,6 +314,7 @@ class PipelineWebhookDao {
                         it.and(PROJECT_NAME.`in`(projectNames))
                     }
                 }
+                .groupBy(PROJECT_ID, PIPELINE_ID)
                 .limit(offset, limit)
                 .fetch().map {
                     WebhookTriggerPipeline(

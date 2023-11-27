@@ -314,7 +314,7 @@ class PipelineWebhookUpgradeService(
         // 上一个更新的项目ID
         var preProjectId: String? = null
         do {
-            val pipelines = pipelineWebhookDao.listPipelines(
+            val pipelines = pipelineWebhookDao.groupPipelineList(
                 dslContext = dslContext,
                 projectId = projectId,
                 projectNames = projectNames,
@@ -341,6 +341,12 @@ class PipelineWebhookUpgradeService(
         val model = pipelineWebhookService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.info("$projectId|$pipelineId|model is null")
+            // 流水线不存在,则直接删除
+            pipelineWebhookDao.deleteByPipelineId(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             return
         }
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -380,8 +386,7 @@ class PipelineWebhookUpgradeService(
                 // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,修复数据
                 if (repository != null && webhook.projectName != repository.projectName) {
                     logger.info(
-                        "webhook projectName different from repo projectName|" +
-                                "webhook:${webhook}|repo:${repository}"
+                        "webhook projectName different from repo projectName|webhook:$webhook|repo:$repository"
                     )
                     pipelineWebhookDao.updateProjectName(
                         dslContext = dslContext,

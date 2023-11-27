@@ -458,11 +458,6 @@ class PipelineTriggerEventService @Autowired constructor(
             buildNum = getBuildNumUrl()
             reasonDetailList = getI18nReasonDetailDesc(triggerType = triggerType, reasonDetailList = reasonDetailList)
             reason = getI18nReason(eventParam.reason)
-            failReason = if (!reasonDetailList.isNullOrEmpty()) {
-                getI18nReason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
-            } else {
-                ""
-            }
             this
         }
     }

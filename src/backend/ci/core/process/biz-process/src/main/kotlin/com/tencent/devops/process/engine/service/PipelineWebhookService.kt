@@ -362,4 +362,19 @@ class PipelineWebhookService @Autowired constructor(
             limit = limit.limit
         ) ?: emptyList()
     }
+
+    fun get(
+        projectId: String,
+        pipelineId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): PipelineWebhook? {
+        return pipelineWebhookDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repositoryHashId = repositoryHashId,
+            eventType = eventType
+        )
+    }
 }
