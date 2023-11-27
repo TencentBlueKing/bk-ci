@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -65,7 +66,6 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MATERIAL_LINK_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -329,7 +329,7 @@ data class StartBuildContext(
                 parentProjectId = params[PIPELINE_START_PARENT_PROJECT_ID],
                 parentPipelineId = params[PIPELINE_START_PARENT_PIPELINE_ID],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
-                linkUrl = params[PIPELINE_BUILD_MATERIAL_LINK_URL]
+                linkUrl = params[PIPELINE_GIT_EVENT_URL]
             )
         }
 

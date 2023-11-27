@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -57,7 +58,6 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MATERIAL_LINK_URL
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
@@ -241,9 +241,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId)
-            params[PIPELINE_BUILD_MATERIAL_LINK_URL] =
+            params[PIPELINE_GIT_EVENT_URL] =
                 BuildParameters(
-                    key = PIPELINE_BUILD_MATERIAL_LINK_URL,
+                    key = PIPELINE_GIT_EVENT_URL,
                     value = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = parentProjectId,
                         pipelineId = parentPipelineId,

@@ -49,8 +49,6 @@ const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.bu
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
-// 触发材料链接
-const val PIPELINE_BUILD_MATERIAL_LINK_URL = "BK_CI_BUILD_MATERIAL_URL"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
