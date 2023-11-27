@@ -12,9 +12,9 @@ data class JobCloudResp<T>(
     @ApiModelProperty(value = "执行成功失败", required = true)
     @JsonProperty("result")
     var result: Boolean,
-    @ApiModelProperty(value = "请求ID", required = true)
+    @ApiModelProperty(value = "请求ID")
     @JsonProperty("job_request_id")
-    var jobRequestId: String,
+    var jobRequestId: String?,
     @ApiModelProperty(value = "结果消息", required = true)
     @JsonProperty("message")
     var message: String?,
