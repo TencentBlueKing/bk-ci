@@ -108,7 +108,7 @@
                 handleTemplateNoPermission({
                     projectId,
                     resourceCode: templateId,
-                    actions: TEMPLATE_RESOURCE_ACTION.VIEW
+                    action: TEMPLATE_RESOURCE_ACTION.VIEW
                 })
             }
         }
