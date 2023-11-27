@@ -30,6 +30,7 @@ package com.tencent.devops.common.db.config
 import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.db.pojo.ARCHIVE_DATA_SOURCE_NAME_PREFIX
 import com.tencent.devops.common.db.pojo.BindingTableGroupConfig
 import com.tencent.devops.common.db.pojo.DATA_SOURCE_NAME_PREFIX
@@ -58,6 +59,7 @@ import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.util.Properties
@@ -117,6 +119,9 @@ class BkShardingDataSourceConfiguration {
     @Value("\${spring.datasource.idleTimeout:#{60000}}")
     private val datasourceIdleTimeout: Long = 60000
 
+    @Value("\${sharding.table.defaultShardingNum:#{5}}")
+    private val defaultTableShardingNum: Int = 5
+
     private fun dataSourceMap(
         dataSourcePrefixName: String,
         dataSourceConfigs: List<DataSourceConfig>,
@@ -164,6 +169,7 @@ class BkShardingDataSourceConfiguration {
     }
 
     @Bean
+    @Primary
     fun shardingDataSource(config: DataSourceProperties, registry: MeterRegistry): DataSource {
         return createShardingDataSource(
             dataSourcePrefixName = DATA_SOURCE_NAME_PREFIX,
@@ -193,7 +199,7 @@ class BkShardingDataSourceConfiguration {
             databaseAlgorithmClassName = migratingDatabaseAlgorithmClassName,
             tableAlgorithmClassName = migratingTableAlgorithmClassName,
             dataSourceConfigs = migratingDataSourceConfigs,
-            tableRuleConfigs = migratingTableRuleConfigs ?: config.tableRuleConfigs,
+            tableRuleConfigs = generateTableRuleConfigs(migratingTableRuleConfigs, config),
             bindingTableGroupConfigs = config.migratingBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
             registry = registry
         )
@@ -216,10 +222,28 @@ class BkShardingDataSourceConfiguration {
             databaseAlgorithmClassName = archiveDatabaseAlgorithmClassName,
             tableAlgorithmClassName = archiveTableAlgorithmClassName,
             dataSourceConfigs = archiveDataSourceConfigs ?: config.dataSourceConfigs,
-            tableRuleConfigs = archiveTableRuleConfigs ?: config.tableRuleConfigs,
+            tableRuleConfigs = generateTableRuleConfigs(archiveTableRuleConfigs, config),
             bindingTableGroupConfigs = config.archiveBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
             registry = registry
         )
+    }
+
+    private fun generateTableRuleConfigs(
+        tableRuleConfigs: List<TableRuleConfig>?,
+        config: DataSourceProperties
+    ): List<TableRuleConfig>? {
+        var finalTableRuleConfigs = tableRuleConfigs
+        if (finalTableRuleConfigs.isNullOrEmpty()) {
+            // 如果分表规则为空，则复用默认的分表规则
+            finalTableRuleConfigs = config.tableRuleConfigs.deepCopy()
+            finalTableRuleConfigs?.forEach { tableRuleConfig ->
+                if (tableRuleConfig.broadcastFlag != true) {
+                    tableRuleConfig.tableShardingStrategy = TableShardingStrategyEnum.SHARDING
+                    tableRuleConfig.shardingNum = defaultTableShardingNum
+                }
+            }
+        }
+        return finalTableRuleConfigs
     }
 
     fun createShardingDataSource(
