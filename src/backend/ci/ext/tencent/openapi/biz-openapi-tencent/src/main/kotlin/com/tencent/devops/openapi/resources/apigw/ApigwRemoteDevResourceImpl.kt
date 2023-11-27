@@ -46,9 +46,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun queryWorkspaceProjects(appCode: String?, apigwType: String?): Result<List<RemotedevProject>> {
+    override fun queryWorkspaceProjects(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String?
+    ): Result<List<RemotedevProject>> {
         logger.info("Get  workspace projects")
-        return client.get(ServiceRemoteDevResource::class).getRemotedevProjects()
+        return client.get(ServiceRemoteDevResource::class).getRemotedevProjects(projectId)
     }
 
     override fun queryProjectRemoteDevCvm(
@@ -58,5 +62,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<List<RemotedevCvmData>> {
         logger.info("Get  project cvm")
         return client.get(ServiceRemoteDevResource::class).queryProjectRemoteDevCvm(projectId)
+    }
+
+    override fun checkUserCgsPermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        ip: String
+    ): Result<Boolean> {
+        logger.info("check user cgs permission")
+        return client.get(ServiceRemoteDevResource::class).checkUserIpPermission(userId, ip)
     }
 }

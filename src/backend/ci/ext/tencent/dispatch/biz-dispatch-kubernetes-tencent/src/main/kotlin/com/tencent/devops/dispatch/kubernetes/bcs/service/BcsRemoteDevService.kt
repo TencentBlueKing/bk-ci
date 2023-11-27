@@ -28,13 +28,16 @@
 package com.tencent.devops.dispatch.kubernetes.bcs.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.bcs.client.WorkspaceBcsClient
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.Container
+import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvVar
 import com.tencent.devops.dispatch.kubernetes.pojo.Environment
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
@@ -48,12 +51,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.CreateWorkspaceRes
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -64,9 +67,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class BcsRemoteDevService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val profile: Profile
 ) : RemoteDevInterface {
@@ -183,179 +188,193 @@ class BcsRemoteDevService @Autowired constructor(
         )
         return CreateWorkspaceRes(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
-        override fun startWorkspace(userId: String, workspaceName: String): String {
-            val environmentUid = getEnvironmentUid(workspaceName)
-            val resp = workspaceBcsClient.operatorWorkspace(
-                userId = userId,
-                environmentUid = environmentUid,
-                workspaceName = workspaceName,
-                environmentAction = EnvironmentAction.START,
-                envPatchStr = mutableMapOf(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE to "false")
-            )
 
-            return resp.taskUid
-        }
+    override fun startWorkspace(userId: String, workspaceName: String): String {
+        val environmentUid = getEnvironmentUid(workspaceName)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.START,
+            envPatchStr = mutableMapOf(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE to "false")
+        )
 
-        override fun stopWorkspace(userId: String, workspaceName: String): String {
-            val environmentUid = getEnvironmentUid(workspaceName)
-            val resp = workspaceBcsClient.operatorWorkspace(
-                userId = userId,
-                environmentUid = environmentUid,
-                workspaceName = workspaceName,
-                environmentAction = EnvironmentAction.STOP
-            )
+        return resp.taskUid
+    }
 
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
-                status = EnvStatusEnum.stopped,
-                dslContext = dslContext
-            )
+    override fun stopWorkspace(userId: String, workspaceName: String): String {
+        val environmentUid = getEnvironmentUid(workspaceName)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.STOP
+        )
 
-            return resp.taskUid
-        }
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.stopped,
+            dslContext = dslContext
+        )
+
+        return resp.taskUid
+    }
 
     override fun restartWorkspace(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
 
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
-            val environmentUid = getEnvironmentUid(workspaceName)
-            val resp = workspaceBcsClient.operatorWorkspace(
-                userId = userId,
-                environmentUid = environmentUid,
-                workspaceName = workspaceName,
-                environmentAction = EnvironmentAction.DELETE
-            )
+        val environmentUid = getEnvironmentUid(workspaceName)
+        val resp = workspaceBcsClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.DELETE
+        )
 
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
-                status = EnvStatusEnum.deleted,
-                dslContext = dslContext
-            )
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.deleted,
+            dslContext = dslContext
+        )
 
-            return resp.taskUid
-        }
+        return resp.taskUid
+    }
 
     override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
         TODO("Not yet implemented")
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-            TODO("Not yet implemented")
-        }
+        TODO("Not yet implemented")
+    }
 
-        override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-            logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
-            workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-            return true
-        }
-
-        override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-            val environmentStatus = workspaceBcsClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
-            val podInfo = environmentStatus.containerStatuses?.firstOrNull { it.name == workspaceName }
-            return WorkspaceInfo(
-                status = environmentStatus.status,
-                hostIP = environmentStatus.hostIP,
-                environmentIP = environmentStatus.environmentIP,
-                clusterId = environmentStatus.clusterId,
-                namespace = environmentStatus.namespace,
-                environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
-                ready = podInfo?.ready ?: false,
-                started = podInfo?.started ?: false
-            )
-        }
-
-        override fun waitTaskFinish(
-            userId: String,
-            taskId: String,
-            type: UpdateEventType
-        ): DispatchBuildTaskStatus {
-
-            logger.info("BcsRemoteDevService|start to do waitTaskFinish|userId|$userId|taskId|$taskId")
-            // 将task放入缓存，等待回调
-            workspaceRedisUtils.refreshTaskStatus(
-                userId = userId,
-                taskUid = taskId,
-                taskStatus = TaskStatus(taskId)
-            )
-            // 轮训十分钟
-            val startTime = System.currentTimeMillis()
-            loop@ while (true) {
-                if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                    logger.error("Wait task: $taskId finish timeout(10min)")
-                    return DispatchBuildTaskStatus(
-                        DispatchBuildTaskStatusEnum.FAILED,
-                        I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
-                    )
-                }
-                Thread.sleep(1 * 1000)
-                val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
-                if (taskStatus?.status != null) {
-                    logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
-                    return if (taskStatus.status == TaskStatusEnum.successed) {
-                        DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
-                    } else {
-                        DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
-                    }
-                }
+    override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
+        val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid)
+        workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
+        if (task?.status?.needFix() == true && task.action == EnvironmentAction.CREATE) {
+            val oldWs = dispatchWorkspaceDao.getWorkspaceInfo(task.workspaceName, dslContext) ?: kotlin.run {
+                logger.warn("workspaceTaskCallback|try to fix fail with wrong workspace|$task")
+                return false
+            }
+            kotlin.runCatching {
+                client.get(ServiceRemoteDevResource::class)
+                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+            }.onFailure {
+                logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
             }
         }
+        return true
+    }
 
-        private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
-            return "$workspaceName.${workspaceRedisUtils.getDevcloudClusterIdHost(clusterId, bcsCloudAppId)}"
-        }
+    override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
+        val environmentStatus = workspaceBcsClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        val podInfo = environmentStatus.containerStatuses?.firstOrNull { it.name == workspaceName }
+        return WorkspaceInfo(
+            status = environmentStatus.status,
+            hostIP = environmentStatus.hostIP,
+            environmentIP = environmentStatus.environmentIP,
+            clusterId = environmentStatus.clusterId,
+            namespace = environmentStatus.namespace,
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            ready = podInfo?.ready ?: false,
+            started = podInfo?.started ?: false
+        )
+    }
 
-        private fun generateContainerEnvVar(
-            userId: String,
-            gitRepoRootPath: String,
-            event: WorkspaceCreateEvent
-        ): List<EnvVar> {
-            val envVarList = mutableListOf<EnvVar>()
-            envVarList.addAll(
-                listOf(
-                    // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
-                    EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
-                    EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
-                    EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
-                    EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
-                    EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
-                    EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
-                    EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
-                    EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
-                    EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
-                    EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
-                    EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
-                    EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
-                    EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
-                    EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
-                    EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
-                    EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_URL, event.repositoryUrl),
-                    EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_BRANCH, event.branch)
+    override fun waitTaskFinish(
+        userId: String,
+        taskId: String,
+        type: UpdateEventType
+    ): DispatchBuildTaskStatus {
 
+        logger.info("BcsRemoteDevService|start to do waitTaskFinish|userId|$userId|taskId|$taskId")
+        // 将task放入缓存，等待回调
+        workspaceRedisUtils.refreshTaskStatus(
+            userId = userId,
+            taskUid = taskId,
+            taskStatus = TaskStatus(taskId)
+        )
+        // 轮训十分钟
+        val startTime = System.currentTimeMillis()
+        loop@ while (true) {
+            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
+                logger.error("Wait task: $taskId finish timeout(10min)")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
                 )
-            )
-
-            val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
-            allCustomizedEnvs.forEach { (t, u) ->
-                envVarList.add(EnvVar(t, u))
             }
+            Thread.sleep(1 * 1000)
+            val taskStatus = workspaceRedisUtils.getTaskStatus(taskId)
+            if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
+                return if (taskStatus.status == TaskStatusEnum.successed) {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+                } else {
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
+                }
+            }
+        }
+    }
 
-            return envVarList
+    private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
+        return "$workspaceName.${workspaceRedisUtils.getDevcloudClusterIdHost(clusterId, bcsCloudAppId)}"
+    }
+
+    private fun generateContainerEnvVar(
+        userId: String,
+        gitRepoRootPath: String,
+        event: WorkspaceCreateEvent
+    ): List<EnvVar> {
+        val envVarList = mutableListOf<EnvVar>()
+        envVarList.addAll(
+            listOf(
+                // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
+                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
+                EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
+                EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
+                EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
+                EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
+                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
+                EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
+                EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
+                EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
+                EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
+                EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
+                EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_URL, event.repositoryUrl),
+                EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_BRANCH, event.branch)
+
+            )
+        )
+
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
         }
 
-        private fun getEnvironmentUid(workspaceName: String): String {
-            val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
-            return workspaceRecord?.environmentUid
-                ?: throw RuntimeException("No bcs environment with $workspaceName")
-        }
+        return envVarList
+    }
 
-        private fun getWorkspaceEnvPatchStr(
-            envName: String,
-            patchValue: String
-        ): String {
-            val patchMap = mutableMapOf(envName to patchValue)
-            return JsonUtil.toJson(patchMap)
-        }
+    private fun getEnvironmentUid(workspaceName: String): String {
+        val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+        return workspaceRecord?.environmentUid
+            ?: throw RuntimeException("No bcs environment with $workspaceName")
+    }
+
+    private fun getWorkspaceEnvPatchStr(
+        envName: String,
+        patchValue: String
+    ): String {
+        val patchMap = mutableMapOf(envName to patchValue)
+        return JsonUtil.toJson(patchMap)
+    }
 }

@@ -25,40 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.project
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+enum class EnvironmentActionStatus {
+    PENDING,
+    SUCCEEDED,
+    FAILED,
+    WAIT_TIMEOUT,
+    AUTOMATIC_CORRECTION;
 
-@ApiModel("提供给安全侧的项目下云桌面信息")
-data class WeSecProjectWorkspace(
-    @ApiModelProperty("工作空间名称")
-    @JsonProperty("workspace_name")
-    val workspaceName: String,
-    @ApiModelProperty("项目ID")
-    @JsonProperty("project_id")
-    val projectId: String,
-    @ApiModelProperty("工作空间创建人")
-    val creator: String,
-    @ApiModelProperty("工作空间拥有者")
-    val owner: String? = null,
-    @ApiModelProperty("工作空间创建时间")
-    @JsonProperty("create_time")
-    val createTime: String? = null,
-    @ApiModelProperty("region_id")
-    @JsonProperty("region_id")
-    val regionId: String,
-    @ApiModelProperty("inner_ip")
-    @JsonProperty("inner_ip")
-    val innerIp: String?,
-    @ApiModelProperty("状态")
-    val status: WorkspaceStatus?,
-    @ApiModelProperty("工作空间实际拥有者，待分配时为空")
-    @JsonProperty("real_owner")
-    val realOwner: String? = null,
-    @ApiModelProperty("云桌面别名")
-    @JsonProperty("display_name")
-    val displayName: String? = null
-)
+    fun needFix() = this == FAILED || this == WAIT_TIMEOUT
+
+    companion object {
+        fun parse(status: String): EnvironmentActionStatus {
+            return values().find { it.name == status } ?: SUCCEEDED
+        }
+    }
+}
