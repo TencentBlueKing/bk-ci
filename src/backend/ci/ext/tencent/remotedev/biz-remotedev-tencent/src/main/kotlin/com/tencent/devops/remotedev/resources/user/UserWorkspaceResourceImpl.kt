@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -230,5 +231,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    }
+
+    override fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
 }
