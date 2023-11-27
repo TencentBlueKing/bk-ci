@@ -700,6 +700,12 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId
             )
+            pipelineTemplatePermissionService.modifyResource(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                templateName = setting.pipelineName
+            )
             saveTemplatePipelineSetting(userId, setting, true)
         }
         return true

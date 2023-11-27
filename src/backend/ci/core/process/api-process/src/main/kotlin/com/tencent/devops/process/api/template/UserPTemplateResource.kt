@@ -296,7 +296,7 @@ interface UserPTemplateResource {
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("是否开启模板管路权限")
+    @ApiOperation("是否开启模板管理权限")
     @GET
     @Path("/projects/{projectId}/templates/enableTemplatePermissionManage")
     fun enableTemplatePermissionManage(
