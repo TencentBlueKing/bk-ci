@@ -43,6 +43,12 @@ data class RepositoryInfoWithPermission(
     val type: ScmType,
     @ApiModelProperty("最后更新时间", required = true)
     val updatedTime: Long,
+    @ApiModelProperty("最后更新用户", required = false)
+    val updatedUser: String?,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: Long,
+    @ApiModelProperty("创建人", required = true)
+    val createUser: String,
     @ApiModelProperty("能否被编辑", required = true)
     val canEdit: Boolean,
     @ApiModelProperty("能否被删除", required = true)
