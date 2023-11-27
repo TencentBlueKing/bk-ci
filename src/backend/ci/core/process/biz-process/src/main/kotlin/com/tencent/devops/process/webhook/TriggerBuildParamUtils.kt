@@ -32,8 +32,10 @@ import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_ACTION
@@ -93,7 +95,7 @@ import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_TAG_FROM
 
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
-    private val TRIGGER_BUILD_PARAM_NAME_MAP = mutableMapOf<String, Map<String, List<String>>>()
+    private val TRIGGER_BUILD_PARAM_NAME_MAP = mutableMapOf<String, MutableMap<String, List<String>>>()
     private const val TRIGGER_BUILD_PARAM_PREFIX = "trigger.build.param"
     private const val TRIGGER_BUILD_PARAM_DESC = "desc"
 
@@ -154,9 +156,13 @@ object TriggerBuildParamUtils {
         )
 
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
-            mapOf("common" to commonParams)
+            mutableMapOf("common" to commonParams)
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
-            mapOf("common" to commonParams)
+            mutableMapOf("common" to commonParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType] =
+            mutableMapOf("common" to commonParams)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType] =
+            mutableMapOf("common" to commonParams)
     }
 
     /**
@@ -170,10 +176,18 @@ object TriggerBuildParamUtils {
             CI_SHA,
             CI_SHA_SHORT
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.PUSH.name to params)
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.PUSH.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.PUSH.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.PUSH.name to params)
+        )
     }
 
     /**
@@ -195,10 +209,18 @@ object TriggerBuildParamUtils {
             CI_MILESTONE_NAME,
             CI_MILESTONE_ID
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params)
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
-            mapOf(CodeEventType.PULL_REQUEST.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+        )
     }
 
     /**
@@ -209,8 +231,15 @@ object TriggerBuildParamUtils {
             CI_COMMIT_AUTHOR,
             CI_TAG_FROM
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.TAG_PUSH.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.TAG_PUSH.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.TAG_PUSH.name to params)
+        )
     }
 
     /**
@@ -226,10 +255,17 @@ object TriggerBuildParamUtils {
             CI_CREATE_TIME,
             CI_MODIFY_TIME
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.NOTE.name to params)
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+        )
+
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.NOTE.name to params)
+        )
+
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.NOTE.name to params)
+        )
     }
 
     /**
@@ -245,10 +281,15 @@ object TriggerBuildParamUtils {
             CI_ISSUE_OWNER,
             CI_ISSUE_MILESTONE_ID
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.ISSUES.name to params)
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.ISSUES.name to params)
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
+            mapOf(CodeEventType.ISSUES.name to params)
+        )
     }
     /**
      * git事件触发Review变量名列表
@@ -262,10 +303,12 @@ object TriggerBuildParamUtils {
             CI_REVIEW_STATE,
             CI_REVIEW_OWNER
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.REVIEW.name to params)
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType] =
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.REVIEW.name to params)
+        )
     }
 
 
@@ -277,8 +320,9 @@ object TriggerBuildParamUtils {
             CI_CREATE_REF,
             CI_CREATE_REF_TYPE
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] =
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.CREATE.name to params)
+        )
     }
 
     /**
@@ -295,7 +339,7 @@ object TriggerBuildParamUtils {
             CI_REPO_URL
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeSVNWebHookTriggerElement.classType] =
-            mapOf(CodeEventType.POST_COMMIT.name to params)
+            mutableMapOf(CodeEventType.POST_COMMIT.name to params)
     }
 
     /**
@@ -311,7 +355,6 @@ object TriggerBuildParamUtils {
             CI_REPO_ALIAS_NAME,
             CI_REPO_URL
         )
-        TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] =
-            mapOf("common" to params)
+        TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }
 }
