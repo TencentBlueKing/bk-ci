@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-USE devops_ci_environment
+USE devops_ci_environment;
 SET NAMES utf8mb4;
 
 DROP PROCEDURE IF EXISTS ci_environment_schema_update;
@@ -65,6 +65,33 @@ BEGIN
                     AND COLUMN_NAME = 'CLOUD_AREA_ID') THEN
         ALTER TABLE `T_NODE`
             ADD COLUMN `CLOUD_AREA_ID` bigint(20) default null comment '云区域id，公司内为0';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `HOST_ID` (`HOST_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'IDX_HOST') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `IDX_HOST` (`PROJECT_ID`, `HOST_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'IDX_HOST') THEN
+        ALTER TABLE `T_ENV_NODE`
+            ADD INDEX `NODE_ID` (`NODE_ID`);
     END IF;
 
     COMMIT;
