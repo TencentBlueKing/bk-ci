@@ -558,7 +558,7 @@
       "totalTime": "耗时{0}",
       "appVersions": "APP版本",
       "recommendVersion": "推荐版本号",
-      "pipelineVersion": "编排版本号",
+      "pipelineVersion": "流水线版本",
       "entry": "快捷入口"
     },
     "filterNullTips": "搜索结果为空",

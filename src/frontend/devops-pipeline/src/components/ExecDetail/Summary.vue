@@ -56,12 +56,12 @@
                                 <p v-for="row in templateRows" :key="row.id">
                                     <label>{{ row.id }}：</label>
                                     <span>{{ row.content }}</span>
-                                    <i v-if="row.link" class="template-link-icon" @click="$router.push(row.link)">
+                                    <router-link v-if="row.link" class="template-link-icon" :to="row.link" target="_blank">
                                         <logo
                                             name="tiaozhuan"
                                             size="14"
                                         />
-                                    </i>
+                                    </router-link>
                                 </p>
                             </section>
                         </div>
