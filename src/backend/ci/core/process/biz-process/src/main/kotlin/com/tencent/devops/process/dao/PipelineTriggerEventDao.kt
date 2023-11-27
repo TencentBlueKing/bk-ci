@@ -468,7 +468,7 @@ class PipelineTriggerEventDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REQUEST_ID.eq(requestId))
                 .and(EVENT_SOURCE.eq(eventSource))
-                .fetchOne()
+                .fetchAny()
         }
         return record?.let { convertEvent(it) }
     }
