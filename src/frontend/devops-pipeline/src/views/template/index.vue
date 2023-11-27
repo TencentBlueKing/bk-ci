@@ -7,21 +7,43 @@
                 :sub-system-name="'pipelines'">
             </side-bar>
         </div>
-        <router-view class="biz-content" :is-enabled-permission="isEnabledPermission"></router-view>
+        <router-view
+            v-if="hasViewPermission"
+            class="biz-content"
+            :is-enabled-permission="isEnabledPermission"
+        >
+        </router-view>
+        <empty-tips
+            v-else
+            :title="$t('template.accessDeny.title')"
+            :desc="$t('template.accessDeny.desc')"
+            show-lock
+        >
+            <bk-button
+                theme="primary"
+                @click="handleApply"
+            >
+                {{ $t('template.accessDeny.apply') }}
+            </bk-button>
+        </empty-tips>
     </div>
 </template>
 
 <script>
+    import { handleTemplateNoPermission, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import sideBar from '@/components/devops/side-nav'
+    import emptyTips from '@/components/template/empty-tips'
 
     export default {
         components: {
-            'side-bar': sideBar
+            'side-bar': sideBar,
+            emptyTips
         },
 
         data () {
             return {
                 isEnabledPermission: false,
+                hasViewPermission: false,
                 sideMenuList: [
                     {
                         list: [
@@ -60,7 +82,7 @@
             }
         },
         created () {
-            const projectId = this.$route.params.projectId
+            const { projectId, templateId } = this.$route.params
             this.$store.dispatch('requestProjectDetail', { projectId })
             this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {
                 if (res.data) {
@@ -72,6 +94,23 @@
                     })
                 }
             })
+            this.$store.dispatch('pipelines/getTemplateHasViewPermission', {
+                projectId,
+                templateId
+            }).then(async res => {
+                this.hasViewPermission = res.data
+                if (!this.hasViewPermission) await this.handleApply()
+            })
+        },
+        methods: {
+            handleApply () {
+                const { projectId, templateId } = this.$route.params
+                handleTemplateNoPermission({
+                    projectId,
+                    resourceCode: templateId,
+                    actions: TEMPLATE_RESOURCE_ACTION.VIEW
+                })
+            }
         }
     }
 </script>

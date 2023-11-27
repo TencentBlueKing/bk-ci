@@ -120,6 +120,9 @@ const actions = {
     },
     enableTemplatePermissionManage (_, projectId) {
         return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/enableTemplatePermissionManage`)
+    },
+    getTemplateHasViewPermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasViewPermission`)
     }
 }
 

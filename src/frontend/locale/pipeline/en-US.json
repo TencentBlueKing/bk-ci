@@ -417,7 +417,12 @@
     "updateStatus": "Update Status",
     "updateDialogTitle": "Update Instance",
     "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
-    "permissionSetting": "Permission Setting"
+    "permissionSetting": "Permission Setting",
+    "accessDeny": {
+        "title": "No access to this pipeline template",
+        "desc": "You do not have permission to view the pipeline template, please apply for permission",
+        "apply": "Apply"
+    }
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

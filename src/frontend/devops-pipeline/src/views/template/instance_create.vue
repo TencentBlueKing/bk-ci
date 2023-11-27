@@ -481,10 +481,6 @@
             handelSavePipelineName (index) {
                 this.$set(this.pipelineNameList[index], 'isEditing', false)
                 this.$set(this.pipelineNameList[index], 'pipelineName', this.displayName)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('saveSuc')
-                })
             },
             handelCancelSave (index) {
                 this.$set(this.pipelineNameList[index], 'isEditing', false)

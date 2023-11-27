@@ -418,7 +418,12 @@
     "updateStatus": "刷新状态",
     "updateDialogTitle": "实例更新",
     "updateDialogContent": "实例正在更新中，更新完成后将会邮件通知更新结果。",
-    "permissionSetting": "权限设置"
+    "permissionSetting": "权限设置",
+    "accessDeny": {
+      "title": "无该流水线模板权限",
+      "desc": "你没有该模板查看权限，请申请权限",
+      "apply": "申请加入"
+    }
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
