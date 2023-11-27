@@ -17,13 +17,6 @@
                 </ul>
             </div>
         </bk-dropdown-menu>
-        <rename-dialog
-            :is-show="isRenameDialogShow"
-            v-bind="pipelineInfo"
-            :project-id="$route.params.projectId"
-            @close="toggleRenameDialog"
-            @done="renameDone"
-        />
         <copy-pipeline-dialog
             :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
             :pipeline="pipelineActionState.activePipeline"
@@ -51,16 +44,15 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
     import CopyIcon from '@/components/copyIcon'
-    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -68,7 +60,6 @@
             exportDialog,
             CopyPipelineDialog,
             SaveAsTemplateDialog,
-            RenameDialog,
             RemoveConfirmDialog,
             // eslint-disable-next-line vue/no-unused-components
             CopyIcon
@@ -76,7 +67,6 @@
         mixins: [pipelineActionMixin],
         data () {
             return {
-                isRenameDialogShow: false,
                 hasNoPermission: false,
                 showExportDialog: false,
                 showImportDialog: false
@@ -102,12 +92,6 @@
                 }
                 return [
                     [
-                        {
-                            label: 'rename',
-                            handler: () => {
-                                this.toggleRenameDialog(true)
-                            }
-                        },
                         {
                             label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
                             handler: this.toggleCollect
@@ -151,26 +135,8 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom', 'updatePipelineSetting']),
+            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
             ...mapActions('pipelines', ['requestToggleCollect']),
-            toggleRenameDialog (show = false) {
-                this.isRenameDialogShow = show
-            },
-            renameDone (name) {
-                this.$nextTick(() => {
-                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        pipelineName: name
-                    })
-                    this.pipelineSetting
-                        && Object.keys(this.pipelineSetting).length
-                        && this.updatePipelineSetting({
-                            container: this.pipelineSetting,
-                            param: {
-                                pipelineName: name
-                            }
-                        })
-                })
-            },
             exportPipeline () {
                 this.showExportDialog = true
             },

@@ -470,11 +470,6 @@ const actions = {
             remark
         })
     },
-    renamePipeline (_, { projectId, pipelineId, name }) {
-        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
-            name
-        })
-    },
     // 流水线操作日志列表
     requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
