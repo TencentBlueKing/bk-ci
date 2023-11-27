@@ -185,7 +185,8 @@ class CmdbNodeService @Autowired constructor(
                     nodesAgentStatus = it.agentStatus,
                     nodesAgentVersion = "1.0.0"
                 )
-            }
+            },
+            agentAbnormalNodesCount = toAddNodeList.filterNot { it.agentStatus }.size
         )
     }
 
