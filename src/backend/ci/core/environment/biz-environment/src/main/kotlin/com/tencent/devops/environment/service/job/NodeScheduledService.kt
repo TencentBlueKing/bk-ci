@@ -29,7 +29,7 @@ class NodeScheduledService @Autowired constructor(
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 51 14 * * 1-5")
+    @Scheduled(cron = "0 5 15 * * 1-5")
     fun scheduledCleanInvalidHostId() {
         val redisLock = RedisLock(
             getRedisStringSerializerOperation(), SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK
