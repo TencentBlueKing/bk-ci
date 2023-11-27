@@ -1,6 +1,6 @@
 {
   "name": "bk-permission",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
