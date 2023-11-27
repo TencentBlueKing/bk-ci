@@ -87,7 +87,6 @@ class NodeDao {
             dslContext.selectFrom(this)
                 .where(NODE_IP.`in`(ipList))
                 .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.toString()))
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }.map {
             if (it != null) nodeRecords.add(it)
@@ -110,7 +109,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.selectFrom(this)
                 .where(NODE_TYPE.eq("CMDB"))
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }.map {
             if (it != null) nodeRecords.add(it)
@@ -135,7 +133,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.selectFrom(this)
                 .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }.map {
             if (it != null) nodeRecords.add(it)
@@ -148,7 +145,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.selectFrom(this)
                 .where(HOST_ID.isNotNull)
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }.map {
             if (it != null) nodeRecords.add(it)
@@ -163,7 +159,6 @@ class NodeDao {
                 dslContext.selectFrom(this)
                     .where(HOST_ID.eq(it.bkHostId))
                     .and(PROJECT_ID.eq(projectId))
-                    .orderBy(NODE_ID.desc())
                     .fetch()
             }.map {
                 if (it != null) nodeRecords.add(it)
@@ -180,7 +175,6 @@ class NodeDao {
                     .where(NODE_IP.eq(it.ip))
                     .and(CLOUD_AREA_ID.eq(it.bkCloudId))
                     .and(PROJECT_ID.eq(projectId))
-                    .orderBy(NODE_ID.desc())
                     .fetch()
             }.map {
                 if (it != null) nodeRecords.add(it)
@@ -194,7 +188,6 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(NODE_HASH_ID.`in`(nodeHashIdList))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
@@ -204,7 +197,6 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(ENV_HASH_ID.`in`(envHashIdList))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(ENV_ID.desc())
                 .fetch()
         }
     }
@@ -214,7 +206,6 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(ENV_ID.`in`(envIdList))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(ENV_ID.desc())
                 .fetch()
         }
     }
@@ -224,7 +215,6 @@ class NodeDao {
             return dslContext.selectFrom(this)
                 .where(NODE_ID.`in`(nodeIdList))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
