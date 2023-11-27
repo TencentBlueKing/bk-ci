@@ -239,10 +239,10 @@ interface ApigwJobResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "作业实例ID")
-        @QueryParam("jobInstanceId")
+        @QueryParam("job_instance_id")
         jobInstanceId: Long,
         @ApiParam(value = "步骤实例ID")
-        @QueryParam("stepInstanceId")
+        @QueryParam("step_instance_id")
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult>
 
