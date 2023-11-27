@@ -74,6 +74,8 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
 
     fun getAction(event: T): String? = null
 
+    fun getState(event: T): String? = null
+
     private fun initCommonFilters(
         event: T,
         pipelineId: String,
@@ -91,7 +93,8 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
                 pipelineId = pipelineId,
                 triggerOnEventType = getEventType(),
                 eventType = eventType,
-                action = getAction(event)
+                action = getAction(event),
+                state = getState(event)
             )
             return listOf(urlFilter, eventTypeFilter)
         }

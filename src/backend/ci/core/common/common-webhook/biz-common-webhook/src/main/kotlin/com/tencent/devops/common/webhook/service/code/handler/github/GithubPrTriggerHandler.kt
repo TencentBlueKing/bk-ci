@@ -80,6 +80,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestMergeState
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -128,6 +129,18 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     override fun getMessage(event: GithubPullRequestEvent): String? {
         return event.pullRequest.title
+    }
+
+    override fun getAction(event: GithubPullRequestEvent): String? {
+        return event.action
+    }
+
+    override fun getState(event: GithubPullRequestEvent): String? {
+        return if (event.pullRequest.merged) {
+            GithubPullRequestMergeState.MERGED
+        } else {
+            GithubPullRequestMergeState.NOT_MERGED
+        }.name
     }
 
     override fun getEventDesc(event: GithubPullRequestEvent): String {

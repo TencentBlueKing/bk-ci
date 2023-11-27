@@ -29,6 +29,8 @@ package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -221,3 +223,12 @@ data class GithubPullRequestBranch(
     @JsonProperty("user")
     val user: GithubUser
 )
+
+@ApiModel("Github pull request 合并状态")
+enum class GithubPullRequestMergeState {
+    @ApiModelProperty("已合并")
+    MERGED,
+
+    @ApiModelProperty("未合并")
+    NOT_MERGED
+}

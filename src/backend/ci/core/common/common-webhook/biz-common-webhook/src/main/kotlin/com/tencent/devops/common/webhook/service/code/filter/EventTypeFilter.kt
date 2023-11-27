@@ -28,13 +28,15 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestMergeState
 import org.slf4j.LoggerFactory
 
 class EventTypeFilter(
     private val pipelineId: String,
     private val triggerOnEventType: CodeEventType,
     private val eventType: CodeEventType?,
-    private val action: String? = null
+    private val action: String? = null,
+    private val state: String? = null
 ) : WebhookFilter {
 
     companion object {
@@ -49,6 +51,8 @@ class EventTypeFilter(
             null -> true
             CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
                 isAllowedByMrAction()
+            CodeEventType.PULL_REQUEST, CodeEventType.PULL_REQUEST_ACCEPT ->
+                isAllowedByPrAction()
             else ->
                 isAllowedByEventType()
         }
@@ -77,5 +81,34 @@ class EventTypeFilter(
 
     private fun isMrAcceptNotMergeAction(): Boolean {
         return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
+    }
+
+    /**
+     * Github PULL_REQUEST_ACCEPT 事件过滤
+     */
+    private fun isAllowedByPrAction(): Boolean {
+        if (triggerOnEventType != CodeEventType.PULL_REQUEST ||
+            isPrAndMergeAction() ||
+            isPrAcceptNotMergeAction()
+        ) {
+            logger.warn(
+                "$pipelineId|Github pr web hook not match with triggerOnEventType($triggerOnEventType) " +
+                        "or action($action) or state($state)"
+            )
+            return false
+        }
+        return true
+    }
+
+    private fun isPrAndMergeAction(): Boolean {
+        return eventType == CodeEventType.PULL_REQUEST && (
+                action == "close" &&
+                        state == GithubPullRequestMergeState.MERGED.name)
+    }
+
+    private fun isPrAcceptNotMergeAction(): Boolean {
+        return eventType == CodeEventType.PULL_REQUEST_ACCEPT && (
+                action != "close" ||
+                        state != GithubPullRequestMergeState.MERGED.name)
     }
 }
