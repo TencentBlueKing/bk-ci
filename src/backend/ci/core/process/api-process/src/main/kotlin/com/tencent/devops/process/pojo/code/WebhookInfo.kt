@@ -76,8 +76,12 @@ data class WebhookInfo(
     val parentProjectId: String?,
     // 父流水线流水线ID
     val parentPipelineId: String?,
+    // 父流水线名称
+    val parentPipelineName: String?,
     // 父流水线buildId
     val parentBuildId: String?,
+    // 父流水线构建号
+    val parentBuildNum: String?,
     // 触发材料url
     val linkUrl: String?
 )

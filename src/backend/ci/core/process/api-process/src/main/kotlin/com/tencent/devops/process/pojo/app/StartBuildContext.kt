@@ -73,8 +73,10 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
@@ -328,7 +330,9 @@ data class StartBuildContext(
                 reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID],
                 parentProjectId = params[PIPELINE_START_PARENT_PROJECT_ID],
                 parentPipelineId = params[PIPELINE_START_PARENT_PIPELINE_ID],
+                parentPipelineName = params[PIPELINE_START_PARENT_PIPELINE_NAME],
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
+                parentBuildNum = params[PIPELINE_START_PARENT_BUILD_NUM],
                 linkUrl = params[PIPELINE_GIT_EVENT_URL]
             )
         }
