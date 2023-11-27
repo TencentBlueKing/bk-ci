@@ -383,6 +383,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         workspaceName = workspaceName,
                         environmentUid = "",
                         operator = userId,
+                        uid = "",
                         action = EnvironmentAction.DELETE
                     )
                 } else {
@@ -440,7 +441,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         workspaceName = workspaceName,
                         environmentUid = environmentOperate.uid,
                         operator = userId,
-                        action = EnvironmentAction.START
+                        uid = environmentOpRsp.data!!.taskUid,
+                        action = action
                     )
 
                     return environmentOpRsp.data!!

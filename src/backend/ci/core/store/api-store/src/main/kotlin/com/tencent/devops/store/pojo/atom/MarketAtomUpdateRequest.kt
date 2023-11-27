@@ -57,7 +57,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("logo地址", required = false)
     val logoUrl: String?,
     @ApiModelProperty("版本号", required = true)
-    val version: String,
+    var version: String,
     @ApiModelProperty(
         "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正",
         required = true
@@ -74,5 +74,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty(value = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false,
     @ApiModelProperty("分支", required = false)
-    val branch: String? = null
+    val branch: String? = null,
+    @ApiModelProperty("是否属于分支测试版本", required = false)
+    var isBranchTestVersion: Boolean = false
 )

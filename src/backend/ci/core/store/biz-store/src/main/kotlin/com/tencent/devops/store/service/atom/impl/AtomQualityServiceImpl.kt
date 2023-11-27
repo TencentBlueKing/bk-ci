@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -71,9 +72,9 @@ class AtomQualityServiceImpl @Autowired constructor(
                 client.get(ServiceQualityControlPointMarketResource::class).refreshControlPoint(atomCode)
             }
             // 删除测试数据
-            client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-            client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+            client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, IN_READY_TEST)
+            client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode, IN_READY_TEST)
+            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, IN_READY_TEST)
         } finally {
             lock.unlock()
         }

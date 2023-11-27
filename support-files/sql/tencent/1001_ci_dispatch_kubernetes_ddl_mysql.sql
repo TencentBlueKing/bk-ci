@@ -39,7 +39,11 @@ CREATE TABLE IF NOT EXISTS T_DISPATCH_WORKSPACE_OP_HIS
     ACTION          varchar(64)  default ''                not null comment '操作行为: CREATE, START, STOP, DELETE, SHARE',
     ACTION_MSG      varchar(256) default ''                not null comment '操作行为描述',
     CREATED_TIME    timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
-    KEY `uni_1` (`WORKSPACE_NAME`)
+    UID             varchar(128) default ''                not null comment 'task id',
+    STATUS          varchar(32)  default ''                not null comment '操作状态',
+    KEY `uni_1` (`WORKSPACE_NAME`),
+    KEY `uni_2` (`UID`),
+    KEY `uni_3` (`STATUS`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='KUBERNETES构建集群工作空间操作记录表';
 
 -- ----------------------------
