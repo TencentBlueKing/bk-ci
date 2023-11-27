@@ -11,7 +11,7 @@
                 <div class="item-content-area">
                     <template v-for="(item, index) in getRenderInfo(card.type)">
                         <div :key="index" class="item-content">
-                            <div class="operate-icons">
+                            <div v-if="editable" class="operate-icons">
                                 <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
                                 <i class="devops-icon icon-more" style="font-size: 16px"></i>
                             </div>
