@@ -25,18 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.common
+package com.tencent.devops.auth.resources.service
 
-object Constants {
-    const val SUPER_MANAGER = -1
-    const val DEPT_LABEL = "id,name,parent,enabled,has_children"
-    const val USER_LABLE = "id,username,enabled,departments,extras"
-    const val LEVEL = "level"
-    const val PARENT = "parent"
-    const val NAME = "name"
-    const val USERNAME = "username"
-    const val ALL_ACTION = "all_action"
-    const val PROJECT_VIEW = "project_view"
+import com.tencent.devops.auth.api.service.ServiceSecurityResource
+import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.auth.service.security.SecurityService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-    const val HTTP_RESULT = "results"
+@RestResource
+class ServiceSecurityResourceImpl @Autowired constructor(
+    val securityService: SecurityService
+) : ServiceSecurityResource {
+    override fun getUserSecurityInfo(
+        userId: String,
+        projectCode: String
+    ): Result<UserAndDeptInfoVo> {
+        return Result(securityService.getUserSecurityInfo(userId, projectCode))
+    }
 }
