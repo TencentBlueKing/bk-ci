@@ -71,5 +71,13 @@ data class WebhookInfo(
     // note id
     val noteId: String?,
     // review id
-    val reviewId: String?
+    val reviewId: String?,
+    // 父流水线项目ID
+    val parentProjectId: String?,
+    // 父流水线流水线ID
+    val parentPipelineId: String?,
+    // 父流水线buildId
+    val parentBuildId: String?,
+    // 触发材料url
+    val linkUrl: String?
 )

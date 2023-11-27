@@ -72,6 +72,7 @@ import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MATERIAL_LINK_URL
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -304,6 +305,8 @@ class TGitPushTriggerHandler(
             true -> TGitPushActionType.NEW_BRANCH_AND_PUSH_FILE.value
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
+        startParams[PIPELINE_BUILD_MATERIAL_LINK_URL] =
+            "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
     }
 

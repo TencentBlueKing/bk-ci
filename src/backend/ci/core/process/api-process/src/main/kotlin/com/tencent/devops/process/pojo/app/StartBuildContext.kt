@@ -65,6 +65,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MATERIAL_LINK_URL
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -73,6 +74,8 @@ import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -292,7 +295,9 @@ data class StartBuildContext(
         }
 
         private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
-            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
+            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name &&
+                params[PIPELINE_START_TYPE] != StartType.PIPELINE.name
+            ) {
                 return null
             }
             return WebhookInfo(
@@ -320,7 +325,11 @@ data class StartBuildContext(
                 tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME],
                 issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID],
                 noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID],
-                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]
+                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID],
+                parentProjectId = params[PIPELINE_START_PARENT_PROJECT_ID],
+                parentPipelineId = params[PIPELINE_START_PARENT_PIPELINE_ID],
+                parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
+                linkUrl = params[PIPELINE_BUILD_MATERIAL_LINK_URL]
             )
         }
 
