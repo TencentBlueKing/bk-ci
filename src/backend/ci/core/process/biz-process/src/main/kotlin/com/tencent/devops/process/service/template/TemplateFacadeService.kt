@@ -2055,6 +2055,23 @@ class TemplateFacadeService @Autowired constructor(
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
         pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
 
+    fun hasViewPermission(
+        projectId: String,
+        userId: String,
+        templateId: String
+    ): Boolean {
+        // 用户界面，对于未开启模板权限的项目，不校验查看权限。
+        if (!pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)) {
+            return true
+        }
+        return pipelineTemplatePermissionService.checkPipelineTemplatePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
+    }
+
     /**
      * 删除模板的参数， 如果模板中没有这个参数，那么流水线中应该删除掉
      */

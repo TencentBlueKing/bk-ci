@@ -196,6 +196,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(templateFacadeService.hasManagerPermission(projectId, userId))
     }
 
+    override fun hasViewPermission(
+        userId: String,
+        projectId: String,
+        templateId: String
+    ): Result<Boolean> {
+        return Result(templateFacadeService.hasViewPermission(userId, projectId, templateId))
+    }
+
     override fun enableTemplatePermissionManage(userId: String, projectId: String): Result<Boolean> {
         return Result(templateFacadeService.enableTemplatePermissionManage(projectId))
     }
