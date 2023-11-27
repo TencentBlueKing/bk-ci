@@ -306,7 +306,7 @@
             display: grid;
             grid-gap: 20px;
             grid-auto-flow: column;
-            height: 38px;
+            height: 48px;
             grid-auto-columns: minmax(auto, max-content) 36px;
             .material-row-info-spans {
                 display: grid;
@@ -352,10 +352,12 @@
             .material-span-tooltip-box {
                 flex: 1;
                 overflow: hidden;
+                font-size: 0;
                 > .bk-tooltip-ref {
                     width: 100%;
                     .material-span {
                         width: 100%;
+                        font-size: 12px;
                     }
                 }
             }
