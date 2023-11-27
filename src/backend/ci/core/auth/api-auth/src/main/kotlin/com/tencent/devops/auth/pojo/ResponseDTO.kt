@@ -8,7 +8,7 @@ data class ResponseDTO<T>(
     @ApiModelProperty("返回码")
     val code: Long,
     @ApiModelProperty("返回信息")
-    val message: String,
+    val message: String?,
     @ApiModelProperty("请求返回结果")
     val result: Boolean,
     @ApiModelProperty("请求返回数据")

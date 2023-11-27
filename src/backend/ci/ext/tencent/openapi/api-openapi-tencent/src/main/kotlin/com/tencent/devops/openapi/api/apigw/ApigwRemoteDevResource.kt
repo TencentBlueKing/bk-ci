@@ -73,7 +73,10 @@ interface ApigwRemoteDevResource {
         appCode: String?,
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
-        apigwType: String?
+        apigwType: String?,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("project_id")
+        projectId: String?
     ): Result<List<RemotedevProject>>
 
     @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])

@@ -36,9 +36,14 @@ data class Devfile(
     @ApiModelProperty("团队空间是否自动分配")
     val autoAssign: Boolean? = false,
     @ApiModelProperty("start自定义镜像地址")
-    val imageCosFile: String? = ""
-
+    val imageCosFile: String? = "",
+    @ApiModelProperty("通过已有task uid进行创建")
+    val uid: String? = null,
+    @ApiModelProperty("通过已有task uid进行创建")
+    val environmentUid: String? = null
 ) {
+
+    fun checkWorkspaceAutomaticCorrection() = uid != null && environmentUid != null
     fun checkWorkspaceMountType(): WorkspaceMountType {
         if (runsOn?.poolName == JobRunsOnType.WINDOWS_LATEST.type && runsOn.agentSelector?.contains("gpu") == true) {
             return WorkspaceMountType.START
