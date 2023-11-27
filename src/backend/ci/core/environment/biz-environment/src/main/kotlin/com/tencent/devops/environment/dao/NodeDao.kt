@@ -148,7 +148,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.selectFrom(this)
                 .where(HOST_ID.isNotNull)
-                .orderBy(HOST_ID.desc())
+                .orderBy(NODE_ID.desc())
                 .fetch()
         }.map {
             if (it != null) nodeRecords.add(it)
