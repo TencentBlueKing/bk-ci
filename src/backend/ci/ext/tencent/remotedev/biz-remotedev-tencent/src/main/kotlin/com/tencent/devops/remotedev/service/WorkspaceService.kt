@@ -572,7 +572,8 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
                 realOwner = res["SHARED_USER"] as? String ?: "",
-                status = WorkspaceStatus.values()[res["STATUS"] as Int]
+                status = WorkspaceStatus.values()[res["STATUS"] as Int],
+                displayName = res["DISPLAY_NAME"] as String
             )
         }
 
@@ -588,16 +589,25 @@ class WorkspaceService @Autowired constructor(
         return data
     }
 
-    fun getWorkspaceProject(): List<RemotedevProject> {
+    fun getWorkspaceProject(projectId: String?): List<RemotedevProject> {
         logger.info("get workspace project list")
         val result = workspaceDao.getWorkspaceProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START
+            mountType = WorkspaceMountType.START,
+            projectId = projectId
         ) ?: emptyList()
+
+        val projectIds = result.map { it.value1() as String }.toSet()
+
+        val projectInfoData = client.get(ServiceProjectResource::class).listOnlyByProjectCode(projectIds).data ?: return emptyList()
+
+        val detailMap = projectInfoData.associateBy { it.projectCode }
+
         return result.map {
             RemotedevProject(
                 projectId = it.value1(),
-                projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
+                projectName = detailMap[it.value1()]?.projectName ?: "",
+                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: ""
             )
         }
     }

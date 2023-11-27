@@ -77,8 +77,8 @@ class RemoteDevSettingDao {
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
                     JsonUtil.toJson(RemoteDevUserSettings(), false),
-                    userInfo.value?.accountName,
-                    userInfo.value?.companyTags?.joinToString(",") { it.tagName }
+                    userInfo.value?.accountName ?: "",
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -311,8 +311,8 @@ class RemoteDevSettingDao {
                     userSetting.maxRunningCount,
                     userSetting.maxHavingCount,
                     JsonUtil.toJson(userSetting, false),
-                    userInfo.value?.username,
-                    userInfo.value?.companyTags?.joinToString(",") { it.tagName }
+                    userInfo.value?.username ?: "",
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(
