@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
@@ -92,6 +93,7 @@ class WorkspaceWindowsDao {
                 .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
                 .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
+                .skipCheck()
                 .unionAll(
                     dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
                         .from(
@@ -104,8 +106,8 @@ class WorkspaceWindowsDao {
                         .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.like("%.$ip"))
                         .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                         .and(TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
+                        .skipCheck()
                 )
-
         )
     }
 }
