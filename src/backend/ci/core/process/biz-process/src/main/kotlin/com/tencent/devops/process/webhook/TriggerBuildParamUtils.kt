@@ -74,7 +74,6 @@ import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_AUTHOR
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_COMMENT
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_ID
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_NOTE_TYPE
-import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_OPERATION_KIND
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_ALIAS_NAME
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REPO_GROUP
@@ -115,19 +114,24 @@ object TriggerBuildParamUtils {
         p4WebhookTrigger()
     }
 
-    fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {
+    fun getTriggerParamNameMap(atomCode: String, userId: String): List<BuildParameterGroup> {
         val paramNameMap = TRIGGER_BUILD_PARAM_NAME_MAP[atomCode] ?: emptyMap()
+        val language = I18nUtil.getLanguage(userId)
         return paramNameMap.map { (eventType, paramNames) ->
             val params = paramNames.map { paramName ->
                 BuildEnvParameters(
                     name = paramName,
                     desc = I18nUtil.getCodeLanMessage(
-                        messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$paramName.$TRIGGER_BUILD_PARAM_DESC"
+                        messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$paramName.$TRIGGER_BUILD_PARAM_DESC",
+                        language = language
                     )
                 )
             }
             BuildParameterGroup(
-                name = I18nUtil.getCodeLanMessage(messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$eventType"),
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = "$TRIGGER_BUILD_PARAM_PREFIX.$atomCode.$eventType",
+                    language = language
+                ),
                 params = params
             )
         }

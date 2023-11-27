@@ -120,7 +120,12 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     ): Result<List<BuildParameterGroup>> {
         val buildParameterGroups = mutableListOf<BuildParameterGroup>()
         atomCodeList.forEach { atomCode ->
-            buildParameterGroups.addAll(TriggerBuildParamUtils.getTriggerParamNameMap(atomCode = atomCode))
+            buildParameterGroups.addAll(
+                TriggerBuildParamUtils.getTriggerParamNameMap(
+                    atomCode = atomCode,
+                    userId = userId
+                )
+            )
         }
         return Result(buildParameterGroups)
     }
