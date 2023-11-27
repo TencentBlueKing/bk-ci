@@ -640,13 +640,15 @@
                     })
                     window.open(res.url, '_self')
                 } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$showTips({
-                        message,
-                        theme
-                    })
+                    const { projectId, pipelineId } = this.$route.params
+                    this.handleError(
+                        err,
+                        {
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: this.$permissionResourceAction.DOWNLOAD
+                        }
+                    )
                 }
             },
             async copyToCustom (artifactory) {
@@ -702,19 +704,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [
+                    const { projectId, pipelineId } = this.$route.params
+                    this.handleError(
+                        err,
                         {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.$route.params.pipelineId
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
+                            projectId,
+                            resourceCode: pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
                         }
-                    ])
+                    )
                 } finally {
                     delete this.retryingMap[buildId]
                     message

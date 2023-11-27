@@ -112,13 +112,14 @@
         codelibTypes,
         getCodelibConfig,
         isGit,
-        isGithub,
         isGitLab,
+        isGithub,
         isTGit,
         isP4,
         CODE_REPOSITORY_CACHE,
         isSvn
     } from '../config/'
+
     export default {
         name: 'codelib-list',
 

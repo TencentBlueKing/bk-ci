@@ -12,12 +12,18 @@ class PathStreamFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
-    private val excludedPaths: List<String>
+    private val excludedPaths: List<String>,
+    // 包含过滤失败原因
+    private val includedFailedReason: String = "",
+    // 排除过滤失败原因
+    private val excludedFailedReason: String = ""
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,
     includedPaths = includedPaths,
-    excludedPaths = excludedPaths
+    excludedPaths = excludedPaths,
+    includedFailedReason = includedFailedReason,
+    excludedFailedReason = excludedFailedReason
 ) {
 
     companion object {

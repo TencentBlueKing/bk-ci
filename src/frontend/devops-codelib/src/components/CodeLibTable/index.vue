@@ -202,6 +202,7 @@
                 type: Function,
                 required: true
             },
+            isSearch: Boolean,
             count: Number,
             totalPages: Number,
             page: Number,

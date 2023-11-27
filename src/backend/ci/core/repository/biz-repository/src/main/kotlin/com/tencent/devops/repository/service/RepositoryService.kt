@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -51,6 +53,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
@@ -69,15 +72,15 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -422,7 +425,8 @@ class RepositoryService @Autowired constructor(
                         dslContext = context,
                         repositoryId = repositoryId,
                         aliasName = gitProjectInfo.namespaceName,
-                        url = gitProjectInfo.repositoryUrl
+                        url = gitProjectInfo.repositoryUrl,
+                        updateUser = userId
                     )
                     repositoryCodeGitDao.edit(
                         dslContext = context,
@@ -588,7 +592,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -627,7 +630,10 @@ class RepositoryService @Autowired constructor(
                 updatedTime = repository.updatedTime.timestamp(),
                 canEdit = true,
                 canDelete = true,
-                authType = authType
+                authType = authType,
+                createUser = repository.userId,
+                createTime = repository.createdTime.timestamp(),
+                updatedUser = repository.updatedUser
             )
         }.toList()
     }
@@ -709,7 +715,10 @@ class RepositoryService @Autowired constructor(
                 canUse = hasUsePermission,
                 authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
                 svnType = authInfo?.svnType,
-                authIdentity = authInfo?.credentialId?.ifBlank { it.userId }
+                authIdentity = authInfo?.credentialId?.ifBlank { it.userId },
+                createTime = it.createdTime.timestamp(),
+                createUser = it.userId,
+                updatedUser = it.updatedUser ?: it.userId
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -850,7 +859,14 @@ class RepositoryService @Autowired constructor(
         }
 
         deleteResource(projectId, repositoryId)
-        repositoryDao.delete(dslContext, repositoryId)
+        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+        val deleteAliasName = "${record.aliasName}[$deleteTime]"
+        repositoryDao.delete(
+            dslContext = dslContext,
+            repositoryId = repositoryId,
+            deleteAliasName = deleteAliasName.coerceAtMaxLength(MAX_ALIAS_LENGTH),
+            updateUser = userId
+        )
     }
 
     fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
@@ -1088,7 +1104,37 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    fun rename(userId: String, projectId: String, repositoryHashId: String, repoRename: RepoRename) {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        // 权限校验
+        validatePermission(
+            user = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            authPermission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
+        if (hasAliasName(projectId, repositoryHashId, repoRename.name)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repoRename.name)
+            )
+        }
+        repositoryDao.rename(
+            dslContext = dslContext,
+            projectId = projectId,
+            updateUser = userId,
+            hashId = repositoryHashId,
+            newName = repoRename.name
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
+        const val MAX_ALIAS_LENGTH = 255
     }
 }

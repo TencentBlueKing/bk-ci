@@ -37,8 +37,8 @@ package com.tencent.devops.process.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
- * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
+ *    32: remotedev 35：misc-杂项）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
  * @since: 2023-3-20
@@ -281,6 +281,12 @@ object ProcessMessageCode {
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
     const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
     const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+
+    const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
+    const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
+    const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
+    const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
+    const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

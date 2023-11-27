@@ -391,7 +391,7 @@ export function convertFileSize (size, unit) {
             return convertFileSize(calcSize, next)
         }
     } else {
-        return `${calcSize.toFixed(2)}${next || unit}`
+        return `${calcSize.toFixed(2)} ${next || unit}`
     }
 }
 
@@ -589,13 +589,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title, ...restProps }) {
+export function navConfirm ({ content, title, cancelText, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title, ...restProps })
+        window.globalVue.$leaveConfirm({ content, title, cancelText, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 

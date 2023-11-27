@@ -382,3 +382,9 @@
         font-size: 12px;
     }
 </style>
+
+<style lang="scss" scoped>
+    .bk-form-control {
+        display: list-item !important;
+    }
+</style>

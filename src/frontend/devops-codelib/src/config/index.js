@@ -125,7 +125,7 @@ export const codelibTypes = [
     'SVN',
     'GitHub',
     'GitLab',
-    'Git',
+    // 'Git',
     'TGit',
     'P4'
 ]

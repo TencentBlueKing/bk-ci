@@ -24,10 +24,14 @@
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
-    import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
     import webSocketMessage from '@/utils/webSocketMessage'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -86,11 +90,11 @@
             filterData () {
                 return [
                     {
-                        value: 'commitid',
+                        value: 'Commit ID',
                         id: 'materialCommitId'
                     },
                     {
-                        value: 'commitMessage',
+                        value: 'Commit Message',
                         id: 'materialCommitMessage'
                     },
                     {
@@ -135,7 +139,7 @@
                     : [{
                         theme: 'primary',
                         size: 'normal',
-                        disabled: this.executeStatus,
+                        // disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
                             !this.executeStatus && this.$router.push({
@@ -143,7 +147,14 @@
                                 ...this.$route.params
                             })
                         },
-                        text: this.$t('history.startBuildTips')
+                        text: this.$t('history.startBuildTips'),
+                        isCheckPermission: true,
+                        permissionData: {
+                            projectId: this.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: this.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
                     }]
                 return {
                     title,
@@ -234,29 +245,10 @@
             },
             async toApplyPermission () {
                 try {
-                    const { projectId } = this.$route.params
-                    const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, {
-                            id: this.pipelineId,
-                            name: this.pipelineId,
-                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                        }]
-                    }])
-                    console.log('redirectUrl', redirectUrl)
-                    window.open(redirectUrl, '_blank')
-                    this.$bkInfo({
-                        title: this.$t('permissionRefreshtitle'),
-                        subTitle: this.$t('permissionRefreshSubtitle'),
-                        okText: this.$t('permissionRefreshOkText'),
-                        cancelText: this.$t('close'),
-                        confirmFn: () => {
-                            location.reload()
-                        }
+                    handlePipelineNoPermission({
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
                     })
                 } catch (e) {
                     console.error(e)

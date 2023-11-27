@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.store.api.image.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -60,9 +59,6 @@ interface UserImageProjectResource {
     @POST
     @Path("/image/install")
     fun installImage(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -74,9 +70,6 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/installedProjects/{imageCode}")
     fun getInstalledProjects(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -89,9 +82,6 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/availableImages")
     fun getAvailableImagesByProjectCode(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -119,9 +109,6 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/jobMarketImages")
     fun getJobMarketImagesByProjectCode(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -146,9 +133,6 @@ interface UserImageProjectResource {
     @POST
     @Path("/image/jobMarketImages/search")
     fun searchJobMarketImages(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

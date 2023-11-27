@@ -49,7 +49,7 @@ class UserImageProjectResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserImageProjectResource {
 
-    override fun installImage(accessToken: String, userId: String, installImageReq: InstallImageReq): Result<Boolean> {
+    override fun installImage(userId: String, installImageReq: InstallImageReq): Result<Boolean> {
         return imageProjectService.installImage(
             userId = userId,
             projectCodeList = installImageReq.projectCodeList,
@@ -60,15 +60,17 @@ class UserImageProjectResourceImpl @Autowired constructor(
     }
 
     override fun getInstalledProjects(
-        accessToken: String,
         userId: String,
         imageCode: String
     ): Result<List<InstalledProjRespItem>> {
-        return storeProjectService.getInstalledProjects(accessToken, userId, imageCode, StoreTypeEnum.IMAGE)
+        return storeProjectService.getInstalledProjects(
+            userId = userId,
+            storeCode = imageCode,
+            storeType = StoreTypeEnum.IMAGE
+        )
     }
 
     override fun getAvailableImagesByProjectCode(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum?,
@@ -79,7 +81,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
     ): Result<Page<JobImageItem>?> {
         return Result(
             imageProjectService.getJobImages(
-                accessToken = accessToken,
                 userId = userId,
                 projectCode = projectCode,
                 agentType = ImageAgentTypeEnum.getImageAgentType(agentType?.name ?: ""),
@@ -92,7 +93,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
     }
 
     override fun getJobMarketImagesByProjectCode(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -102,7 +102,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
     ): Result<Page<JobMarketImageItem?>?> {
         return Result(
             imageProjectService.getJobMarketImagesByProjectCode(
-                accessToken = accessToken,
                 userId = userId,
                 projectCode = projectCode,
                 agentType = agentType,
@@ -115,7 +114,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
     }
 
     override fun searchJobMarketImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -129,7 +127,6 @@ class UserImageProjectResourceImpl @Autowired constructor(
     ): Result<Page<JobMarketImageItem?>?> {
         return Result(
             imageProjectService.searchJobMarketImages(
-                accessToken = accessToken,
                 userId = userId,
                 projectCode = projectCode,
                 agentType = agentType,

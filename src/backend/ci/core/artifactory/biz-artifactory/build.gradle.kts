@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-audit"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:artifactory:model-artifactory"))
     api(project(":core:project:api-project"))
