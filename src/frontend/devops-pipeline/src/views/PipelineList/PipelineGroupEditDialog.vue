@@ -41,12 +41,27 @@
                                         v-model="props.row.id"
                                         @change="handleFilterTypeChange(props.row)"
                                     >
-                                        <bk-option
+                                        <template
                                             v-for="item in filterTypes"
-                                            :id="item.id"
-                                            :key="item.id"
-                                            :name="item.name"
-                                        />
+                                        >
+                                            <bk-option-group
+                                                v-if="Array.isArray(item.children) && item.children.length > 0"
+                                                :name="item.name"
+                                                :key="item.id"
+                                            >
+                                                <bk-option v-for="option in item.children"
+                                                    :key="option.id"
+                                                    :id="option.id"
+                                                    :name="option.name"
+                                                />
+                                            </bk-option-group>
+                                            <bk-option
+                                                v-else
+                                                :key="item.id"
+                                                :id="item.id"
+                                                :name="item.name"
+                                            />
+                                        </template>
                                     </bk-select>
                                 </template>
                             </bk-table-column>
@@ -229,19 +244,19 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import moment from 'moment'
     import Logo from '@/components/Logo'
     import {
-        NAME_FILTER_TYPE,
         CREATOR_FILTER_TYPE,
         FILTER_BY_LABEL,
+        FILTER_BY_PAC,
+        NAME_FILTER_TYPE,
         VIEW_CONDITION
     } from '@/utils/pipelineConst'
     import {
         hashID
     } from '@/utils/util'
-
+    import moment from 'moment'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     const defaultFilter = {
         '@type': NAME_FILTER_TYPE,
         id: NAME_FILTER_TYPE,
@@ -320,10 +335,22 @@
                         name: this.$t('creator'),
                         '@type': CREATOR_FILTER_TYPE
                     },
-                    ...this.tagGroupList.map(item => ({
-                        '@type': FILTER_BY_LABEL,
-                        ...item
-                    }))
+                    {
+                        id: FILTER_BY_LABEL,
+                        name: this.$t('label'),
+                        children: this.tagGroupList.map(item => ({
+                            '@type': FILTER_BY_LABEL,
+                            ...item
+                        }))
+                    },
+                    {
+                        id: FILTER_BY_PAC,
+                        name: this.$t('PAC'),
+                        children: [].map(item => ({
+                            '@type': FILTER_BY_PAC,
+                            ...item
+                        }))
+                    }
                 ]
             },
             formatFilters () { // TODO: ugly
@@ -662,6 +689,13 @@
                         filter.labelIds = []
                         break
                     case CREATOR_FILTER_TYPE:
+                        filter.condition = VIEW_CONDITION.INCLUDE
+                        filter['@type'] = CREATOR_FILTER_TYPE
+                        filter.pipelineName = ''
+                        filter.labelIds = []
+                        break
+                    case FILTER_BY_PAC:
+                        // TODO: pac
                         filter.condition = VIEW_CONDITION.INCLUDE
                         filter['@type'] = CREATOR_FILTER_TYPE
                         filter.pipelineName = ''

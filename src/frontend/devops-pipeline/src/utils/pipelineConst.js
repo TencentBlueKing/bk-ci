@@ -26,6 +26,7 @@ export const allVersionKeyList = [
 export const NAME_FILTER_TYPE = 'filterByName'
 export const CREATOR_FILTER_TYPE = 'filterByCreator'
 export const FILTER_BY_LABEL = 'filterByLabel'
+export const FILTER_BY_PAC = 'filterByPac'
 export const FILTER_BY_VIEW_ID = 'filterByViewIds'
 
 export const FILTER_BY_DELETER = 'filterByViewIds'
