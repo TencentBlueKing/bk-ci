@@ -16,8 +16,6 @@
         :default-sort="sortField"
         @selection-change="handleSelectChange"
         @header-dragend="handelHeaderDragend"
-        @row-mouse-enter="handleRowMouseEnter"
-        @row-mouse-leave="handleRowMouseLeave"
         v-on="$listeners"
         :key="viewId"
     >
@@ -30,11 +28,13 @@
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
-            <template slot-scope="{ row, $index }">
+            <template slot-scope="{ row }">
                 <bk-button
-                    v-show="showCollectIndex === $index || row.hasCollect"
                     text
-                    class="icon-star-btn"
+                    :class="{
+                        'icon-star-btn': true,
+                        'is-collect': row.hasCollect
+                    }"
                     :theme="row.hasCollect ? 'warning' : ''"
                     @click="collectHandler(row)">
                     <i :class="{
@@ -48,7 +48,7 @@
         <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <div class="pipeline-name-warpper">
+                <div class="pipeline-name-warpper" :key="props.row.pipelineName">
                     <div class="pipeline-name" v-bk-overflow-tips>
                         <span
                             v-if="props.row.permissions && !props.row.permissions.canView"
@@ -631,12 +631,6 @@
                 // this.tableWidthMap.pipelineName -= 1
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
-            handleRowMouseEnter (index) {
-                this.showCollectIndex = index
-            },
-            handleRowMouseLeave (index) {
-                this.showCollectIndex = -1
-            },
             setTableColumn (val) {
                 if (val) {
                     this.tableColumn.splice(1, 0, {
@@ -727,14 +721,24 @@
             position: relative;
             top: 2px;
         }
-    }
-    .exec-pipeline-btn {
-        width: 55px;
-        text-align: left;
-        overflow: hidden;
-    }
-    .icon-star-btn {
-        position: relative;
-        font-size: 14px !important;
+        .exec-pipeline-btn {
+            width: 55px;
+            text-align: left;
+            overflow: hidden;
+        }
+        .icon-star-btn {
+            position: relative;
+            font-size: 14px !important;
+            z-index: 999;
+            display: none;
+        }
+        .is-collect {
+            display: block
+        }
+        .bk-table-row.hover-row {
+            .icon-star-btn {
+                display: block
+            }
+        }
     }
 </style>

@@ -4,7 +4,7 @@
             <thead>
                 <tr>
                     <th width="10%">{{ $t('icon') }}</th>
-                    <th width="16%">{{ $t('template.name') }}</th>
+                    <th width="20%">{{ $t('template.name') }}</th>
                     <th width="10%">{{ $t('version') }}</th>
                     <th width="10%">{{ $t('template.source') }}</th>
                     <th width="30%">{{ $t('template.relatedCodelib') }}</th>
@@ -21,7 +21,7 @@
                                     <img :src="row.logoUrl" class="pipeline-icon" v-if="row.logoUrl">
                                     <logo size="40" name="pipeline" v-else></logo>
                                 </td>
-                                <td width="16%" :class="[{ 'manager-user': row.canEdit }, 'template-name']" :title="row.name">
+                                <td width="20%" :class="[{ 'manager-user': row.canEdit }, 'template-name']" :title="row.name">
                                     <span
                                         v-if="isEnabledPermission"
                                         @click="editTemplate(row)"
@@ -78,7 +78,7 @@
                                     <span
                                         v-if="isEnabledPermission"
                                         @click="toInstanceList(row)"
-                                        :class="canCreatePP ? 'create-permission' : 'not-create-permission'"
+                                        :key="row.templateId"
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
@@ -114,6 +114,7 @@
                                                             action: TEMPLATE_RESOURCE_ACTION.CREATE
                                                         }
                                                     }"
+                                                    key="cloneBtn"
                                                 >
                                                     {{ $t('clone') }}
                                                 </li>
@@ -131,6 +132,7 @@
                                                                 action: TEMPLATE_RESOURCE_ACTION.EDIT
                                                             }
                                                         }"
+                                                        key="alreadyToStoreBtn"
                                                     >
                                                         {{ $t('template.alreadyToStore') }}
                                                     </li>
@@ -148,6 +150,7 @@
                                                                 action: TEMPLATE_RESOURCE_ACTION.EDIT
                                                             }
                                                         }"
+                                                        key="toStoreBtn"
                                                     >
                                                         {{ $t('template.toStore') }}
                                                     </li>
@@ -165,6 +168,7 @@
                                                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                                                         }
                                                     }"
+                                                    key="deleteBtn"
                                                 >
                                                     {{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}
                                                 </li>
@@ -572,6 +576,7 @@
                         }
                         &.manager-user {
                             color: $primaryColor;
+                            cursor: pointer;
                         }
                         &.template-version {
                             max-width: 120px;
