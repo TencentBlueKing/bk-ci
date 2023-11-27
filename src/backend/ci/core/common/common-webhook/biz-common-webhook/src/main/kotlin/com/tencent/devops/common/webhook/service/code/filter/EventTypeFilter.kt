@@ -102,13 +102,13 @@ class EventTypeFilter(
 
     private fun isPrAndMergeAction(): Boolean {
         return eventType == CodeEventType.PULL_REQUEST && (
-                action == "close" &&
+                action == "closed" &&
                         state == GithubPullRequestMergeState.MERGED.name)
     }
 
     private fun isPrAcceptNotMergeAction(): Boolean {
         return eventType == CodeEventType.PULL_REQUEST_ACCEPT && (
-                action != "close" ||
+                action != "closed" ||
                         state != GithubPullRequestMergeState.MERGED.name)
     }
 }

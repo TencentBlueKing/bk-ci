@@ -171,8 +171,13 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return event.pullRequest.base.repo.cloneUrl
     }
 
+    @SuppressWarnings("ComplexCondition")
     override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
-        if (!(event.action == "opened" || event.action == "reopened" || event.action == "synchronize")) {
+        if (!(event.action == "opened" ||
+                    event.action == "reopened" ||
+                    event.action == "synchronize" ||
+                    (event.pullRequest.merged && event.action == "closed"))
+        ) {
             logger.info("Github pull request no open or update")
             return WebhookMatchResult(false)
         }
