@@ -25,7 +25,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
-    @ApiOperation("提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate", "v4_user_ticket_validate"])
+    @ApiOperation("提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate"])
     @GET
     @Path("/ticket/validate")
     fun validateUserTicket(
@@ -46,7 +46,7 @@ interface ApigwRemoteDevResource {
         ticket: String
     ): Result<Boolean>
 
-    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace", "v4_user_project_workspace"])
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_project_workspace"])
     @GET
     @Path("/project/workspace")
     fun queryProjectWorkspace(
@@ -64,7 +64,7 @@ interface ApigwRemoteDevResource {
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
-    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list", "v4_user_remotedev_project_list"])
+    @ApiOperation("提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET
     @Path("/project/list")
     fun queryWorkspaceProjects(
@@ -79,7 +79,7 @@ interface ApigwRemoteDevResource {
         projectId: String?
     ): Result<List<RemotedevProject>>
 
-    @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
+    @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm"])
     @GET
     @Path("/project/cvm")
     fun queryProjectRemoteDevCvm(
@@ -93,4 +93,22 @@ interface ApigwRemoteDevResource {
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevCvmData>>
+
+    @ApiOperation("提供给套件部署校验用户和云桌面是否有权限", tags = ["v4_app_check_cgs_permission"])
+    @GET
+    @Path("/check/cgs/permission")
+    fun checkUserCgsPermission(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("云桌面IP", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }
