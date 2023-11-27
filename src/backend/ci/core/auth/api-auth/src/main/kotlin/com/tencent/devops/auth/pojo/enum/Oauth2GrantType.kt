@@ -23,20 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.common
+package com.tencent.devops.auth.pojo.enum
 
-object Constants {
-    const val SUPER_MANAGER = -1
-    const val DEPT_LABEL = "id,name,parent,enabled,has_children"
-    const val USER_LABLE = "id,username,enabled,departments,extras"
-    const val LEVEL = "level"
-    const val PARENT = "parent"
-    const val NAME = "name"
-    const val USERNAME = "username"
-    const val ALL_ACTION = "all_action"
-    const val PROJECT_VIEW = "project_view"
+enum class Oauth2GrantType(val grantType: String) {
+    // 授权码模式
+    AUTHORIZATION_CODE("authorization_code"),
 
-    const val HTTP_RESULT = "results"
+    // 客户端模式
+    CLIENT_CREDENTIALS("client_credentials"),
+
+    // 刷新token模式
+    REFRESH_TOKEN("refresh_token");
 }
