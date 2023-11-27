@@ -29,7 +29,7 @@ class NodeScheduledService @Autowired constructor(
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 30 11 * * 1-5")
+    @Scheduled(cron = "0 51 14 * * 1-5")
     fun scheduledCleanInvalidHostId() {
         val redisLock = RedisLock(
             getRedisStringSerializerOperation(), SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK
@@ -58,7 +58,10 @@ class NodeScheduledService @Autowired constructor(
     private fun checkNodeInCC() {
         val nodeRecords = nodeDao.getNodesWhoseHostIdNotNull(dslContext) // T_NODE表中host_id不为空的记录
         val hostIdList = nodeRecords.map { it.hostId } // 要判断在不在cc中的 所有host_id
-        val nodeCCList = queryFromCCService.queryCCFindHostBizRelations(hostIdList).data // 在cc中的 host_id对应cc记录
+
+        val nodeCCList =
+            if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
+            else emptyList() // 在cc中的 host_id对应cc记录
         val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
         // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
         val invalidHostIdList = hostIdList.filterNot { hostIdToNodeCCMap?.containsKey(it) ?: false }
