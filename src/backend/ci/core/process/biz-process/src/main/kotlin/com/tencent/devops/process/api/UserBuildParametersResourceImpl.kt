@@ -122,8 +122,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         atomCodeList.forEach { atomCode ->
             buildParameterGroups.addAll(
                 TriggerBuildParamUtils.getTriggerParamNameMap(
-                    atomCode = atomCode,
-                    userId = userId
+                    atomCode = atomCode
                 )
             )
         }
