@@ -74,10 +74,10 @@
                                             {{ detail.reason }}  |
                                             <span v-html="detail.buildNum"></span>
                                         </div>
-                                        <div class="cell">
+                                        <div class="cell" v-else>
                                             <div v-for="i in detail.reasonDetailList" :key="i">
                                                 <StatusIcon :status="detail.status"></StatusIcon>
-                                                <span style="color: red;">{{ detail.failReason }}</span>  |
+                                                <span style="color: red;">{{ detail.reason }}</span>  |
                                                 <span>{{ i }}</span>
                                             </div>
                                         </div>
