@@ -25,7 +25,7 @@ export default {
     namespaced: true,
     state: {
         showAtomSelectorPopup: false,
-        showVariable: true,
+        showVariable: false,
         pipeline: null,
         pipelineWithoutTrigger: null,
         pipelineYaml: '',

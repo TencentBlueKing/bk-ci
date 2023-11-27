@@ -218,6 +218,10 @@
                 }
             }
         },
+        created () {
+            // HACK： 修复弹窗z-index问题
+            window.__bk_zIndex_manager.zIndex = 2020
+        },
         mounted () {
             if (!this.editfromImport) {
                 this.init()
@@ -231,6 +235,7 @@
             this.setSaveStatus(false)
             this.setEditFrom(false)
             this.errors.clear()
+            window.__bk_zIndex_manager.zIndex = 2000
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {

@@ -66,7 +66,7 @@
             </bk-collapse-item>
         </template>
         <bk-exception v-else type="empty">
-            {{$t('无执行参数')}}
+            {{$t('暂无入参')}}
         </bk-exception>
     </bk-collapse>
 </template>

@@ -299,16 +299,6 @@
             }
         },
         watch: {
-            value: {
-                handler (val) {
-                    if (val) {
-                        window.__bk_zIndex_manager.zIndex = 2020
-                    } else {
-                        window.__bk_zIndex_manager.zIndex = 2000
-                    }
-                },
-                immediate: true
-            },
             yamlInfo: {
                 handler: function (val) {
                     if (val) {
@@ -414,11 +404,13 @@
                         version: this.version,
                         params: {
                             ...rest,
-                            yamlInfo: {
-                                scmType,
-                                repoHashId,
-                                filePath
-                            }
+                            yamlInfo: rest.enablePac
+                                ? {
+                                    scmType,
+                                    repoHashId,
+                                    filePath
+                                }
+                                : null
                         }
                     })
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {

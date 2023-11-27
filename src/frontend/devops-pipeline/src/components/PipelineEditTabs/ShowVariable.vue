@@ -78,7 +78,11 @@
 
         },
         created () {
+            this.setShowVariable(true)
             this.requestCommonParams()
+        },
+        beforeDestroy () {
+            this.setShowVariable(false)
         },
         methods: {
             ...mapActions('atom', [
