@@ -114,9 +114,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        logger.info("getAllWindowsResourceConfig|$userId")
-        return Result(windowsResourceConfigService.getAllType())
+    override fun getAllWindowsResourceConfig(userId: String, withUnavailable: Boolean?): Result<List<WindowsResourceTypeConfig>> {
+        logger.info("getAllWindowsResourceConfig|$userId|withUnavailable|$withUnavailable")
+        return Result(windowsResourceConfigService.getAllType(withUnavailable))
     }
 
     override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
