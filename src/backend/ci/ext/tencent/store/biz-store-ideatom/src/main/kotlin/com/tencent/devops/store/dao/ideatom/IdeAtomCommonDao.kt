@@ -27,9 +27,11 @@
 
 package com.tencent.devops.store.dao.ideatom
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.model.store.tables.TIdeAtomFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -74,7 +76,7 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TIdeAtom.T_IDE_ATOM) {
-            dslContext.select(ATOM_CODE.`as`("storeCode")).from(this)
+            dslContext.select(ATOM_CODE.`as`(KEY_STORE_CODE)).from(this)
                 .where(ATOM_NAME.contains(storeName))
                 .groupBy(ATOM_CODE)
                 .fetch()
@@ -87,8 +89,8 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
     ): Result<out Record>? {
         return with(TIdeAtom.T_IDE_ATOM) {
             dslContext.select(
-                ATOM_CODE.`as`("storeCode"),
-                VERSION.`as`("version")
+                ATOM_CODE.`as`(KEY_STORE_CODE),
+                VERSION.`as`(KEY_VERSION)
             ).from(this)
                 .where(ATOM_CODE.`in`(storeCodeList))
                 .and(LATEST_FLAG.eq(true))

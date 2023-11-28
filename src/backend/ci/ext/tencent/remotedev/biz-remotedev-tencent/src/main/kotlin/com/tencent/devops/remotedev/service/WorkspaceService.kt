@@ -64,6 +64,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
@@ -102,6 +103,8 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -139,7 +142,8 @@ class WorkspaceService @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val bkccService: BKCCService,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val expertSupportDao: ExpertSupportDao
+    private val expertSupportDao: ExpertSupportDao,
+    private val apiGwService: ApiGwService
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -568,7 +572,8 @@ class WorkspaceService @Autowired constructor(
                 createTime = DateTimeUtil.toDateTime(res["CREATE_TIME"] as LocalDateTime),
                 owner = res["SHARED_USER"] as? String ?: res["CREATOR"] as String,
                 realOwner = res["SHARED_USER"] as? String ?: "",
-                status = WorkspaceStatus.values()[res["STATUS"] as Int]
+                status = WorkspaceStatus.values()[res["STATUS"] as Int],
+                displayName = res["DISPLAY_NAME"] as String
             )
         }
 
@@ -584,16 +589,25 @@ class WorkspaceService @Autowired constructor(
         return data
     }
 
-    fun getWorkspaceProject(): List<RemotedevProject> {
+    fun getWorkspaceProject(projectId: String?): List<RemotedevProject> {
         logger.info("get workspace project list")
         val result = workspaceDao.getWorkspaceProject(
             dslContext = dslContext,
-            mountType = WorkspaceMountType.START
+            mountType = WorkspaceMountType.START,
+            projectId = projectId
         ) ?: emptyList()
+
+        val projectIds = result.map { it.value1() as String }.toSet()
+
+        val projectInfoData = client.get(ServiceProjectResource::class).listOnlyByProjectCode(projectIds).data ?: return emptyList()
+
+        val detailMap = projectInfoData.associateBy { it.projectCode }
+
         return result.map {
             RemotedevProject(
                 projectId = it.value1(),
-                projectName = client.get(ServiceProjectResource::class).get(it.value1()).data?.projectName ?: ""
+                projectName = detailMap[it.value1()]?.projectName ?: "",
+                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: ""
             )
         }
     }
@@ -1303,6 +1317,32 @@ class WorkspaceService @Autowired constructor(
             MediaType.APPLICATION_OCTET_STREAM
         ).header("Content-disposition", "attachment;filename=InstanceManagement.xlsx")
             .build()
+    }
+
+    fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Map<String, ProjectAccessDevicePermissionsResp> {
+        // 获取用户当前的项目列表
+        val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
+        if (projects.isEmpty()) {
+            logger.debug("projectAccessDevicePermissions|userId|$userId|empty projects")
+            return emptyMap()
+        }
+        // 调用安全接口
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        val ip = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
+            ?.firstOrNull { it.isNotBlank() }?.trim()
+        if (ip.isNullOrBlank()) {
+            logger.debug("projectAccessDevicePermissions ip null")
+            return emptyMap()
+        }
+        return apiGwService.projectAccessDevicePermissions(
+            mac = macAddress,
+            userId = userId,
+            projects = projects.joinToString(","),
+            ip = ip
+        ) ?: emptyMap()
     }
 
     // 检测过期的工作空间分享并且取消

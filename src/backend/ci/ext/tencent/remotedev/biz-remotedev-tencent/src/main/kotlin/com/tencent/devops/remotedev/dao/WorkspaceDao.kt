@@ -364,7 +364,8 @@ class WorkspaceDao {
 
     fun getWorkspaceProject(
         dslContext: DSLContext,
-        mountType: WorkspaceMountType? = null
+        mountType: WorkspaceMountType? = null,
+        projectId: String? = null
     ): Result<Record1<String>>? {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectDistinct(PROJECT_ID).from(this)
@@ -372,6 +373,13 @@ class WorkspaceDao {
                 .let { i ->
                     if (mountType != null) {
                         i.and(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+                    } else {
+                        i
+                    }
+                }
+                .let { i ->
+                    if (projectId != null) {
+                        i.and(PROJECT_ID.eq(projectId))
                     } else {
                         i
                     }
@@ -459,7 +467,7 @@ class WorkspaceDao {
         }
 
         return dslContext.selectDistinct(
-            t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.SHARED_USER
+            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.SHARED_USER
         )
             .from(t1).leftOuterJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
@@ -473,7 +481,7 @@ class WorkspaceDao {
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.selectDistinct(
-                    t1.NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
+                    t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
                 )
                     .from(t1)
                     .where(conditions)

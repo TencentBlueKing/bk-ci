@@ -13,7 +13,7 @@ sed_script=$(mktemp /tmp/XXXXXX.sed)
 
 usage () {
     echo "Usage: $0 [-c] [-n] [-E k=v, -E k=v] tpl_path ..."
-} 
+}
 
 usage_and_exit () {
     usage
@@ -34,7 +34,7 @@ target_file_path () {
     echo ${_target_file%.tpl}
 }
 
-[[ $# -eq 0 ]] && usage_and_exit 1 
+[[ $# -eq 0 ]] && usage_and_exit 1
 declare -i DRY_RUN=0 CHECK=0
 declare MODULE=""
 declare -a EXTRA_ENV=()

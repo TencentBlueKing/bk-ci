@@ -160,6 +160,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     workspaceName = workspaceName,
                     environmentUid = environmentUid,
                     operator = "admin",
+                    uid = environmentOpRsp.data.taskUid,
                     action = environmentAction
                 )
 

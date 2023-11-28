@@ -120,4 +120,22 @@ interface OpWorkspaceResource {
         @QueryParam("workspaceStatus")
         workspaceStatus: WorkspaceStatus
     ): Result<Boolean>
+
+    @ApiOperation("通过已有cgsIp实例创建workspace记录")
+    @POST
+    @Path("/create_win_workspace_by_vm")
+    fun createWinWorkspaceByVm(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @QueryParam("oldWorkspaceName")
+        oldWorkspaceName: String?,
+        @ApiParam(value = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @QueryParam("projectId")
+        projectId: String?,
+        @ApiParam(value = "机器uid", required = true)
+        @QueryParam("uid")
+        uid: String
+    ): Result<Boolean>
 }

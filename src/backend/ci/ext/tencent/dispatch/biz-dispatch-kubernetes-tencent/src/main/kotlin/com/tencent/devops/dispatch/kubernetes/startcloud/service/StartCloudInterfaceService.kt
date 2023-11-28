@@ -30,13 +30,17 @@ package com.tencent.devops.dispatch.kubernetes.startcloud.service
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.dao.WindowsGpuResourceDao
+import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -48,7 +52,8 @@ import org.springframework.stereotype.Service
 class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -96,6 +101,27 @@ class StartCloudInterfaceService @Autowired constructor(
                 receivers = receivers, unSharer = userId
             )
         )
+    }
+
+    fun getWorkspaceInfoByEid(eid: String): WorkspaceInfo {
+        val workspaceStatus = workspaceClient.getWorkspaceInfo(
+            userId = "admin",
+            environmentOperate = EnvironmentOperate(eid)
+        )
+        return WorkspaceInfo(
+            status = workspaceStatus.status,
+            hostIP = workspaceStatus.hostIP,
+            environmentIP = workspaceStatus.environmentIP,
+            clusterId = workspaceStatus.clusterId,
+            namespace = workspaceStatus.namespace,
+            environmentHost = workspaceStatus.environmentIP,
+            ready = true,
+            started = true
+        )
+    }
+
+    fun getTaskInfoByUid(uid: String): TaskStatus? {
+        return workspaceRedisUtils.getTaskStatus(uid)
     }
 
     // 同步更新云桌面资源池列表
