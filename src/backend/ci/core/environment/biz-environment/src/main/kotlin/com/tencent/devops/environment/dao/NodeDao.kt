@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.DisplayNameInfo
+import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.model.environment.tables.TNode
@@ -48,6 +50,73 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateHostIdAndCloudAreaIdByNodeId(
+        dslContext: DSLContext,
+        nodeHostIdAndCloudAreaIdInfoList: List<HostIdAndCloudAreaIdInfo>
+    ) {
+        with(TNode.T_NODE) {
+            nodeHostIdAndCloudAreaIdInfoList.map {
+                dslContext.update(this)
+                    .set(HOST_ID, it.bkHostId)
+                    .set(CLOUD_AREA_ID, it.bkCloudId)
+                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                    .where(NODE_ID.eq(it.nodeId))
+                    .execute()
+            }
+        }
+    }
+
+    fun getCmdbNodesLimit(dslContext: DSLContext, limit: Int, offset: Int): Result<Record3<Long, String, String>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP).from(this)
+                .where(NODE_TYPE.eq(NodeType.CMDB.toString()))
+                .and(HOST_ID.isNull)
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun countCmdbNodes(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.eq(NodeType.CMDB.toString()))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countDisplayNameEmptyNodes(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(DISPLAY_NAME.isNull)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, limit: Int, offset: Int): Result<Record3<Long, String, String>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE, NODE_HASH_ID).from(this)
+                .where(DISPLAY_NAME.isNull)
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateDisplayNameByNodeId(dslContext: DSLContext, nodeDisplayNameInfoList: List<DisplayNameInfo>) {
+        with(TNode.T_NODE) {
+            nodeDisplayNameInfoList.map {
+                dslContext.update(this)
+                    .set(DISPLAY_NAME, it.displayName)
+                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                    .where(NODE_ID.eq(it.nodeId))
+                    .execute()
+            }
+        }
+    }
+
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
         with(TNode.T_NODE) {
             dslContext.update(this)

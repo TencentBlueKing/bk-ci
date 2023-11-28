@@ -89,7 +89,7 @@ class TencentQueryFromCmdbService : QueryOperatorService {
         }
     }
 
-    fun queryCmdbInfoFromIp(nodeIpList: List<String>): Map<String, CmdbDataIns>? {
+    fun queryCmdbInfoFromIp(nodeIpList: Set<String>): Map<String, CmdbDataIns>? {
         val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,

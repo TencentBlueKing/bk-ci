@@ -57,7 +57,7 @@ class TencentNodeScheduledService @Autowired constructor(
 
     private fun checkNodeInCmdb() {
         val nodeRecords = nodeDao.getCmdbNodes(dslContext) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
-        val nodeIpList = nodeRecords.map { it.value1() } // 要判断在不在cmdb中的 所有ip
+        val nodeIpList = nodeRecords.map { it.value1() }.toSet() // 要判断在不在cmdb中的 所有ip
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList) // 从cmdb中查到的 所有ip - 记录 映射
 
         // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
