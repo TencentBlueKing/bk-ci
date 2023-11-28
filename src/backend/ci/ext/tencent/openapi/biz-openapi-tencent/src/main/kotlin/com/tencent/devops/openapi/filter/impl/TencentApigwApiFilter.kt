@@ -173,7 +173,6 @@ class TencentApigwApiFilter(
     }
 
     fun verifyOauth2Authorization(requestContext: ContainerRequestContext): Boolean {
-        // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
         // 判断是否为合法的路径
         val apiType = ApiType.parseType(path) ?: return false
