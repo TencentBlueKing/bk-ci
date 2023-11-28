@@ -177,7 +177,7 @@ class ExpertSupportService @Autowired constructor(
         expertSupportDao.getSup(dslContext, id)?.let {
             val sups = mutableListOf(userId)
             if (it.supporter != null) {
-                sups.addAll(JsonUtil.to<List<String>>(it.supporter.data()))
+                sups.addAll(JsonUtil.to<List<String>>(it.supporter))
             }
 
             expertSupportDao.updateSupport(

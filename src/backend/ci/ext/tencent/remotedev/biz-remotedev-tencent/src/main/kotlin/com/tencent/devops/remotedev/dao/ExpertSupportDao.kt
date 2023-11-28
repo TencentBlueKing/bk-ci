@@ -10,7 +10,6 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
-import org.jooq.JSON
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -66,7 +65,7 @@ class ExpertSupportDao {
             val sql = dslContext.update(this)
                 .set(STATUS, status.name)
             if (supporter != null) {
-                sql.set(SUPPORTER, JSON.json(JsonUtil.toJson(supporter, formatted = false)))
+                sql.set(SUPPORTER, JsonUtil.toJson(supporter, formatted = false))
             }
             sql.set(UPDATE_TIME, LocalDateTime.now())
             sql.where(ID.eq(id))

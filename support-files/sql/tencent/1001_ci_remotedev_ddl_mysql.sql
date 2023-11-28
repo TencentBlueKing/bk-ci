@@ -464,7 +464,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
     `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
 	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
-	`SUPPORTER` varchar(32)  NULL COMMENT '协助人',
+	`SUPPORTER` varchar(256)  NULL COMMENT '协助人',
 	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
 	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
     `CITY` varchar(32) NOT NULL COMMENT '城市',
