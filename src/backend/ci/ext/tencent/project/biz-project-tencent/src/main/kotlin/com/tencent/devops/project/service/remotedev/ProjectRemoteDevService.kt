@@ -42,7 +42,7 @@ class ProjectRemoteDevService @Autowired constructor(
     val bkrepoDevxHeaderUserAuth = ""
 
     @Value("\${remoteDev.bkrepoLsyncProxyUrl:}")
-    val bkrepoLsyncProxyUrl = “”
+    val bkrepoLsyncProxyUrl = ""
 
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
