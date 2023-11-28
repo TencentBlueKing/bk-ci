@@ -338,10 +338,6 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
-            
-            .trigger-user {
-                color: #979BA5 !important;
-            }
         }
         .header-right {
             display: flex;
@@ -427,5 +423,8 @@
         .part-text {
             margin-bottom: 50px !important;
         }
+    }
+    .trigger-user {
+        color: #979BA5 !important;
     }
 </style>

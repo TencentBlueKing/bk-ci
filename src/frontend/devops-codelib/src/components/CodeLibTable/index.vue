@@ -448,7 +448,7 @@
                             ...this.$route.query,
                             id: row.repositoryHashId,
                             page: this.page,
-                            // scmType: row.type,
+                            scmType: row.type,
                             limit: this.pagination.limit
                         }
                     })

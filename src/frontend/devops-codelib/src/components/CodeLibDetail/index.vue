@@ -318,7 +318,6 @@
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
                     .then((res) => {
                         this.repoInfo = res
-                        console.log(res, 11111111)
                         this.$router.push({
                             query: {
                                 ...this.$route.query,

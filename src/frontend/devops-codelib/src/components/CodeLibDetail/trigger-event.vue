@@ -3,7 +3,7 @@
         <header class="header-warpper">
             <bk-date-picker
                 class="date-picker mr15"
-                v-model="daterange"
+                :value="daterange"
                 type="daterange"
                 :placeholder="$t('codelib.选择日期范围')"
                 :options="{
@@ -11,6 +11,7 @@
                 }"
                 :shortcuts="shortcuts"
                 :key="repoId"
+                @change="handleChangeDaterange"
             >
             </bk-date-picker>
             <bk-search-select
@@ -77,6 +78,10 @@
         },
         props: {
             curRepo: {
+                type: Object,
+                default: () => {}
+            },
+            repoInfo: {
                 type: Object,
                 default: () => {}
             },
@@ -170,12 +175,13 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
+                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
                 this.timelineMap = {}
-                if (this.catchRepoId === this.repoId) {
+                if ((this.catchRepoId === this.repoId) && !this.eventId) {
                     this.getListData()
                 }
             },
@@ -343,11 +349,16 @@
                 })
             },
 
+            handleChangeDaterange (date, type) {
+                this.daterange = date
+            },
+
             async handleRefresh () {
+                console.log(this.setDefaultDaterange())
                 this.pageLoading = true
                 this.hasLoadEnd = false
-                this.page = 1
-                await this.getListData()
+                this.daterange = this.setDefaultDaterange()
+                // await this.getListData()
             },
 
             replayEvent () {
