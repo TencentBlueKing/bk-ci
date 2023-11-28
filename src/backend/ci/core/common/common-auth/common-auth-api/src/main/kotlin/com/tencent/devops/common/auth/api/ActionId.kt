@@ -2,7 +2,11 @@ package com.tencent.devops.common.auth.api
 
 object ActionId {
     // 项目
+    const val PROJECT_CREATE = "project_create"
+    const val PROJECT_EDIT = "project_edit"
+    const val PROJECT_ENABLE = "project_enable"
     const val PROJECT_MANAGE = "project_manage"
+    const val PROJECT_MANAGE_ARCHIVED_PIPELINE = "project_manage-archived-pipeline"
 
     // 流水线
     const val PIPELINE_CREATE = "pipeline_create"
@@ -60,4 +64,20 @@ object ActionId {
     const val CODE_PROXY_CREATE = "code_proxy_create"
     const val CODE_PROXY_LIST = "code_proxy_list"
     const val CODE_PROXY_DELETE = "code_proxy_delete"
+
+    // 环境
+    const val ENVIRONMENT_CREATE = "environment_create"
+    const val ENVIRONMENT_EDIT = "environment_edit"
+    const val ENVIRONMENT_VIEW = "environment_view"
+    const val ENVIRONMENT_DELETE = "environment_delete"
+    const val ENVIRONMENT_LIST = "environment_list"
+    const val ENVIRONMENT_USE = "environment_use"
+
+    // 环境节点
+    const val ENV_NODE_CREATE = "env_node_create"
+    const val ENV_NODE_EDIT = "env_node_edit"
+    const val ENV_NODE_VIEW = "env_node_view"
+    const val ENV_NODE_DELETE = "env_node_delete"
+    const val ENV_NODE_LIST = "env_node_list"
+    const val ENV_NODE_USE = "env_node_use"
 }
