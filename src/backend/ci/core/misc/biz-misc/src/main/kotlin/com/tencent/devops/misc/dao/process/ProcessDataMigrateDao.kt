@@ -55,6 +55,8 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineTimer
+import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
+import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
@@ -97,6 +99,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionR
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
+import com.tencent.devops.model.process.tables.records.TPipelineTriggerDetailRecord
+import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventRecord
 import com.tencent.devops.model.process.tables.records.TPipelineTriggerReviewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -1138,6 +1142,55 @@ class ProcessDataMigrateDao {
                 .set(CREATOR, pipelineTimerRecord.creator)
                 .set(CREATE_TIME, pipelineTimerRecord.createTime)
                 .set(CHANNEL, pipelineTimerRecord.channel)
+        }
+    }
+
+    fun getPipelineTriggerDetailRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int
+    ): List<TPipelineTriggerDetailRecord> {
+        with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .orderBy(DETAIL_ID.asc(), PIPELINE_ID.asc())
+                .limit(limit).offset(offset).fetchInto(TPipelineTriggerDetailRecord::class.java)
+        }
+    }
+
+    fun migratePipelineTriggerDetailData(
+        migratingShardingDslContext: DSLContext,
+        pipelineTriggerDetailRecords: List<TPipelineTriggerDetailRecord>
+    ) {
+        with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+            val insertRecords = pipelineTriggerDetailRecords.map { migratingShardingDslContext.newRecord(this, it) }
+            migratingShardingDslContext.batchInsert(insertRecords).execute()
+        }
+    }
+
+    fun getProjectPipelineTriggerEventRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<TPipelineTriggerEventRecord> {
+        with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(EVENT_ID.asc())
+                .limit(limit).offset(offset).fetchInto(TPipelineTriggerEventRecord::class.java)
+        }
+    }
+
+    fun migrateProjectPipelineTriggerEventData(
+        migratingShardingDslContext: DSLContext,
+        pipelineTriggerEventRecords: List<TPipelineTriggerEventRecord>
+    ) {
+        with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+            val insertRecords = pipelineTriggerEventRecords.map { migratingShardingDslContext.newRecord(this, it) }
+            migratingShardingDslContext.batchInsert(insertRecords).execute()
         }
     }
 }
