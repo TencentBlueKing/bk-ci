@@ -28,11 +28,13 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.MANUAL_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OPENAPI_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.PIPELINE_START_EVENT_DESC
@@ -290,9 +292,19 @@ class PipelineTriggerEventAspect(
             }
 
             exception != null -> {
+                val reasonDetail = when (exception) {
+                    is ErrorCodeException -> I18nUtil.getCodeLanMessage(
+                        messageCode = exception.errorCode,
+                        params = exception.params,
+                        defaultMessage = exception.defaultMessage
+                    )
+
+                    else -> exception.message ?: "unknown error"
+
+                }
                 triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
                 triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
-                triggerDetailBuilder.reasonDetail(exception.message ?: "unknown error")
+                triggerDetailBuilder.reasonDetail(reasonDetail)
             }
         }
         return triggerDetailBuilder.build()
