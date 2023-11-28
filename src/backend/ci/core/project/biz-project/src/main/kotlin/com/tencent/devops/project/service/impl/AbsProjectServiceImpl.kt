@@ -28,6 +28,9 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -41,9 +44,17 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CREATE_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_EDIT_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISABLE_TEMPLATE
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_EDIT
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_ENABLE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId.PROJECT
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -163,6 +174,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
+    @ActionAuditRecord(
+        actionId = PROJECT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#projectCreateInfo?.englishName",
+            instanceNames = "#projectCreateInfo?.projectName"
+        ),
+        scopeId = "#projectCreateInfo?.englishName",
+        content = PROJECT_CREATE_CONTENT
+    )
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
@@ -411,6 +432,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record)
     }
 
+    @ActionAuditRecord(
+        actionId = PROJECT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#englishName",
+            instanceNames = "#projectUpdateInfo?.projectName"
+        ),
+        scopeId = "#projectCreateInfo?.englishName",
+        content = PROJECT_EDIT_CONTENT
+    )
     override fun update(
         userId: String,
         englishName: String,
@@ -439,6 +470,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     englishName = englishName
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
+                // 审计
+                ActionAuditContext.current()
+                    .setOriginInstance(projectInfo)
+                    .setInstance(projectUpdateInfo)
+
                 val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
                 if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
                     val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
@@ -1009,6 +1045,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
     }
 
+    @ActionAuditRecord(
+        actionId = PROJECT_ENABLE,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#projectCreateInfo?.englishName"
+        ),
+        scopeId = "#projectCreateInfo?.englishName",
+        content = PROJECT_ENABLE_CONTENT
+    )
     override fun updateUsableStatus(
         userId: String?,
         englishName: String,
@@ -1017,10 +1062,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw ErrorCodeException(
-                errorCode = PROJECT_NOT_EXIST,
-                defaultMessage = "project($englishName) not exist!"
-            )
+            ?: throw ErrorCodeException(errorCode = PROJECT_NOT_EXIST)
+        // 审计
+        ActionAuditContext.current()
+            .setInstanceName(projectInfo.projectName)
+        if (enabled) {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+        }
         if (checkPermission) {
             val verify = validatePermission(
                 userId = userId!!,

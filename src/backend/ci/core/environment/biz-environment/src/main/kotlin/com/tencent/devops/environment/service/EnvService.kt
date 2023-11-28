@@ -30,6 +30,10 @@ package com.tencent.devops.environment.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -37,7 +41,10 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
@@ -576,7 +583,21 @@ class EnvService @Autowired constructor(
         }
     }
 
-    override fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENVIRONMENT_EDIT_ADD_NODES_CONTENT
+    )
+    override fun addEnvNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
@@ -584,8 +605,12 @@ class EnvService @Autowired constructor(
             )
         }
 
+
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
 
+        ActionAuditContext.current()
+            .setInstanceId(envId.toString())
+            .addExtendData("nodeIds", nodeLongIds.toString())
         // 检查 node 权限
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }

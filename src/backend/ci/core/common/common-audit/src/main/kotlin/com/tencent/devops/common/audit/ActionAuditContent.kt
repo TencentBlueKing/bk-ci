@@ -8,11 +8,17 @@ object ActionAuditContent {
     private const val CONTENT_TEMPLATE = "[{{$INSTANCE_NAME}}]({{$INSTANCE_ID}})"
     private const val PROJECT_CODE_CONTENT_TEMPLATE = "[{{@PROJECT_CODE}}]"
     const val PROJECT_CODE_TEMPLATE = "@PROJECT_CODE"
+    const val PROJECT_ENABLE_OR_DISABLE_TEMPLATE = "@ENABLE"
     const val BUILD_ID_TEMPLATE = "@BUILD_ID"
     const val ASSIGNS_TEMPLATE = "@ASSIGNS"
 
     // 项目
     const val PROJECT_MANAGE_RESTORE_PIPELINE_CONTENT = "restore pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PROJECT_MANAGE_CONTENT = "manage project $CONTENT_TEMPLATE"
+    const val PROJECT_CREATE_CONTENT = "create project $CONTENT_TEMPLATE"
+    const val PROJECT_EDIT_CONTENT = "modify project $CONTENT_TEMPLATE"
+    const val PROJECT_ENABLE_CONTENT = "{{$PROJECT_ENABLE_OR_DISABLE_TEMPLATE}} project $CONTENT_TEMPLATE"
+    const val PROJECT_MANAGE_ARCHIVED_PIPELINE_CONTENT = "manage project archived pipeline $CONTENT_TEMPLATE"
 
     // 流水线
     const val PIPELINE_VIEW_CONTENT = "get pipeline info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -89,4 +95,24 @@ object ActionAuditContent {
     const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 环境
+    const val ENVIRONMENT_CREATE_CONTENT = "create environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_EDIT_CONTENT = "modify environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_EDIT_ADD_NODES_CONTENT = "add environment nodes $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_EDIT_SET_SHARE_ENV_CONTENT = "set share environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_EDIT_DELETE_NODES_CONTENT = "delete environment  nodes $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_VIEW_CONTENT = "get environment info  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_DELETE_CONTENT = "delete environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_OF_SHARE_DELETE_CONTENT = "delete share environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_LIST_CONTENT = "list environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENVIRONMENT_USE_CONTENT = "use environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 环境节点
+    const val ENV_NODE_CREATE_CONTENT = "create environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_EDIT_CONTENT = "modify environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_VIEW_CONTENT = "get environment node info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_DELETE_CONTENT = "delete environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 }
