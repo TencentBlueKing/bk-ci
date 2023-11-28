@@ -50,14 +50,6 @@ class SearchInstanceInfo : SearchInstanceResponseDTO() {
         return result
     }
 
-    // 关键词匹配中数据太多，需要优化关键词
-    fun buildSearchInstanceResultFailResult(): SearchInstanceInfo {
-        val result = SearchInstanceInfo()
-        result.code = AuthConstants.TOO_RESULT_DATA
-        result.message = AuthConstants.TOO_RESULT_DATA_MESSAGE
-        return result
-    }
-
     fun buildSearchInstanceResult(infos: List<InstanceInfoDTO>, count: Long): SearchInstanceInfo {
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         data.count = count

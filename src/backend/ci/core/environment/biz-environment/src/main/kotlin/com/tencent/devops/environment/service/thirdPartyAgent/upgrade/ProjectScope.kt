@@ -30,8 +30,13 @@ class ProjectScope @Autowired constructor(private val redisOperation: RedisOpera
      * 或者[AGENT_PRIORITY_UPGRADE_PROJECT_SET]为空，表示未设置任何优先升级项目，也返回true
      */
     fun checkInPriorityUpgradeProjectOrEmpty(projectId: String): Boolean {
-        val cache = loadCache(getKeyType(UpgradeKey.PRIORITY_PROJECT))
+        val cache = fetchInPriorityUpgradeProject()
         return cache.isEmpty() || cache.contains(projectId)
+    }
+
+    // 获取升级列表的项目，方便早点升级
+    fun fetchInPriorityUpgradeProject(): Set<String> {
+        return loadCache(getKeyType(UpgradeKey.PRIORITY_PROJECT))
     }
 
     fun setUpgradeProjects(upgradeKey: UpgradeKey, projectIds: Set<String>): Result<Boolean> {
