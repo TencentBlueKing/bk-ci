@@ -186,6 +186,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
                 offset += DEFAULT_PAGE_SIZE
             } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
         }
@@ -254,6 +255,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         processDataDeleteDao.deleteProjectPipelineCallbackHistory(dslContext, projectId)
         processDataDeleteDao.deleteTemplate(dslContext, projectId)
         processDataDeleteDao.deletePipelineViewTop(dslContext, projectId)
+        processDataDeleteDao.deletePipelineTriggerEvent(dslContext, projectId)
         logger.info("project[$projectId] deleteProjectDirectlyRelData success!")
     }
 }

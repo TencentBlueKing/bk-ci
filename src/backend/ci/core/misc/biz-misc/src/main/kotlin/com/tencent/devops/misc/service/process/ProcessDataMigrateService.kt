@@ -464,6 +464,7 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateProjectPipelineCallbackHistoryData(migratingShardingDslContext, projectId)
         migrateTemplateData(migratingShardingDslContext, projectId)
         migratePipelineViewTopData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineTriggerEventData(migratingShardingDslContext, projectId)
     }
 
     private fun doAfterMigrationBus(
@@ -850,5 +851,24 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += LONG_PAGE_SIZE
         } while (pipelineViewTopRecords.size == LONG_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineTriggerEventData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineTriggerEventRecords = processDataMigrateDao.getProjectPipelineTriggerEventRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineTriggerEventRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineTriggerEventData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTriggerEventRecords = pipelineTriggerEventRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineTriggerEventRecords.size == MEDIUM_PAGE_SIZE)
     }
 }

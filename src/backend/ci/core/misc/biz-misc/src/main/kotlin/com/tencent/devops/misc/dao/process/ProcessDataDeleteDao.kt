@@ -53,6 +53,8 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
+import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
+import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
@@ -400,6 +402,22 @@ class ProcessDataDeleteDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTriggerDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTriggerEvent(dslContext: DSLContext, projectId: String) {
+        with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

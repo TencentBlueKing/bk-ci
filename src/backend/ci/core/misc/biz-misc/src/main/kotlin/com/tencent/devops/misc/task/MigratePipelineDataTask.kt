@@ -225,6 +225,14 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 3.22、迁移T_PIPELINE_TRIGGER_DETAIL表数据
+                migratePipelineTriggerDetailData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (doneSignal == null) {
                     // 单独迁移一条流水线的数据时需要执行以下数据迁移逻辑
                     migratePipelineAuditResourceData(
@@ -899,6 +907,32 @@ class MigratePipelineDataTask constructor(
                 pipelineTimerRecord = pipelineTimerRecord
             )
         }
+    }
+
+    private fun migratePipelineTriggerDetailData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineTriggerDetailRecords = processDataMigrateDao.getPipelineTriggerDetailRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineTriggerDetailRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineTriggerDetailData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTriggerDetailRecords = pipelineTriggerDetailRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineTriggerDetailRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun handleUnFinishPipelines(retryNum: Int) {
