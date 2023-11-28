@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -23,7 +24,8 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     @Value("\${remoteDev.appCode:}")
@@ -124,6 +126,7 @@ class ProjectRemoteDevService @Autowired constructor(
     private fun createLsyncGeneric(
         projectId: String
     ) {
+        // 创建 devx 的 lsync
         val requestData = CreateRepoData(
             projectId = projectId,
             name = "lsync",
@@ -152,6 +155,33 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("createLsyncGeneric request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+
+        // 创建 idc 的 lsync
+        val url2 = "${bkRepoClient.getRkRepoIdcHost()}/api/repository/api/repo/create"
+        val requestBody2 = objectMapper.writeValueAsString(
+            mapOf(
+                "projectId" to projectId,
+                "name" to "lsync",
+                "type" to "GENERIC",
+                "category" to "COMPOSITE",
+                "display" to false
+            )
+        ).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request2 = Request.Builder()
+            .url(url2)
+            .post(requestBody2)
+            .build()
+        try {
+            OkhttpUtils.doHttp(request2).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("createLsyncGeneric idc request failed, uri:($url)|response: ($responseStr)")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("createLsyncGeneric idc request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
