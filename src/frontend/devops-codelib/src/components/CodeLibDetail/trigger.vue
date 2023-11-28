@@ -118,6 +118,7 @@
             :is-show.sync="showPipelineSideslider"
             :width="600"
             quick-close
+            :title="$t('codelib.关联的流水线')"
             ext-cls="pipeline-list-sideslider"
         >
             <template slot="content">

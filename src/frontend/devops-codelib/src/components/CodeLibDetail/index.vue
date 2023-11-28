@@ -255,7 +255,8 @@
                 }
             },
             scmType: {
-                handler () {
+                handler (val) {
+                    if (!val) return
                     this.getEventTypeList()
                     this.getTriggerTypeList()
                 },
@@ -317,6 +318,13 @@
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
                     .then((res) => {
                         this.repoInfo = res
+                        console.log(res, 11111111)
+                        this.$router.push({
+                            query: {
+                                ...this.$route.query,
+                                scmType: this.repoInfo.scmType
+                            }
+                        })
                     }).finally(() => {
                         if (this.userId) {
                             this.isLoading = loading
@@ -429,6 +437,12 @@
                             }).then(async () => {
                                 await this.refreshCodelibList()
                                 await this.$emit('update:curRepoId', this.codelibList[0].repositoryHashId)
+                                this.$router.push({
+                                    query: {
+                                        ...this.$route.query,
+                                        id: this.codelibList[0].repositoryHashId
+                                    }
+                                })
                                 this.$bkMessage({
                                     message: this.$t('codelib.successfullyDeleted'),
                                     theme: 'success'

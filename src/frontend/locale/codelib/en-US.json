@@ -180,5 +180,6 @@
     "展开": "Expand",
     "收起": "Collapse",
     "重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。": "Caution: Resetting authorization may cause running pipelines to fail.",
-    "事件ID": "Event ID"
+    "事件ID": "Event ID",
+    "关联的流水线": "Associated Pipeline"
 }
