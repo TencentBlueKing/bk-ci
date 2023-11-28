@@ -13,7 +13,10 @@
             ref="list"
             v-if="tableHeight"
             v-bkloading="{ isLoading }"
-            class="devops-codelib-table"
+            :class="{
+                'devops-codelib-table': true,
+                'flod-table': isListFlod
+            }"
             :data="records"
             :size="tableSize"
             :height="tableHeight"
@@ -605,6 +608,12 @@
         position: relative;
         top: 3px;
         font-size: 24px !important;
+    }
+}
+.flod-table {
+    td,
+    th {
+        width: 400px !important;
     }
 }
 .devops-codelib-table {
